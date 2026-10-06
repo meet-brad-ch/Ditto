@@ -53,7 +53,6 @@ protected:
 	CPropertyPage *m_pStats;
 	CPropertyPage *m_pTypes;
 	CPropertyPage *m_pAbout;
-	CPropertyPage *m_pFriends;
 	CPropertyPage *m_pCopyBuffers;
 	CPropertyPage *m_pQuickPasteShortCuts;
 

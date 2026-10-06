@@ -1,19 +1,13 @@
 #pragma once
 
-#include "RecieveSocket.h"
-#include "FileTransferProgressDlg.h"
-
-#define USER_CANCELED -2
-#define MD5_MISMATCH -3
-
+// Collects file paths and builds CF_HDROP data from them. Local only: the
+// network file transfer that used to live here was removed in this fork.
 class CFileRecieve
 {
 public:
 	CFileRecieve();
 	virtual ~CFileRecieve();
 
-	long RecieveFiles(SOCKET sock, CString csIP, CFileTransferProgressDlg *pProgress);
-	
 	HGLOBAL CreateCF_HDROPBuffer();
 
 	HGLOBAL CreateCF_HDROPBufferAsString();
@@ -21,11 +15,5 @@ public:
 	void AddFile(CString csFile)	{ m_RecievedFiles.Add(csFile); }
 
 protected:
-	long RecieveFileData(ULONG lFileSize, CString csFileName, CString &md5String);
-
-protected:
-	CRecieveSocket m_Sock;
-	CString m_csReceivingFromIP;
 	CStringArray m_RecievedFiles;
-	CFileTransferProgressDlg *m_pProgress;
 };

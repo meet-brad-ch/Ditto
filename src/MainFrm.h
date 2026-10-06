@@ -114,13 +114,10 @@ protected:
 	void ShowQPasteWithActiveWindowCheck();
     afx_msg LRESULT OnShowTrayIcon(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnClipboardCopied(WPARAM wParam, LPARAM lParam);
-    afx_msg LRESULT OnAddToDatabaseFromSocket(WPARAM wParam, LPARAM lParam);
-    afx_msg LRESULT OnErrorOnSendRecieve(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnErrorMsg(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnEditWndClose(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnSetConnected(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnOpenCloseWindow(WPARAM wParam, LPARAM lParam);
-	afx_msg LRESULT OnLoadClipOnClipboard(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnGlobalClipsClosed(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnDeleteClipDataClosed(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnOptionsClosed(WPARAM wParam, LPARAM lParam);

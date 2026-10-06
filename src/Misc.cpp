@@ -12,32 +12,6 @@
 #include <regex>
 #include <vector>
 
-CString GetIPAddress()
-{
-	WORD wVersionRequested;
-    WSADATA wsaData;
-    char name[255];
-    CString IP;
-	PHOSTENT hostinfo;
-	wVersionRequested = MAKEWORD(2,0);
-	
-	if (WSAStartup(wVersionRequested, &wsaData)==0)
-	{
-		if(gethostname(name, sizeof(name))==0)
-		{
-			if((hostinfo=gethostbyname(name)) != NULL)
-			{
-				IP = inet_ntoa(*(struct in_addr*)* hostinfo->h_addr_list);
-			}
-		}
-		
-		WSACleanup();
-	} 
-	IP.MakeUpper();
-
-	return IP;
-}
-
 CString GetComputerName()
 {
 	TCHAR ComputerName[MAX_COMPUTERNAME_LENGTH+1] = _T("");

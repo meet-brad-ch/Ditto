@@ -10,7 +10,6 @@
 #include "OptionsStats.h"
 #include "OptionsTypes.h"
 #include "About.h"
-#include "OptionFriends.h"
 #include "OptionsCopyBuffers.h"
 #include "Misc.h"
 #include "QuickPasteKeyboard.h"
@@ -38,7 +37,6 @@ COptionsSheet::COptionsSheet(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectP
 	m_pStats = NULL;
 	m_pTypes = NULL;
 	m_pAbout = NULL;
-	m_pFriends = NULL;
 	m_pCopyBuffers = NULL;
 	m_pQuickPasteShortCuts = NULL;
 	
@@ -63,11 +61,6 @@ COptionsSheet::COptionsSheet(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectP
 	AddPage(m_pCopyBuffers);
 	//AddPage(m_pQuickPasteOptions);
 	AddPage(m_pQuickPasteShortCuts);
-	if(CGetSetOptions::GetAllowFriends())
-	{
-		m_pFriends = new COptionFriends;
-		AddPage(m_pFriends);
-	}
 	AddPage(m_pStats);
 	AddPage(m_pAbout);
 
@@ -83,7 +76,6 @@ COptionsSheet::~COptionsSheet()
 	delete m_pStats;
 	delete m_pTypes;
 	delete m_pAbout;	
-	delete m_pFriends;
 	delete m_pUtilites;
 	delete m_pQuickPasteShortCuts;	
 }

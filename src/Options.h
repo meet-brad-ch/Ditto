@@ -5,21 +5,6 @@
 #include "ChaiScriptXml.h"
 #include <set>
 
-#define MAX_SEND_CLIENTS	15
-class CSendClients
-{
-public:
-	CSendClients()
-	{
-		bSendAll = FALSE;
-		bShownFirstError = FALSE;
-	}
-	BOOL bSendAll;
-	CString csIP;
-	CString csDescription;
-	BOOL bShownFirstError;
-};
-
 #define MAX_COPY_BUFFER	3
 class CCopyBufferItem
 {
@@ -239,16 +224,6 @@ public:
 	static void		SetSendPasteOnFirstTenHotKeys(BOOL bOption);
 	static BOOL		GetSendPasteOnFirstTenHotKeys();
 
-	static CSendClients m_SendClients[MAX_SEND_CLIENTS];
-	static long		m_lAutoSendClientCount;
-	static void		GetClientSendCount();
-	static void		SetSendClients(CSendClients Client, int nPos);
-	static CSendClients		GetSendClients(int nPos);
-
-	static CString m_csIPListToPutOnClipboard;
-	static CString	GetListToPutOnClipboard();
-	static BOOL		SetListToPutOnClipboard(CString cs);
-
 	static BOOL		m_bLogSendReceiveErrors;
 	static void		SetLogSendReceiveErrors(BOOL bOption);
 	static BOOL		GetLogSendReceiveErrors();
@@ -256,13 +231,6 @@ public:
 	static BOOL		m_HideDittoOnHotKeyIfAlreadyShown;
 	static BOOL		GetHideDittoOnHotKeyIfAlreadyShown();
 	static void		SetHideDittoOnHotKeyIfAlreadyShown(BOOL bVal);
-
-	static long		m_lPort;
-	static void		SetPort(long lPort);
-	static long		GetPort();
-
-	static BOOL		GetDisableRecieve();
-	static void		SetDisableRecieve(BOOL bVal);
 
 	static BOOL		GetFont(LOGFONT &font);
 	static void		SetFont(LOGFONT &font);
@@ -274,10 +242,6 @@ public:
 	static BOOL		m_bFastThumbnailMode;
 	static void		SetFastThumbnailMode(BOOL bval);
 	static BOOL		GetFastThumbnailMode();
-
-	static CStringA	m_csPassword;
-	static void		SetNetworkPassword(CString csPassword);
-	static CStringA	GetNetworkPassword();
 
 	static BOOL		m_bDrawRTF;
 	static void		SetDrawRTF(long bDraw);
@@ -307,8 +271,6 @@ public:
 	static void		SetShowAllClipsInMainList(BOOL bVal);
 	static BOOL		GetShowAllClipsInMainList();
 
-	static void		SetExtraNetworkPassword(CString csPassword);
-	static CString	GetExtraNetworkPassword(bool bFillArray);
 
 	static long		m_lMaxClipSizeInBytes;
 	static long		GetMaxClipSizeInBytes();
@@ -349,7 +311,6 @@ public:
 	static BOOL		GetEnableOutputDebugStringLogging();
 	static void		SetEnableOutputDebugStringLogging(BOOL bSet);
 
-	static CStringArray m_csNetworkPasswordArray;
 
 	static CString  GetPath(long lPathID);
 
@@ -382,8 +343,6 @@ public:
 	static BOOL	GetEditWordWrap();
 	static void	SetEditWordWrap(BOOL bSet);
 
-	static void SetAllowFriends(BOOL val);
-	static bool GetAllowFriends();
 
 	static bool		GetIsPortableDitto();
 	static bool		GetIsWindowsApp();
@@ -506,11 +465,6 @@ public:
 	static CString GetWebSearchUrl();
 	static void SetWebSearchUrl(CString val);
 
-	static void SetNetworkReadTimeoutMS(int val);
-	static int GetNetworkReadTimeoutMS();
-
-	static void SetRequestFilesUsingIP(int val);
-	static int GetRequestFilesUsingIP();
 
 	static int ReadRandomFileInterval();
 	static int ReadRandomFileIdleMin();
@@ -570,14 +524,10 @@ public:
 	static BOOL GetAdjustClipsForCRC();
 	static void SetAdjustClipsForCRC(int val);
 
-	static BOOL GetCheckMd5OnFileTransfers();
-	static void SetCheckMd5OnFileTransfers(int val);
 
 	static int GetBalloonTimeout();
 	static void SetBalloonTimeout(int val);
 
-	static void		SetCustomSendToList(CString val);
-	static CString	GetCustomSendToList();
 
 	static int GetMaxFileContentsSize();
 	static void SetMaxFileContentsSize(int val);
@@ -613,8 +563,6 @@ public:
 	static CString GetPastSearchXml();
 	static void SetPastSearchXml(CString val);
 
-	static BOOL GetShowMsgWhenReceivingManualSentClip();
-	static void SetShowMsgWhenReceivingManualSentClip(BOOL val);
 
 	static BOOL m_cleanRTFBeforeDrawing;
 	static BOOL GetCleanRTFBeforeDrawing();
@@ -668,8 +616,6 @@ public:
 	static BOOL GetMaintainSearchView();
 	static void SetMaintainSearchView(BOOL val);
 
-	static CString GetNetworkBindIPAddress();
-	static void SetNetworkBindIPAddress(CString val);
 
 	static CString m_tempDragFileName;
 	static CTime m_tempDragFileNameSetTime;
