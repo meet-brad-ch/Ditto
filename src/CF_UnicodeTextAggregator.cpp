@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include ".\cf_unicodetextaggregator.h"
 #include "Misc.h"
+#include "ClipText.h"
 #include "FileDropList.h"
 
 CCF_UnicodeTextAggregator::CCF_UnicodeTextAggregator(CStringW csSeparator) :
@@ -37,27 +38,7 @@ bool CCF_UnicodeTextAggregator::AddClip(LPVOID lpData, int nDataSize, int nPos, 
 		return false;
 	}
 
-	LPCWSTR pText = (LPCWSTR)lpData;
-	if(pText == NULL)
-	{
-		return false;
-	}
-
-	int stringLen = nDataSize/sizeof(wchar_t);
-
-	//Ensure it's null terminated
-	if(pText[stringLen-1] != '\0')
-	{
-		int len = 0;
-		for(len = 0; len < stringLen && pText[len] != '\0'; len++ )
-		{
-		}
-		// if it is not null terminated, skip this item
-		if(len >= stringLen)
-			return false;
-	}
-
-	m_csNewText += pText;
+	m_csNewText += DittoCore::ClipText::ReadWide(lpData, static_cast<std::size_t>(nDataSize)).c_str();
 	
 	if(nPos != nCount-1)
 	{

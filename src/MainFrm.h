@@ -114,6 +114,12 @@ protected:
     afx_msg LRESULT OnShowTrayIcon(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnClipboardCopied(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnErrorMsg(WPARAM wParam, LPARAM lParam);
+	/**
+	 * @brief WM_SHOW_OWNED_ERROR_MSG handler: shows an error balloon posted by CErrorReport.
+	 * @param wParam A CString* allocated by the sender; this handler takes ownership and frees it.
+	 * @param lParam Unused.
+	 * @return TRUE.
+	 */
 	afx_msg LRESULT OnOwnedErrorMsg(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnEditWndClose(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnSetConnected(WPARAM wParam, LPARAM lParam);

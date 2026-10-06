@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+#include "FileDialogPath.h"
 #include "CP_Main.h"
 #include "OptionsQuickPaste.h"
 #include ".\optionsquickpaste.h"
@@ -330,7 +331,7 @@ void COptionsQuickPaste::OnBnClickedButtonDiffBrowse()
 	FileName.lStructSize = sizeof(FileName);
 	FileName.lpstrTitle = _T("Diff Application");
 	FileName.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
-	FileName.nMaxFile = 400;
+	FileName.nMaxFile = _countof(szFileName);
 	FileName.lpstrFile = szFileName;
 	FileName.lpstrInitialDir = szDir;
 	FileName.lpstrFilter = _T("*.exe");
@@ -340,7 +341,7 @@ void COptionsQuickPaste::OnBnClickedButtonDiffBrowse()
 	if(GetOpenFileName(&FileName) == 0)
 		return;
 
-	CString csPath(FileName.lpstrFile);
+	CString csPath(CFileDialogPath::From(FileName));
 
 	m_diffPathEditBox.SetWindowText(csPath);
 }

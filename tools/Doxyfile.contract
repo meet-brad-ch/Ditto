@@ -1,0 +1,43 @@
+# Doxygen documentation gate for code written to the contract (run from the repo root by
+# tools\verify.ps1). Every class, function and member must be documented; any warning fails.
+# Inputs are listed by file name; add each new contract file here.
+PROJECT_NAME           = "Ditto local-only"
+OUTPUT_DIRECTORY       = build/doxygen
+INPUT                  = lib/DittoCore/ClipboardFormatError.h \
+                         lib/DittoCore/ClipText.h \
+                         lib/DittoCore/ClipText.cpp \
+                         lib/DittoCore/DropBlockReader.h \
+                         lib/DittoCore/DropBlockReader.cpp \
+                         lib/DittoCore/FileDropList.h \
+                         lib/DittoCore/FileDropList.cpp \
+                         lib/DittoCore/GlobalFileDrop.h \
+                         lib/DittoCore/GlobalFileDrop.cpp \
+                         lib/DittoCore/GlobalLockGuard.h \
+                         lib/DittoCore/GlobalLockGuard.cpp \
+                         src/ErrorReport.h \
+                         src/FileDialogPath.h \
+                         src/FileDialogPath.cpp \
+                         src/ErrorReport.cpp \
+                         src/RulerRichEditCtrl/RichEditStringSink.h \
+                         src/RulerRichEditCtrl/RichEditStringSink.cpp \
+                         src/RulerRichEditCtrl/RichEditUtf8Source.h \
+                         src/RulerRichEditCtrl/RichEditUtf8Source.cpp
+RECURSIVE              = NO
+EXTRACT_ALL            = NO
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+EXTRACT_ANON_NSPACES   = YES
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+WARN_IF_INCOMPLETE_DOC = YES
+WARN_NO_PARAMDOC       = YES
+WARN_AS_ERROR          = FAIL_ON_WARNINGS
+WARN_FORMAT            = "$file:$line: $text"
+QUIET                  = YES
+# document only the listed files; quoted includes would otherwise pull in the legacy app headers
+ENABLE_PREPROCESSING   = NO
+SEARCH_INCLUDES        = NO
+GENERATE_HTML          = NO
+GENERATE_LATEX         = NO
+GENERATE_XML           = YES
+XML_OUTPUT             = xml

@@ -98,6 +98,8 @@ unsigned char* CCreateQRCodeImage::CreateImage(CString text, int &size)
 		size = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + unDataBytes;
 
 		bitmapData = new unsigned char[size];
+		// size includes both headers (line above), so the 14-byte file header always fits
+#pragma warning(suppress: 6386)
 		memcpy(bitmapData, &kFileHeader, sizeof(BITMAPFILEHEADER));
 		memcpy((bitmapData + sizeof(BITMAPFILEHEADER)), &kInfoHeader, sizeof(BITMAPINFOHEADER));
 		memcpy((bitmapData + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)), pRGBData, unDataBytes);

@@ -245,7 +245,7 @@ HANDLE CBitmapHelper::hBitmapToDIB(HBITMAP hBitmap, DWORD dwCompression, HPALETT
 	BITMAPINFOHEADER        bi;
 	LPBITMAPINFOHEADER      lpbi;
 	DWORD                   dwLen;
-	HANDLE                  hDIB;
+	HANDLE                  hDIB{};
 	HANDLE                  handle;
 	HDC                     hDC;
 
@@ -281,7 +281,7 @@ HANDLE CBitmapHelper::hBitmapToDIB(HBITMAP hBitmap, DWORD dwCompression, HPALETT
 	(void)RealizePalette(hDC);
 
 	// Allocate enough memory to hold bitmapinfoheader and color table
-	hDIB = GlobalAlloc(GMEM_FIXED, dwLen);
+	hDIB = GlobalAlloc(GMEM_FIXED | GMEM_ZEROINIT, dwLen);
 
 	if (!hDIB)
 	{
@@ -319,6 +319,9 @@ HANDLE CBitmapHelper::hBitmapToDIB(HBITMAP hBitmap, DWORD dwCompression, HPALETT
 	handle = GlobalReAlloc(hDIB, dwLen, GMEM_MOVEABLE);
 	if (!handle)
 	{
+		// GlobalReAlloc is annotated _Frees_ptr_, but a failed call leaves the original block
+		// allocated and the handle valid (GlobalReAlloc docs), so it is freed here.
+#pragma warning(suppress: 6001)
 		GlobalFree(hDIB);
 
 		// Reselect the original palette

@@ -148,7 +148,7 @@ bool CPasteImageAsHtmlImage::WriteDataToFile(CString csPath, LPVOID data, ULONG 
 	{
 		CString csError;
 		TCHAR exError[250];
-		ex.GetErrorMessage(exError, sizeof(exError));
+		ex.GetErrorMessage(exError, _countof(exError));
 
 		csError.Format(_T("OutLookExpress Addin - Failed to write CF_DIB to file: %s, Error: %s"), csPath, exError);
 		OutputDebugString(csPath);

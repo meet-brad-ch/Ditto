@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "FileDialogPath.h"
 #include "CP_Main.h"
 #include "Misc.h"
 #include "OptionsSheet.h"
@@ -587,101 +588,69 @@ BOOL CALLBACK MyMonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMo
 	return TRUE;
 }
 
+// Every supported Windows is NT. The former GetVersionEx check passed an OSVERSIONINFO without
+// dwOSVersionInfoSize set, so it failed or read stack garbage and picked a branch by chance.
 int GetScreenWidth(void)
 {
-	OSVERSIONINFO OS_Version_Info;
-	DWORD dwPlatform = 0;
-	
-	if(GetVersionEx(&OS_Version_Info) != 0)
+	const int width{ GetSystemMetrics(SM_CXSCREEN) };
+	const int height{ GetSystemMetrics(SM_CYSCREEN) };
+	switch(width)
 	{
-		dwPlatform = OS_Version_Info.dwPlatformId;
-	}
-	
-	if(dwPlatform == VER_PLATFORM_WIN32_NT)
-	{
-		int width, height;
-		
-		width = GetSystemMetrics(SM_CXSCREEN);
-		height = GetSystemMetrics(SM_CYSCREEN);
-		switch(width)
+	default:
+	case 640:
+	case 800:
+	case 1024:
+		return(width);
+	case 1280:
+		if(height == 480)
 		{
-		default:
-		case 640:
-		case 800:
-		case 1024:
-			return(width);
-		case 1280:
-			if(height == 480)
-			{
-				return(width / 2);
-			}
-			return(width);
-		case 1600:
-			if(height == 600)
-			{
-				return(width / 2);
-			}
-			return(width);
-		case 2048:
-			if(height == 768)
-			{
-				return(width / 2);
-			}
-			return(width);
+			return(width / 2);
 		}
-	}
-	else
-	{
-		return(GetSystemMetrics(SM_CXVIRTUALSCREEN));
+		return(width);
+	case 1600:
+		if(height == 600)
+		{
+			return(width / 2);
+		}
+		return(width);
+	case 2048:
+		if(height == 768)
+		{
+			return(width / 2);
+		}
+		return(width);
 	}
 }
 
 int GetScreenHeight(void)
 {
-	OSVERSIONINFO OS_Version_Info;
-	DWORD dwPlatform = 0;
-	
-	if(GetVersionEx(&OS_Version_Info) != 0)
+	const int width{ GetSystemMetrics(SM_CXSCREEN) };
+	const int height{ GetSystemMetrics(SM_CYSCREEN) };
+	switch(height)
 	{
-		dwPlatform = OS_Version_Info.dwPlatformId;
-	}
-	
-	if(dwPlatform == VER_PLATFORM_WIN32_NT)
-	{
-		int width, height;
-		
-		width = GetSystemMetrics(SM_CXSCREEN);
-		height = GetSystemMetrics(SM_CYSCREEN);
-		switch(height)
+	default:
+	case 480:
+	case 600:
+	case 768:
+		return(height);
+	case 960:
+		if(width == 640)
 		{
-		default:
-		case 480:
-		case 600:
-		case 768:
-			return(height);
-		case 960:
-			if(width == 640)
-			{
-				return(height / 2);
-			}
-			return(height);
-		case 1200:
-			if(width == 800)
-			{
-				return(height / 2);
-			}
-			return(height);
-		case 1536:
-			if(width == 1024)
-			{
-				return(height / 2);
-			}
-			return(height);
+			return(height / 2);
 		}
-	}
-	else
-	{
-		return(GetSystemMetrics(SM_CYVIRTUALSCREEN));
+		return(height);
+	case 1200:
+		if(width == 800)
+		{
+			return(height / 2);
+		}
+		return(height);
+	case 1536:
+		if(width == 1024)
+		{
+			return(height / 2);
+		}
+		return(height);
 	}
 }
 
@@ -1585,7 +1554,7 @@ BOOL RestoreDbPrompt(HWND hwnd)
 	ofn.lStructSize = sizeof(OPENFILENAME);
 	ofn.hwndOwner = hwnd;
 	ofn.lpstrFile = szFile;
-	ofn.nMaxFile = sizeof(szFile);
+	ofn.nMaxFile = _countof(szFile);
 	ofn.lpstrFilter = _T("Ditto database backups (.zdb)\0*.zdb\0\0");
 	ofn.nFilterIndex = 1;
 	ofn.lpstrFileTitle = NULL;
@@ -1599,7 +1568,7 @@ BOOL RestoreDbPrompt(HWND hwnd)
 		CWaitCursor wait;
 
 		CString dbPath = CGetSetOptions::GetDBPath();
-		CString backupPath(ofn.lpstrFile);
+		CString backupPath(CFileDialogPath::From(ofn));
 		ret = RestoreDB(backupPath);
 	}
 
@@ -1621,7 +1590,7 @@ BOOL BackupDbPrompt(HWND hwnd)
 	ofn.lStructSize = sizeof(OPENFILENAME);
 	ofn.hwndOwner = hwnd;
 	ofn.lpstrFile = szFile;
-	ofn.nMaxFile = sizeof(szFile);
+	ofn.nMaxFile = _countof(szFile);
 	ofn.lpstrFilter = _T("Ditto database backups (.zdb)\0*.zdb\0\0");
 	ofn.nFilterIndex = 1;
 	ofn.lpstrFileTitle = NULL;
@@ -1635,7 +1604,7 @@ BOOL BackupDbPrompt(HWND hwnd)
 		CWaitCursor wait;
 
 		CString dbPath = CGetSetOptions::GetDBPath();
-		CString backupPath(ofn.lpstrFile);
+		CString backupPath(CFileDialogPath::From(ofn));
 		ret = BackupDB(dbPath, backupPath);
 	}
 

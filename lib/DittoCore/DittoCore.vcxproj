@@ -40,12 +40,14 @@
   <!-- one class per .h/.cpp pair -->
   <ItemGroup>
     <ClInclude Include="ClipboardFormatError.h" />
+    <ClInclude Include="ClipText.h" />
     <ClInclude Include="DropBlockReader.h" />
     <ClInclude Include="FileDropList.h" />
     <ClInclude Include="GlobalFileDrop.h" />
     <ClInclude Include="GlobalLockGuard.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ClipText.cpp" />
     <ClCompile Include="DropBlockReader.cpp" />
     <ClCompile Include="FileDropList.cpp" />
     <ClCompile Include="GlobalFileDrop.cpp" />

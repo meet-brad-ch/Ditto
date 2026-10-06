@@ -36,6 +36,12 @@ bool PasteAnyAsText::SelectClipToPasteAsText(const CDittoInfo &DittoInfo, IClip 
 				if(dlg.PasteAsUnicode() == false)
 				{
 					char * stringData = (char *)GlobalLock(data);
+					if(stringData == NULL)
+					{
+						pText->AutoDeleteData(true);  // the format keeps owning its data
+						::MessageBox(DittoInfo.m_hWndDitto, _T("Paste as text stopped: the clip's data could not be locked."), _T("Ditto"), MB_OK | MB_ICONERROR);
+						return false;
+					}
 					int size = (int)GlobalSize(data);
 					for(int i = 0; i < size; i++)
 					{
@@ -60,6 +66,12 @@ bool PasteAnyAsText::SelectClipToPasteAsText(const CDittoInfo &DittoInfo, IClip 
 				else
 				{
 					wchar_t * stringData = (wchar_t *)GlobalLock(data);
+					if(stringData == NULL)
+					{
+						pText->AutoDeleteData(true);  // the format keeps owning its data
+						::MessageBox(DittoInfo.m_hWndDitto, _T("Paste as text stopped: the clip's data could not be locked."), _T("Ditto"), MB_OK | MB_ICONERROR);
+						return false;
+					}
 					int size = (int)GlobalSize(data);
 					for(int i = 0; i < (int)(size/(sizeof(wchar_t))); i++)
 					{

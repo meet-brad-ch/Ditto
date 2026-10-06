@@ -68,6 +68,9 @@ stages and exits 1 on the first failed one:
 4. It checks that `DittoSetup_10.iss` adds no firewall rules (netsh) and launches no URLs.
 5. It rejects raw allocation (`new`, `delete`, `malloc`, `free`) in `lib\` and `tests\`.
 6. It runs every GoogleTest in `tests\` on its own (`--gtest_filter`), under AddressSanitizer.
+7. It runs Doxygen (`tools\Doxyfile.contract`): every class, function and member of the contract
+   code must be documented, and any Doxygen warning fails. The files are listed by name in that
+   Doxyfile.
 
 `-SkipBuild` skips stage 1. The gate was tested against faults planted on purpose: a seeded
 `WSAStartup` line and a copied `curl.exe` were both caught.
@@ -101,6 +104,12 @@ stages and exits 1 on the first failed one:
 - **No raw allocation.** Use `std::unique_ptr` and standard containers, and RAII for Win32
   resources.
 - **Explicit project files.** Every file is listed by name; no wildcards.
+- **Always initialize.** Every variable and member gets a brace initializer (`{}`).
+- **Doxygen.** Every class, function and member is documented with `@brief`, `@param`, `@return`
+  and `@throws`.
+- **No dead code.** Unused code is deleted, not kept.
+
+**Supported OS:** Windows 10 and 11 only (owner, 2026-10-06).
 
 ## Installer
 
@@ -157,6 +166,39 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   - The boundaries are copy, save clipboard, paste/drag, the OLE delayed-render callback (it
     returns FALSE, so nothing crosses COM), text-only paste (parsed before the clipboard is
     opened) and file-contents import.
+- 2026-10-06: Clipboard text is read by `DittoCore::ClipText`, in the four aggregators (text,
+  Unicode, HTML, RTF).
+  - Upstream read `data[size-1]`, one byte before the buffer when a clip was empty. The HTML
+    aggregator also wrote there. The RTF aggregator stepped 6 characters into clips of any length.
+  - CF_TEXT and CF_UNICODETEXT must contain a terminating null.
+  - CF_HTML and RTF are read up to the first null or the end of the block, because those formats
+    are length-delimited.
+  - A malformed clip now stops the paste with a message instead of being dropped silently.
+- 2026-10-06: Fixed every other byte-vs-character count found by `/analyze`.
+  - Six file dialogs passed `sizeof` as `nMaxFile`.
+  - SendKeys checked a key name against `sizeof(KeyString)` and read window titles the same way.
+  - The INI font name and an add-in error message had the same mistake.
+- 2026-10-06: File dialog paths are read through `CFileDialogPath::From`, which reads at most
+  `nMaxFile` characters. The 21 direct `lpstrFile` reads could run past the buffer when the
+  dialog left no terminator (`/analyze` C6054).
+- 2026-10-06: Cleared the other step-1 `/analyze` memory findings in our own code:
+  - The Slugify table is a static array, no longer a large initializer list on the stack (C6262).
+  - The add-in's `PasteAnyAsText` fails visibly when `GlobalLock` returns null.
+  - Two findings are verified false positives, suppressed in place with the reason:
+    - `CreateQRCodeImage` (C6386): the copy size includes both headers.
+    - `BitmapHelper` (C6001): `GlobalReAlloc` is annotated `_Frees_ptr_`, but a failed call
+      leaves the block valid.
+  - Open: `rijndael.cpp` (dead `EncryptDecrypt`, removed with it), and C6387 null-after-lock
+    findings in the app, left for the `GlobalLock` RAII wrapper (Phase C). Findings in the
+    vendored sqlite3mc and QRCode sources are not touched: sqlite stays vendored, and QRCode is
+    replaced in Phase E.
+- 2026-10-06: The RTF editor streams through `CRichEditUtf8Source` and `CRichEditStringSink`.
+  Upstream mixed UTF-8 bytes with characters, so non-ASCII text loaded in chunks was corrupted,
+  and characters split across chunks were broken.
+- 2026-10-06: Deleted dead code: `CTextFile`, `CStdioFileEx`, and the editor's
+  `CRulerRichEditCtrl::Save`/`Load`. `Load` called StreamIn with no callback set.
+- 2026-10-06: `GetScreenWidth`/`GetScreenHeight` no longer call `GetVersionEx` with an
+  uninitialized struct. Every supported Windows is NT.
 - 2026-10-06: Third-party libraries come from a vcpkg manifest instead of NuGet `packages.config`.
   zlib went from 1.2.11 (2017) to 1.3.1. The unused libpng package and the orphan
   `src\zlib\*.h` and `src\sqlite\lz4.*` files are gone.

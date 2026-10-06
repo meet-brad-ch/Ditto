@@ -531,8 +531,8 @@ bool CSendKeys::SendKeys(LPCTSTR KeysString, bool Wait)
           p++;
 
         t = p - pKey;
-        // special key definition too big?
-        if (t > sizeof(KeyString))
+        // special key definition too big? (t characters are written, KeyString[t-1] included)
+        if (t > _countof(KeyString))
           return false;
 
         // Take this KeyString into local buffer
@@ -683,14 +683,14 @@ BOOL CALLBACK CSendKeys::enumwindowsProc(HWND hwnd, LPARAM lParam)
   if (wclass)
   {
     TCHAR szClass[300];
-    if (::GetClassName(hwnd, szClass, sizeof(szClass)))
+    if (::GetClassName(hwnd, szClass, _countof(szClass)))
       bMatch |= (_tcsstr(szClass, wclass) != 0);
   }
 
   if (wtitle)
   {
     TCHAR szTitle[300];
-    if (::GetWindowText(hwnd, szTitle, sizeof(szTitle)))
+    if (::GetWindowText(hwnd, szTitle, _countof(szTitle)))
       bMatch |= (_tcsstr(szTitle, wtitle) != 0);
   }
 

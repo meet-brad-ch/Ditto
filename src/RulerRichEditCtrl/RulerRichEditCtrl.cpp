@@ -46,11 +46,14 @@
 #include "stdafx.h"
 #include "StdGrfx.h"
 #include "RulerRichEditCtrl.h"
-#include "TextFile/TextFile.h"
+#include "RichEditStringSink.h"
+#include "RichEditUtf8Source.h"
 #include "..\Options.h"
 #include "..\Misc.h"
 #include ".\rulerricheditctrl.h"
 #include "..\..\resource.h"
+
+#include <vector>
 
 
 
@@ -71,83 +74,6 @@ UINT urm_SETCURRENTFONTCOLOR = ::RegisterWindowMessage( _T( "_RULERRICHEDITCTRL_
 
 #define TOOLBAR_HEIGHT		28
 
-/////////////////////////////////////////////////////////////////////////////
-// Stream callback functions
-// Callbacks to the Save and Load functions.
-
-static DWORD CALLBACK StreamOut( DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb )
-{
-
-	// Setting up temp buffer
-	char*	buff;
-	buff = new char[cb + 1];
-	buff[cb] = ( char ) 0;
-	strncpy(buff, (LPCSTR)pbBuff, cb);
-	int max = (int)strlen(buff);
-
-	CString* str = (CString*) dwCookie;
-
-#ifdef _UNICODE
-
-	// We want to convert the buff to wide chars
-	int length = ::MultiByteToWideChar(CP_UTF8, 0, buff, max, NULL, 0);
-	if(length)
-	{
-		TCHAR* wBuff = new TCHAR[length+1];
-		::MultiByteToWideChar(CP_UTF8, 0, buff, max, wBuff, length);
-		wBuff[length] = 0;
-		*str += wBuff;
-		delete[] wBuff;
-	}
-
-#else
-
-	*str += buff;
-
-#endif
-
-	delete[] buff;
-	*pcb = max;
-	
-	return 0;
-
-}
-
-static DWORD CALLBACK StreamIn( DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb )
-{
-
-	CString* str = ( ( CString* ) dwCookie );
-
-#ifdef _UNICODE
-
-	// Unicode is only supported for SF_TEXT, so we need
-	// to convert
-	LPCTSTR ptr = str->GetBuffer( (*str).GetLength() );
-	int length = ::WideCharToMultiByte( CP_UTF8, 0, ptr, -1, NULL, 0, NULL, NULL );
-	int max = min( cb, length );
-	if( length )
-	{
-		char* buff = new char[ length ];
-		::WideCharToMultiByte( CP_UTF8, 0, ptr, -1, buff, length + 1, NULL, NULL );
-		strncpy( (LPSTR) pbBuff, buff, max );
-		delete[] buff;
-	}
-	str->ReleaseBuffer();
-
-#else
-
-	int max = min( cb, (*str).GetLength() );
-	strncpy( ( LPSTR ) pbBuff, (*str) , max  );
-
-#endif
-
-	(*str) = (*str).Right( (*str).GetLength() - max );
-
-	*pcb = max;
-
-	return 0;
-
-}
 
 /////////////////////////////////////////////////////////////////////////////
 // CRulerRichEditCtrl
@@ -635,195 +561,57 @@ LRESULT CRulerRichEditCtrl::OnGetTextLength( WPARAM wParam, LPARAM lParam )
 /////////////////////////////////////////////////////////////////////////////
 // CRulerRichEditCtrl public implementation
 
+/**
+ * @brief Returns the contents of the control as RTF.
+ * @return The RTF contents, streamed out through CRichEditStringSink.
+ */
 CString CRulerRichEditCtrl::GetRTF()
-/* ============================================================
-	Function :		CRulerRichEditCtrl::GetRTF
-	Description :	Returns the contents of the control as RTF.
-	Access :		Public
-					
-	Return :		CString	-	The RTF-contents of the control.
-	Parameters :	none
-
-	Usage :			Call this function to get a char buffer 
-					with the contents of the embedded RTF-
-					control.
-
-   ============================================================*/
 {
-
-	CString* str = new CString;
-	EDITSTREAM	es;
-	es.dwCookie = (DWORD_PTR) str;
-	es.pfnCallback = StreamOut;
-	m_rtf.StreamOut( SF_RTF, es );
-
-	CString output( *str );
-	delete str;
-
-	return output;
-
+	CRichEditStringSink sink;
+	EDITSTREAM stream{ sink.Stream() };
+	m_rtf.StreamOut( SF_RTF, stream );
+	return sink.Text();
 }
 
+/**
+ * @brief Replaces the contents of the control with RTF.
+ * @param rtf The RTF contents, streamed in as UTF-8 through CRichEditUtf8Source.
+ */
 void CRulerRichEditCtrl::SetRTF( const CString& rtf )
-/* ============================================================
-	Function :		CRulerRichEditCtrl::SetRTF
-	Description :	Set the contents of the embedded RTF-
-					control from rtf.
-	Access :		Public
-					
-	Return :		void
-	Parameters :	const CString& rtf	-	The rtf-contents to 
-											set.
-					
-	Usage :			Call this function to set the RTF-contents 
-					of the control.
-
-   ============================================================*/
 {
-
-	CString* str = new CString( rtf );
-
-	EDITSTREAM	es;
-	es.dwCookie = (DWORD_PTR) str;
-	es.pfnCallback = StreamIn;
-	m_rtf.StreamIn( SF_RTF, es );
-
-	delete str;
+	CRichEditUtf8Source source{ rtf };
+	EDITSTREAM stream{ source.Stream() };
+	m_rtf.StreamIn( SF_RTF, stream );
 }
 
+/**
+ * @brief Replaces the selection with plain text (EM_SETTEXTEX, UTF-16, undo kept).
+ * @param sText The text to insert.
+ */
 void CRulerRichEditCtrl::SetText(CString sText)
 {
-	// Read the text in
-	EDITSTREAM es;
-	es.dwError = 0;
-//	es.pfnCallback = StreamIn;
-#ifdef _UNICODE
-	CString cs;
-	es.dwCookie = (DWORD_PTR) &cs;
-#else
-	es.dwCookie = (DWORD_PTR) &sText;
-	m_rtf.StreamIn(SF_TEXT, es);	// Do it.
-#endif
-	
-
-#ifdef _UNICODE
-	SETTEXTEX stex;
+	SETTEXTEX stex{};
 	stex.flags = ST_SELECTION | ST_KEEPUNDO;
-	stex.codepage = 1200;  // Unicode code page(set SETTEXTEX documentation)
-	m_rtf.SendMessage(EM_SETTEXTEX, (WPARAM)&stex, (LPARAM)sText.GetBuffer(sText.GetLength())); 
-	sText.ReleaseBuffer();
-#endif
+	stex.codepage = 1200;  // Unicode code page (see SETTEXTEX documentation)
+	m_rtf.SendMessage(EM_SETTEXTEX, (WPARAM)&stex, (LPARAM)sText.GetString());
 }
 
+/**
+ * @brief Returns the contents of the control as plain text with CRLF line ends.
+ * @return The text (EM_GETTEXTEX, UTF-16).
+ */
 CString CRulerRichEditCtrl::GetText()
 {
-	CString sText;
+	// room for the text plus CRLF expansion, as UTF-16
+	std::vector<wchar_t> text(static_cast<std::size_t>(m_rtf.GetTextLength()) + 50, L'\0');
 
-#ifdef _UNICODE
-  	GETTEXTEX stex;
-  	stex.codepage = 1200;  // Unicode code page(set SETTEXTEX documentation)
+	GETTEXTEX stex{};
+	stex.codepage = 1200;  // Unicode code page (see GETTEXTEX documentation)
 	stex.flags = GT_USECRLF;
-  
-  	int nSize = m_rtf.GetTextLength();
-  	//increase the size incase of unicode text
-  	nSize += 50;
-  	nSize = nSize * sizeof(WCHAR);
-  	stex.cb = nSize;
-  
-  	TCHAR *pText = new TCHAR[nSize];
-  	if(pText)
-  	{
-  		m_rtf.SendMessage(EM_GETTEXTEX, (WPARAM)&stex, (LPARAM)pText); 
-  		sText = pText;
-  
-  		delete []pText;
-  		pText = NULL;
-  	}
-#else
-	// Stream out here.
-	EDITSTREAM es;
-	es.dwError = 0;
-	es.pfnCallback = StreamOut;		// Set the callback
-	es.dwCookie = (DWORD_PTR) &sText;	// so sRTF receives the string
-	m_rtf.StreamOut(SF_TEXT, es);			// Call CRichEditCtrl::StreamOut to get the string.
-#endif
+	stex.cb = static_cast<DWORD>(text.size() * sizeof(wchar_t));
+	m_rtf.SendMessage(EM_GETTEXTEX, (WPARAM)&stex, (LPARAM)text.data());
 
-	return sText;
-}
-
-BOOL CRulerRichEditCtrl::Save( CString& filename )
-/* ============================================================
-	Function :		CRulerRichEditCtrl::Save
-	Description :	Saves the contents to the file filename. 
-					If filename is empty, a file dialog will 
-					be displayed and the selected name will be 
-					returned in the "CString".
-	Access :		Public
-					
-	Return :		BOOL				-	"TRUE" if the file 
-											was saved.
-	Parameters :	CString& filename	-	The file name to save 
-											to. Can be empty.
-					
-	Usage :			Call to save the contents of the embedded 
-					RTF-control do a file.
-
-   ============================================================*/
-{
-
-	BOOL result = TRUE;
-
-	CString* str = new CString;
-
-	EDITSTREAM	es;
-	es.dwCookie = (DWORD_PTR) str;
-	es.pfnCallback = StreamOut;
-	m_rtf.StreamOut( SF_RTF, es );
-
-	CTextFile f( _T( "rtf" ) );
-	result = f.WriteTextFile( filename, *str );
-
-	delete str;
-	return result;
-
-}
-
-BOOL CRulerRichEditCtrl::Load( CString& filename )
-/* ============================================================
-	Function :		CRulerRichEditCtrl::Load
-	Description :	Loads the embedded RTF-control with the 
-					contents from the file filename. 
-					If filename is empty, a file dialog will 
-					be displayed and the selected name will be 
-					returned in the "CString".
-	Access :		Public
-					
-	Return :		BOOL				-	"TRUE" if the file 
-											was loaded.
-	Parameters :	CString& filename	-	File name to load 
-											from. Can be empty.
-					
-	Usage :			Call to load an RTF-file to the control.
-
-   ============================================================*/
-{
-
-	BOOL result = TRUE;
-
-	CString* str = new CString;
-	CTextFile f( _T( "rtf" ) );
-	result = f.ReadTextFile( filename, *str );
-	if( result )
-	{
-		EDITSTREAM	es;
-		es.dwCookie = (DWORD_PTR) str;
-//		es.pfnCallback = StreamIn;
-		m_rtf.StreamIn( SF_RTF, es );
-	}
-
-	delete str;
-	return result;
-
+	return CString(text.data());
 }
 
 void CRulerRichEditCtrl::SetMode( int mode )

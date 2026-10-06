@@ -1,3 +1,7 @@
+/**
+ * @file GlobalFileDrop.cpp
+ * @brief Implements DittoCore::GlobalFileDrop.
+ */
 #include "GlobalFileDrop.h"
 #include "ClipboardFormatError.h"
 #include "GlobalLockGuard.h"

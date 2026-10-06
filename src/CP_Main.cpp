@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "FileDialogPath.h"
 #include "CP_Main.h"
 #include "MainFrm.h"
 #include "Misc.h"
@@ -961,7 +962,7 @@ bool CCP_MainApp::ImportClips(HWND hWnd)
 	FileName.lStructSize = sizeof(FileName);
 	FileName.lpstrTitle = _T("Import Clips");
 	FileName.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
-	FileName.nMaxFile = 400;
+	FileName.nMaxFile = _countof(szFileName);
 	FileName.lpstrFile = szFileName;
 	FileName.lpstrInitialDir = szDir;
 	FileName.lpstrFilter = _T("Exported Ditto Clips (.dto)\0*.dto\0\0");
@@ -973,14 +974,14 @@ bool CCP_MainApp::ImportClips(HWND hWnd)
 	}
 
 	using namespace nsPath;
-	CPath path(FileName.lpstrFile);
+	CPath path(CFileDialogPath::From(FileName));
 	CString csPath = path.GetPath();
 	CGetSetOptions::SetLastImportDir(csPath);
 	
 	try
 	{
 		CppSQLite3DB db;
-		db.open(FileName.lpstrFile);
+		db.open(CFileDialogPath::From(FileName));
 
 		CClip_ImportExport clip;
 		if(clip.ImportFromSqliteDB(db, true, false))

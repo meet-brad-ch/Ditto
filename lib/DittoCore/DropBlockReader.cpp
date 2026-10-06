@@ -1,3 +1,7 @@
+/**
+ * @file DropBlockReader.cpp
+ * @brief Implements DittoCore::DropBlockReader.
+ */
 #include "DropBlockReader.h"
 #include "ClipboardFormatError.h"
 

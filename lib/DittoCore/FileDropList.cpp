@@ -1,3 +1,7 @@
+/**
+ * @file FileDropList.cpp
+ * @brief Implements DittoCore::FileDropList.
+ */
 #include "FileDropList.h"
 #include "DropBlockReader.h"
 

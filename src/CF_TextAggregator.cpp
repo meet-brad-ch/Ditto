@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include ".\cf_textaggregator.h"
 #include "Misc.h"
+#include "..\Shared\TextConvert.h"
+#include "ClipText.h"
+#include "FileDropList.h"
 
 CCF_TextAggregator::CCF_TextAggregator(CStringA csSepator) :
 	m_csSeparator(csSepator)
@@ -13,20 +16,14 @@ CCF_TextAggregator::~CCF_TextAggregator(void)
 
 bool CCF_TextAggregator::AddClip(LPVOID lpData, int nDataSize, int nPos, int nCount, UINT cfType)
 {
+	const std::size_t size = static_cast<std::size_t>(nDataSize);
 	if (cfType == CF_HDROP)
 	{
 		CStringA hDropFiles = _T("");
-		HDROP drop = (HDROP)GlobalLock((HDROP)lpData);
-		int nNumFiles = DragQueryFileA(drop, -1, NULL, 0);
-		CHAR file[MAX_PATH];
-
-		for (int nFile = 0; nFile < nNumFiles; nFile++)
+		for (const std::wstring& path : DittoCore::FileDropList::Parse(lpData, size).Paths())
 		{
-			if (DragQueryFileA(drop, nFile, file, sizeof(file)) > 0)
-			{
-				hDropFiles += file;
-				hDropFiles += "\r\n";
-			}
+			hDropFiles += CTextConvert::UnicodeToAnsi(CString(path.c_str()));
+			hDropFiles += "\r\n";
 		}
 
 		if (hDropFiles != _T(""))
@@ -43,25 +40,7 @@ bool CCF_TextAggregator::AddClip(LPVOID lpData, int nDataSize, int nPos, int nCo
 		return false;
 	}
 
-	LPCSTR pText = (LPCSTR)lpData;
-	if(pText == NULL)
-	{
-		return false;
-	}
-
-	//Ensure it's null terminated
-	if(pText[nDataSize-1] != '\0')
-	{
-		int len = 0;
-		for(len = 0; len < nDataSize && pText[len] != '\0'; len++ )
-		{
-		}
-		// if it is not null terminated, skip this item
-		if(len >= nDataSize)
-			return false;
-	}
-
-	m_csNewText += pText;
+	m_csNewText += DittoCore::ClipText::ReadAnsi(lpData, size).c_str();
 	
 	if(nPos != nCount-1)
 	{

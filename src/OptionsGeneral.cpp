@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+#include "FileDialogPath.h"
 #include "CP_Main.h"
 #include "OptionsGeneral.h"
 #include <io.h>
@@ -379,7 +380,7 @@ void COptionsGeneral::OnGetPath()
 	FileName.lStructSize = sizeof(FileName);
 	FileName.lpstrTitle = _T("Open Database");
 	FileName.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
-	FileName.nMaxFile = 400;
+	FileName.nMaxFile = _countof(szFileName);
 	FileName.lpstrFile = szFileName;
 	FileName.lpstrInitialDir = szDir;
 	FileName.lpstrFilter = _T("Ditto Databases (*.db; *.mdb)\0*.db;*.mdb\0\0");
@@ -389,7 +390,7 @@ void COptionsGeneral::OnGetPath()
 	if(GetOpenFileName(&FileName) == 0)
 		return;
 
-	CString csPath(FileName.lpstrFile);
+	CString csPath(CFileDialogPath::From(FileName));
 	if(FileExists(csPath))
 	{
 		if(ValidDB(csPath) == FALSE)

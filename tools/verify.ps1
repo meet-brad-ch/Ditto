@@ -5,6 +5,7 @@
 #   4. checks the installer script for firewall rules and URL launches
 #   5. rejects raw allocation (new/delete/malloc/free) in lib\ and tests\
 #   6. runs every unit test on its own (AddressSanitizer build)
+#   7. checks with Doxygen that the contract code is fully documented
 # Prints one timestamped line per check and exits 1 on the first failed stage.
 # Usage (repo root):  powershell -NoProfile -ExecutionPolicy Bypass -File tools\verify.ps1 [-SkipBuild]
 param([switch] $SkipBuild)
@@ -143,5 +144,20 @@ foreach ($name in $testNames) {
 if ($testFailures -gt 0) { Fail "tests: $testFailures of $($testNames.Count) failed" }
 Say "tests: ok   $($testNames.Count) tests, each run on its own under ASan"
 
-Say "VERIFY OK: build, imports ($($binaries.Count) binaries), source ($($files.Count) files), installer script, allocation, tests ($($testNames.Count))"
+# ---- 7. documentation (Doxygen) -------------------------------------------------------
+# Every class, function and member of the contract code is documented; any Doxygen warning fails.
+$doxygen = (Get-Command doxygen -ErrorAction SilentlyContinue).Source
+if (-not $doxygen -and (Test-Path 'C:\Program Files\doxygen\bin\doxygen.exe')) { $doxygen = 'C:\Program Files\doxygen\bin\doxygen.exe' }
+if (-not $doxygen) { Fail 'docs: doxygen not found (install Doxygen or put it on PATH)' }
+Push-Location $repo
+try {
+    $docOut = & $doxygen (Join-Path $repo 'tools\Doxyfile.contract') 2>&1
+    $docCode = $LASTEXITCODE
+}
+finally { Pop-Location }
+$docOut | Where-Object { "$_".Trim() } | Select-Object -First 20 | ForEach-Object { Say "  docs: $_" }
+if ($docCode -ne 0) { Fail "docs: doxygen exit $docCode (undocumented or wrongly documented code)" }
+Say 'docs: ok   contract code fully documented (tools\Doxyfile.contract)'
+
+Say "VERIFY OK: build, imports ($($binaries.Count) binaries), source ($($files.Count) files), installer script, allocation, tests ($($testNames.Count)), docs"
 exit 0

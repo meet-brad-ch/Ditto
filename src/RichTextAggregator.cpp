@@ -1,6 +1,10 @@
 #include "stdafx.h"
 #include ".\richtextaggregator.h"
 #include "Misc.h"
+#include "ClipText.h"
+#include "ClipboardFormatError.h"
+
+#include <string>
 
 CRichTextAggregator::CRichTextAggregator(CStringA csSeparator) :
 	m_csSeparator(csSeparator)
@@ -21,50 +25,27 @@ CRichTextAggregator::~CRichTextAggregator(void)
 
 bool CRichTextAggregator::AddClip(LPVOID lpData, int nDataSize, int nPos, int nCount, UINT cfType)
 {
-	LPSTR pText = (LPSTR)lpData;
-	if(pText == NULL)
-	{
-		return false;
-	}
-
-	//Ensure it's null terminated
-	if(pText[nDataSize-1] != '\0')
-	{
-		int len = 0;
-		for(len = 0; len < nDataSize && pText[len] != '\0'; len++ )
-		{
-		}
-		// if it is not null terminated, skip this item
-		if(len >= nDataSize)
-			return false;
-	}
+	// RTF is length-delimited: read up to the first null or the end of the blob, into a copy
+	std::string text = DittoCore::ClipText::ReadAnsiBounded(lpData, static_cast<std::size_t>(nDataSize));
 
 	if(nPos != nCount-1)
 	{
-		//Remove the last } at the end of the rtf
-		bool bBreak = false;
-		for(int i = nDataSize-1; i >= 0; i--)
-		{
-			if(pText[i] == '}')
-				bBreak = true;
-
-			pText[i] = NULL;
-
-			if(bBreak)
-				break;
-		}
+		//Remove the last } at the end of the rtf, and anything after it
+		const std::size_t lastBrace = text.rfind('}');
+		text.erase(lastBrace == std::string::npos ? 0 : lastBrace);
 	}
 	else if(nPos >= 1)
 	{
 		//Remove the {\rtf1 at the start of the rtf
-		for(int i = 0; i < 6; i++)
+		const std::string rtfStart("{\\rtf1");
+		if(text.compare(0, rtfStart.size(), rtfStart) != 0)
 		{
-			pText[0] = NULL;
-			pText++;
+			throw DittoCore::ClipboardFormatError("RTF clip does not start with {\\rtf1");
 		}
+		text.erase(0, rtfStart.size());
 	}
 
-	m_csNewText += pText;
+	m_csNewText += text.c_str();
 
 	if(nPos != nCount-1)
 	{

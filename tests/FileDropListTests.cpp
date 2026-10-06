@@ -1,3 +1,7 @@
+/**
+ * @file FileDropListTests.cpp
+ * @brief Unit tests for DittoCore::FileDropList, including the over-MAX_PATH regression.
+ */
 #include "FileDropList.h"
 #include "ClipboardFormatError.h"
 

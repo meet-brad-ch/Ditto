@@ -1,6 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClCompile Include="src\FileDialogPath.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RulerRichEditCtrl\RichEditUtf8Source.cpp">
+      <Filter>src\RulerRichEditCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RulerRichEditCtrl\RichEditStringSink.cpp">
+      <Filter>src\RulerRichEditCtrl</Filter>
+    </ClCompile>
     <ClCompile Include="src\About.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -424,16 +433,10 @@
     <ClCompile Include="src\RulerRichEditCtrl\StdGrfx.cpp">
       <Filter>src\RulerRichEditCtrl</Filter>
     </ClCompile>
-    <ClCompile Include="src\RulerRichEditCtrl\TextFile\TextFile.cpp">
-      <Filter>src\RulerRichEditCtrl\TextFile</Filter>
-    </ClCompile>
     <ClCompile Include="src\RulerRichEditCtrl\External\ColourPicker.cpp">
       <Filter>src\RulerRichEditCtrl\External</Filter>
     </ClCompile>
     <ClCompile Include="src\RulerRichEditCtrl\External\ColourPopup.cpp">
-      <Filter>src\RulerRichEditCtrl\External</Filter>
-    </ClCompile>
-    <ClCompile Include="src\RulerRichEditCtrl\External\StdioFileEx.cpp">
       <Filter>src\RulerRichEditCtrl\External</Filter>
     </ClCompile>
     <ClCompile Include="src\DittoRulerRichEditCtrl.cpp">
@@ -448,6 +451,15 @@
     <ClCompile Include="src\ModernScrollBar.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\FileDialogPath.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\RulerRichEditCtrl\RichEditUtf8Source.h">
+      <Filter>src\RulerRichEditCtrl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\RulerRichEditCtrl\RichEditStringSink.h">
+      <Filter>src\RulerRichEditCtrl</Filter>
+    </ClInclude>
     <ClInclude Include="src\About.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -890,16 +902,10 @@
     <ClInclude Include="src\RulerRichEditCtrl\StdGrfx.h">
       <Filter>src\RulerRichEditCtrl</Filter>
     </ClInclude>
-    <ClInclude Include="src\RulerRichEditCtrl\TextFile\TextFile.h">
-      <Filter>src\RulerRichEditCtrl\TextFile</Filter>
-    </ClInclude>
     <ClInclude Include="src\RulerRichEditCtrl\External\ColourPicker.h">
       <Filter>src\RulerRichEditCtrl\External</Filter>
     </ClInclude>
     <ClInclude Include="src\RulerRichEditCtrl\External\ColourPopup.h">
-      <Filter>src\RulerRichEditCtrl\External</Filter>
-    </ClInclude>
-    <ClInclude Include="src\RulerRichEditCtrl\External\StdioFileEx.h">
       <Filter>src\RulerRichEditCtrl\External</Filter>
     </ClInclude>
     <ClInclude Include="src\DittoRulerRichEditCtrl.h">
@@ -1398,9 +1404,6 @@
     </Filter>
     <Filter Include="src\RulerRichEditCtrl">
       <UniqueIdentifier>{f864d5e8-8cca-488e-b506-d8177e85262d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\RulerRichEditCtrl\TextFile">
-      <UniqueIdentifier>{78b7e533-7922-4cc1-82a6-0d14c3b82eba}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\RulerRichEditCtrl\External">
       <UniqueIdentifier>{f6e3888b-0fa5-4ef0-88a0-b280da7bc15a}</UniqueIdentifier>

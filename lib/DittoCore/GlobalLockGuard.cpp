@@ -1,3 +1,7 @@
+/**
+ * @file GlobalLockGuard.cpp
+ * @brief Implements DittoCore::GlobalLockGuard.
+ */
 #include "GlobalLockGuard.h"
 
 namespace DittoCore

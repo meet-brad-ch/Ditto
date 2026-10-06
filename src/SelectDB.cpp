@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+#include "FileDialogPath.h"
 #include "cp_main.h"
 #include "SelectDB.h"
 
@@ -79,7 +80,7 @@ void CSelectDB::OnSelect()
 	
 	FileName.lpstrTitle = _T("Open Database");
 	FileName.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT|OFN_PATHMUSTEXIST;
-	FileName.nMaxFile = 400;
+	FileName.nMaxFile = _countof(szFileName);
 	FileName.lpstrFile = szFileName;
 	FileName.lpstrInitialDir = szDir;
 	FileName.lpstrFilter = _T("Database Files (.MDB)\0*.mdb");
@@ -88,7 +89,7 @@ void CSelectDB::OnSelect()
 	if(GetOpenFileName(&FileName) == 0)
 		return;
 
-	CString	csPath(FileName.lpstrFile);
+	CString	csPath(CFileDialogPath::From(FileName));
 
 	if(ValidDB(csPath) == FALSE)
 	{

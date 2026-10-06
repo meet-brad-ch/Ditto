@@ -44,10 +44,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\lib\DittoCore\ClipText.cpp" />
     <ClCompile Include="..\lib\DittoCore\DropBlockReader.cpp" />
     <ClCompile Include="..\lib\DittoCore\FileDropList.cpp" />
     <ClCompile Include="..\lib\DittoCore\GlobalFileDrop.cpp" />
     <ClCompile Include="..\lib\DittoCore\GlobalLockGuard.cpp" />
+    <ClCompile Include="ClipTextTests.cpp" />
     <ClCompile Include="FileDropListTests.cpp" />
     <ClCompile Include="GlobalFileDropTests.cpp" />
   </ItemGroup>

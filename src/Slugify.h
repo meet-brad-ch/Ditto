@@ -31,7 +31,8 @@ std::wstring trim(const std::wstring &s)
 // SLUGIFY
 std::wstring slugify(std::wstring input, std::wstring separator)
 {
-	std::unordered_map<std::wstring, std::wstring> charMap{
+	// constant data (string literals), so no copy lives on the stack; the map is built from it once
+	static const std::pair<const wchar_t*, const wchar_t*> charPairs[]{
 		// latin
 		{_T("À"), _T("A")}, {_T("Á"), _T("A")}, {_T("Â"), _T("A")}, {_T("Ã"), _T("A")}, {_T("Ä"), _T("A")}, {_T("Å"), _T("A")}, {_T("Æ"), _T("AE")}, {
 		_T("Ç"), _T("C")}, {_T("È"), _T("E")}, {_T("É"), _T("E")}, {_T("Ê"), _T("E")}, {_T("Ë"), _T("E")}, {_T("Ì"), _T("I")}, {_T("Í"), _T("I")}, {
@@ -97,9 +98,10 @@ std::wstring slugify(std::wstring input, std::wstring separator)
 		{_T("<"), _T("less")}, {_T(">"), _T("greater")
 		}
 	};
+	static const std::unordered_map<std::wstring, std::wstring> charMap(std::begin(charPairs), std::end(charPairs));
 
 	//remove accents
-	for (auto kv : charMap)
+	for (const auto& kv : charMap)
 	{
 		replace_all(input, kv.first, kv.second);
 	}

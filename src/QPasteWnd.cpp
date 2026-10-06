@@ -2,6 +2,7 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 
 #include "stdafx.h"
+#include "FileDialogPath.h"
 #include "..\Shared\Tokenizer.h"
 #include ".\qpastewnd.h"
 #include "ActionEnums.h"
@@ -2465,7 +2466,7 @@ void CQPasteWnd::OnMenuExport()
 	ofn.lStructSize = sizeof(OPENFILENAME);
 	ofn.hwndOwner = m_hWnd;
 	ofn.lpstrFile = szFile;
-	ofn.nMaxFile = sizeof(szFile);
+	ofn.nMaxFile = _countof(szFile);
 	ofn.lpstrFilter = _T("Exported Ditto Clips (.dto)\0*.dto\0\0");
 	ofn.nFilterIndex = 1;
 	ofn.lpstrFileTitle = NULL;
@@ -2479,11 +2480,11 @@ void CQPasteWnd::OnMenuExport()
 	if (GetSaveFileName(&ofn))
 	{
 		using namespace nsPath;
-		CPath path(ofn.lpstrFile);
+		CPath path(CFileDialogPath::From(ofn));
 		CString csPath = path.GetPath();
 		CGetSetOptions::SetLastExportDir(csPath);
 
-		CString csFile(ofn.lpstrFile);
+		CString csFile(CFileDialogPath::From(ofn));
 		IDs.Export(csFile);
 	}
 
@@ -4086,7 +4087,7 @@ bool CQPasteWnd::DoExportToTextFile()
 	ofn.lStructSize = sizeof(OPENFILENAME);
 	ofn.hwndOwner = m_hWnd;
 	ofn.lpstrFile = szFile;
-	ofn.nMaxFile = sizeof(szFile);
+	ofn.nMaxFile = _countof(szFile);
 	ofn.lpstrFilter = _T("Exported Ditto Clips (.txt)\0*.txt\0\0");
 	ofn.nFilterIndex = 1;
 	ofn.lpstrFileTitle = NULL;
@@ -4100,8 +4101,8 @@ bool CQPasteWnd::DoExportToTextFile()
 	if (GetSaveFileName(&ofn))
 	{
 		using namespace nsPath;
-		CString startingFilePath = ofn.lpstrFile;
-		CPath path(ofn.lpstrFile);
+		CString startingFilePath = CFileDialogPath::From(ofn);
+		CPath path(CFileDialogPath::From(ofn));
 		CString csPath = path.GetPath();
 		CString csExt = path.GetExtension();
 		path.RemoveExtension();
@@ -4999,7 +5000,7 @@ bool CQPasteWnd::DoExportToBitMapFile()
 	ofn.lStructSize = sizeof(OPENFILENAME);
 	ofn.hwndOwner = m_hWnd;
 	ofn.lpstrFile = szFile;
-	ofn.nMaxFile = sizeof(szFile);
+	ofn.nMaxFile = _countof(szFile);
 	ofn.lpstrFilter = _T("PNG (*.png)\0*.png\0BMP (*.bmp)\0*.bmp\0JPEG (*.jpeg)\0*.jpeg");
 	ofn.nFilterIndex = 1;
 	ofn.lpstrFileTitle = NULL;
@@ -5015,8 +5016,8 @@ bool CQPasteWnd::DoExportToBitMapFile()
 		CWaitCursor wait;
 
 		using namespace nsPath;
-		CString startingFilePath = ofn.lpstrFile;
-		CPath path(ofn.lpstrFile);
+		CString startingFilePath = CFileDialogPath::From(ofn);
+		CPath path(CFileDialogPath::From(ofn));
 		CString csPath = path.GetPath();
 		CString csExt = path.GetExtension();
 		path.RemoveExtension();

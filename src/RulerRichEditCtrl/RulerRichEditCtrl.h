@@ -60,8 +60,6 @@ public:
 	void	SetRTF( const CString& rtf );
 	void	SetText(CString sText);
 	CString GetText();
-	BOOL	Save( CString& filename );
-	BOOL	Load( CString& filename );
 
 	void SetReadOnly( BOOL readOnly );
 	BOOL GetReadOnly() const;

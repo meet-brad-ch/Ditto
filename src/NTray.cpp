@@ -944,15 +944,11 @@ int	CTrayNotifyIcon::GetTooltipMaxSize()
   //Otherwise calculate the maximum based on the shell version
   if (m_ShellVersion >= Version5)
   {
-    NOTIFYICONDATA_2 dummy;
-    m_nTooltipMaxSize = _countof(dummy.szTip) - 1; //The -1 is to allow size for the NULL terminator
-    DBG_UNREFERENCED_LOCAL_VARIABLE(dummy);
+    m_nTooltipMaxSize = sizeof(NOTIFYICONDATA_2::szTip) / sizeof(NOTIFYICONDATA_2::szTip[0]) - 1; //The -1 is to allow size for the NULL terminator
   }
   else
   {
-    NOTIFYICONDATA_1 dummy;
-    m_nTooltipMaxSize = _countof(dummy.szTip) - 1; //The -1 is to allow size for the NULL terminator
-    DBG_UNREFERENCED_LOCAL_VARIABLE(dummy);
+    m_nTooltipMaxSize = sizeof(NOTIFYICONDATA_1::szTip) / sizeof(NOTIFYICONDATA_1::szTip[0]) - 1; //The -1 is to allow size for the NULL terminator
   }
 
   return m_nTooltipMaxSize;

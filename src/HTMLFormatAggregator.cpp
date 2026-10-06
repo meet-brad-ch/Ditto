@@ -2,6 +2,9 @@
 #include ".\htmlformataggregator.h"
 #include "Misc.h"
 #include "..\Shared\Tokenizer.h"
+#include "ClipText.h"
+
+#include <string>
 
 CHTMLFormatAggregator::CHTMLFormatAggregator(CStringA csSepator) :
 	m_csSeparator(csSepator)
@@ -22,20 +25,11 @@ CHTMLFormatAggregator::~CHTMLFormatAggregator(void)
 
 bool CHTMLFormatAggregator::AddClip(LPVOID lpData, int nDataSize, int nPos, int nCount, UINT cfType)
 {
-	LPSTR pText = (LPSTR)lpData;
-	if(pText == NULL)
-	{
-		return false;
-	}
-
-	//Ensure it's null terminated
-	if(pText[nDataSize-1] != '\0')
-	{
-		pText[nDataSize-1] = NULL;
-	}
+	// CF_HTML is length-delimited: read up to the first null or the end of the blob, into a copy
+	const std::string text = DittoCore::ClipText::ReadAnsiBounded(lpData, static_cast<std::size_t>(nDataSize));
 
 	CHTMFormatStruct HtmlData;
-	if(HtmlData.GetData(pText))
+	if(HtmlData.GetData(text.c_str()))
 	{
 		m_csNewText += HtmlData.GetFragment();
 

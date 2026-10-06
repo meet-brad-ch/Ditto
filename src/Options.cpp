@@ -757,7 +757,7 @@ BOOL CGetSetOptions::GetProfileFont(CString csSection, LOGFONT &font)
 	font.lfClipPrecision = GetPrivateProfileInt(csSection, _T("ClipPrecision"), 0, m_csIniFileName);
 	font.lfQuality = GetPrivateProfileInt(csSection, _T("Quality"), 0, m_csIniFileName);
 	font.lfPitchAndFamily = GetPrivateProfileInt(csSection, _T("PitchAndFamily"), 0, m_csIniFileName);
-	GetPrivateProfileString(csSection, _T("FaceName"), _T(""), font.lfFaceName, sizeof(font.lfFaceName), m_csIniFileName);
+	GetPrivateProfileString(csSection, _T("FaceName"), _T(""), font.lfFaceName, _countof(font.lfFaceName), m_csIniFileName);
 
 	return TRUE;
 }

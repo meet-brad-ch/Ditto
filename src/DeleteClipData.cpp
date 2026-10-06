@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+#include "FileDialogPath.h"
 #include "CP_Main.h"
 #include "DeleteClipData.h"
 #include "afxdialogex.h"
@@ -1163,7 +1164,7 @@ void CDeleteClipData::SaveClipDataItemToFile(CDeleteData item)
 	ofn.lStructSize = sizeof(OPENFILENAME);
 	ofn.hwndOwner = m_hWnd;
 	ofn.lpstrFile = szFile;
-	ofn.nMaxFile = sizeof(szFile);
+	ofn.nMaxFile = _countof(szFile);
 	CString x = _T("Exported Ditto Clips (.txt)\0*.txt\0\0");
 	ofn.lpstrFilter = filter;
 	ofn.nFilterIndex = 1;
@@ -1176,8 +1177,8 @@ void CDeleteClipData::SaveClipDataItemToFile(CDeleteData item)
 	if (GetSaveFileName(&ofn))
 	{
 		using namespace nsPath;
-		CString startingFilePath = ofn.lpstrFile;
-		CPath path(ofn.lpstrFile);
+		CString startingFilePath = CFileDialogPath::From(ofn);
+		CPath path(CFileDialogPath::From(ofn));
 		CString csPath = path.GetPath();
 		CString csExt = path.GetExtension();
 		path.RemoveExtension();
@@ -1188,23 +1189,23 @@ void CDeleteClipData::SaveClipDataItemToFile(CDeleteData item)
 
 		if (item.m_clipboardFormat == _T("PNG"))
 		{
-			selectedClip.WriteImageToFile(ofn.lpstrFile);
+			selectedClip.WriteImageToFile(CFileDialogPath::From(ofn));
 		}
 		else if (item.m_clipboardFormat == _T("CF_DIB"))
 		{
-			selectedClip.WriteImageToFile(ofn.lpstrFile);
+			selectedClip.WriteImageToFile(CFileDialogPath::From(ofn));
 		}
 		else if (item.m_clipboardFormat == _T("CF_UNICODETEXT"))
 		{
-			selectedClip.WriteTextToFile(ofn.lpstrFile, TRUE, FALSE, FALSE);
+			selectedClip.WriteTextToFile(CFileDialogPath::From(ofn), TRUE, FALSE, FALSE);
 		}
 		else if (item.m_clipboardFormat == _T("CF_TEXT"))
 		{
-			selectedClip.WriteTextToFile(ofn.lpstrFile, FALSE, TRUE, FALSE);
+			selectedClip.WriteTextToFile(CFileDialogPath::From(ofn), FALSE, TRUE, FALSE);
 		}
 		else if (item.m_clipboardFormat == _T("Rich Text Format"))
 		{
-			selectedClip.WriteTextToFile(ofn.lpstrFile, FALSE, FALSE, TRUE);
+			selectedClip.WriteTextToFile(CFileDialogPath::From(ofn), FALSE, FALSE, TRUE);
 		}
 	}
 }

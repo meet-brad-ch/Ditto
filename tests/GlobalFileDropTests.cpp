@@ -1,3 +1,7 @@
+/**
+ * @file GlobalFileDropTests.cpp
+ * @brief Unit tests for DittoCore::GlobalFileDrop and its lock handling.
+ */
 #include "GlobalFileDrop.h"
 #include "ClipboardFormatError.h"
 
@@ -28,7 +32,11 @@ namespace
 			{
 				throw std::runtime_error("GlobalAlloc failed in test setup");
 			}
-			void* target = ::GlobalLock(m_block.get());
+			void* target{ ::GlobalLock(m_block.get()) };
+			if (target == nullptr)
+			{
+				throw std::runtime_error("GlobalLock failed in test setup");
+			}
 			std::memcpy(target, bytes.data(), bytes.size());
 			::GlobalUnlock(m_block.get());
 		}

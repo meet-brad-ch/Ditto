@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+#include "FileDialogPath.h"
 #include "CP_Main.h"
 #include "OptionsUtilities.h"
 
@@ -97,7 +98,7 @@ void COptionsUtilities::OnGetPath()
 	
 	FileName.lpstrTitle = _T("Open Database");
 	FileName.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
-	FileName.nMaxFile = 400;
+	FileName.nMaxFile = _countof(szFileName);
 	FileName.lpstrFile = szFileName;
 	FileName.lpstrInitialDir = szDir;
 	FileName.lpstrFilter = _T("Database Files (.MDB)\0*.mdb");
@@ -106,7 +107,7 @@ void COptionsUtilities::OnGetPath()
 	if(GetOpenFileName(&FileName) == 0)
 		return;
 
-	CString	csPath(FileName.lpstrFile);
+	CString	csPath(CFileDialogPath::From(FileName));
 	
 	m_ePath.SetWindowText(csPath);		
 }

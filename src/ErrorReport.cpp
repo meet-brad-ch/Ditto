@@ -1,3 +1,7 @@
+/**
+ * @file ErrorReport.cpp
+ * @brief Implements CErrorReport.
+ */
 #include "stdafx.h"
 #include "ErrorReport.h"
 #include "CP_Main.h"
