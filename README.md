@@ -29,21 +29,29 @@ ini or registry are ignored.
 
 ## How to run
 
-These commands are verified 2026-10-06 on unmodified upstream: a full Release|x64 rebuild in
-about 1.5 min with no errors. Run them from the repo root in PowerShell.
+These commands are verified 2026-10-06: a full Release|x64 rebuild in about 2 min with no errors.
+Run them from the repo root in PowerShell. The simplest way is `tools\verify.ps1`, which does the
+same and then runs the gates.
 
 ```
+C:\vcpkg\vcpkg.exe install --triplet x64-windows-static-md --x-install-root=vcpkg_installed\x64-windows-static-md
 $msb = "C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
-& $msb CP_Main_10.sln /t:restore /p:RestorePackagesConfig=true          # libpng/zlib NuGet into packages\
-& $msb CP_Main_10.sln /p:Configuration=Release /p:Platform=x64 /p:VcpkgEnabled=false /m
+& $msb CP_Main_10.sln /p:Configuration=Release /p:Platform=x64 /m
 Release64\Ditto.exe
 ```
 
-The build writes `Release64\Ditto.exe`, `Release64\Addins\DittoUtil.dll`, `ICU_Loader.dll`,
-`focus.dll` and `libpng16.dll`.
+The build writes `Release64\Ditto.exe`, `Release64\Addins\DittoUtil.dll`, `ICU_Loader.dll` and
+`focus.dll`.
 
-`/p:VcpkgEnabled=false` keeps a user-wide `vcpkg integrate install` out of the build. Ditto does
-not use vcpkg, and without the flag the integration calls `pwsh.exe` after each project.
+**Third-party libraries come from vcpkg, not NuGet.**
+- **Manifest:** `vcpkg.json` lists zlib 1.3.1 and gtest 1.17.0. It is pinned by its
+  `builtin-baseline`, the vcpkg commit `0e39c107…`.
+- **Wiring:** `Directory.Build.props` and `.targets` hook vcpkg into every project, using the
+  `x64-windows-static-md` triplet (static libraries, dynamic CRT). Auto-link is off, so each
+  project lists the libraries it links. A user-wide `vcpkg integrate install` is ignored.
+- **Separate install step:** run `vcpkg install` first. Under `/m`, each project would otherwise
+  start its own install, and the app compiled before zlib had finished installing.
+- **SQLite:** SQLite3MultipleCiphers stays vendored in `src\sqlite`.
 
 Baseline imports of upstream `Ditto.exe`: **WS2_32.dll** (Friends sockets) and **WININET.dll**
 (`InternetCanonicalizeUrl`). This fork removes both.
@@ -51,7 +59,7 @@ Baseline imports of upstream `Ditto.exe`: **WS2_32.dll** (Friends sockets) and *
 **Verify:** `powershell -NoProfile -ExecutionPolicy Bypass -File tools\verify.ps1` runs three
 stages and exits 1 on the first failed one:
 
-1. It builds Release|x64. It restores NuGet first if `packages\` is missing.
+1. It installs the `vcpkg.json` dependencies, then builds Release|x64.
 2. It runs `dumpbin /imports` on every `.exe`/`.dll` in `Release64`. No binary may import
    ws2_32, wsock32, mswsock, wininet, winhttp, urlmon, mapi32, dnsapi, iphlpapi, webio or
    httpapi.
@@ -69,6 +77,8 @@ stages and exits 1 on the first failed one:
   `setup.exe modify --installPath "C:\Program Files\Microsoft Visual Studio\18\Community" --add Microsoft.VisualStudio.Component.VC.ATLMFC --passive`
   (run from `%ProgramFiles(x86)%\Microsoft Visual Studio\Installer`, elevated).
 - Windows SDK 10.0.26100.0.
+- vcpkg at `C:\vcpkg`, or set `VCPKG_ROOT`. It must have the baseline commit from `vcpkg.json`
+  (verified with vcpkg tool 2025-10-16).
 
 ## Installer
 
@@ -97,9 +107,9 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
 ## Remotes
 
 - `origin`: https://github.com/meet-brad-ch/Ditto (the fork)
-- `upstream`: https://github.com/sabrogden/Ditto. To merge upstream:
-  `git fetch upstream; git merge upstream/master`. If upstream changed a file this fork deleted,
-  keep the delete.
+- `upstream`: https://github.com/sabrogden/Ditto. This is a hard fork: no merges. To take an
+  upstream fix, `git fetch upstream`, read the commit, and port it by hand into the fork's
+  structure.
 
 ## Decisions
 
@@ -116,6 +126,12 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   existing shortcuts.
 - 2026-10-06: HTML clips show text or RTF, not a rendered page. The only renderer available was
   the IE WebBrowser control, which loads remote content.
+- 2026-10-06: Third-party libraries come from a vcpkg manifest instead of NuGet `packages.config`.
+  zlib went from 1.2.11 (2017) to 1.3.1. The unused libpng package and the orphan
+  `src\zlib\*.h` and `src\sqlite\lz4.*` files are gone.
+- 2026-10-06: Owner chose a hard fork: no upstream merges, upstream fixes are cherry-picked by
+  hand. The ranked update plan is: safety fixes first, then test foundation, clipboard-core
+  refactor, toolchain, libraries.
 - 2026-10-06: Kept Inno Setup for the installer: it is open source and was already upstream's
   tool. Only the firewall and browser-link parts of the script were removed.
 - 2026-10-06: Renamed `ReadMe.md` to `README.md`. The two names collide on Windows. The upstream

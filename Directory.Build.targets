@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(VcpkgRoot)\scripts\buildsystems\msbuild\vcpkg.targets" Condition="Exists('$(VcpkgRoot)\scripts\buildsystems\msbuild\vcpkg.targets')" />
+  <Target Name="DittoRequireVcpkg" BeforeTargets="PrepareForBuild">
+    <Error Condition="!Exists('$(VcpkgRoot)\scripts\buildsystems\msbuild\vcpkg.targets')"
+           Text="vcpkg not found at '$(VcpkgRoot)'. Set VCPKG_ROOT or pass /p:VcpkgRoot=&lt;path&gt;." />
+  </Target>
+</Project>

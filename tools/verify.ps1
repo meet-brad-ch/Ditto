@@ -1,5 +1,5 @@
 # Quality gate for the local-only Ditto fork.
-#   1. builds Release|x64 (restores NuGet packages first when packages\ is missing)
+#   1. installs vcpkg.json dependencies, then builds Release|x64
 #   2. scans the imports of every built .exe/.dll for network DLLs
 #   3. greps all sources for network APIs and network DLL names
 #   4. checks the installer script for firewall rules and URL launches
@@ -25,14 +25,16 @@ if (-not $dumpbin) { Fail "dumpbin.exe not found under $vs" }
 $sln = Join-Path $repo 'CP_Main_10.sln'
 $logDir = Join-Path $repo 'Release64'
 if (-not $SkipBuild) {
-    if (-not (Test-Path (Join-Path $repo 'packages'))) {
-        Say 'restore: NuGet packages'
-        & $msbuild $sln /t:restore /p:RestorePackagesConfig=true /nologo /v:q
-        if ($LASTEXITCODE -ne 0) { Fail "restore exit $LASTEXITCODE" }
-    }
+    # one install up front: under /m every project would otherwise start its own vcpkg install
+    $vcpkgRoot = if ($env:VCPKG_ROOT) { $env:VCPKG_ROOT } else { 'C:\vcpkg' }
+    $vcpkg = Join-Path $vcpkgRoot 'vcpkg.exe'
+    if (-not (Test-Path $vcpkg)) { Fail "vcpkg.exe not found at $vcpkg (set VCPKG_ROOT)" }
+    Say 'vcpkg: install from vcpkg.json (x64-windows-static-md)'
+    & $vcpkg install --triplet x64-windows-static-md "--x-manifest-root=$repo" "--x-install-root=$(Join-Path $repo 'vcpkg_installed\x64-windows-static-md')" --no-print-usage | Out-Null
+    if ($LASTEXITCODE -ne 0) { Fail "vcpkg install exit $LASTEXITCODE" }
     Say 'build: Release|x64'
     $start = Get-Date
-    $out = & $msbuild $sln /p:Configuration=Release /p:Platform=x64 /p:VcpkgEnabled=false /m /nologo /v:m 2>&1
+    $out = & $msbuild $sln /p:Configuration=Release /p:Platform=x64 "/p:VcpkgRoot=$vcpkgRoot" /m /nologo /v:m 2>&1
     $code = $LASTEXITCODE
     $errors = @($out | Where-Object { "$_" -match ': (fatal )?error ' })
     $errors | Select-Object -First 30 | ForEach-Object { Say "  $_" }

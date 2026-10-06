@@ -1379,7 +1379,6 @@
     <None Include="res\cursor_zoom_in.cur">
       <Filter>res</Filter>
     </None>
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="res">

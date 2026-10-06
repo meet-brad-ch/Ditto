@@ -76,3 +76,6 @@ Debug/portable
 
 # Local session log (sw-project), never committed
 LOG.md
+
+# vcpkg manifest-mode install tree
+vcpkg_installed/
