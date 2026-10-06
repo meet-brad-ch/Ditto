@@ -716,7 +716,6 @@
     <ClCompile Include="src\SelectDB.cpp" />
     <ClCompile Include="src\SendKeys.cpp" />
     <ClCompile Include="src\ShowTaskBarIcon.cpp" />
-    <ClCompile Include="src\SimpleBrowser.cpp" />
     <ClCompile Include="src\SnapWindow.cpp" />
     <ClCompile Include="src\SpecialPasteOptions.cpp" />
     <ClCompile Include="src\sqlite\CppSQLite3.cpp" />
@@ -840,7 +839,6 @@
     <ClInclude Include="src\HListBox.h" />
     <ClInclude Include="src\HotKeys.h" />
     <ClInclude Include="src\HTMLFormatAggregator.h" />
-    <ClInclude Include="src\httplib.h" />
     <ClInclude Include="src\IClipAggregator.h" />
     <ClInclude Include="src\ICU_String.h" />
     <ClInclude Include="src\ImageFormatAggregator.h" />
@@ -916,7 +914,6 @@
     <ClInclude Include="src\SelectDB.h" />
     <ClInclude Include="src\SendKeys.h" />
     <ClInclude Include="src\ShowTaskBarIcon.h" />
-    <ClInclude Include="src\SimpleBrowser.h" />
     <ClInclude Include="src\Slugify.h" />
     <ClInclude Include="src\SnapWindow.h" />
     <ClInclude Include="src\SpecialPasteOptions.h" />

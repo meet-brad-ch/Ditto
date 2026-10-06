@@ -8,7 +8,6 @@
 #include "GroupStatic.h"
 #include "Accels.h"
 #include "SnapWindow.h"
-#include "SimpleBrowser.h"
 
 class CToolTipEx : public CWnd
 {
@@ -27,7 +26,6 @@ public:
 	BOOL Hide();
 	void SetToolTipText(const CString &csText);
 	void SetRTFText(const CStringA &rtf);
-	void SetHtmlText(const CString &html);
 	void SetGdiplusBitmap(Gdiplus::Bitmap *gdiplusBitmap);
 	void SetNotifyWnd(CWnd *pNotify)		{ m_pNotifyWnd = pNotify;	}
 	void HideWindowInXMilliSeconds(long lms);
@@ -78,9 +76,7 @@ protected:
 	CFont m_Font;
 	int m_fontHeight;
 	CStringA m_csRTF;
-	CString m_html;
 	CRichEditCtrlEx m_RichEdit;
-	SimpleBrowser m_browser;
 	CWnd *m_pNotifyWnd;
 	CGdipButton m_optionsButton;
 	int m_clipId;
@@ -104,7 +100,6 @@ protected:
 	CString m_folderPath;
 	bool m_showingText;
 	bool m_showingRTF;
-	bool m_showingHTML;
 	bool m_showingImage;
 
 protected:
@@ -150,9 +145,7 @@ public:
 	afx_msg LRESULT OnRefreshFooter(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnFirstViewtext();
 	afx_msg void OnFirstViewrtf();
-	afx_msg void OnFirstViewhtml();
 	afx_msg void OnFirstViewImage();
 	afx_msg void OnUpdateFirstViewtext(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateFirstViewrtf(CCmdUI* pCmdUI);
-	afx_msg void OnUpdateFirstViewhtml(CCmdUI* pCmdUI);
 };

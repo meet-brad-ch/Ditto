@@ -1719,17 +1719,6 @@ bool CQListCtrl::ShowFullDescription(bool bFromAuto, bool fromNextPrev)
 			Clip.Clear();
 		}
 
-		m_pToolTip->SetHtmlText(_T(""));
-		Clip.m_cfType = GetFormatID(_T("HTML Format"));
-		if (GetClipData(nItem, Clip) && Clip.m_hgData)
-		{
-			CString html = CTextConvert::Utf8ToUnicode(Clip.GetAsCStringA());
-			m_pToolTip->SetHtmlText(html);
-
-			Clip.Free();
-			Clip.Clear();
-		}
-
 		Clip.m_cfType = CF_DIB;
 		if (GetClipData(nItem, Clip) && Clip.m_hgData)
 		{

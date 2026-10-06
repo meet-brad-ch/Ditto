@@ -944,7 +944,6 @@ void CDeleteClipData::SetDescriptionWindowText(INT_PTR row)
 {
 	m_pDescriptionWindow->SetGdiplusBitmap(NULL);
 	m_pDescriptionWindow->SetRTFText("");
-	m_pDescriptionWindow->SetHtmlText("");
 	m_pDescriptionWindow->SetToolTipText(_T(""));
 	m_pDescriptionWindow->SetFolderPath(_T(""));
 
@@ -1045,8 +1044,9 @@ void CDeleteClipData::SetDescriptionWindowText(INT_PTR row)
 		IClipFormat* format = selectedClip.Clips()->FindFormatEx(GetFormatID(_T("HTML Format")));
 		if (format != nullptr)
 		{
+			// show the HTML source as plain text; this fork has no HTML renderer
 			CString html = CTextConvert::Utf8ToUnicode(format->GetAsCStringA());
-			m_pDescriptionWindow->SetHtmlText(html);
+			m_pDescriptionWindow->SetToolTipText(html);
 		}
 	}
 

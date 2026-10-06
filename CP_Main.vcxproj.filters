@@ -307,9 +307,6 @@
     <ClCompile Include="src\ShowTaskBarIcon.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\SimpleBrowser.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\SnapWindow.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -625,9 +622,6 @@
     <ClInclude Include="src\HTMLFormatAggregator.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\httplib.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\IClipAggregator.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -779,9 +773,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\ShowTaskBarIcon.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\SimpleBrowser.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\Slugify.h">

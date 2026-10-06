@@ -30,7 +30,6 @@ CToolTipEx::CToolTipEx(): m_dwTextStyle(DT_EXPANDTABS | DT_EXTERNALLEADING |
 	m_lDelayMaxSeconds = 2;
 	m_showingText = false;
 	m_showingRTF = false;
-	m_showingHTML = false;
 }
 
 CToolTipEx::~CToolTipEx()
@@ -71,11 +70,9 @@ BEGIN_MESSAGE_MAP(CToolTipEx, CWnd)
 	ON_MESSAGE(WM_REFRESH_FOOTER, OnRefreshFooter)
 	ON_COMMAND(ID_FIRST_VIEWTEXT, &CToolTipEx::OnFirstViewtext)
 	ON_COMMAND(ID_FIRST_VIEWRTF, &CToolTipEx::OnFirstViewrtf)
-	ON_COMMAND(ID_FIRST_VIEWHTML, &CToolTipEx::OnFirstViewhtml)
 	ON_COMMAND(ID_FIRST_VIEWASIMAGE, &CToolTipEx::OnFirstViewImage)
 	ON_UPDATE_COMMAND_UI(ID_FIRST_VIEWTEXT, &CToolTipEx::OnUpdateFirstViewtext)
 	ON_UPDATE_COMMAND_UI(ID_FIRST_VIEWRTF, &CToolTipEx::OnUpdateFirstViewrtf)
-	ON_UPDATE_COMMAND_UI(ID_FIRST_VIEWHTML, &CToolTipEx::OnUpdateFirstViewhtml)
 END_MESSAGE_MAP()
 
 
@@ -154,7 +151,6 @@ BOOL CToolTipEx::Show(CPoint point)
 {
 	m_showingText = false;
 	m_showingRTF = false;
-	m_showingHTML = false;
 	m_showingImage = false;
 
 	CRect rect;
@@ -266,37 +262,14 @@ BOOL CToolTipEx::Show(CPoint point)
 		//OutputDebugString(_T("Showing image editor\r\n"));
 
 		m_RichEdit.ShowWindow(SW_HIDE);
-		if (::IsWindow(m_browser.m_hWnd))
-		{
-			m_browser.ShowWindow(SW_HIDE);
-		}
 
 		m_imageViewer.ShowWindow(SW_SHOW);
 
 		m_showingImage = true;
 	}
-	else if (m_html.GetLength() > 0 && m_csRTF.GetLength() <= 0)
-	{
-		m_imageViewer.ShowWindow(SW_HIDE);
-		m_RichEdit.ShowWindow(SW_HIDE);
-
-		if (::IsWindow(m_browser.m_hWnd))
-		{
-			m_browser.ShowWindow(SW_SHOW);
-			m_browser.Invalidate();
-		}
-
-		m_showingHTML = true;
-		//OutputDebugString(_T("Showing html\r\n"));
-	}
 	else
 	{
 		m_imageViewer.ShowWindow(SW_HIDE);
-
-		if (::IsWindow(m_browser.m_hWnd))
-		{
-			m_browser.ShowWindow(SW_HIDE);
-		}
 
 		m_RichEdit.ShowWindow(SW_SHOW);
 
@@ -339,15 +312,8 @@ BOOL CToolTipEx::Hide()
 	SaveWindowSize();	
 	ShowWindow(SW_HIDE);
 
-	if (m_browser.m_hWnd != NULL &&
-		::IsWindow(m_browser.m_hWnd))
-	{
-		m_browser.DestroyWindow();
-	}
-
 	m_csRTF = "";
 	m_csText = "";
-	m_html = "";
 	m_clipId = 0;
 	m_clipRow = -1;
 	m_searchText = _T("");
@@ -496,19 +462,6 @@ BOOL CToolTipEx::OnMsg(MSG *pMsg)
             {
                 WPARAM vk = pMsg->wParam;
 
-				if(vk == 'C')
-				{
-					if (GetKeyState(VK_CONTROL) & 0x8000)
-					{
-						if (::IsWindow(m_browser.m_hWnd))
-						{
-							m_browser.Copy();
-							theApp.SetCopyReason(CopyReasonEnum::COPY_FROM_TOOLTIP);
-							return TRUE;
-						}
-					}
-				}
-                
                 if(vk == VK_TAB)
                 {
                     m_RichEdit.SetFocus();
@@ -784,10 +737,6 @@ void CToolTipEx::MoveControls()
 
 	m_RichEdit.MoveWindow(cr);
 	m_imageViewer.MoveWindow(cr);
-	if (::IsWindow(m_browser.m_hWnd))
-	{
-		m_browser.MoveWindow(cr);
-	}
 
 	m_optionsButton.MoveWindow(cr.left, cr.bottom + m_DittoWindow.m_dpi.Scale(3) + optionsExtra, m_DittoWindow.m_dpi.Scale(17), m_DittoWindow.m_dpi.Scale(17));
 
@@ -812,53 +761,6 @@ BOOL CToolTipEx::IsCursorInToolTip()
     GetCursorPos(&cursorPos);
 
     return cr.PtInRect(cursorPos);
-}
-
-void CToolTipEx::SetHtmlText(const CString &html)
-{
-	//OutputDebugString(_T("SetHtmlText-") + html.Left(20) + "\r\n");
-
-	if (html.GetLength() > 0 &&
-		::IsWindow(m_browser.m_hWnd) == FALSE)
-	{
-		m_browser.Create(WS_CHILD | WS_VISIBLE, CRect(10, 10, 100, 200), this, 2);
-	}
-
-	if (::IsWindow(m_browser.m_hWnd))
-	{		
-		int pos = html.Find(_T("<html"));
-		if (pos >= 0)
-		{
-			m_html = html.Mid(pos);
-		}
-		else
-		{
-			int pos = html.Find(_T("<HTML"));
-			if (pos >= 0)
-			{
-				m_html = html.Mid(pos);
-			}
-			else
-			{
-				m_html = html;
-			}
-		}
-
-		COLORREF c = CGetSetOptions::m_Theme.DescriptionWindowBG();
-
-		DWORD dwR = GetRValue(c);
-		DWORD dwG = GetGValue(c);
-		DWORD dwB = GetBValue(c);
-
-		CString colorHex;
-		colorHex.Format(_T("#%02X%02X%02X"), dwR, dwG, dwB);
-		
-		m_html.Replace(_T("<body>"), StrF(_T("<body bgcolor=\"%s\">"), colorHex));
-
-		m_browser.PutSilent(true);
-		m_browser.Clear();
-		m_browser.Write(m_html);
-	}
 }
 
 void CToolTipEx::SetRTFText(const CStringA &rtf)
@@ -1216,15 +1118,6 @@ void CToolTipEx::OnOptions()
 			cmSubMenu->EnableMenuItem(ID_FIRST_VIEWRTF, MF_DISABLED);
 		}
 
-		if (m_showingHTML)
-		{
-			cmSubMenu->CheckMenuItem(ID_FIRST_VIEWHTML, MF_CHECKED);
-		}
-		if (m_html.GetLength() <= 0)
-		{
-			cmSubMenu->EnableMenuItem(ID_FIRST_VIEWHTML, MF_DISABLED);
-		}
-
 		if (m_showingImage)
 		{
 			cmSubMenu->CheckMenuItem(ID_FIRST_VIEWASIMAGE, MF_CHECKED);
@@ -1392,12 +1285,6 @@ BOOL CToolTipEx::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult)
 	//OutputDebugString(cs);
 	switch (((LPNMHDR)lParam)->code)
 	{
-		case SimpleBrowser::NotificationType::BeforeNavigate2:
-		{
-			// cancel every navigation, local-only fork
-			*pResult = TRUE;
-		}
-			break;
 		case 5:
 			int x = 0;
 		break;
@@ -1524,10 +1411,6 @@ LRESULT CToolTipEx::OnRefreshFooter(WPARAM wParam, LPARAM lParam)
 
 void CToolTipEx::OnFirstViewtext()
 {
-	if (::IsWindow(m_browser.m_hWnd))
-	{
-		m_browser.ShowWindow(SW_HIDE);
-	}
 	m_imageViewer.ShowWindow(SW_HIDE);
 
 	m_RichEdit.SetText(m_csText);
@@ -1542,16 +1425,11 @@ void CToolTipEx::OnFirstViewtext()
 
 	m_showingText = true;
 	m_showingRTF = false;
-	m_showingHTML = false;
 	m_showingImage = false;
 }
 
 void CToolTipEx::OnFirstViewrtf()
 {
-	if (::IsWindow(m_browser.m_hWnd))
-	{
-		m_browser.ShowWindow(SW_HIDE);
-	}
 	m_imageViewer.ShowWindow(SW_HIDE);
 
 	m_RichEdit.SetRTF(m_csRTF);
@@ -1566,34 +1444,13 @@ void CToolTipEx::OnFirstViewrtf()
 
 	m_showingText = false;
 	m_showingRTF = true;
-	m_showingHTML = false;
 	m_showingImage = false;
 }
 
-
-void CToolTipEx::OnFirstViewhtml()
-{
-	m_imageViewer.ShowWindow(SW_HIDE);
-	m_RichEdit.ShowWindow(SW_HIDE);
-
-	if (::IsWindow(m_browser.m_hWnd))
-	{
-		m_browser.ShowWindow(SW_SHOW);
-	}
-
-	m_showingText = false;
-	m_showingRTF = false;
-	m_showingHTML = true;
-	m_showingImage = false;
-}
 
 void CToolTipEx::OnFirstViewImage()
 {
 	m_RichEdit.ShowWindow(SW_HIDE);
-	if (::IsWindow(m_browser.m_hWnd))
-	{
-		m_browser.ShowWindow(SW_HIDE);
-	}
 
 	if (m_imageViewer.m_pGdiplusBitmap)
 	{
@@ -1603,7 +1460,6 @@ void CToolTipEx::OnFirstViewImage()
 
 	m_showingText = false;
 	m_showingRTF = false;
-	m_showingHTML = false;
 	m_showingImage = true;
 }
 
@@ -1626,10 +1482,3 @@ void CToolTipEx::OnUpdateFirstViewrtf(CCmdUI* pCmdUI)
 }
 
 
-void CToolTipEx::OnUpdateFirstViewhtml(CCmdUI* pCmdUI)
-{
-	if (m_html.IsEmpty())
-	{
-		pCmdUI->Enable(0);
-	}
-}
