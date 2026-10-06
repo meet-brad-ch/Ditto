@@ -10,7 +10,6 @@
 #include "CP_Main.h"
 #include "OptionsSheet.h"
 #include "afxwin.h"
-#include "HyperLink.h"
 #include "afxcmn.h"
 
 /////////////////////////////////////////////////////////////////////////////
@@ -76,7 +75,6 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 public:
-	CMFCLinkCtrl m_CustomeKeysHelp;
 	CHotKeyCtrl m_saveClipboardHotKey;
 };
 

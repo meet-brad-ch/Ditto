@@ -125,9 +125,6 @@ CString ActionEnums::EnumDescription(ActionEnumValues value)
 	case EXPORT_TO_QR_CODE:
 		val = "Export To QR Code";
 		break;
-	case EXPORT_TO_GOOGLE_TRANSLATE:
-		val = "Export To Google Translate";
-		break;
 	case EXPORT_TO_BITMAP_FILE:
 		val = "Export To Image File";
 		break;
@@ -305,18 +302,6 @@ CString ActionEnums::EnumDescription(ActionEnumValues value)
 	case TRANSPARENCY_DECREASE:
 		val = "Decrease Transparency %";
 		break;
-	case EMAILTO_BODY:
-		val = "EMail, Content In Body";
-		break;
-	case EMAILTO_ATTACH_EXPORT:
-		val = "EMail, Clip Export As Attachment";
-		break;
-	case EMAILTO_ATTACH_CONTENT:
-		val = "EMail, Content As Attachment";
-		break;
-	case GMAIL:
-		val = "Gmail";
-		break;
 	case SLUGIFY:
 		val = "Slugify";
 		break;
@@ -379,9 +364,6 @@ CString ActionEnums::EnumDescription(ActionEnumValues value)
 		break;
 	case PASTE_POSITION_10_PLAIN_TEXT:
 		val = "Paste Position 10 Plain Text Only";
-		break;
-	case EXPORT_TO_WEB_SEARCH:
-		val = "Export To Web Search";
 		break;
 	case GENERATE_GUID:
 		val = "Generate GUID";
@@ -565,6 +547,12 @@ bool ActionEnums::Removed(ActionEnumValues value)
 	case ActionEnums::SEND_TO_FRIEND_14:
 	case ActionEnums::SEND_TO_FRIEND_15:
 	case ActionEnums::PROMPT_SEND_TO_FRIEND:
+	case ActionEnums::EXPORT_TO_GOOGLE_TRANSLATE:
+	case ActionEnums::EXPORT_TO_WEB_SEARCH:
+	case ActionEnums::EMAILTO_BODY:
+	case ActionEnums::EMAILTO_ATTACH_EXPORT:
+	case ActionEnums::EMAILTO_ATTACH_CONTENT:
+	case ActionEnums::GMAIL:
 		return true;
 	}
 

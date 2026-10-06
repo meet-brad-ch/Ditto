@@ -589,7 +589,6 @@
     <ClCompile Include="src\HListBox.cpp" />
     <ClCompile Include="src\HotKeys.cpp" />
     <ClCompile Include="src\HTMLFormatAggregator.cpp" />
-    <ClCompile Include="src\HyperLink.cpp" />
     <ClCompile Include="src\ICU_String.cpp" />
     <ClCompile Include="src\ImageFormatAggregator.cpp" />
     <ClCompile Include="src\ImageHelper.cpp" />
@@ -716,7 +715,6 @@
     <ClCompile Include="src\SearchEditBox.cpp" />
     <ClCompile Include="src\SelectDB.cpp" />
     <ClCompile Include="src\SendKeys.cpp" />
-    <ClCompile Include="src\SendMail.cpp" />
     <ClCompile Include="src\ShowTaskBarIcon.cpp" />
     <ClCompile Include="src\SimpleBrowser.cpp" />
     <ClCompile Include="src\SnapWindow.cpp" />
@@ -843,7 +841,6 @@
     <ClInclude Include="src\HotKeys.h" />
     <ClInclude Include="src\HTMLFormatAggregator.h" />
     <ClInclude Include="src\httplib.h" />
-    <ClInclude Include="src\HyperLink.h" />
     <ClInclude Include="src\IClipAggregator.h" />
     <ClInclude Include="src\ICU_String.h" />
     <ClInclude Include="src\ImageFormatAggregator.h" />
@@ -918,7 +915,6 @@
     <ClInclude Include="src\SearchEditBox.h" />
     <ClInclude Include="src\SelectDB.h" />
     <ClInclude Include="src\SendKeys.h" />
-    <ClInclude Include="src\SendMail.h" />
     <ClInclude Include="src\ShowTaskBarIcon.h" />
     <ClInclude Include="src\SimpleBrowser.h" />
     <ClInclude Include="src\Slugify.h" />

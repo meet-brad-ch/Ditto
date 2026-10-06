@@ -69,7 +69,7 @@ void CClipCompare::Compare(int leftId, int rightId)
 				{
 					Log(StrF(_T("CClipCompare::Compare, No Valid compare apps, not doing compare")));
 
-					ShellExecute(NULL, _T("open"), _T("http://winmerge.org/"), NULL,NULL, SW_SHOW);
+					MessageBox(NULL, _T("No compare application found. Install WinMerge or set \"Diff application path\" in Advanced options."), _T("Ditto"), MB_OK | MB_ICONINFORMATION | MB_TOPMOST);
 				}
 			}
 			else	

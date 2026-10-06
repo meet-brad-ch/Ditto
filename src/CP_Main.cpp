@@ -6,7 +6,6 @@
 #include <io.h>
 #include "Path.h"
 #include "Clip_ImportExport.h"
-#include "HyperLink.h"
 #include "OptionsSheet.h"
 #include "DittoCopyBuffer.h"
 #include "SendKeys.h"

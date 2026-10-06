@@ -113,7 +113,6 @@ protected:
 	afx_msg LRESULT OnSetText (WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnGetText (WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnGetTextLength (WPARAM wParam, LPARAM lParam);
-	afx_msg void OnLink(NMHDR* pnm, LRESULT* pResult);
 	//}}AFX_MSG
 
 	LRESULT OnGetScrollPos(WPARAM, LPARAM);

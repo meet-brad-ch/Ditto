@@ -51,7 +51,6 @@ void COptionsKeyBoard::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_HOTKEY_ACTIVATE_3, m_HotKey3);
 	DDX_Control(pDX, IDC_HOTKEY_TEXT_ONLY, m_TextOnlyKey);
 	//}}AFX_DATA_MAP
-	DDX_Control(pDX, IDC_STATIC_CUSTOM_KEYS, m_CustomeKeysHelp);
 	DDX_Control(pDX, IDC_CHECK_MOVE_CLIPS_ON_PASTE, m_btMoveClipOnGlobal10);
 	DDX_Control(pDX, IDC_HOTKEY_SAVE_CLIPBOARD, m_saveClipboardHotKey);
 	DDX_Control(pDX, IDC_HOTKEY_COPYSAVECLIPBOARD, m_copyAndSaveClipboardCtrl);
@@ -68,8 +67,6 @@ END_MESSAGE_MAP()
 BOOL COptionsKeyBoard::OnInitDialog() 
 {
 	CPropertyPage::OnInitDialog();
-
-	m_CustomeKeysHelp.SetURL(_T("https://github.com/sabrogden/Ditto/wiki/Custom-Key-Strokes"));
 
 	m_pParent = (COptionsSheet *)GetParent();
 

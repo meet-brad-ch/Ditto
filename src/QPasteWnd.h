@@ -267,8 +267,6 @@ public:
 	bool DoSelectRightSideAndDoCompare();
 	bool DoExportToQRCode();
 	bool DoExportToTextFile();
-	bool DoExportToGoogleTranslate();
-	bool DoExportToWebSearch();
 	bool DoActionGenerateGuid();
 	bool DoPasteAsImage();
 	bool DoExportToBitMapFile();
@@ -308,15 +306,11 @@ public:
 	bool DoActionToggleTransparency();
 	bool DoActionIncreaseTransparency();
 	bool DoActionDecreaseTransparency();
-	bool DoActionEmailTo();
-	bool DoActionGmail();
-	bool DoActionEmailToAttachExport();
 	
 	// Refresh scrollbar colors from current theme
 	void RefreshScrollBarColors();
 	// Refresh all theme colors (caption, scrollbars, etc.)
 	void RefreshThemeColors();
-	bool DoActionEmailToAttachContent();
 	bool DoActionSlugify();
 	bool DoCopySelection();
 	bool DoRefreshList();
@@ -392,7 +386,6 @@ protected:
     afx_msg void OnMenuQuickpropertiesRemovehotkey();
     afx_msg void OnMenuGroupsMovetogroup();
     afx_msg void OnMenuPasteplaintextonly();
-    afx_msg void OnMenuHelp();
     afx_msg void OnMenuQuickoptionsFont();
     afx_msg void OnMenuQuickoptionsShowthumbnails();
     afx_msg void OnMenuQuickoptionsDrawrtftext();
@@ -477,8 +470,6 @@ public:
 	afx_msg LRESULT OnNewGroup(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnDeleteId(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnMenuRegularexpressionsearch();
-	afx_msg void OnImportExporttogoogletranslate();
-	afx_msg void OnUpdateImportExporttogoogletranslate(CCmdUI *pCmdUI);
 	afx_msg void OnImportExportclipBitmap();
 	afx_msg void OnUpdateImportExportclipBitmap(CCmdUI *pCmdUI);
 	afx_msg void OnMenuWildcardsearch();
@@ -569,16 +560,8 @@ public:
 	afx_msg void OnUpdateTransparency35(CCmdUI *pCmdUI);
 	afx_msg void OnUpdateTransparency40(CCmdUI *pCmdUI);
 	afx_msg void OnTransparency35();
-	afx_msg void OnImportEmailto();
-	afx_msg void OnUpdateImportEmailto(CCmdUI *pCmdUI);
-	afx_msg void OnImportGmail();
-	afx_msg void OnUpdateImportGmail(CCmdUI *pCmdUI);
-	afx_msg void OnImportEmailtoasattachment();
-	afx_msg void OnUpdateImportEmailtoasattachment(CCmdUI *pCmdUI);
 	afx_msg void OnSpecialpasteSlugify();
 	afx_msg void OnUpdateSpecialpasteSlugify(CCmdUI *pCmdUI);
-	afx_msg void OnImportEmailContentAttach();
-	afx_msg void OnUpdateImportEmailContentAttach(CCmdUI *pCmdUI);
 	afx_msg void OnSpecialpasteTogglecase();
 	afx_msg void OnUpdateSpecialpasteTogglecase(CCmdUI *pCmdUI);
 	afx_msg void OnFirstShowstartupmessage();
@@ -596,8 +579,6 @@ public:
 	afx_msg void OnUpdateSpecialpasteMultipleImagesVert(CCmdUI* pCmdUI);
 	afx_msg void OnSpecialpasteAsciitextonly();
 	afx_msg void OnUpdateSpecialpasteAsciitextonly(CCmdUI* pCmdUI);
-	afx_msg void OnImportExporttowebsearch();
-	afx_msg void OnUpdateImportExporttowebsearch(CCmdUI* pCmdUI);
 	afx_msg void OnSpecialpastePastenewguid();
 	afx_msg void OnUpdateSpecialpastePastenewguid(CCmdUI* pCmdUI);
 	afx_msg void OnSpecialpastePasteAsImage();

@@ -4,7 +4,6 @@
 #include "BitmapHelper.h"
 #include "Options.h"
 #include "ActionEnums.h"
-#include "HyperLink.h"
 #include <Richedit.h>
 
 #ifdef _DEBUG
@@ -120,7 +119,7 @@ BOOL CToolTipEx::Create(CWnd *pParentWnd)
     m_RichEdit.SetReadOnly();
     m_RichEdit.SetBackgroundColor(FALSE, CGetSetOptions::m_Theme.DescriptionWindowBG());
 
-	m_RichEdit.SetEventMask(m_RichEdit.GetEventMask() | ENM_SELCHANGE | ENM_LINK | ENM_MOUSEEVENTS | ENM_SCROLLEVENTS);
+	m_RichEdit.SetEventMask(m_RichEdit.GetEventMask() | ENM_SELCHANGE | ENM_MOUSEEVENTS | ENM_SCROLLEVENTS);
 	m_RichEdit.SetAutoURLDetect(TRUE);
 	
 	ApplyWordWrap();	   
@@ -1393,39 +1392,10 @@ BOOL CToolTipEx::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult)
 	//OutputDebugString(cs);
 	switch (((LPNMHDR)lParam)->code)
 	{
-		case EN_LINK:
-		{
-			ENLINK *enLinkInfo = (ENLINK *)lParam; // pointer to a ENLINK structure
-			if (enLinkInfo->msg == WM_LBUTTONUP)
-			{
-				CString s;
-				m_RichEdit.GetTextRange(enLinkInfo->chrg.cpMin, enLinkInfo->chrg.cpMax, s);
-
-				if (s == m_mouseDownOnLink)
-				{
-					CHyperLink::GotoURL(s, SW_SHOW);
-				}
-
-				m_mouseDownOnLink = _T("");
-			}
-			if (enLinkInfo->msg == WM_LBUTTONDOWN)
-			{
-				m_RichEdit.GetTextRange(enLinkInfo->chrg.cpMin, enLinkInfo->chrg.cpMax, m_mouseDownOnLink);
-			}
-		}
-		break;
 		case SimpleBrowser::NotificationType::BeforeNavigate2:
 		{
-			SimpleBrowser::Notification * not = (SimpleBrowser::Notification *)lParam;
-			if (not != NULL)
-			{
-				if (not->URL.Find(_T("http")) >= 0)
-				{
-					CHyperLink::GotoURL(not->URL, SW_SHOW);
-					*pResult = TRUE;
-					//return TRUE;
-				}				
-			}
+			// cancel every navigation, local-only fork
+			*pResult = TRUE;
 		}
 			break;
 		case 5:

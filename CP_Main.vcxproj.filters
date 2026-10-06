@@ -160,9 +160,6 @@
     <ClCompile Include="src\HTMLFormatAggregator.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\HyperLink.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\ICU_String.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -305,9 +302,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\SendKeys.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\SendMail.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\ShowTaskBarIcon.cpp">
@@ -634,9 +628,6 @@
     <ClInclude Include="src\httplib.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\HyperLink.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\IClipAggregator.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -785,9 +776,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\SendKeys.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\SendMail.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\ShowTaskBarIcon.h">

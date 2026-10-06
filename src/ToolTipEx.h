@@ -113,7 +113,6 @@ protected:
 	void HighlightSearchText();	
 	void ApplyWordWrap();
 	void SaveWindowSize();
-	CString m_mouseDownOnLink;
 
 	// Generated message map functions
 protected:

@@ -9,7 +9,6 @@
 #include "Path.h"
 #include "AdvGeneral.h"
 #include "DimWnd.h"
-#include "HyperLink.h"
 
 using namespace nsPath;
 
@@ -89,8 +88,6 @@ END_MESSAGE_MAP()
 BOOL COptionsGeneral::OnInitDialog() 
 {
 	CPropertyPage::OnInitDialog();
-
-	CString url = _T("https://github.com/sabrogden/Ditto/wiki/Environment-Variables");
 
 	m_brush.CreateSolidBrush(RGB(251, 251, 251));
 	
@@ -614,16 +611,6 @@ void COptionsGeneral::OnBnClickedButtonFont()
 }
 
 
-//void COptionsGeneral::OnNMClickSyslinkEnvVarInfo(NMHDR *pNMHDR, LRESULT *pResult)
-//{
-//	CString url = _T("https:////sourceforge.net//p//ditto-cp//wiki//EnvironmentVariables//");
-//
-//	CHyperLink::GotoURL(url, SW_SHOW);
-//
-//	*pResult = 0;
-//}
-//
-//
 //void COptionsGeneral::OnEnChangePath()
 //{
 //	// TODO:  If this is a RICHEDIT control, the control will not

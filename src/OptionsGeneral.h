@@ -11,7 +11,6 @@
 #include "OptionsSheet.h"
 #include "NumberEdit.h"
 #include "afxwin.h"
-#include "HyperLink.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // COptionsGeneral dialog
@@ -47,7 +46,7 @@ public:
 	CEdit m_ClipSeparator;
 	CEdit m_copyAppInclude;
 	CEdit m_copyAppExclude;
-	CMFCLinkCtrl m_envVarLink;
+	CStatic m_envVarLink;
 	 
 	//}}AFX_DATA
 

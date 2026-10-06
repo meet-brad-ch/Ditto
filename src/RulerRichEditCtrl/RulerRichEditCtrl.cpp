@@ -49,7 +49,6 @@
 #include "TextFile/TextFile.h"
 #include "..\Options.h"
 #include "..\Misc.h"
-#include "..\HyperLink.h"
 #include ".\rulerricheditctrl.h"
 #include "..\..\resource.h"
 
@@ -340,7 +339,7 @@ BOOL CRulerRichEditCtrl::CreateRTFControl( BOOL autohscroll )
  		// Set the internal tabs array
  		SetTabStops( ( LPLONG ) ( para.rgxTabs ), MAX_TAB_STOPS );
  
- 		m_rtf.SetEventMask( m_rtf.GetEventMask() | ENM_SELCHANGE | ENM_SCROLL | ENM_CHANGE | ENM_LINK );
+ 		m_rtf.SetEventMask( m_rtf.GetEventMask() | ENM_SELCHANGE | ENM_SCROLL | ENM_CHANGE );
  		SetReadOnly( GetReadOnly() ); 
 
 		result = TRUE;
@@ -414,28 +413,11 @@ BEGIN_MESSAGE_MAP(CRulerRichEditCtrl, CWnd)
 	ON_REGISTERED_MESSAGE(urm_GETSCROLLPOS, OnGetScrollPos)
 	ON_REGISTERED_MESSAGE(urm_SETCURRENTFONTNAME, OnSetCurrentFontName)
 	ON_REGISTERED_MESSAGE(urm_SETCURRENTFONTSIZE, OnSetCurrentFontSize)
-	ON_NOTIFY(EN_LINK, RTF_CONTROL, OnLink)
 	ON_REGISTERED_MESSAGE(urm_SETCURRENTFONTCOLOR, OnSetCurrentFontColor)
 	//}}AFX_MSG_MAP
 	ON_WM_KEYDOWN()
 END_MESSAGE_MAP()
 
-void CRulerRichEditCtrl::OnLink(NMHDR* pnm, LRESULT* pResult)
-{
-	ENLINK* pnml = reinterpret_cast<ENLINK*>(pnm);
-
-	if (pnml->msg == WM_LBUTTONDOWN ||
-		(pnml->msg == WM_KEYDOWN && pnml->wParam == VK_RETURN))
-	{
-		CString url;
-		m_rtf.GetTextRange(pnml->chrg.cpMin, pnml->chrg.cpMax, url);
-		CHyperLink::GotoURL(url, SW_SHOW);
-
-		*pResult = 1; // message handled
-	}
-
-	*pResult = 0;  // enable default processing
-}
 
 /////////////////////////////////////////////////////////////////////////////
 // CRulerRichEditCtrl message handlers
