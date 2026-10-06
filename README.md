@@ -7,9 +7,9 @@ network code removed from the build.
 private text, so the copy the owner runs is compiled from source they can read, and it has no
 code that can send anything off the machine.
 
-**Status:** partly working. All network code listed below is removed, the build is clean, and
-`tools/verify.ps1` passes. The running app has not been checked yet: no runtime socket check, no
-UI check.
+**Status:** working. All network code listed below is removed, the build is clean, and
+`tools/verify.ps1` passes. At run time, `tools/runtime-netcheck.ps1` sees no TCP/UDP endpoint owned
+by Ditto. The owner runs an installed build of the fork.
 
 What this fork removed (found by reading upstream a80fd35):
 
@@ -79,6 +79,16 @@ stages and exits 1 on the first failed one:
 `WSAStartup` line and a copied `curl.exe` were both caught. The hardening stage failed on the
 binaries built before Control Flow Guard was on, and the installer stage on the old ARM64 script.
 
+**Runtime network check:** `powershell -NoProfile -ExecutionPolicy Bypass -File
+tools\runtime-netcheck.ps1 [-WatchSeconds 20]` runs after a build.
+- It runs `Release64` as a portable copy in a new temporary folder and copies four kinds of content
+  to the clipboard: text, CF_HTML with a remote `<img>`, an image and a file list.
+- It watches the TCP/UDP endpoints the Ditto process owns, and any endpoint fails the check.
+- At the end it stops the copy, deletes the folder with its database and log, and restores the
+  clipboard text from before the run. With `-WatchSeconds 10` it took 28 s.
+- It was tested with a fake `Ditto.exe` that opens a TCP listener, and it failed as intended.
+- It changes the clipboard, so a Ditto you are running also records the four test clips.
+
 **Prerequisites:**
 
 - Visual Studio Community 2026 18.9, MSVC 14.51, toolset v145, with the C++ desktop workload.
@@ -98,6 +108,7 @@ binaries built before Control Flow Guard was on, and the installer stage on the 
 - `tests\`: GoogleTest unit tests for DittoCore. The Release build uses AddressSanitizer; the
   output is `build\DittoTests\x64\Release\DittoTests.exe`.
 - `tools\verify.ps1`: the quality gate.
+- `tools\runtime-netcheck.ps1`: the runtime network check.
 - `DittoSetup\`: the Inno Setup installer.
 
 **Rules for new and refactored code (owner, 2026-10-06):**
