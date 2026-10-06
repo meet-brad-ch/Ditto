@@ -7,8 +7,8 @@ network code removed from the build.
 private text, so the copy the owner runs is compiled from source they can read, and it has no
 code that can send anything off the machine.
 
-**Status:** scaffold only. This is upstream master a80fd35 with the fork files added. No network
-code has been removed yet, and no local build has been done yet.
+**Status:** partly working. Upstream master a80fd35 builds locally. No network code has been
+removed yet.
 
 What "network code" means in this fork, found by reading upstream a80fd35:
 
@@ -24,22 +24,34 @@ in the repo but are never compiled.
 
 ## How to run
 
-Not yet run. The commands below are planned and get replaced by the verified ones after the
-first build.
+These commands are verified 2026-10-06 on unmodified upstream: a full Release|x64 rebuild in
+about 1.5 min with no errors. Run them from the repo root in PowerShell.
 
 ```
-msbuild CP_Main_10.sln /t:restore /p:RestorePackagesConfig=true
-msbuild CP_Main_10.sln /p:Configuration=Release /p:Platform=x64
+$msb = "C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
+& $msb CP_Main_10.sln /t:restore /p:RestorePackagesConfig=true          # libpng/zlib NuGet into packages\
+& $msb CP_Main_10.sln /p:Configuration=Release /p:Platform=x64 /p:VcpkgEnabled=false /m
 Release64\Ditto.exe
 ```
+
+The build writes `Release64\Ditto.exe`, `Release64\Addins\DittoUtil.dll`, `ICU_Loader.dll`,
+`focus.dll` and `libpng16.dll`.
+
+`/p:VcpkgEnabled=false` keeps a user-wide `vcpkg integrate install` out of the build. Ditto does
+not use vcpkg, and without the flag the integration calls `pwsh.exe` after each project.
+
+Baseline imports of upstream `Ditto.exe`: **WS2_32.dll** (Friends sockets) and **WININET.dll**
+(`InternetCanonicalizeUrl`). This fork removes both.
 
 **Verify:** none yet. `tools/verify.ps1` is planned: it builds, scans the binary imports and
 greps the source.
 
 **Prerequisites:**
 
-- Visual Studio 2026 (18.x) with the C++ desktop workload and toolset v145.
-- The MFC component (`Microsoft.VisualStudio.Component.VC.ATLMFC`).
+- Visual Studio Community 2026 18.9, MSVC 14.51, toolset v145, with the C++ desktop workload.
+- The MFC component (`Microsoft.VisualStudio.Component.VC.ATLMFC`). Install it with:
+  `setup.exe modify --installPath "C:\Program Files\Microsoft Visual Studio\18\Community" --add Microsoft.VisualStudio.Component.VC.ATLMFC --passive`
+  (run from `%ProgramFiles(x86)%\Microsoft Visual Studio\Installer`, elevated).
 - Windows SDK 10.0.26100.0.
 
 ## Remotes
