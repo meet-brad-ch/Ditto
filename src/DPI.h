@@ -1,5 +1,4 @@
 #pragma once
-#include <ShellScalingAPI.h>
 
 // Definition: relative pixel = 1 pixel at 96 DPI and scaled based on actual DPI.
 class CDPI
@@ -31,39 +30,7 @@ private:
 		{
 			if (m_hWnd != NULL)
 			{
-				HMODULE hUser32 = LoadLibrary(_T("USER32.dll"));
-				if (hUser32)
-				{
-					//windows 10
-					typedef UINT(__stdcall *GetDpiForWindow)(HWND hwnd);
-					GetDpiForWindow getDpi = (GetDpiForWindow)GetProcAddress(hUser32, "GetDpiForWindow");
-					if (getDpi)
-					{
-						int dpi = getDpi(m_hWnd);
-						this->Update(dpi);
-						m_Initialized = true;
-					}
-					else
-					{
-						//windows 8
-						auto monitor = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
-						HMODULE shCore = LoadLibrary(_T("Shcore.dll"));
-						if (shCore)
-						{
-							typedef HRESULT(__stdcall *GetDpiForMonitor)(HMONITOR, UINT, UINT*, UINT*);
-							GetDpiForMonitor monDpi = (GetDpiForMonitor)GetProcAddress(shCore, "GetDpiForMonitor");
-							if (monDpi)
-							{
-								UINT x = 0;
-								UINT y = 0;
-								monDpi(monitor, MDT_EFFECTIVE_DPI, &x, &y);
-
-								this->Update(x);
-								m_Initialized = true;
-							}
-						}
-					}
-				}
+				this->Update(static_cast<int>(::GetDpiForWindow(m_hWnd)));
 			}
 
 			if (m_Initialized == false)

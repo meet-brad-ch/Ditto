@@ -718,7 +718,10 @@
     <ClCompile Include="src\SnapWindow.cpp" />
     <ClCompile Include="src\SpecialPasteOptions.cpp" />
     <ClCompile Include="src\sqlite\CppSQLite3.cpp" />
+    <!-- Vendored sqlite3mc, kept unmodified: /sdl would turn its CRT deprecation warnings (C4996,
+         strcpy/sprintf) into errors. Silenced for this file only; /sdl stays on for it. -->
     <ClCompile Include="src\sqlite\sqlite3mc_amalgamation.c">
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
@@ -731,7 +734,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\SymbolEdit.cpp" />
-    <ClCompile Include="src\SystemTray.cpp" />
     <ClCompile Include="src\TabCtrl.cpp" />
     <ClCompile Include="src\Theme.cpp" />
     <ClCompile Include="src\TinyXml\tinystr.cpp">
@@ -922,7 +924,6 @@
     <ClInclude Include="src\sqlite\sqlite3mc_amalgamation.h" />
     <ClInclude Include="src\StdAfx.h" />
     <ClInclude Include="src\SymbolEdit.h" />
-    <ClInclude Include="src\SystemTray.h" />
     <ClInclude Include="src\TabCtrl.h" />
     <ClInclude Include="src\Theme.h" />
     <ClInclude Include="src\TinyXml\tinystr.h" />

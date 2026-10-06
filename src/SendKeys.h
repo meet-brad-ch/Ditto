@@ -14,7 +14,6 @@ private:
   static BOOL CALLBACK enumwindowsProc(HWND hwnd, LPARAM lParam);
   void   CarryDelay();
 
-  typedef BYTE KEYBOARDSTATE_t[256];
   struct enumwindow_t
   {
     LPTSTR str;

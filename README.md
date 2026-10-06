@@ -56,24 +56,28 @@ The build writes `Release64\Ditto.exe`, `Release64\Addins\DittoUtil.dll`, `ICU_L
 Baseline imports of upstream `Ditto.exe`: **WS2_32.dll** (Friends sockets) and **WININET.dll**
 (`InternetCanonicalizeUrl`). This fork removes both.
 
-**Verify:** `powershell -NoProfile -ExecutionPolicy Bypass -File tools\verify.ps1` runs three
+**Verify:** `powershell -NoProfile -ExecutionPolicy Bypass -File tools\verify.ps1` runs eight
 stages and exits 1 on the first failed one:
 
 1. It installs the `vcpkg.json` dependencies, then builds Release|x64.
 2. It runs `dumpbin /imports` on every `.exe`/`.dll` in `Release64`. No binary may import
    ws2_32, wsock32, mswsock, wininet, winhttp, urlmon, mapi32, dnsapi, iphlpapi, webio or
    httpapi.
-3. It greps every source, `.rc` and `.vcxproj` file for socket, WinINet, WinHTTP, urlmon, MAPI and
+3. It runs `dumpbin /headers` on the same binaries. Each must carry high-entropy ASLR, dynamic
+   base, DEP (NX) and Control Flow Guard.
+4. It greps every source, `.rc` and `.vcxproj` file for socket, WinINet, WinHTTP, urlmon, MAPI and
    WebBrowser APIs, network DLL names and `ShellExecute` of an `http(s)://` URL.
-4. It checks that `DittoSetup_10.iss` adds no firewall rules (netsh) and launches no URLs.
-5. It rejects raw allocation (`new`, `delete`, `malloc`, `free`) in `lib\` and `tests\`.
-6. It runs every GoogleTest in `tests\` on its own (`--gtest_filter`), under AddressSanitizer.
-7. It runs Doxygen (`tools\Doxyfile.contract`): every class, function and member of the contract
+5. It checks every Inno Setup script (`*.iss`): no firewall rules (netsh), no URL launches, and a
+   `MinVersion` of Windows 10 or later.
+6. It rejects raw allocation (`new`, `delete`, `malloc`, `free`) in `lib\` and `tests\`.
+7. It runs every GoogleTest in `tests\` on its own (`--gtest_filter`), under AddressSanitizer.
+8. It runs Doxygen (`tools\Doxyfile.contract`): every class, function and member of the contract
    code must be documented, and any Doxygen warning fails. The files are listed by name in that
    Doxyfile.
 
 `-SkipBuild` skips stage 1. The gate was tested against faults planted on purpose: a seeded
-`WSAStartup` line and a copied `curl.exe` were both caught.
+`WSAStartup` line and a copied `curl.exe` were both caught. The hardening stage failed on the
+binaries built before Control Flow Guard was on, and the installer stage on the old ARM64 script.
 
 **Prerequisites:**
 
@@ -109,7 +113,10 @@ stages and exits 1 on the first failed one:
   and `@throws`.
 - **No dead code.** Unused code is deleted, not kept.
 
-**Supported OS:** Windows 10 and 11 only (owner, 2026-10-06).
+**Supported OS:** Windows 10 and 11 only (owner, 2026-10-06), from Windows 10 1607 (build 14393),
+because Ditto calls `GetDpiForWindow` directly. Every project builds with `_WIN32_WINNT` and
+`WINVER` at `0x0A00`, `/sdl` and Control Flow Guard, set in `Directory.Build.targets` after each
+project's own settings, so no project can turn them off.
 
 ## Installer
 
@@ -130,6 +137,8 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   - The publisher names the fork.
   - The runtime DLL folder works with both 32-bit and 64-bit ISCC.
   - `{pf}` is now `{commonpf}`.
+  - `MinVersion` is Windows 10 1607 (was Windows 7). The Windows 7/8 `cmd.exe` paste strings are
+    no longer written; the leftover values are deleted on every install.
 - **Existing install:** the AppName is still "Ditto", so the installer upgrades an existing Ditto
   install in place and keeps its settings. It closes a running Ditto while it installs.
 - **Warnings:** the remaining ISCC warnings come from upstream: outdated unofficial translations,
@@ -199,6 +208,26 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   `CRulerRichEditCtrl::Save`/`Load`. `Load` called StreamIn with no callback set.
 - 2026-10-06: `GetScreenWidth`/`GetScreenHeight` no longer call `GetVersionEx` with an
   uninitialized struct. Every supported Windows is NT.
+- 2026-10-06: Windows 10 1607 or later only; the code paths for older Windows are deleted:
+  - Clipboard capture uses `AddClipboardFormatListener` directly. The `SetClipboardViewer`
+    chain (`WM_DRAWCLIPBOARD`, `WM_CHANGECBCHAIN`) is gone. A failed registration now shows an
+    error balloon. Before, it went unnoticed and no copy was saved.
+  - The tray icon class uses the SDK `NOTIFYICONDATA`, instead of its own per-shell-version
+    structs, its `DllGetVersion` check and the branches for each shell version.
+  - `GetDpiForWindow`, `SetLayeredWindowAttributes` and the suspend/resume notification API are
+    called directly, not looked up with `GetProcAddress`. A failed power-notification
+    registration is shown to the user.
+  - `IsVista`, SendKeys' Win9x NumLock code and the unused `CSystemTray` and `U3Stop` are deleted.
+- 2026-10-06: Every project builds with `/sdl` and Control Flow Guard, from
+  `Directory.Build.targets`.
+  - `/sdl` turned one deprecated call into an error (`GetVersion` in SendKeys, removed with the
+    Win9x code).
+  - It also turned the CRT deprecation warnings in the vendored sqlite3mc amalgamation into
+    errors. That one file defines `_CRT_SECURE_NO_WARNINGS`, so SQLite stays unmodified.
+- 2026-10-06: Deleted upstream's ARM64 and portable installer scripts. The fork builds neither.
+  The ARM64 script still added firewall rules for TCP 23443 and launched URLs, and the portable
+  one packaged files that no longer exist (`DittoU.exe`, `sqlite3.dll`, `zlib1.dll`). The
+  installer gate now checks every `.iss` file.
 - 2026-10-06: Third-party libraries come from a vcpkg manifest instead of NuGet `packages.config`.
   zlib went from 1.2.11 (2017) to 1.3.1. The unused libpng package and the orphan
   `src\zlib\*.h` and `src\sqlite\lz4.*` files are gone.

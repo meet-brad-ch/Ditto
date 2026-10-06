@@ -1,6 +1,5 @@
 #pragma once
 
-//#include "SystemTray.h"
 #include "QuickPaste.h"
 #include "ToolTipEx.h"
 #include "MainFrmThread.h"
@@ -58,7 +57,6 @@ public:
     #endif 
 
     CQuickPaste m_quickPaste;
-    //CSystemTray m_TrayIcon;
 	CTrayNotifyIcon m_trayIcon;
     ULONG m_ulCopyGap;
     CString m_csKeyboardPaste;
@@ -102,8 +100,6 @@ protected:
     afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
     afx_msg void OnFirstOption();
     afx_msg void OnFirstExit();
-    afx_msg void OnChangeCbChain(HWND hWndRemove, HWND hWndAfter);
-    afx_msg void OnDrawClipboard();
     afx_msg void OnTimer(UINT_PTR nIDEvent);
     afx_msg void OnFirstShowquickpaste();
     afx_msg void OnFirstToggleConnectCV();

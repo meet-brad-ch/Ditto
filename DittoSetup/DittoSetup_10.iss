@@ -44,7 +44,8 @@ DirExistsWarning=no
 UninstallLogMode=overwrite
 ChangesAssociations=yes
 CloseApplications=yes
-MinVersion=6.1
+;Windows 10 1607 (build 14393) or later: Ditto calls GetDpiForWindow directly
+MinVersion=10.0.14393
 SetupLogging=yes
 
 [Languages]
@@ -133,11 +134,9 @@ Root: HKCU; Subkey: Software\Ditto\PasteStrings; ValueType: string; ValueName: g
 Root: HKCU; Subkey: Software\Ditto\CopyStrings; ValueType: string; ValueName: gvim.exe; ValueData: """{{PLUS}y"
 Root: HKCU; Subkey: Software\Ditto\CutStrings; ValueType: string; ValueName: gvim.exe; ValueData: """{{PLUS}x"
 
-Root: HKCU; Subkey: Software\Ditto\PasteStrings; ValueType: string; ValueName: cmd.exe; OnlyBelowVersion: 10; ValueData: % {{Delay100}ep
-Root: HKCU; Subkey: Software\Ditto\CopyStrings; ValueType: string; ValueName: cmd.exe; OnlyBelowVersion: 10; ValueData: % {{Delay100}ey
-
-Root: HKCU; Subkey: Software\Ditto\PasteStrings; ValueName: cmd.exe; MinVersion: 10; Flags: deletevalue
-Root: HKCU; Subkey: Software\Ditto\CopyStrings; ValueName: cmd.exe; MinVersion: 10; Flags: deletevalue
+;remove the cmd.exe paste/copy strings that installs on Windows 7 and 8 wrote
+Root: HKCU; Subkey: Software\Ditto\PasteStrings; ValueName: cmd.exe; Flags: deletevalue
+Root: HKCU; Subkey: Software\Ditto\CopyStrings; ValueName: cmd.exe; Flags: deletevalue
 
 ;associate .dto with Ditto
 Root: HKCR; Subkey: .dto; ValueType: string; ValueName: ; ValueData: Ditto; Flags: uninsdeletevalue

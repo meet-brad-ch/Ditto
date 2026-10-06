@@ -97,34 +97,11 @@ BOOL CAlphaBlend::SetOpacity(int nOpacity)
 		{
 			// update the transparency
 			ASSERT(::IsWindow(m_hWnd));
-			SetLayeredWindowAttributesEx(m_hWnd, 0, m_nOpacity, LWA_ALPHA);		
+			::SetLayeredWindowAttributes(m_hWnd, 0, static_cast<BYTE>(m_nOpacity), LWA_ALPHA);
 		}
 		return true;
 	}
 	return false;
-}
-
-BOOL CAlphaBlend::SetLayeredWindowAttributesEx(HWND hwnd, COLORREF crKey, BYTE bAlpha, DWORD dwFlags)
-{
-	BOOL bRet = FALSE;
-	typedef BOOL (CALLBACK* fnc)(HWND, COLORREF, BYTE, DWORD);
-	HINSTANCE DLL;
-	fnc setLayeredWindowAttributes;
-	
-	DLL = LoadLibrary(_T("user32.dll"));
-	if(DLL != NULL)
-	{
-		setLayeredWindowAttributes = (fnc)GetProcAddress(DLL,"SetLayeredWindowAttributes");  
-		
-		if(setLayeredWindowAttributes) 
-		{
-			bRet = setLayeredWindowAttributes(hwnd, crKey, bAlpha, dwFlags);
-		}
-				
-		FreeLibrary(DLL);
-	}
-
-	return bRet;
 }
 
 void CAlphaBlend::SetTransparent(BOOL bTransparent)
@@ -143,7 +120,7 @@ void CAlphaBlend::SetTransparent(BOOL bTransparent)
 			SetWindowLong(m_hWnd, GWL_EXSTYLE, l);
 		}
 
-		SetLayeredWindowAttributesEx(m_hWnd, 0, m_nOpacity, LWA_ALPHA);
+		::SetLayeredWindowAttributes(m_hWnd, 0, static_cast<BYTE>(m_nOpacity), LWA_ALPHA);
 
 		CRect r;
 		::GetWindowRect(m_hWnd, r);

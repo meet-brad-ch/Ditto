@@ -1,11 +1,12 @@
 # Quality gate for the local-only Ditto fork.
 #   1. installs vcpkg.json dependencies, then builds Release|x64
 #   2. scans the imports of every built .exe/.dll for network DLLs
-#   3. greps all sources for network APIs and network DLL names
-#   4. checks the installer script for firewall rules and URL launches
-#   5. rejects raw allocation (new/delete/malloc/free) in lib\ and tests\
-#   6. runs every unit test on its own (AddressSanitizer build)
-#   7. checks with Doxygen that the contract code is fully documented
+#   3. checks every built binary for ASLR, DEP and Control Flow Guard
+#   4. greps all sources for network APIs and network DLL names
+#   5. checks every installer script for firewall rules, URL launches and a Windows 10 minimum
+#   6. rejects raw allocation (new/delete/malloc/free) in lib\ and tests\
+#   7. runs every unit test on its own (AddressSanitizer build)
+#   8. checks with Doxygen that the contract code is fully documented
 # Prints one timestamped line per check and exits 1 on the first failed stage.
 # Usage (repo root):  powershell -NoProfile -ExecutionPolicy Bypass -File tools\verify.ps1 [-SkipBuild]
 param([switch] $SkipBuild)
@@ -64,12 +65,27 @@ foreach ($bin in $binaries) {
 }
 if ($importFindings -gt 0) { Fail "imports: $importFindings binaries import network DLLs" }
 
-# ---- 3. source grep ------------------------------------------------------------
+# ---- 3. hardening --------------------------------------------------------------
+# Every binary must carry ASLR (64-bit), DEP and Control Flow Guard in its DLL characteristics.
+$requiredFlags = 'High Entropy Virtual Addresses', 'Dynamic base', 'NX compatible', 'Control Flow Guard'   # dumpbin /headers wording
+$hardeningFindings = 0
+foreach ($bin in $binaries) {
+    $dump = & $dumpbin.FullName /nologo /headers $bin.FullName
+    if ($LASTEXITCODE -ne 0) { Fail "hardening: dumpbin exit $LASTEXITCODE on $($bin.FullName)" }
+    $flags = @($dump | ForEach-Object { "$_".Trim() })
+    $missing = @($requiredFlags | Where-Object { $flags -notcontains $_ })
+    $rel = $bin.FullName.Substring($repo.Length + 1)
+    if ($missing.Count -gt 0) { Say "hardening: FAIL $rel lacks $($missing -join ', ')"; $hardeningFindings++ }
+    else { Say "hardening: ok   $rel (high-entropy ASLR, DEP, CFG)" }
+}
+if ($hardeningFindings -gt 0) { Fail "hardening: $hardeningFindings binaries lack ASLR/DEP/CFG flags" }
+
+# ---- 4. source grep ------------------------------------------------------------
 # Case-sensitive API names, matched as whole words; DLL names case-insensitive.
 $apiPattern = '\b(WSAStartup|WSASocket|closesocket|gethostbyname|getaddrinfo|GetAddrInfoW|InternetOpen\w*|InternetConnect\w*|InternetCanonicalizeUrl|HttpOpenRequest\w*|WinHttp\w+|URLDownloadTo\w+|URLOpenStream\w*|MAPISendMail\w*|CLSID_WebBrowser|IWebBrowser2?|CAsyncSocket|CSocket|GotoURL)\b'
 $dllPattern = '(?i)\b(ws2_32|wsock32|wininet|winhttp|urlmon|mapi32|dnsapi|iphlpapi)\b'
 $urlLaunchPattern = '(?i)ShellExecute\w*\s*\(.*https?://'
-$sourceDirs = 'src', 'Shared', 'Addins', 'ICU_Loader', 'focusdll', 'EncryptDecrypt', 'FocusHighlight', 'U3Stop', 'lib', 'tests'
+$sourceDirs = 'src', 'Shared', 'Addins', 'ICU_Loader', 'focusdll', 'EncryptDecrypt', 'FocusHighlight', 'lib', 'tests'
 $files = foreach ($d in $sourceDirs) {
     $p = Join-Path $repo $d
     if (Test-Path $p) { Get-ChildItem $p -Recurse -File -Include *.c, *.cpp, *.h, *.hpp, *.rc, *.vcxproj, *.def }
@@ -89,21 +105,29 @@ foreach ($f in $files) {
 if ($sourceFindings -gt 0) { Fail "source: $sourceFindings lines reference network APIs or DLLs" }
 Say "source: ok   $($files.Count) files, no network APIs or DLL names"
 
-# ---- 4. installer script ---------------------------------------------------------
-# No firewall rules and no post-install URL launches in the installer the fork builds.
-$iss = Join-Path $repo 'DittoSetup\DittoSetup_10.iss'
+# ---- 5. installer scripts --------------------------------------------------------
+# Every Inno Setup script in the repo: no firewall rules, no post-install URL launches, and a
+# MinVersion of Windows 10 or later.
+$issFiles = @(Get-ChildItem $repo -Recurse -Filter *.iss | Where-Object { $_.FullName -notmatch '\\(build|vcpkg_installed|Release64)\\' })
+if ($issFiles.Count -eq 0) { Fail 'installer: no .iss script found' }
 $issPattern = '(?i)\b(netsh|advfirewall|firewall)\b|^\s*Filename:\s*https?://|\bshellexec\b'
 $issFindings = 0
-$n = 0
-foreach ($line in [IO.File]::ReadLines($iss)) {
-    $n++
-    if ($line.TrimStart().StartsWith(';') -or $line.TrimStart().StartsWith('//')) { continue }   # comments
-    if ($line -match $issPattern) { Say "installer: FAIL DittoSetup_10.iss:${n}: $($line.Trim())"; $issFindings++ }
+foreach ($iss in $issFiles) {
+    $rel = $iss.FullName.Substring($repo.Length + 1)
+    $n = 0
+    $minVersionOk = $false
+    foreach ($line in [IO.File]::ReadLines($iss.FullName)) {
+        $n++
+        if ($line.TrimStart().StartsWith(';') -or $line.TrimStart().StartsWith('//')) { continue }   # comments
+        if ($line -match $issPattern) { Say "installer: FAIL ${rel}:${n}: $($line.Trim())"; $issFindings++ }
+        if ($line -match '^\s*MinVersion\s*=\s*(\d+)\.' -and [int]$Matches[1] -ge 10) { $minVersionOk = $true }
+    }
+    if (-not $minVersionOk) { Say "installer: FAIL $rel has no MinVersion of Windows 10 or later"; $issFindings++ }
 }
-if ($issFindings -gt 0) { Fail "installer: $issFindings lines add firewall rules or launch URLs" }
-Say 'installer: ok   DittoSetup_10.iss has no firewall rules or URL launches'
+if ($issFindings -gt 0) { Fail "installer: $issFindings findings (firewall rules, URL launches or OS version)" }
+Say "installer: ok   $($issFiles.Count) script(s): no firewall rules or URL launches, Windows 10 or later"
 
-# ---- 5. no raw allocation in contract code ------------------------------------------
+# ---- 6. no raw allocation in contract code ------------------------------------------
 # Owner rule: no new/delete/malloc/free; smart pointers and containers only. Deleted functions
 # ('= delete') and comments are not allocations.
 $allocPattern = '\bnew\b|\bdelete\b|\b(malloc|calloc|realloc|free)\s*\('
@@ -123,7 +147,7 @@ foreach ($f in $contractFiles) {
 if ($allocFindings -gt 0) { Fail "allocation: $allocFindings raw allocations in lib\ or tests\" }
 Say "allocation: ok   $($contractFiles.Count) files in lib\ and tests\, no raw new/delete/malloc/free"
 
-# ---- 6. unit tests (each test on its own, AddressSanitizer build) -----------------------
+# ---- 7. unit tests (each test on its own, AddressSanitizer build) -----------------------
 $testExe = Join-Path $repo 'build\DittoTests\x64\Release\DittoTests.exe'
 if (-not (Test-Path $testExe)) { Fail "tests: $testExe not found (run without -SkipBuild)" }
 $env:PATH = "$($dumpbin.DirectoryName);$env:PATH"   # clang_rt.asan_dynamic-x86_64.dll lives next to dumpbin
@@ -144,7 +168,7 @@ foreach ($name in $testNames) {
 if ($testFailures -gt 0) { Fail "tests: $testFailures of $($testNames.Count) failed" }
 Say "tests: ok   $($testNames.Count) tests, each run on its own under ASan"
 
-# ---- 7. documentation (Doxygen) -------------------------------------------------------
+# ---- 8. documentation (Doxygen) -------------------------------------------------------
 # Every class, function and member of the contract code is documented; any Doxygen warning fails.
 $doxygen = (Get-Command doxygen -ErrorAction SilentlyContinue).Source
 if (-not $doxygen -and (Test-Path 'C:\Program Files\doxygen\bin\doxygen.exe')) { $doxygen = 'C:\Program Files\doxygen\bin\doxygen.exe' }
@@ -159,5 +183,5 @@ $docOut | Where-Object { "$_".Trim() } | Select-Object -First 20 | ForEach-Objec
 if ($docCode -ne 0) { Fail "docs: doxygen exit $docCode (undocumented or wrongly documented code)" }
 Say 'docs: ok   contract code fully documented (tools\Doxyfile.contract)'
 
-Say "VERIFY OK: build, imports ($($binaries.Count) binaries), source ($($files.Count) files), installer script, allocation, tests ($($testNames.Count)), docs"
+Say "VERIFY OK: build, imports and hardening ($($binaries.Count) binaries), source ($($files.Count) files), installer scripts ($($issFiles.Count)), allocation, tests ($($testNames.Count)), docs"
 exit 0

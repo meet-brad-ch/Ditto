@@ -1013,22 +1013,6 @@ CString GetProcessName(HWND hWnd, DWORD processId)
 	return strProcessName;
 }
 
-BOOL IsVista()
-{
-	OSVERSIONINFO osver;
-
-	osver.dwOSVersionInfoSize = sizeof( OSVERSIONINFO );
-
-	if (::GetVersionEx( &osver ) && 
-		osver.dwPlatformId == VER_PLATFORM_WIN32_NT && 
-		(osver.dwMajorVersion >= 6 ) )
-	{
-		return TRUE;
-	}
-
-	return FALSE;
-}
-
 bool IsRunningLimited()
 {
 	LPCTSTR pszSubKey = _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System");
@@ -1039,14 +1023,9 @@ bool IsRunningLimited()
 
 	if(ERROR_SUCCESS != SHGetValue(HKEY_LOCAL_MACHINE, pszSubKey, pszValue, &dwType, &dwValue, &dwValueSize))
 	{
-		//failed to read the reg key, either it's not there or we don't have access to the registry
-		//If we are vista then assume we don't have access and we are running as a limited app
-		//otherwise we are xp and the reg key probably doesn't exist and we are not a limited running app
-		if(IsVista())
-		{
-			OutputDebugString(_T("Ditto - Failed to read registry entry finding UAC, Running as limited application"));
-			return true;
-		}
+		//failed to read the reg key: assume we don't have access and we are running as a limited app
+		OutputDebugString(_T("Ditto - Failed to read registry entry finding UAC, Running as limited application"));
+		return true;
 	}
 
 	if(dwValue == 1)

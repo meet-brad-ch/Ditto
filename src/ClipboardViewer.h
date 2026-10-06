@@ -26,8 +26,6 @@ public:
 public:
 	void Create();
 
-	HWND	m_hNextClipboardViewer;
-	bool	m_bCalling_SetClipboardViewer;
 	bool	m_bPinging;
 	bool	m_bConnect;
 	bool	m_bIsConnected;
@@ -38,8 +36,8 @@ public:
 	// m_pHandler->OnClipboardChange is called when the clipboard changes.
 	CCopyThread*	m_pHandler;
 
-	void Connect();    // connects as a clipboard viewer
-	void Disconnect(bool bSendPing = true); // disconnects as a clipboard viewer
+	void Connect();    // starts listening for clipboard changes
+	void Disconnect(bool bSendPing = true); // stops listening for clipboard changes
 
 	void SendPing();
 
@@ -57,13 +55,14 @@ protected:
 	//{{AFX_MSG(CClipboardViewer)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDestroy();
-	afx_msg void OnChangeCbChain(HWND hWndRemove, HWND hWndAfter);
-	afx_msg void OnDrawClipboard();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	//}}AFX_MSG
 	afx_msg LRESULT OnSetConnect(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT CClipboardViewer::OnClipboardChange(WPARAM wParam, LPARAM lPara);
 	DECLARE_MESSAGE_MAP()
+
+private:
+	void ProcessClipboardChange();
 };
 
 /////////////////////////////////////////////////////////////////////////////

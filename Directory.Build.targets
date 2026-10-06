@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(VcpkgRoot)\scripts\buildsystems\msbuild\vcpkg.targets" Condition="Exists('$(VcpkgRoot)\scripts\buildsystems\msbuild\vcpkg.targets')" />
+  <!-- Every project targets Windows 10 and later and is built hardened: SDL checks (/sdl) and
+       Control Flow Guard (/guard:cf). Set here, after each project's own settings, so no project
+       or configuration can opt out. tools\verify.ps1 checks the flags in every built binary. -->
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0A00;WINVER=0x0A00;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <Target Name="DittoRequireVcpkg" BeforeTargets="PrepareForBuild">
     <Error Condition="!Exists('$(VcpkgRoot)\scripts\buildsystems\msbuild\vcpkg.targets')"
            Text="vcpkg not found at '$(VcpkgRoot)'. Set VCPKG_ROOT or pass /p:VcpkgRoot=&lt;path&gt;." />

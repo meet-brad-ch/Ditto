@@ -5,6 +5,7 @@
 #include "cp_main.h"
 #include "ClipboardViewer.h"
 #include "Misc.h"
+#include "ErrorReport.h"
 #include "..\Shared\Tokenizer.h"
 #include "WildCardMatch.h"
 
@@ -18,8 +19,6 @@ static char THIS_FILE[] = __FILE__;
 // CClipboardViewer
 
 CClipboardViewer::CClipboardViewer(CCopyThread* pHandler) :
-	m_hNextClipboardViewer(0),
-	m_bCalling_SetClipboardViewer(false),
 	m_pHandler(pHandler),
 	m_bPinging(false),
 	m_bIsConnected(false),
@@ -39,8 +38,6 @@ CClipboardViewer::~CClipboardViewer()
 BEGIN_MESSAGE_MAP(CClipboardViewer, CWnd)
 	//{{AFX_MSG_MAP(CClipboardViewer)
 	ON_WM_CREATE()
-	ON_WM_CHANGECBCHAIN()
-	ON_WM_DRAWCLIPBOARD()
 	ON_WM_TIMER()
 	ON_WM_DESTROY()
 	//}}AFX_MSG_MAP
@@ -62,40 +59,17 @@ void CClipboardViewer::Create()
 	}
 }
 
-// connects as a clipboard viewer
+// connects as a clipboard format listener; a failure is shown to the user, since no copy is saved without it
 void CClipboardViewer::Connect()
 {
 	Log(_T("Connect to Clipboard"));
-	
-	m_bCalling_SetClipboardViewer = true;
 
-	bool useSetClipboardWnd = true;
-
-	if(IsVista())
+	if(!::AddClipboardFormatListener(m_hWnd))
 	{
-		HMODULE hUser32 = LoadLibrary(_T("USER32.dll"));
-		if (hUser32) 
-		{
-			typedef BOOL (__stdcall *AddClipFormatListener)( HWND hwnd );
-
-			AddClipFormatListener addListener = (AddClipFormatListener) GetProcAddress(hUser32, "AddClipboardFormatListener");
-			if(addListener)
-			{
-				Log(_T("Connecting to clipboard with function AddClipboardFormatListener"));
-				useSetClipboardWnd = false;
-				addListener(m_hWnd);				
-			}
-		}
-	}
-	
-	if(useSetClipboardWnd)
-	{
-		Log(_T("Connecting to clipboard with function SetClipboardViewer"));
-		m_hNextClipboardViewer = CWnd::SetClipboardViewer();		
+		CErrorReport::Show(StrF(_T("Ditto could not listen for clipboard changes (AddClipboardFormatListener failed, error %u). Copies are not saved."), ::GetLastError()));
+		return;
 	}
 
-	m_bCalling_SetClipboardViewer = false;
-	
 	m_bIsConnected = true;
 	m_bConnect = true;
 
@@ -113,42 +87,12 @@ void CClipboardViewer::Disconnect(bool bSendPing)
 	Log(_T("Disconnect From Clipboard"));
 
 	KillTimer(TIMER_ENSURE_VIEWER_IN_CHAIN);
-	bool removeOldWay = true;
 
-	if(IsVista())
+	if(m_bIsConnected && !::RemoveClipboardFormatListener(m_hWnd))
 	{
-		HMODULE hUser32 = LoadLibrary(_T("USER32.dll"));
-		if (hUser32) 
-		{
-			typedef BOOL (__stdcall *RemoveClipFormatListener)( HWND hwnd );
-
-			RemoveClipFormatListener removeListener = (RemoveClipFormatListener) GetProcAddress(hUser32, "RemoveClipboardFormatListener");
-			if(removeListener)
-			{
-				Log(_T("Disconnecting from clipboard with function RemoveClipboardFormatListener"));
-				removeOldWay = false;
-				removeListener(m_hWnd);				
-			}
-		}
-	}
-	
-	if(removeOldWay)
-	{
-		Log(_T("Disconnecting from clipboard with function ChangeClipboardChain"));
-
-		BOOL bRet = CWnd::ChangeClipboardChain(m_hNextClipboardViewer);
-		if(!bRet)
-		{
-			Log(_T("Error disconnecting from clipboard"));
-			bRet = CWnd::ChangeClipboardChain(m_hNextClipboardViewer);
-			if(!bRet)
-			{
-				Log(_T("Error disconnecting from clipboard2"));
-			}
-		}
+		CErrorReport::Show(StrF(_T("Ditto could not stop listening for clipboard changes (RemoveClipboardFormatListener failed, error %u)."), ::GetLastError()));
 	}
 
-	m_hNextClipboardViewer = 0;
 	m_bConnect = false;
 	m_bIsConnected = false;
 	if(bSendPing)
@@ -214,33 +158,10 @@ void CClipboardViewer::OnDestroy()
 	CWnd::OnDestroy();
 }
 
-void CClipboardViewer::OnChangeCbChain(HWND hWndRemove, HWND hWndAfter) 
-{
-	Log(_T("OnChangeCbChain"));
-	
-	// If the next window is closing, repair the chain. 
-	if(m_hNextClipboardViewer == hWndRemove)
-    {
-		m_hNextClipboardViewer = hWndAfter;
-    }
-    // Otherwise, pass the message to the next link.
-	else if (m_hNextClipboardViewer != NULL)
-    {
-		if(m_hNextClipboardViewer != m_hWnd)
-		{
-			::SendMessage(m_hNextClipboardViewer, WM_CHANGECBCHAIN, (WPARAM) hWndRemove, (LPARAM) hWndAfter);
-		}
-		else
-		{
-			m_hNextClipboardViewer = NULL;
-		}
-    }
-}
-
 LRESULT CClipboardViewer::OnClipboardChange(WPARAM wParam, LPARAM lPara)
 {
 	Log(StrF(_T("OnClipboardChange - Start")));
-	OnDrawClipboard();
+	ProcessClipboardChange();
 	Log(StrF(_T("OnClipboardChange - End")));
 
 	return TRUE;
@@ -269,8 +190,8 @@ bool CClipboardViewer::GetIgnoreClipboardChange()
 	return false;
 }
 
-//Message that the clipboard data has changed
-void CClipboardViewer::OnDrawClipboard() 
+//The clipboard data has changed
+void CClipboardViewer::ProcessClipboardChange()
 {
 	if(::IsClipboardFormatAvailable(theApp.m_PingFormat))
 	{
@@ -278,8 +199,7 @@ void CClipboardViewer::OnDrawClipboard()
 		return;
 	}
 
-	// don't process the event when we first attach
-	if(m_pHandler && !m_bCalling_SetClipboardViewer)
+	if(m_pHandler)
 	{
 		if(m_bIsConnected)
 		{
@@ -297,19 +217,6 @@ void CClipboardViewer::OnDrawClipboard()
 		else
 		{
 			Log(_T("Not connected, ignore clipboard change"));
-		}
-	}
-
-	// pass the event to the next Clipboard viewer in the chain
-	if(m_hNextClipboardViewer != NULL)
-	{
-		if(m_hNextClipboardViewer != m_hWnd)
-		{
-			::SendMessage(m_hNextClipboardViewer, WM_DRAWCLIPBOARD, 0, 0);	
-		}
-		else
-		{
-			m_hNextClipboardViewer = NULL;
 		}
 	}
 }

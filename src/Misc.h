@@ -176,7 +176,6 @@ __inline BOOL FileExists(LPCTSTR pszFile)
 }
 
 bool IsRunningLimited();
-BOOL IsVista();
 
 void DeleteDittoTempFiles(BOOL checkFileLastAccess);
 void DeleteFolderFiles(CString csDir, BOOL checkFileLastAccess, CTimeSpan lastAccessOffset);

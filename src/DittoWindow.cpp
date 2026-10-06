@@ -2,7 +2,6 @@
 #include ".\dittowindow.h"
 #include "CP_Main.h"
 #include "Options.h"
-#include <ShellScalingAPI.h>
 
 CDittoWindow::CDittoWindow(void)
 {

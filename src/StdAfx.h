@@ -19,8 +19,7 @@
 
 #define HITTEST_RET LRESULT
 
-#define _WIN32_WINNT 0x0A00
-#define WINVER 0x0A00
+// _WIN32_WINNT and WINVER (Windows 10) are set for every project in Directory.Build.targets
 
 #define VC_EXTRALEAN		// Exclude rarely-used stuff from Windows headers
 

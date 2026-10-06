@@ -81,86 +81,6 @@ public:
     User
   };
 
-  //We use our own definitions of the NOTIFYICONDATA structs so that
-  //we can use all the functionality without requiring client code to 
-  //define _WIN32_IE >= 0x500
-  typedef struct _NOTIFYICONDATA_1 //The version of the structure supported by Shell v4
-  {
-    DWORD cbSize;
-    HWND hWnd;
-    UINT uID;
-    UINT uFlags;
-    UINT uCallbackMessage;
-    HICON hIcon;
-    TCHAR szTip[64];
-  } NOTIFYICONDATA_1;
-
-  typedef struct _NOTIFYICONDATA_2 //The version of the structure supported by Shell v5
-  {
-    DWORD cbSize;
-    HWND hWnd;
-    UINT uID;
-    UINT uFlags;
-    UINT uCallbackMessage;
-    HICON hIcon;
-    TCHAR szTip[128];
-    DWORD dwState;
-    DWORD dwStateMask;
-    TCHAR szInfo[256];
-    union 
-    {
-      UINT uTimeout;
-      UINT uVersion;
-    } DUMMYUNIONNAME;
-    TCHAR szInfoTitle[64];
-    DWORD dwInfoFlags;
-  } NOTIFYICONDATA_2;
-
-  typedef struct _NOTIFYICONDATA_3 //The version of the structure supported by Shell v6
-  {
-    DWORD cbSize;
-    HWND hWnd;
-    UINT uID;
-    UINT uFlags;
-    UINT uCallbackMessage;
-    HICON hIcon;
-    TCHAR szTip[128];
-    DWORD dwState;
-    DWORD dwStateMask;
-    TCHAR szInfo[256];
-    union 
-    {
-      UINT uTimeout;
-      UINT uVersion;
-    } DUMMYUNIONNAME;
-    TCHAR szInfoTitle[64];
-    DWORD dwInfoFlags;
-    GUID guidItem;
-  } NOTIFYICONDATA_3;
-
-  typedef struct _NOTIFYICONDATA_4 //The version of the structure supported by Shell v7
-  {
-    DWORD cbSize;
-    HWND hWnd;
-    UINT uID;
-    UINT uFlags;
-    UINT uCallbackMessage;
-    HICON hIcon;
-    TCHAR szTip[128];
-    DWORD dwState;
-    DWORD dwStateMask;
-    TCHAR szInfo[256];
-    union 
-    {
-      UINT uTimeout;
-      UINT uVersion;
-    } DUMMYUNIONNAME;
-    TCHAR szInfoTitle[64];
-    DWORD dwInfoFlags;
-    GUID guidItem;
-    HICON hBalloonIcon;
-  } NOTIFYICONDATA_4;
-
   DECLARE_WND_CLASS(_T("TrayNotifyIconClass"))
 
 
@@ -265,22 +185,11 @@ protected:
   LRESULT      OnTaskbarCreated(WPARAM wParam, LPARAM lParam);
   void         OnTimer(UINT_PTR nIDEvent);
   void         OnDestroy();
-  DWORD        GetNOTIFYICONDATASizeForOS();
 
   static CTrayWnd  m_wndInvisible;
 
-//Enums
-  enum ShellVersion
-  {
-    Version4     = 0, //PreWin2k
-    Version5     = 1, //Win2k
-    Version6     = 2, //XP
-    VersionVista = 3, //Vista
-    Version7     = 4, //Windows7
-  };
-
 //Member variables
-  NOTIFYICONDATA_4     m_NotifyIconData;
+  NOTIFYICONDATA       m_NotifyIconData;
   BOOL                 m_bCreated;
   BOOL                 m_bHidden;
 #ifdef _AFX
@@ -291,7 +200,6 @@ protected:
   CMenu                m_Menu;
   UINT                 m_nDefaultMenuItem;
   BOOL                 m_bDefaultMenuItemByPos;
-  ShellVersion         m_ShellVersion;
   HICON                m_hDynamicIcon; //Our cached copy of the last icon created with BitmapToIcon
   ATL::CHeapPtr<HICON> m_Icons;
   int                  m_nNumIcons;
