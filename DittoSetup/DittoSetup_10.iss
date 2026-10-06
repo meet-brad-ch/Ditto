@@ -1,10 +1,12 @@
 #define MyAppName               "Ditto"
-#define MyAppVersion            GetFileVersion("..\Release64\Ditto.exe")
-#define MyAppVerName            MyAppName + " " + MyAppVersion
-#define MyAppPublisher          "Scott Brogden"
-#define MyAppSupportURL         "ditto-cp.sourceforge.net"
+#define MyAppVersion            GetVersionNumbersString("..\Release64\Ditto.exe")
+#define MyAppVerName            MyAppName + " " + MyAppVersion + " (local-only build)"
+; local-only fork of sabrogden/Ditto: no network code, no firewall rule, no browser links
+#define MyAppPublisher          "Ditto local-only fork (meet-brad-ch)"
+#define MyAppAuthor             "Scott Brogden"
+#define MyAppSupportURL         "https://github.com/meet-brad-ch/Ditto"
 #define MyAppCopyrighEndYear    GetDateTimeString('yyyy','','')
-#define MyOutputBaseFilename    "DittoSetup_" + GetEnv('VERSION_FILENAME')
+#define MyOutputBaseFilename    "DittoLocalSetup_" + StringChange(MyAppVersion, '.', '_')
  
 [Setup]
 AppName={#MyAppName}
@@ -27,12 +29,12 @@ VersionInfoVersion={#MyAppVersion}
 VersionInfoProductName={#MyAppName}
 VersionInfoProductVersion={#MyAppVersion}
 
-AppCopyright={#MyAppPublisher} {#MyAppCopyrighEndYear}
+AppCopyright={#MyAppAuthor} {#MyAppCopyrighEndYear}
 
 OutputBaseFilename={#MyOutputBaseFilename}
 ArchitecturesInstallIn64BitMode=x64compatible
 ArchitecturesAllowed=x64compatible
-DefaultDirName={pf}\{#MyAppName}
+DefaultDirName={commonpf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 ;UsePreviousTasks=no
 ;DisableDirPage=yes
@@ -79,36 +81,34 @@ Name: Swedish;             MessagesFile: Swedish.isl
 
 [CustomMessages]
 English.RunDittoOnStartup=Run Ditto on Windows startup
-English.AddFirewallException=Add Windows Firewall exception for Ditto on port 23443
 English.LaunchDitto=Launch Ditto
-English.ViewHelp=View Help
-English.ViewChangeHistory=View Change History
 English.UninstallDitto=Uninstall Ditto
 English.VCRuntimeInstallFailed=VCRuntime prerequisite install failed.
 
 Italiano.RunDittoOnStartup=Esegui Ditto all'avvio di Windows
-Italiano.AddFirewallException=Aggiungi eccezione a Windows Firewall per Ditto e la porta 23443
 Italiano.LaunchDitto=Esegui Ditto
-Italiano.ViewHelp=Visualizza guida in linea
-Italiano.ViewChangeHistory=Visualizza cronologia versioni programma
 Italiano.UninstallDitto=Disinstalla Ditto
 Italiano.VCRuntimeInstallFailed=Installazione prerequisito VCRuntime non riuscita.
 
 [Tasks]
 Name: RunAtStartup; Description: {cm:RunDittoOnStartup}
-Name: AddFireWallException; Description: {cm:AddFirewallException};  Flags: unchecked
 
 [Files]
-Source: ..\Release64\Ditto.exe; DestDir: {app}; DestName: Ditto.exe; Flags: ignoreversion; AfterInstall: AddProgramToFirewall(ExpandConstant('{app}\Ditto.exe'), 'Ditto_FromInstaller_64');
+Source: ..\Release64\Ditto.exe; DestDir: {app}; DestName: Ditto.exe; Flags: ignoreversion
 Source: ..\Release64\ICU_Loader.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\Release64\Addins\DittoUtil.dll; DestDir: {app}\Addins; Flags: ignoreversion
 
-; "C:\Windows\sysnative" will be converted to "C:\Windows\System32"
-; System32 stores a 64-bit DLL on x64 system
-Source: C:\Windows\sysnative\vcruntime140.dll;  DestDir: {app}; Flags: ignoreversion
-Source: C:\Windows\sysnative\vcruntime140_1.dll;  DestDir: {app}; Flags: ignoreversion 
-Source: C:\Windows\sysnative\msvcp140.dll;  DestDir: {app}; Flags: ignoreversion
-Source: C:\Windows\sysnative\mfc140u.dll;  DestDir: {app}; Flags: ignoreversion
+; the 64-bit runtime DLLs live in System32; a 32-bit compiler (Inno Setup 6) sees them
+; only through "sysnative", a 64-bit compiler (Inno Setup 7) only through "System32"
+#if FileExists("C:\Windows\sysnative\vcruntime140.dll")
+  #define Sys64Dir "C:\Windows\sysnative"
+#else
+  #define Sys64Dir "C:\Windows\System32"
+#endif
+Source: {#Sys64Dir}\vcruntime140.dll;  DestDir: {app}; Flags: ignoreversion
+Source: {#Sys64Dir}\vcruntime140_1.dll;  DestDir: {app}; Flags: ignoreversion
+Source: {#Sys64Dir}\msvcp140.dll;  DestDir: {app}; Flags: ignoreversion
+Source: {#Sys64Dir}\mfc140u.dll;  DestDir: {app}; Flags: ignoreversion
 
 
 Source: ..\Debug\Language\*; DestDir: {app}\Language; BeforeInstall: BeforeLanguageInstall()
@@ -120,8 +120,6 @@ Name: {group}\{cm:UninstallDitto}; Filename: {uninstallexe}
 
 [Run]
 Filename: {app}\Ditto.exe; Description: {cm:LaunchDitto}; Flags: nowait postinstall
-Filename: https://github.com/sabrogden/Ditto/wiki; Description: {cm:ViewHelp}; Flags: nowait postinstall skipifsilent shellexec unchecked
-Filename: https://github.com/sabrogden/Ditto/releases; Description: {cm:ViewChangeHistory}; Flags: nowait postinstall skipifsilent shellexec unchecked
 
 [Registry]
 Root: HKCU; Subkey: Software\Ditto; Flags: uninsdeletekey
@@ -284,46 +282,5 @@ begin
     end;
 
   end;
-end;
-
-
-function RuleExistsInFirewall(RuleName : String) : Boolean;
-var
-  ErrorCode : Integer;
-begin
-  Exec('>', 'netsh advfirewall firewall show rule name="' + RuleName + '"', '', SW_HIDE, ewWaitUntilTerminated, ErrorCode);
-  if ErrorCode = 0 then
-    Result := True
-  else
-    Result := False;
-end;
-
-procedure AddProgramToFirewall(ProgramName : String; RuleName : String);
-var
-  ErrorCode : Integer;
-  Success : Boolean;
-  WindowsVersion : TWindowsVersion;
-begin
-  if IsTaskSelected('AddFireWallException') then
-    begin
-    GetWindowsVersionEx(WindowsVersion);
-    if (WindowsVersion.Major < 6) then
-      begin
-        Success := Exec('>', 'netsh firewall add allowedprogram "' + ProgramName + '" "' + RuleName + '" ENABLE ALL', '', SW_HIDE, ewWaitUntilTerminated, ErrorCode);
-      end
-    else
-      begin
-        if (not RuleExistsInFirewall(RuleName)) then
-          begin
-            Success := Exec('>', 'netsh advfirewall firewall add rule name="' + RuleName + '" dir=in action=allow protocol=TCP localport=23443 program="' + ProgramName + '" enable=yes', '', SW_HIDE, ewWaitUntilTerminated, ErrorCode);
-            Success := Exec('>', 'netsh advfirewall firewall add rule name="' + RuleName + '" dir=out action=allow protocol=TCP localport=23443 program="' + ProgramName + '" enable=yes', '', SW_HIDE, ewWaitUntilTerminated, ErrorCode);
-          end
-      end;
-     
-    if not Success then
-       Log('Error - Unable to add ' + RuleName + ' to List of Windows firewall exceptions. ErrorCode: ' + IntToStr(ErrorCode))
-    else
-       Log(RuleName + ' successfully added to list of Windows firewall exceptions. ErrorCode: ' + IntToStr(ErrorCode))
-  end
 end;
 

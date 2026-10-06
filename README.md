@@ -57,6 +57,7 @@ stages and exits 1 on the first failed one:
    httpapi.
 3. It greps every source, `.rc` and `.vcxproj` file for socket, WinINet, WinHTTP, urlmon, MAPI and
    WebBrowser APIs, network DLL names and `ShellExecute` of an `http(s)://` URL.
+4. It checks that `DittoSetup_10.iss` adds no firewall rules (netsh) and launches no URLs.
 
 `-SkipBuild` skips stage 1. The gate was tested against faults planted on purpose: a seeded
 `WSAStartup` line and a copied `curl.exe` were both caught.
@@ -68,6 +69,30 @@ stages and exits 1 on the first failed one:
   `setup.exe modify --installPath "C:\Program Files\Microsoft Visual Studio\18\Community" --add Microsoft.VisualStudio.Component.VC.ATLMFC --passive`
   (run from `%ProgramFiles(x86)%\Microsoft Visual Studio\Installer`, elevated).
 - Windows SDK 10.0.26100.0.
+
+## Installer
+
+Inno Setup (open source) builds the installer from `DittoSetup\DittoSetup_10.iss`. These commands
+were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then run:
+
+```
+& "C:\Program Files\Inno Setup 7\ISCC.exe" DittoSetup\DittoSetup_10.iss
+```
+
+- **Output:** `DittoSetup\Output\DittoLocalSetup_<exe version>.exe`, unsigned. The version comes
+  from `Ditto.exe`, which is currently 3.24.238.2 from `CP_Main.rc`.
+- **What it packages:** Ditto.exe, ICU_Loader.dll, Addins\DittoUtil.dll, the VC++/MFC runtime
+  DLLs from System32 (14.51), and `Debug\Language` and `Debug\Themes`.
+- **What changed from upstream's script:**
+  - The netsh firewall task (TCP 23443) is removed.
+  - The post-install "View Help" and "View Change History" browser links are removed.
+  - The publisher names the fork.
+  - The runtime DLL folder works with both 32-bit and 64-bit ISCC.
+  - `{pf}` is now `{commonpf}`.
+- **Existing install:** the AppName is still "Ditto", so the installer upgrades an existing Ditto
+  install in place and keeps its settings. It closes a running Ditto while it installs.
+- **Warnings:** the remaining ISCC warnings come from upstream: outdated unofficial translations,
+  unused variables, and HKCU writes from an admin install.
 
 ## Remotes
 
@@ -91,6 +116,8 @@ stages and exits 1 on the first failed one:
   existing shortcuts.
 - 2026-10-06: HTML clips show text or RTF, not a rendered page. The only renderer available was
   the IE WebBrowser control, which loads remote content.
+- 2026-10-06: Kept Inno Setup for the installer: it is open source and was already upstream's
+  tool. Only the firewall and browser-link parts of the script were removed.
 - 2026-10-06: Renamed `ReadMe.md` to `README.md`. The two names collide on Windows. The upstream
   readme text is kept below.
 

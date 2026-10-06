@@ -2,6 +2,7 @@
 #   1. builds Release|x64 (restores NuGet packages first when packages\ is missing)
 #   2. scans the imports of every built .exe/.dll for network DLLs
 #   3. greps all sources for network APIs and network DLL names
+#   4. checks the installer script for firewall rules and URL launches
 # Prints one timestamped line per check and exits 1 on the first failed stage.
 # Usage (repo root):  powershell -NoProfile -ExecutionPolicy Bypass -File tools\verify.ps1 [-SkipBuild]
 param([switch] $SkipBuild)
@@ -81,5 +82,19 @@ foreach ($f in $files) {
 if ($sourceFindings -gt 0) { Fail "source: $sourceFindings lines reference network APIs or DLLs" }
 Say "source: ok   $($files.Count) files, no network APIs or DLL names"
 
-Say "VERIFY OK: build, imports ($($binaries.Count) binaries), source ($($files.Count) files)"
+# ---- 4. installer script ---------------------------------------------------------
+# No firewall rules and no post-install URL launches in the installer the fork builds.
+$iss = Join-Path $repo 'DittoSetup\DittoSetup_10.iss'
+$issPattern = '(?i)\b(netsh|advfirewall|firewall)\b|^\s*Filename:\s*https?://|\bshellexec\b'
+$issFindings = 0
+$n = 0
+foreach ($line in [IO.File]::ReadLines($iss)) {
+    $n++
+    if ($line.TrimStart().StartsWith(';') -or $line.TrimStart().StartsWith('//')) { continue }   # comments
+    if ($line -match $issPattern) { Say "installer: FAIL DittoSetup_10.iss:${n}: $($line.Trim())"; $issFindings++ }
+}
+if ($issFindings -gt 0) { Fail "installer: $issFindings lines add firewall rules or launch URLs" }
+Say 'installer: ok   DittoSetup_10.iss has no firewall rules or URL launches'
+
+Say "VERIFY OK: build, imports ($($binaries.Count) binaries), source ($($files.Count) files), installer script"
 exit 0
