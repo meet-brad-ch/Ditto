@@ -1278,20 +1278,6 @@ void CToolTipEx::OnFirstAlwaysontop()
 	::SetWindowPos(m_hWnd, NULL, 0, 0, 0, 0, SWP_DRAWFRAME | SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);	
 }
 
-BOOL CToolTipEx::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult)
-{
-	//CString cs;
-	//cs.Format(_T("On Notify: %d\r\n"), ((LPNMHDR)lParam)->code);
-	//OutputDebugString(cs);
-	switch (((LPNMHDR)lParam)->code)
-	{
-		case 5:
-			int x = 0;
-		break;
-	}
-
-	return CWnd::OnNotify(wParam, lParam, pResult);
-}
 
 
 void CToolTipEx::OnEnMsgfilterRichedit21(NMHDR *pNMHDR, LRESULT *pResult)

@@ -961,9 +961,6 @@
     <None Include="res\Ditto_NoCopyCb.ico">
       <Filter>res</Filter>
     </None>
-    <None Include="res\FILECOPY.AVI">
-      <Filter>res</Filter>
-    </None>
     <None Include="res\mainfram.bmp">
       <Filter>res</Filter>
     </None>

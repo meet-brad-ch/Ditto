@@ -12,18 +12,6 @@
 #include <regex>
 #include <vector>
 
-CString GetComputerName()
-{
-	TCHAR ComputerName[MAX_COMPUTERNAME_LENGTH+1] = _T("");
-	DWORD Size=MAX_COMPUTERNAME_LENGTH+1;
-	GetComputerName(ComputerName, &Size);
-
-	CString cs(ComputerName);
-	cs.MakeUpper();
-
-	return cs;
-}
-
 void AppendToFile(const TCHAR* fn, const TCHAR* msg)
 {
 #ifdef _UNICODE

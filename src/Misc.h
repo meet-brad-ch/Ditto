@@ -69,7 +69,6 @@ public:
 
 #include "DatabaseUtilities.h"
 
-CString GetComputerName();
 
 #define FUNC		__FUNCTION__
 #define FUNCSIG		__FUNCSIG__

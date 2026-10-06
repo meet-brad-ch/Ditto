@@ -197,7 +197,7 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
     - `CreateQRCodeImage` (C6386): the copy size includes both headers.
     - `BitmapHelper` (C6001): `GlobalReAlloc` is annotated `_Frees_ptr_`, but a failed call
       leaves the block valid.
-  - Open: `rijndael.cpp` (dead `EncryptDecrypt`, removed with it), and C6387 null-after-lock
+  - Open: C6387 null-after-lock
     findings in the app, left for the `GlobalLock` RAII wrapper (Phase C). Findings in the
     vendored sqlite3mc and QRCode sources are not touched: sqlite stays vendored, and QRCode is
     replaced in Phase E.
@@ -228,6 +228,18 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   The ARM64 script still added firewall rules for TCP 23443 and launched URLs, and the portable
   one packaged files that no longer exist (`DittoU.exe`, `sqlite3.dll`, `zlib1.dll`). The
   installer gate now checks every `.iss` file.
+- 2026-10-06: Deleted dead code and files (plan step 4):
+  - The `EncryptDecrypt` project. Nothing called it; it was only linked. Its `rijndael.cpp` held
+    the last `/analyze` memory finding in our own code.
+  - The Friends leftovers in `CMultiLanguage` (two updaters, two language arrays),
+    `GetComputerName()`, the empty `CToolTipEx::OnNotify`, and the unused `FILECOPY.AVI` resource.
+  - 194 `resource.h` IDs that no code, resource script or language file references.
+  - Upstream's release tooling in `DittoSetup`: Chocolatey packages, the GitHub-release
+    publisher, the appx Store package (including `my.pfx`), the encrypted `BuildDitto.bld`, the
+    portable-zip script, and the committed `ProjectZip.exe` and `rcedit` executables. Only
+    `DittoSetup_10.iss` and its translations remain.
+  - `ActionEnums::Removed` and `UserConfigurable` are table lookups now (CC 1 and 2, were 23 and
+    14).
 - 2026-10-06: Third-party libraries come from a vcpkg manifest instead of NuGet `packages.config`.
   zlib went from 1.2.11 (2017) to 1.3.1. The unused libpng package and the orphan
   `src\zlib\*.h` and `src\sqlite\lz4.*` files are gone.

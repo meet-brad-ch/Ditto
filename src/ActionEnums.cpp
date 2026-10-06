@@ -4,6 +4,9 @@
 #include "Misc.h"
 #include "CP_Main.h"
 
+#include <algorithm>
+#include <array>
+
 ActionEnums::ActionEnums()
 {
 }
@@ -502,61 +505,26 @@ int ActionEnums::GetDefaultShortCutKeyB(ActionEnumValues value, int pos)
 
 bool ActionEnums::UserConfigurable(ActionEnumValues value)
 {
-	switch (value)
-	{
-	case ActionEnums::NEXTTABCONTROL:
-	case ActionEnums::PREVTABCONTROL:
-	case ActionEnums::MODIFIER_ACTVE_SELECTIONUP:
-	case ActionEnums::MODIFIER_ACTVE_SELECTIONDOWN:
-	case ActionEnums::MODIFIER_ACTVE_MOVEFIRST:
-	case ActionEnums::MODIFIER_ACTVE_MOVELAST:
-	case ActionEnums::BACKGRROUP:
-	case ActionEnums::DELETE_SELECTED:
-	case ActionEnums::TOGGLEFILELOGGING:
-	case ActionEnums::TOGGLEOUTPUTDEBUGSTRING:
-	case ActionEnums::HOMELIST:
-	case ActionEnums::PASTE_SCRIPT:
-		return false;
-	}
+	// Actions bound internally, never offered in the shortcut editor
+	static const std::array internalOnly{
+		NEXTTABCONTROL, PREVTABCONTROL,
+		MODIFIER_ACTVE_SELECTIONUP, MODIFIER_ACTVE_SELECTIONDOWN, MODIFIER_ACTVE_MOVEFIRST, MODIFIER_ACTVE_MOVELAST,
+		BACKGRROUP, DELETE_SELECTED, TOGGLEFILELOGGING, TOGGLEOUTPUTDEBUGSTRING, HOMELIST, PASTE_SCRIPT };
 
-	if (Removed(value))
-	{
-		return false;
-	}
-
-	return true;
+	const bool internal{ std::find(internalOnly.begin(), internalOnly.end(), value) != internalOnly.end() };
+	return !internal && !Removed(value);
 }
 
 bool ActionEnums::Removed(ActionEnumValues value)
 {
-	switch (value)
-	{
-	case ActionEnums::SEND_TO_FRIEND_1:
-	case ActionEnums::SEND_TO_FRIEND_2:
-	case ActionEnums::SEND_TO_FRIEND_3:
-	case ActionEnums::SEND_TO_FRIEND_4:
-	case ActionEnums::SEND_TO_FRIEND_5:
-	case ActionEnums::SEND_TO_FRIEND_6:
-	case ActionEnums::SEND_TO_FRIEND_7:
-	case ActionEnums::SEND_TO_FRIEND_8:
-	case ActionEnums::SEND_TO_FRIEND_9:
-	case ActionEnums::SEND_TO_FRIEND_10:
-	case ActionEnums::SEND_TO_FRIEND_11:
-	case ActionEnums::SEND_TO_FRIEND_12:
-	case ActionEnums::SEND_TO_FRIEND_13:
-	case ActionEnums::SEND_TO_FRIEND_14:
-	case ActionEnums::SEND_TO_FRIEND_15:
-	case ActionEnums::PROMPT_SEND_TO_FRIEND:
-	case ActionEnums::EXPORT_TO_GOOGLE_TRANSLATE:
-	case ActionEnums::EXPORT_TO_WEB_SEARCH:
-	case ActionEnums::EMAILTO_BODY:
-	case ActionEnums::EMAILTO_ATTACH_EXPORT:
-	case ActionEnums::EMAILTO_ATTACH_CONTENT:
-	case ActionEnums::GMAIL:
-		return true;
-	}
+	static const std::array removed{
+		SEND_TO_FRIEND_1, SEND_TO_FRIEND_2, SEND_TO_FRIEND_3, SEND_TO_FRIEND_4, SEND_TO_FRIEND_5,
+		SEND_TO_FRIEND_6, SEND_TO_FRIEND_7, SEND_TO_FRIEND_8, SEND_TO_FRIEND_9, SEND_TO_FRIEND_10,
+		SEND_TO_FRIEND_11, SEND_TO_FRIEND_12, SEND_TO_FRIEND_13, SEND_TO_FRIEND_14, SEND_TO_FRIEND_15,
+		PROMPT_SEND_TO_FRIEND, EXPORT_TO_GOOGLE_TRANSLATE, EXPORT_TO_WEB_SEARCH,
+		EMAILTO_BODY, EMAILTO_ATTACH_EXPORT, EMAILTO_ATTACH_CONTENT, GMAIL };
 
-	return false;
+	return std::find(removed.begin(), removed.end(), value) != removed.end();
 }
 
 bool ActionEnums::ToolTipAction(ActionEnumValues value)

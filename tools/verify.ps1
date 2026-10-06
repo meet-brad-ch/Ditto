@@ -85,7 +85,7 @@ if ($hardeningFindings -gt 0) { Fail "hardening: $hardeningFindings binaries lac
 $apiPattern = '\b(WSAStartup|WSASocket|closesocket|gethostbyname|getaddrinfo|GetAddrInfoW|InternetOpen\w*|InternetConnect\w*|InternetCanonicalizeUrl|HttpOpenRequest\w*|WinHttp\w+|URLDownloadTo\w+|URLOpenStream\w*|MAPISendMail\w*|CLSID_WebBrowser|IWebBrowser2?|CAsyncSocket|CSocket|GotoURL)\b'
 $dllPattern = '(?i)\b(ws2_32|wsock32|wininet|winhttp|urlmon|mapi32|dnsapi|iphlpapi)\b'
 $urlLaunchPattern = '(?i)ShellExecute\w*\s*\(.*https?://'
-$sourceDirs = 'src', 'Shared', 'Addins', 'ICU_Loader', 'focusdll', 'EncryptDecrypt', 'FocusHighlight', 'lib', 'tests'
+$sourceDirs = 'src', 'Shared', 'Addins', 'ICU_Loader', 'focusdll', 'FocusHighlight', 'lib', 'tests'
 $files = foreach ($d in $sourceDirs) {
     $p = Join-Path $repo $d
     if (Test-Path $p) { Get-ChildItem $p -Recurse -File -Include *.c, *.cpp, *.h, *.hpp, *.rc, *.vcxproj, *.def }

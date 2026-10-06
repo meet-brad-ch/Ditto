@@ -62,13 +62,11 @@ Debug/portable
 *.tlh
 /Addins/DittoUtil/Win32/Debug
 /Debug/EditClips
-/EncryptDecrypt/Win32/Debug
 /focusdll/Win32/Debug
 /ICU_Loader/Debug
 /Win32/Debug
 /Debug
 /Addins/DittoUtil/x64
-/EncryptDecrypt
 /focusdll/x64
 /FocusHighlight
 /focusdll
