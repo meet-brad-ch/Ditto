@@ -7,10 +7,11 @@ network code removed from the build.
 private text, so the copy the owner runs is compiled from source they can read, and it has no
 code that can send anything off the machine.
 
-**Status:** partly working. Upstream master a80fd35 builds locally. No network code has been
-removed yet.
+**Status:** partly working. All network code listed below is removed, the build is clean, and
+`tools/verify.ps1` passes. The running app has not been checked yet: no runtime socket check, no
+UI check.
 
-What "network code" means in this fork, found by reading upstream a80fd35:
+What this fork removed (found by reading upstream a80fd35):
 
 - **Friends.** Winsock TCP send and receive of clips, with the server on port 23443. The server
   starts by default on a normal install.
@@ -19,8 +20,12 @@ What "network code" means in this fork, found by reading upstream a80fd35:
 - **Hand-offs to other programs.** URLs go to the browser through ShellExecute: Help, Web Search,
   Translate, Gmail, the QR URL and links. Email goes to the mail client through MAPI.
 
-Upstream has no update check, telemetry or HTTP client. `httplib.h` and `sqlite/sqcloud.*` are
-in the repo but are never compiled.
+Upstream has no update check, telemetry or HTTP client. `httplib.h` and `sqlite/sqcloud.*` were
+in the repo but were never compiled. They are deleted too.
+
+Settings stay compatible. Action numbers are unchanged (`ActionEnums::Removed`), so saved
+keyboard shortcuts still map to the same actions. Network settings left in an existing
+ini or registry are ignored.
 
 ## How to run
 
@@ -43,8 +48,18 @@ not use vcpkg, and without the flag the integration calls `pwsh.exe` after each 
 Baseline imports of upstream `Ditto.exe`: **WS2_32.dll** (Friends sockets) and **WININET.dll**
 (`InternetCanonicalizeUrl`). This fork removes both.
 
-**Verify:** none yet. `tools/verify.ps1` is planned: it builds, scans the binary imports and
-greps the source.
+**Verify:** `powershell -NoProfile -ExecutionPolicy Bypass -File tools\verify.ps1` runs three
+stages and exits 1 on the first failed one:
+
+1. It builds Release|x64. It restores NuGet first if `packages\` is missing.
+2. It runs `dumpbin /imports` on every `.exe`/`.dll` in `Release64`. No binary may import
+   ws2_32, wsock32, mswsock, wininet, winhttp, urlmon, mapi32, dnsapi, iphlpapi, webio or
+   httpapi.
+3. It greps every source, `.rc` and `.vcxproj` file for socket, WinINet, WinHTTP, urlmon, MAPI and
+   WebBrowser APIs, network DLL names and `ShellExecute` of an `http(s)://` URL.
+
+`-SkipBuild` skips stage 1. The gate was tested against faults planted on purpose: a seeded
+`WSAStartup` line and a copied `curl.exe` were both caught.
 
 **Prerequisites:**
 
@@ -71,6 +86,11 @@ greps the source.
   something else.
 - 2026-10-06: Removed upstream's GitHub workflows, because they publish to Chocolatey,
   SignPath and GitHub Releases.
+- 2026-10-06: Kept the removed action enum values and marked them `Removed`, instead of
+  deleting them. Shortcuts are saved as `QP_ShortCut_<number>_…`, so renumbering would remap
+  existing shortcuts.
+- 2026-10-06: HTML clips show text or RTF, not a rendered page. The only renderer available was
+  the IE WebBrowser control, which loads remote content.
 - 2026-10-06: Renamed `ReadMe.md` to `README.md`. The two names collide on Windows. The upstream
   readme text is kept below.
 
