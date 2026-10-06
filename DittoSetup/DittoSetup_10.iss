@@ -123,7 +123,8 @@ Name: {group}\{cm:UninstallDitto}; Filename: {uninstallexe}
 Filename: {app}\Ditto.exe; Description: {cm:LaunchDitto}; Flags: nowait postinstall
 
 [Registry]
-Root: HKCU; Subkey: Software\Ditto; Flags: uninsdeletekey
+;HKCU\Software\Ditto stays on uninstall: it holds the settings and the database path (DBPath3),
+;so a later install opens the same clip history
 Root: HKCU; Subkey: SOFTWARE\Microsoft\Windows\CurrentVersion\Run; ValueType: string; ValueName: Ditto; flags: uninsdeletevalue; ValueData: {app}\Ditto.exe; Tasks: RunAtStartup
 
 Root: HKCU; Subkey: Software\Ditto; ValueType: dword; ValueName: SetFocus_iexplore.exe; ValueData: 00000001

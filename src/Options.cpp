@@ -969,16 +969,6 @@ void CGetSetOptions::SetCopyGap(long lGap)
 	SetProfileLong("CopyGap", lGap);
 }
 
-BOOL CGetSetOptions::SetDBPathOld(CString csPath)
-{
-	return SetProfileString("DBPath", csPath);
-}
-
-CString CGetSetOptions::GetDBPathOld()
-{
-	return GetProfileString("DBPath", "");
-}
-
 BOOL CGetSetOptions::SetDBPath(CString csPath)
 {
 	return SetProfileString("DBPath3", csPath);
@@ -1008,6 +998,16 @@ CString CGetSetOptions::GetDBPath(bool resolvePath)
 	}
 
 	return csDBPath;
+}
+
+CString CGetSetOptions::GetDefaultDBDirectory()
+{
+	if (GetIsPortableDitto())
+	{
+		return CString();
+	}
+
+	return GetAppDataPath();
 }
 
 void CGetSetOptions::SetCheckForMaxEntries(BOOL bVal)

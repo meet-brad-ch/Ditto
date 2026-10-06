@@ -117,10 +117,10 @@ public:
 
 	static BOOL SetDBPath(CString csPath);
 	static CString GetDBPath(bool resolvePath = true);
+	// Folder of the default database: the app data folder, or empty (the exe folder) when portable
+	static CString GetDefaultDBDirectory();
 	static CString ResolvePath(CString path);
 
-	static BOOL SetDBPathOld(CString csPath);
-	static CString GetDBPathOld();
 
 	static void SetCheckForMaxEntries(BOOL bVal);
 	static BOOL GetCheckForMaxEntries();

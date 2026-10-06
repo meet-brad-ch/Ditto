@@ -150,6 +150,7 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   - `{pf}` is now `{commonpf}`.
   - `MinVersion` is Windows 10 1607 (was Windows 7). The Windows 7/8 `cmd.exe` paste strings are
     no longer written; the leftover values are deleted on every install.
+  - Uninstalling keeps `HKCU\Software\Ditto` (settings and database path). Upstream deleted it.
 - **Existing install:** the AppName is still "Ditto", so the installer upgrades an existing Ditto
   install in place and keeps its settings. It closes a running Ditto while it installs.
 - **Warnings:** the remaining ISCC warnings come from upstream: outdated unofficial translations,
@@ -239,6 +240,17 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   The ARM64 script still added firewall rules for TCP 23443 and launched URLs, and the portable
   one packaged files that no longer exist (`DittoU.exe`, `sqlite3.dll`, `zlib1.dll`). The
   installer gate now checks every `.iss` file.
+- 2026-10-06: Ditto keeps the clip history when its settings are gone. Before, the uninstaller
+  deleted `HKCU\Software\Ditto` (`uninsdeletekey`), including the database path `DBPath3`. On the
+  next start Ditto had no path. It created an empty `Ditto_1.db` next to the existing `Ditto.db`,
+  so the history looked lost. This happened to the owner on 2026-10-06.
+  - With no path set, Ditto now opens `Ditto.db` in the default location
+    (`DittoCore::DatabasePath`, 4 tests).
+  - The usual checks still apply. A missing file is created, and an invalid one gets the existing
+    "Unrecognized Database Format" message.
+  - The installer keeps `HKCU\Software\Ditto` on uninstall.
+  - Runtime test: a portable copy with `DBPath3` cleared created `Ditto_1.db` before the fix and
+    reopens `Ditto.db` after it.
 - 2026-10-06: Deleted dead code and files (plan step 4):
   - The `EncryptDecrypt` project. Nothing called it; it was only linked. Its `rijndael.cpp` held
     the last `/analyze` memory finding in our own code.

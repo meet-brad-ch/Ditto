@@ -135,9 +135,26 @@ $contractFiles = @(Get-ChildItem (Join-Path $repo 'lib'), (Join-Path $repo 'test
 $allocFindings = 0
 foreach ($f in $contractFiles) {
     $n = 0
+    $inBlock = $false   # inside a /* ... */ (or Doxygen /** ... */) comment
     foreach ($line in [IO.File]::ReadLines($f.FullName)) {
         $n++
-        $code = ($line -replace '//.*$', '') -replace '=\s*delete\b', ''
+        $code = ''
+        $rest = $line
+        while ($rest.Length -gt 0) {
+            if ($inBlock) {
+                $end = $rest.IndexOf('*/')
+                if ($end -lt 0) { $rest = '' } else { $rest = $rest.Substring($end + 2); $inBlock = $false }
+                continue
+            }
+            $lineComment = $rest.IndexOf('//')
+            $blockStart = $rest.IndexOf('/*')
+            if ($blockStart -ge 0 -and ($lineComment -lt 0 -or $blockStart -lt $lineComment)) {
+                $code += $rest.Substring(0, $blockStart); $rest = $rest.Substring($blockStart + 2); $inBlock = $true
+            }
+            elseif ($lineComment -ge 0) { $code += $rest.Substring(0, $lineComment); $rest = '' }
+            else { $code += $rest; $rest = '' }
+        }
+        $code = $code -replace '=\s*delete\b', ''
         if ($code -cmatch $allocPattern) {
             Say ("allocation: FAIL {0}:{1}: {2}" -f $f.FullName.Substring($repo.Length + 1), $n, $line.Trim())
             $allocFindings++

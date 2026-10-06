@@ -10,6 +10,9 @@
 #include "Path.h"
 #include "zlib.h"
 #include "..\Shared\TextConvert.h"
+#include "DatabasePath.h"
+
+#include <filesystem>
 using namespace nsPath;
 
 //////////////////////////////////////////////////////////////////////
@@ -42,45 +45,11 @@ CString GetDBName()
 	return CGetSetOptions::GetDBPath();
 }
 
-CString GetOLDDefaultDBName()
-{
-	CString csDefaultPath;
-	LPMALLOC pMalloc;
-
-	if (SUCCEEDED(::SHGetMalloc(&pMalloc)))
-	{
-		LPITEMIDLIST pidlPrograms;
-
-		SHGetSpecialFolderLocation(NULL, CSIDL_APPDATA, &pidlPrograms);
-
-		TCHAR string[MAX_PATH];
-		SHGetPathFromIDList(pidlPrograms, string);
-
-		pMalloc->Free(pidlPrograms);
-		pMalloc->Release();
-
-		csDefaultPath = string;
-		csDefaultPath += "\\Ditto\\";
-
-		csDefaultPath += "DittoDB.mdb";
-	}
-
-	return csDefaultPath;
-}
-
+// A database file name in the default location that does not exist yet (Ditto.db, Ditto_1.db, ...),
+// for creating a new database
 CString GetDefaultDBName()
 {
-	CString csDefaultPath = _T("c:\\program files\\Ditto\\");
-
-	//If portable then default to the running path
-	if (CGetSetOptions::GetIsPortableDitto())
-	{
-		csDefaultPath.Empty();
-	}
-	else
-	{
-		csDefaultPath = CGetSetOptions::GetAppDataPath();
-	}
+	CString csDefaultPath = CGetSetOptions::GetDefaultDBDirectory();
 
 	CString csTempName = csDefaultPath + "Ditto.db";
 	int i = 1;
@@ -96,14 +65,16 @@ CString GetDefaultDBName()
 
 BOOL CheckDBExists(CString csDBPath)
 {
-	CPath path(csDBPath);
-
-	//If this is the first time running this version then convert the old database to the new db
+	// No path set (first run, or the settings were removed by an uninstall): open Ditto.db in the
+	// default location, which may hold the existing history; it is created below only if missing
 	if (csDBPath.IsEmpty())
 	{
-		csDBPath = GetDefaultDBName();
+		const std::filesystem::path defaultDirectory{ CGetSetOptions::GetDefaultDBDirectory().GetString() };
+		csDBPath = DittoCore::DatabasePath::Resolve({}, defaultDirectory).c_str();
 		CGetSetOptions::SetDBPath(csDBPath);
 	}
+
+	CPath path(csDBPath);
 
 	BOOL bRet = FALSE;
 	if (FileExists(csDBPath) == FALSE)

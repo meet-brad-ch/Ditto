@@ -6,6 +6,8 @@ OUTPUT_DIRECTORY       = build/doxygen
 INPUT                  = lib/DittoCore/ClipboardFormatError.h \
                          lib/DittoCore/ClipText.h \
                          lib/DittoCore/ClipText.cpp \
+                         lib/DittoCore/DatabasePath.h \
+                         lib/DittoCore/DatabasePath.cpp \
                          lib/DittoCore/DropBlockReader.h \
                          lib/DittoCore/DropBlockReader.cpp \
                          lib/DittoCore/FileDropList.h \
