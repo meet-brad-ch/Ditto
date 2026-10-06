@@ -66,6 +66,8 @@ stages and exits 1 on the first failed one:
 3. It greps every source, `.rc` and `.vcxproj` file for socket, WinINet, WinHTTP, urlmon, MAPI and
    WebBrowser APIs, network DLL names and `ShellExecute` of an `http(s)://` URL.
 4. It checks that `DittoSetup_10.iss` adds no firewall rules (netsh) and launches no URLs.
+5. It rejects raw allocation (`new`, `delete`, `malloc`, `free`) in `lib\` and `tests\`.
+6. It runs every GoogleTest in `tests\` on its own (`--gtest_filter`), under AddressSanitizer.
 
 `-SkipBuild` skips stage 1. The gate was tested against faults planted on purpose: a seeded
 `WSAStartup` line and a copied `curl.exe` were both caught.
@@ -79,6 +81,26 @@ stages and exits 1 on the first failed one:
 - Windows SDK 10.0.26100.0.
 - vcpkg at `C:\vcpkg`, or set `VCPKG_ROOT`. It must have the baseline commit from `vcpkg.json`
   (verified with vcpkg tool 2025-10-16).
+
+## Layout
+
+- `src\`: the Ditto app (MFC), mostly upstream code.
+- `lib\DittoCore\`: clipboard-format logic in plain C++, written to the contract. It has no MFC, no
+  UI and no global state. Built at `/W4 /WX`, with `/sdl`, `/permissive-` and Control Flow Guard
+  (`lib\Contract.props`).
+- `tests\`: GoogleTest unit tests for DittoCore. The Release build uses AddressSanitizer; the
+  output is `build\DittoTests\x64\Release\DittoTests.exe`.
+- `tools\verify.ps1`: the quality gate.
+- `DittoSetup\`: the Inno Setup installer.
+
+**Rules for new and refactored code (owner, 2026-10-06):**
+- **Fail fast.** An operation that cannot continue correctly stops at its top and shows the cause.
+  There are no fallbacks and no swallowed errors.
+- **Object-oriented.** Behavior lives in classes, with one class per `.h`/`.cpp` pair. Tests are
+  exempt from strict OO.
+- **No raw allocation.** Use `std::unique_ptr` and standard containers, and RAII for Win32
+  resources.
+- **Explicit project files.** Every file is listed by name; no wildcards.
 
 ## Installer
 
@@ -126,6 +148,15 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   existing shortcuts.
 - 2026-10-06: HTML clips show text or RTF, not a rendered page. The only renderer available was
   the IE WebBrowser control, which loads remote content.
+- 2026-10-06: CF_HDROP file lists are read by `DittoCore::FileDropList` and `GlobalFileDrop`, not
+  `DragQueryFile` with fixed buffers. Upstream passed `sizeof` (bytes) as a character count at
+  seven sites, so a clipboard path over 260 characters overflowed a stack buffer.
+- 2026-10-06: Malformed clipboard data throws `DittoCore::ClipboardFormatError`. Only the top of
+  each operation catches it, and it rejects that operation visibly: an error balloon through
+  `CErrorReport`, the paste/drag popup, or an add-in message box.
+  - The boundaries are copy, save clipboard, paste/drag, the OLE delayed-render callback (it
+    returns FALSE, so nothing crosses COM), text-only paste (parsed before the clipboard is
+    opened) and file-contents import.
 - 2026-10-06: Third-party libraries come from a vcpkg manifest instead of NuGet `packages.config`.
   zlib went from 1.2.11 (2017) to 1.3.1. The unused libpng package and the orphan
   `src\zlib\*.h` and `src\sqlite\lz4.*` files are gone.

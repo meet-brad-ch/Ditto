@@ -2,6 +2,7 @@
 #include "CP_Main.h"
 #include "ProcessPaste.h"
 #include "ClipIds.h"
+#include "ClipboardFormatError.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -69,6 +70,11 @@ BOOL CProcessPaste::DoPaste()
 		ret = TRUE;
 	
 	}
+	catch (const DittoCore::ClipboardFormatError& error)
+	{
+		m_lastErrorMessage.Format(_T("the clip's data is malformed (%s)"), CString(error.what()).GetString());
+		Log(m_lastErrorMessage);
+	}
 	catch (CException *ex)
 	{
 		TCHAR szCause[255];
@@ -103,6 +109,11 @@ BOOL CProcessPaste::DoDrag()
 			MarkAsPasted(m_pasteOptions.m_updateClipOrder);
 			ret = TRUE;
 		}		
+	}
+	catch (const DittoCore::ClipboardFormatError& error)
+	{
+		m_lastErrorMessage.Format(_T("the clip's data is malformed (%s)"), CString(error.what()).GetString());
+		Log(m_lastErrorMessage);
 	}
 	catch (CException *ex)
 	{

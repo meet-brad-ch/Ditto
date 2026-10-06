@@ -79,3 +79,5 @@ LOG.md
 
 # vcpkg manifest-mode install tree
 vcpkg_installed/
+# contract-code build output (lib\, tests\)
+/build/

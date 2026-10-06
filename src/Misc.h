@@ -135,6 +135,7 @@ __int64 GetLastWriteTime(const CString &csFile);
 #define WM_CLOSE_APP			WM_USER + 204
 #define WM_REFRESH_VIEW			WM_USER + 205
 #define WM_CLIPBOARD_COPIED		WM_USER + 206
+#define WM_SHOW_OWNED_ERROR_MSG	WM_USER + 207	// wParam: CString* owned by the receiver (CErrorReport)
 #define WM_FOCUS_CHANGED		WM_USER + 209
 #define WM_CV_GETCONNECT		WM_USER + 211
 #define WM_EDIT_WND_CLOSING		WM_USER	+ 212

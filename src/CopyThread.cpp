@@ -4,6 +4,10 @@
 #include "stdafx.h"
 #include "cp_main.h"
 #include "CopyThread.h"
+#include "ErrorReport.h"
+#include "ClipboardFormatError.h"
+
+#include <memory>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -67,7 +71,7 @@ void CCopyThread::OnClipboardChange(CString activeWindow, CString activeWindowTi
 		Log(StrF(_T("LoadFromClipboard - loading clips into groupId: %d"), groupId));
 	}
 	
-	CClip* pClip = new CClip;
+	auto pClip = std::make_unique<CClip>();
 	pClip->m_copyReason = theApp.GetCopyReason();
 
 	COleDataObjectEx oleData;
@@ -83,46 +87,67 @@ void CCopyThread::OnClipboardChange(CString activeWindow, CString activeWindowTi
 		pSupportedTypes = availableTypes.get();
 	}
 
-	Log(_T("LoadFromClipboard - Before"));
-	int bResult = pClip->LoadFromClipboard(pSupportedTypes, true, activeWindow, activeWindowTitle);
-	Log(_T("LoadFromClipboard - After"));
-
-	if(bResult == FALSE)
+	int bResult = FALSE;
+	try
 	{
-		DWORD delay = CGetSetOptions::GetNoFormatsRetryDelay();
-		if(delay > 0)
-		{
-			Log(StrF(_T("LoadFromClipboard didn't find any clips to save, sleeping %dms, then trying again"), delay));
-			Sleep(delay);
+		Log(_T("LoadFromClipboard - Before"));
+		bResult = pClip->LoadFromClipboard(pSupportedTypes, true, activeWindow, activeWindowTitle);
+		Log(_T("LoadFromClipboard - After"));
 
-			Log(_T("LoadFromClipboard #2 - Before"));
-			bResult = pClip->LoadFromClipboard(pSupportedTypes, activeWindow);
-			Log(_T("LoadFromClipboard #2 - After"));
-		}
-		else
+		if(bResult == FALSE)
 		{
-			Log(_T("LoadFromClipboard didn't find any clips to save, retry setting is not set, not retrying"));
+			DWORD delay = CGetSetOptions::GetNoFormatsRetryDelay();
+			if(delay > 0)
+			{
+				Log(StrF(_T("LoadFromClipboard didn't find any clips to save, sleeping %dms, then trying again"), delay));
+				Sleep(delay);
+
+				Log(_T("LoadFromClipboard #2 - Before"));
+				bResult = pClip->LoadFromClipboard(pSupportedTypes, activeWindow);
+				Log(_T("LoadFromClipboard #2 - After"));
+			}
+			else
+			{
+				Log(_T("LoadFromClipboard didn't find any clips to save, retry setting is not set, not retrying"));
+			}
 		}
+	}
+	catch(const DittoCore::ClipboardFormatError& error)
+	{
+		// clipboard data comes from other processes: this copy is rejected, Ditto keeps running
+		CErrorReport::Show(StrF(_T("A copy from %s was not saved: its clipboard data is malformed (%s)."),
+			activeWindow.GetString(), CString(error.what()).GetString()));
+		return;
 	}
 
 	pSupportedTypes = NULL;
-	
+
 	if(bResult != TRUE)
 	{
-		delete pClip;
-		return; // error
+		return; // nothing to save
 	}
 
-	if(pClip != NULL &&
-		groupId > -1)
+	if(groupId > -1)
 	{
 		pClip->m_parentId = groupId;
 	}
-	
+
+	// the WM_CLIPBOARD_COPIED handler takes ownership of the clip
 	if(m_LocalConfig.m_bAsyncCopy)
-		::PostMessage(m_LocalConfig.m_hClipHandler, WM_CLIPBOARD_COPIED, (WPARAM)pClip, 0);
+	{
+		if(::PostMessage(m_LocalConfig.m_hClipHandler, WM_CLIPBOARD_COPIED, reinterpret_cast<WPARAM>(pClip.get()), 0))
+		{
+			pClip.release();
+		}
+		else
+		{
+			Log(StrF(_T("Could not post the copied clip to the main window, GetLastError %d"), ::GetLastError()));
+		}
+	}
 	else
-		::SendMessage(m_LocalConfig.m_hClipHandler, WM_CLIPBOARD_COPIED, (WPARAM)pClip, 0);
+	{
+		::SendMessage(m_LocalConfig.m_hClipHandler, WM_CLIPBOARD_COPIED, reinterpret_cast<WPARAM>(pClip.release()), 0);
+	}
 
 	Log(_T("OnClipboardChange - End"));
 }

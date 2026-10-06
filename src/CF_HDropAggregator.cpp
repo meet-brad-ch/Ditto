@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include ".\cf_hdropaggregator.h"
+#include "FileDropList.h"
 
 CCF_HDropAggregator::CCF_HDropAggregator(void)
 {
@@ -11,16 +12,9 @@ CCF_HDropAggregator::~CCF_HDropAggregator(void)
 
 bool CCF_HDropAggregator::AddClip(LPVOID lpData, int nDataSize, int nPos, int nCount, UINT cfType)
 {
-	HDROP drop = (HDROP)GlobalLock((HDROP)lpData);
-	int nNumFiles = DragQueryFile(drop, -1, NULL, 0);
-	TCHAR file[MAX_PATH];
-
-	for(int nFile = 0; nFile < nNumFiles; nFile++)
+	for (const std::wstring& path : DittoCore::FileDropList::Parse(lpData, static_cast<std::size_t>(nDataSize)).Paths())
 	{
-		if(DragQueryFile(drop, nFile, file, sizeof(file)) > 0)
-		{
-			m_DropFiles.AddFile(file);
-		}
+		m_DropFiles.AddFile(path.c_str());
 	}
 
 	return true;

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include ".\cf_unicodetextaggregator.h"
 #include "Misc.h"
+#include "FileDropList.h"
 
 CCF_UnicodeTextAggregator::CCF_UnicodeTextAggregator(CStringW csSeparator) :
 	m_csSeparator(csSeparator)
@@ -16,17 +17,10 @@ bool CCF_UnicodeTextAggregator::AddClip(LPVOID lpData, int nDataSize, int nPos, 
 	if (cfType == CF_HDROP)
 	{
 		CString hDropFiles = _T("");
-		HDROP drop = (HDROP)GlobalLock((HDROP)lpData);
-		int nNumFiles = DragQueryFile(drop, -1, NULL, 0);
-		TCHAR file[MAX_PATH];
-
-		for (int nFile = 0; nFile < nNumFiles; nFile++)
+		for (const std::wstring& path : DittoCore::FileDropList::Parse(lpData, static_cast<std::size_t>(nDataSize)).Paths())
 		{
-			if (DragQueryFile(drop, nFile, file, sizeof(file)) > 0)
-			{
-				hDropFiles += file;
-				hDropFiles += _T("\r\n");
-			}
+			hDropFiles += path.c_str();
+			hDropFiles += _T("\r\n");
 		}
 
 		if (hDropFiles != _T(""))

@@ -5142,7 +5142,13 @@ void CQPasteWnd::OnBegindrag(NMHDR* pNMHDR, LRESULT* pResult)
 
 	this->SetTimer(TIMER_DRAG_HIDE_WINDOW, 500, NULL);
 
-	paste.DoDrag();
+	if (!paste.DoDrag() && !paste.m_lastErrorMessage.IsEmpty())  // FALSE without a message: drop cancelled
+	{
+		CString errorMessage;
+		errorMessage.Format(_T("Drag Error - %s"), paste.m_lastErrorMessage.GetString());
+		m_popupMsg.Show(errorMessage, CPoint(0, 0), true);
+		SetTimer(TIMER_ERROR_MSG, CGetSetOptions::GetErrorMsgPopupTimeout(), NULL);
+	}
 
 	KillTimer(TIMER_DRAG_HIDE_WINDOW);
 

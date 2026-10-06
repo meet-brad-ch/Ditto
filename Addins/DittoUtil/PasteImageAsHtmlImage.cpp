@@ -1,6 +1,11 @@
 #include "StdAfx.h"
 #include ".\pasteimageashtmlimage.h"
 #include "../../shared/TextConvert.h"
+#include "ClipboardFormatError.h"
+#include "GlobalFileDrop.h"
+
+#include <string>
+#include <vector>
 
 CString g_csDIBImagePath = _T("");
 int g_nDIBImageName = 1;
@@ -53,16 +58,26 @@ bool CPasteImageAsHtmlImage::ConvertPathToHtmlImageTag(const CDittoInfo &DittoIn
 			IClipFormat *pHDrop = pFormats->FindFormatEx(CF_HDROP);
 			if(pHDrop)
 			{
-				HDROP drop = (HDROP)GlobalLock((HDROP)pHDrop->Data());
-				int nNumFiles = DragQueryFile(drop, -1, NULL, 0);
-				TCHAR file[MAX_PATH];
-
-				for(int nFile = 0; nFile < nNumFiles; nFile++)
+				std::vector<std::wstring> files;
+				try
 				{
-					if(DragQueryFile(drop, nFile, file, sizeof(file)) > 0)
+					files = DittoCore::GlobalFileDrop::Read(pHDrop->Data()).Paths();
+				}
+				catch (const DittoCore::ClipboardFormatError& error)
+				{
+					// add-in boundary: no exception may cross into Ditto
+					CString message;
+					message.Format(_T("The images were not pasted as HTML: the clip's file list is malformed (%s)."), CString(error.what()).GetString());
+					::MessageBox(DittoInfo.m_hWndDitto, message, _T("Ditto"), MB_OK | MB_ICONERROR);
+					return false;
+				}
+
+				const size_t nNumFiles = files.size();
+				for(size_t nFile = 0; nFile < nNumFiles; nFile++)
+				{
 					{
-						CString csOrigfile(file);
-						CString csFile(file);
+						CString csOrigfile(files[nFile].c_str());
+						CString csFile(csOrigfile);
 						csFile = csFile.MakeLower();
 
 						if(csFile.Find(_T(".bmp")) != -1 || 
@@ -86,8 +101,6 @@ bool CPasteImageAsHtmlImage::ConvertPathToHtmlImageTag(const CDittoInfo &DittoIn
 						}
 					}
 				}
-
-				GlobalUnlock(pHDrop->Data());
 			}
 		}
 

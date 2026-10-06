@@ -9,6 +9,8 @@
 #include "htmlformataggregator.h"
 #include "..\Shared\Tokenizer.h"
 #include <random>
+#include "ErrorReport.h"
+#include "ClipboardFormatError.h"
 #include "Path.h"
 #include "Md5.h"
 #include "DittoChaiScript.h"
@@ -1317,7 +1319,18 @@ BOOL COleClipSource::OnRenderGlobalData(LPFORMATETC lpFormatEtc, HGLOBAL* phGlob
 
 		if(m_ClipIDs.GetCount() > 0)
 		{
-			hData = m_ClipIDs.Render(lpFormatEtc->cfFormat);
+			try
+			{
+				hData = m_ClipIDs.Render(lpFormatEtc->cfFormat);
+			}
+			catch (const DittoCore::ClipboardFormatError& error)
+			{
+				// COM callback: no exception may leave it; FALSE tells the target the render failed
+				CErrorReport::Show(StrF(_T("Ditto could not provide %s for the paste: the clip's data is malformed (%s)."),
+					GetFormatName(lpFormatEtc->cfFormat).GetString(), CString(error.what()).GetString()));
+				bInHere = false;
+				return FALSE;
+			}
 
 			if (m_convertToHDROPOnDelayRender &&
 				hData == NULL &&

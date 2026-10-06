@@ -20,6 +20,8 @@
 #include <memory>
 
 #include "Path.h"
+#include "ClipboardFormatError.h"
+#include "GlobalFileDrop.h"
 #include <set>
 
 #ifdef _DEBUG
@@ -732,29 +734,22 @@ bool CClip::SetDescFromType()
 	{
 		using namespace nsPath;
 
-		HDROP drop = (HDROP)GlobalLock(m_Formats[nCF_HDROPIndex].m_hgData);
-		int nNumFiles = min(5, DragQueryFile(drop, -1, NULL, 0));
+		const std::vector<std::wstring> files = DittoCore::GlobalFileDrop::Read(m_Formats[nCF_HDROPIndex].m_hgData).Paths();
+		const size_t nNumFiles = min(static_cast<size_t>(5), files.size());
 
 		if(nNumFiles > 1)
 			m_Desc = "Copied Files - ";
 		else
 			m_Desc = "Copied File - ";
 
-		TCHAR file[MAX_PATH];
-		
-		for(int nFile = 0; nFile < nNumFiles; nFile++)
+		for(size_t nFile = 0; nFile < nNumFiles; nFile++)
 		{
-			if(DragQueryFile(drop, nFile, file, sizeof(file)) > 0)
-			{
-				CPath path(file);
-				m_Desc += path.GetName();
-				m_Desc += " - ";
-				m_Desc += file;
-				m_Desc += "\n";
-			}
+			CPath path(files[nFile].c_str());
+			m_Desc += path.GetName();
+			m_Desc += " - ";
+			m_Desc += files[nFile].c_str();
+			m_Desc += "\n";
 		}
-		
-		GlobalUnlock(m_Formats[nCF_HDROPIndex].m_hgData);
 	}
 	else
 	{
@@ -1985,17 +1980,23 @@ bool CClip::AddFileDataToData(CString &errorMessage)
 
 	using namespace nsPath;
 
-	HDROP drop = (HDROP)GlobalLock(m_Formats[nCF_HDROPIndex].m_hgData);
-	int nNumFiles = DragQueryFile(drop, -1, NULL, 0);
-
-	TCHAR filePath[MAX_PATH];
+	std::vector<std::wstring> files;
+	try
+	{
+		files = DittoCore::GlobalFileDrop::Read(m_Formats[nCF_HDROPIndex].m_hgData).Paths();
+	}
+	catch (const DittoCore::ClipboardFormatError& error)
+	{
+		// this function reports through errorMessage; the caller shows it
+		errorMessage += StrF(_T("The clip's file list is malformed (%s)\r\n"), CString(error.what()).GetString());
+		return false;
+	}
 
 	CString newDesc = _T("File Contents - ");
 	int maxSize = CGetSetOptions::GetMaxFileContentsSize();
-	for (int nFile = 0; nFile < nNumFiles; nFile++)
+	for (const std::wstring& path : files)
 	{
-		if (DragQueryFile(drop, nFile, filePath, sizeof(filePath)) == 0)
-			continue;
+		const wchar_t* filePath = path.c_str();
 
 		CFile file;
 		CFileException ex;
@@ -2049,8 +2050,6 @@ bool CClip::AddFileDataToData(CString &errorMessage)
 
 		Log(StrF(_T("Saving file contents to Ditto Database, file: %s, size: %d, md5: %s"), filePath, fileSize, md5String));
 	}
-
-	GlobalUnlock(m_Formats[nCF_HDROPIndex].m_hgData);
 
 	if (!addedFileData)
 		return false;

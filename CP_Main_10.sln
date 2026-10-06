@@ -20,6 +20,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FocusHighlight", "FocusHigh
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ICU_Loader", "ICU_Loader\ICU_Loader.vcxproj", "{1FA87564-F5EC-42F8-978C-E827AAB54CB1}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DittoCore", "lib\DittoCore\DittoCore.vcxproj", "{6A1C2F43-8E57-4C1D-9B2A-3D4E5F607182}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DittoTests", "tests\DittoTests.vcxproj", "{7B2D3054-9F68-4D2E-8C3B-4E5F60718293}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -98,6 +102,26 @@ Global
 		{1FA87564-F5EC-42F8-978C-E827AAB54CB1}.Release|Win32.Build.0 = Release|Win32
 		{1FA87564-F5EC-42F8-978C-E827AAB54CB1}.Release|x64.ActiveCfg = Release|x64
 		{1FA87564-F5EC-42F8-978C-E827AAB54CB1}.Release|x64.Build.0 = Release|x64
+		{6A1C2F43-8E57-4C1D-9B2A-3D4E5F607182}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{6A1C2F43-8E57-4C1D-9B2A-3D4E5F607182}.Debug|ARM64.Build.0 = Debug|ARM64
+		{7B2D3054-9F68-4D2E-8C3B-4E5F60718293}.Debug|ARM64.ActiveCfg = Debug|x64
+		{6A1C2F43-8E57-4C1D-9B2A-3D4E5F607182}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6A1C2F43-8E57-4C1D-9B2A-3D4E5F607182}.Debug|Win32.Build.0 = Debug|Win32
+		{7B2D3054-9F68-4D2E-8C3B-4E5F60718293}.Debug|Win32.ActiveCfg = Debug|x64
+		{6A1C2F43-8E57-4C1D-9B2A-3D4E5F607182}.Debug|x64.ActiveCfg = Debug|x64
+		{6A1C2F43-8E57-4C1D-9B2A-3D4E5F607182}.Debug|x64.Build.0 = Debug|x64
+		{7B2D3054-9F68-4D2E-8C3B-4E5F60718293}.Debug|x64.ActiveCfg = Debug|x64
+		{7B2D3054-9F68-4D2E-8C3B-4E5F60718293}.Debug|x64.Build.0 = Debug|x64
+		{6A1C2F43-8E57-4C1D-9B2A-3D4E5F607182}.Release|ARM64.ActiveCfg = Release|ARM64
+		{6A1C2F43-8E57-4C1D-9B2A-3D4E5F607182}.Release|ARM64.Build.0 = Release|ARM64
+		{7B2D3054-9F68-4D2E-8C3B-4E5F60718293}.Release|ARM64.ActiveCfg = Release|x64
+		{6A1C2F43-8E57-4C1D-9B2A-3D4E5F607182}.Release|Win32.ActiveCfg = Release|Win32
+		{6A1C2F43-8E57-4C1D-9B2A-3D4E5F607182}.Release|Win32.Build.0 = Release|Win32
+		{7B2D3054-9F68-4D2E-8C3B-4E5F60718293}.Release|Win32.ActiveCfg = Release|x64
+		{6A1C2F43-8E57-4C1D-9B2A-3D4E5F607182}.Release|x64.ActiveCfg = Release|x64
+		{6A1C2F43-8E57-4C1D-9B2A-3D4E5F607182}.Release|x64.Build.0 = Release|x64
+		{7B2D3054-9F68-4D2E-8C3B-4E5F60718293}.Release|x64.ActiveCfg = Release|x64
+		{7B2D3054-9F68-4D2E-8C3B-4E5F60718293}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

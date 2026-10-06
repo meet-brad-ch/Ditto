@@ -16,6 +16,10 @@
 #include "OptionsSheet.h"
 #include "DeleteClipData.h"
 #include "DatabaseUtilities.h"
+#include "ErrorReport.h"
+#include "ClipboardFormatError.h"
+
+#include <memory>
 
 #ifdef _DEBUG
     #define new DEBUG_NEW
@@ -44,6 +48,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_MESSAGE(WM_CLIPBOARD_COPIED, OnClipboardCopied)
 	ON_WM_CLOSE()
 	ON_MESSAGE(WM_SHOW_ERROR_MSG, OnErrorMsg)
+	ON_MESSAGE(WM_SHOW_OWNED_ERROR_MSG, OnOwnedErrorMsg)
 	ON_COMMAND(ID_FIRST_IMPORT, OnFirstImport)
 	ON_MESSAGE(WM_EDIT_WND_CLOSING, OnEditWndClose)
 	ON_WM_DESTROY()
@@ -525,7 +530,19 @@ void CMainFrame::DoTextOnlyPaste()
 	textOnlyPaste.Save(TRUE);
 
 	Log(_T("Text Only paste, Add cf_text or cf_unicodetext to clipboard"));
-	textOnlyPaste.RestoreTextOnly();
+	try
+	{
+		if (!textOnlyPaste.RestoreTextOnly())
+		{
+			CErrorReport::Show(_T("Text only paste stopped: the clipboard could not be opened."));
+			return;
+		}
+	}
+	catch (const DittoCore::ClipboardFormatError& error)
+	{
+		CErrorReport::Show(StrF(_T("Text only paste stopped: the clipboard data is malformed (%s)."), CString(error.what()).GetString()));
+		return;
+	}
 
 	DWORD pasteDelay = CGetSetOptions::GetTextOnlyPasteDelay();
 
@@ -1030,6 +1047,15 @@ LRESULT CMainFrame::OnErrorMsg(WPARAM wParam, LPARAM lParam)
 	return TRUE;
 }
 
+LRESULT CMainFrame::OnOwnedErrorMsg(WPARAM wParam, LPARAM lParam)
+{
+	const std::unique_ptr<CString> message(reinterpret_cast<CString*>(wParam));
+
+	ShowErrorMessage(_T("Ditto"), *message);
+
+	return TRUE;
+}
+
 CString WndName(HWND hParent)
 {
     TCHAR cWindowText[200];
@@ -1310,30 +1336,33 @@ LRESULT CMainFrame::OnSaveClipboardMessage(WPARAM wParam, LPARAM lParam)
 void CMainFrame::OnFirstSavecurrentclipboard()
 {
 	Log(_T("Start Saving the current clipboard to the database"));
-	CClip* pClip = new CClip;
-	if(pClip)
+	const std::unique_ptr<CClipTypes> types(theApp.LoadTypesFromDB());
+	if(!types)
 	{
-		CClipTypes* pTypes = theApp.LoadTypesFromDB();
-		if(pTypes)
+		Log(_T("Failed to load supported types from the db, not saving to the db"));
+		return;
+	}
+
+	auto clip = std::make_unique<CClip>();
+	try
+	{
+		if(!clip->LoadFromClipboard(types.get(), false, _T("")))
 		{
-			if(pClip->LoadFromClipboard(pTypes, false, _T("")))
-			{
-				Log(_T("Loaded clips from the clipboard, sending message to save to the db"));
-				::PostMessage(m_hWnd, WM_CLIPBOARD_COPIED, (WPARAM)pClip, 0);
-			}
-			else
-			{
-				Log(_T("Failed to load clips from the clipboard, not saving to db"));
-				delete pClip;
-				pClip = NULL;
-			}
-		}
-		else
-		{
-			Log(_T("Failed to load supported types from the db, not saving to the db"));
+			Log(_T("Failed to load clips from the clipboard, not saving to db"));
+			return;
 		}
 	}
-	Log(_T("Start Saving the current clipboard to the database"));
+	catch(const DittoCore::ClipboardFormatError& error)
+	{
+		CErrorReport::Show(StrF(_T("The clipboard was not saved: its data is malformed (%s)."), CString(error.what()).GetString()));
+		return;
+	}
+
+	Log(_T("Loaded clips from the clipboard, sending message to save to the db"));
+	if(::PostMessage(m_hWnd, WM_CLIPBOARD_COPIED, reinterpret_cast<WPARAM>(clip.get()), 0))
+	{
+		clip.release();  // the WM_CLIPBOARD_COPIED handler owns it now
+	}
 }
 
 LRESULT CMainFrame::OnReAddTaskBarIcon(WPARAM wParam, LPARAM lParam)

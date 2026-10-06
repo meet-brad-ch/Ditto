@@ -394,6 +394,11 @@
   <ItemGroup>
     <ResourceCompile Include="DittoUtil.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\lib\DittoCore\DittoCore.vcxproj">
+      <Project>{6A1C2F43-8E57-4C1D-9B2A-3D4E5F607182}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

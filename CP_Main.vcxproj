@@ -571,6 +571,7 @@
     <ClCompile Include="src\EditFrameWnd.cpp" />
     <ClCompile Include="src\EditWithButton.cpp" />
     <ClCompile Include="src\EditWnd.cpp" />
+    <ClCompile Include="src\ErrorReport.cpp" />
     <ClCompile Include="src\EventThread.cpp" />
     <ClCompile Include="src\ExternalWindowTracker.cpp" />
     <ClCompile Include="src\FileRecieve.cpp" />
@@ -821,6 +822,7 @@
     <ClInclude Include="src\EditFrameWnd.h" />
     <ClInclude Include="src\EditWithButton.h" />
     <ClInclude Include="src\EditWnd.h" />
+    <ClInclude Include="src\ErrorReport.h" />
     <ClInclude Include="src\EventThread.h" />
     <ClInclude Include="src\ExternalWindowTracker.h" />
     <ClInclude Include="src\FileRecieve.h" />
@@ -1209,6 +1211,11 @@
     <Image Include="res\system_menu_84.png" />
     <Image Include="src\RulerRichEditCtrl\toolbar.bmp" />
     <Image Include="src\RulerRichEditCtrl\toolbar_.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="lib\DittoCore\DittoCore.vcxproj">
+      <Project>{6A1C2F43-8E57-4C1D-9B2A-3D4E5F607182}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

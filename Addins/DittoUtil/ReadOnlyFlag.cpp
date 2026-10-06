@@ -2,6 +2,8 @@
 #include "ReadOnlyFlag.h"
 #include "../../Shared/Tokenizer.h"
 #include "../../Shared/TextConvert.h"
+#include "ClipboardFormatError.h"
+#include "GlobalFileDrop.h"
 
 
 CReadOnlyFlag::CReadOnlyFlag(void)
@@ -21,7 +23,18 @@ bool CReadOnlyFlag::ResetReadOnlyFlag(const CDittoInfo &DittoInfo, IClip *pClip,
 	{
 		CStringArray lines;
 
-		LoadHDropFiles(lines, pFormats);
+		try
+		{
+			LoadHDropFiles(lines, pFormats);
+		}
+		catch (const DittoCore::ClipboardFormatError& error)
+		{
+			// add-in boundary: no exception may cross into Ditto
+			CString message;
+			message.Format(_T("The read-only flag was not changed: the clip's file list is malformed (%s)."), CString(error.what()).GetString());
+			::MessageBox(DittoInfo.m_hWndDitto, message, _T("Ditto"), MB_OK | MB_ICONERROR);
+			return false;
+		}
 
 		if(lines.GetSize() <= 0)
 		{
@@ -148,21 +161,9 @@ bool CReadOnlyFlag::LoadHDropFiles(CStringArray &lines, IClipFormats *pFormats)
 	IClipFormat *pFormat = pFormats->FindFormatEx(CF_HDROP);
 	if(pFormat != NULL)
 	{
-		HDROP drop = (HDROP)GlobalLock(pFormat->Data());
-		if(drop)
+		for (const std::wstring& path : DittoCore::GlobalFileDrop::Read(pFormat->Data()).Paths())
 		{
-			int nNumFiles = DragQueryFile(drop, -1, NULL, 0);
-			TCHAR file[MAX_PATH];
-
-			for(int nFile = 0; nFile < nNumFiles; nFile++)
-			{
-				if(DragQueryFile(drop, nFile, file, sizeof(file)) > 0)
-				{
-					lines.Add(file);
-				}
-			}
-
-			GlobalUnlock(pFormat->Data());
+			lines.Add(path.c_str());
 		}
 	}
 

@@ -3,6 +3,8 @@
 #   2. scans the imports of every built .exe/.dll for network DLLs
 #   3. greps all sources for network APIs and network DLL names
 #   4. checks the installer script for firewall rules and URL launches
+#   5. rejects raw allocation (new/delete/malloc/free) in lib\ and tests\
+#   6. runs every unit test on its own (AddressSanitizer build)
 # Prints one timestamped line per check and exits 1 on the first failed stage.
 # Usage (repo root):  powershell -NoProfile -ExecutionPolicy Bypass -File tools\verify.ps1 [-SkipBuild]
 param([switch] $SkipBuild)
@@ -51,7 +53,9 @@ $binaries = @(Get-ChildItem (Join-Path $repo 'Release64') -Recurse -Include *.ex
 if ($binaries.Count -eq 0) { Fail 'no binaries under Release64 (run without -SkipBuild)' }
 $importFindings = 0
 foreach ($bin in $binaries) {
-    $imports = @(& $dumpbin.FullName /nologo /imports $bin.FullName | Where-Object { $_ -match '^\s+(\S+\.dll)\s*$' } | ForEach-Object { $Matches[1].ToLowerInvariant() })
+    $dump = & $dumpbin.FullName /nologo /imports $bin.FullName
+    if ($LASTEXITCODE -ne 0) { Fail "imports: dumpbin exit $LASTEXITCODE on $($bin.FullName)" }
+    $imports = @($dump | Where-Object { $_ -match '^\s+(\S+\.dll)\s*$' } | ForEach-Object { $Matches[1].ToLowerInvariant() })
     $bad = @($imports | Where-Object { $bannedDlls -contains [IO.Path]::GetFileNameWithoutExtension($_) })
     $rel = $bin.FullName.Substring($repo.Length + 1)
     if ($bad.Count -gt 0) { Say "imports: FAIL $rel imports $($bad -join ', ')"; $importFindings++ }
@@ -64,7 +68,7 @@ if ($importFindings -gt 0) { Fail "imports: $importFindings binaries import netw
 $apiPattern = '\b(WSAStartup|WSASocket|closesocket|gethostbyname|getaddrinfo|GetAddrInfoW|InternetOpen\w*|InternetConnect\w*|InternetCanonicalizeUrl|HttpOpenRequest\w*|WinHttp\w+|URLDownloadTo\w+|URLOpenStream\w*|MAPISendMail\w*|CLSID_WebBrowser|IWebBrowser2?|CAsyncSocket|CSocket|GotoURL)\b'
 $dllPattern = '(?i)\b(ws2_32|wsock32|wininet|winhttp|urlmon|mapi32|dnsapi|iphlpapi)\b'
 $urlLaunchPattern = '(?i)ShellExecute\w*\s*\(.*https?://'
-$sourceDirs = 'src', 'Shared', 'Addins', 'ICU_Loader', 'focusdll', 'EncryptDecrypt', 'FocusHighlight', 'U3Stop'
+$sourceDirs = 'src', 'Shared', 'Addins', 'ICU_Loader', 'focusdll', 'EncryptDecrypt', 'FocusHighlight', 'U3Stop', 'lib', 'tests'
 $files = foreach ($d in $sourceDirs) {
     $p = Join-Path $repo $d
     if (Test-Path $p) { Get-ChildItem $p -Recurse -File -Include *.c, *.cpp, *.h, *.hpp, *.rc, *.vcxproj, *.def }
@@ -98,5 +102,46 @@ foreach ($line in [IO.File]::ReadLines($iss)) {
 if ($issFindings -gt 0) { Fail "installer: $issFindings lines add firewall rules or launch URLs" }
 Say 'installer: ok   DittoSetup_10.iss has no firewall rules or URL launches'
 
-Say "VERIFY OK: build, imports ($($binaries.Count) binaries), source ($($files.Count) files), installer script"
+# ---- 5. no raw allocation in contract code ------------------------------------------
+# Owner rule: no new/delete/malloc/free; smart pointers and containers only. Deleted functions
+# ('= delete') and comments are not allocations.
+$allocPattern = '\bnew\b|\bdelete\b|\b(malloc|calloc|realloc|free)\s*\('
+$contractFiles = @(Get-ChildItem (Join-Path $repo 'lib'), (Join-Path $repo 'tests') -Recurse -File -Include *.cpp, *.h)
+$allocFindings = 0
+foreach ($f in $contractFiles) {
+    $n = 0
+    foreach ($line in [IO.File]::ReadLines($f.FullName)) {
+        $n++
+        $code = ($line -replace '//.*$', '') -replace '=\s*delete\b', ''
+        if ($code -cmatch $allocPattern) {
+            Say ("allocation: FAIL {0}:{1}: {2}" -f $f.FullName.Substring($repo.Length + 1), $n, $line.Trim())
+            $allocFindings++
+        }
+    }
+}
+if ($allocFindings -gt 0) { Fail "allocation: $allocFindings raw allocations in lib\ or tests\" }
+Say "allocation: ok   $($contractFiles.Count) files in lib\ and tests\, no raw new/delete/malloc/free"
+
+# ---- 6. unit tests (each test on its own, AddressSanitizer build) -----------------------
+$testExe = Join-Path $repo 'build\DittoTests\x64\Release\DittoTests.exe'
+if (-not (Test-Path $testExe)) { Fail "tests: $testExe not found (run without -SkipBuild)" }
+$env:PATH = "$($dumpbin.DirectoryName);$env:PATH"   # clang_rt.asan_dynamic-x86_64.dll lives next to dumpbin
+$suite = ''
+$testNames = @(& $testExe --gtest_list_tests | ForEach-Object {
+    if ($_ -match '^(\w+)\.$') { $suite = $Matches[1] } elseif ($_ -match '^\s+(\w+)') { "$suite.$($Matches[1])" } })
+if ($LASTEXITCODE -ne 0 -or $testNames.Count -eq 0) { Fail "tests: could not list tests (exit $LASTEXITCODE)" }
+$testFailures = 0
+foreach ($name in $testNames) {
+    $out = & $testExe "--gtest_filter=$name" --gtest_brief=1 2>&1 | Out-String
+    if ($LASTEXITCODE -ne 0) {
+        Say "tests: FAIL $name"
+        ($out -split "`n" | Where-Object { $_ -match 'error|Failure|AddressSanitizer' } | Select-Object -First 5) | ForEach-Object { Say "    $($_.Trim())" }
+        $testFailures++
+    }
+    else { Say "tests: PASS $name" }
+}
+if ($testFailures -gt 0) { Fail "tests: $testFailures of $($testNames.Count) failed" }
+Say "tests: ok   $($testNames.Count) tests, each run on its own under ASan"
+
+Say "VERIFY OK: build, imports ($($binaries.Count) binaries), source ($($files.Count) files), installer script, allocation, tests ($($testNames.Count))"
 exit 0
