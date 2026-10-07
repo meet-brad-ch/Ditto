@@ -147,7 +147,7 @@ BOOL COleClipSource::DoImmediateRender()
 					cf.m_autoDeleteData = false;
 				}
 
-				CHTMLFormatAggregator Html(SepA);
+				CHTMLFormatAggregator Html(SepW);
 				if (m_ClipIDs.AggregateData(Html, theApp.m_HTML_Format, CGetSetOptions::m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
 				{
 					CClipFormat cf(theApp.m_HTML_Format, Html.GetHGlobal());

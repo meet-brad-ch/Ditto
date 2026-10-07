@@ -4,6 +4,7 @@
  */
 #include "FuzzSession.h"
 
+#include "CfHtmlFuzzTarget.h"
 #include "ClipTextFuzzTarget.h"
 #include "HdropFuzzTarget.h"
 
@@ -18,6 +19,7 @@ const FuzzTarget* FuzzSession::s_selected{};
 std::vector<std::unique_ptr<FuzzTarget>> FuzzSession::AllTargets()
 {
 	std::vector<std::unique_ptr<FuzzTarget>> targets;
+	targets.push_back(std::make_unique<CfHtmlFuzzTarget>());
 	targets.push_back(std::make_unique<ClipTextFuzzTarget>());
 	targets.push_back(std::make_unique<HdropFuzzTarget>());
 	return targets;

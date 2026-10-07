@@ -3,7 +3,10 @@
 # Inputs are listed by file name; add each new contract file here.
 PROJECT_NAME           = "Ditto local-only"
 OUTPUT_DIRECTORY       = build/doxygen
-INPUT                  = lib/DittoCore/ClipboardFormatError.h \
+INPUT                  = lib/DittoCore/CfHtml.h \
+                         lib/DittoCore/CfHtml.cpp \
+                         lib/DittoCore/CfHtmlFragment.h \
+                         lib/DittoCore/ClipboardFormatError.h \
                          lib/DittoCore/ClipText.h \
                          lib/DittoCore/ClipText.cpp \
                          lib/DittoCore/DatabasePath.h \

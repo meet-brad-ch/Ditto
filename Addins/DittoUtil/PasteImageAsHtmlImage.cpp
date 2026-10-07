@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include ".\pasteimageashtmlimage.h"
 #include "../../shared/TextConvert.h"
+#include "CfHtml.h"
 #include "ClipboardFormatError.h"
 #include "GlobalFileDrop.h"
 
@@ -107,8 +108,10 @@ bool CPasteImageAsHtmlImage::ConvertPathToHtmlImageTag(const CDittoInfo &DittoIn
 		if(csIMG.IsEmpty() == FALSE)
 		{
 			pFormats->DeleteAll();
-			CStringA utf8 = CTextConvert::UnicodeToUTF8(csIMG);
-			pFormats->AddNew(DittoAddinHelpers::GetFormatID(_T("HTML Format")), DittoAddinHelpers::NewGlobalP(utf8.GetBuffer(), utf8.GetLength()));
+			const CStringA utf8 = CTextConvert::UnicodeToUTF8(csIMG);
+			// a real CF_HTML block (header with byte offsets) with its terminating null
+			const std::string block = DittoCore::CfHtml::Build(std::string(utf8.GetString(), utf8.GetLength()), "", "");
+			pFormats->AddNew(DittoAddinHelpers::GetFormatID(_T("HTML Format")), DittoAddinHelpers::NewGlobalP(const_cast<char*>(block.c_str()), static_cast<UINT>(block.size() + 1)));
 			bRet = true;
 		}
 	}

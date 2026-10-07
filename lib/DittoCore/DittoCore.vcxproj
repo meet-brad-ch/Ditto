@@ -39,6 +39,8 @@
   </ItemDefinitionGroup>
   <!-- one class per .h/.cpp pair -->
   <ItemGroup>
+    <ClInclude Include="CfHtml.h" />
+    <ClInclude Include="CfHtmlFragment.h" />
     <ClInclude Include="ClipboardFormatError.h" />
     <ClInclude Include="ClipText.h" />
     <ClInclude Include="DatabasePath.h" />
@@ -49,6 +51,7 @@
     <ClInclude Include="GlobalLockGuard.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CfHtml.cpp" />
     <ClCompile Include="ClipText.cpp" />
     <ClCompile Include="DatabasePath.cpp" />
     <ClCompile Include="DropBlockReader.cpp" />

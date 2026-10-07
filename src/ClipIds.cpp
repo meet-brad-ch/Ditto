@@ -54,7 +54,7 @@ HGLOBAL CClipIDs::Render(UINT cfType)
 	}
 	else if(cfType == theApp.m_HTML_Format)
 	{
-		CHTMLFormatAggregator Html(SepA);
+		CHTMLFormatAggregator Html(SepW);
 		if(AggregateData(Html, theApp.m_HTML_Format, CGetSetOptions::m_bMultiPasteReverse, false))
 		{
 			return Html.GetHGlobal();

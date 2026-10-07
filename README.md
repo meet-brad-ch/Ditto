@@ -310,6 +310,20 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   The ARM64 script still added firewall rules for TCP 23443 and launched URLs, and the portable
   one packaged files that no longer exist (`DittoU.exe`, `sqlite3.dll`, `zlib1.dll`). The
   installer gate now checks every `.iss` file.
+- 2026-10-06: CF_HTML is read and written by `DittoCore::CfHtml` (Phase C4).
+  - **Offsets:** the old parser decoded the UTF-8 block with the ANSI code page and used the
+    byte offsets as UTF-16 indexes. Non-ASCII text before or in the fragment cut it in the wrong
+    place, and the result was converted back through the code page.
+  - **Malformed headers:** a CF_HTML block without valid `StartFragment`/`EndFragment` byte
+    offsets inside the text now stops the paste with a message. Before, the clip was silently
+    left out.
+  - **Built blocks:** 10-digit byte offsets, `Version:0.9` when none is known, and `SourceURL`
+    only when known.
+  - **Separator:** the multi-paste separator is inserted as escaped HTML (UTF-8, line breaks as
+    `<br>`). Before, it went in as ANSI text without escaping.
+  - **Add-in:** the image-to-HTML add-in writes a real CF_HTML block with a terminator. Before,
+    it wrote bare `<IMG>` markup.
+  - **Tests:** 14 unit tests; fuzz target `cfhtml` with a Parse/Build/Parse round-trip check.
 - 2026-10-06: The DittoCore parsers are fuzzed with libFuzzer (Phase C3; see Fuzzing). MSVC
   14.51's fuzzer runtime works with the forced `/guard:cf` and `/sdl`, so the fuzz project needs
   no exemption.
