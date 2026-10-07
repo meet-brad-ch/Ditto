@@ -21,7 +21,6 @@ public:
 	CString LastError()	{ return m_csLastError; }
 
 protected:
-	TCHAR m_DllName[MAX_PATH]{};
 	HMODULE m_hModule;
 	CDittoAddinInfo m_DittoAddinInfo;
 	CString m_csLastError;

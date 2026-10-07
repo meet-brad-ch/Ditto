@@ -21,8 +21,6 @@ bool CDittoAddin::DoLoad(LPCTSTR lpszDllName, CDittoInfo DittoInfo)
 
 	if(lpszDllName)
 	{
-		_tcscpy(m_DllName, lpszDllName);
-
 		m_hModule = ::LoadLibrary(lpszDllName);
 
 		if( m_hModule )
@@ -49,7 +47,7 @@ bool CDittoAddin::DoLoad(LPCTSTR lpszDllName, CDittoInfo DittoInfo)
 		}
 		else
 		{
-			m_csLastError.Format((_T("Ditto Addin - Failed to load library on Addin %s"), lpszDllName));
+			m_csLastError.Format(_T("Ditto Addin - Failed to load library on Addin %s"), lpszDllName);
 		}
 	}
 

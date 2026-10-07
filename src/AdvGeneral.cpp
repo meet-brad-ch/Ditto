@@ -386,7 +386,7 @@ BOOL CAdvGeneral::OnInitDialog()
 	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("14 Regex"), regexFilter14, regexFilterDesc, SETTING_REGEX_FILTERING_14));
 	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("14 Process Name"), regexProcessName14, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_14));
 	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("15 Regex"), regexFilter15, regexFilterDesc, SETTING_REGEX_FILTERING_15));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("15 Process Name"), regexProcessName15, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_14));
+	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("15 Process Name"), regexProcessName15, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_15));
 
 	regexFilterGroup->Expand(FALSE);
 

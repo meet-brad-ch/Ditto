@@ -12,6 +12,7 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <vector>
 #include <Wincrypt.h>
 
 using namespace nsPath;
@@ -607,19 +608,18 @@ CString CGetSetOptions::GetProfileString(CString csName, CString csDefault, CStr
 				setMaxSize = true;
 			}
 
-			TCHAR *szString = new TCHAR[dwBufLen];
-			ZeroMemory(szString, dwBufLen);
+			// zero-filled: every TCHAR, not half the buffer (ZeroMemory took the count as bytes)
+			std::vector<TCHAR> buffer(dwBufLen);
 
-			DWORD readLength = GetPrivateProfileString(csApp, csName, csDefault, szString, dwBufLen, m_csIniFileName);
+			DWORD readLength = GetPrivateProfileString(csApp, csName, csDefault, buffer.data(), dwBufLen, m_csIniFileName);
 
 			if (setMaxSize ||
 				readLength < (dwBufLen - 1))
 			{
-				returnString = szString;
-				doBreak = true; //delay break so we can delete the string
+				returnString = buffer.data();
+				doBreak = true;
 			}
 
-			delete[] szString;
 			dwBufLen = dwBufLen * 2;
 
 			if (doBreak)

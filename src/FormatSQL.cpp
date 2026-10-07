@@ -140,7 +140,8 @@ bool CFormatSQL::AddToSQL(CString cs, eSpecialTypes &eNOTValue, eSpecialTypes &e
 	}
 	else if (CGetSetOptions::GetSimpleTextSearch())
 	{
-		if (m_csVariable.Find(_T("%")))
+		// the search text, not the column name: a % in it must match a literal %
+		if (cs.Find(_T("%")) >= 0)
 		{
 			CString local(cs);
 			local.Replace(_T("%"), _T("\\%"));

@@ -52,7 +52,10 @@ void CUAC_Thread::OnTimeOut(void * /*param*/)
 		this->CancelThread();
 	}
 
-	CloseHandle(hProcess);
+	if (hProcess != NULL)
+	{
+		CloseHandle(hProcess);
+	}
 }
 
 void CUAC_Thread::OnEvent(int eventId, void * /*param*/)
