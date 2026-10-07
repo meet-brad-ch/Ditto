@@ -817,30 +817,42 @@ void COleClipSource::PasteAsImage(CClip& clip)
 	clip.m_Formats.Add(cfDib);
 	cfDib.m_autoDeleteData = false;
 
-	IStream* pStream = nullptr;
-	if (SUCCEEDED(CreateStreamOnHGlobal(nullptr, TRUE, &pStream)))
-	{
-		if (SUCCEEDED(image.Save(pStream, Gdiplus::ImageFormatPNG)))
-		{
-			LARGE_INTEGER liZero = { 0 };
-			ULARGE_INTEGER ulSize;
-			pStream->Seek({ 0 }, STREAM_SEEK_END, &ulSize);
-			pStream->Seek(liZero, STREAM_SEEK_SET, nullptr);
-
-			HGLOBAL hPng = GlobalAlloc(GMEM_MOVEABLE, (SIZE_T)ulSize.QuadPart);
-			if (hPng)
-			{
-				LPVOID pDst = GlobalLock(hPng);
-				pStream->Read(pDst, (ULONG)ulSize.QuadPart, nullptr);
-				GlobalUnlock(hPng);
-
-				CClipFormat cfPng(theApp.m_PNG_Format, hPng);
-				clip.m_Formats.Add(cfPng);
-				cfPng.m_autoDeleteData = false;
-			}
-		}
-		pStream->Release();
-	}
+	AddPngFormat(clip, image);
 
 	CLogger::Log(_T("End of PasteAsImage"));
+}
+
+void COleClipSource::AddPngFormat(CClip& clip, CImage& image)
+{
+	CComPtr<IStream> pStream{};
+	if (FAILED(CreateStreamOnHGlobal(nullptr, TRUE, &pStream)) || FAILED(image.Save(pStream, Gdiplus::ImageFormatPNG)))
+	{
+		return;
+	}
+
+	LARGE_INTEGER liZero = { 0 };
+	ULARGE_INTEGER ulSize{};
+	pStream->Seek({ 0 }, STREAM_SEEK_END, &ulSize);
+	pStream->Seek(liZero, STREAM_SEEK_SET, nullptr);
+
+	HGLOBAL hPng = GlobalAlloc(GMEM_MOVEABLE, (SIZE_T)ulSize.QuadPart);
+	if (hPng == nullptr)
+	{
+		return;
+	}
+
+	LPVOID pDst = GlobalLock(hPng);
+	if (pDst == nullptr)
+	{
+		// a block that cannot be locked holds no PNG: the clip keeps only its DIB, as when the allocation fails
+		CLogger::Log(_T("PasteAsImage - failed to lock the PNG block"));
+		GlobalFree(hPng);
+		return;
+	}
+	pStream->Read(pDst, (ULONG)ulSize.QuadPart, nullptr);
+	GlobalUnlock(hPng);
+
+	CClipFormat cfPng(theApp.m_PNG_Format, hPng);
+	clip.m_Formats.Add(cfPng);
+	cfPng.m_autoDeleteData = false;
 }

@@ -22,15 +22,15 @@ HINSTANCE hDllInst;
 class KeyEventType
 {
 public:
-	/** @brief The event kinds (bit values, as GetKeyEventType returns them). */
+	/** @brief The event kinds, mutually exclusive (GetKeyEventType returns exactly one; used only in this file). */
 	enum : BYTE
 	{
 		/** @brief Key-down event. */
-		KeyDown = 0x01,
+		KeyDown = 1,
 		/** @brief Key-up event. */
-		KeyUp = 0x02,
+		KeyUp = 2,
 		/** @brief Key-repeat event: the key is held down for long enough. */
-		KeyRepeat = 0x04,
+		KeyRepeat = 3,
 	};
 };
 

@@ -77,6 +77,13 @@ protected:
 	void AsciiOnly(CClip& clip);
 	void PutGuidOntoClipboard(CClip& clip);
 	void PasteAsImage(CClip& clip);
+	/**
+	 * @brief Adds the image as a PNG format to the clip; on a stream, save, allocation or lock failure
+	 *        the clip keeps only its DIB.
+	 * @param clip The clip that receives the PNG format.
+	 * @param image The loaded image.
+	 */
+	void AddPngFormat(CClip& clip, CImage& image);
 
 private:
 	// DoImmediateRender's multi-clip text paste: adds the clips' text, unicode text and, unless the
