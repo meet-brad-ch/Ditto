@@ -265,6 +265,8 @@ public:
 	bool DoSelectLeftSideCompare();
 	bool DoSelectRightSideAndDoCompare();
 	bool DoExportToQRCode();
+	// Shows the text as a QR code in a viewer window; reports text too long for a QR code
+	bool ShowQRCode(const CString& clipText, const CString& description);
 	bool DoExportToTextFile();
 	bool DoActionGenerateGuid();
 	bool DoPasteAsImage();

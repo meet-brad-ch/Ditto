@@ -30,7 +30,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
     <Link>
-      <AdditionalDependencies>gtest.lib;gtest_main.lib;zlibd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gtest.lib;gtest_main.lib;zlibd.lib;nayuki-qr-code-generator.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
@@ -40,7 +40,7 @@
       <PreprocessorDefinitions>NDEBUG;_DISABLE_STL_ANNOTATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>gtest.lib;gtest_main.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gtest.lib;gtest_main.lib;zlib.lib;nayuki-qr-code-generator.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -60,6 +60,7 @@
     <ClCompile Include="..\lib\DittoCore\GlobalFileDrop.cpp" />
     <ClCompile Include="..\lib\DittoCore\GlobalLockGuard.cpp" />
     <ClCompile Include="..\lib\DittoCore\GzipStream.cpp" />
+    <ClCompile Include="..\lib\DittoCore\QrBitmap.cpp" />
     <ClCompile Include="..\lib\DittoCore\RtfJoin.cpp" />
     <ClCompile Include="..\lib\DittoCore\RtfNormalizer.cpp" />
     <ClCompile Include="..\lib\DittoCore\RtfTransforms.cpp" />
@@ -78,6 +79,7 @@
     <ClCompile Include="GlobalBytesTests.cpp" />
     <ClCompile Include="GlobalFileDropTests.cpp" />
     <ClCompile Include="GzipStreamTests.cpp" />
+    <ClCompile Include="QrBitmapTests.cpp" />
     <ClCompile Include="RtfTests.cpp" />
     <ClCompile Include="TextJoinTests.cpp" />
     <ClCompile Include="TransformsTests.cpp" />

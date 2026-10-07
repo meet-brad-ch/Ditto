@@ -26,9 +26,13 @@
 #include "ProcessPaste.h"
 #include "QPasteWnd.h"
 #include <algorithm>
+#include <cstddef>
 #include <memory>
 #include <signal.h>
-#include "CreateQRCodeImage.h"
+#include <stdexcept>
+#include <string>
+#include <vector>
+#include "QrBitmap.h"
 #include "QRCodeViewer.h"
 
 #ifdef _DEBUG
@@ -4150,6 +4154,35 @@ bool CQPasteWnd::DoExportToTextFile()
 	return ret;
 }
 
+bool CQPasteWnd::ShowQRCode(const CString& clipText, const CString& description)
+{
+	std::vector<std::byte> bitmap;
+	try
+	{
+		bitmap = DittoCore::QrBitmap::Render(std::string(CTextConvert::UnicodeToUTF8(clipText).GetString()));
+	}
+	catch (const std::length_error&)
+	{
+		CErrorReport::Show(StrF(_T("The clip's text (%d characters) is too long for a QR code."), clipText.GetLength()));
+		return false;
+	}
+
+	auto viewer = std::make_unique<QRCodeViewer>();
+
+	LOGFONT lf;
+	CGetSetOptions::GetFont(lf);
+
+	if (!viewer->CreateEx(this, std::move(bitmap), description, m_lstHeader.GetRowHeight(), lf))
+	{
+		CErrorReport::Show(StrF(_T("Ditto could not create the QR code window (error %u)."), ::GetLastError()));
+		return false;
+	}
+
+	// the window owns itself from here on: QRCodeViewer::PostNcDestroy deletes it
+	viewer.release()->ShowWindow(SW_SHOW);
+	return true;
+}
+
 bool CQPasteWnd::DoExportToQRCode()
 {
 	bool ret = false;
@@ -4167,28 +4200,7 @@ bool CQPasteWnd::DoExportToQRCode()
 			{
 				CString clipText = clip.GetUnicodeTextFormat();
 
-				CCreateQRCodeImage p;
-				int imageSize = 0;
-				unsigned char* bitmapData = p.CreateImage(clipText, imageSize);
-
-				if (bitmapData != NULL)
-				{
-					auto viewer = std::make_unique<QRCodeViewer>();
-
-					LOGFONT lf;
-					CGetSetOptions::GetFont(lf);
-
-					if (viewer->CreateEx(this, bitmapData, imageSize, clip.Description(), m_lstHeader.GetRowHeight(), lf))
-					{
-						// the window owns itself from here on: QRCodeViewer::PostNcDestroy deletes it
-						viewer.release()->ShowWindow(SW_SHOW);
-						ret = true;
-					}
-					else
-					{
-						CErrorReport::Show(StrF(_T("Ditto could not create the QR code window (error %u)."), ::GetLastError()));
-					}
-				}
+				ret = ShowQRCode(clipText, clip.Description());
 			}
 		}
 	}

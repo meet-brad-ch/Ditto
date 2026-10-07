@@ -46,13 +46,18 @@ BEGIN_MESSAGE_MAP(QRCodeViewer, CWnd)
 END_MESSAGE_MAP()
 
 
-BOOL QRCodeViewer::CreateEx(CWnd *pParentWnd, unsigned char* bitmapData, int imageSize, CString desc, int rowHeight, LOGFONT logFont)
+BOOL QRCodeViewer::CreateEx(CWnd *pParentWnd, std::vector<std::byte> bitmap, CString desc, int rowHeight, LOGFONT logFont)
 {
 	// Get the class name and create the window
 	CString szClassName = AfxRegisterWndClass(CS_CLASSDC | CS_SAVEBITS, LoadCursor(NULL, IDC_ARROW));
 
-	m_bitmapData = bitmapData;
-	m_imageSize = imageSize;
+	// before the window exists: a bitmap GDI+ cannot read fails the creation (the caller reports
+	// it); LoadRaw copies the bytes into its own buffer
+	if (!m_qrCodeDrawer.LoadRaw(reinterpret_cast<unsigned char*>(bitmap.data()), static_cast<int>(bitmap.size())))
+	{
+		return FALSE;
+	}
+
 	m_descRowHeight = rowHeight;
 	m_descBackground = CreateSolidBrush(RGB(255, 255, 255));
 	m_logFont = logFont;
@@ -80,9 +85,6 @@ BOOL QRCodeViewer::CreateEx(CWnd *pParentWnd, unsigned char* bitmapData, int ima
 		m_DittoWindow.m_bDrawChevron = false;
 		m_DittoWindow.m_sendWMClose = false;
 
-		m_qrCodeDrawer.LoadRaw(m_bitmapData, m_imageSize);
-
-		delete[] m_bitmapData;
 
 		CRect parentRect;
 		pParentWnd->GetWindowRect(&parentRect);
@@ -111,7 +113,6 @@ BOOL QRCodeViewer::CreateEx(CWnd *pParentWnd, unsigned char* bitmapData, int ima
 	}
 	else
 	{
-		delete[] m_bitmapData;
 		return FALSE;
 	}
 

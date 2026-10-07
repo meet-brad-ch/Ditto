@@ -3,6 +3,9 @@
 #include "GdipButton.h"
 #include "DittoWindow.h"
 #include "SnapWindow.h"
+
+#include <cstddef>
+#include <vector>
 // QRCodeViewer
 
 class QRCodeViewer : public CWnd
@@ -16,7 +19,8 @@ public:
 	virtual ~QRCodeViewer();
 
 	CDittoWindow m_DittoWindow;
-	BOOL CreateEx(CWnd *pParentWnd, unsigned char* bitmapData, int imageSize, CString desc, int rowHeight, LOGFONT font);
+	// bitmap: a BMP file image of the QR code (DittoCore::QrBitmap::Render)
+	BOOL CreateEx(CWnd *pParentWnd, std::vector<std::byte> bitmap, CString desc, int rowHeight, LOGFONT font);
 
 	CStatic m_desc;
 
@@ -38,8 +42,6 @@ protected:
 	afx_msg void OnMoving(UINT fwSide, LPRECT pRect);
 	afx_msg void OnEnterSizeMove();
 
-	unsigned char* m_bitmapData{};
-	int m_imageSize{};
 	CGdipButton m_ShowGroupsFolderBottom;
 	CGdiImageDrawer m_qrCodeDrawer;
 	int m_descRowHeight{};

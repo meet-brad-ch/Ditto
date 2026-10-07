@@ -2,7 +2,7 @@
 #  - contract code (lib\, tests\): no function may reach CC 10, ever;
 #  - legacy code: every function at CC >= 10 is held in tools\baselines\complexity.tsv by
 #    tools\ratchet.ps1, so no new function may reach 10 and no listed function may get worse.
-# Vendored code (src\sqlite, src\QRCode, src\TinyXml) is not measured.
+# Vendored code (src\sqlite, src\TinyXml) is not measured.
 # Functions are keyed by (file, qualified name); overloads share the key and keep the highest CC.
 param(
     [Parameter(Mandatory)] [string] $Repo,
@@ -13,7 +13,7 @@ function Say([string] $m) { Write-Output "$(Get-Date -Format 'HH:mm:ss') $m" }
 $limit = 10
 
 $dirs = 'src', 'Shared', 'Addins', 'ICU_Loader', 'focusdll', 'lib', 'tests'
-$vendored = '^src\\(sqlite|QRCode|TinyXml)\\'
+$vendored = '^src\\(sqlite|TinyXml)\\'
 $files = foreach ($d in $dirs) {
     Get-ChildItem (Join-Path $Repo $d) -Recurse -File -Include *.c, *.cpp, *.h, *.hpp |
         ForEach-Object { $_.FullName.Substring($Repo.Length + 1) } |
