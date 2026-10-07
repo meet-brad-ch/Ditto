@@ -78,7 +78,6 @@ src\mainfrm.cpp	CMainFrame::OnHotKey	75
 src\mainfrm.cpp	CMainFrame::OnTimer	24
 src\mainfrm.cpp	CMainFrame::PasteOrShowGroup	12
 src\misc.cpp	DeleteFolderFiles	10
-src\misc.cpp	DeleteParamFromRTF	11
 src\misc.cpp	EnsureWindowVisible	10
 src\misc.cpp	FindNoCaseAndInsert	13
 src\misc.cpp	GetEscapeChar	13

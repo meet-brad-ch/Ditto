@@ -24,6 +24,7 @@
 #include "FileDataRecord.h"
 #include "GlobalBytes.h"
 #include "GlobalFileDrop.h"
+#include "RtfNormalizer.h"
 #include <algorithm>
 #include <set>
 
@@ -844,13 +845,8 @@ void CClip::AddToCrc(CCrc32Dynamic& crc32, const CClipFormat& format, bool adjus
 	if (adjust && format.m_cfType == theApp.m_RTFFormat)
 	{
 		// In Word and Outlook the \datastore section and the rsid values change on every copy: leave them out
-		const std::string rtf = DittoCore::ClipText::ReadAnsiBounded(bytes);
-		CStringA normalized(rtf.c_str(), static_cast<int>(rtf.size()));
-		RemoveRTFSection(normalized, "{\\*\\datastore");
-		DeleteParamFromRTF(normalized, "\\rsid", true);
-		DeleteParamFromRTF(normalized, "\\insrsid", true);
-		DeleteParamFromRTF(normalized, "\\mdispDef1", false);
-		crc32.GenerateCrc32(reinterpret_cast<LPBYTE>(normalized.GetBuffer()), static_cast<DWORD>(normalized.GetLength()), crc);
+		std::string normalized = DittoCore::RtfNormalizer::Normalize(DittoCore::ClipText::ReadAnsiBounded(bytes));
+		crc32.GenerateCrc32(reinterpret_cast<LPBYTE>(normalized.data()), static_cast<DWORD>(normalized.size()), crc);
 		return;
 	}
 	if (adjust)

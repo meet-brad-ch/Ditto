@@ -55,6 +55,8 @@
     <ClCompile Include="..\lib\DittoCore\GlobalBytes.cpp" />
     <ClCompile Include="..\lib\DittoCore\GlobalFileDrop.cpp" />
     <ClCompile Include="..\lib\DittoCore\GlobalLockGuard.cpp" />
+    <ClCompile Include="..\lib\DittoCore\RtfJoin.cpp" />
+    <ClCompile Include="..\lib\DittoCore\RtfNormalizer.cpp" />
     <ClCompile Include="CfHtmlTests.cpp" />
     <ClCompile Include="ClipTextTests.cpp" />
     <ClCompile Include="DatabasePathTests.cpp" />
@@ -63,6 +65,7 @@
     <ClCompile Include="FileDropListTests.cpp" />
     <ClCompile Include="GlobalBytesTests.cpp" />
     <ClCompile Include="GlobalFileDropTests.cpp" />
+    <ClCompile Include="RtfTests.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

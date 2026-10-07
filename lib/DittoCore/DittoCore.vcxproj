@@ -54,6 +54,8 @@
     <ClInclude Include="GlobalBytes.h" />
     <ClInclude Include="GlobalFileDrop.h" />
     <ClInclude Include="GlobalLockGuard.h" />
+    <ClInclude Include="RtfJoin.h" />
+    <ClInclude Include="RtfNormalizer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ByteCursor.cpp" />
@@ -67,6 +69,8 @@
     <ClCompile Include="GlobalBytes.cpp" />
     <ClCompile Include="GlobalFileDrop.cpp" />
     <ClCompile Include="GlobalLockGuard.cpp" />
+    <ClCompile Include="RtfJoin.cpp" />
+    <ClCompile Include="RtfNormalizer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

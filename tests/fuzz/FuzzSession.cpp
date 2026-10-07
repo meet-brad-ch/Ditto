@@ -9,6 +9,7 @@
 #include "DibFuzzTarget.h"
 #include "FileDataFuzzTarget.h"
 #include "HdropFuzzTarget.h"
+#include "RtfFuzzTarget.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -26,6 +27,7 @@ std::vector<std::unique_ptr<FuzzTarget>> FuzzSession::AllTargets()
 	targets.push_back(std::make_unique<DibFuzzTarget>());
 	targets.push_back(std::make_unique<FileDataFuzzTarget>());
 	targets.push_back(std::make_unique<HdropFuzzTarget>());
+	targets.push_back(std::make_unique<RtfFuzzTarget>());
 	return targets;
 }
 

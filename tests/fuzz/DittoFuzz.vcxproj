@@ -46,6 +46,8 @@
     <ClCompile Include="..\..\lib\DittoCore\GlobalBytes.cpp" />
     <ClCompile Include="..\..\lib\DittoCore\GlobalFileDrop.cpp" />
     <ClCompile Include="..\..\lib\DittoCore\GlobalLockGuard.cpp" />
+    <ClCompile Include="..\..\lib\DittoCore\RtfJoin.cpp" />
+    <ClCompile Include="..\..\lib\DittoCore\RtfNormalizer.cpp" />
     <ClCompile Include="CfHtmlFuzzTarget.cpp" />
     <ClCompile Include="ClipTextFuzzTarget.cpp" />
     <ClCompile Include="DibFuzzTarget.cpp" />
@@ -53,6 +55,7 @@
     <ClCompile Include="FuzzMain.cpp" />
     <ClCompile Include="FuzzSession.cpp" />
     <ClCompile Include="HdropFuzzTarget.cpp" />
+    <ClCompile Include="RtfFuzzTarget.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CfHtmlFuzzTarget.h" />
@@ -62,6 +65,7 @@
     <ClInclude Include="FuzzSession.h" />
     <ClInclude Include="FuzzTarget.h" />
     <ClInclude Include="HdropFuzzTarget.h" />
+    <ClInclude Include="RtfFuzzTarget.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

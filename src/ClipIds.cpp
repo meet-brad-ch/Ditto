@@ -62,7 +62,7 @@ HGLOBAL CClipIDs::Render(UINT cfType)
 	}
 	else if(cfType == theApp.m_RTFFormat)
 	{
-		CRichTextAggregator RichText(SepA);
+		CRichTextAggregator RichText(SepW);
 		if(AggregateData(RichText, theApp.m_RTFFormat, CGetSetOptions::m_bMultiPasteReverse, false))
 		{
 			return RichText.GetHGlobal();

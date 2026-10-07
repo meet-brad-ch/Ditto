@@ -140,7 +140,7 @@ BOOL COleClipSource::DoImmediateRender()
 					cf.m_autoDeleteData = false;
 				}
 
-				CRichTextAggregator RichText(SepA);
+				CRichTextAggregator RichText(SepW);
 				if (m_ClipIDs.AggregateData(RichText, theApp.m_RTFFormat, CGetSetOptions::m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
 				{
 					CClipFormat cf(theApp.m_RTFFormat, RichText.GetHGlobal());

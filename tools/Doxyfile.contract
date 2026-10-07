@@ -29,6 +29,10 @@ INPUT                  = lib/DittoCore/ByteCursor.h \
                          lib/DittoCore/GlobalFileDrop.cpp \
                          lib/DittoCore/GlobalLockGuard.h \
                          lib/DittoCore/GlobalLockGuard.cpp \
+                         lib/DittoCore/RtfJoin.h \
+                         lib/DittoCore/RtfJoin.cpp \
+                         lib/DittoCore/RtfNormalizer.h \
+                         lib/DittoCore/RtfNormalizer.cpp \
                          src/ErrorReport.h \
                          src/FileDialogPath.h \
                          src/FileDialogPath.cpp \

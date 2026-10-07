@@ -187,10 +187,6 @@ void OnInitMenuPopupEx(CMenu *pPopupMenu, UINT nIndex, BOOL bSysMenu, CWnd *pWnd
 
 CString GetProcessName(HWND hWnd, DWORD processId = 0);
 
-void DeleteParamFromRTF(CStringA &test, CStringA find, bool searchForTrailingDigits);
-
-bool RemoveRTFSection(CStringA &str, CStringA section);
-
 CString NewGuidString();
 
 CString FolderPath(int folderId);

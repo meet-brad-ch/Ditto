@@ -310,6 +310,19 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   The ARM64 script still added firewall rules for TCP 23443 and launched URLs, and the portable
   one packaged files that no longer exist (`DittoU.exe`, `sqlite3.dll`, `zlib1.dll`). The
   installer gate now checks every `.iss` file.
+- 2026-10-06: Multi-clip RTF paste is joined by `DittoCore::RtfJoin`, and the RTF
+  normalization for duplicate detection lives in `DittoCore::RtfNormalizer` (Phase C7).
+  - **Three or more clips:** upstream removed `{\rtf1` from the last document only, so every
+    middle document kept its opening brace without its closing one, and the pasted RTF was
+    unbalanced. Now each further document is inserted without its own outer group.
+  - **Separator:** it is escaped as RTF (backslash, braces, `\uN?` for characters outside
+    ASCII). Before, it went in unescaped in the ANSI code page, and a line break became `\par`
+    without a delimiter, so a separator line starting with a letter merged into the control word.
+  - **Malformed RTF:** a clip that does not start with `{\rtf1` or has no closing brace stops
+    the paste with a message. Before, only the last clip was checked.
+  - **Normalizer:** upstream's rules are kept exactly (`{\*\datastore}`, `\rsid`, `\insrsid`,
+    `\mdispDef1`), so CRCs of clips already in a database still match new copies.
+  - **Tests:** 15 unit tests; fuzz target `rtf`.
 - 2026-10-06: Contract code (`lib\`, `tests\`) is compiled with `/utf-8`. Without it, the
   BOM-less sources were read in the ANSI code page, so the non-ASCII test strings (the emoji
   and check marks in the CF_HTML tests) were mangled the same way on both sides of each
