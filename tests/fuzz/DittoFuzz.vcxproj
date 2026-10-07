@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- DittoFuzz: libFuzzer targets for the lib\DittoCore parsers (/fsanitize=address,fuzzer). Compiles
+     the DittoCore sources itself so they are instrumented. One binary, the target is chosen with
+     the DITTO_FUZZ_TARGET environment variable; run it with tools\fuzz.ps1. Never shipped. -->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64"><Configuration>Debug</Configuration><Platform>x64</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64"><Configuration>Release</Configuration><Platform>x64</Platform></ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{3E8B5A21-4C7D-4F09-9A6E-2D1F80C3B754}</ProjectGuid>
+    <RootNamespace>DittoFuzz</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseDebugLibraries Condition="'$(Configuration)'=='Debug'">true</UseDebugLibraries>
+    <UseDebugLibraries Condition="'$(Configuration)'=='Release'">false</UseDebugLibraries>
+    <EnableASAN>true</EnableASAN>
+    <EnableFuzzer>true</EnableFuzzer>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="..\..\lib\Contract.props" />
+  <ItemDefinitionGroup>
+    <Link>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+    <ClCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\lib\DittoCore\ClipText.cpp" />
+    <ClCompile Include="..\..\lib\DittoCore\DropBlockReader.cpp" />
+    <ClCompile Include="..\..\lib\DittoCore\FileDropList.cpp" />
+    <ClCompile Include="..\..\lib\DittoCore\GlobalBytes.cpp" />
+    <ClCompile Include="..\..\lib\DittoCore\GlobalFileDrop.cpp" />
+    <ClCompile Include="..\..\lib\DittoCore\GlobalLockGuard.cpp" />
+    <ClCompile Include="ClipTextFuzzTarget.cpp" />
+    <ClCompile Include="FuzzMain.cpp" />
+    <ClCompile Include="FuzzSession.cpp" />
+    <ClCompile Include="HdropFuzzTarget.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ClipTextFuzzTarget.h" />
+    <ClInclude Include="FuzzSession.h" />
+    <ClInclude Include="FuzzTarget.h" />
+    <ClInclude Include="HdropFuzzTarget.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

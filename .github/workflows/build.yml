@@ -69,6 +69,9 @@ jobs:
       - name: Verify (all gates, /analyze)
         run: powershell -NoProfile -ExecutionPolicy Bypass -File tools\verify.ps1 -Analyze
 
+      - name: Fuzz (libFuzzer, 60 s per target)
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File tools\fuzz.ps1 -Seconds 60
+
       - name: Unit test summary
         if: always()
         run: powershell -NoProfile -ExecutionPolicy Bypass -File tools\test-summary.ps1 -Results build\test-results -Output $env:GITHUB_STEP_SUMMARY
@@ -106,4 +109,5 @@ jobs:
             build/test-results/
             build/coverage/
             build/logs/
+            build/fuzz/
           if-no-files-found: warn

@@ -2,8 +2,9 @@
 # of one commit, so only committed files take part (no untracked or ignored leftovers).
 #   1. clone the commit into build\ci\<commit>\work
 #   2. tools\verify.ps1 -Analyze (rebuild with /analyze, all gates, every test alone under ASan)
-#   3. Debug|x64 solution build
-#   4. the Inno Setup installer
+#   3. tools\fuzz.ps1: every libFuzzer target for 60 s
+#   4. Debug|x64 solution build
+#   5. the Inno Setup installer
 # Writes build\ci\<commit>\summary.md (steps, the section 38 block, the per-test table, installer
 # SHA256) and build\ci\<commit>\artifacts\ (installer, binaries, test XML, coverage, logs), then
 # deletes the clone. Prints one timestamped line per step; exits 0 when every step passed.
@@ -55,6 +56,10 @@ try {
             Tee-Object -FilePath $verifyLog | Where-Object { "$_" -notmatch 'tests: PASS|imports: ok|hardening: ok|uncovered' } | ForEach-Object { "    $_" }
     }
 
+    Invoke-Step 'fuzz (60 s per target)' {
+        powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $work 'tools\fuzz.ps1') -Seconds 60 *>&1 | ForEach-Object { "    $_" }
+    }
+
     Invoke-Step 'Debug|x64 build' {
         $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.VisualStudio.Component.VC.ATLMFC -property installationPath
         $vcpkgRoot = if ($env:VCPKG_ROOT) { $env:VCPKG_ROOT } else { 'C:\vcpkg' }
@@ -81,7 +86,8 @@ finally {
         @{ From = (Join-Path $work 'Release64'); To = 'Release64' },
         @{ From = $results; To = 'test-results' },
         @{ From = (Join-Path $work 'build\coverage'); To = 'coverage' },
-        @{ From = (Join-Path $work 'build\logs'); To = 'logs' }
+        @{ From = (Join-Path $work 'build\logs'); To = 'logs' },
+        @{ From = (Join-Path $work 'build\fuzz'); To = 'fuzz' }
     )
     foreach ($c in $copies) {
         if (Test-Path $c.From) {
