@@ -70,6 +70,7 @@ function Get-DeclaredName([string] $statement) {
 
 # Is a function header (text before its body) a free function? Returns its name, or '' for a member.
 function Get-FreeFunctionName([string] $header, $namespaces) {
+    $header = $header -replace '__declspec\s*\([^)]*\)', ''   # an attribute, not the function's name
     $m = [regex]::Match($header, '((?:[A-Za-z_]\w*\s*::\s*)*~?(?:operator\s*[^\s(]+|[A-Za-z_]\w*))\s*\([^;]*$')
     if (-not $m.Success) { return '' }
     $name = $m.Groups[1].Value -replace '\s', ''
