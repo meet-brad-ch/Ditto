@@ -2453,7 +2453,8 @@ void CQPasteWnd::OnMenuExport()
 	ofn.nMaxFileTitle = 0;
 	ofn.lpstrInitialDir = szDir;
 	ofn.lpstrDefExt = _T("dto");
-	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
+	// a save dialog: the file may be new (no OFN_FILEMUSTEXIST)
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
 
 	m_bHideWnd = false;
 
@@ -4061,7 +4062,8 @@ bool CQPasteWnd::DoExportToTextFile()
 	ofn.nMaxFileTitle = 0;
 	ofn.lpstrInitialDir = szDir;
 	ofn.lpstrDefExt = _T("txt");
-	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
+	// a save dialog: the file may be new (no OFN_FILEMUSTEXIST)
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
 
 	m_bHideWnd = false;
 
@@ -4969,13 +4971,15 @@ bool CQPasteWnd::DoExportToBitMapFile()
 	ofn.hwndOwner = m_hWnd;
 	ofn.lpstrFile = szFile;
 	ofn.nMaxFile = _countof(szFile);
-	ofn.lpstrFilter = _T("PNG (*.png)\0*.png\0BMP (*.bmp)\0*.bmp\0JPEG (*.jpeg)\0*.jpeg");
+	// the list of filter strings ends with an empty one
+	ofn.lpstrFilter = _T("PNG (*.png)\0*.png\0BMP (*.bmp)\0*.bmp\0JPEG (*.jpeg)\0*.jpeg\0");
 	ofn.nFilterIndex = 1;
 	ofn.lpstrFileTitle = NULL;
 	ofn.nMaxFileTitle = 0;
 	ofn.lpstrInitialDir = szDir;
 	ofn.lpstrDefExt = _T("png");
-	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR | OFN_NOCHANGEDIR;
+	// a save dialog: the file may be new (no OFN_FILEMUSTEXIST)
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
 
 	m_bHideWnd = false;
 

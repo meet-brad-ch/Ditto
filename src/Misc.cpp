@@ -1393,9 +1393,9 @@ BOOL BackupDbPrompt(HWND hwnd)
 	ofn.nFilterIndex = 1;
 	ofn.lpstrFileTitle = NULL;
 	ofn.nMaxFileTitle = 0;
-	//ofn.lpstrInitialDir = szDir;
 	ofn.lpstrDefExt = _T("zdb");
-	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
+	// a save dialog: the file may be new (no OFN_FILEMUSTEXIST)
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
 
 	if (GetSaveFileName(&ofn))
 	{

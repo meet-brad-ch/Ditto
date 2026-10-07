@@ -1126,68 +1126,53 @@ void CDeleteClipData::ShowClipPropertiesWindow()
 
 void CDeleteClipData::SaveClipDataItemToFile(CDeleteData item)
 {
-	CString extension = _T("");
-	CString filter = _T("");
+	// The filter is a list of strings ending in an empty one, so it stays a literal: a CString
+	// would end it at the first \0. The default extension has no period.
+	const TCHAR* extension{};
+	const TCHAR* filter{};
 
 	if (item.m_clipboardFormat == _T("PNG"))
 	{
 		extension = _T("png");
-		filter = _T("PNG Files (*.png)\0*.png\0\0");
+		filter = _T("PNG Files (*.png)\0*.png\0");
 	}
 	else if (item.m_clipboardFormat == _T("CF_DIB"))
 	{
-		extension = _T(".bmp");
-		filter = _T("Bitmap Files (*.bmp)\0*.bmp\0\0");
-	}		
+		extension = _T("bmp");
+		filter = _T("Bitmap Files (*.bmp)\0*.bmp\0");
+	}
 	else if (item.m_clipboardFormat == _T("CF_UNICODETEXT") || item.m_clipboardFormat == _T("CF_TEXT"))
 	{
-		extension = _T(".txt");
-		filter = _T("Text Files (*.txt)\0*.txt\0\0");
+		extension = _T("txt");
+		filter = _T("Text Files (*.txt)\0*.txt\0");
 	}
 	else if (item.m_clipboardFormat == _T("Rich Text Format"))
 	{
-		extension = _T(".rtf");
-		filter = _T("Rich Text Files (*.rtf)\0*.rtf\0\0");
+		extension = _T("rtf");
+		filter = _T("Rich Text Files (*.rtf)\0*.rtf\0");
 	}
 	else
 	{
 		return;
 	}
 
-	OPENFILENAME ofn;
-	TCHAR szFile[400];
-	TCHAR szDir[400];
-
-	memset(&szFile, 0, sizeof(szFile));
-	memset(szDir, 0, sizeof(szDir));
-	memset(&ofn, 0, sizeof(ofn));
-
-	CString csInitialDir = CGetSetOptions::GetLastImportDir();
-	STRCPY(szDir, csInitialDir);
+	OPENFILENAME ofn{};
+	TCHAR szFile[400]{};
+	const CString csInitialDir = CGetSetOptions::GetLastImportDir();
 
 	ofn.lStructSize = sizeof(OPENFILENAME);
 	ofn.hwndOwner = m_hWnd;
 	ofn.lpstrFile = szFile;
 	ofn.nMaxFile = _countof(szFile);
-	CString x = _T("Exported Ditto Clips (.txt)\0*.txt\0\0");
 	ofn.lpstrFilter = filter;
 	ofn.nFilterIndex = 1;
-	ofn.lpstrFileTitle = nullptr;
-	ofn.nMaxFileTitle = 0;
-	ofn.lpstrInitialDir = szDir;
+	ofn.lpstrInitialDir = csInitialDir.GetString();
 	ofn.lpstrDefExt = extension;
-	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
+	// a save dialog: the file may be new (no OFN_FILEMUSTEXIST)
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
 
 	if (GetSaveFileName(&ofn))
 	{
-		using namespace nsPath;
-		CString startingFilePath = CFileDialogPath::From(ofn);
-		CPath path(CFileDialogPath::From(ofn));
-		CString csPath = path.GetPath();
-		CString csExt = path.GetExtension();
-		path.RemoveExtension();
-		CString csFileName = path.GetName();
-
 		CClip selectedClip;
 		selectedClip.LoadFormats(item.m_lID, false, false, item.m_DatalID);
 
