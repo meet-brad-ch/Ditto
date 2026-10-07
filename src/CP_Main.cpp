@@ -1044,7 +1044,7 @@ bool CCP_MainApp::ImportClips(HWND hWnd)
 
 	using namespace nsPath;
 	CPath path(CFileDialogPath::From(FileName));
-	CString csPath = path.GetPath();
+	CString csPath(path.GetPath());
 	CGetSetOptions::SetLastImportDir(csPath);
 	
 	try

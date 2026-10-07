@@ -246,7 +246,7 @@ CString GetEnvVar(LPCTSTR envVar)
     SetLastError(0);
 
     // get length of buffer
-    DWORD result = GetEnvironmentVariable(envVar, _T(""), 0);
+    DWORD result = GetEnvironmentVariable(envVar, nullptr, 0);
     if (!result)
         return CString();
 

@@ -31,12 +31,12 @@ distribution.
 
 #include "tinyxml.h"
 
-FILE* TiXmlFOpen(wchar_t* filename, wchar_t* mode );
+FILE* TiXmlFOpen(const wchar_t* filename, const wchar_t* mode );
 
 bool TiXmlBase::condenseWhiteSpace = true;
 
 // Microsoft compiler security
-FILE* TiXmlFOpen(wchar_t* filename, wchar_t* mode )
+FILE* TiXmlFOpen(const wchar_t* filename, const wchar_t* mode )
 {
 	#if defined(_MSC_VER) && (_MSC_VER >= 1400 )
 		FILE* fp = 0;

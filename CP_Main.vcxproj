@@ -466,8 +466,14 @@
       <PREfastRulesetDirectories />
       <PREfastProjectDirectory />
     </ClCompile>
+    <!-- Its colour table keeps string literals in TCHAR* fields, which /permissive- rejects; the
+         file stays untouched and /permissive, so it cannot share the /permissive- precompiled
+         header and compiles without it. -->
     <ClCompile Include="src\RulerRichEditCtrl\External\ColourPopup.cpp">
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <ConformanceMode>false</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
       <PREfastRulesetFile />
       <PREfastRulesetDirectories />

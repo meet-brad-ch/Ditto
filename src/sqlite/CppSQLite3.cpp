@@ -50,7 +50,7 @@ int sqlite3_decode_binary(const unsigned char *in, unsigned char *out);
 ////////////////////////////////////////////////////////////////////////////////
 
 CppSQLite3Exception::CppSQLite3Exception(const int nErrCode,
-									TCHAR* szErrMess,
+									const TCHAR* szErrMess,
 									bool /*bDeleteMsg=true*/) :
 									mnErrCode(nErrCode)
 {

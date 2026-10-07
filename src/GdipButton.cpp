@@ -178,12 +178,6 @@ void CGdipButton::Reset()
 	m_dcBk.DeleteDC();
 }
 
-void CGdipButton::Test(CString c)
-{
-	m_pStdImage = new CGdiPlusBitmapResource;
-	m_pStdImage->Loads(c);
-}
-
 //=============================================================================
 //
 // LoadAltImage()

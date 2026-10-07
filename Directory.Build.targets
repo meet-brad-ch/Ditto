@@ -9,10 +9,9 @@
       <PreprocessorDefinitions>_WIN32_WINNT=0x0A00;WINVER=0x0A00;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <!-- C++20 for every project (owner, 2026-10-06; std::span in the clipboard parsers) -->
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <!-- /std:c++20 implies /permissive-. Projects that set ConformanceMode=true (lib\Contract.props,
-           ICU_Loader) keep it; the legacy MFC code (118 conformance errors) stays /permissive until
-           Phase D fixes it. -->
-      <ConformanceMode Condition="'%(ClCompile.ConformanceMode)' != 'true'">false</ConformanceMode>
+      <!-- Standard conformance (/permissive-) for every project (Phase D, 2026-10-07). Only the
+           untouched third-party C++ sources keep /permissive, per file in the project files. -->
+      <ConformanceMode>true</ConformanceMode>
       <!-- /W4 /WX everywhere (owner, 2026-10-07): a warning fails the build. /WX does not make
            every code analysis finding an error; tools\verify.ps1 fails on any finding in the
            build log. Untouched third-party files are silenced per file. -->

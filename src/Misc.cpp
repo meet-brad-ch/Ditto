@@ -210,7 +210,7 @@ BOOL IsValid(HGLOBAL hGlobal)
 }
 
 // Copies ulBufLen bytes into hDest; throws when hDest is not a lockable block of at least that size
-void CopyToGlobalHP(HGLOBAL hDest, LPVOID pBuf, SIZE_T ulBufLen)
+void CopyToGlobalHP(HGLOBAL hDest, const void* pBuf, SIZE_T ulBufLen)
 {
 	DittoCore::GlobalBytes dest(hDest);
 	if (pBuf == nullptr || ulBufLen > dest.WritableBytes().size())
@@ -227,11 +227,11 @@ void CopyToGlobalHH(HGLOBAL hDest, HGLOBAL hSource, SIZE_T ulBufLen)
 	{
 		throw DittoCore::ClipboardFormatError("copy of " + std::to_string(ulBufLen) + " bytes reads past a block of " + std::to_string(source.Bytes().size()));
 	}
-	CopyToGlobalHP(hDest, const_cast<std::byte*>(source.Bytes().data()), ulBufLen);
+	CopyToGlobalHP(hDest, source.Bytes().data(), ulBufLen);
 }
 
 
-HGLOBAL NewGlobalP(LPVOID pBuf, SIZE_T nLen)
+HGLOBAL NewGlobalP(const void* pBuf, SIZE_T nLen)
 {
 	HGLOBAL hDest = GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, nLen);
 	if (hDest == nullptr)
@@ -256,7 +256,7 @@ HGLOBAL NewGlobalH(HGLOBAL hSource, SIZE_T nLen)
 	{
 		throw DittoCore::ClipboardFormatError("copy of " + std::to_string(nLen) + " bytes reads past a block of " + std::to_string(source.Bytes().size()));
 	}
-	return NewGlobalP(const_cast<std::byte*>(source.Bytes().data()), nLen);
+	return NewGlobalP(source.Bytes().data(), nLen);
 }
 
 int CompareGlobalHP(HGLOBAL hLeft, LPVOID pBuf, SIZE_T ulBufLen)

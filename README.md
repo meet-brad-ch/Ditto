@@ -401,6 +401,32 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
     did not (Debug-only code, 32-bit `size_t`); they are fixed, and CI builds all of them. The
     ARM64 configurations are removed (owner decision): this machine has no ARM64 compiler or
     ARM64 MFC to build or check them, and no installer ships them.
+- 2026-10-07: After a `sw-quality review all`, the owner chose to do all of the remaining work
+  (Phases G1, G2, G3, F, E, D).
+  - **G1, defects found in Phase W, each with a regression test where testable:** the copy
+    properties dialog released the move-to-group hot key by the paste key
+    (`CClipRepository::ReleaseShortCuts`); database backup and restore leaked, ignored read and
+    write errors and swallowed exceptions (now `DittoCore::GzipStream`, tested);
+    `CppSQLite3DB::open` leaked the handle on failure and loaded ICU unchecked into every
+    connection (now `loadExtension`, main connection only, C API only); save dialogs had cut
+    filters and `OFN_FILEMUSTEXIST`; tool tip buffers were freed with the wrong `delete`; a
+    damaged font setting stopped Ditto at every start; and smaller ones (see the commits).
+  - **G2, installer:** per user without administrator rights, English only, zero Inno Setup
+    warnings, enforced by CI (see Installer).
+  - **G3, error handling:** the 73 `CATCH_SQLITE_EXCEPTION` sites that logged a database error
+    and went on now report it to the user (`CErrorReport`) and stop the operation; the macros
+    are gone. `InitInstance` is the application-start boundary.
+  - **F, settings injection:** `CClip` gets its save settings as a
+    `DittoCore::ClipSaveSettings` record through `ClipSavePolicy` (tested) instead of reading
+    `CGetSetOptions`; the default constructor reads them once from the options.
+  - **E, QR code:** `DittoCore::QrBitmap` (tested) renders with vcpkg's
+    `nayuki-qr-code-generator`; the vendored libqrencode is removed.
+  - **D, conformance:** every project builds with `/permissive-`. The conformance errors in
+    Ditto's code (about 40 sites) were fixed: string literals passed to non-`const` parameters,
+    qualified member declarations, a `CPath` copy-initialised into a `CString` (two user
+    conversions), an ambiguous ternary and `bind`, and a dead `CGdipButton::Test`. The untouched `ColourPopup.cpp` keeps `/permissive`
+    and compiles without the shared precompiled header, which a different conformance mode
+    cannot use.
 - 2026-10-06: The clip SQL is in `CClipRepository`, tested by AppTests (Phase C11, second part).
   - **Repository:** `CClipRepository` takes the database as a parameter and works on plain
     records (`ClipRecord`, `FormatRecord`), so it builds and is tested without `CClip` or the

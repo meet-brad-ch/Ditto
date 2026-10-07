@@ -37,7 +37,7 @@ bool CClip_ImportExport::ExportToSqliteDB(CppSQLite3DB& db)
 	//Add to Main Table
 	m_Desc.Replace(_T("'"), _T("''"));
 	db.execDMLEx(_T("insert into Main values(NULL, %d, '%s');"), CURRENT_EXPORT_VERSION, m_Desc.GetString());
-	long lId = (long)db.lastRowId();
+	const sqlite_int64 lId{ db.lastRowId() };
 
 	//Add to Data table
 	CClipFormat* pCF;
@@ -47,8 +47,8 @@ bool CClip_ImportExport::ExportToSqliteDB(CppSQLite3DB& db)
 	{
 		pCF = &m_Formats.ElementAt(i);
 
-		stmt.bind(1, lId);
-		stmt.bind(2, GetFormatName(pCF->m_cfType));
+		stmt.bindInt64(1, lId);
+		stmt.bind(2, GetFormatName(pCF->m_cfType).GetString());
 
 		const DittoCore::GlobalBytes block(pCF->m_hgData);
 		const std::vector<std::byte> compressed = DittoCore::DtoCodec::Compress(block.Bytes());

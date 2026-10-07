@@ -45,7 +45,7 @@ class CppSQLite3Exception
 public:
 
     CppSQLite3Exception(const int nErrCode,
-                    TCHAR* szErrMess,
+                    const TCHAR* szErrMess,
                     bool bDeleteMsg=true);
 
     CppSQLite3Exception(const CppSQLite3Exception&  e);

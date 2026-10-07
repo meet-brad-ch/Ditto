@@ -1498,7 +1498,7 @@ BOOL CQPasteWnd::FillList(CString csSQLSearch)
 
 	if (csSQLSearch == "")
 	{
-		m_strSQLSearch = m_bShowStarredClips ? strFilter : _T("");
+		m_strSQLSearch = m_bShowStarredClips ? strFilter : CString();
 		m_strSearch = "";
 	}
 	else
@@ -2487,7 +2487,7 @@ void CQPasteWnd::OnMenuExport()
 	{
 		using namespace nsPath;
 		CPath path(CFileDialogPath::From(ofn));
-		CString csPath = path.GetPath();
+		CString csPath(path.GetPath());
 		CGetSetOptions::SetLastExportDir(csPath);
 
 		CString csFile(CFileDialogPath::From(ofn));
@@ -4101,7 +4101,7 @@ bool CQPasteWnd::DoExportToTextFile()
 		using namespace nsPath;
 		CString startingFilePath = CFileDialogPath::From(ofn);
 		CPath path(CFileDialogPath::From(ofn));
-		CString csPath = path.GetPath();
+		CString csPath(path.GetPath());
 		CString csExt = path.GetExtension();
 		path.RemoveExtension();
 		CString csFileName = path.GetName();
@@ -5033,7 +5033,7 @@ bool CQPasteWnd::DoExportToBitMapFile()
 		using namespace nsPath;
 		CString startingFilePath = CFileDialogPath::From(ofn);
 		CPath path(CFileDialogPath::From(ofn));
-		CString csPath = path.GetPath();
+		CString csPath(path.GetPath());
 		CString csExt = path.GetExtension();
 		path.RemoveExtension();
 		CString csFileName = path.GetName();

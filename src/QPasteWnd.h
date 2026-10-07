@@ -565,8 +565,8 @@ public:
 	afx_msg void OnSpecialpasteTogglecase();
 	afx_msg void OnUpdateSpecialpasteTogglecase(CCmdUI *pCmdUI);
 	afx_msg void OnFirstShowstartupmessage();
-	afx_msg void CQPasteWnd::OnFirstBackupDb();
-	afx_msg void CQPasteWnd::OnFirstRestoreDb();
+	afx_msg void OnFirstBackupDb();
+	afx_msg void OnFirstRestoreDb();
 	afx_msg void OnMenuDeleteallnonusedclips();
 	afx_msg void OnUpdateMenuDeleteallnonusedclips(CCmdUI* pCmdUI);
 	afx_msg void OnImportSetdragfilename();

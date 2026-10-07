@@ -578,7 +578,7 @@ BOOL RestoreDB(CString backupPath)
 		}
 
 		CPath defaultDbPathPath(GetDefaultDBName());
-		const CString path = defaultDbPathPath.GetPath();
+		const CString path(defaultDbPathPath.GetPath());
 		backupPathPath.RenameExtension(_T("db"));
 		CString newFullPath = path + backupPathPath.GetName();
 		for (int i = 1; FileExists(newFullPath); i++)

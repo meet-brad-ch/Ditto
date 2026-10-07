@@ -57,7 +57,7 @@ protected:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	//}}AFX_MSG
 	afx_msg LRESULT OnSetConnect(WPARAM wParam, LPARAM lParam);
-	afx_msg LRESULT CClipboardViewer::OnClipboardChange(WPARAM wParam, LPARAM lPara);
+	afx_msg LRESULT OnClipboardChange(WPARAM wParam, LPARAM lPara);
 	DECLARE_MESSAGE_MAP()
 
 private:

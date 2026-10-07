@@ -76,9 +76,9 @@ bool IsAppWnd( HWND hWnd );
 
 // Global Memory Helper Functions
 BOOL IsValid(HGLOBAL hGlobal);
-void CopyToGlobalHP(HGLOBAL hDest, LPVOID pBuf, SIZE_T ulBufLen);
+void CopyToGlobalHP(HGLOBAL hDest, const void* pBuf, SIZE_T ulBufLen);
 void CopyToGlobalHH(HGLOBAL hDest, HGLOBAL hSource, SIZE_T ulBufLen);
-HGLOBAL NewGlobalP(LPVOID pBuf, SIZE_T nLen);
+HGLOBAL NewGlobalP(const void* pBuf, SIZE_T nLen);
 HGLOBAL NewGlobalH(HGLOBAL hSource, SIZE_T nLen);
 HGLOBAL NewGlobal(SIZE_T nLen);
 int CompareGlobalHP(HGLOBAL hLeft, LPVOID pBuf, SIZE_T ulBufLen);
