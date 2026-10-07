@@ -12,6 +12,7 @@
 #include <afxtempl.h>
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <vector>
@@ -202,6 +203,9 @@ public:
 	Gdiplus::Bitmap *CreateGdiplusBitmap();
 	
 protected:
+	// Adds the Main row and the Data rows, and clears another clip's top-sticky setting, in one
+	// transaction; returns false (rolled back) when a step fails
+	bool AddRowsInTransaction(int removeStickySettingClipId);
 	bool AddToMainTable();
 	bool AddToDataTable();
 	int FindDuplicate();
@@ -209,6 +213,28 @@ protected:
 	AddToDbStickyEnum::AddToDbSticky m_addToDbStickyEnum;
 
 private:
+	// Where a clip's position lives for one list: the order member that MoveUp/MoveDown change,
+	// its column, and whether the clip is sticky there
+	struct OrderSlot
+	{
+		bool inGroup{};
+		bool sticky{};
+		CString column{};
+		CString stickyColumn{};
+		double* order{};
+	};
+
+	// The order slot of this clip in the main list (parentId < 0) or a group
+	OrderSlot SlotFor(int parentId);
+	// The SQL that finds the nearest order above (up) or below a given order in the slot's list
+	static CString NeighbourSql(const OrderSlot& slot, bool up);
+	// Runs NeighbourSql for one order; nullopt when there is no clip beyond it
+	static std::optional<double> NeighbourOrder(const CString& sql, int parentId, double from);
+	// Moves the clip one place up or down in its list (midpoint of the two neighbours)
+	void Move(int parentId, bool up);
+	// The highest or lowest order of a column in the main list or a group; nullopt when empty
+	static std::optional<double> EdgeOrder(const CString& column, bool sticky, int parentId, bool highest);
+
 	// A file read for "Ditto File Data": its UTF-8 path, the MD5 of its contents, the contents
 	struct CopiedFile
 	{

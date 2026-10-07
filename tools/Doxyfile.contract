@@ -11,6 +11,8 @@ INPUT                  = lib/DittoCore/ByteCursor.h \
                          lib/DittoCore/CfHtml.cpp \
                          lib/DittoCore/CfHtmlFragment.h \
                          lib/DittoCore/ClipboardFormatError.h \
+                         lib/DittoCore/ClipOrder.h \
+                         lib/DittoCore/ClipOrder.cpp \
                          lib/DittoCore/ClipText.h \
                          lib/DittoCore/ClipText.cpp \
                          lib/DittoCore/DatabasePath.h \

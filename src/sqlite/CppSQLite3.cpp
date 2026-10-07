@@ -1218,3 +1218,16 @@ int sqlite3_decode_binary(const unsigned char *in, unsigned char *out){
   }
   return i;
 }
+
+void CppSQLite3Statement::bindInt64(int nParam, const sqlite_int64 nValue)
+{
+	checkVM();
+	int nRes = sqlite3_bind_int64(mpVM, nParam, nValue);
+
+	if (nRes != SQLITE_OK)
+	{
+		throw CppSQLite3Exception(nRes,
+								_T("Error binding int64 param"),
+								DONT_DELETE_MSG);
+	}
+}

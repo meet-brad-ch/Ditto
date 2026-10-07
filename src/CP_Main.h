@@ -17,6 +17,7 @@
 #include "ClipboardSaveRestore.h"
 #include "DittoCopyBuffer.h"
 #include "sqlite\CppSQLite3.h"
+#include "DittoDb.h"
 #include "DittoAddins.h"
 #include "externalwindowtracker.h"
 #include "HotKeys.h"
@@ -33,7 +34,7 @@ public:
 	CCP_MainApp();
 	~CCP_MainApp();
 
-	CppSQLite3DB m_db;
+	CDittoDb m_db;
 	bool m_databaseOnNetworkShare;
 
 	HANDLE	m_hMutex; // for singleton app

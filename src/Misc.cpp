@@ -587,22 +587,18 @@ long NewGroupID(int parentID, CString text)
 	
 	try
 	{
-		//sqlite doesn't like single quotes ' replace them with double ''
 		if(text.IsEmpty())
 			text = time.Format("NewGroup %y/%m/%d %H:%M:%S");
-		text.Replace(_T("'"), _T("''"));
 
-		CString cs;
+		// bound values: the name is stored as typed (no quote doubling) and the time keeps 64 bits
+		CppSQLite3Statement insert = theApp.m_db.compileStatement(
+			_T("insert into Main (lDate, mText, lDontAutoDelete, bIsGroup, lParentID, stickyClipOrder, stickyClipGroupOrder) values(?, ?, ?, 1, ?, -(2147483647), -(2147483647));"));
+		insert.bindInt64(1, time.GetTime());
+		insert.bind(2, text);
+		insert.bindInt64(3, time.GetTime());
+		insert.bind(4, parentID);
 
-		cs.Format(_T("insert into Main (lDate, mText, lDontAutoDelete, bIsGroup, lParentID, stickyClipOrder, stickyClipGroupOrder) values(%d, '%s', %d, 1, %d, -(2147483647), -(2147483647));"),
-							(int)time.GetTime(),
-							text,
-							(int)time.GetTime(),
-							parentID);
-
-		theApp.m_db.execDML(cs);
-
-		lID = (long)theApp.m_db.lastRowId();
+		lID = (long)theApp.m_db.InsertReturningId(insert);
 	}
 	CATCH_SQLITE_EXCEPTION_AND_RETURN(0)
 	

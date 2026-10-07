@@ -310,6 +310,28 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   The ARM64 script still added firewall rules for TCP 23443 and launched URLs, and the portable
   one packaged files that no longer exist (`DittoU.exe`, `sqlite3.dll`, `zlib1.dll`). The
   installer gate now checks every `.iss` file.
+- 2026-10-06: The database connection is a locked `CDittoDb` (Phase C11, first part).
+  - **Shared connection:** the clip window, the copy thread and the paste and import paths share
+    one SQLite connection. An insert and its `lastRowId()` were two calls, so an insert by
+    another thread in between gave a clip or format the wrong id. `InsertReturningId` runs both
+    under one recursive lock; `AddToDB` holds the lock from reading the newest order to writing
+    the clip.
+  - **Transactions:** `CDittoDbTransaction` (RAII; rolled back unless committed). Saving a clip
+    writes its Main row and Data rows in one transaction (before, a failed data insert left an
+    empty clip in the list), and saving from the editor deletes and rewrites the data in one
+    (before, a failure lost the clip's contents).
+  - **Bound values:** the clip and group writes bind their values. Upstream doubled the quotes
+    of the description and quick-paste text in memory, printed the orders with `%f` (6
+    decimals, so repeated moves between two clips stopped working) and the group date as a
+    32-bit `int`.
+  - **Moving clips:** the eight copies of the move-up/move-down query are one `Move`, and the
+    order rules are `DittoCore::ClipOrder` (7 unit tests).
+  - **Fixed:** a format saved without data reused the previous format's memory, so two formats
+    freed one block (it is now left out and logged); `LoadFormat` returned `false` as a handle;
+    clearing another clip's top-sticky setting always reported "not changed".
+  - **Not done yet (C11b):** moving the remaining SQL from `CClip` into a `CClipRepository` with
+    an injected database and settings, and an AppTests project that tests it against an
+    in-memory database.
 - 2026-10-06: The special-paste transforms live in DittoCore (Phase C10): `CaseTransforms` (with
   an injected `ICaseMapper`, ICU in the app), `TextTransforms`, `RtfTransforms`, `Typoglycemia`
   (with an injected `IRandomRange`) and `Slugifier`. `OleClipSource` keeps one helper that reads

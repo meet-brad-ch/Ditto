@@ -511,6 +511,8 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\DittoDbTransaction.cpp" />
+    <ClCompile Include="src\DittoDb.cpp" />
     <ClCompile Include="src\RandomRange.cpp" />
     <ClCompile Include="src\IcuCaseMapper.cpp" />
     <ClCompile Include="src\FileDialogPath.cpp" />
@@ -763,6 +765,8 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\DittoDbTransaction.h" />
+    <ClInclude Include="src\DittoDb.h" />
     <ClInclude Include="src\RandomRange.h" />
     <ClInclude Include="src\IcuCaseMapper.h" />
     <ClInclude Include="src\FileDialogPath.h" />

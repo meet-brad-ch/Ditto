@@ -150,6 +150,7 @@ public:
 
     void bind(int nParam, const TCHAR* szValue);
     void bind(int nParam, const int nValue);
+    void bindInt64(int nParam, const sqlite_int64 nValue);
     void bind(int nParam, const double dwValue);
     void bind(int nParam, const unsigned char* blobValue, int nLen);
     void bindNull(int nParam);

@@ -25,6 +25,8 @@
 #include "GlobalBytes.h"
 #include "GlobalFileDrop.h"
 #include "RtfNormalizer.h"
+#include "ClipOrder.h"
+#include "DittoDbTransaction.h"
 #include <algorithm>
 #include <set>
 
@@ -704,6 +706,9 @@ bool CClip::SetDescFromType()
 
 bool CClip::AddToDB(bool bCheckForDuplicates)
 {
+	// one lock from reading the newest order to writing the clip, so a clip saved by another
+	// thread cannot get the same order in between
+	const std::unique_lock<std::recursive_mutex> lock = theApp.m_db.Lock();
 	bool bResult;
 	try
 	{
@@ -720,28 +725,27 @@ bool CClip::AddToDB(bool bCheckForDuplicates)
 				MakeLatestOrder();
 				MakeLatestGroupOrder();
 
-				CString sql;
-				
-				sql.Format(_T("UPDATE Main SET clipOrder = %f where lID = %d;"), 
-								m_clipOrder, nID);
-
-				int ret = theApp.m_db.execDML(sql);
+				// bound orders keep full precision (upstream printed them with %f)
+				CppSQLite3Statement update = theApp.m_db.compileStatement(_T("UPDATE Main SET clipOrder = ? where lID = ?;"));
+				update.bind(1, m_clipOrder);
+				update.bind(2, nID);
+				int ret = update.execDML();
 
 				int groupRet = -1;
 
 				if(m_parentId > -1)
 				{
-					sql.Format(_T("UPDATE Main SET clipGroupOrder = %f where lID = %d;"), 
-						m_clipGroupOrder, nID);
-
-					groupRet = theApp.m_db.execDML(sql);
+					CppSQLite3Statement groupUpdate = theApp.m_db.compileStatement(_T("UPDATE Main SET clipGroupOrder = ? where lID = ?;"));
+					groupUpdate.bind(1, m_clipGroupOrder);
+					groupUpdate.bind(2, nID);
+					groupRet = groupUpdate.execDML();
 				}
 
 
 				m_id = nID;
 
-				Log(StrF(_T("Found duplicate clip in db, Id: %d, ParentId: %d crc: %d, NewOrder: %f, GroupOrder %f, Ret: %d, GroupRet: %d, SQL: %s"), 
-										nID, m_parentId, m_CRC, m_clipOrder, m_clipGroupOrder, ret, groupRet, sql));
+				Log(StrF(_T("Found duplicate clip in db, Id: %d, ParentId: %d crc: %d, NewOrder: %f, GroupOrder %f, Ret: %d, GroupRet: %d"),
+										nID, m_parentId, m_CRC, m_clipOrder, m_clipGroupOrder, ret, groupRet));
 
 				return true;
 			}
@@ -765,21 +769,12 @@ bool CClip::AddToDB(bool bCheckForDuplicates)
 		removeStickySettingClipId = GetExistingTopStickyClipId(m_parentId);
 	}
 	
-	bResult = false;
-	if(AddToMainTable())
-	{		
-		bResult = AddToDataTable();
-	}
+	bResult = AddRowsInTransaction(removeStickySettingClipId);
 
 	if(bResult)
 	{
 		if(CGetSetOptions::m_csPlaySoundOnCopy.IsEmpty() == FALSE)
 			PlaySound(CGetSetOptions::m_csPlaySoundOnCopy, NULL, SND_FILENAME|SND_ASYNC);
-
-		if (removeStickySettingClipId > 0)
-		{
-			RemoveStickySetting(removeStickySettingClipId, m_parentId);
-		}
 	}
 	
 	// should be emptied by AddToDataTable
@@ -872,37 +867,55 @@ std::span<const std::byte> CClip::TextBytesWithTerminator(CLIPFORMAT type, std::
 	return bytes;
 }
 
+bool CClip::AddRowsInTransaction(int removeStickySettingClipId)
+{
+	try
+	{
+		// all or nothing: upstream left a Main row without data when the data insert failed
+		CDittoDbTransaction transaction(theApp.m_db);
+		if (AddToMainTable() == false || AddToDataTable() == false)
+		{
+			return false;   // the transaction rolls back
+		}
+		if (removeStickySettingClipId > 0)
+		{
+			RemoveStickySetting(removeStickySettingClipId, m_parentId);
+		}
+		transaction.Commit();
+		return true;
+	}
+	CATCH_SQLITE_EXCEPTION_AND_RETURN(false)
+}
+
 // assigns m_ID
 bool CClip::AddToMainTable()
 {
 	try
 	{
-		m_Desc.Replace(_T("'"), _T("''"));
-		m_csQuickPaste.Replace(_T("'"), _T("''"));
+		// bound values: the texts are stored as they are and the orders keep full precision;
+		// upstream doubled the quotes of m_Desc and m_csQuickPaste in memory and printed the
+		// orders with %f (6 decimals)
+		CppSQLite3Statement insert = theApp.m_db.compileStatement(
+			_T("INSERT into Main (lDate, mText, lShortCut, lDontAutoDelete, CRC, bIsGroup, lParentID, QuickPasteText, clipOrder, clipGroupOrder, globalShortCut, lastPasteDate, stickyClipOrder, stickyClipGroupOrder, MoveToGroupShortCut, GlobalMoveToGroupShortCut) ")
+			_T("values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"));
+		insert.bindInt64(1, m_Time.GetTime());
+		insert.bind(2, m_Desc);
+		insert.bind(3, m_shortCut);
+		insert.bind(4, m_dontAutoDelete);
+		insert.bind(5, static_cast<int>(m_CRC));
+		insert.bind(6, m_bIsGroup);
+		insert.bind(7, m_parentId);
+		insert.bind(8, m_csQuickPaste);
+		insert.bind(9, m_clipOrder);
+		insert.bind(10, m_clipGroupOrder);
+		insert.bind(11, m_globalShortCut);
+		insert.bindInt64(12, CTime::GetCurrentTime().GetTime());
+		insert.bind(13, m_stickyClipOrder);
+		insert.bind(14, m_stickyClipGroupOrder);
+		insert.bind(15, m_moveToGroupShortCut);
+		insert.bind(16, m_globalMoveToGroupShortCut);
 
-		CString cs;
-		cs.Format(_T("INSERT into Main (lDate, mText, lShortCut, lDontAutoDelete, CRC, bIsGroup, lParentID, QuickPasteText, clipOrder, clipGroupOrder, globalShortCut, lastPasteDate, stickyClipOrder, stickyClipGroupOrder, MoveToGroupShortCut, GlobalMoveToGroupShortCut) ")
-						_T("values(%lld, '%s', %d, %d, %d, %d, %d, '%s', %f, %f, %d, %lld, %f, %f, %d, %d);"),
-							m_Time.GetTime(),
-							m_Desc,
-							m_shortCut,
-							m_dontAutoDelete,
-							m_CRC,
-							m_bIsGroup,
-							m_parentId,
-							m_csQuickPaste,
-							m_clipOrder,
-							m_clipGroupOrder,
-							m_globalShortCut,
-							CTime::GetCurrentTime().GetTime(),
-							m_stickyClipOrder,
-							m_stickyClipGroupOrder,
-							m_moveToGroupShortCut,
-							m_globalMoveToGroupShortCut);
-
-		theApp.m_db.execDML(cs);
-
-		m_id = (long)theApp.m_db.lastRowId();
+		m_id = (long)theApp.m_db.InsertReturningId(insert);
 
 		Log(StrF(_T("Added clip to main table, Id: %d, ParentId: %d Desc: %s, Order: %f, GroupOrder: %f"), m_id, m_parentId, m_Desc, m_clipOrder, m_clipGroupOrder));
 
@@ -919,35 +932,33 @@ bool CClip::ModifyMainTable()
 	bool bRet = false;
 	try
 	{
-		m_Desc.Replace(_T("'"), _T("''"));
-		m_csQuickPaste.Replace(_T("'"), _T("''"));
-
-		theApp.m_db.execDMLEx(_T("UPDATE Main SET lShortCut = %d, ")
-			_T("mText = '%s', ")
-			_T("lParentID = %d, ")
-			_T("lDontAutoDelete = %d, ")
-			_T("QuickPasteText = '%s', ")
-			_T("clipOrder = %f, ")
-			_T("clipGroupOrder = %f, ")
-			_T("globalShortCut = %d, ")
-			_T("stickyClipOrder = %f, ")
-			_T("stickyClipGroupOrder = %f, ")
-			_T("MoveToGroupShortCut = %d, ")
-			_T("GlobalMoveToGroupShortCut = %d ")
-			_T("WHERE lID = %d;"), 
-			m_shortCut, 
-			m_Desc, 
-			m_parentId, 
-			m_dontAutoDelete, 
-			m_csQuickPaste,
-			m_clipOrder,
-			m_clipGroupOrder,
-			m_globalShortCut,
-			m_stickyClipOrder,
-			m_stickyClipGroupOrder,
-			m_moveToGroupShortCut,
-			m_globalMoveToGroupShortCut,
-			m_id);
+		CppSQLite3Statement update = theApp.m_db.compileStatement(_T("UPDATE Main SET lShortCut = ?, ")
+			_T("mText = ?, ")
+			_T("lParentID = ?, ")
+			_T("lDontAutoDelete = ?, ")
+			_T("QuickPasteText = ?, ")
+			_T("clipOrder = ?, ")
+			_T("clipGroupOrder = ?, ")
+			_T("globalShortCut = ?, ")
+			_T("stickyClipOrder = ?, ")
+			_T("stickyClipGroupOrder = ?, ")
+			_T("MoveToGroupShortCut = ?, ")
+			_T("GlobalMoveToGroupShortCut = ? ")
+			_T("WHERE lID = ?;"));
+		update.bind(1, m_shortCut);
+		update.bind(2, m_Desc);
+		update.bind(3, m_parentId);
+		update.bind(4, m_dontAutoDelete);
+		update.bind(5, m_csQuickPaste);
+		update.bind(6, m_clipOrder);
+		update.bind(7, m_clipGroupOrder);
+		update.bind(8, m_globalShortCut);
+		update.bind(9, m_stickyClipOrder);
+		update.bind(10, m_stickyClipGroupOrder);
+		update.bind(11, m_moveToGroupShortCut);
+		update.bind(12, m_globalMoveToGroupShortCut);
+		update.bind(13, m_id);
+		update.execDML();
 
 		bRet = true;
 	}
@@ -961,12 +972,10 @@ bool CClip::ModifyDescription()
 	bool bRet = false;
 	try
 	{
-		m_Desc.Replace(_T("'"), _T("''"));
-
-		theApp.m_db.execDMLEx(_T("UPDATE Main SET mText = '%s' ")
-			_T("WHERE lID = %d;"),
-			m_Desc,
-			m_id);
+		CppSQLite3Statement update = theApp.m_db.compileStatement(_T("UPDATE Main SET mText = ? WHERE lID = ?;"));
+		update.bind(1, m_Desc);
+		update.bind(2, m_id);
+		update.execDML();
 
 		bRet = true;
 	}
@@ -994,18 +1003,12 @@ bool CClip::AddToDataTable()
 			stmt.bind(1, m_id);
 			stmt.bind(2, formatName);
 
-			const unsigned char *Data = (const unsigned char *)GlobalLock(pCF->m_hgData);
-			if(Data)
-			{
-				clipSize = (int)GlobalSize(pCF->m_hgData);
-				stmt.bind(3, Data, clipSize);
-			}
-			GlobalUnlock(pCF->m_hgData);
-			
-			stmt.execDML();
-			stmt.reset();
+			const DittoCore::GlobalBytes block(pCF->m_hgData);
+			clipSize = static_cast<int>(block.Bytes().size());
+			stmt.bind(3, reinterpret_cast<const unsigned char*>(block.Bytes().data()), clipSize);
 
-			pCF->m_dataId = (long)theApp.m_db.lastRowId();
+			pCF->m_dataId = (long)theApp.m_db.InsertReturningId(stmt);
+			stmt.reset();
 
 			Log(StrF(_T("Added ClipData to DB, Id: %d, ParentId: %d Type: %s, size: %d"), pCF->m_dataId, m_id, formatName, clipSize));
 		}
@@ -1015,204 +1018,76 @@ bool CClip::AddToDataTable()
 	return true;
 }
 
-void CClip::MoveUp(int parentId)
+CClip::OrderSlot CClip::SlotFor(int parentId)
 {
+	OrderSlot slot{};
+	slot.inGroup = parentId > -1;
+	slot.stickyColumn = slot.inGroup ? _T("stickyClipGroupOrder") : _T("stickyClipOrder");
+	double& sticky = slot.inGroup ? m_stickyClipGroupOrder : m_stickyClipOrder;
+	slot.sticky = sticky != INVALID_STICKY;
+	slot.column = slot.sticky ? slot.stickyColumn : (slot.inGroup ? _T("clipGroupOrder") : _T("clipOrder"));
+	slot.order = slot.sticky ? &sticky : (slot.inGroup ? &m_clipGroupOrder : &m_clipOrder);
+	return slot;
+}
+
+CString CClip::NeighbourSql(const OrderSlot& slot, bool up)
+{
+	// the nearest order above (up) or below (down) among the clips of the same list and kind
+	CString sql;
+	sql.Format(_T("SELECT %s FROM Main WHERE %s%s %s -(2147483647) AND %s %s ? ORDER BY %s %s LIMIT 1"),
+		slot.column.GetString(),
+		slot.inGroup ? _T("lParentID = ? AND ") : _T(""),
+		slot.stickyColumn.GetString(),
+		slot.sticky ? _T("<>") : _T("="),
+		slot.column.GetString(),
+		up ? _T(">") : _T("<"),
+		slot.column.GetString(),
+		up ? _T("ASC") : _T("DESC"));
+	return sql;
+}
+
+std::optional<double> CClip::NeighbourOrder(const CString& sql, int parentId, double from)
+{
+	CppSQLite3Statement statement = theApp.m_db.compileStatement(sql);
+	int param = 1;
+	if (parentId > -1)
+	{
+		statement.bind(param++, parentId);
+	}
+	statement.bind(param, from);
+	CppSQLite3Query q = statement.execQuery();
+	if (q.eof())
+	{
+		return std::nullopt;
+	}
+	return q.getFloatField(0);
+}
+
+void CClip::Move(int parentId, bool up)
+{
+	// upstream had a copy of this for each list and kind of clip, and printed the orders into
+	// the SQL with %f (6 decimals), so after a few midpoint moves the query found the clip itself
+	const OrderSlot slot = SlotFor(parentId);
+	const CString sql = NeighbourSql(slot, up);
 	try
 	{
-		//In a group, not a sticky
-		if(parentId > -1 && m_stickyClipGroupOrder == INVALID_STICKY)
+		const std::optional<double> neighbour = NeighbourOrder(sql, parentId, *slot.order);
+		if (neighbour)
 		{
-			CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID, clipGroupOrder FROM Main Where lParentID = %d AND stickyClipGroupOrder == -(2147483647) AND clipGroupOrder > %f ORDER BY clipGroupOrder ASC LIMIT 1"), parentId, m_clipGroupOrder);
-			if (q.eof() == false)
-			{
-				int idAbove = q.getIntField(_T("lID"));
-				double orderAbove = q.getFloatField(_T("clipGroupOrder"));
-
-				CppSQLite3Query q2 = theApp.m_db.execQueryEx(_T("SELECT lID, clipGroupOrder FROM Main Where lParentID = %d AND clipGroupOrder > %f AND stickyClipGroupOrder == -(2147483647) ORDER BY clipGroupOrder ASC LIMIT 1"), parentId, orderAbove);
-				if (q2.eof() == false)
-				{ 
-					int idTwoAbove = q2.getIntField(_T("lID"));
-					double orderTwoAbove = q2.getFloatField(_T("clipGroupOrder"));
-
-					m_clipGroupOrder = orderAbove + (orderTwoAbove - orderAbove) / 2.0;
-				}
-				else
-				{
-					m_clipGroupOrder = orderAbove + 1;
-				}
-			}
-		}
-		// main group, not a sticky
-		else if(parentId <= -1 && m_stickyClipOrder == INVALID_STICKY)
-		{
-			CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID, clipOrder FROM Main Where clipOrder > %f AND stickyClipOrder == -(2147483647) ORDER BY clipOrder ASC LIMIT 1"), m_clipOrder);
-			if (q.eof() == false)
-			{
-				int idAbove = q.getIntField(_T("lID"));
-				double orderAbove = q.getFloatField(_T("clipOrder"));
-
-				CppSQLite3Query q2 = theApp.m_db.execQueryEx(_T("SELECT lID, clipOrder FROM Main Where clipOrder > %f AND stickyClipOrder == -(2147483647) ORDER BY clipOrder ASC LIMIT 1"), orderAbove);
-				if (q2.eof() == false)
-				{ 
-					int idTwoAbove = q2.getIntField(_T("lID"));
-					double orderTwoAbove = q2.getFloatField(_T("clipOrder"));
-
-					m_clipOrder = orderAbove + (orderTwoAbove - orderAbove) / 2.0;
-				}
-				else
-				{
-					m_clipOrder = orderAbove + 1;
-				}
-			}
-		}
-		//In a group, a sticky clip
-		else if(parentId > -1 && m_stickyClipGroupOrder != INVALID_STICKY)
-		{
-			CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID, stickyClipGroupOrder FROM Main Where lParentID = %d AND stickyClipGroupOrder <> -(2147483647) AND stickyClipGroupOrder > %f ORDER BY stickyClipGroupOrder ASC LIMIT 1"), parentId, m_stickyClipGroupOrder);
-			if (q.eof() == false)
-			{
-				int idAbove = q.getIntField(_T("lID"));
-				double orderAbove = q.getFloatField(_T("stickyClipGroupOrder"));
-
-				CppSQLite3Query q2 = theApp.m_db.execQueryEx(_T("SELECT lID, stickyClipGroupOrder FROM Main Where lParentID = %d AND stickyClipGroupOrder <> -(2147483647) AND stickyClipGroupOrder > %f ORDER BY stickyClipGroupOrder ASC LIMIT 1"), parentId, orderAbove);
-				if (q2.eof() == false)
-				{
-					int idTwoAbove = q2.getIntField(_T("lID"));
-					double orderTwoAbove = q2.getFloatField(_T("stickyClipGroupOrder"));
-
-					m_stickyClipGroupOrder = orderAbove + (orderTwoAbove - orderAbove) / 2.0;
-				}
-				else
-				{
-					m_stickyClipGroupOrder = orderAbove + 1;
-				}
-			}
-		}
-		//not in a group, a sticky clip
-		else if(parentId <= -1 && m_stickyClipOrder != INVALID_STICKY)
-		{
-			CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID, stickyClipOrder FROM Main Where stickyClipOrder <> -(2147483647) AND stickyClipOrder > %f ORDER BY stickyClipOrder ASC LIMIT 1"), m_stickyClipOrder);
-			if (q.eof() == false)
-			{
-				int idAbove = q.getIntField(_T("lID"));
-				double orderAbove = q.getFloatField(_T("stickyClipOrder"));
-
-				CppSQLite3Query q2 = theApp.m_db.execQueryEx(_T("SELECT lID, stickyClipOrder FROM Main Where stickyClipOrder <> -(2147483647) AND stickyClipOrder > %f ORDER BY stickyClipOrder ASC LIMIT 1"), orderAbove);
-				if (q2.eof() == false)
-				{
-					int idTwoAbove = q2.getIntField(_T("lID"));
-					double orderTwoAbove = q2.getFloatField(_T("stickyClipOrder"));
-
-					m_stickyClipOrder = orderAbove + (orderTwoAbove - orderAbove) / 2.0;
-				}
-				else
-				{
-					m_stickyClipOrder = orderAbove + 1;
-				}
-			}
+			*slot.order = DittoCore::ClipOrder::MovedPast(*neighbour, NeighbourOrder(sql, parentId, *neighbour), up);
 		}
 	}
 	CATCH_SQLITE_EXCEPTION
 }
 
+void CClip::MoveUp(int parentId)
+{
+	Move(parentId, true);
+}
+
 void CClip::MoveDown(int parentId)
 {
-	try
-	{
-		//In a group, not a sticky
-		if(parentId > -1 && m_stickyClipGroupOrder == INVALID_STICKY)
-		{
-			CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID, clipGroupOrder FROM Main Where lParentID = %d AND clipGroupOrder < %f AND stickyClipGroupOrder = -(2147483647) ORDER BY clipGroupOrder DESC LIMIT 1"), parentId, m_clipGroupOrder);
-			if (q.eof() == false)
-			{
-				int idBelow = q.getIntField(_T("lID"));
-				double orderBelow = q.getFloatField(_T("clipGroupOrder"));
-
-				CppSQLite3Query q2 = theApp.m_db.execQueryEx(_T("SELECT lID, clipGroupOrder FROM Main Where lParentID = %d AND clipGroupOrder < %f AND stickyClipGroupOrder = -(2147483647) ORDER BY clipGroupOrder DESC LIMIT 1"), parentId, orderBelow);
-				if (q2.eof() == false)
-				{ 
-					int idTwoBelow = q2.getIntField(_T("lID"));
-					double orderTwoBelow = q2.getFloatField(_T("clipGroupOrder"));
-
-					m_clipGroupOrder = orderBelow + (orderTwoBelow - orderBelow) / 2.0;
-				}
-				else
-				{
-					m_clipGroupOrder = orderBelow - 1;
-				}
-			}
-		}
-		// main group, not a sticky
-		else if(parentId <= -1 && m_stickyClipOrder == INVALID_STICKY)
-		{
-			CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID, clipOrder FROM Main Where clipOrder < %f AND stickyClipOrder = -(2147483647) ORDER BY clipOrder DESC LIMIT 1"), m_clipOrder);
-			if (q.eof() == false)
-			{
-				int idBelow = q.getIntField(_T("lID"));
-				double orderBelow = q.getFloatField(_T("clipOrder"));
-
-				CppSQLite3Query q2 = theApp.m_db.execQueryEx(_T("SELECT lID, clipOrder FROM Main Where clipOrder < %f AND stickyClipOrder = -(2147483647) ORDER BY clipOrder DESC LIMIT 1"), orderBelow);
-				if (q2.eof() == false)
-				{ 
-					int idTwoBelow = q2.getIntField(_T("lID"));
-					double orderTwoBelow = q2.getFloatField(_T("clipOrder"));
-
-					m_clipOrder = orderBelow + (orderTwoBelow - orderBelow) / 2.0;
-				}
-				else
-				{
-					m_clipOrder = orderBelow - 1;
-				}
-			}
-		}
-		//In a group, a sticky clip
-		else if(parentId > -1 && m_stickyClipGroupOrder != INVALID_STICKY)
-		{
-			CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID, stickyClipGroupOrder FROM Main Where lParentID = %d AND stickyClipGroupOrder <> -(2147483647) AND stickyClipGroupOrder < %f ORDER BY stickyClipGroupOrder DESC LIMIT 1"), parentId, m_stickyClipGroupOrder);
-			if (q.eof() == false)
-			{
-				int idBelow = q.getIntField(_T("lID"));
-				double orderBelow = q.getFloatField(_T("stickyClipGroupOrder"));
-
-				CppSQLite3Query q2 = theApp.m_db.execQueryEx(_T("SELECT lID, stickyClipGroupOrder FROM Main Where lParentID = %d AND stickyClipGroupOrder <> -(2147483647) AND stickyClipGroupOrder < %f ORDER BY stickyClipGroupOrder DESC LIMIT 1"), parentId, orderBelow);
-				if (q2.eof() == false)
-				{
-					int idTwoBelow = q2.getIntField(_T("lID"));
-					double orderTwoBelow = q2.getFloatField(_T("stickyClipGroupOrder"));
-
-					m_stickyClipGroupOrder = orderBelow + (orderTwoBelow - orderBelow) / 2.0;
-				}
-				else
-				{
-					m_stickyClipGroupOrder = orderBelow - 1;
-				}
-			}
-		}
-		//not in a group, a sticky clip
-		else if(parentId <= -1 && m_stickyClipOrder != INVALID_STICKY)
-		{
-			CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID, stickyClipOrder FROM Main Where stickyClipOrder <> -(2147483647) AND stickyClipOrder < %f ORDER BY stickyClipOrder DESC LIMIT 1"), m_stickyClipOrder);
-			if (q.eof() == false)
-			{
-				int idBelow = q.getIntField(_T("lID"));
-				double orderBelow = q.getFloatField(_T("stickyClipOrder"));
-
-				CppSQLite3Query q2 = theApp.m_db.execQueryEx(_T("SELECT lID, stickyClipOrder FROM Main Where stickyClipOrder <> -(2147483647) AND stickyClipOrder < %f ORDER BY stickyClipOrder DESC LIMIT 1"), orderBelow);
-				if (q2.eof() == false)
-				{
-					int idTwoBelow = q2.getIntField(_T("lID"));
-					double orderTwoBelow = q2.getFloatField(_T("stickyClipOrder"));
-
-					m_stickyClipOrder = orderBelow + (orderTwoBelow - orderBelow) / 2.0;
-				}
-				else
-				{
-					m_stickyClipOrder = orderBelow - 1;
-				}
-			}
-		}
-	}
-	CATCH_SQLITE_EXCEPTION
+	Move(parentId, false);
 }
 
 void CClip::MakeStickyTop(int parentId)
@@ -1264,19 +1139,14 @@ bool CClip::RemoveStickySetting(int parentId)
 
 bool CClip::RemoveStickySetting(int clipId, int parentId)
 {
-	bool reset = false;
-	if (parentId < 0)
-	{
-		int c = theApp.m_db.execDMLEx(_T("UPDATE Main SET stickyClipOrder = %f WHERE lID = %d"), (double)INVALID_STICKY, clipId);
-		int y = 0;
-	}
-	else
-	{
-		int c = theApp.m_db.execDMLEx(_T("UPDATE Main SET stickyClipGroupOrder = %f WHERE lID = %d"), (double)INVALID_STICKY, clipId);
-		int y = 0;
-	}
-
-	return reset;
+	// returns whether the clip's row was changed; upstream always returned false
+	const TCHAR* sql = parentId < 0
+		? _T("UPDATE Main SET stickyClipOrder = ? WHERE lID = ?")
+		: _T("UPDATE Main SET stickyClipGroupOrder = ? WHERE lID = ?");
+	CppSQLite3Statement update = theApp.m_db.compileStatement(sql);
+	update.bind(1, static_cast<double>(INVALID_STICKY));
+	update.bind(2, clipId);
+	return update.execDML() > 0;
 }
 
 int CClip::GetExistingTopStickyClipId(int parentId)
@@ -1308,79 +1178,49 @@ int CClip::GetExistingTopStickyClipId(int parentId)
 	return existingTopClipId;
 }
 
-double CClip::GetNewTopSticky(int parentId, int clipId)
+std::optional<double> CClip::EdgeOrder(const CString& column, bool sticky, int parentId, bool highest)
 {
-	double newOrder = 1;
-	double existingMaxOrder = 0;
-	CString existingDesc = _T("");
-
+	// the highest or lowest order among the main list's clips or a group's clips; only sticky
+	// clips when sticky
+	CString sql;
+	sql.Format(_T("SELECT %s FROM Main WHERE %s %s ORDER BY %s %s LIMIT 1"),
+		column.GetString(),
+		parentId > -1 ? _T("lParentID = ? AND") : _T(""),
+		sticky ? (column + _T(" <> -(2147483647)")).GetString() : (column + _T(" notnull")).GetString(),
+		column.GetString(),
+		highest ? _T("DESC") : _T("ASC"));
 	try
 	{
-		if (parentId < 0)
+		CppSQLite3Statement statement = theApp.m_db.compileStatement(sql);
+		if (parentId > -1)
 		{
-			CppSQLite3Query q = theApp.m_db.execQuery(_T("SELECT lID, stickyClipOrder, mText FROM Main WHERE stickyClipOrder <> -(2147483647) ORDER BY stickyClipOrder DESC LIMIT 1"));
-			if (q.eof() == false)
-			{
-				existingMaxOrder = q.getFloatField(_T("stickyClipOrder"));
-				existingDesc = q.getStringField(_T("mText"));
-				newOrder = existingMaxOrder + 1;
-			}
+			statement.bind(1, parentId);
 		}
-		else
+		CppSQLite3Query q = statement.execQuery();
+		if (q.eof() == false)
 		{
-			CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID, stickyClipGroupOrder, mText FROM Main WHERE lParentID = %d AND stickyClipGroupOrder <> -(2147483647) ORDER BY stickyClipGroupOrder DESC LIMIT 1"), parentId);
-			if (q.eof() == false)
-			{
-				existingMaxOrder = q.getFloatField(_T("stickyClipGroupOrder"));
-				newOrder = existingMaxOrder + 1;
-			}
+			return q.getFloatField(0);
 		}
-
-		if (newOrder == 0.0)
-			newOrder += 1;
-
-		Log(StrF(_T("GetNewTopSticky, Id: %d, parentId: %d, CurrentMax: %f, CurrentDesc: %s, NewMax: %f"), clipId, parentId, existingMaxOrder, existingDesc, newOrder));
 	}
+	// kept from upstream for now (callers have no error path): a failed query is logged and
+	// treated as an empty list
 	CATCH_SQLITE_EXCEPTION
+	return std::nullopt;
+}
 
+double CClip::GetNewTopSticky(int parentId, int clipId)
+{
+	const std::optional<double> highest = EdgeOrder(parentId < 0 ? _T("stickyClipOrder") : _T("stickyClipGroupOrder"), true, parentId, true);
+	const double newOrder = DittoCore::ClipOrder::TopSticky(highest);
+	Log(StrF(_T("GetNewTopSticky, Id: %d, parentId: %d, NewMax: %f"), clipId, parentId, newOrder));
 	return newOrder;
 }
 
 double CClip::GetNewLastSticky(int parentId, int clipId)
 {
-	double newOrder = 1;
-	double existingMaxOrder = 0;
-	CString existingDesc = _T("");
-
-	try
-	{
-		if (parentId < 0)
-		{
-			CppSQLite3Query q = theApp.m_db.execQuery(_T("SELECT stickyClipOrder, mText FROM Main WHERE stickyClipOrder <> -(2147483647) ORDER BY stickyClipOrder LIMIT 1"));
-			if (q.eof() == false)
-			{
-				existingMaxOrder = q.getFloatField(_T("stickyClipOrder"));
-				existingDesc = q.getStringField(_T("mText"));
-				newOrder = existingMaxOrder - 1;
-			}
-		}
-		else
-		{
-			CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT stickyClipGroupOrder, mText FROM Main WHERE lParentID = %d AND stickyClipGroupOrder <> -(2147483647) ORDER BY stickyClipGroupOrder LIMIT 1"), parentId);
-			if (q.eof() == false)
-			{
-				existingMaxOrder = q.getFloatField(_T("stickyClipGroupOrder"));
-				newOrder = existingMaxOrder - 1;
-			}
-		}
-
-		if (newOrder == 0.0)
-			newOrder -= 1;
-
-		Log(StrF(_T("GetNewLastSticky, Id: %d, parentId: %d, CurrentMax: %f, CurrentDesc: %s, NewMax: %f"), clipId, parentId, existingMaxOrder, existingDesc, newOrder));
-	}
-	CATCH_SQLITE_EXCEPTION
-
+	const std::optional<double> lowest = EdgeOrder(parentId < 0 ? _T("stickyClipOrder") : _T("stickyClipGroupOrder"), true, parentId, false);
+	const double newOrder = DittoCore::ClipOrder::LastSticky(lowest);
+	Log(StrF(_T("GetNewLastSticky, Id: %d, parentId: %d, NewMin: %f"), clipId, parentId, newOrder));
 	return newOrder;
 }
 
@@ -1412,72 +1252,18 @@ void CClip::MakeLastGroupOrder()
 
 double CClip::GetNewOrder(int parentId, int clipId)
 {
-	double newOrder = 0;
-	double existingMaxOrder = 0;
-	CString existingDesc = _T("");
-
-	try
-	{
-		if(parentId < 0)
-		{
-			CppSQLite3Query q = theApp.m_db.execQuery(_T("SELECT clipOrder, mText FROM Main ORDER BY clipOrder DESC LIMIT 1"));			
-			if(q.eof() == false)
-			{
-				existingMaxOrder = q.getFloatField(_T("clipOrder"));
-				existingDesc = q.getStringField(_T("mText"));
-				newOrder = existingMaxOrder + 1;
-			}
-		}
-		else
-		{
-			CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT clipGroupOrder, mText FROM Main WHERE lParentID = %d ORDER BY clipGroupOrder DESC LIMIT 1"), parentId);			
-			if(q.eof() == false)
-			{
-				existingMaxOrder = q.getFloatField(_T("clipGroupOrder"));
-				newOrder = existingMaxOrder + 1;
-			}
-		}
-
-		Log(StrF(_T("GetNewOrder, Id: %d, parentId: %d, CurrentMax: %f, CurrentDesc: %s, NewMax: %f"), clipId, parentId, existingMaxOrder, existingDesc, newOrder));
-	}
-	CATCH_SQLITE_EXCEPTION
-
+	const std::optional<double> highest = EdgeOrder(parentId < 0 ? _T("clipOrder") : _T("clipGroupOrder"), false, parentId, true);
+	const double newOrder = DittoCore::ClipOrder::Newest(highest);
+	Log(StrF(_T("GetNewOrder, Id: %d, parentId: %d, NewMax: %f"), clipId, parentId, newOrder));
 	return newOrder;
 }
 
 double CClip::GetNewLastOrder(int parentId, int clipId)
 {
-	double newOrder = 0;
-	double existingMinOrder = 0;
-	CString existingDesc = _T("");
-
-	try
-	{
-		if (parentId < 0)
-		{
-			CppSQLite3Query q = theApp.m_db.execQuery(_T("SELECT clipOrder, mText FROM Main where clipOrder notnull ORDER BY clipOrder ASC LIMIT 1"));
-			if (q.eof() == false)
-			{
-				existingMinOrder = q.getFloatField(_T("clipOrder"));
-				existingDesc = q.getStringField(_T("mText"));
-				newOrder = existingMinOrder - 1;
-			}
-		}
-		else
-		{
-			CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT clipGroupOrder, mText FROM Main WHERE lParentID = %d AND clipGroupOrder notnull ORDER BY clipGroupOrder ASC LIMIT 1"), parentId);
-			if (q.eof() == false)
-			{
-				existingMinOrder = q.getFloatField(_T("clipGroupOrder"));
-				newOrder = existingMinOrder - 1;
-			}
-		}
-
-		Log(StrF(_T("GetLastOrder, Id: %d, parentId: %d, CurrentMin: %f, CurrentDesc: %s, NewMax: %f"), clipId, parentId, existingMinOrder, existingDesc, newOrder));
-	}
-	CATCH_SQLITE_EXCEPTION
-
-		return newOrder;
+	const std::optional<double> lowest = EdgeOrder(parentId < 0 ? _T("clipOrder") : _T("clipGroupOrder"), false, parentId, false);
+	const double newOrder = DittoCore::ClipOrder::Oldest(lowest);
+	Log(StrF(_T("GetLastOrder, Id: %d, parentId: %d, NewMin: %f"), clipId, parentId, newOrder));
+	return newOrder;
 }
 
 BOOL CClip::LoadMainTable(int id)
@@ -1542,7 +1328,7 @@ HGLOBAL CClip::LoadFormat(int id, UINT cfType)
 			const unsigned char *cData = q.getBlobField(0, nDataLen);
 			if(cData == NULL)
 			{
-				return false;
+				return NULL;   // a format saved without data; upstream returned false as a handle
 			}
 
 			hGlobal = NewGlobalP((LPVOID)cData, nDataLen);
@@ -1557,7 +1343,6 @@ bool CClip::LoadFormats(int id, bool bOnlyLoad_CF_TEXT, bool includeRichTextForT
 {
 	DWORD startTick = GetTickCount();
 	CClipFormat cf;
-	HGLOBAL hGlobal = 0;
 	m_Formats.RemoveAll();
 
 	try
@@ -1617,12 +1402,16 @@ bool CClip::LoadFormats(int id, bool bOnlyLoad_CF_TEXT, bool includeRichTextForT
 
 			int nDataLen = 0;
 			const unsigned char *cData = q.getBlobField(_T("ooData"), nDataLen);
-			if(cData != NULL)
+			if(cData == NULL)
 			{
-				hGlobal = NewGlobalP((LPVOID)cData, nDataLen);
+				// a format saved without data is left out; upstream added it with the previous
+				// format's handle, so two formats owned one block and freed it twice
+				Log(StrF(_T("LoadFormats: clip %d has a format without data (row %d), left out"), id, cf.m_dataId));
+				q.nextRow();
+				continue;
 			}
-			
-			cf.m_hgData = hGlobal;
+
+			cf.m_hgData = NewGlobalP((LPVOID)cData, nDataLen);
 			m_Formats.Add(cf);
 
 			q.nextRow();
@@ -2050,20 +1839,29 @@ bool CClip::SaveFromEditWnd(BOOL bUpdateDesc)
 
 	try
 	{
+		// one transaction: upstream deleted the old data first, so a failure while writing the
+		// new data lost the clip's contents
+		CDittoDbTransaction transaction(theApp.m_db);
 		theApp.m_db.execDMLEx(_T("DELETE FROM Data WHERE lParentID = %d;"), m_id);
 
 		DWORD CRC = GenerateCRC();
 
-		AddToDataTable();
+		if (AddToDataTable() == false)
+		{
+			return false;   // the transaction rolls back
+		}
 
 		theApp.m_db.execDMLEx(_T("UPDATE Main SET CRC = %d WHERE lID = %d"), CRC, m_id);
 
 		if (bUpdateDesc)
 		{
-			m_Desc.Replace(_T("'"), _T("''"));
-			theApp.m_db.execDMLEx(_T("UPDATE Main SET mText = '%s' WHERE lID = %d"), m_Desc, m_id);
+			CppSQLite3Statement update = theApp.m_db.compileStatement(_T("UPDATE Main SET mText = ? WHERE lID = ?"));
+			update.bind(1, m_Desc);
+			update.bind(2, m_id);
+			update.execDML();
 		}
 
+		transaction.Commit();
 		bRet = true;
 	}
 	CATCH_SQLITE_EXCEPTION

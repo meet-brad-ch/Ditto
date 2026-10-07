@@ -47,6 +47,7 @@
     <ClCompile Include="..\lib\DittoCore\ByteCursor.cpp" />
     <ClCompile Include="..\lib\DittoCore\CaseTransforms.cpp" />
     <ClCompile Include="..\lib\DittoCore\CfHtml.cpp" />
+    <ClCompile Include="..\lib\DittoCore\ClipOrder.cpp" />
     <ClCompile Include="..\lib\DittoCore\ClipText.cpp" />
     <ClCompile Include="..\lib\DittoCore\DatabasePath.cpp" />
     <ClCompile Include="..\lib\DittoCore\DibHeader.cpp" />
@@ -64,6 +65,7 @@
     <ClCompile Include="..\lib\DittoCore\TextTransforms.cpp" />
     <ClCompile Include="..\lib\DittoCore\Typoglycemia.cpp" />
     <ClCompile Include="CfHtmlTests.cpp" />
+    <ClCompile Include="ClipOrderTests.cpp" />
     <ClCompile Include="ClipTextTests.cpp" />
     <ClCompile Include="DatabasePathTests.cpp" />
     <ClCompile Include="DibHeaderTests.cpp" />
