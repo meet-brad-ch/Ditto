@@ -6,6 +6,7 @@
 #   4. greps all sources for network APIs and network DLL names
 #   5. checks every installer script for firewall rules, URL launches and a Windows 10 minimum
 #   6. rejects raw allocation (new/delete/malloc/free) in lib\ and tests\
+#      - complexity: lib\ and tests\ below CC 10; legacy CC >= 10 held by tools\baselines\complexity.tsv
 #   7. runs every unit test on its own (AddressSanitizer build)
 #   8. checks with Doxygen that the contract code is fully documented
 # Prints one timestamped line per check and exits 1 on the first failed stage.
@@ -176,6 +177,13 @@ foreach ($f in $contractFiles) {
 }
 if ($allocFindings -gt 0) { Fail "allocation: $allocFindings raw allocations in lib\ or tests\" }
 Say "allocation: ok   $($contractFiles.Count) files in lib\ and tests\, no raw new/delete/malloc/free"
+
+# ---- 6b. cyclomatic complexity (lizard) -----------------------------------------------
+# Contract code stays below CC 10; legacy functions at CC >= 10 may not grow (baseline ratchet).
+$complexityArgs = @{ Repo = $repo }
+if ($UpdateBaselines) { $complexityArgs['Update'] = $true }
+& (Join-Path $PSScriptRoot 'gates\complexity.ps1') @complexityArgs
+if ($LASTEXITCODE -ne 0) { Fail 'complexity: a function is above its limit or baseline' }
 
 # ---- 7. unit tests (each test on its own, AddressSanitizer build) -----------------------
 $testExe = Join-Path $repo 'build\DittoTests\x64\Release\DittoTests.exe'
