@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Microsoft code coverage settings for tools\gates\coverage.ps1: measure only the contract
+     library lib\DittoCore inside the test executable, by dynamic native instrumentation. -->
+<Configuration>
+  <CodeCoverage>
+    <ModulePaths>
+      <Include>
+        <ModulePath>.*\\DittoTests\.exe$</ModulePath>
+      </Include>
+    </ModulePaths>
+    <Sources>
+      <Include>
+        <Source>.*\\lib\\DittoCore\\.*</Source>
+      </Include>
+    </Sources>
+    <EnableStaticNativeInstrumentation>False</EnableStaticNativeInstrumentation>
+    <EnableDynamicNativeInstrumentation>True</EnableDynamicNativeInstrumentation>
+  </CodeCoverage>
+</Configuration>

@@ -60,10 +60,19 @@ The build writes `Release64\Ditto.exe`, `Release64\Addins\DittoUtil.dll`, `ICU_L
 Baseline imports of upstream `Ditto.exe`: **WS2_32.dll** (Friends sockets) and **WININET.dll**
 (`InternetCanonicalizeUrl`). This fork removes both.
 
-**Verify:** `powershell -NoProfile -ExecutionPolicy Bypass -File tools\verify.ps1` runs eight
-stages and exits 1 on the first failed one:
+**Verify:** `powershell -NoProfile -ExecutionPolicy Bypass -File tools\verify.ps1 [-Analyze]`
+runs these stages and exits 1 on the first failed one. It ends with the sw-quality §38
+Verification block (Build, Unit tests, Lint, Static analysis, Cyclomatic complexity, Line and
+Branch coverage), on failure too. Run time: about 2 min, or about 3.5 min with `-Analyze`.
 
-1. It installs the `vcpkg.json` dependencies, then builds Release|x64.
+1. It installs the `vcpkg.json` dependencies, then rebuilds Release|x64 with a log
+   (`build\logs\build.log`). The rebuild is full because an incremental build reports only the
+   warnings of the files it recompiles.
+   - **Warnings ratchet:** every project builds at `/W4`. The build's warnings, counted per
+     (code, file), may not exceed `tools\baselines\warnings.tsv`.
+   - **Code analysis ratchet (`-Analyze`):** the same rebuild runs `/analyze` with
+     NativeRecommendedRules. Its findings may not exceed `tools\baselines\analyze.tsv`.
+     Without `-Analyze`, static analysis is NOT VERIFIED.
 2. It runs `dumpbin /imports` on every `.exe`/`.dll` in `Release64`. No binary may import
    ws2_32, wsock32, mswsock, wininet, winhttp, urlmon, mapi32, dnsapi, iphlpapi, webio or
    httpapi.
@@ -74,14 +83,37 @@ stages and exits 1 on the first failed one:
 5. It checks every Inno Setup script (`*.iss`): no firewall rules (netsh), no URL launches, and a
    `MinVersion` of Windows 10 or later.
 6. It rejects raw allocation (`new`, `delete`, `malloc`, `free`) in `lib\` and `tests\`.
-7. It runs every GoogleTest in `tests\` on its own (`--gtest_filter`), under AddressSanitizer.
+   - **Complexity:** lizard measures our own C/C++ code (vendored sqlite, QRCode and TinyXml
+     excluded). No function in `lib\` or `tests\` may reach CC 10. The legacy functions at
+     CC 10 or more are listed in `tools\baselines\complexity.tsv`, and none may get worse or be
+     added.
+7. It runs every GoogleTest in `tests\` on its own (`--gtest_filter`), under AddressSanitizer. Each
+   test writes its result to `build\test-results\<test>.xml`.
+   - **Coverage:** Microsoft code coverage (it ships with Visual Studio) runs the Debug|x64 test
+     build. The Release test build uses AddressSanitizer, which the instrumentation does not
+     combine with. `lib\DittoCore` must have at least 90 % line coverage, and every uncovered
+     line is listed. The tool gives no branch data, so branch coverage is reported as NOT
+     VERIFIED.
 8. It runs Doxygen (`tools\Doxyfile.contract`): every class, function and member of the contract
    code must be documented, and any Doxygen warning fails. The files are listed by name in that
    Doxyfile.
 
-`-SkipBuild` skips stage 1. The gate was tested against faults planted on purpose: a seeded
-`WSAStartup` line and a copied `curl.exe` were both caught. The hardening stage failed on the
-binaries built before Control Flow Guard was on, and the installer stage on the old ARM64 script.
+`-SkipBuild` skips stage 1, so the warnings and analysis ratchets are NOT VERIFIED.
+
+**Baselines** (`tools\baselines\*.tsv`, read by `tools\ratchet.ps1`):
+- They hold today's legacy debt: 592 `/W4` warnings, 308 analysis findings and 179 functions at
+  CC 10 or more.
+- A count above its baseline fails, and so does an entry missing from it.
+- `verify.ps1 -UpdateBaselines` rewrites them only when nothing rose, so a baseline can only
+  shrink. Commit the smaller file after a cleanup.
+
+**Planted faults the gates caught:**
+- a seeded `WSAStartup` line and a copied `curl.exe`;
+- binaries built before Control Flow Guard was on (hardening stage);
+- the old ARM64 installer script (installer stage);
+- a C4244 warning and a C6011 null dereference in `src\ErrorReport.cpp`;
+- a 9-branch function in `src\` and in `lib\DittoCore`;
+- coverage measured against a raised minimum of 99 %.
 
 **Runtime network check:** `powershell -NoProfile -ExecutionPolicy Bypass -File
 tools\runtime-netcheck.ps1 [-WatchSeconds 20]` runs after a build.
@@ -102,6 +134,9 @@ tools\runtime-netcheck.ps1 [-WatchSeconds 20]` runs after a build.
 - Windows SDK 10.0.26100.0.
 - vcpkg at `C:\vcpkg`, or set `VCPKG_ROOT`. It must have the baseline commit from `vcpkg.json`
   (verified with vcpkg tool 2025-10-16).
+- Doxygen 1.15.0 on `PATH` (or in `C:\Program Files\doxygen\bin`), Python with
+  `pip install lizard==1.17.31`, and Inno Setup 7.0.2 for the installer. Code coverage uses
+  `Microsoft.CodeCoverage.Console`, which ships with Visual Studio 2026 (Community included).
 
 ## Layout
 
