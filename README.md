@@ -310,6 +310,27 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   The ARM64 script still added firewall rules for TCP 23443 and launched URLs, and the portable
   one packaged files that no longer exist (`DittoU.exe`, `sqlite3.dll`, `zlib1.dll`). The
   installer gate now checks every `.iss` file.
+- 2026-10-06: The clips made by *Save copied file (cf_hdrop) contents into Ditto* ("Ditto File
+  Data") are read and written by
+  `DittoCore::FileDataRecord` (Phase C6).
+  - **Every file kept:** upstream added one format per copied file, and each replaced the one
+    before, so a clip of several files kept only the last file's contents while its
+    description listed them all. A new version-2 record holds all files with their lengths.
+    Version-1 records (one file) in existing databases and `.dto` files are still read.
+  - **Formats saved twice or lost:** upstream removed the clip's old formats with
+    `RemoveAt(i)` on a shrinking array, so it skipped every other format, saved some again, and
+    could remove the file data instead.
+  - **Pasting checks the record:** lengths and terminators are checked against the block, and
+    a failed MD5 check or a file that cannot be written stops the paste with a message. Before,
+    the block was read without bounds and both failures were only logged, so files went
+    missing silently.
+  - **Same names:** two files with the same name are pasted as `name.ext` and
+    `name (2).ext`; before, the second overwrote the first.
+  - **Reading files:** the file is read into a vector with its size checked against the
+    maximum before any cast; the read count is checked; the `new[]` buffer that leaked per file
+    is gone.
+  - **Tests:** 14 unit tests (`FileDataRecord`, `ByteCursor`); fuzz target `filedata` with a
+    Parse/Build/Parse round trip.
 - 2026-10-06: CF_DIB images are checked by `DittoCore::DibHeader` before they are drawn or
   saved (Phase C5). It checks the header size (40, 52, 56, 108 or 124 bytes), planes, bit count,
   compression, color count, and that the color table and pixels fit in the block.

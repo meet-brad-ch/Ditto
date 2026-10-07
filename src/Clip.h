@@ -13,6 +13,8 @@
 #include <cstddef>
 #include <memory>
 #include <span>
+#include <string>
+#include <vector>
 #include "tinyxml\tinyxml.h"
 #include "Crc32Dynamic.h"
 #include "..\Shared\IClip.h"
@@ -207,6 +209,18 @@ protected:
 	AddToDbStickyEnum::AddToDbSticky m_addToDbStickyEnum;
 
 private:
+	// A file read for "Ditto File Data": its UTF-8 path, the MD5 of its contents, the contents
+	struct CopiedFile
+	{
+		std::string path{};
+		std::string md5{};
+		std::vector<std::byte> contents{};
+	};
+
+	// Reads a file for AddFileDataToData; appends the reason to errorMessage and returns false
+	// when it cannot be opened or read, or is not smaller than maxSize
+	static bool ReadFileContents(const CString& path, ULONGLONG maxSize, CopiedFile& file, CString& errorMessage);
+
 	// Reads the DWORD at the start of a clipboard block and frees the block; throws
 	// DittoCore::ClipboardFormatError when the block is shorter than a DWORD
 	static DWORD TakeDword(HGLOBAL block);

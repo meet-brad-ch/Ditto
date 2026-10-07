@@ -135,7 +135,7 @@ C4706	src\qpastewnd.cpp	1
 C4706	src\qrcode\qrgenerator.cpp	1
 C4706	src\sendkeys.cpp	1
 C4840	addins\dittoutil\pasteimageashtmlimage.cpp	1
-C4840	src\clip.cpp	27
+C4840	src\clip.cpp	26
 C4840	src\clip_importexport.cpp	1
 C4840	src\clipboardviewer.cpp	5
 C4840	src\clipcompare.cpp	4
@@ -157,7 +157,7 @@ C4840	src\mainfrmthread.cpp	1
 C4840	src\misc.cpp	7
 C4840	src\multilanguage.cpp	3
 C4840	src\nodbframewnd.cpp	1
-C4840	src\oleclipsource.cpp	13
+C4840	src\oleclipsource.cpp	10
 C4840	src\options.cpp	2
 C4840	src\optionsgeneral.cpp	10
 C4840	src\optionsquickpaste.cpp	4

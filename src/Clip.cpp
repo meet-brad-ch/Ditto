@@ -21,6 +21,7 @@
 #include "ClipboardFormatError.h"
 #include "ClipText.h"
 #include "ErrorReport.h"
+#include "FileDataRecord.h"
 #include "GlobalBytes.h"
 #include "GlobalFileDrop.h"
 #include <algorithm>
@@ -1889,6 +1890,47 @@ bool CClip::WriteImageToFileOrReport(const CString& path, const CString& operati
 	}
 }
 
+bool CClip::ReadFileContents(const CString& path, ULONGLONG maxSize, CopiedFile& file, CString& errorMessage)
+{
+	CFile source;
+	CFileException ex;
+	if (!source.Open(path, CFile::modeRead | CFile::typeBinary | CFile::shareDenyNone, &ex))
+	{
+		TCHAR szError[200]{};
+		ex.GetErrorMessage(szError, _countof(szError));
+		errorMessage += StrF(_T("Error opening file: %s, Error: %s\r\n"), path.GetString(), szError);
+		return false;
+	}
+
+	const ULONGLONG fileSize = source.GetLength();
+	if (fileSize >= maxSize)
+	{
+		TCHAR szFileSize[64]{};
+		TCHAR szMaxFileSize[64]{};
+		StrFormatByteSize((LONGLONG)fileSize, szFileSize, _countof(szFileSize));
+		StrFormatByteSize((LONGLONG)maxSize, szMaxFileSize, _countof(szMaxFileSize));
+		errorMessage += StrF(_T("File is to large: %s, Size: %s, Max Size: %s\r\n"), path.GetString(), szFileSize, szMaxFileSize);
+		return false;
+	}
+
+	// fileSize is below the int-sized maximum, so it fits UINT and int
+	file.contents.resize(static_cast<size_t>(fileSize));
+	const UINT read = source.Read(file.contents.data(), static_cast<UINT>(fileSize));
+	if (read != fileSize)
+	{
+		errorMessage += StrF(_T("Error reading file: %s, read %u of %I64u bytes\r\n"), path.GetString(), read, fileSize);
+		return false;
+	}
+
+	CMd5 md5;
+	file.md5 = md5.CalcMD5FromString(reinterpret_cast<const char*>(file.contents.data()), static_cast<int>(fileSize));
+	const CStringA utf8Path = CTextConvert::UnicodeToUTF8(path);
+	file.path.assign(utf8Path.GetString(), utf8Path.GetLength());
+
+	Log(StrF(_T("Saving file contents to Ditto Database, file: %s, size: %I64u, md5: %S"), path.GetString(), fileSize, file.md5.c_str()));
+	return true;
+}
+
 bool CClip::AddFileDataToData(CString &errorMessage)
 {
 	INT_PTR size = m_Formats.GetSize();
@@ -1939,71 +1981,42 @@ bool CClip::AddFileDataToData(CString &errorMessage)
 	}
 
 	CString newDesc = _T("File Contents - ");
-	int maxSize = CGetSetOptions::GetMaxFileContentsSize();
+	const ULONGLONG maxSize = (ULONGLONG)CGetSetOptions::GetMaxFileContentsSize();
+	std::vector<CopiedFile> copied;
 	for (const std::wstring& path : files)
 	{
-		const wchar_t* filePath = path.c_str();
-
-		CFile file;
-		CFileException ex;
-		if (!file.Open(filePath, CFile::modeRead | CFile::typeBinary | CFile::shareDenyNone, &ex))
-		{
-			TCHAR szError[200];
-			ex.GetErrorMessage(szError, 200);
-			errorMessage += StrF(_T("Error opening file: %s, Error: %s\r\n"), filePath, szError);
+		CopiedFile file{};
+		if (!ReadFileContents(path.c_str(), maxSize, file, errorMessage))
 			continue;
-		}
 
-		int fileSize = (int)file.GetLength();
-		if (fileSize >= maxSize)
-		{
-			const int MAX_FILE_SIZE_BUFFER = 255;
-			TCHAR szFileSize[MAX_FILE_SIZE_BUFFER];
-			TCHAR szMaxFileSize[MAX_FILE_SIZE_BUFFER];
-			StrFormatByteSize(fileSize, szFileSize, MAX_FILE_SIZE_BUFFER);
-			StrFormatByteSize(maxSize, szMaxFileSize, MAX_FILE_SIZE_BUFFER);
-
-			errorMessage += StrF(_T("File is to large: %s, Size: %s, Max Size: %s\r\n"), filePath, szFileSize, szMaxFileSize);
-			continue;
-		}
-
-		CString src(filePath);
-		CStringA csFilePath = CTextConvert::UnicodeToUTF8(src);
-
-		//data contents
-		//original file<null terminator>md5<null terminator>file data
-		int bufferSize = (int)fileSize + csFilePath.GetLength() + 1 + md5StringLength + 1;;
-		char* pBuffer = new char[bufferSize]();
-		strncpy(pBuffer, csFilePath, csFilePath.GetLength());
-
-		//move the buffer start past the file path and md5 string
-		char* bufferStart = pBuffer + csFilePath.GetLength() + 1 + md5StringLength + 1;
-
-		int readBytes = (int)file.Read(bufferStart, fileSize);
-
-		CMd5 md5;
-		CStringA md5String = md5.CalcMD5FromString(bufferStart, fileSize);
-
-		char* bufferMd5 = pBuffer + csFilePath.GetLength() + 1;
-		strncpy(bufferMd5, md5String, md5StringLength);
-
-		AddFormat(theApp.m_DittoFileData, pBuffer, bufferSize);
-
-		addedFileData = true;
-
-		newDesc += filePath;
+		copied.push_back(std::move(file));
+		newDesc += path.c_str();
 		newDesc += _T("\n");
-
-		Log(StrF(_T("Saving file contents to Ditto Database, file: %s, size: %d, md5: %s"), filePath, fileSize, md5String));
 	}
 
-	if (!addedFileData)
+	if (copied.empty())
 		return false;
 
-	for (int i = 0; i < size; i++)
+	// one version-2 record holds every file; upstream added one format per file, and each
+	// replaced the one before, so only the last file was kept
+	std::vector<DittoCore::FileDataEntry> entries;
+	for (const CopiedFile& file : copied)
 	{
-		this->m_Formats.RemoveAt(i, 1);
+		entries.push_back(DittoCore::FileDataEntry{ file.path, file.md5, file.contents });
 	}
+	const std::vector<std::byte> record = DittoCore::FileDataRecord::Build(entries);
+	if (record.size() > UINT_MAX)
+	{
+		errorMessage += _T("The files are too large to save together\r\n");
+		return false;
+	}
+	AddFormat(theApp.m_DittoFileData, const_cast<std::byte*>(record.data()), static_cast<UINT>(record.size()));
+	addedFileData = true;
+
+	// AddFormat appended the record after the clip's existing formats, which are already in the
+	// database; drop them so AddToDataTable saves only the record. Upstream removed index i of a
+	// shrinking array, which skipped formats and removed file data instead.
+	this->m_Formats.RemoveAt(0, size);
 
 	this->m_Desc = newDesc;
 

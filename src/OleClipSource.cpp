@@ -11,6 +11,8 @@
 #include <random>
 #include "ErrorReport.h"
 #include "ClipboardFormatError.h"
+#include "FileDataRecord.h"
+#include "GlobalBytes.h"
 #include "Path.h"
 #include "Md5.h"
 #include "Slugify.h"
@@ -1056,6 +1058,52 @@ void COleClipSource::ApplyDriveReplacements(
 	}
 }
 
+bool COleClipSource::SaveFileDataRecord(HGLOBAL record, CFileRecieve& dropFiles)
+{
+	const DittoCore::GlobalBytes block(record);
+	const std::vector<DittoCore::FileDataEntry> files = DittoCore::FileDataRecord::Parse(block.Bytes());
+	const CString folder = CGetSetOptions::GetPath(PATH_DRAG_FILES);
+	std::set<CString> usedNames;
+	for (const DittoCore::FileDataEntry& file : files)
+	{
+		const CString originalPath = CTextConvert::Utf8ToUnicode(CStringA(file.path.data(), static_cast<int>(file.path.size())));
+		CMd5 calcMd5;
+		const std::string md5 = calcMd5.CalcMD5FromString(reinterpret_cast<const char*>(file.data.data()), static_cast<int>(file.data.size()));
+		if (md5 != file.md5)
+		{
+			throw DittoCore::ClipboardFormatError("the saved contents of " + std::string(file.path) + " fail their MD5 check");
+		}
+
+		const CString newFilePath = folder + UniqueFileName(originalPath, usedNames);
+		Log(StrF(_T("Saving file contents from Ditto, original file: %s, size: %Iu, md5: %S, to: %s"), originalPath.GetString(), file.data.size(), md5.c_str(), newFilePath.GetString()));
+
+		// the constructor throws CFileException when the file cannot be created; the paste stops
+		CFile target(newFilePath, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary);
+		target.Write(file.data.data(), static_cast<UINT>(file.data.size()));
+		target.Close();
+		dropFiles.AddFile(newFilePath);
+	}
+	return !files.empty();
+}
+
+CString COleClipSource::UniqueFileName(const CString& originalPath, std::set<CString>& usedNames)
+{
+	using namespace nsPath;
+	CPath path(originalPath);
+	const CString name = path.GetName();
+	CString candidate = name;
+	// two copied files may share a name (from different folders); number the later ones
+	for (int n = 2; usedNames.count(CString(candidate).MakeLower()) > 0; n++)
+	{
+		CPath numbered(originalPath);
+		const CString extension = numbered.GetExtension();
+		numbered.RemoveExtension();
+		candidate = StrF(_T("%s (%d)%s%s"), numbered.GetName().GetString(), n, extension.IsEmpty() ? _T("") : _T("."), extension.GetString());
+	}
+	usedNames.insert(CString(candidate).MakeLower());
+	return candidate;
+}
+
 void COleClipSource::SaveDittoFileDataToFile(CClip &clip)
 {
 	CFileRecieve hDrpData;
@@ -1069,59 +1117,7 @@ void COleClipSource::SaveDittoFileDataToFile(CClip &clip)
 
 		if (pCF->m_cfType == theApp.m_DittoFileData)
 		{
-			IClipFormat *dittoFileData = &clip.m_Formats.ElementAt(i);
-			if (dittoFileData == NULL)
-				continue;
-
-			HGLOBAL data = dittoFileData->Data();
-			char * stringData = (char *)GlobalLock(data);
-
-			//original source is store in the first string ending in the null terminator
-			CStringA src(stringData);
-			stringData += src.GetLength() + 1;
-
-			CStringA originalMd5(stringData);
-			stringData += originalMd5.GetLength() + 1;
-
-			int dataSize = (int)GlobalSize(data) - (src.GetLength() + 1) - (originalMd5.GetLength() + 1);
-
-			CMd5 calcMd5;
-			CStringA md5String = calcMd5.CalcMD5FromString(stringData, dataSize);
-
-			CString unicodeFilePath = CTextConvert::Utf8ToUnicode(src);
-
-			CString unicodeMd5 = CTextConvert::Utf8ToUnicode(md5String);
-
-			Log(StrF(_T("Saving file contents from Ditto, original file: %s, size: %d, md5: %s"), unicodeFilePath, dataSize, unicodeMd5));
-
-			if (md5String != originalMd5)
-			{
-				Log(StrF(_T("MD5 ERROR, file: %s, original md5: %s, calc md5: %s"), unicodeFilePath, originalMd5, md5String));
-				continue;
-			}
-
-			using namespace nsPath;
-			CPath path(unicodeFilePath);
-			CString fileName = path.GetName();
-
-			CString newFilePath = CGetSetOptions::GetPath(PATH_DRAG_FILES);
-			newFilePath += fileName;
-
-			CFile f;
-			if (f.Open(newFilePath, CFile::modeWrite | CFile::modeCreate))
-			{
-				f.Write(stringData, dataSize);
-
-				f.Close();
-
-				savedFile = true;
-				hDrpData.AddFile(newFilePath);
-			}
-			else
-			{
-				Log(StrF(_T("Error saving file: %s"), unicodeFilePath));
-			}
-
+			savedFile = SaveFileDataRecord(pCF->m_hgData, hDrpData) || savedFile;
 		}
 		else if (pCF->m_cfType == CF_HDROP)
 		{

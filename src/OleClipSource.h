@@ -4,6 +4,9 @@
 #include "SpecialPasteOptions.h"
 
 #include <optional>
+#include <set>
+
+class CFileRecieve;
 
 /*------------------------------------------------------------------*\
 	COleClipSource
@@ -45,6 +48,12 @@ protected:
 	HGLOBAL ConvertToFileDrop();
 	void AddDateTime(CClip &clip);
 	void SaveDittoFileDataToFile(CClip &clip);
+	// Writes the files of one "Ditto File Data" record to the drag-files folder and adds them to
+	// dropFiles; throws DittoCore::ClipboardFormatError for a malformed record or a failed MD5
+	// check, CFileException when a file cannot be written. Returns whether it held any file.
+	static bool SaveFileDataRecord(HGLOBAL record, CFileRecieve& dropFiles);
+	// The file name of originalPath, numbered ("name (2).ext") when usedNames already has it.
+	static CString UniqueFileName(const CString& originalPath, std::set<CString>& usedNames);
 	void TrimWhiteSpace(CClip &clip);
 	void PosixifyPaths(CClip &clip);
 	struct MatchInfoA

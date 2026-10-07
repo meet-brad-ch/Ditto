@@ -44,11 +44,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\lib\DittoCore\ByteCursor.cpp" />
     <ClCompile Include="..\lib\DittoCore\CfHtml.cpp" />
     <ClCompile Include="..\lib\DittoCore\ClipText.cpp" />
     <ClCompile Include="..\lib\DittoCore\DatabasePath.cpp" />
     <ClCompile Include="..\lib\DittoCore\DibHeader.cpp" />
     <ClCompile Include="..\lib\DittoCore\DropBlockReader.cpp" />
+    <ClCompile Include="..\lib\DittoCore\FileDataRecord.cpp" />
     <ClCompile Include="..\lib\DittoCore\FileDropList.cpp" />
     <ClCompile Include="..\lib\DittoCore\GlobalBytes.cpp" />
     <ClCompile Include="..\lib\DittoCore\GlobalFileDrop.cpp" />
@@ -57,6 +59,7 @@
     <ClCompile Include="ClipTextTests.cpp" />
     <ClCompile Include="DatabasePathTests.cpp" />
     <ClCompile Include="DibHeaderTests.cpp" />
+    <ClCompile Include="FileDataRecordTests.cpp" />
     <ClCompile Include="FileDropListTests.cpp" />
     <ClCompile Include="GlobalBytesTests.cpp" />
     <ClCompile Include="GlobalFileDropTests.cpp" />
