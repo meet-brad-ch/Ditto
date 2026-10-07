@@ -121,7 +121,7 @@ src\qpastewnd.cpp	CQPasteWnd::HideQPasteWindow	15
 src\qpastewnd.cpp	CQPasteWnd::LoadShortcuts	11
 src\qpastewnd.cpp	CQPasteWnd::MoveControls	11
 src\qpastewnd.cpp	CQPasteWnd::OnActivate	16
-src\qpastewnd.cpp	CQPasteWnd::OnGetToolTipText	16
+src\qpastewnd.cpp	CQPasteWnd::OnGetToolTipText	15
 src\qpastewnd.cpp	CQPasteWnd::OnMenuGoToEntry	16
 src\qpastewnd.cpp	CQPasteWnd::OnReloadClipInUI	13
 src\qpastewnd.cpp	CQPasteWnd::OnTimer	10
@@ -147,7 +147,7 @@ src\scrollhelper.cpp	CScrollHelper::OnVScroll	11
 src\scrollhelper.cpp	CScrollHelper::ScrollToOrigin	10
 src\searcheditbox.cpp	CSearchEditBox::PreTranslateMessage	17
 src\sendkeys.cpp	CSendKeys::PopUpShiftKeys	10
-src\sendkeys.cpp	CSendKeys::SendKeys	27
+src\sendkeys.cpp	CSendKeys::SendKeys	26
 src\specialpasteoptions.h	CSpecialPasteOptions::LimitFormatsToText	16
 src\symboledit.cpp	CSymbolEdit::OnPaint	11
 src\symboledit.cpp	CSymbolEdit::PreTranslateMessage	28
