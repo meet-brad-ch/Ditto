@@ -7,6 +7,7 @@
 #include "Path.h"
 #include "CP_Main.h"
 #include "ActionEnums.h"
+#include "ErrorReport.h"
 #include "..\Shared\Tokenizer.h"
 #include <set>
 #include <stdexcept>
@@ -1370,7 +1371,22 @@ BOOL CGetSetOptions::GetFont(LOGFONT &font)
 {
 	if(m_bFromIni && !m_bInConversion)
 	{
-		GetProfileFont("DisplayFont6", font);
+		try
+		{
+			GetProfileFont("DisplayFont6", font);
+		}
+		catch (const std::out_of_range& e)
+		{
+			// A damaged font setting: report it and remove it, so the default font below is used
+			// and the report does not come back on every start
+			CErrorReport::Show(StrF(_T("The display font setting in %s is damaged (%s). Ditto removed it and uses its default font; choose a font again in Options."),
+				m_csIniFileName.GetString(), CString(e.what()).GetString()));
+			if (!WritePrivateProfileString(_T("DisplayFont6"), NULL, NULL, m_csIniFileName))
+			{
+				throw std::runtime_error("the damaged display font setting could not be removed from the ini file (error " + std::to_string(::GetLastError()) + ")");
+			}
+			font = LOGFONT{};
+		}
 
 		//Return true if there is a font name
 		//other wise load the default font below
