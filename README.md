@@ -342,6 +342,22 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   - **Fixed:** a format saved without data reused the previous format's memory, so two formats
     freed one block (it is now left out and logged); `LoadFormat` returned `false` as a handle;
     clearing another clip's top-sticky setting always reported "not changed".
+- 2026-10-07: Compiler warnings and `/analyze` findings are fixed, not listed (owner decision,
+  Phase W). Third-party code is split by one rule: a file whose code was changed for Ditto after
+  it was imported (by upstream Ditto or by this fork) is Ditto's code and gets fixed; a file
+  never changed in code (only imported, moved, re-formatted, or replaced by a newer release of
+  its library) is untouched, and its warnings and code analysis are switched off. Measured with
+  `git log --follow -p -w` per file:
+  - **Untouched, silenced per file in the project files:** the sqlite3mc amalgamation,
+    libqrencode (`src\QRCode\*`, with `QRGenerator.cpp`), TinyXML's `tinyxmlparser.cpp`,
+    `tinystr.cpp` and `tinyxmlerror.cpp`, and the ruler editor's `ColourPicker`, `ColourPopup`,
+    `FontComboBox.cpp`, `SizeComboBox.cpp` and `StdGrfx.cpp`.
+  - **Changed for Ditto, fixed like our code:** `tinyxml.cpp/.h` (Unicode paths), `Path`,
+    `memdc.h`, `EditWithButton`, `DrawHTML`, `GdipButton`, `SymbolEdit`, `SendKeys`,
+    `CppSQLite3`, `NTray`, `AlphaBlend`, `FormattedTextDraw`, `RulerRichEditCtrl`, `RRECToolbar`,
+    `RulerRichEdit` and `ICU_Loader\icu.cpp`.
+  - **Headers outside the repo** (Windows SDK, MFC, the STL, vcpkg's gtest and zlib) are
+    included with angle brackets and treated as external: no warnings, no analysis.
 - 2026-10-06: The clip SQL is in `CClipRepository`, tested by AppTests (Phase C11, second part).
   - **Repository:** `CClipRepository` takes the database as a parameter and works on plain
     records (`ClipRecord`, `FormatRecord`), so it builds and is tested without `CClip` or the

@@ -61,6 +61,8 @@
     <ClCompile Include="..\..\src\sqlite\CppSQLite3.cpp" />
     <!-- vendored, as in CP_Main: its CRT deprecation warnings would be /sdl errors -->
     <ClCompile Include="..\..\src\sqlite\sqlite3mc_amalgamation.c">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <EnablePREfast>false</EnablePREfast>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="ClipRepositoryTests.cpp">

@@ -15,6 +15,13 @@
       <ConformanceMode Condition="'%(ClCompile.ConformanceMode)' != 'true'">false</ConformanceMode>
       <!-- /W4 everywhere; the legacy warnings are held by the ratchet in tools\baselines\warnings.tsv -->
       <WarningLevel>Level4</WarningLevel>
+      <!-- Headers included with angle brackets (Windows SDK, MFC, the STL, vcpkg's gtest and zlib)
+           are external: no warnings and no code analysis for them (/external:anglebrackets
+           /external:W0 /analyze:external-). Untouched third-party sources in the repo are
+           silenced per file in the project files (README, Decisions). -->
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
       <SDLCheck>true</SDLCheck>
       <ControlFlowGuard>Guard</ControlFlowGuard>
       <!-- /ZI (Edit and Continue) cannot be combined with /guard:cf: use a plain program database -->
