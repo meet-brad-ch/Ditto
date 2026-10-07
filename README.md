@@ -426,6 +426,23 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
     conversions), an ambiguous ternary and `bind`, and a dead `CGdipButton::Test`. The untouched `ColourPopup.cpp` keeps `/permissive`
     and compiles without the shared precompiled header, which a different conformance mode
     cannot use.
+- 2026-10-07: Third-party code is replaced by maintained releases where one exists (Phase T,
+  owner decision); untouched third-party code is otherwise never changed.
+  - **sqlite3mc:** SQLite3 Multiple Ciphers 2.5.1 (SQLite 3.53.4), was 2.3.5 (3.53.2).
+    ICU_Loader's `sqlite3.h`/`sqlite3ext.h` come from the same release.
+  - **ICU extension:** SQLite 3.53.4's `ext/icu/icu.c`, byte for byte and untouched; shims in
+    `ICU_Loader\unicode\` point its ICU includes to Windows' `<icu.h>`. Ditto's former changes
+    moved out: the regex search builds case-insensitivity and "find anywhere" into its pattern
+    (`(?i)(?s:.*)(?:…)(?s:.*)`), so the DLL has no global flag and no extra export.
+  - **XML:** vcpkg's tinyxml2 replaces TinyXML 2.6.2 (language files, themes, search history);
+    `CXmlFile` opens Unicode paths. The search history is UTF-8 both ways now (non-ASCII searches
+    were garbled).
+  - **CRC and MD5:** `DittoCore::Crc32` (zlib) and `DittoCore::Md5` (Windows CNG) replace the
+    copied `Crc32Dynamic` and `Md5`; both give the values Ditto stored before (tests pin them).
+  - **Removed:** `PerfTimer` (`std::chrono` in its one use) and the unused `DIBAPI.H`.
+  - **Still untouched third-party:** the ruler editor's `ColourPicker`, `ColourPopup`,
+    `FontComboBox`, `SizeComboBox`, `StdGrfx`; `WildCardMatch`; `SnapWindow.cpp`; the sqlite3mc
+    amalgamation; SQLite's `icu.c`.
 - 2026-10-06: The clip SQL is in `CClipRepository`, tested by AppTests (Phase C11, second part).
   - **Repository:** `CClipRepository` takes the database as a parameter and works on plain
     records (`ClipRecord`, `FormatRecord`), so it builds and is tested without `CClip` or the

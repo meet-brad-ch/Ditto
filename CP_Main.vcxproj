@@ -439,7 +439,6 @@
     <ClCompile Include="src\OptionsTypes.cpp" />
     <ClCompile Include="src\OptionsUtilities.cpp" />
     <ClCompile Include="src\Path.cpp" />
-    <ClCompile Include="src\PerfTimer.cpp" />
     <ClCompile Include="src\Popup.cpp" />
     <ClCompile Include="src\PowerManager.cpp" />
     <ClCompile Include="src\ProcessPaste.cpp" />
@@ -589,7 +588,6 @@
     <ClInclude Include="src\DatabaseUtilities.h" />
     <ClInclude Include="src\DeleteClipData.h" />
     <ClInclude Include="src\DialogResizer.h" />
-    <ClInclude Include="src\DIBAPI.H" />
     <ClInclude Include="src\DimWnd.h" />
     <ClInclude Include="src\DittoAddin.h" />
     <ClInclude Include="src\DittoAddins.h" />
@@ -648,7 +646,6 @@
     <ClInclude Include="src\OptionsTypes.h" />
     <ClInclude Include="src\OptionsUtilities.h" />
     <ClInclude Include="src\Path.h" />
-    <ClInclude Include="src\PerfTimer.h" />
     <ClInclude Include="src\Popup.h" />
     <ClInclude Include="src\PowerManager.h" />
     <ClInclude Include="src\ProcessPaste.h" />

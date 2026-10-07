@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include ".\saveanimation.h"
-#include "PerfTimer.h"
+#include <chrono>
 
 CSaveAnimation::CSaveAnimation(void)
 {
@@ -31,15 +31,15 @@ void CSaveAnimation::DoAnimation(CRect crStart, CRect crEnd, CWnd *pWnd)
 	double dCurTop = crCur.top;
 	double dCurRight = crCur.right;
 	double dCurBottom = crCur.bottom;
-	CPerfTimer Timer;
+	std::chrono::steady_clock::time_point frameStart{};
 
 	for(int i = 0; i < lMaxDist/m_dSpeed; i++)
-	{	
+	{
 		//don't do the first time
 		if(i > 0)
 		{
-			//wait 20ms between paints
-			while(Timer.Elapsedms() < 10)
+			//wait 10ms between paints
+			while(std::chrono::steady_clock::now() - frameStart < std::chrono::milliseconds(10))
 			{
 				Sleep(1);
 			}
@@ -47,7 +47,7 @@ void CSaveAnimation::DoAnimation(CRect crStart, CRect crEnd, CWnd *pWnd)
 			//Remove the old focus rect
 			pDC->DrawFocusRect(crPrev);
 		}
-		Timer.Start(TRUE);
+		frameStart = std::chrono::steady_clock::now();
 
 		pDC->DrawFocusRect(crCur);
 

@@ -250,9 +250,6 @@
     <ClCompile Include="src\Path.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\PerfTimer.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\Popup.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -508,9 +505,6 @@
     <ClInclude Include="src\DialogResizer.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\DIBAPI.H">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\DimWnd.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -671,9 +665,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\Path.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\PerfTimer.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\Popup.h">
