@@ -8,11 +8,16 @@
 #include "ProcessPaste.h"
 #include <io.h>
 #include "Path.h"
-#include "zlib.h"
 #include "..\Shared\TextConvert.h"
 #include "DatabasePath.h"
+#include "ErrorReport.h"
+#include "GzipStream.h"
 
+#include <cstdint>
 #include <filesystem>
+#include <fstream>
+#include <stdexcept>
+#include <string>
 using namespace nsPath;
 
 //////////////////////////////////////////////////////////////////////
@@ -468,77 +473,47 @@ BOOL BackupDB(CString dbPath, CString backupPath)
 
 	status.Show(StrF(_T("Ditto - %s - %s"), msg.GetString(), backupPath.GetString()));
 
-	BOOL ret = FALSE;
-
 	Log(StrF(_T("Start backing up db, from: %s to %s"), dbPath.GetString(), backupPath.GetString()));
-
-	CString errorMessage = _T("");
 
 	try
 	{
-		CFile file;
-		CFileException ex;
-		if (file.Open(dbPath, CFile::modeRead | CFile::typeBinary | CFile::shareDenyNone, &ex))
+		std::ifstream in(dbPath.GetString(), std::ios::binary);
+		if (!in)
 		{
-			ULONGLONG fileSize = file.GetLength();
-			ULONGLONG totalReadSize = 0;
-			int percentageComplete = 0;
-			UINT readBytes = 0;
-			char* pBuffer = new char[65536];
-			if (pBuffer != NULL)
+			throw std::runtime_error("the database cannot be opened for reading");
+		}
+		std::ofstream out(backupPath.GetString(), std::ios::binary | std::ios::trunc);
+		if (!out)
+		{
+			throw std::runtime_error("the backup file cannot be created");
+		}
+
+		const std::uintmax_t fileSize = std::filesystem::file_size(dbPath.GetString());
+		int percentageComplete{};
+		DittoCore::GzipStream::Compress(in, out, [&](std::uint64_t bytesDone)
+		{
+			const int percent = fileSize == 0 ? 100 : static_cast<int>((bytesDone * 100) / fileSize);
+			if (percent != percentageComplete)
 			{
-				gzFile f = gzopen(CTextConvert::UnicodeToAnsi(backupPath), "w");
-
-				if (f != NULL)
-				{
-					do
-					{
-						readBytes = file.Read(pBuffer, 65536);
-						gzwrite(f, pBuffer, readBytes);
-						totalReadSize += readBytes;
-
-						int percent = (int)((totalReadSize * 100) / fileSize);
-						if (percent != percentageComplete)
-						{
-							percentageComplete = percent;
-							Log(StrF(_T("backing up db percent done: %d"), percentageComplete));
-
-							status.Show(StrF(_T("Ditto - %02d%% %s - %s"), percentageComplete, msg.GetString(), backupPath.GetString()));
-						}
-
-					} while (readBytes >= 65536);
-
-					gzclose(f);
-
-					ret = TRUE;
-				}
+				percentageComplete = percent;
+				status.Show(StrF(_T("Ditto - %02d%% %s - %s"), percentageComplete, msg.GetString(), backupPath.GetString()));
 			}
+		});
 
-			file.Close();
-		}
-		else
+		out.close();
+		if (!out)
 		{
-			TCHAR szCause[255];
-			ex.GetErrorMessage(szCause, 255);
-			errorMessage = szCause;
+			throw std::runtime_error("the backup file could not be completed");
 		}
 	}
-	catch (...)
+	catch (const std::exception& e)
 	{
-
+		CErrorReport::Show(StrF(_T("Backing up the database to %s failed: %s"), backupPath.GetString(), CString(e.what()).GetString()));
+		return FALSE;
 	}
 
-	if (errorMessage != _T(""))
-	{
-		CString cs;
-		cs.Format(_T("Restore ERROR: %s"), errorMessage.GetString());
-		::SendMessage(theApp.m_MainhWnd, WM_SHOW_ERROR_MSG, (WPARAM)cs.GetBuffer(cs.GetLength()), 0);
-		cs.ReleaseBuffer();
-	}
-
-	Log(StrF(_T("Done restoring db, from: %s, errors: %s"), backupPath.GetString(), errorMessage.GetString()));
-
-	return ret;
+	Log(StrF(_T("Done backing up db, to: %s"), backupPath.GetString()));
+	return TRUE;
 }
 
 BOOL RestoreDB(CString backupPath)
@@ -549,115 +524,63 @@ BOOL RestoreDB(CString backupPath)
 	CString msg = theApp.m_Language.GetString("RestoreDbMsg", "Restoring database");
 	status.Show(StrF(_T("Ditto - %s - %s"), msg.GetString(), backupPath.GetString()));
 
-	BOOL ret = FALSE;
-
 	Log(StrF(_T("Start restoring db, from: %s"), backupPath.GetString()));
-
-	CString errorMessage = _T("");
 
 	using namespace nsPath;
 	CPath backupPathPath(backupPath);
-
-	CString tempPath = CGetSetOptions::GetPath(PATH_RESTORE_TEMP);
-
-	tempPath += backupPathPath.GetName();
+	const CString tempPath = CGetSetOptions::GetPath(PATH_RESTORE_TEMP) + backupPathPath.GetName();
 
 	try
 	{
-		gzFile f = gzopen(CTextConvert::UnicodeToAnsi(backupPath), "r");
-		if (f != NULL)
 		{
-			CFile file;
-			CFileException ex;
-			if (file.Open(tempPath, CFile::modeWrite | CFile::modeCreate, &ex))
+			std::ifstream in(backupPath.GetString(), std::ios::binary);
+			if (!in)
 			{
-				ULONGLONG totalReadSize = 0;
-				int readBytes = 0;
-				char* pBuffer = new char[65536];
-
-				do
-				{
-					readBytes = gzread(f, pBuffer, 65536);
-					file.Write(pBuffer, readBytes);
-
-					totalReadSize += readBytes;
-
-					Log(StrF(_T("restoring db uncompressed bytes read: %d"), readBytes));
-
-				} while (readBytes >= 65536);
-
-				file.Close();
+				throw std::runtime_error("the backup cannot be opened for reading");
 			}
-			else
+			std::ofstream out(tempPath.GetString(), std::ios::binary | std::ios::trunc);
+			if (!out)
 			{
-				//errorMessage.Format(_T("Failed to open temp file %s, exception: %s"), tempPath, ex.GetErrorMessage());
+				throw std::runtime_error("the temporary file for the unpacked database cannot be created");
 			}
-
-			gzclose(f);
-
-			if (ValidDB(tempPath, true))
+			DittoCore::GzipStream::Uncompress(in, out);
+			out.close();
+			if (!out)
 			{
-				CString defaultDbPath = GetDefaultDBName();
-				CPath defaultDbPathPath(defaultDbPath);
-
-				CString path = defaultDbPathPath.GetPath();
-
-				backupPathPath.RenameExtension(_T("db"));
-				CString newFullPath = path + backupPathPath.GetName();
-
-				int i = 1;
-				while (FileExists(newFullPath))
-				{
-					newFullPath.Format(_T("%s%s_%d.db"), path.GetString(), backupPathPath.GetTitle().GetString(), i);
-					i++;
-				}
-
-				if (MoveFile(tempPath, newFullPath))
-				{
-					CGetSetOptions::SetDBPath(newFullPath);
-					OpenDatabase(newFullPath);
-
-					ret = TRUE;
-				}
-				else
-				{
-					errorMessage.Format(_T("Failed to copy file %s to %s"), tempPath.GetString(), newFullPath.GetString());
-				}
-			}
-			else
-			{
-				errorMessage.Format(_T("Unpacked database is not a valid Ditto database"));
+				throw std::runtime_error("the unpacked database could not be completed");
 			}
 		}
-		else
+
+		if (!ValidDB(tempPath, true))
 		{
-			errorMessage.Format(_T("Failed to open file %s"), tempPath.GetString());
+			throw std::runtime_error("the unpacked database is not a valid Ditto database");
 		}
+
+		CPath defaultDbPathPath(GetDefaultDBName());
+		const CString path = defaultDbPathPath.GetPath();
+		backupPathPath.RenameExtension(_T("db"));
+		CString newFullPath = path + backupPathPath.GetName();
+		for (int i = 1; FileExists(newFullPath); i++)
+		{
+			newFullPath.Format(_T("%s%s_%d.db"), path.GetString(), backupPathPath.GetTitle().GetString(), i);
+		}
+
+		if (!MoveFile(tempPath, newFullPath))
+		{
+			throw std::runtime_error("the unpacked database could not be moved next to the current one, error " + std::to_string(::GetLastError()));
+		}
+		CGetSetOptions::SetDBPath(newFullPath);
+		OpenDatabase(newFullPath);
 	}
-	catch (CFileException* pEx)
+	catch (const std::exception& e)
 	{
-		TCHAR cause[255];
-		pEx->GetErrorMessage(cause, 255);
-		errorMessage.Format(_T("Exception: %s"), cause);
-	}
-	catch (...)
-	{
-		errorMessage.Format(_T("Exception: ... catch"));
+		CErrorReport::Show(StrF(_T("Restoring the database from %s failed: %s"), backupPath.GetString(), CString(e.what()).GetString()));
+		return FALSE;
 	}
 
-	if (errorMessage != _T(""))
-	{
-		CString cs;
-		cs.Format(_T("Restore ERROR: %s"), errorMessage.GetString());
-		::SendMessage(theApp.m_MainhWnd, WM_SHOW_ERROR_MSG, (WPARAM)cs.GetBuffer(cs.GetLength()), 0);
-		cs.ReleaseBuffer();
-	}
-
-	Log(StrF(_T("Done restoring db, from: %s, error: %s"), backupPath.GetString(), errorMessage.GetString()));
-
+	Log(StrF(_T("Done restoring db, from: %s"), backupPath.GetString()));
 	theApp.RefreshView();
-
-	return ret;
+	return TRUE;
 }
 
 BOOL CreateDB(CString csFile)

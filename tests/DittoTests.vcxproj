@@ -58,6 +58,7 @@
     <ClCompile Include="..\lib\DittoCore\GlobalBytes.cpp" />
     <ClCompile Include="..\lib\DittoCore\GlobalFileDrop.cpp" />
     <ClCompile Include="..\lib\DittoCore\GlobalLockGuard.cpp" />
+    <ClCompile Include="..\lib\DittoCore\GzipStream.cpp" />
     <ClCompile Include="..\lib\DittoCore\RtfJoin.cpp" />
     <ClCompile Include="..\lib\DittoCore\RtfNormalizer.cpp" />
     <ClCompile Include="..\lib\DittoCore\RtfTransforms.cpp" />
@@ -74,6 +75,7 @@
     <ClCompile Include="FileDropListTests.cpp" />
     <ClCompile Include="GlobalBytesTests.cpp" />
     <ClCompile Include="GlobalFileDropTests.cpp" />
+    <ClCompile Include="GzipStreamTests.cpp" />
     <ClCompile Include="RtfTests.cpp" />
     <ClCompile Include="TextJoinTests.cpp" />
     <ClCompile Include="TransformsTests.cpp" />

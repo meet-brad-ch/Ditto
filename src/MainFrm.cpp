@@ -47,7 +47,6 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_MESSAGE(WM_SHOW_TRAY_ICON, OnShowTrayIcon)
 	ON_MESSAGE(WM_CLIPBOARD_COPIED, OnClipboardCopied)
 	ON_WM_CLOSE()
-	ON_MESSAGE(WM_SHOW_ERROR_MSG, OnErrorMsg)
 	ON_MESSAGE(WM_SHOW_OWNED_ERROR_MSG, OnOwnedErrorMsg)
 	ON_COMMAND(ID_FIRST_IMPORT, OnFirstImport)
 	ON_MESSAGE(WM_EDIT_WND_CLOSING, OnEditWndClose)
@@ -1036,15 +1035,6 @@ bool CMainFrame::CloseAllOpenDialogs()
     }
 
     return bRet;
-}
-
-LRESULT CMainFrame::OnErrorMsg(WPARAM wParam, LPARAM /*lParam*/)
-{
-	CString csNewText = (TCHAR*)wParam;
-
-	ShowErrorMessage(_T("Ditto"), csNewText);
-
-	return TRUE;
 }
 
 LRESULT CMainFrame::OnOwnedErrorMsg(WPARAM wParam, LPARAM /*lParam*/)
