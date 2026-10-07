@@ -245,7 +245,6 @@ int CQListCtrl::GetFirstTenNum(int index)
 {
 	// set firstTenNum to the first ten number (1-10) corresponding to the given index
 	int firstTenNum = -1; // -1 means that nItem is not in the FirstTen block.
-	int count = GetItemCount();
 
 	if (0 <= index && index <= 9)
 	{
@@ -280,10 +279,8 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CQListCtrl message handlers
 
-void CQListCtrl::OnKeydown(NMHDR* pNMHDR, LRESULT* pResult)
+void CQListCtrl::OnKeydown(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
-	LV_KEYDOWN* pLVKeyDown = (LV_KEYDOWN*)pNMHDR;
-
 	*pResult = 0;
 }
 
@@ -1254,7 +1251,6 @@ BOOL CQListCtrl::OnEraseBkgnd(CDC* pDC)
 BOOL CQListCtrl::OnToolTipText(UINT /*id*/, NMHDR* pNMHDR, LRESULT* pResult)
 {
 	// need to handle both ANSI and UNICODE versions of the message
-	TOOLTIPTEXTA* pTTTA = (TOOLTIPTEXTA*)pNMHDR;
 	TOOLTIPTEXTW* pTTTW = (TOOLTIPTEXTW*)pNMHDR;
 	CString strTipText;
 

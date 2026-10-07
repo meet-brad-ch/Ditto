@@ -5,6 +5,7 @@
 #include "CP_Main.h"
 #include "QRCodeViewer.h"
 #include "MainTableFunctions.h"
+#include "ErrorReport.h"
 
 #define TIMER_BUTTON_UP 1
 
@@ -60,10 +61,17 @@ BOOL QRCodeViewer::CreateEx(CWnd *pParentWnd, unsigned char* bitmapData, int ima
 
 	if(CWnd::CreateEx(0, szClassName, _T(""), WS_POPUP, 0, 0, 0, 0, NULL, 0, NULL))
 	{	
-		BOOL r = m_desc.Create(CMainTableFunctions::GetDisplayText(CGetSetOptions::m_nLinesPerRow, desc), WS_CHILD|WS_VISIBLE, CRect(0,0,0,0), this, 2);
-
 		m_font.CreateFontIndirect(&logFont);
-		m_desc.SetFont(&m_font);	
+
+		// the QR code is still shown without its description; MoveControls skips a missing m_desc
+		if (m_desc.Create(CMainTableFunctions::GetDisplayText(CGetSetOptions::m_nLinesPerRow, desc), WS_CHILD|WS_VISIBLE, CRect(0,0,0,0), this, 2))
+		{
+			m_desc.SetFont(&m_font);
+		}
+		else
+		{
+			CErrorReport::Show(StrF(_T("Ditto could not create the QR code description (CStatic::Create failed, error %u)."), ::GetLastError()));
+		}
 
 		m_DittoWindow.DoCreate(this);
 		m_DittoWindow.SetCaptionColors(CGetSetOptions::m_Theme.CaptionLeft(), CGetSetOptions::m_Theme.CaptionRight(), CGetSetOptions::m_Theme.Border());
@@ -204,7 +212,7 @@ BOOL QRCodeViewer::OnEraseBkgnd(CDC* pDC)
 	GetClientRect(&rect);
 	CBrush myBrush(RGB(255, 255, 255));
 	CBrush *pOld = pDC->SelectObject(&myBrush);
-	BOOL bRes  = pDC->PatBlt(0, 0, rect.Width(), rect.Height(), PATCOPY);
+	pDC->PatBlt(0, 0, rect.Width(), rect.Height(), PATCOPY);
 	pDC->SelectObject(pOld);
 
 	return TRUE;

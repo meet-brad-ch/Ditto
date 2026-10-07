@@ -227,9 +227,8 @@ void CGroupTree::FillTree(int parentID, HTREEITEM hParent)
 	CATCH_SQLITE_EXCEPTION	
 }
 
-void CGroupTree::OnSelchanged(NMHDR* pNMHDR, LRESULT* /*pResult*/)
+void CGroupTree::OnSelchanged(NMHDR* /*pNMHDR*/, LRESULT* /*pResult*/)
 {
-	NM_TREEVIEW* pNMTreeView = (NM_TREEVIEW*)pNMHDR;
 	// TODO: Add your control notification handler code here
 	
 //	if(m_bHide == true)

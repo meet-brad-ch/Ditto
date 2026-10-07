@@ -73,8 +73,6 @@ public:
 	afx_msg void OnEnKillfocusEdit1();
 	afx_msg void OnKillFocus(CWnd* pNewWnd);
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
-	virtual BOOL OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult);
-	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnBnClickedButtonEnter();
 	afx_msg void OnBnClickedButtonEnter2();
 

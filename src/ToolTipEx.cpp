@@ -1010,7 +1010,7 @@ HITTEST_RET CToolTipEx::OnNcHitTest(CPoint point)
 
 void CToolTipEx::OnNcLButtonDown(UINT nHitTest, CPoint point) 
 {
-	int buttonPressed = m_DittoWindow.DoNcLButtonDown(this, nHitTest, point);
+	m_DittoWindow.DoNcLButtonDown(this, nHitTest, point);
 
 	SetTimer(TIMER_BUTTON_UP, 100, NULL);
 	
@@ -1374,7 +1374,6 @@ void CToolTipEx::OnEnterSizeMove()
 
 void CToolTipEx::OnHScroll(UINT /*nSBCode*/, UINT /*nPos*/, CScrollBar* /*pScrollBar*/)
 {
-	int x = 9;
 	//m_scrollHelper.OnHScroll(nSBCode, nPos, pScrollBar);
 }
 

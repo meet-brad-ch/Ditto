@@ -39,7 +39,7 @@ void AppendToFile(const TCHAR* fn, const TCHAR* msg)
 	}
 }
 
-void log(const TCHAR* msg, bool bFromSendRecieve, CString csFile, long lLine)
+void log(const TCHAR* msg, CString csFile, long lLine)
 {
 	ASSERT(AfxIsValidString(msg));
 
@@ -65,11 +65,8 @@ void log(const TCHAR* msg, bool bFromSendRecieve, CString csFile, long lLine)
 	}
 
 #ifndef _DEBUG
-	if(!bFromSendRecieve)
-	{
-		if(!CGetSetOptions::m_bEnableDebugLogging)
-			return;
-	}
+	if(!CGetSetOptions::m_bEnableDebugLogging)
+		return;
 #endif
 	
 	CString csExeFile = CGetSetOptions::GetPath(PATH_LOG_FILE);
@@ -709,8 +706,6 @@ CRect DefaultMonitorRect()
 
 CRect MonitorRectFromRect(CRect rect)
 {
-	BOOL ret = FALSE;
-
 	CRect crMonitor;
 
 	HMONITOR monitorHandle = MonitorFromPoint(rect.TopLeft(), MONITOR_DEFAULTTONEAREST);
@@ -1057,8 +1052,6 @@ int FindNoCaseAndInsert(CString& mainStr, CString& findStr, CString preInsert, C
 		int preLength = preInsert.GetLength();
 		int postLength = postInsert.GetLength();
 
-		int x = mainLow.Find(findLow, 0);
-		
 		while(TRUE)
 		{
 			foundPos = mainLow.Find(findLow, startFindPos);
@@ -1128,8 +1121,8 @@ int FindNoCaseAndInsert(CString& mainStr, CString& findStr, CString preInsert, C
 		{
 			//use unprintable characters so it doesn't find copied html to convert
 			mainStr.Replace(_T("\r\n"), _T("\x01\x05\x02"));
-			int l = mainStr.Replace(_T("\r"), _T("\x01\x05\x02"));
-			int m = mainStr.Replace(_T("\n"), _T("\x01\x05\x02"));
+			mainStr.Replace(_T("\r"), _T("\x01\x05\x02"));
+			mainStr.Replace(_T("\n"), _T("\x01\x05\x02"));
 		}
 	}
 
@@ -1299,7 +1292,6 @@ BOOL DarkAppWindows10Setting()
 DWORD Windows10AccentColor()
 {
 	DWORD color = MAXDWORD;
-	BOOL darkMode = false;
 	HKEY hkKey;
 	long lResult = ::RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\DWM"), NULL, KEY_READ, &hkKey);
 	if (lResult == ERROR_SUCCESS)
@@ -1324,7 +1316,6 @@ DWORD Windows10AccentColor()
 BOOL Windows10ColorTitleBar()
 {
 	BOOL colorTitleBar = FALSE;
-	BOOL darkMode = false;
 	HKEY hkKey;
 	long lResult = ::RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\DWM"), NULL, KEY_READ, &hkKey);
 	if (lResult == ERROR_SUCCESS)

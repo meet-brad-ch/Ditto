@@ -444,15 +444,14 @@ void CDittoWindow::DoNcPaint(CWnd *pWnd)
 		int offset = rectWidth / 2 - m_titleTextHeight / 2;
 		//textRect.right += 30;
 		//I don't understand where the 4 is coming from but it's always 4 pixals from the right so adjust for this
-		textRect.left -= (offset - m_dpi.Scale(4));		
-
-		int k = 0;
+		textRect.left -= (offset - m_dpi.Scale(4));
 	}
 
 	dc.DrawText(csText, textRect, flags);
 
 	dc.SelectObject(pOldFont);
 	dc.SetBkMode(nOldBKMode);
+	dc.SetTextColor(oldColor);
 
 	DrawWindowIcon(dc, pWnd);
 	DrawChevronBtn(dc, pWnd);

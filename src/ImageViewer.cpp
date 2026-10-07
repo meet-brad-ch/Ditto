@@ -133,9 +133,6 @@ void CImageViewer::OnPaint()
 
 	if (m_pGdiplusBitmap)
 	{
-		int width = m_pGdiplusBitmap->GetWidth();
-		int height = m_pGdiplusBitmap->GetHeight();
-		
 		Gdiplus::ImageAttributes attrs;
 		CSize s = m_scrollHelper.GetScrollPos();
 
@@ -218,7 +215,7 @@ void CImageViewer::OnMouseHWheel(UINT nFlags, short zDelta, CPoint pt)
 {
 	OutputDebugString(_T("OnMouseHWheel\r\n"));
 
-	BOOL wasScrolled = m_scrollHelper.OnMouseHWheel(nFlags, -zDelta, pt);
+	m_scrollHelper.OnMouseHWheel(nFlags, -zDelta, pt);
 
 	CWnd::OnMouseHWheel(nFlags, zDelta, pt);
 }
@@ -439,14 +436,17 @@ LRESULT CImageViewer::OnGestureNotify(WPARAM /*wParam*/, LPARAM /*lParam*/)
 						// turned off
 	};
 
-	BOOL bResult = ::SetGestureConfig(
-		m_hWnd,                 // window for which configuration is specified  
+	if (!::SetGestureConfig(
+		m_hWnd,                 // window for which configuration is specified
 		0,                    // reserved, must be 0
 		1,                    // count of GESTURECONFIG structures
 		&gc,                  // array of GESTURECONFIG structures, dwIDs will be processed in the
 							  // order specified and repeated occurances will overwrite previous ones
 		sizeof(GESTURECONFIG) // sizeof(GESTURECONFIG)
-	);
+	))
+	{
+		Log(StrF(_T("CImageViewer::OnGestureNotify SetGestureConfig failed, GetLastError %u"), ::GetLastError()));
+	}
 
 	return TRUE;
 }

@@ -574,7 +574,6 @@ BOOL RestoreDB(CString backupPath)
 				ULONGLONG totalReadSize = 0;
 				int readBytes = 0;
 				char* pBuffer = new char[65536];
-				int percentageComplete = 0;
 
 				do
 				{

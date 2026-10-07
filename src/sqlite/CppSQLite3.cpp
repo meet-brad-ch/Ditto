@@ -808,7 +808,12 @@ void CppSQLite3DB::open(const TCHAR* szFile)
 		throw CppSQLite3Exception(nRet, (TCHAR*)szError, DONT_DELETE_MSG);
 	}
 
-	int ret = sqlite3_create_function(mpDB, "regexp", 2, SQLITE_ANY, 0, &sqlite_regexp, 0, 0);
+	nRet = sqlite3_create_function(mpDB, "regexp", 2, SQLITE_ANY, 0, &sqlite_regexp, 0, 0);
+	if (nRet != SQLITE_OK)
+	{
+		SQLITE3_ERRMSG(mpDB);
+		throw CppSQLite3Exception(nRet, (TCHAR*)szError, DONT_DELETE_MSG);
+	}
 
 	setBusyTimeout(mnBusyTimeoutMs);
 

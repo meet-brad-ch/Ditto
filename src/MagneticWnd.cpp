@@ -28,7 +28,6 @@ void CMagneticWnd::OnMove(int x, int y)
 	{
 		CRect crThis;
 		CRect crAttached;
-		long lDiff = 0;
 
 		GetWindowRect(crThis);
 

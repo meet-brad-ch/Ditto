@@ -435,10 +435,8 @@ void CDeleteClipData::OnLvnKeydownList2(NMHDR *pNMHDR, LRESULT *pResult)
 	}	
 }
 
-void CDeleteClipData::OnLvnItemchangedList2(NMHDR *pNMHDR, LRESULT *pResult)
+void CDeleteClipData::OnLvnItemchangedList2(NMHDR * /*pNMHDR*/, LRESULT *pResult)
 {
-	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
-	
 	POSITION pos = m_clipList.GetFirstSelectedItemPosition();
 	__int64 selectedDataSize = 0;
 	int selectedCount = 0;
@@ -635,10 +633,10 @@ void CDeleteClipData::ApplyDelete()
 				try
 				{
 					//Sleep(100);
-					int deleteCount = theApp.m_db.execDMLEx(_T("DELETE FROM Data where lID = %d"), data.m_DatalID);
+					theApp.m_db.execDMLEx(_T("DELETE FROM Data where lID = %d"), data.m_DatalID);
 
 					//If there are no more children for this clip then delete the parent
-					int parentDeleteCount = theApp.m_db.execDMLEx(_T("DELETE FROM Main where lID IN ")
+					theApp.m_db.execDMLEx(_T("DELETE FROM Main where lID IN ")
 						_T("(")
 						_T("SELECT Main.lID ")
 						_T("FROM Main ")
@@ -1128,8 +1126,6 @@ void CDeleteClipData::ShowClipPropertiesWindow()
 
 void CDeleteClipData::SaveClipDataItemToFile(CDeleteData item)
 {
-	bool ret = false;
-
 	CString extension = _T("");
 	CString filter = _T("");
 

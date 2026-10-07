@@ -73,8 +73,8 @@ public:
 #define FUNC		__FUNCTION__
 #define FUNCSIG		__FUNCSIG__
 void AppendToFile(const TCHAR* fn, const TCHAR *msg);
-#define Log(msg) log(msg, false, __FILE__, __LINE__)
-void log(const TCHAR* msg, bool bFromSendRecieve = false, CString csFile = _T(""), long lLine = -1);
+#define Log(msg) log(msg, __FILE__, __LINE__)
+void log(const TCHAR* msg, CString csFile = _T(""), long lLine = -1);
 CString GetErrorString(int err);
 
 double IdleSeconds();

@@ -6,6 +6,8 @@
 #include "cp_main.h"
 #include <vector>
 #include <algorithm>
+#include <stdexcept>
+#include <string>
 
 CQPasteWndThread::CQPasteWndThread(void)
 {
@@ -64,7 +66,10 @@ void CQPasteWndThread::OnSetListCount(void *param)
 
     static CEvent UpdateTimeEvent(TRUE, TRUE, _T("Ditto_Update_Clip_Time"), NULL);
     //If we pasted then wait for the time on the pasted event to be updated before we query the db
-    DWORD dRet = WaitForSingleObject(UpdateTimeEvent, 2000);
+    if (WaitForSingleObject(UpdateTimeEvent, 2000) == WAIT_FAILED)
+    {
+        throw std::runtime_error("waiting for the clip time update event failed, error " + std::to_string(::GetLastError()));
+    }
 
     ResetEvent(m_SearchingEvent);
     ULONGLONG lTick = GetTickCount64();

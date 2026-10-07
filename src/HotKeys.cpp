@@ -498,7 +498,8 @@ void CHotKeys::SetKeys(ARRAY& keys, bool bSave)
 bool CHotKeys::FindFirstConflict(ARRAY& keys, INT_PTR* pX, INT_PTR* pY)
 {
 	bool bConflict = false;
-	INT_PTR i, j;
+	INT_PTR i{};
+	INT_PTR j{};
 	INT_PTR count = keys.GetSize();
 	int key = 0;
 	for(i = 0; i < count && !bConflict; i++)

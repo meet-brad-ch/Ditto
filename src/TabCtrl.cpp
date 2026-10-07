@@ -681,64 +681,6 @@ void CTabCtrlEx::DrawTab(int nTab, CDC *pDC, CRect& rcTab)
 		return;
 
 	DrawTabEx(nTab, pDC, rcTab);
-	return;
-
-	// Paint the text centered.
-	CPoint ptArr[5];
-	if (m_nStyle & SCS_TOP)
-	{
-		ptArr[0] = CPoint(rcTab.left, rcTab.bottom-1);
-		ptArr[1] = CPoint(rcTab.left+TEXT_PAD, rcTab.top);
-		ptArr[2] = CPoint(rcTab.right, rcTab.top);
-		ptArr[3] = CPoint(rcTab.right+TEXT_PAD, rcTab.bottom);
-		ptArr[4] = CPoint(rcTab.left, rcTab.bottom);
-	}
-	else
-	{
-		ptArr[0] = rcTab.TopLeft();
-		ptArr[1] = CPoint(rcTab.left+TEXT_PAD, rcTab.bottom-1);
-		ptArr[2] = CPoint(rcTab.right, rcTab.bottom-1);
-		ptArr[3] = CPoint(rcTab.right+TEXT_PAD, rcTab.top-1);
-		ptArr[4] = rcTab.TopLeft();
-	}
-	
-	// Draw the Tab
-	CRgn rgn;
-	if (rgn.CreatePolygonRgn(ptArr, 4, WINDING) == FALSE)
-		return;
-
-	CFont *pFont = NULL;
-	if (nTab == GetActiveTab())
-	{
-		pDC->FillRgn(&rgn, &m_brSelectedTab);
-		pFont = m_pFntBoldText;
-	}
-	else
-	{
-		pDC->FillRgn(&rgn, &m_brNonSelectedTab);
-		pFont = m_pFntText;
-	}
-
-	CPen *pPen = NULL;
-	if ((m_nStyle & SCS_BOLD) == 0)
-		pPen = &m_penGray;
-	
-	CPen *pPrevPen = pDC->SelectObject(pPen);
-	pDC->Polyline(ptArr, 4);
-	pDC->SelectObject(pPrevPen);
-	
-	// Draw the text
-	CFont *pPrevFont = pDC->SelectObject(pFont);
-	rcTab.right += TEXT_PAD;
-	pDC->SetBkMode(TRANSPARENT);
-	pDC->DrawText(m_Tabs[nTab].csTitle, rcTab, DT_CENTER|DT_VCENTER|DT_END_ELLIPSIS);
-	pDC->SelectObject(pPrevFont);
-
-	if (m_Tabs[nTab].clrUnderline != -1)
-	{
-		pDC->Draw3dRect(CRect(rcTab.left+TEXT_PAD+2, rcTab.bottom-2, rcTab.right-TEXT_PAD-2, rcTab.bottom),
-			m_Tabs[nTab].clrUnderline, m_Tabs[nTab].clrUnderline);
-	}
 }
 
 void CTabCtrlEx::DrawTabEx(int nTab, CDC *pDC, CRect& rcTab)

@@ -1392,10 +1392,9 @@ LRESULT CMainFrame::OnReOpenDatabase(WPARAM /*wParam*/, LPARAM /*lParam*/)
 	return TRUE;
 }
 
-LRESULT CMainFrame::OnShowMsgWindow(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnShowMsgWindow(WPARAM wParam, LPARAM /*lParam*/)
 {
 	CString *pMsg = (CString*)wParam;
-	int clipId = (int)lParam;
 
 	m_trayIcon.SetBalloonDetails(pMsg->GetBuffer(), _T("Ditto"), CTrayNotifyIcon::BalloonStyle::Info, CGetSetOptions::GetBalloonTimeout());
 

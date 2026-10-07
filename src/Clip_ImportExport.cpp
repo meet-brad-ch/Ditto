@@ -217,7 +217,6 @@ bool CClip_ImportExport::ImportFromSqliteV1(CppSQLite3DB& db, CppSQLite3Query& q
 
 		//Load the data Table
 		CClipFormat cf;
-		HGLOBAL hGlobal = 0;
 		m_Formats.RemoveAll();
 
 		CString csSQL;

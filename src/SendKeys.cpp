@@ -432,7 +432,6 @@ bool CSendKeys::SendKeys(LPCTSTR KeysString, bool Wait)
   WORD MKey;
   WORD NumTimes = 1;
   TCHAR KeyString[300] = {0};
-  bool retval  = false;
   int  keyIdx;
 
   LPTSTR pKey = (LPTSTR) KeysString;

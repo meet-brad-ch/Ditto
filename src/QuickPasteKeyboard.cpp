@@ -229,9 +229,8 @@ CString CQuickPasteKeyboard::GetShortCutText(KeyboardArray ar)
 	return all;
 }
 
-void CQuickPasteKeyboard::OnLvnItemActivateList1(NMHDR *pNMHDR, LRESULT *pResult)
+void CQuickPasteKeyboard::OnLvnItemActivateList1(NMHDR * /*pNMHDR*/, LRESULT *pResult)
 {
-	LPNMITEMACTIVATE pNMIA = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
 	// TODO: Add your control notification handler code here
 	*pResult = 0;
 }
@@ -769,64 +768,8 @@ BOOL CQuickPasteKeyboard::PreTranslateMessage(MSG* pMsg)
 }
 
 
-BOOL CQuickPasteKeyboard::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult)
-{
-	NMHDR* pNMHDR = (NMHDR *) lParam;
-	if (pNMHDR &&pNMHDR->code == WM_KILLFOCUS)
-	{
-		CWnd *pFocus = CWnd::GetFocus(); // call to a static function 
-		if (pFocus && (pFocus->GetParent() == this))
-		{
-			if (pFocus->GetDlgCtrlID() != IDCANCEL)
-			{
-				// Ok, if the focus is not in the cancelbutton... 
-				if (pNMHDR->idFrom)
-				{
-					int k = 0;
-				}
-			}
-		}
-	}
-
-
-	return CPropertyPage::OnNotify(wParam, lParam, pResult);
-}
-
-
-BOOL CQuickPasteKeyboard::OnCommand(WPARAM wParam, LPARAM lParam)
-{
-	UINT notificationCode = (UINT) HIWORD(wParam);
-
-	// For List control I handle it in another way....
-	if ((notificationCode == EN_KILLFOCUS) ||
-		(notificationCode == LBN_KILLFOCUS) ||
-		(notificationCode == CBN_KILLFOCUS) ||
-		(notificationCode == NM_KILLFOCUS) ||
-		(notificationCode == WM_KILLFOCUS)) {
-
-		CWnd *pFocus = CWnd::GetFocus();
-		// call to a static function 
-
-		// If we are changing the focus to another
-		// control of the same window... 
-
-		if (pFocus && (pFocus->GetParent() == this))
-		{
-			// Ok, if the focus is not in the cancel button...
-			if (pFocus->GetDlgCtrlID() != IDCANCEL) 
-			{
-				int k = 9;
-			}
-		}
-	}
-
-	return CPropertyPage::OnCommand(wParam, lParam);
-}
-
-
 void CQuickPasteKeyboard::OnBnClickedButtonEnter()
 {
-	DWORD hk = m_hotKey1.GetHotKey();
 	BYTE currentModifiers = CAccels::GetKeyStateModifiers();
 	m_hotKey1.SetHotKey(VK_RETURN, currentModifiers);
 }
@@ -834,7 +777,6 @@ void CQuickPasteKeyboard::OnBnClickedButtonEnter()
 
 void CQuickPasteKeyboard::OnBnClickedButtonEnter2()
 {
-	DWORD hk = m_hotKey2.GetHotKey();
 	BYTE currentModifiers = CAccels::GetKeyStateModifiers();
 	m_hotKey2.SetHotKey(VK_RETURN, currentModifiers);
 }

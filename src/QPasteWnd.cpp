@@ -652,7 +652,6 @@ void CQPasteWnd::MoveControls()
 		searchRowStart = 41;
 	}*/
 
-	int nWidth = cx;
 	int listBoxBottomOffset = m_DittoWindow.m_dpi.Scale(searchRowStart);
 
 	int extraSize = 0;
@@ -3835,7 +3834,6 @@ bool CQPasteWnd::ShowProperties(int id, int row)
 
 			if (row < 0)
 			{
-				bool selectedItem = false;
 				int index = 0;
 				std::vector<CMainTable>::iterator iter = m_listItems.begin();
 				while (iter != m_listItems.end())
@@ -5131,8 +5129,6 @@ void CQPasteWnd::OnBegindrag(NMHDR* pNMHDR, LRESULT* pResult)
 
 DROPEFFECT CQPasteWnd::OnDragEnter(COleDataObject* /*pDataObject*/, DWORD /*dwKeyState*/, CPoint /*point*/)
 {
-	int k = 0;
-
 	return DROPEFFECT_COPY;
 }
 
@@ -5170,7 +5166,6 @@ void CQPasteWnd::GetDispInfo(NMHDR* pNMHDR, LRESULT* /*pResult*/)
 			{
 				ATL::CCritSecLock csLock(m_CritSection.m_sect);
 
-				int c = m_lstHeader.GetItemCount();
 				if ((int)m_listItems.size() > pItem->iItem &&
 					m_listItems[pItem->iItem].m_lID > 0)
 				{
@@ -5755,7 +5750,7 @@ LRESULT CQPasteWnd::OnUpDown(WPARAM wParam, LPARAM lParam)
 	{
 		if (m_lstHeader.HandleKeyDown(wParam, lParam) == FALSE)
 		{
-			LRESULT res = m_lstHeader.SendMessage(WM_KEYDOWN, wParam, lParam);
+			m_lstHeader.SendMessage(WM_KEYDOWN, wParam, lParam);
 		}
 	}
 
@@ -6312,7 +6307,6 @@ LRESULT CQPasteWnd::OnDeleteId(WPARAM wParam, LPARAM /*lParam*/)
 
 	IDs.Add((int)wParam);
 
-	bool selectedItem = false;
 	int index = 0;
 	{
 		ATL::CCritSecLock csLock(m_CritSection.m_sect);
@@ -6807,7 +6801,7 @@ void CQPasteWnd::OnUpdateSpecialpasteTypoglycemia(CCmdUI* pCmdUI)
 	UpdateMenuShortCut(pCmdUI, ActionEnums::PASTE_TYPOGLYCEMIA);
 }
 
-void CQPasteWnd::OnNMClickList1(NMHDR* pNMHDR, LRESULT* pResult)
+void CQPasteWnd::OnNMClickList1(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
 	CString csText;
 	m_search.GetWindowText(csText);
@@ -6822,7 +6816,6 @@ void CQPasteWnd::OnNMClickList1(NMHDR* pNMHDR, LRESULT* pResult)
 		}
 	}
 
-	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
 	MSG msg;
 	msg.lParam = 0;
 	msg.wParam = VK_MOUSE_CLICK;
@@ -6834,10 +6827,8 @@ void CQPasteWnd::OnNMClickList1(NMHDR* pNMHDR, LRESULT* pResult)
 }
 
 
-void CQPasteWnd::OnNMDblclkList1(NMHDR* pNMHDR, LRESULT* pResult)
+void CQPasteWnd::OnNMDblclkList1(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
-	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
-
 	MSG msg;
 	msg.lParam = 0;
 	msg.wParam = VK_MOUSE_DOUBLE_CLICK;
@@ -6850,9 +6841,8 @@ void CQPasteWnd::OnNMDblclkList1(NMHDR* pNMHDR, LRESULT* pResult)
 }
 
 
-void CQPasteWnd::OnNMRClickList1(NMHDR* pNMHDR, LRESULT* pResult)
+void CQPasteWnd::OnNMRClickList1(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
-	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
 	MSG msg;
 	msg.lParam = 0;
 	msg.wParam = VK_MOUSE_RIGHT_CLICK;
@@ -6863,9 +6853,8 @@ void CQPasteWnd::OnNMRClickList1(NMHDR* pNMHDR, LRESULT* pResult)
 	*pResult = 0;
 }
 
-void CQPasteWnd::OnNMRDblclkList1(NMHDR* pNMHDR, LRESULT* pResult)
+void CQPasteWnd::OnNMRDblclkList1(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
-	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
 	/*MSG msg;
 	msg.lParam = 0;
 	msg.wParam = VK_MOUSE_RIGHT_CLICK;

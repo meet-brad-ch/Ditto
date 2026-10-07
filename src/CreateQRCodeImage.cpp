@@ -3,7 +3,6 @@
 #include "QRCode/qrencode.h"
 #include "..\shared\TextConvert.h"
 
-#define QRCODE_TEXT					"http://www.ultramundum.org/index.htm";		// Text to encode into QRCode
 #define OUT_FILE					"C:/temp/test.bmp"								// Output file name
 #define OUT_FILE_PIXEL_PRESCALER	8											// Prescaler (number of pixels in bmp file for each QRCode pixel, on each dimension)
 
@@ -22,7 +21,6 @@ CCreateQRCodeImage::~CCreateQRCodeImage(void)
 
 unsigned char* CCreateQRCodeImage::CreateImage(CString text, int &size)
 {
-	char*			szSourceSring = QRCODE_TEXT;
 	unsigned int	unWidth, x, y, l, n, unWidthAdjusted, unDataBytes;
 	unsigned char*	pRGBData, *pSourceData, *pDestData;
 	QRcode*			pQRC;

@@ -76,7 +76,6 @@ void CAddType::AddCurrentClipboardTypes()
 
 	while (oleData.GetNextFormat(&test))
 	{
-		BOOL b = oleData.IsDataAvailable(test.cfFormat);
 		m_lbCandidateTypes.AddString(GetFormatName(test.cfFormat));
 	}
 

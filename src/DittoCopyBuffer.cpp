@@ -2,6 +2,8 @@
 #include ".\dittocopybuffer.h"
 #include "CP_Main.h"
 #include <Mmsystem.h> //play sound
+#include <stdexcept>
+#include <string>
 
 
 CDittoCopyBuffer::CDittoCopyBuffer() :
@@ -211,7 +213,11 @@ UINT CDittoCopyBuffer::DelayRestoreClipboard(LPVOID pParam)
 	{
 		CClipboardSaveRestoreCopyBuffer *pLocalClipboard = pBuffer->m_pClipboard;
 
-		DWORD dRes = WaitForSingleObject(pBuffer->m_RestoreTimer, pLocalClipboard->m_lRestoreDelay);
+		// signaled (EndRestoreThread) and timed out both mean: restore now
+		if(WaitForSingleObject(pBuffer->m_RestoreTimer, pLocalClipboard->m_lRestoreDelay) == WAIT_FAILED)
+		{
+			throw std::runtime_error("waiting for the copy buffer restore delay failed, error " + std::to_string(::GetLastError()));
+		}
 
 		if(GetKeyState(VK_SHIFT) & 0x8000)
 		{

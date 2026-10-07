@@ -393,10 +393,10 @@ BOOL CCopyProperties::CheckMoveToGroupGlobalHotKey(CClip &clip)
 
 void CCopyProperties::LoadDataIntoCClip(CClip &Clip)
 {
-	long lHotKey = m_HotKey.GetHotKey();
+	const DWORD hotKey{ m_HotKey.GetHotKey() };
 
-	short sKeyKode = LOBYTE(m_HotKey.GetHotKey());
-	short sModifers = (HIBYTE(m_HotKey.GetHotKey())) & ~HOTKEYF_EXT;
+	short sKeyKode = LOBYTE(hotKey);
+	short sModifers = (HIBYTE(hotKey)) & ~HOTKEYF_EXT;
 
 	if(sKeyKode && ::IsDlgButtonChecked(m_hWnd, IDC_CHECK_WIN))
 	{
@@ -405,10 +405,10 @@ void CCopyProperties::LoadDataIntoCClip(CClip &Clip)
 
 	Clip.m_shortCut = MAKEWORD(sKeyKode, sModifers); 
 
-	long moveToGroupHotKey = m_MoveToGrouHotKey.GetHotKey();
+	const DWORD moveToGroupHotKey{ m_MoveToGrouHotKey.GetHotKey() };
 
-	short moveToGroupKeyKode = LOBYTE(m_MoveToGrouHotKey.GetHotKey());
-	short moveToGroupModifers = HIBYTE(m_MoveToGrouHotKey.GetHotKey());
+	short moveToGroupKeyKode = LOBYTE(moveToGroupHotKey);
+	short moveToGroupModifers = HIBYTE(moveToGroupHotKey);
 
 	if(moveToGroupKeyKode && ::IsDlgButtonChecked(m_hWnd, IDC_CHECK_WIN_MOVE_TO_GROUP))
 	{
