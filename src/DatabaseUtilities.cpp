@@ -197,9 +197,11 @@ BOOL OpenDatabase(CString dbPath)
 
 		return TRUE;
 	}
-	CATCH_SQLITE_EXCEPTION
-
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Opening the clip database %s failed: %s"), dbPath.GetString(), e.errorMessage()));
 		return FALSE;
+	}
 }
 
 void ReOrderStickyClips(int parentID, CppSQLite3DB& db)
@@ -259,7 +261,13 @@ void ReOrderStickyClips(int parentID, CppSQLite3DB& db)
 
 		Log(StrF(_T("End of ReOrderStickyClips, ParentId %d"), parentID));
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		// a recursive call stops only its own group; the parent level goes on with the next
+		// group, as each group's sticky order is independent (void: no failure value to pass up)
+		CErrorReport::Show(StrF(_T("Fixing the sticky clip order of group %d failed: %s"), parentID, e.errorMessage()));
+		return;
+	}
 }
 
 BOOL ValidDB(CString csPath, BOOL /*bUpgrade*/)
@@ -461,7 +469,11 @@ BOOL ValidDB(CString csPath, BOOL /*bUpgrade*/)
 		db.execDML(_T("CREATE INDEX IF NOT EXISTS Main_MoveToGroup on Main(MoveToGroupShortCut DESC, GlobalMoveToGroupShortCut DESC)"));
 		db.execDML(_T("CREATE INDEX IF NOT EXISTS Main_CRC on Main(CRC ASC)"));
 	}
-	CATCH_SQLITE_EXCEPTION_AND_RETURN(FALSE)
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Checking and upgrading the clip database %s failed: %s"), csPath.GetString(), e.errorMessage()));
+		return FALSE;
+	}
 
 		return TRUE;
 }
@@ -662,7 +674,11 @@ BOOL CreateDB(CString csFile)
 
 		db.close();
 	}
-	CATCH_SQLITE_EXCEPTION_AND_RETURN(FALSE)
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Creating the clip database %s failed: %s"), csFile.GetString(), e.errorMessage()));
+		return FALSE;
+	}
 
 		return TRUE;
 }
@@ -848,7 +864,11 @@ BOOL RemoveOldEntries(bool checkIdleTime)
 
 		Log(StrF(_T("After Deleting emptied out data rows, Count: %d, toDelete: %d"), deleteCount, toDeleteCount));
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Removing old clips failed: %s"), e.errorMessage()));
+		return FALSE;
+	}
 
 		Log(_T("End of RemoveOldEntries"));
 

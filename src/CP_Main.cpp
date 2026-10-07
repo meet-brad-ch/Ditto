@@ -16,6 +16,8 @@
 #include "ShowTaskBarIcon.h"
 #include "NoDbFrameWnd.h"
 #include <clocale>
+#include <memory>
+#include <stdexcept>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -222,7 +224,21 @@ void CCP_MainApp::ImportFileFromCommandLine(const CString& fileName)
 }
 
 BOOL CCP_MainApp::InitInstance()
-{	
+{
+	// application-start boundary: the main window does not exist yet, so a failure is shown in a message box
+	try
+	{
+		return InitInstanceBody();
+	}
+	catch (const std::exception& e)
+	{
+		AfxMessageBox(StrF(_T("Ditto could not start: %s"), CString(e.what()).GetString()), MB_OK | MB_ICONERROR);
+		return FALSE;
+	}
+}
+
+BOOL CCP_MainApp::InitInstanceBody()
+{
 	INITCOMMONCONTROLSEX InitCtrls;
 	InitCtrls.dwSize = sizeof(InitCtrls);
 	// Set this to include all the common control classes you want to use
@@ -437,7 +453,13 @@ void CCP_MainApp::CreateMainWnd()
 	CMainFrame* pFrame = new CMainFrame;
 	m_pMainWnd = m_pMainFrame = pFrame;
 
-	pFrame->LoadFrame(IDR_MAINFRAME, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL, NULL);
+	if (!pFrame->LoadFrame(IDR_MAINFRAME, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL, NULL))
+	{
+		// the failed frame destroyed itself (CFrameWnd::PostNcDestroy); AfterMainCreate reported why
+		m_pMainWnd = m_pMainFrame = NULL;
+		m_MainhWnd = NULL;
+		throw std::runtime_error("the main window could not be created");
+	}
 
 	//removed to keep ditto from taking focus on startup
 	//pFrame->ShowWindow(SW_SHOW);
@@ -455,7 +477,7 @@ void CCP_MainApp::CloseNoDbWindow()
 	}
 }
 
-void CCP_MainApp::AfterMainCreate()
+bool CCP_MainApp::AfterMainCreate()
 {
 	m_MainhWnd = m_pMainFrame->m_hWnd;
 	ASSERT( ::IsWindow(m_MainhWnd) );
@@ -510,13 +532,17 @@ void CCP_MainApp::AfterMainCreate()
 	LoadGlobalClips();
 
 	g_HotKeys.RegisterAll();
-	StartCopyThread();
+	if (!StartCopyThread())
+	{
+		return false;
+	}
 
 #ifdef UNICODE
 	m_Addins.LoadAll();
 #endif
 	
 	m_bAppRunning = true;
+	return true;
 }
 
 void CCP_MainApp::LoadGlobalClips()
@@ -563,7 +589,11 @@ void CCP_MainApp::LoadGlobalClips()
 			}
 		}
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Loading the global clip hot keys from the clip database failed: %s"), e.errorMessage()));
+		return;
+	}
 }
 
 void CCP_MainApp::BeforeMainClose()
@@ -575,10 +605,15 @@ void CCP_MainApp::BeforeMainClose()
 	StopCopyThread();
 }
 
-void CCP_MainApp::StartCopyThread()
+bool CCP_MainApp::StartCopyThread()
 {
 	ASSERT( m_MainhWnd );
 	CClipTypes* pTypes = LoadTypesFromDB();
+	if (pTypes == NULL)
+	{
+		// LoadTypesFromDB reported why; without the clip types the copy thread cannot work
+		return false;
+	}
 	// initialize to:
 	// - m_MainhWnd = send WM_CLIPBOARD_COPIED messages to m_MainhWnd
 	// - true = use Asynchronous communication (PostMessage)
@@ -598,8 +633,13 @@ void CCP_MainApp::StartCopyThread()
 		Log(_T("Starting Ditto up connected from the clipboard, passed in true from command line to start connected"));
 	}
 
-	VERIFY(m_CopyThread.CreateThread(CREATE_SUSPENDED));
+	if (!m_CopyThread.CreateThread(CREATE_SUSPENDED))
+	{
+		CErrorReport::Show(StrF(_T("Starting the clipboard copy thread failed (error %u)."), ::GetLastError()));
+		return false;
+	}
 	m_CopyThread.ResumeThread();
+	return true;
 }
 
 void CCP_MainApp::StopCopyThread()
@@ -645,11 +685,11 @@ void CCP_MainApp::UpdateMenuConnectCV(CMenu* pMenu, UINT nMenuID)
 // Allocates a new CClipTypes
 CClipTypes* CCP_MainApp::LoadTypesFromDB()
 {
-	CClipTypes* pTypes = new CClipTypes;
+	std::unique_ptr<CClipTypes> pTypes{std::make_unique<CClipTypes>()};
 
 	try
 	{
-		CppSQLite3Query q = theApp.m_db.execQuery(_T("SELECT TypeText FROM Types"));			
+		CppSQLite3Query q = theApp.m_db.execQuery(_T("SELECT TypeText FROM Types"));
 		while(q.eof() == false)
 		{
 			pTypes->Add(GetFormatID(q.getStringField(_T("TypeText"))));
@@ -657,7 +697,11 @@ CClipTypes* CCP_MainApp::LoadTypesFromDB()
 			q.nextRow();
 		}
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Loading the clipboard types to save from the clip database failed: %s"), e.errorMessage()));
+		return NULL;
+	}
 
 	if(pTypes->GetSize() <= 0)
 	{
@@ -670,7 +714,7 @@ CClipTypes* CCP_MainApp::LoadTypesFromDB()
 		pTypes->Add(GetFormatID(_T("PNG")));
 	}
 
-	return pTypes;
+	return pTypes.release();
 }
 
 void CCP_MainApp::ReloadTypes()
@@ -821,7 +865,11 @@ BOOL CCP_MainApp::EnterGroupID(long lID, BOOL clearOldGroupState/* = TRUE*/, BOO
 				}
 			}
 		}
-		CATCH_SQLITE_EXCEPTION
+		catch (CppSQLite3Exception& e)
+		{
+			CErrorReport::Show(StrF(_T("Opening group id %ld failed: %s"), lID, e.errorMessage()));
+			return FALSE;
+		}
 		break;
 	}
 
@@ -1082,7 +1130,11 @@ BOOL CCP_MainApp::GetClipData(long parentId, CClipFormat &Clip)
 			}
 		}
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Loading the data of clip id %ld from the clip database failed: %s"), parentId, e.errorMessage()));
+		return FALSE;
+	}
 
 	return bRet;
 }

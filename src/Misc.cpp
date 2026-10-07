@@ -11,6 +11,7 @@
 #include "Path.h"
 #include "GlobalBytes.h"
 #include "ClipboardFormatError.h"
+#include "ErrorReport.h"
 #include <new>
 #include <regex>
 #include <stdexcept>
@@ -602,7 +603,11 @@ long NewGroupID(int parentID, CString text)
 
 		lID = (long)theApp.m_db.InsertReturningId(insert);
 	}
-	CATCH_SQLITE_EXCEPTION_AND_RETURN(0)
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Creating the group %s failed: %s"), text.GetString(), e.errorMessage()));
+		return 0;
+	}
 	
 	return lID;
 }
@@ -614,7 +619,11 @@ BOOL DeleteAllIDs()
 		theApp.m_db.execDML(_T("DELETE FROM Data;"));
 		theApp.m_db.execDML(_T("DELETE FROM Main;"));
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Deleting all clips failed: %s"), e.errorMessage()));
+		return FALSE;
+	}
 
 	return TRUE;
 }
@@ -642,7 +651,11 @@ BOOL DeleteFormats(int parentID, ARRAY& formatIDs)
 			theApp.m_db.execDMLEx(_T("UPDATE Main SET CRC = %d WHERE lID = %d"), CRC, parentID);
 		}
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Deleting the selected formats of clip %d failed: %s"), parentID, e.errorMessage()));
+		return FALSE;
+	}
 		
 	return TRUE;
 }
@@ -1259,7 +1272,11 @@ CString FolderPath(int folderId)
 				folder += arr[folderPos];
 			}
 		}
-		CATCH_SQLITE_EXCEPTION
+		catch (CppSQLite3Exception& e)
+		{
+			CErrorReport::Show(StrF(_T("Reading the group path of group %d failed: %s"), folderId, e.errorMessage()));
+			return _T("");
+		}
 	}
 
 	return folder;

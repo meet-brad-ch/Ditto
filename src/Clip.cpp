@@ -743,7 +743,11 @@ bool CClip::AddToDB(bool bCheckForDuplicates)
 			}
 		}
 	}
-	CATCH_SQLITE_EXCEPTION_AND_RETURN(false)
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Saving the copied clip failed: %s"), e.errorMessage()));
+		return false;
+	}
 
 	int removeStickySettingClipId = -1;
 
@@ -776,27 +780,25 @@ bool CClip::AddToDB(bool bCheckForDuplicates)
 }
 
 // if a duplicate exists, set recset to the duplicate and return true
+// a failed query throws CppSQLite3Exception to AddToDB, which reports it and stops the save;
+// returning -1 here would have saved a second copy of the clip
 int CClip::FindDuplicate()
 {
-	try
+	//If they are allowing duplicates still check
+	//the last copied item
+	if(CGetSetOptions::m_bAllowDuplicates)
 	{
-		//If they are allowing duplicates still check 
-		//the last copied item
-		if(CGetSetOptions::m_bAllowDuplicates)
+		if (CGetSetOptions::m_allowBackToBackDuplicates == FALSE)
 		{
-			if (CGetSetOptions::m_allowBackToBackDuplicates == FALSE)
-			{
-				if (m_CRC == m_LastAddedCRC)
-					return m_lastAddedID;
-			}
-		}
-		else
-		{
-			return Repository().FindByCrc(m_CRC).value_or(-1);
+			if (m_CRC == m_LastAddedCRC)
+				return m_lastAddedID;
 		}
 	}
-	CATCH_SQLITE_EXCEPTION
-		
+	else
+	{
+		return Repository().FindByCrc(m_CRC).value_or(-1);
+	}
+
 	return -1;
 }
 
@@ -871,7 +873,11 @@ bool CClip::AddRowsInTransaction(int removeStickySettingClipId)
 		transaction.Commit();
 		return true;
 	}
-	CATCH_SQLITE_EXCEPTION_AND_RETURN(false)
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Saving the clip failed: %s"), e.errorMessage()));
+		return false;
+	}
 }
 
 // assigns m_ID
@@ -888,7 +894,11 @@ bool CClip::AddToMainTable()
 		m_LastAddedCRC = m_CRC;
 		m_lastAddedID = m_id;
 	}
-	CATCH_SQLITE_EXCEPTION_AND_RETURN(false)
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Adding the clip to the database failed: %s"), e.errorMessage()));
+		return false;
+	}
 	
 	return true;
 }
@@ -901,7 +911,11 @@ bool CClip::ModifyMainTable()
 		Repository().UpdateClip(ToRecord());
 		bRet = true;
 	}
-	CATCH_SQLITE_EXCEPTION_AND_RETURN(false)
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Saving the changes to clip %d failed: %s"), m_id, e.errorMessage()));
+		return false;
+	}
 
 	return bRet;
 }
@@ -914,7 +928,11 @@ bool CClip::ModifyDescription()
 		Repository().UpdateDescription(m_id, m_Desc);
 		bRet = true;
 	}
-	CATCH_SQLITE_EXCEPTION_AND_RETURN(false)
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Saving the description of clip %d failed: %s"), m_id, e.errorMessage()));
+		return false;
+	}
 
 		return bRet;
 }
@@ -944,7 +962,11 @@ bool CClip::AddToDataTable()
 			Log(StrF(_T("Added ClipData to DB, Id: %d, ParentId: %d Type: %s, size: %d"), ids[r], m_id, records[r].name.GetString(), static_cast<int>(records[r].data.size())));
 		}
 	}
-	CATCH_SQLITE_EXCEPTION_AND_RETURN(false)
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Saving the formats of clip %d failed: %s"), m_id, e.errorMessage()));
+		return false;
+	}
 		
 	return true;
 }
@@ -987,7 +1009,12 @@ void CClip::Move(int parentId, bool up)
 			*slot.order = DittoCore::ClipOrder::MovedPast(*neighbour, beyond, up);
 		}
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		// the order stays unchanged, so the caller's save writes the clip's old position
+		CErrorReport::Show(StrF(_T("Moving clip %d %s failed: %s"), m_id, up ? _T("up") : _T("down"), e.errorMessage()));
+		return;
+	}
 }
 
 void CClip::MoveUp(int parentId)
@@ -1060,8 +1087,12 @@ int CClip::GetExistingTopStickyClipId(int parentId)
 	{
 		return Repository().TopStickyClipId(ParentFilter(parentId)).value_or(-1);
 	}
-	CATCH_SQLITE_EXCEPTION
-	return -1;
+	catch (CppSQLite3Exception& e)
+	{
+		// -1 is also the "no top sticky clip" answer: the caller cannot tell the failure apart
+		CErrorReport::Show(StrF(_T("Finding the top sticky clip failed: %s"), e.errorMessage()));
+		return -1;
+	}
 }
 
 std::optional<double> CClip::EdgeOrder(CClipRepository::OrderColumn column, bool sticky, int parentId, bool highest)
@@ -1070,10 +1101,13 @@ std::optional<double> CClip::EdgeOrder(CClipRepository::OrderColumn column, bool
 	{
 		return Repository().EdgeOrder(column, sticky, ParentFilter(parentId), highest);
 	}
-	// kept from upstream for now (callers have no error path): a failed query is logged and
-	// treated as an empty list
-	CATCH_SQLITE_EXCEPTION
-	return std::nullopt;
+	catch (CppSQLite3Exception& e)
+	{
+		// kept from upstream for now (callers have no error path): a failed query is reported
+		// and treated as an empty list
+		CErrorReport::Show(StrF(_T("Reading the clip order failed: %s"), e.errorMessage()));
+		return std::nullopt;
+	}
 }
 
 std::optional<int> CClip::ParentFilter(int parentId)
@@ -1199,7 +1233,11 @@ BOOL CClip::LoadMainTable(int id)
 			return TRUE;
 		}
 	}
-	CATCH_SQLITE_EXCEPTION_AND_RETURN(FALSE)
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Loading clip %d failed: %s"), id, e.errorMessage()));
+		return FALSE;
+	}
 
 	return FALSE;
 }
@@ -1217,7 +1255,11 @@ HGLOBAL CClip::LoadFormat(int id, UINT cfType)
 			return NewGlobalP(const_cast<std::byte*>(data->data()), data->size());
 		}
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Loading the %s format of clip %d failed: %s"), GetFormatName(static_cast<CLIPFORMAT>(cfType)).GetString(), id, e.errorMessage()));
+		return NULL;
+	}
 
 	// a missing format or one saved without data; upstream returned false as the handle
 	return NULL;
@@ -1258,7 +1300,11 @@ bool CClip::LoadFormats(int id, bool bOnlyLoad_CF_TEXT, bool includeRichTextForT
 			cf.m_hgData = NULL;
 		}
 	}
-	CATCH_SQLITE_EXCEPTION_AND_RETURN(false)
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Loading the formats of clip %d failed: %s"), id, e.errorMessage()));
+		return false;
+	}
 
 	ULONGLONG endTick = GetTickCount64();
 	if((endTick-startTick) > 150)
@@ -1277,7 +1323,12 @@ void CClip::LoadTypes(int id, CClipTypes& types)
 			types.Add(GetFormatID(name));
 		}
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		// the names are read in one query before any is added, so types stays empty
+		CErrorReport::Show(StrF(_T("Loading the format list of clip %d failed: %s"), id, e.errorMessage()));
+		return;
+	}
 }
 
 CStringW CClip::GetUnicodeTextFormat()
@@ -1431,7 +1482,11 @@ bool CClip::SaveFormatsInTransaction(const ARRAY& deletedData, BOOL updateDescri
 
 		transaction.Commit();
 	}
-	CATCH_SQLITE_EXCEPTION_AND_RETURN(false)
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Saving the formats of clip %d failed: %s"), m_id, e.errorMessage()));
+		return false;
+	}
 
 	return true;
 }
@@ -1665,7 +1720,11 @@ bool CClip::SaveFromEditWnd(BOOL bUpdateDesc)
 		transaction.Commit();
 		bRet = true;
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Saving the edited clip %d failed: %s"), m_id, e.errorMessage()));
+		return false;
+	}
 
 		return bRet;
 }

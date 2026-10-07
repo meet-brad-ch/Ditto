@@ -648,7 +648,12 @@ void CDeleteClipData::ApplyDelete()
 
 					m_data.erase(m_data.begin() + row);
 				}
-				CATCH_SQLITE_EXCEPTION
+				catch (CppSQLite3Exception& e)
+				{
+					CErrorReport::Show(StrF(_T("Deleting clip data id %ld (clip id %ld) failed, the remaining items were not deleted: %s"), data.m_DatalID, data.m_lID, e.errorMessage()));
+					// stop deleting; the refresh below still shows the items deleted so far
+					break;
+				}
 			}
 			
 			progress.StepIt();
@@ -668,7 +673,11 @@ void CDeleteClipData::ApplyDelete()
 				SelectRow((int)row);
 			}
 		}
-		CATCH_SQLITE_EXCEPTION
+		catch (CppSQLite3Exception& e)
+		{
+			// the operation stops here; the lines below only re-enable the dialog
+			CErrorReport::Show(StrF(_T("Deleting the selected clip items failed: %s"), e.errorMessage()));
+		}
 
 		m_applyingDelete = false;
 		m_clipList.EnableWindow();
@@ -1221,12 +1230,20 @@ void CDeleteClipData::OnBnClickedBtCompactAndRepair()
 					RemoveOldEntries(false);
 				}
 			}
-			CATCH_SQLITE_EXCEPTION
+			catch (CppSQLite3Exception& e)
+			{
+				CErrorReport::Show(StrF(_T("Compact and repair failed while removing deleted clips, the database was not compacted: %s"), e.errorMessage()));
+				return;
+			}
 
 			theApp.m_db.execDML(_T("PRAGMA auto_vacuum = 1"));
 			theApp.m_db.execQuery(_T("VACUUM"));
 			SetDbSize();
 		}
-		CATCH_SQLITE_EXCEPTION
+		catch (CppSQLite3Exception& e)
+		{
+			CErrorReport::Show(StrF(_T("Compacting and repairing the clip database failed: %s"), e.errorMessage()));
+			return;
+		}
 	}
 }

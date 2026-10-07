@@ -7,6 +7,7 @@
 #include ".\copyproperties.h"
 #include "ClipRepository.h"
 #include "Md5.h"
+#include "ErrorReport.h"
 #include "..\Shared\TextConvert.h"
 
 #ifdef _DEBUG
@@ -81,10 +82,10 @@ BOOL CCopyProperties::OnInitDialog()
 	SetWindowLong(m_hWnd, GWL_EXSTYLE, extendedStyle | WS_EX_DLGMODALFRAME);
 	SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
-	m_GroupCombo.FillCombo();
-
 	try
 	{
+		m_GroupCombo.FillCombo();
+
 		if(m_lCopyID == -1 && m_pMemoryClip != NULL)
 		{
 			LoadDataFromCClip(*m_pMemoryClip);
@@ -98,7 +99,13 @@ BOOL CCopyProperties::OnInitDialog()
 			}
 		}
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		// close the dialog: OK would save the partly loaded properties
+		CErrorReport::Show(StrF(_T("Loading the properties of clip id %ld failed: %s"), m_lCopyID, e.errorMessage()));
+		EndDialog(IDCANCEL);
+		return TRUE;
+	}
 
 	UpdateData(FALSE);
 
@@ -353,7 +360,12 @@ void CCopyProperties::OnOK()
 
 		m_bHandleKillFocus = true;
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		// the dialog stays open, so the caller does not take the properties as saved
+		CErrorReport::Show(StrF(_T("Saving the properties of clip id %ld failed: %s"), m_lCopyID, e.errorMessage()));
+		return;
+	}
 
 	CDialog::OnOK();
 }

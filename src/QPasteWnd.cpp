@@ -2226,7 +2226,12 @@ void CQPasteWnd::OnMenuQuickpropertiesSettoneverautodelete()
 		{
 			theApp.m_db.execDMLEx(_T("UPDATE Main SET lDontAutoDelete = %d where lID = %d;"), (int)CTime::GetCurrentTime().GetTime(), IDs[i]);
 		}
-		CATCH_SQLITE_EXCEPTION
+		catch (CppSQLite3Exception& e)
+		{
+			// stops before the list rows are marked: the list does not show a change that was not saved
+			CErrorReport::Show(StrF(_T("Setting clip %d to never auto delete failed: %s"), IDs[i], e.errorMessage()));
+			return;
+		}
 	}
 
 	{
@@ -2261,7 +2266,12 @@ void CQPasteWnd::OnMenuQuickpropertiesAutodelete()
 		{
 			theApp.m_db.execDMLEx(_T("UPDATE Main SET lDontAutoDelete = 0 where lID = %d;"), IDs[i]);
 		}
-		CATCH_SQLITE_EXCEPTION
+		catch (CppSQLite3Exception& e)
+		{
+			// stops before the list rows are marked: the list does not show a change that was not saved
+			CErrorReport::Show(StrF(_T("Setting clip %d to auto delete failed: %s"), IDs[i], e.errorMessage()));
+			return;
+		}
 	}
 
 	{
@@ -2298,7 +2308,12 @@ void CQPasteWnd::OnMenuQuickpropertiesRemovehotkey()
 			theApp.m_db.execDMLEx(_T("UPDATE Main SET MoveToGroupShortCut = 0, GlobalMoveToGroupShortCut = 0 where lID = %d;"), IDs[i]);
 			g_HotKeys.Remove(IDs[i], CHotKey::MOVE_TO_GROUP);
 		}
-		CATCH_SQLITE_EXCEPTION
+		catch (CppSQLite3Exception& e)
+		{
+			// stops before the list rows are marked: the list does not show a change that was not saved
+			CErrorReport::Show(StrF(_T("Removing the hot keys of clip %d failed: %s"), IDs[i], e.errorMessage()));
+			return;
+		}
 	}
 
 	{
@@ -2333,7 +2348,12 @@ void CQPasteWnd::OnQuickpropertiesRemovequickpaste()
 		{
 			theApp.m_db.execDMLEx(_T("UPDATE Main SET QuickPasteText = '' where lID = %d;"), IDs[i]);
 		}
-		CATCH_SQLITE_EXCEPTION
+		catch (CppSQLite3Exception& e)
+		{
+			// stops before the list rows are marked: the list does not show a change that was not saved
+			CErrorReport::Show(StrF(_T("Removing the quick paste text of clip %d failed: %s"), IDs[i], e.errorMessage()));
+			return;
+		}
 	}
 
 	{
@@ -2697,7 +2717,11 @@ CString CQPasteWnd::LoadDescription(int nItem)
 			cs = q.getStringField(0);
 		}
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Loading the clip's description failed: %s"), e.errorMessage()));
+		return _T("");
+	}
 
 		return cs;
 }
@@ -5174,7 +5198,7 @@ void CQPasteWnd::GetDispInfo(NMHDR* pNMHDR, LRESULT* /*pResult*/)
 		switch (pItem->iSubItem)
 		{
 		case 0:
-			try
+			// reads only the loaded list rows (no database access), so it has no SQLite failure to report
 			{
 				ATL::CCritSecLock csLock(m_CritSection.m_sect);
 
@@ -5260,7 +5284,6 @@ void CQPasteWnd::GetDispInfo(NMHDR* pNMHDR, LRESULT* /*pResult*/)
 					m_thread.FireLoadItems(false);
 				}
 			}
-			CATCH_SQLITE_EXCEPTION
 
 				break;
 		}
@@ -5520,7 +5543,11 @@ void CQPasteWnd::OnGetToolTipText(NMHDR* pNMHDR, LRESULT* /*pResult*/)
 
 		CControlTextBuffer::CopyCut(pInfo->pszText, pInfo->cchTextMax, cs);
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Loading the clip's tool tip failed: %s"), e.errorMessage()));
+		return;
+	}
 }
 
 void CQPasteWnd::OnFindItem(NMHDR* pNMHDR, LRESULT* pResult)

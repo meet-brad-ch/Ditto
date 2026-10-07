@@ -48,7 +48,7 @@ public:
 	HWND m_MainhWnd;
 	CMainFrame* m_pMainFrame;
 	CFrameWnd* m_pNoDbMainFrame;
-	void AfterMainCreate();  // called after main window creation
+	bool AfterMainCreate();  // called after main window creation; false: Ditto cannot run (reported)
 	void BeforeMainClose();  // called before main window close
 
 // System-wide HotKeys
@@ -95,7 +95,7 @@ public:
 
 	// CopyThread and ClipViewer (Copy and Paste Management)
 	CCopyThread	m_CopyThread;
-	void StartCopyThread();
+	bool StartCopyThread();  // false: the copy thread could not start (reported)
 	void StopCopyThread();
 	// for posting messages
 	HWND GetClipboardViewer() { return m_CopyThread.m_pClipboardViewer->m_hWnd; }
@@ -211,4 +211,12 @@ protected:
 
 	CopyReasonEnum::CopyReason m_copyReason;
 	ULONGLONG m_copyReasonStartTime{};
+
+private:
+	/**
+	 * @brief Starts the application; InitInstance wraps it as the start-up error boundary.
+	 * @return TRUE to run the message loop, FALSE to exit the process.
+	 * @throws std::exception When a start-up step fails.
+	 */
+	BOOL InitInstanceBody();
 };

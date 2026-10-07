@@ -4,6 +4,7 @@
 #include "..\shared\TextConvert.h"
 #include ".\dittorulerricheditctrl.h"
 #include "CopyProperties.h"
+#include "ErrorReport.h"
 
 CDittoRulerRichEditCtrl::CDittoRulerRichEditCtrl(void)
 {	
@@ -101,7 +102,11 @@ long CDittoRulerRichEditCtrl::GetTypeFlags(long lID)
 			lRet |= stRTF;
 		}
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Reading the formats of clip id %ld failed: %s"), lID, e.errorMessage()));
+		return stNONE;
+	}
 
 	return lRet;
 }
@@ -130,6 +135,10 @@ int CDittoRulerRichEditCtrl::SaveToDB(BOOL bUpdateDesc)
 		//only save the types if they have them set as save types, mainly rtf type
 		int saveTypes = 0;
 		CClipTypes* pTypes = theApp.LoadTypesFromDB();
+		if (pTypes == NULL)
+		{
+			return FALSE; // LoadTypesFromDB reported the failure
+		}
 
 		INT_PTR numTypes = pTypes->GetSize();
 		for (int i = 0; i < numTypes; i++)
@@ -191,7 +200,12 @@ int CDittoRulerRichEditCtrl::SaveToDB(BOOL bUpdateDesc)
 		if(bUpdateDesc)
 			theApp.RefreshView();
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		// the edit stays marked as modified, so it is not lost
+		CErrorReport::Show(StrF(_T("Saving the edited clip id %ld failed: %s"), m_lID, e.errorMessage()));
+		return FALSE;
+	}
 
 	if(bSetModifyToFalse)
 		m_rtf.SetModify(FALSE);

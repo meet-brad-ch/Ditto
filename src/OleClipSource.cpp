@@ -234,7 +234,16 @@ BOOL COleClipSource::DoImmediateRender()
 	}
 	else if (m_pasteOptions.m_pasteGuid)
 	{
-		PutGuidOntoClipboard(clip);
+		try
+		{
+			PutGuidOntoClipboard(clip);
+		}
+		catch (const std::runtime_error& e)
+		{
+			// NewGuidString() throws it when CoCreateGuid fails; the paste stops
+			CErrorReport::Show(StrF(_T("Pasting a new GUID failed: %s"), CString(e.what()).GetString()));
+			return FALSE;
+		}
 	}
 	else if (m_pasteOptions.m_pasteAsImage)
 	{

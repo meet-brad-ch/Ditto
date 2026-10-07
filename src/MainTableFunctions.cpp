@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "cp_main.h"
 #include "MainTableFunctions.h"
+#include "ErrorReport.h"
 #include "..\Shared\Tokenizer.h"
 
 #ifdef _DEBUG
@@ -63,7 +64,11 @@ void CMainTableFunctions::LoadAcceleratorKeys(CAccels& accels, CppSQLite3DB &db)
 			}
 		}
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Loading the clip shortcut keys from the clip database failed: %s"), e.errorMessage()));
+		return;
+	}
 }
 
 CString CMainTableFunctions::GetDisplayText(int /*nMaxLines*/, const CString &OrigText)

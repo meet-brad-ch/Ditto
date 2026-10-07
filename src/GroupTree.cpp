@@ -5,6 +5,7 @@
 #include "cp_main.h"
 #include "GroupTree.h"
 #include "ActionEnums.h"
+#include "ErrorReport.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -189,42 +190,47 @@ void CGroupTree::FillTree()
 
 	if(m_selectedFolderID < 0)
 		SelectItem(hItem);
-	
-	FillTree(-1, hItem);
+
+	// caught here, not in the recursion, so a failure is reported once and stops the whole fill
+	try
+	{
+		FillTree(-1, hItem);
+	}
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Loading the group tree failed: %s"), e.errorMessage()));
+		return;
+	}
 }
 
 
 void CGroupTree::FillTree(int parentID, HTREEITEM hParent)
-{	
-	try
+{
+	CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID, mText FROM Main WHERE bIsGroup = 1 AND lParentID = %d"), parentID);
+
+	if(q.eof() == false)
 	{
-		CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID, mText FROM Main WHERE bIsGroup = 1 AND lParentID = %d"), parentID);
-			
-		if(q.eof() == false)
+		HTREEITEM hItem;
+
+		while(!q.eof())
 		{
-			HTREEITEM hItem;
-
-			while(!q.eof())
+			if(q.getIntField(_T("lID")) == m_selectedFolderID)
 			{
-				if(q.getIntField(_T("lID")) == m_selectedFolderID)
-				{
-					hItem = InsertItem(q.getStringField(_T("mText")), 1, 1, hParent);
-					SelectItem(hItem);
-				}
-				else
-				{				
-					hItem = InsertItem(q.getStringField(_T("mText")), 0, 0, hParent);
-				}
-
-				SetItemData(hItem, q.getIntField(_T("lID")));
-				
-				FillTree(q.getIntField(_T("lID")), hItem);
-
-				q.nextRow();
+				hItem = InsertItem(q.getStringField(_T("mText")), 1, 1, hParent);
+				SelectItem(hItem);
 			}
+			else
+			{
+				hItem = InsertItem(q.getStringField(_T("mText")), 0, 0, hParent);
+			}
+
+			SetItemData(hItem, q.getIntField(_T("lID")));
+
+			FillTree(q.getIntField(_T("lID")), hItem);
+
+			q.nextRow();
 		}
-	}		
-	CATCH_SQLITE_EXCEPTION	
+	}
 }
 
 void CGroupTree::OnSelchanged(NMHDR* /*pNMHDR*/, LRESULT* /*pResult*/)

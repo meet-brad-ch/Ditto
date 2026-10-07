@@ -179,7 +179,10 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
     m_ulCopyGap = CGetSetOptions::GetCopyGap();
 
-    theApp.AfterMainCreate();
+    if (!theApp.AfterMainCreate())
+    {
+        return -1;  // the failure is reported; CCP_MainApp::CreateMainWnd stops the start
+    }
 
     m_thread.Start(this);
 
@@ -614,7 +617,11 @@ void CMainFrame::DoFirstTenPositionsPaste(int nPos)
 			PasteOrShowGroup(q.getIntField(_T("lID")), CGetSetOptions::GetMoveClipsOnGlobal10(), false, CGetSetOptions::m_bSendPasteOnFirstTenHotKeys, pastedFromGroup);
         }
     }
-    CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Pasting the clip at position %d failed: %s"), nPos, e.errorMessage()));
+		return;
+	}
 }
 
 void CMainFrame::StartKeyModifierTimer()
@@ -706,7 +713,11 @@ void CMainFrame::PasteOrShowGroup(int dbId, BOOL updateClipTime, BOOL activeTarg
 			}
 		}
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Pasting clip or group id %d failed: %s"), dbId, e.errorMessage()));
+		return;
+	}
 }
 
 void CMainFrame::DoDittoCopyBufferPaste(int nCopyBuffer)
@@ -730,7 +741,11 @@ void CMainFrame::DoDittoCopyBufferPaste(int nCopyBuffer)
             CGetSetOptions::m_bUpdateTimeOnPaste = bItWas;
         }
     }
-    CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Pasting Ditto copy buffer %d failed: %s"), nCopyBuffer, e.errorMessage()));
+		return;
+	}
 }
 
 void CMainFrame::OnTimer(UINT_PTR nIDEvent)
@@ -1375,7 +1390,11 @@ LRESULT CMainFrame::OnReOpenDatabase(WPARAM /*wParam*/, LPARAM /*lParam*/)
 		theApp.m_db.close();
 		OpenDatabase(CGetSetOptions::GetDBPath());
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Reopening the clip database after resume failed: %s"), e.errorMessage()));
+		return FALSE;
+	}
 
 	Log(StrF(_T("OnReOpenDatabase, End closing and reopening database Delay: %d"), CGetSetOptions::GetWindowsResumeDelayReOpenDbMS()));
 

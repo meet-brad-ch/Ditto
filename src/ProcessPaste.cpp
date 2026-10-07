@@ -3,6 +3,8 @@
 #include "ProcessPaste.h"
 #include "ClipIds.h"
 #include "ClipboardFormatError.h"
+#include "ErrorReport.h"
+#include <memory>
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -24,7 +26,7 @@ CProcessPaste::~CProcessPaste()
 }
 
 // Error boundary of a paste or drag: whatever stops the operation (malformed clip data, a database
-// error, an MFC or any other exception) ends it and is kept in m_lastErrorMessage for the caller
+// error, an MFC or a standard exception) ends it and is kept in m_lastErrorMessage for the caller
 // to show.
 BOOL CProcessPaste::RunAtBoundary(LPCTSTR operation, const std::function<BOOL()>& body)
 {
@@ -47,9 +49,10 @@ BOOL CProcessPaste::RunAtBoundary(LPCTSTR operation, const std::function<BOOL()>
 		ex->Delete();
 		m_lastErrorMessage.Format(_T("%s exception: %s"), operation, szCause);
 	}
-	catch (...)
+	catch (const std::exception& error)
 	{
-		m_lastErrorMessage.Format(_T("%s generic exception"), operation);
+		// e.g. std::bad_alloc, or std::runtime_error from a failed system call while rendering the clip
+		m_lastErrorMessage.Format(_T("%s failed: %s"), operation, CString(error.what()).GetString());
 	}
 	Log(m_lastErrorMessage);
 	return FALSE;
@@ -125,25 +128,11 @@ BOOL CProcessPaste::DoDrag()
 		return TRUE;
 	});
 
-	try
-	{
-		//from https://www.codeproject.com/Articles/886711/Drag-Drop-Images-and-Drop-Descriptions-for-MFC-App
-		//You may have noted the InternalRelease() function call.This is required here to delete the object.While it is possible to use 
-		//delete or create the object on the stack with Drag & Drop operations, it is not recommended to do so.
-		m_pOle->InternalRelease();
-	}
-	catch (CException *ex)
-	{
-		TCHAR szCause[255];
-		ex->GetErrorMessage(szCause, 255);
-		m_lastErrorMessage.Format(_T("Drag drop exception 2: %s"), szCause);
-		Log(m_lastErrorMessage);
-	}
-	catch (...)
-	{
-		m_lastErrorMessage = _T("Drag drop generic exception 2");
-		Log(m_lastErrorMessage);
-	}
+	//from https://www.codeproject.com/Articles/886711/Drag-Drop-Images-and-Drop-Descriptions-for-MFC-App
+	//You may have noted the InternalRelease() function call.This is required here to delete the object.While it is possible to use
+	//delete or create the object on the stack with Drag & Drop operations, it is not recommended to do so.
+	// No try: InternalRelease only drops the reference and runs the (non-throwing) destructor.
+	m_pOle->InternalRelease();
 
 	// The Clipboard now owns the allocated memory
 	// and will delete this data object
@@ -187,17 +176,18 @@ UINT CProcessPaste::MarkAsPastedThread(LPVOID pParam)
 
 	BOOL bRet = FALSE;
 	int clipId = 0;
+	// owns the data from MarkAsPasted, also when an update below fails
+	const std::unique_ptr<MarkAsPastedData> pData{static_cast<MarkAsPastedData*>(pParam)};
 
 	try
 	{
 		int refreshFlags = 0;
 
-		MarkAsPastedData* pData = (MarkAsPastedData*)pParam;
 		if(pData)
 		{
 			int clipCount = (int)pData->ids.GetCount();
 
-			if(CGetSetOptions::m_bUpdateTimeOnPaste && 
+			if(CGetSetOptions::m_bUpdateTimeOnPaste &&
 				pData->updateClipOrder)
 			{
 				if (CGetSetOptions::m_refreshViewAfterPasting)
@@ -208,62 +198,59 @@ UINT CProcessPaste::MarkAsPastedThread(LPVOID pParam)
 				for (int i = 0; i < clipCount; i++)
 				{
 					int id = pData->ids.ElementAt(i);
-					try
+					clipId = id;
+					if (pData->pastedFromGroup)
 					{
-						if (pData->pastedFromGroup)
+						CppSQLite3Query q = theApp.m_db.execQuery(_T("SELECT clipGroupOrder FROM Main ORDER BY clipGroupOrder DESC LIMIT 1"));
+
+						if (q.eof() == false)
 						{
-							CppSQLite3Query q = theApp.m_db.execQuery(_T("SELECT clipGroupOrder FROM Main ORDER BY clipGroupOrder DESC LIMIT 1"));
+							double latestDate = q.getFloatField(_T("clipGroupOrder"));
+							latestDate += 1;
 
-							if (q.eof() == false)
-							{
-								double latestDate = q.getFloatField(_T("clipGroupOrder"));
-								latestDate += 1;
+							Log(StrF(_T("Setting clipId: %d, GroupOrder: %f"), id, latestDate));
 
-								Log(StrF(_T("Setting clipId: %d, GroupOrder: %f"), id, latestDate));
-
-								theApp.m_db.execDMLEx(_T("UPDATE Main SET clipGroupOrder = %f where lID = %d;"), latestDate, id);
-							}
-						}
-						else
-						{
-							CppSQLite3Query q = theApp.m_db.execQuery(_T("SELECT clipOrder FROM Main ORDER BY clipOrder DESC LIMIT 1"));
-
-							if (q.eof() == false)
-							{
-								double latestDate = q.getFloatField(_T("clipOrder"));
-								latestDate += 1;
-
-								Log(StrF(_T("Setting clipId: %d, order: %f"), id, latestDate));
-
-								theApp.m_db.execDMLEx(_T("UPDATE Main SET clipOrder = %f where lID = %d;"), latestDate, id);
-							}
+							theApp.m_db.execDMLEx(_T("UPDATE Main SET clipGroupOrder = %f where lID = %d;"), latestDate, id);
 						}
 					}
-					CATCH_SQLITE_EXCEPTION
+					else
+					{
+						CppSQLite3Query q = theApp.m_db.execQuery(_T("SELECT clipOrder FROM Main ORDER BY clipOrder DESC LIMIT 1"));
+
+						if (q.eof() == false)
+						{
+							double latestDate = q.getFloatField(_T("clipOrder"));
+							latestDate += 1;
+
+							Log(StrF(_T("Setting clipId: %d, order: %f"), id, latestDate));
+
+							theApp.m_db.execDMLEx(_T("UPDATE Main SET clipOrder = %f where lID = %d;"), latestDate, id);
+						}
+					}
 				}
 			}
 
-			try
+			for (int i = 0; i < clipCount; i++)
 			{
-				for (int i = 0; i < clipCount; i++)
-				{
-					int id = pData->ids.ElementAt(i);
-					theApp.m_db.execDMLEx(_T("UPDATE Main SET lastPasteDate = %d where lID = %d;"), (int)CTime::GetCurrentTime().GetTime(), id);
-				}
+				int id = pData->ids.ElementAt(i);
+				clipId = id;
+				theApp.m_db.execDMLEx(_T("UPDATE Main SET lastPasteDate = %d where lID = %d;"), (int)CTime::GetCurrentTime().GetTime(), id);
 			}
-			CATCH_SQLITE_EXCEPTION
 
 			for (int i = 0; i < clipCount; i++)
 			{
 				int id = pData->ids.ElementAt(i);
 				theApp.RefreshClipInUI(id, refreshFlags);
-			}			
+			}
 
-			delete pData;
 			bRet = TRUE;
 		}
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		// the remaining updates and the UI refresh are skipped; the event below is still set so the list query does not wait
+		CErrorReport::Show(StrF(_T("Updating the order and paste time of pasted clip id %d failed: %s"), clipId, e.errorMessage()));
+	}
 
 	Log(_T("End of MarkAsPastedThread"));
 

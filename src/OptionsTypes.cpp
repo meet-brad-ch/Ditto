@@ -7,6 +7,7 @@
 #include "..\Shared\ArrayEx.h"
 #include "DimWnd.h"
 #include "Misc.h"
+#include "ErrorReport.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -71,7 +72,11 @@ BOOL COptionsTypes::OnApply()
 				theApp.m_db.execDMLEx(_T("INSERT INTO Types VALUES(NULL, '%s');"), csText.GetString());
 			}
 		}
-		CATCH_SQLITE_EXCEPTION
+		catch (CppSQLite3Exception& e)
+		{
+			CErrorReport::Show(StrF(_T("Saving the supported clipboard types failed: %s"), e.errorMessage()));
+			return FALSE;
+		}
 
 		// refresh our local cache
 		theApp.ReloadTypes();
@@ -106,8 +111,12 @@ BOOL COptionsTypes::OnInitDialog()
 			q.nextRow();
 		}
 	}
-	CATCH_SQLITE_EXCEPTION
-	
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Loading the supported clipboard types failed: %s"), e.errorMessage()));
+		return FALSE;
+	}
+
 	m_List.SetFocus();
 
 	theApp.m_Language.UpdateOptionSupportedTypes(this);

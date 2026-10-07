@@ -4,6 +4,7 @@
 #include "Options.h"
 #include "QPasteWnd.h"
 #include "cp_main.h"
+#include "ErrorReport.h"
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
@@ -83,7 +84,12 @@ void CQPasteWndThread::OnSetListCount(void *param)
         lRecordCount = theApp.m_db.execScalar(countSQL);
         ::PostMessage(pasteWnd->m_hWnd, NM_SET_LIST_COUNT, lRecordCount, 0);
     }
-    CATCH_SQLITE_EXCEPTION 
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Counting the clips for the clip list failed: %s"), e.errorMessage()));
+		SetEvent(m_SearchingEvent); // the count is over, so waiters on the search may go on
+		return;
+	}
 
     SetEvent(m_SearchingEvent);
 

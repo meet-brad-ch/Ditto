@@ -31,104 +31,96 @@ CClip_ImportExport::~CClip_ImportExport(void)
 {
 }
 
+// A CppSQLite3Exception propagates: the caller (CClipIDs::Export) is the operation boundary and reports it.
 bool CClip_ImportExport::ExportToSqliteDB(CppSQLite3DB& db)
 {
-	bool bRet = false;
-	try
+	//Add to Main Table
+	m_Desc.Replace(_T("'"), _T("''"));
+	db.execDMLEx(_T("insert into Main values(NULL, %d, '%s');"), CURRENT_EXPORT_VERSION, m_Desc.GetString());
+	long lId = (long)db.lastRowId();
+
+	//Add to Data table
+	CClipFormat* pCF;
+	CppSQLite3Statement stmt = db.compileStatement(_T("insert into Data values (NULL, ?, ?, ?, ?);"));
+
+	for (INT_PTR i = m_Formats.GetSize() - 1; i >= 0; i--)
 	{
-		//Add to Main Table
-		m_Desc.Replace(_T("'"), _T("''"));
-		db.execDMLEx(_T("insert into Main values(NULL, %d, '%s');"), CURRENT_EXPORT_VERSION, m_Desc.GetString());
-		long lId = (long)db.lastRowId();
+		pCF = &m_Formats.ElementAt(i);
 
-		//Add to Data table
-		CClipFormat* pCF;
-		CppSQLite3Statement stmt = db.compileStatement(_T("insert into Data values (NULL, ?, ?, ?, ?);"));
+		stmt.bind(1, lId);
+		stmt.bind(2, GetFormatName(pCF->m_cfType));
 
-		for (INT_PTR i = m_Formats.GetSize() - 1; i >= 0; i--)
-		{
-			pCF = &m_Formats.ElementAt(i);
+		const DittoCore::GlobalBytes block(pCF->m_hgData);
+		const std::vector<std::byte> compressed = DittoCore::DtoCodec::Compress(block.Bytes());
+		stmt.bind(3, static_cast<int>(block.Bytes().size()));
+		stmt.bind(4, reinterpret_cast<const unsigned char*>(compressed.data()), static_cast<int>(compressed.size()));
 
-			stmt.bind(1, lId);
-			stmt.bind(2, GetFormatName(pCF->m_cfType));
+		stmt.execDML();
+		stmt.reset();
 
-			const DittoCore::GlobalBytes block(pCF->m_hgData);
-			const std::vector<std::byte> compressed = DittoCore::DtoCodec::Compress(block.Bytes());
-			stmt.bind(3, static_cast<int>(block.Bytes().size()));
-			stmt.bind(4, reinterpret_cast<const unsigned char*>(compressed.data()), static_cast<int>(compressed.size()));
-
-			stmt.execDML();
-			stmt.reset();
-
-			m_Formats.RemoveAt(i);
-		}
-
-		bRet = true;
+		m_Formats.RemoveAt(i);
 	}
-	CATCH_SQLITE_EXCEPTION_AND_RETURN(false)
 
-		return bRet;
+	return true;
 }
 
+// A CppSQLite3Exception propagates: the callers (CCP_MainApp::ImportClips and ImportFileFromCommandLine)
+// are the operation boundaries and show it.
 bool CClip_ImportExport::ImportFromSqliteDB(CppSQLite3DB& db, bool bAddToDB, bool bPutOnClipboard)
 {
 	bool bRet = false;
 	CStringA csCF_TEXT;
 	CStringW csCF_UNICODETEXT;
 
-	try
+	CppSQLite3Query q = db.execQuery(_T("Select * from Main order by lId DESC"));
+	while (q.eof() == false)
 	{
-		CppSQLite3Query q = db.execQuery(_T("Select * from Main order by lId DESC"));
-		while (q.eof() == false)
-		{
-			Clear();
+		Clear();
 
-			int nVersion = q.getIntField(_T("lVersion"));
-			if (nVersion == 1)
+		int nVersion = q.getIntField(_T("lVersion"));
+		if (nVersion == 1)
+		{
+			if (ImportFromSqliteV1(db, q))
 			{
-				if (ImportFromSqliteV1(db, q))
+				if (bAddToDB)
 				{
-					if (bAddToDB)
-					{
-						MakeLatestOrder();
-						AddToDB(true);
-						bRet = true;
-					}
-					else if (bPutOnClipboard)
-					{
-						bRet = true;
-					}
+					MakeLatestOrder();
+					AddToDB(true);
+					bRet = true;
+				}
+				else if (bPutOnClipboard)
+				{
+					bRet = true;
 				}
 			}
-
-			m_importCount++;
-
-			//If putting on the clipboard and there are multiple
-			//then append cf_text and cf_unicodetext
-			if (bPutOnClipboard)
-			{
-				Append_CF_TEXT_AND_CF_UNICODETEXT(csCF_TEXT, csCF_UNICODETEXT);
-			}
-
-			q.nextRow();
 		}
 
-		if (bRet && bAddToDB)
+		m_importCount++;
+
+		//If putting on the clipboard and there are multiple
+		//then append cf_text and cf_unicodetext
+		if (bPutOnClipboard)
 		{
-			theApp.RefreshView();
+			Append_CF_TEXT_AND_CF_UNICODETEXT(csCF_TEXT, csCF_UNICODETEXT);
 		}
-		else if (bRet && m_importCount == 1 && bPutOnClipboard)
-		{
-			PlaceFormatsOnclipboard();
-		}
-		else if (bRet && bPutOnClipboard)
-		{
-			PlaceCF_TEXT_AND_CF_UNICODETEXT_OnClipboard(csCF_TEXT, csCF_UNICODETEXT);
-		}
+
+		q.nextRow();
 	}
-	CATCH_SQLITE_EXCEPTION_AND_RETURN(false)
 
-		return bRet;
+	if (bRet && bAddToDB)
+	{
+		theApp.RefreshView();
+	}
+	else if (bRet && m_importCount == 1 && bPutOnClipboard)
+	{
+		PlaceFormatsOnclipboard();
+	}
+	else if (bRet && bPutOnClipboard)
+	{
+		PlaceCF_TEXT_AND_CF_UNICODETEXT_OnClipboard(csCF_TEXT, csCF_UNICODETEXT);
+	}
+
+	return bRet;
 }
 
 bool CClip_ImportExport::PlaceCF_TEXT_AND_CF_UNICODETEXT_OnClipboard(CStringA& csCF_TEXT, CStringW& csCF_UNICODETEXT)
@@ -207,53 +199,50 @@ bool CClip_ImportExport::PlaceFormatsOnclipboard()
 	return bRet;
 }
 
+// A CppSQLite3Exception propagates to the import boundary (see ImportFromSqliteDB).
 bool CClip_ImportExport::ImportFromSqliteV1(CppSQLite3DB& db, CppSQLite3Query& qMain)
 {
-	try
+	//Load the Main Table
+	m_Desc = qMain.getStringField(_T("mText"));
+	long lID = qMain.getIntField(_T("lID"));
+
+	//Load the data Table
+	CClipFormat cf;
+	m_Formats.RemoveAll();
+
+	CString csSQL;
+	csSQL.Format(
+		_T("SELECT Data.* FROM Data ")
+		_T("INNER JOIN Main ON Main.lID = Data.lParentID ")
+		_T("WHERE Main.lID = %d ORDER BY Data.lID desc"), lID);
+
+	CppSQLite3Query qData = db.execQuery(csSQL);
+	while (qData.eof() == false)
 	{
-		//Load the Main Table
-		m_Desc = qMain.getStringField(_T("mText"));
-		long lID = qMain.getIntField(_T("lID"));
+		cf.m_cfType = GetFormatID(qData.getStringField(_T("strClipBoardFormat")));
+		const long long originalSize = qData.getInt64Field(_T("lOriginalSize"));
 
-		//Load the data Table
-		CClipFormat cf;
-		m_Formats.RemoveAll();
-
-		CString csSQL;
-		csSQL.Format(
-			_T("SELECT Data.* FROM Data ")
-			_T("INNER JOIN Main ON Main.lID = Data.lParentID ")
-			_T("WHERE Main.lID = %d ORDER BY Data.lID desc"), lID);
-
-		CppSQLite3Query qData = db.execQuery(csSQL);
-		while (qData.eof() == false)
+		int nDataLen = 0;
+		const unsigned char* cData = qData.getBlobField(_T("ooData"), nDataLen);
+		if (cData == NULL || nDataLen < 0)
 		{
-			cf.m_cfType = GetFormatID(qData.getStringField(_T("strClipBoardFormat")));
-			const long long originalSize = qData.getInt64Field(_T("lOriginalSize"));
-
-			int nDataLen = 0;
-			const unsigned char* cData = qData.getBlobField(_T("ooData"), nDataLen);
-			if (cData == NULL || nDataLen < 0)
-			{
-				throw DittoCore::ClipboardFormatError("the exported clip has a format without data");
-			}
-			// the size comes from the file: DtoCodec checks it before allocating
-			const std::vector<std::byte> data = DittoCore::DtoCodec::Uncompress(
-				std::span(reinterpret_cast<const std::byte*>(cData), static_cast<std::size_t>(nDataLen)), originalSize);
-			cf.m_hgData = NewGlobalP(const_cast<std::byte*>(data.data()), data.size());
-			if (cf.m_hgData == NULL)
-			{
-				throw DittoCore::ClipboardFormatError("no memory for an imported format of " + std::to_string(data.size()) + " bytes");
-			}
-			m_Formats.Add(cf);
-			cf.m_hgData = NULL; //m_format owns m_hgData now
-
-			qData.nextRow();
+			throw DittoCore::ClipboardFormatError("the exported clip has a format without data");
 		}
-	}
-	CATCH_SQLITE_EXCEPTION_AND_RETURN(false)
+		// the size comes from the file: DtoCodec checks it before allocating
+		const std::vector<std::byte> data = DittoCore::DtoCodec::Uncompress(
+			std::span(reinterpret_cast<const std::byte*>(cData), static_cast<std::size_t>(nDataLen)), originalSize);
+		cf.m_hgData = NewGlobalP(const_cast<std::byte*>(data.data()), data.size());
+		if (cf.m_hgData == NULL)
+		{
+			throw DittoCore::ClipboardFormatError("no memory for an imported format of " + std::to_string(data.size()) + " bytes");
+		}
+		m_Formats.Add(cf);
+		cf.m_hgData = NULL; //m_format owns m_hgData now
 
-		return m_Formats.GetSize() > 0;
+		qData.nextRow();
+	}
+
+	return m_Formats.GetSize() > 0;
 }
 
 bool CClip_ImportExport::Append_CF_TEXT_AND_CF_UNICODETEXT(CStringA& csCF_TEXT, CStringW& csCF_UNICODETEXT)

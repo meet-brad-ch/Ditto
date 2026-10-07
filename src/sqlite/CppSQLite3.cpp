@@ -155,25 +155,23 @@ CppSQLite3Query::CppSQLite3Query(sqlite3* pDB,
 
 CppSQLite3Query::~CppSQLite3Query()
 {
-	try
+	// A destructor must not throw, so this does not call finalize(). sqlite3_finalize always frees
+	// the statement, and its result code only repeats the error of the statement's last step:
+	// nextRow() and execQuery() finalize and throw on a failed step, so an owned VM that is still
+	// here has stepped without error and its finalize returns SQLITE_OK.
+	if (mpVM && mbOwnVM)
 	{
-		finalize();
-	}
-	catch (...)
-	{
+		static_cast<void>(sqlite3_finalize(mpVM));
+		mpVM = 0;
 	}
 }
 
 
 CppSQLite3Query& CppSQLite3Query::operator=(const CppSQLite3Query& rQuery)
 {
-	try
-	{
-		finalize();
-	}
-	catch (...)
-	{
-	}
+	// a CppSQLite3Exception from finalize() propagates to the caller; finalize() has already
+	// cleared mpVM and rQuery still owns its own VM
+	finalize();
 	mpDB = rQuery.mpDB;
 	mpVM = rQuery.mpVM;
 	// Only one object can own the VM
@@ -503,12 +501,13 @@ CppSQLite3Statement::CppSQLite3Statement(sqlite3* pDB, sqlite3_stmt* pVM)
 
 CppSQLite3Statement::~CppSQLite3Statement()
 {
-	try
+	// A destructor must not throw, so this does not call finalize(). sqlite3_finalize always frees
+	// the statement, and its result code only repeats the error of the statement's last step,
+	// which execDML()/execQuery() already threw to the caller.
+	if (mpVM)
 	{
-		finalize();
-	}
-	catch (...)
-	{
+		static_cast<void>(sqlite3_finalize(mpVM));
+		mpVM = 0;
 	}
 }
 

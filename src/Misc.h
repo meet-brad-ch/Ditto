@@ -40,21 +40,6 @@ public:
 
 #define INVALID_STICKY	-(2147483647)
 
-#define CATCH_SQLITE_EXCEPTION		\
-	catch (CppSQLite3Exception& e)	\
-    {								\
-		Log(StrF(_T("SQLITE Exception %d - %s"), e.errorCode(), e.errorMessage()));	\
-		ASSERT(FALSE);				\
-    }								\
-
-#define CATCH_SQLITE_EXCEPTION_AND_RETURN(bRet)		\
-	catch (CppSQLite3Exception& e)	\
-    {								\
-		Log(StrF(_T("SQLITE Exception %d - %s"), e.errorCode(), e.errorMessage()));	\
-		ASSERT(FALSE);				\
-		return bRet;				\
-    }								\
-	
 #define	FIX_PATH(strPath) \
 { \
 	if (strPath[strlen(strPath)-1] != '\\' && strPath[strlen(strPath)-1] != '/') \

@@ -8,6 +8,7 @@
 #include "DimWnd.h"
 #include "MoveToGroupDlg.h"
 #include "SQlite/CppSQLite3.h"
+#include "ErrorReport.h"
 
 IMPLEMENT_DYNAMIC(CAdvGeneral, CDialogEx)
 
@@ -1009,12 +1010,20 @@ void CAdvGeneral::OnBnClickedBtCompactAndRepair()
 					RemoveOldEntries(false);
 				}
 			}
-			CATCH_SQLITE_EXCEPTION
+			catch (CppSQLite3Exception& e)
+			{
+				CErrorReport::Show(StrF(_T("Compact and repair failed while removing deleted clips, the database was not compacted: %s"), e.errorMessage()));
+				return;
+			}
 
 			theApp.m_db.execDML(_T("PRAGMA auto_vacuum = 1"));
 			theApp.m_db.execQuery(_T("VACUUM"));
 		}
-		CATCH_SQLITE_EXCEPTION
+		catch (CppSQLite3Exception& e)
+		{
+			CErrorReport::Show(StrF(_T("Compacting and repairing the clip database failed: %s"), e.errorMessage()));
+			return;
+		}
 	}
 }
 

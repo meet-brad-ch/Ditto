@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Crc32Dynamic.h"
+#include <stdexcept>
 //#include <fstream.h>
 
 CCrc32Dynamic::CCrc32Dynamic() : m_pdwCrc32Table(NULL)
@@ -50,29 +51,23 @@ inline void CCrc32Dynamic::CalcCrc32(const BYTE byte, DWORD &dwCrc32) const
 
 DWORD CCrc32Dynamic::GenerateCrc32(const LPBYTE lpbArray, DWORD dSize, DWORD &dwCrc32)
 {
-	DWORD dwErrorCode = NO_ERROR;
-
 //	dwCrc32 = 0xFFFFFFFF;
 
-	try
+	// the constructor builds the table and only the destructor frees it, so a missing table is a
+	// programming error; upstream caught it with catch(...) and returned ERROR_CRC, which the
+	// callers ignore, so the clip got a wrong CRC without notice. Nothing else in here throws.
+	if(m_pdwCrc32Table == NULL)
 	{
-		// Is the table initialized?
-		if(m_pdwCrc32Table == NULL)
-			throw 0;
-
-		for(DWORD i = 0; i < dSize; i++)
-		{
-			CalcCrc32(lpbArray[i], dwCrc32);
-		}
+		throw std::logic_error("CCrc32Dynamic::GenerateCrc32: the CRC32 table is not initialized");
 	}
-	catch(...)
+
+	for(DWORD i = 0; i < dSize; i++)
 	{
-		// An unknown exception happened, or the table isn't initialized
-		dwErrorCode = ERROR_CRC;
+		CalcCrc32(lpbArray[i], dwCrc32);
 	}
 
 //	dwCrc32 = ~dwCrc32;
 
-	return dwErrorCode;
+	return NO_ERROR;
 }
 

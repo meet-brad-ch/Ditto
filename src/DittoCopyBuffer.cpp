@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include ".\dittocopybuffer.h"
 #include "CP_Main.h"
+#include "ErrorReport.h"
 #include <Mmsystem.h> //play sound
 #include <stdexcept>
 #include <string>
@@ -135,9 +136,11 @@ bool CDittoCopyBuffer::PutClipOnDittoCopyBuffer(long lClipId, long lBuffer)
 
 		return true;
 	}
-	CATCH_SQLITE_EXCEPTION
-
-	return false;
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Saving clip id %ld to Ditto copy buffer %ld failed: %s"), lClipId, lBuffer, e.errorMessage()));
+		return false;
+	}
 }
 
 bool CDittoCopyBuffer::PastCopyBuffer(long lCopyBuffer)
@@ -189,7 +192,12 @@ bool CDittoCopyBuffer::PastCopyBuffer(long lCopyBuffer)
 			}
 		}
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Pasting Ditto copy buffer %ld failed: %s"), lCopyBuffer, e.errorMessage()));
+		m_Pasting.SetEvent(); // no paste is running, so the next one may start
+		return false;
+	}
 
 	if(bRet == false)
 		m_Pasting.SetEvent();

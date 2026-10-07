@@ -1665,7 +1665,11 @@ bool CQListCtrl::ShowFullDescription(bool bFromAuto, bool fromNextPrev)
 				m_pToolTip->SetClipData(clipData);
 			}
 		}
-		CATCH_SQLITE_EXCEPTION
+		catch (CppSQLite3Exception& e)
+		{
+			CErrorReport::Show(StrF(_T("Loading the description of clip id %d failed: %s"), clipId, e.errorMessage()));
+			return false;
+		}
 
 		Clip.m_cfType = CF_UNICODETEXT;
 		if (GetClipData(nItem, Clip) && Clip.m_hgData)

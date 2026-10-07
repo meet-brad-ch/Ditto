@@ -5,6 +5,7 @@
 #include "cp_main.h"
 #include "OptionsStats.h"
 #include "ProcessPaste.h"
+#include "ErrorReport.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -97,7 +98,12 @@ BOOL COptionsStats::OnInitDialog()
 		m_eSavedCopies.Format(_T("%d"), theApp.m_db.execScalar(_T("SELECT COUNT(lID) FROM Main")));
 		m_eSavedCopyData.Format(_T("%d"), theApp.m_db.execScalar(_T("SELECT COUNT(lID) FROM Data")));
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		// OnInitDialog has no failure value: TRUE only sets the default focus
+		CErrorReport::Show(StrF(_T("Counting the saved clips for the statistics failed: %s"), e.errorMessage()));
+		return TRUE;
+	}
 	
 	__int64 size = FileSize(GetDBName());			
 

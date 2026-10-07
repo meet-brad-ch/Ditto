@@ -8,7 +8,9 @@
  * @brief Reports a failed operation to the user as an error balloon on the tray icon.
  *
  * Safe to call from any thread: the text is posted to the main window, which takes
- * ownership and shows it (CMainFrame::OnOwnedErrorMsg).
+ * ownership and shows it (CMainFrame::OnOwnedErrorMsg). While Ditto is not fully running
+ * (start-up, no database, closing), or when posting fails, a message box shows it instead (that
+ * blocks the calling thread until closed).
  */
 class CErrorReport
 {

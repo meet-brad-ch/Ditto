@@ -7,6 +7,8 @@
 #include ".\editwnd.h"
 #include "SaveAnimation.h"
 #include "ProcessPaste.h"
+#include "ErrorReport.h"
+#include <memory>
 
 IMPLEMENT_DYNAMIC(CEditWnd, CWnd)
 CEditWnd::CEditWnd()
@@ -249,7 +251,8 @@ bool CEditWnd::EditIds(CClipIDs &Ids)
 bool CEditWnd::AddItem(int id)
 {
 	bool bRet = false;
-	CDittoRulerRichEditCtrl *pEdit = new CDittoRulerRichEditCtrl;
+	// owned here until m_edits takes it, so a failed load does not leak it
+	std::unique_ptr<CDittoRulerRichEditCtrl> pEdit{std::make_unique<CDittoRulerRichEditCtrl>()};
 	if(pEdit)
 	{
 		CString csTitle;
@@ -257,7 +260,7 @@ bool CEditWnd::AddItem(int id)
 		if(id >= 0)
 		{
 			try
-			{				
+			{
 				CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT mText FROM Main where lID = %d"), id);
 				if(q.eof() == false)
 				{
@@ -265,7 +268,11 @@ bool CEditWnd::AddItem(int id)
 					csTitle = csTitle.Left(15);
 				}
 			}
-			CATCH_SQLITE_EXCEPTION
+			catch (CppSQLite3Exception& e)
+			{
+				CErrorReport::Show(StrF(_T("Opening clip id %d for editing failed: %s"), id, e.errorMessage()));
+				return false;
+			}
 		}
 		else
 		{
@@ -276,11 +283,11 @@ bool CEditWnd::AddItem(int id)
 		pEdit->ShowToolbar();
 		pEdit->LoadItem(id, csTitle);		
 
-		m_tabControl.AddItem(csTitle, pEdit);
+		m_tabControl.AddItem(csTitle, pEdit.get());
 		int nTab = m_tabControl.GetTabCount();
 		m_tabControl.SetActiveTab(nTab-1);
 
-		m_edits.push_back(pEdit);
+		m_edits.push_back(pEdit.release());
 		bRet = true;
 	}
 

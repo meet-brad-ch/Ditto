@@ -218,8 +218,12 @@ BOOL CClipIDs::MoveTo(long lParentID, double /*dFirst*/, double /*dIncrement*/)
 			Log(StrF(_T("MoveTo, Sql Ret: %d, SQL: %s"), ret, sql.GetString()));
 		}
 	}
-	CATCH_SQLITE_EXCEPTION
-		
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Moving the clips to group %d failed: %s"), lParentID, e.errorMessage()));
+		return FALSE;
+	}
+
 	return (TRUE);
 }
 
@@ -237,8 +241,14 @@ BOOL CClipIDs::LoadElementsOf(int groupId)
 			q.nextRow();
 		}
 	}
-	CATCH_SQLITE_EXCEPTION
-		
+	catch (CppSQLite3Exception& e)
+	{
+		// a half-read group is not handed on
+		SetSize(0);
+		CErrorReport::Show(StrF(_T("Loading the clips of group %d failed: %s"), groupId, e.errorMessage()));
+		return FALSE;
+	}
+
 	return GetSize() > 0;
 }
 
@@ -288,8 +298,12 @@ BOOL CClipIDs::CopyTo(int parentId)
 
 		transaction.Commit();
 	}
-	CATCH_SQLITE_EXCEPTION
-		
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Copying the clips to group %d failed: %s"), parentId, e.errorMessage()));
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
@@ -391,7 +405,11 @@ BOOL CClipIDs::DeleteIDs(bool fromClipWindow, CppSQLite3DB& db)
 			bRet = TRUE;
 		}
 	}
-	CATCH_SQLITE_EXCEPTION_AND_RETURN(FALSE)
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Deleting the selected clips failed: %s"), e.errorMessage()));
+		return FALSE;
+	}
 	
 	Log(StrF(_T("End delete clips, Count: %d"), count));
 
@@ -425,7 +443,11 @@ BOOL CClipIDs::CreateExportSqliteDB(CppSQLite3DB &db)
 
 		bRet = TRUE;
 	}
-	CATCH_SQLITE_EXCEPTION_AND_RETURN(FALSE)
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Creating the export database failed: %s"), e.errorMessage()));
+		return FALSE;
+	}
 
 	return bRet;
 }
@@ -475,7 +497,11 @@ BOOL CClipIDs::Export(CString csFilePath)
 		CErrorReport::Show(StrF(_T("Export stopped: a clip could not be exported (%s)."), CString(error.what()).GetString()));
 		return FALSE;
 	}
-	CATCH_SQLITE_EXCEPTION
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Exporting the clips to %s failed: %s"), csFilePath.GetString(), e.errorMessage()));
+		return FALSE;
+	}
 
 	return bRet;
 }
