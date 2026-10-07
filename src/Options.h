@@ -3,6 +3,7 @@
 #include "Theme.h"
 #include "RegExFilterHelper.h"
 #include "ClipSavePolicy.h"
+#include <array>
 #include <set>
 #include <vector>
 
@@ -675,6 +676,76 @@ public:
 	static BOOL m_enforceClipboardIgnoreFormats;
 	static void SetEnforceClipboardIgnoreFormats(BOOL val);
 	static BOOL GetEnforceClipboardIgnoreFormats();
+
+private:
+	/** @brief The folder a GetPath folder starts from. */
+	enum class PathRoot
+	{
+		ExeDir,                 ///< the exe's folder
+		AppDataUnlessPortable,  ///< the app data folder, the exe's folder for portable Ditto
+		TempUnlessPortable      ///< the temp folder, the exe's folder for portable Ditto
+	};
+
+	/** @brief How GetPath builds the folder of one PATH_* id. */
+	struct PathRule
+	{
+		/** @brief The PATH_* id. */
+		long pathId{};
+		/** @brief The folder the path starts from. */
+		PathRoot root{};
+		/** @brief The sub folder appended to the root (empty for none). */
+		const TCHAR* subDir{};
+	};
+
+	/** @brief GetPath's folders by PATH_* id; an id without a rule is the exe's folder. */
+	static constexpr std::array<PathRule, 10> s_pathRules{ {
+		{ PATH_HELP, PathRoot::ExeDir, _T("Help\\") },
+		{ PATH_LANGUAGE, PathRoot::ExeDir, _T("language\\") },
+		{ PATH_THEMES, PathRoot::ExeDir, _T("Themes\\") },
+		{ PATH_LOG_FILE, PathRoot::AppDataUnlessPortable, _T("") },
+		{ PATH_ADDINS, PathRoot::ExeDir, _T("Addins\\") },
+		{ PATH_REMOTE_FILES, PathRoot::TempUnlessPortable, _T("ReceivedFiles\\") },
+		{ PATH_DRAG_FILES, PathRoot::TempUnlessPortable, _T("DragFiles\\") },
+		{ PATH_CLIP_DIFF, PathRoot::TempUnlessPortable, _T("ClipCompare\\") },
+		{ PATH_RESTORE_TEMP, PathRoot::TempUnlessPortable, _T("RestoreDb\\") },
+		{ PATH_EDIT_CLIPS, PathRoot::TempUnlessPortable, _T("EditClips\\") },
+	} };
+
+	/**
+	 * @brief GetPath's step for a known id: moves to the rule's root folder and appends its sub folder.
+	 * @param rule The id's rule.
+	 * @param csDir In: the exe's folder; out: the folder of the id.
+	 */
+	static void ApplyPathRule(const PathRule& rule, CString& csDir);
+
+	/**
+	 * @brief LoadSettings' step: finds the ini file (Windows Store, Chocolatey, portable or app data) and sets m_csIniFileName, m_bFromIni and the app kind flags.
+	 * @param exeDir The exe's folder, with a trailing backslash.
+	 */
+	static void LocateIniFile(const CString& exeDir);
+
+	/** @brief LocateIniFile's step for a plain install: the ini file next to the exe (portable) or in app data. */
+	static void LocatePortableOrAppDataIniFile();
+
+	/**
+	 * @brief GetProfileString's ini file read; the buffer grows until the value fits (or maxSize is reached).
+	 * @param csName The value name.
+	 * @param csDefault The value when the ini file has none.
+	 * @param csNewPath The section; empty for "Ditto".
+	 * @param maxSize The most characters to read, -1 for no limit.
+	 * @return The value.
+	 */
+	static CString GetIniProfileString(const CString& csName, const CString& csDefault, const CString& csNewPath, int maxSize);
+
+	/**
+	 * @brief GetProfileString's registry read under HKCU\\Software\\Ditto.
+	 * @param csName The value name.
+	 * @param csDefault The value when the registry has none or the read fails.
+	 * @param csNewPath The sub key; empty for none.
+	 * @param maxSize The most characters to read, -1 for no limit.
+	 * @return The value.
+	 */
+	static CString GetRegistryProfileString(const CString& csName, const CString& csDefault, const CString& csNewPath, int maxSize);
 };
 
 // global for easy access and for initialization of fast access variables

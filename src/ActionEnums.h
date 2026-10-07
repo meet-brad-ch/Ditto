@@ -1,5 +1,8 @@
 #pragma once
 
+#include <array>
+#include <span>
+
 class ActionEnums
 {
 public:
@@ -164,5 +167,39 @@ public:
 	// Actions whose feature this local-only fork removed (network send, mail, browser, ChaiScript).
 	// Their enum values stay so the numbers of later actions, and saved shortcuts, do not shift.
 	static bool Removed(ActionEnumValues value);
+
+private:
+	/** @brief An action's English description (the language file may translate it). */
+	struct ActionDescription
+	{
+		/** @brief The action. */
+		ActionEnumValues action{};
+		/** @brief The English description. */
+		const char* text{};
+	};
+
+	/** @brief An action's default shortcut key. */
+	struct DefaultShortcut
+	{
+		/** @brief The action. */
+		ActionEnumValues action{};
+		/** @brief The key, as ACCEL_MAKEKEY(virtual key, modifiers). */
+		int key{};
+	};
+
+	/** @brief The English description of every described action (EnumDescription). */
+	static const std::array<ActionDescription, 117> s_descriptions;
+	/** @brief The default first shortcut (position 0) of the actions that have one. */
+	static const std::array<DefaultShortcut, 31> s_defaultShortcutsFirst;
+	/** @brief The default second shortcut (position 1) of the actions that have one. */
+	static const std::array<DefaultShortcut, 11> s_defaultShortcutsSecond;
+
+	/**
+	 * @brief Finds an action's default shortcut in a table.
+	 * @param shortcuts The table.
+	 * @param value The action.
+	 * @return The key, or -1 when the table has none for the action.
+	 */
+	static int FindDefaultShortcut(std::span<const DefaultShortcut> shortcuts, ActionEnumValues value);
 };
 

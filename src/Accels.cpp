@@ -93,55 +93,70 @@ bool CAccels::OnMsg(MSG *pMsg, CAccel &a)
     //CString cs;
     //cs.Format(_T("Key: %d, Mod: %d, vkey: %d, diff: %d\r\n"), key, mod, vkey, (GetTickCount() - m_firstMapTick));
     //OutputDebugString(cs);
-		
-	if (m_firstMapTick != 0 &&
-		(GetTickCount64() - m_firstMapTick) < CGetSetOptions::m_doubleKeyStrokeTimeout)
-	{
-		pair<multimap<DWORD, CAccel>::iterator, multimap<DWORD, CAccel>::iterator> ppp;
-		ppp = m_multiMap.equal_range(m_activeFirstKey);
 
-		for (multimap<DWORD, CAccel>::iterator it2 = ppp.first; it2 != ppp.second; ++it2)
-		{
-			if (key == it2->second.Key2)
-			{
-				a = (*it2).second;
-				m_firstMapTick = 0;
-				m_activeFirstKey = 0;
-				return true;
-			}
-		}
+	if (IsSecondKeyPending())
+	{
+		return MatchSecondKey(key, a);
 	}
-	else
+
+	return MatchFirstKey(key, a);
+}
+
+bool CAccels::IsSecondKeyPending() const
+{
+	return m_firstMapTick != 0 &&
+		(GetTickCount64() - m_firstMapTick) < CGetSetOptions::m_doubleKeyStrokeTimeout;
+}
+
+bool CAccels::MatchSecondKey(DWORD key, CAccel &a)
+{
+	pair<multimap<DWORD, CAccel>::iterator, multimap<DWORD, CAccel>::iterator> ppp;
+	ppp = m_multiMap.equal_range(m_activeFirstKey);
+
+	for (multimap<DWORD, CAccel>::iterator it2 = ppp.first; it2 != ppp.second; ++it2)
 	{
-		m_firstMapTick = 0;
-		m_activeFirstKey = 0;
-
-		pair<multimap<DWORD, CAccel>::iterator, multimap<DWORD, CAccel>::iterator> ppp;
-		ppp = m_multiMap.equal_range(key);
-
-		for (multimap<DWORD, CAccel>::iterator it2 = ppp.first; it2 != ppp.second; ++it2)
+		if (key == it2->second.Key2)
 		{
-			if (it2->second.Key2 == 0)
-			{
-				a = (*it2).second;
-				//return now as a another command could have a second key defined
-				//if they don't press the second key this will be handled by a timer on the outside				
-			}
-			else
-			{
-				m_activeFirstKey = key;
-				m_firstMapTick = GetTickCount64();
-				break;
-			}
-		}
-
-		if (a.Cmd > 0 && m_activeFirstKey == 0)
-		{
+			a = (*it2).second;
+			m_firstMapTick = 0;
+			m_activeFirstKey = 0;
 			return true;
 		}
 	}
 
-    return false;
+	return false;
+}
+
+bool CAccels::MatchFirstKey(DWORD key, CAccel &a)
+{
+	m_firstMapTick = 0;
+	m_activeFirstKey = 0;
+
+	pair<multimap<DWORD, CAccel>::iterator, multimap<DWORD, CAccel>::iterator> ppp;
+	ppp = m_multiMap.equal_range(key);
+
+	for (multimap<DWORD, CAccel>::iterator it2 = ppp.first; it2 != ppp.second; ++it2)
+	{
+		if (it2->second.Key2 == 0)
+		{
+			a = (*it2).second;
+			//return now as a another command could have a second key defined
+			//if they don't press the second key this will be handled by a timer on the outside
+		}
+		else
+		{
+			m_activeFirstKey = key;
+			m_firstMapTick = GetTickCount64();
+			break;
+		}
+	}
+
+	if (a.Cmd > 0 && m_activeFirstKey == 0)
+	{
+		return true;
+	}
+
+	return false;
 }
 
 bool CAccels::ContainsKey(int vKey)

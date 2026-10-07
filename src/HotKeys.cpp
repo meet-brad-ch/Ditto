@@ -96,49 +96,20 @@ CString CHotKey::GetVirKeyName(unsigned int virtualKey)
 
        // Provide friendly names for multimedia and browser keys which
        // otherwise return an empty string from GetKeyNameText.
-       switch (virtualKey)
+       for (const NamedKey& namedKey : s_namedKeys)
        {
-       case VK_VOLUME_MUTE:       return _T("Volume Mute");
-       case VK_VOLUME_DOWN:       return _T("Volume Down");
-       case VK_VOLUME_UP:         return _T("Volume Up");
-       case VK_MEDIA_NEXT_TRACK:  return _T("Next Track");
-       case VK_MEDIA_PREV_TRACK:  return _T("Prev Track");
-       case VK_MEDIA_PLAY_PAUSE:  return _T("Play/Pause");
-       case VK_MEDIA_STOP:        return _T("Stop");
-       case VK_BROWSER_BACK:      return _T("Browser Back");
-       case VK_BROWSER_FORWARD:   return _T("Browser Forward");
-       case VK_BROWSER_REFRESH:   return _T("Browser Refresh");
-       case VK_BROWSER_STOP:      return _T("Browser Stop");
-       case VK_BROWSER_SEARCH:    return _T("Browser Search");
-       case VK_BROWSER_FAVORITES: return _T("Browser Favorites");
-       case VK_BROWSER_HOME:      return _T("Browser Home");
-       case VK_LAUNCH_MAIL:       return _T("Launch Mail");
-       case VK_LAUNCH_MEDIA_SELECT: return _T("Launch Media");
-       case VK_LAUNCH_APP1:       return _T("Launch App1");
-       case VK_LAUNCH_APP2:       return _T("Launch App2");
+               if (namedKey.virtualKey == virtualKey)
+               {
+                       return namedKey.name;
+               }
        }
 
        unsigned int scanCode = MapVirtualKey(virtualKey, MAPVK_VK_TO_VSC);
 
 	// because MapVirtualKey strips the extended bit for some keys
-	switch (virtualKey)
+	if (IsExtendedKey(virtualKey))
 	{
-	case VK_LEFT: 
-	case VK_UP: 
-	case VK_RIGHT: 
-	case VK_DOWN: // arrow keys
-	case VK_PRIOR: 
-	case VK_NEXT: // page up and page down
-	case VK_END: 
-	case VK_HOME:
-	case VK_INSERT: 
-	case VK_DELETE:
-	case VK_DIVIDE: // numpad slash
-	case VK_NUMLOCK:
-		{
-			scanCode |= 0x100; // set extended bit
-			break;
-		}
+		scanCode |= 0x100; // set extended bit
 	}
 
        wchar_t keyName[50];
@@ -150,6 +121,19 @@ CString CHotKey::GetVirKeyName(unsigned int virtualKey)
 	{
 		return "[Error]";
 	}
+}
+
+bool CHotKey::IsExtendedKey(unsigned int virtualKey)
+{
+	for (unsigned int extendedKey : s_extendedKeys)
+	{
+		if (extendedKey == virtualKey)
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 UINT CHotKey::GetModifier(DWORD dwHotKey)
@@ -233,24 +217,9 @@ void CHotKey::CopyToCtrl(CHotKeyCtrl& ctrl, HWND hParent, int nWindowsCBID)
 {
 	DWORD shortcut = ACCEL_MAKEKEY(LOBYTE(m_Key), ((HIBYTE(m_Key)) &~HOTKEYF_EXT));
 
-	switch (LOBYTE(shortcut))
+	if (IsExtendedKey(LOBYTE(shortcut)))
 	{
-		case VK_LEFT:
-		case VK_UP:
-		case VK_RIGHT:
-		case VK_DOWN: // arrow keys
-		case VK_PRIOR:
-		case VK_NEXT: // page up and page down
-		case VK_END:
-		case VK_HOME:
-		case VK_INSERT:
-		case VK_DELETE:
-		case VK_DIVIDE: // numpad slash
-		case VK_NUMLOCK:
-		{
-			shortcut = ACCEL_MAKEKEY(LOBYTE(shortcut), (HIBYTE(shortcut) | HOTKEYF_EXT));
-		}
-		break;
+		shortcut = ACCEL_MAKEKEY(LOBYTE(shortcut), (HIBYTE(shortcut) | HOTKEYF_EXT));
 	}
 
 	long lModifiers = HIBYTE(shortcut);

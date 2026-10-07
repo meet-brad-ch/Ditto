@@ -60,4 +60,27 @@ protected:
 	DWORD m_activeFirstKey;
 
 	ULONGLONG m_firstMapTick;
+
+private:
+	/**
+	 * @brief Tells whether the first key of a two-key shortcut was pressed within the double keystroke timeout.
+	 * @return True while OnMsg waits for the second key.
+	 */
+	bool IsSecondKeyPending() const;
+
+	/**
+	 * @brief OnMsg's second-key step: finds the shortcut whose second key is key after the pending first key.
+	 * @param key The pressed key (ACCEL_MAKEKEY of virtual key and modifiers).
+	 * @param a Receives the matching accelerator.
+	 * @return True when a shortcut matched (the pending first key is then cleared).
+	 */
+	bool MatchSecondKey(DWORD key, CAccel &a);
+
+	/**
+	 * @brief OnMsg's first-key step: finds the single-key shortcut of key, or starts waiting for a second key.
+	 * @param key The pressed key (ACCEL_MAKEKEY of virtual key and modifiers).
+	 * @param a Receives the matching single-key accelerator.
+	 * @return True when a single-key shortcut matched and no two-key shortcut starts with key.
+	 */
+	bool MatchFirstKey(DWORD key, CAccel &a);
 };

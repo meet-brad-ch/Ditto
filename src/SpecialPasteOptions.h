@@ -33,24 +33,11 @@ public:
 	bool m_pasteGuid;
 	bool m_pasteAsImage;
 
-	bool LimitFormatsToText() 
-	{ 
-		return m_pasteAsPlainText ||
-			m_pasteUpperCase ||
-			m_pasteLowerCase ||
-			m_pasteCapitalize ||
-			m_pasteSentenceCase ||
-			m_pasteRemoveLineFeeds ||
-			m_pasteAddOneLineFeed ||
-			m_pasteAddTwoLineFeeds ||
-			m_pasteTypoglycemia ||
-			m_pasteAddingDateTime || 
-			m_trimWhiteSpace ||
-			m_PosixifyPaths ||
-			m_pasteSlugify || 
-			m_invertCase ||
-			m_pasteCamelCase ||
-			m_pasteAsciiOnly;
+	bool LimitFormatsToText()
+	{
+		return IsPlainTextOrCaseChange() ||
+			IsLineFeedOrInsertChange() ||
+			IsTextRewrite();
 	}
 
 	bool IncludeRTFForTextOnly()
@@ -62,5 +49,46 @@ public:
 	}
 
 	CString ToString();
+
+private:
+	/**
+	 * @brief LimitFormatsToText's first group: plain text or a case change.
+	 * @return True when plain text, upper, lower, capitalize or sentence case is set.
+	 */
+	bool IsPlainTextOrCaseChange() const
+	{
+		return m_pasteAsPlainText ||
+			m_pasteUpperCase ||
+			m_pasteLowerCase ||
+			m_pasteCapitalize ||
+			m_pasteSentenceCase;
+	}
+
+	/**
+	 * @brief LimitFormatsToText's second group: line feed changes, typoglycemia or an added date/time.
+	 * @return True when one of these options is set.
+	 */
+	bool IsLineFeedOrInsertChange() const
+	{
+		return m_pasteRemoveLineFeeds ||
+			m_pasteAddOneLineFeed ||
+			m_pasteAddTwoLineFeeds ||
+			m_pasteTypoglycemia ||
+			m_pasteAddingDateTime;
+	}
+
+	/**
+	 * @brief LimitFormatsToText's third group: the text rewrites (trim, posix paths, slugify, invert, camel case, ASCII only).
+	 * @return True when one of these options is set.
+	 */
+	bool IsTextRewrite() const
+	{
+		return m_trimWhiteSpace ||
+			m_PosixifyPaths ||
+			m_pasteSlugify ||
+			m_invertCase ||
+			m_pasteCamelCase ||
+			m_pasteAsciiOnly;
+	}
 };
 

@@ -155,6 +155,89 @@ END_MESSAGE_MAP()
 #define SETTING_USE_MODERN_SCROLLBAR 110
 #define SETTING_ENFORCE_CLIPBOARD_IGNORE_FORMATS 111
 
+const std::array<CAdvGeneral::LongSetting, 20> CAdvGeneral::s_longSettings{ {
+	{ SETTING_DESC_SIZE, [](long value) { CGetSetOptions::SetDescTextSize(value); } },
+	{ SETTING_SELECTED_INDEX, [](long value) { CGetSetOptions::SetSelectedIndex(max((value - 1), 0)); } },
+	{ SETTING_CLIPBOARD_SAVE_DELAY, [](long value) { CGetSetOptions::SetProcessDrawClipboardDelay(max(value, 0)); } },
+	{ SETTING_MAX_CLIP_SIZE, [](long value) { CGetSetOptions::SetMaxClipSizeInBytes(value); } },
+	{ SETTING_LINES_PER_ROW, [](long value) { CGetSetOptions::SetLinesPerRow(value); } },
+	{ SETTING_TRANSPARENCY, &CAdvGeneral::WriteTransparencyPercent },
+	{ SETTING_TOOLTIP_TIMEOUT, [](long value) { CGetSetOptions::SetToolTipTimeout(value); } },
+	{ SETTING_TOOLTIP_LINES, [](long value) { CGetSetOptions::SetMaxToolTipLines(value); } },
+	{ SETTING_TOOLTIP_CHARACTERS, [](long value) { CGetSetOptions::SetMaxToolTipCharacters(value); } },
+	{ SETTING_ACTIVATE_WINDOW_DELAY, [](long value) { CGetSetOptions::SetSendKeysDelay(value); } },
+	{ SETTING_SEND_KEYS_DELAY, [](long value) { CGetSetOptions::SetRealSendKeysDelay(value); } },
+	{ SETTING_CLIPBOARD_RESTORE_AFTER_COPY_BUFFER_DELAY, [](long value) { CGetSetOptions::SetDittoRestoreClipboardDelay(value); } },
+	{ SETTING_DOUBLE_KEYSTROKE_TIMEOUT, [](long value) { CGetSetOptions::SetDoubleKeyStrokeTimeout(value); } },
+	{ SETTING_FIRST_TEN_HOTKEYS_START, [](long value) { CGetSetOptions::SetFirstTenHotKeysStart(value); } },
+	{ SETTING_FIRST_TEN_HOTKEYS_FONT_SIZE, [](long value) { CGetSetOptions::SetFirstTenHotKeysFontSize(value); } },
+	{ SETTING_COPY_SAVE_DELAY, [](long value) { CGetSetOptions::SetCopyAndSveDelay(value); } },
+	{ SETTING_EDITOR_FONT_SIZE, [](long value) { CGetSetOptions::SetEditorDefaultFontSize(value); } },
+	{ SETTING_IGNORE_FALSE_COPIES_DELAY, [](long value) { CGetSetOptions::SetSaveClipDelay(value); } },
+	{ SETTING_CLIP_EDIT_SAVE_DELAY_AFTER_LOAD, [](long value) { CGetSetOptions::SetClipEditSaveDelayAfterLoadSeconds(value); } },
+	{ SETTING_ClIP_EDIT_SAVE_DELAY_AFTER_SAVE, [](long value) { CGetSetOptions::SetClipEditSaveDelayAfterSaveSeconds(value); } },
+} };
+
+const std::array<CAdvGeneral::BoolSetting, 43> CAdvGeneral::s_boolSettings{ {
+	{ SETTING_SHOW_TASKBAR_ICON, [](BOOL value) { CGetSetOptions::SetShowIconInSysTray(value); } },
+	{ SETTING_SAVE_MULTI_PASTE, [](BOOL value) { CGetSetOptions::SetSaveMultiPaste(value); } },
+	{ SETTING_HIDE_ON_HOTKEY_IF_VISIBLE, [](BOOL value) { CGetSetOptions::SetHideDittoOnHotKeyIfAlreadyShown(value); } },
+	{ SETTING_PASTE_IN_ACTIVE_WINDOW, [](BOOL value) { CGetSetOptions::SetSendPasteAfterSelection(value); } },
+	{ SETTING_ENSURE_CONNECTED, [](BOOL value) { CGetSetOptions::SetEnsureConnectToClipboard(value); } },
+	{ SETTING_TEXT_FIRST_TEN, [](BOOL value) { CGetSetOptions::SetShowTextForFirstTenHotKeys(value); } },
+	{ SETTING_SHOW_LEADING_WHITESPACE, [](BOOL value) { CGetSetOptions::SetDescShowLeadingWhiteSpace(value); } },
+	{ SETTING_ENABLE_TRANSPARENCY, [](BOOL value) { CGetSetOptions::SetEnableTransparency(value); } },
+	{ SETTING_DRAW_THUMBNAILS, [](BOOL value) { CGetSetOptions::SetDrawThumbnail(value); } },
+	{ SETTING_FAST_THUMBNAIL_MODE, [](BOOL value) { CGetSetOptions::SetFastThumbnailMode(value); } },
+	{ SETTING_DRAW_RTF, [](BOOL value) { CGetSetOptions::SetDrawRTF(value); } },
+	{ SETTING_FIND_AS_TYPE, [](BOOL value) { CGetSetOptions::SetFindAsYouType(value); } },
+	{ SETTING_ENSURE_WINDOW_IS_VISIBLE, [](BOOL value) { CGetSetOptions::SetEnsureEntireWindowCanBeSeen(value); } },
+	{ SETTING_SHOW_GROUP_CLIPS_IN_LIST, [](BOOL value) { CGetSetOptions::SetShowAllClipsInMainList(value); } },
+	{ SETTING_PROMPT_ON_DELETE, [](BOOL value) { CGetSetOptions::SetPromptWhenDeletingClips(value); } },
+	{ SETTING_ALWAYS_SHOW_SCROLL_BAR, [](BOOL value) { CGetSetOptions::SetShowScrollBar(value); } },
+	{ SETTING_USE_MODERN_SCROLLBAR, [](BOOL value) { CGetSetOptions::SetUseModernScrollBar(value); } },
+	{ SETTING_PASTE_AS_ADMIN, [](BOOL value) { CGetSetOptions::SetPasteAsAdmin(value); } },
+	{ SETTTING_SHOW_IN_TASKBAR, [](BOOL value) { CGetSetOptions::SetShowInTaskBar(value); } },
+	{ SETTING_SHOW_CLIP_PASTED, [](BOOL value) { CGetSetOptions::SetShowIfClipWasPasted(value); } },
+	{ SETTING_UPDATE_ORDER_ON_PASTE, [](BOOL value) { CGetSetOptions::SetUpdateTimeOnPaste(value); } },
+	{ SETTING_UPDATE_ORDER_ON_CTRL_C, [](BOOL value) { CGetSetOptions::SetUpdateClipOrderOnCtrlC(value); } },
+	{ SETTING_MULTIPASTE_REVERSE_ORDER, [](BOOL value) { CGetSetOptions::SetMultiPasteReverse(value); } },
+	{ SETTING_ALLOW_DUPLICATES, [](BOOL value) { CGetSetOptions::SetAllowDuplicates(value); } },
+	{ SETTING_ALOW_BACK_TO_BACK_DUPLICATES, [](BOOL value) { CGetSetOptions::SetAllowBackToBackDuplicates(value); } },
+	{ SETTING_SHOW_STARTUP_MESSAGE, [](BOOL value) { CGetSetOptions::SetShowStartupMessage(value); } },
+	{ SETTING_REVERT_TO_TOP_LEVEL_GROUP, [](BOOL value) { CGetSetOptions::SetRevertToTopLevelGroup(value); } },
+	{ SETTING_OPEN_TO_GROUP_AS_ACTIVE_EXE, [](BOOL value) { CGetSetOptions::SetOpenToGroupByActiveExe(value); } },
+	{ SETTING_ADD_CF_HDROP_ON_DRAG, [](BOOL value) { CGetSetOptions::SetAddCFHDROP_OnDrag(value); } },
+	{ SETTING_MOVE_SELECTION_ON_OPEN_HOTKEY, [](BOOL value) { CGetSetOptions::SetMoveSelectionOnOpenHotkey(value); } },
+	{ SETTING_MAINTAIN_SEARCH_VIEW, [](BOOL value) { CGetSetOptions::SetMaintainSearchView(value); } },
+	{ SETTING_DEBUG_TO_FILE, [](BOOL value) { CGetSetOptions::SetEnableDebugLogging(value); } },
+	{ SETTING_DEBUG_TO_OUTPUT_STRING, [](BOOL value) { CGetSetOptions::SetEnableOutputDebugStringLogging(value); } },
+	{ SETTING_REFRESH_VIEW_AFTER_PASTE, [](BOOL value) { CGetSetOptions::SetRefreshViewAfterPasting(value); } },
+	{ SETTING_SUPPORT_ALL_TYPES, [](BOOL value) { CGetSetOptions::SetSupportAllTypes(value); } },
+	{ SETTING_REGEX_CASE_INSENSITIVE, [](BOOL value) { CGetSetOptions::SetRegexCaseInsensitive(value); } },
+	{ SETTING_DRAW_COPIED_COLOR_CODE, [](BOOL value) { CGetSetOptions::SetDrawCopiedColorCode(value); } },
+	{ SETTING_CENTER_WINDOW_BELOW_CURSOR_CARET, [](BOOL value) { CGetSetOptions::SetCenterWindowBelowCursorOrCaret(value); } },
+	{ SETTING_UPDATE_DESC_ON_CLIP_EDIT, [](BOOL value) { CGetSetOptions::SetUpdateDescWhenSavingClip(value); } },
+	{ SETTING_USE_UTF8_FOR_DIFF, [](BOOL value) { CGetSetOptions::SetPreferUtf8ForCompare(value); } },
+	{ SETTING_DO_NOT_HIDE_ON_DEACTIVATE, [](BOOL value) { CGetSetOptions::SetDoNotHideOnDeactivate(value); } },
+	{ SETTING_HIDE_TASKBAR_ICON_ON_CLOSE, [](BOOL value) { CGetSetOptions::SetHideTaskbarIconOnClose(value); } },
+	{ SETTING_ENFORCE_CLIPBOARD_IGNORE_FORMATS, [](BOOL value) { CGetSetOptions::SetEnforceClipboardIgnoreFormats(value); } },
+} };
+
+const std::array<CAdvGeneral::TextSetting, 11> CAdvGeneral::s_textSettings{ {
+	{ SETTING_CLIP_SEPARATOR, [](LPCTSTR value) { CGetSetOptions::SetMultiPasteSeparator(value); } },
+	{ SETTING_COPY_PLAY_SOUND, [](LPCTSTR value) { CGetSetOptions::SetPlaySoundOnCopy(value); } },
+	{ SETTING_DIFF_APP, [](LPCTSTR value) { CGetSetOptions::SetDiffApp(value); } },
+	{ SETTING_DEFAULT_PASTE_STRING, [](LPCTSTR value) { CGetSetOptions::SetDefaultPasteString(value); } },
+	{ SETTING_DEFAULT_COPY_STRING, [](LPCTSTR value) { CGetSetOptions::SetDefaultCopyString(value); } },
+	{ SETTING_DEFAULT_CUT_STRING, [](LPCTSTR value) { CGetSetOptions::SetDefaultCutString(value); } },
+	{ SETTING_SLUGIFY_SEPARATOR, [](LPCTSTR value) { CGetSetOptions::SetSlugifySeparator(value); } },
+	{ SETTING_IGNORE_ANNOYING_CF_DIB, [](LPCTSTR value) { CGetSetOptions::SetIgnoreAnnoyingCFDIB(value); } },
+	{ SETTING_TEXT_EDITOR_PATH, [](LPCTSTR value) { CGetSetOptions::SetTextEditorPath(value); } },
+	{ SETTING_IMAGE_EDITOR_PATH, [](LPCTSTR value) { CGetSetOptions::SetImageEditorPath(value); } },
+	{ SETTING_RTF_EDITOR_PATH, [](LPCTSTR value) { CGetSetOptions::SetRTFEditorPath(value); } },
+} };
+
 BOOL CAdvGeneral::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
@@ -417,560 +500,77 @@ void CAdvGeneral::OnBnClickedOk()
 		int count = m_propertyGrid.GetProperty(topLevel)->GetSubItemsCount();
 		for (int row = 0; row < count; row++)
 		{
-			CMFCPropertyGridProperty* prop = m_propertyGrid.GetProperty(topLevel)->GetSubItem(row);
-
-			COleVariant i = prop->GetValue();
-			LPVARIANT pNewValue = (LPVARIANT)i;
-
-			COleVariant iOrig = prop->GetOriginalValue();
-			LPVARIANT pOrigValue = (LPVARIANT)iOrig;
-
-			switch ((int)prop->GetData())
-			{
-			case SETTING_DESC_SIZE:
-				if (pNewValue->lVal != pOrigValue->lVal)
-				{
-					CGetSetOptions::SetDescTextSize(pNewValue->lVal);
-				}
-				break;
-			case SETTING_SELECTED_INDEX:
-				if (pNewValue->lVal != pOrigValue->lVal)
-				{
-					CGetSetOptions::SetSelectedIndex(max((pNewValue->lVal-1), 0));
-				}
-				break;
-			case SETTING_CLIPBOARD_SAVE_DELAY:
-				if (pNewValue->lVal != pOrigValue->lVal)
-				{
-					CGetSetOptions::SetProcessDrawClipboardDelay(max(pNewValue->lVal, 0));
-				}
-				break;
-			case SETTING_SHOW_TASKBAR_ICON:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetShowIconInSysTray(val);
-				}
-				break;
-			case SETTING_SAVE_MULTI_PASTE:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetSaveMultiPaste(val);
-				}
-				break;
-			case SETTING_HIDE_ON_HOTKEY_IF_VISIBLE:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetHideDittoOnHotKeyIfAlreadyShown(val);
-				}
-				break;
-			case SETTING_PASTE_IN_ACTIVE_WINDOW:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetSendPasteAfterSelection(val);
-				}
-				break;
-			case SETTING_MAX_CLIP_SIZE:
-				if (pNewValue->lVal != pOrigValue->lVal)
-				{
-					CGetSetOptions::SetMaxClipSizeInBytes(pNewValue->lVal);
-				}
-				break;
-			case SETTING_CLIP_SEPARATOR:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					CGetSetOptions::SetMultiPasteSeparator(pNewValue->bstrVal);
-				}
-				break;
-
-			case SETTING_ENSURE_CONNECTED:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetEnsureConnectToClipboard(val);
-				}
-				break;
-			case SETTING_COPY_PLAY_SOUND:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					CGetSetOptions::SetPlaySoundOnCopy(pNewValue->bstrVal);
-				}
-				break;
-			case SETTING_TEXT_FIRST_TEN:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetShowTextForFirstTenHotKeys(val);
-				}
-				break;
-			case SETTING_SHOW_LEADING_WHITESPACE:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetDescShowLeadingWhiteSpace(val);
-				}
-				break;
-			case SETTING_LINES_PER_ROW:
-				if (pNewValue->lVal != pOrigValue->lVal)
-				{
-					CGetSetOptions::SetLinesPerRow(pNewValue->lVal);
-				}
-				break;
-			case SETTING_ENABLE_TRANSPARENCY:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetEnableTransparency(val);
-				}
-				break;
-			case SETTING_TRANSPARENCY:
-				if (pNewValue->lVal != pOrigValue->lVal)
-				{
-					int value = 100;
-					if (pNewValue->lVal <= 100 && pNewValue->lVal > 0)
-					{
-						value = pNewValue->lVal;
-					}
-
-					CGetSetOptions::SetTransparencyPercent(value);
-				}
-				break;
-			case SETTING_DRAW_THUMBNAILS:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetDrawThumbnail(val);
-				}
-				break;
-			case SETTING_FAST_THUMBNAIL_MODE:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetFastThumbnailMode(val);
-				}
-				break;
-			case SETTING_DRAW_RTF:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetDrawRTF(val);
-				}
-				break;
-			case SETTING_FIND_AS_TYPE:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetFindAsYouType(val);
-				}
-				break;
-			case SETTING_ENSURE_WINDOW_IS_VISIBLE:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetEnsureEntireWindowCanBeSeen(val);
-				}
-				break;
-			case SETTING_SHOW_GROUP_CLIPS_IN_LIST:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetShowAllClipsInMainList(val);
-				}
-				break;
-			case SETTING_PROMPT_ON_DELETE:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetPromptWhenDeletingClips(val);
-				}
-				break;
-			case SETTING_ALWAYS_SHOW_SCROLL_BAR:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetShowScrollBar(val);
-				}
-				break;
-			case SETTING_USE_MODERN_SCROLLBAR:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetUseModernScrollBar(val);
-				}
-				break;
-			case SETTING_PASTE_AS_ADMIN:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetPasteAsAdmin(val);
-				}
-				break;
-			case SETTTING_SHOW_IN_TASKBAR:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetShowInTaskBar(val);
-				}
-				break;
-			case SETTING_SHOW_CLIP_PASTED:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetShowIfClipWasPasted(val);
-				}
-				break;
-			case SETTING_DIFF_APP:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					CGetSetOptions::SetDiffApp(pNewValue->bstrVal);
-				}
-				break;
-			case SETTING_UPDATE_ORDER_ON_PASTE:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetUpdateTimeOnPaste(val);
-				}
-				break;
-			case SETTING_UPDATE_ORDER_ON_CTRL_C:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetUpdateClipOrderOnCtrlC(val);
-				}
-				break;
-			case SETTING_MULTIPASTE_REVERSE_ORDER:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetMultiPasteReverse(val);
-				}
-				break;
-			case SETTING_ALLOW_DUPLICATES:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetAllowDuplicates(val);
-				}
-				break;
-			case SETTING_ALOW_BACK_TO_BACK_DUPLICATES:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetAllowBackToBackDuplicates(val);
-				}
-				break;
-			case SETTING_REGEX_FILTERING_1:
-			case SETTING_REGEX_FILTERING_2:
-			case SETTING_REGEX_FILTERING_3:
-			case SETTING_REGEX_FILTERING_4:
-			case SETTING_REGEX_FILTERING_5:
-			case SETTING_REGEX_FILTERING_6:
-			case SETTING_REGEX_FILTERING_7:
-			case SETTING_REGEX_FILTERING_8:
-			case SETTING_REGEX_FILTERING_9:
-			case SETTING_REGEX_FILTERING_10:
-			case SETTING_REGEX_FILTERING_11:
-			case SETTING_REGEX_FILTERING_12:
-			case SETTING_REGEX_FILTERING_13:
-			case SETTING_REGEX_FILTERING_14:
-			case SETTING_REGEX_FILTERING_15:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					CGetSetOptions::SetRegexFilter(pNewValue->bstrVal, (((int)prop->GetData()) - SETTING_REGEX_FILTERING_1));
-				}
-				break;
-			case SETTING_REGEX_FILTERING_BY_PROCESS_NAME_1:
-			case SETTING_REGEX_FILTERING_BY_PROCESS_NAME_2:
-			case SETTING_REGEX_FILTERING_BY_PROCESS_NAME_3:
-			case SETTING_REGEX_FILTERING_BY_PROCESS_NAME_4:
-			case SETTING_REGEX_FILTERING_BY_PROCESS_NAME_5:
-			case SETTING_REGEX_FILTERING_BY_PROCESS_NAME_6:
-			case SETTING_REGEX_FILTERING_BY_PROCESS_NAME_7:
-			case SETTING_REGEX_FILTERING_BY_PROCESS_NAME_8:
-			case SETTING_REGEX_FILTERING_BY_PROCESS_NAME_9:
-			case SETTING_REGEX_FILTERING_BY_PROCESS_NAME_10:
-			case SETTING_REGEX_FILTERING_BY_PROCESS_NAME_11:
-			case SETTING_REGEX_FILTERING_BY_PROCESS_NAME_12:
-			case SETTING_REGEX_FILTERING_BY_PROCESS_NAME_13:
-			case SETTING_REGEX_FILTERING_BY_PROCESS_NAME_14:
-			case SETTING_REGEX_FILTERING_BY_PROCESS_NAME_15:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					CGetSetOptions::SetRegexFilterByProcessName(pNewValue->bstrVal, (((int)prop->GetData()) - SETTING_REGEX_FILTERING_BY_PROCESS_NAME_1));
-				}
-				break;
-
-			case SETTING_SHOW_STARTUP_MESSAGE:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetShowStartupMessage(val);
-				}
-				break;
-
-			case SETTING_TOOLTIP_TIMEOUT:
-				if (pNewValue->lVal != pOrigValue->lVal)
-				{
-					CGetSetOptions::SetToolTipTimeout(pNewValue->lVal);
-				}
-				break;
-
-			case SETTING_TOOLTIP_LINES:
-				if (pNewValue->lVal != pOrigValue->lVal)
-				{
-					CGetSetOptions::SetMaxToolTipLines(pNewValue->lVal);
-				}
-				break;
-
-			case SETTING_TOOLTIP_CHARACTERS:
-				if (pNewValue->lVal != pOrigValue->lVal)
-				{
-					CGetSetOptions::SetMaxToolTipCharacters(pNewValue->lVal);
-				}
-				break;
-
-			case SETTING_DEFAULT_PASTE_STRING:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					CGetSetOptions::SetDefaultPasteString(pNewValue->bstrVal);
-				}
-				break;
-			case SETTING_DEFAULT_COPY_STRING:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					CGetSetOptions::SetDefaultCopyString(pNewValue->bstrVal);
-				}
-				break;
-			case SETTING_DEFAULT_CUT_STRING:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					CGetSetOptions::SetDefaultCutString(pNewValue->bstrVal);
-				}
-				break;
-			case SETTING_SLUGIFY_SEPARATOR:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					CGetSetOptions::SetSlugifySeparator(pNewValue->bstrVal);
-				}
-				break;
-			case SETTING_REVERT_TO_TOP_LEVEL_GROUP:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetRevertToTopLevelGroup(val);
-				}
-				break;
-			case SETTING_ACTIVATE_WINDOW_DELAY:
-				if (pNewValue->lVal != pOrigValue->lVal)
-				{
-					CGetSetOptions::SetSendKeysDelay(pNewValue->lVal);
-				}
-				break;
-			case SETTING_SEND_KEYS_DELAY:
-				if (pNewValue->lVal != pOrigValue->lVal)
-				{
-					CGetSetOptions::SetRealSendKeysDelay(pNewValue->lVal);
-				}
-				break;
-			case SETTING_CLIPBOARD_RESTORE_AFTER_COPY_BUFFER_DELAY:
-				if (pNewValue->lVal != pOrigValue->lVal)
-				{
-					CGetSetOptions::SetDittoRestoreClipboardDelay(pNewValue->lVal);
-				}
-				break;
-			case SETTING_DOUBLE_KEYSTROKE_TIMEOUT:
-				if (pNewValue->lVal != pOrigValue->lVal)
-				{
-					CGetSetOptions::SetDoubleKeyStrokeTimeout(pNewValue->lVal);
-				}
-				break;
-			case SETTING_FIRST_TEN_HOTKEYS_START:
-				if (pNewValue->lVal != pOrigValue->lVal)
-				{
-					CGetSetOptions::SetFirstTenHotKeysStart(pNewValue->lVal);
-				}
-				break;
-			case SETTING_FIRST_TEN_HOTKEYS_FONT_SIZE:
-				if (pNewValue->lVal != pOrigValue->lVal)
-				{
-					CGetSetOptions::SetFirstTenHotKeysFontSize(pNewValue->lVal);
-				}
-				break;
-			case SETTING_OPEN_TO_GROUP_AS_ACTIVE_EXE:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetOpenToGroupByActiveExe(val);
-				}
-				break;
-
-			case SETTING_ADD_CF_HDROP_ON_DRAG:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetAddCFHDROP_OnDrag(val);
-				}
-				break;
-			case SETTING_COPY_SAVE_DELAY:
-				if (pNewValue->lVal != pOrigValue->lVal)
-				{
-					CGetSetOptions::SetCopyAndSveDelay(pNewValue->lVal);
-				}
-				break;
-			case SETTING_EDITOR_FONT_SIZE:
-				if (pNewValue->lVal != pOrigValue->lVal)
-				{
-					CGetSetOptions::SetEditorDefaultFontSize(pNewValue->lVal);
-				}
-				break;
-			case SETTING_MOVE_SELECTION_ON_OPEN_HOTKEY:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetMoveSelectionOnOpenHotkey(val);
-				}
-				break;
-			case SETTING_MAINTAIN_SEARCH_VIEW:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetMaintainSearchView(val);
-				}
-				break;
-			case SETTING_DEBUG_TO_FILE:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetEnableDebugLogging(val);
-				}
-				break;
-			case SETTING_DEBUG_TO_OUTPUT_STRING:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetEnableOutputDebugStringLogging(val);
-				}
-				break;
-			case SETTING_IGNORE_FALSE_COPIES_DELAY:
-				if (pNewValue->lVal != pOrigValue->lVal)
-				{
-					CGetSetOptions::SetSaveClipDelay(pNewValue->lVal);
-				}
-				break;
-			case SETTING_REFRESH_VIEW_AFTER_PASTE:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetRefreshViewAfterPasting(val);
-				}
-				break;
-			case SETTING_SUPPORT_ALL_TYPES:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetSupportAllTypes(val);
-				}
-				break;
-			case SETTING_IGNORE_ANNOYING_CF_DIB:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					CGetSetOptions::SetIgnoreAnnoyingCFDIB(pNewValue->bstrVal);
-				}
-				break;
-			case SETTING_REGEX_CASE_INSENSITIVE:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetRegexCaseInsensitive(val);
-				}
-				break;
-			case SETTING_DRAW_COPIED_COLOR_CODE:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetDrawCopiedColorCode(val);
-				}
-				break;
-			case SETTING_CENTER_WINDOW_BELOW_CURSOR_CARET:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetCenterWindowBelowCursorOrCaret(val);
-				}
-				break;
-			case SETTING_TEXT_EDITOR_PATH:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					CGetSetOptions::SetTextEditorPath(pNewValue->bstrVal);
-				}
-				break;
-			case SETTING_IMAGE_EDITOR_PATH:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					CGetSetOptions::SetImageEditorPath(pNewValue->bstrVal);
-				}
-				break;
-			case SETTING_RTF_EDITOR_PATH:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					CGetSetOptions::SetRTFEditorPath(pNewValue->bstrVal);
-				}
-				break;
-			case SETTING_UPDATE_DESC_ON_CLIP_EDIT:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetUpdateDescWhenSavingClip(val);
-				}
-				break;
-			case SETTING_USE_UTF8_FOR_DIFF:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetPreferUtf8ForCompare(val);
-				}
-				break;
-			case SETTING_CLIP_EDIT_SAVE_DELAY_AFTER_LOAD:
-				if (pNewValue->lVal != pOrigValue->lVal)
-				{
-					CGetSetOptions::SetClipEditSaveDelayAfterLoadSeconds(pNewValue->lVal);
-				}
-				break;
-			case SETTING_ClIP_EDIT_SAVE_DELAY_AFTER_SAVE:
-				if (pNewValue->lVal != pOrigValue->lVal)
-				{
-					CGetSetOptions::SetClipEditSaveDelayAfterSaveSeconds(pNewValue->lVal);
-				}
-				break;
-			case SETTING_DO_NOT_HIDE_ON_DEACTIVATE:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetDoNotHideOnDeactivate(val);
-				}
-				break;
-			case SETTING_HIDE_TASKBAR_ICON_ON_CLOSE:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetHideTaskbarIconOnClose(val);
-				}
-				break;
-			case SETTING_ENFORCE_CLIPBOARD_IGNORE_FORMATS:
-				if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
-				{
-					BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
-					CGetSetOptions::SetEnforceClipboardIgnoreFormats(val);
-				}
-				break;
-			}
+			WriteSetting(m_propertyGrid.GetProperty(topLevel)->GetSubItem(row));
 		}
 	}
 	CDialogEx::OnOK();
+}
+
+void CAdvGeneral::WriteSetting(CMFCPropertyGridProperty* prop)
+{
+	COleVariant i = prop->GetValue();
+	LPVARIANT pNewValue = (LPVARIANT)i;
+
+	COleVariant iOrig = prop->GetOriginalValue();
+	LPVARIANT pOrigValue = (LPVARIANT)iOrig;
+
+	const int id = (int)prop->GetData();
+
+	if (const LongSetting* longSetting = FindSetting(s_longSettings, id))
+	{
+		if (pNewValue->lVal != pOrigValue->lVal)
+		{
+			longSetting->write(pNewValue->lVal);
+		}
+	}
+	else if (const BoolSetting* boolSetting = FindSetting(s_boolSettings, id))
+	{
+		if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
+		{
+			BOOL val = wcscmp(pNewValue->bstrVal, L"True") == 0;
+			boolSetting->write(val);
+		}
+	}
+	else if (const TextSetting* textSetting = FindSetting(s_textSettings, id))
+	{
+		if (wcscmp(pNewValue->bstrVal, pOrigValue->bstrVal) != 0)
+		{
+			textSetting->write(pNewValue->bstrVal);
+		}
+	}
+	else
+	{
+		WriteRegexSetting(id, *pNewValue, *pOrigValue);
+	}
+}
+
+void CAdvGeneral::WriteTransparencyPercent(long newValue)
+{
+	int value = 100;
+	if (newValue <= 100 && newValue > 0)
+	{
+		value = newValue;
+	}
+
+	CGetSetOptions::SetTransparencyPercent(value);
+}
+
+void CAdvGeneral::WriteRegexSetting(int id, const VARIANT& newValue, const VARIANT& origValue)
+{
+	if (id >= SETTING_REGEX_FILTERING_1 && id <= SETTING_REGEX_FILTERING_15)
+	{
+		if (wcscmp(newValue.bstrVal, origValue.bstrVal) != 0)
+		{
+			CGetSetOptions::SetRegexFilter(newValue.bstrVal, (id - SETTING_REGEX_FILTERING_1));
+		}
+	}
+	else if (id >= SETTING_REGEX_FILTERING_BY_PROCESS_NAME_1 && id <= SETTING_REGEX_FILTERING_BY_PROCESS_NAME_15)
+	{
+		if (wcscmp(newValue.bstrVal, origValue.bstrVal) != 0)
+		{
+			CGetSetOptions::SetRegexFilterByProcessName(newValue.bstrVal, (id - SETTING_REGEX_FILTERING_BY_PROCESS_NAME_1));
+		}
+	}
 }
 
 void CAdvGeneral::OnSize(UINT nType, int cx, int cy)
@@ -1073,55 +673,64 @@ void CAdvGeneral::Search(bool fromSelection)
 		CMFCPropertyGridProperty* pProp = m_propertyGrid.GetProperty(i);
 		if (pProp != nullptr)
 		{
-			CString name = pProp->GetName();
-			name.MakeLower();
+			SearchGroup(pProp, filterText, fromSelection, selection, foundSelection);
+		}
+	}
+}
 
-			for (int row = 0; row < pProp->GetSubItemsCount(); ++row)
+void CAdvGeneral::SearchGroup(CMFCPropertyGridProperty* pProp, const CString& filterText, bool fromSelection, CMFCPropertyGridProperty* selection, bool& foundSelection)
+{
+	CString name = pProp->GetName();
+	name.MakeLower();
+
+	for (int row = 0; row < pProp->GetSubItemsCount(); ++row)
+	{
+		auto pSubItem = pProp->GetSubItem(row);
+		if (pSubItem != nullptr)
+		{
+			if (fromSelection && selection != nullptr && foundSelection == false)
 			{
-				auto pSubItem = pProp->GetSubItem(row);
-				if (pSubItem != nullptr)
+				if (selection == pSubItem)
 				{
-					if (fromSelection && selection != nullptr && foundSelection == false)
-					{
-						if (selection == pSubItem)
-						{
-							foundSelection = true;
-						}
-						continue;
-					}
-
-					CString subName = pSubItem->GetName();
-					subName.MakeLower();
-					if (subName.Find(filterText) >= 0)
-					{
-						pSubItem->Show();
-						m_propertyGrid.SetCurSel(pSubItem);
-
-						//calling EnsureVisible mutliple times seemed to show it better otherwise it would randomly not work
-						if (row > 2)
-						{
-							m_propertyGrid.EnsureVisible(pProp->GetSubItem(row - 2), TRUE);
-							m_propertyGrid.EnsureVisible(pProp->GetSubItem(row - 2), TRUE);
-							m_propertyGrid.EnsureVisible(pProp->GetSubItem(row - 2), TRUE);
-						}
-						else if (row > 1)
-						{
-							m_propertyGrid.EnsureVisible(pProp->GetSubItem(row - 1), TRUE);
-							m_propertyGrid.EnsureVisible(pProp->GetSubItem(row - 1), TRUE);
-							m_propertyGrid.EnsureVisible(pProp->GetSubItem(row - 1), TRUE);
-						}
-						else
-						{
-							m_propertyGrid.EnsureVisible(pSubItem, TRUE);
-							m_propertyGrid.EnsureVisible(pSubItem, TRUE);
-							m_propertyGrid.EnsureVisible(pSubItem, TRUE);
-						}
-						
-						break;
-					}
+					foundSelection = true;
 				}
+				continue;
+			}
+
+			CString subName = pSubItem->GetName();
+			subName.MakeLower();
+			if (subName.Find(filterText) >= 0)
+			{
+				ShowSearchMatch(pProp, row, pSubItem);
+				break;
 			}
 		}
+	}
+}
+
+void CAdvGeneral::ShowSearchMatch(CMFCPropertyGridProperty* pProp, int row, CMFCPropertyGridProperty* pSubItem)
+{
+	pSubItem->Show();
+	m_propertyGrid.SetCurSel(pSubItem);
+
+	//calling EnsureVisible mutliple times seemed to show it better otherwise it would randomly not work
+	if (row > 2)
+	{
+		m_propertyGrid.EnsureVisible(pProp->GetSubItem(row - 2), TRUE);
+		m_propertyGrid.EnsureVisible(pProp->GetSubItem(row - 2), TRUE);
+		m_propertyGrid.EnsureVisible(pProp->GetSubItem(row - 2), TRUE);
+	}
+	else if (row > 1)
+	{
+		m_propertyGrid.EnsureVisible(pProp->GetSubItem(row - 1), TRUE);
+		m_propertyGrid.EnsureVisible(pProp->GetSubItem(row - 1), TRUE);
+		m_propertyGrid.EnsureVisible(pProp->GetSubItem(row - 1), TRUE);
+	}
+	else
+	{
+		m_propertyGrid.EnsureVisible(pSubItem, TRUE);
+		m_propertyGrid.EnsureVisible(pSubItem, TRUE);
+		m_propertyGrid.EnsureVisible(pSubItem, TRUE);
 	}
 }
 

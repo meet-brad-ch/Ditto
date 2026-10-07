@@ -9,7 +9,10 @@
 #include "NTray.h"
 #include "EditFrameWnd.h"
 
+#include <array>
 #include <memory>
+
+class CHotKey;
 
 #define CLOSE_WINDOW_TIMER				1	
 #define HIDE_ICON_TIMER					2
@@ -160,4 +163,100 @@ private:
 	// PasteOrShowGroup's clip branch: ends a pending group double press and pastes the clip;
 	// an argument of -1 keeps the option's current value
 	void PasteSingleClip(int dbId, BOOL updateClipTime, BOOL activeTarget, BOOL sendPaste, bool pastedFromGroup);
+
+	/** @brief One entry of OnTimer's dispatch table. */
+	struct TimerHandler
+	{
+		/** @brief The timer id (a *_TIMER define). */
+		UINT_PTR timerId{};
+		/** @brief The member function that handles the timer. */
+		void (CMainFrame::*handle)() = nullptr;
+	};
+
+	/** @brief The copy, paste and cut hot keys of one copy buffer (non-owning; g_HotKeys owns them). */
+	struct CopyBufferHotKeys
+	{
+		/** @brief The hot key that copies into the buffer, or nullptr. */
+		CHotKey* copy{};
+		/** @brief The hot key that pastes the buffer, or nullptr. */
+		CHotKey* paste{};
+		/** @brief The hot key that cuts into the buffer, or nullptr. */
+		CHotKey* cut{};
+	};
+
+	/** @brief OnTimer's dispatch table: the handler of each timer id (CLOSE_WINDOW_TIMER has none). */
+	static const std::array<TimerHandler, 11> s_timerHandlers;
+
+	/**
+	 * @brief Tells whether a WM_HOTKEY id belongs to a hot key.
+	 * @param hotKey The hot key, or nullptr.
+	 * @param wParam The WM_HOTKEY id.
+	 * @return True when hotKey is set and its atom is wParam.
+	 */
+	static bool IsHotKey(const CHotKey* hotKey, WPARAM wParam);
+
+	/**
+	 * @brief Tells whether a WM_HOTKEY id is one of the three show-Ditto hot keys.
+	 * @param wParam The WM_HOTKEY id.
+	 * @return True for a show-Ditto hot key.
+	 */
+	static bool IsShowDittoHotKey(WPARAM wParam);
+
+	/** @brief Handles a show-Ditto hot key: moves the selection, hides or shows the window. */
+	void OnShowDittoHotKey();
+
+	/**
+	 * @brief Handles a first-ten position hot key (paste position 1 to 10).
+	 * @param wParam The WM_HOTKEY id.
+	 * @return True when wParam was a position hot key (and was handled).
+	 */
+	bool DoFirstTenHotKey(WPARAM wParam);
+
+	/**
+	 * @brief Handles a copy buffer hot key (copy, paste or cut of buffer 1 to 5).
+	 * @param wParam The WM_HOTKEY id.
+	 * @return True when wParam was a copy buffer hot key (and was handled).
+	 */
+	bool DoCopyBufferHotKey(WPARAM wParam);
+
+	/**
+	 * @brief Handles the copy, paste or cut hot key of one copy buffer.
+	 * @param hotKeys The buffer's hot keys.
+	 * @param buffer The buffer index, 0 to 4.
+	 * @param wParam The WM_HOTKEY id.
+	 * @return True when wParam was one of the buffer's hot keys (and was handled).
+	 */
+	bool DoCopyBufferHotKey(const CopyBufferHotKeys& hotKeys, int buffer, WPARAM wParam);
+
+	/** @brief Handles the copy-and-save-clipboard hot key: sends a copy, waits, then saves the clipboard. */
+	void DoCopyAndSaveClipboard();
+
+	/**
+	 * @brief Handles a global clip hot key (paste a clip, or save the selection to a group).
+	 * @param wParam The WM_HOTKEY id.
+	 */
+	void DoGlobalClipHotKey(WPARAM wParam);
+
+	/** @brief HIDE_ICON_TIMER: hides the tray icon unless the option shows it. */
+	void OnHideIconTimer();
+	/** @brief REMOVE_OLD_ENTRIES_TIMER: starts deleting old entries on the worker thread. */
+	void OnRemoveOldEntriesTimer();
+	/** @brief REMOVE_OLD_TEMP_FILES: starts removing old temporary files on the worker thread. */
+	void OnRemoveOldTempFilesTimer();
+	/** @brief KEY_STATE_MODIFIERS: pastes or resets once the modifier keys are released. */
+	void OnKeyStateModifiersTimer();
+	/** @brief ACTIVE_WINDOW_TIMER: tracks the active window while the paste window shows. */
+	void OnActiveWindowTimer();
+	/** @brief READ_RANDOM_DB_FILE: starts reading the database file on the worker thread. */
+	void OnReadRandomDbFileTimer();
+	/** @brief GROUP_DOUBLE_CLICK: handles a single press of a group hot key (opens Ditto on the group). */
+	void OnGroupDoubleClickTimer();
+	/** @brief SCREEN_RESOLUTION_CHANGED: lets the paste window follow the new resolution. */
+	void OnScreenResolutionChangedTimer();
+	/** @brief DELAYED_SHOW_DITTO_TIMER: shows the paste window. */
+	void OnDelayedShowDittoTimer();
+	/** @brief SET_WINDOWS_THEME_TIMER: reloads the Windows theme and reopens a visible paste window. */
+	void OnSetWindowsThemeTimer();
+	/** @brief CLOSE_NO_DB_WINDOW_TIMER: closes the no-database window. */
+	void OnCloseNoDbWindowTimer();
 };

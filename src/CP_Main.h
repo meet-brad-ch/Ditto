@@ -29,6 +29,8 @@
 
 extern class CCP_MainApp theApp;
 
+class DittoCommandLineInfo;
+
 class CCP_MainApp : public CWinApp
 {
 public:
@@ -229,4 +231,121 @@ private:
 	 * @throws CppSQLite3Exception When the query fails; EnterGroupID reports it.
 	 */
 	BOOL EnterStoredGroup(long lID);
+
+	/** @brief A message this instance sends to the running Ditto for a command line switch. */
+	struct RunningInstanceRequest
+	{
+		/** @brief True when the command line asks for this message. */
+		bool requested{};
+		/** @brief The message. */
+		UINT message{};
+		/** @brief The message's wParam. */
+		WPARAM wParam{};
+		/** @brief The message's lParam. */
+		LPARAM lParam{};
+	};
+
+	/** @brief How EditItems edits one clip: the file kind, its extension and the editor. */
+	struct ClipEditTarget
+	{
+		/** @brief The clip is written as a unicode text file. */
+		bool unicodeFile{};
+		/** @brief The clip is written as an ANSI text file. */
+		bool asciFile{};
+		/** @brief The clip is written as an RTF file. */
+		bool rtfFile{};
+		/** @brief The clip is written as an image file. */
+		bool imageFile{};
+		/** @brief The editor set in the options; empty for the system mapping (or the internal editor for text). */
+		CString exePath{};
+		/** @brief The file extension (txt, rtf, png or bmp). */
+		CString extension{};
+	};
+
+	/**
+	 * @brief InitInstanceBody's command line step (restart, import, connect, or a request to the running Ditto).
+	 * @param cmdInfo The parsed command line.
+	 * @return False when this instance must exit (InitInstance returns FALSE).
+	 */
+	bool HandleCommandLine(const DittoCommandLineInfo& cmdInfo);
+
+	/**
+	 * @brief Handles /Connect or /Disconnect: passes it to the running Ditto, else starts this instance (dis)connected.
+	 * @param cmdInfo The parsed command line.
+	 * @return False when the running Ditto handled it (this instance exits).
+	 */
+	bool HandleConnectSwitch(const DittoCommandLineInfo& cmdInfo);
+
+	/**
+	 * @brief Sends the first requested command line request (open/close, exit, plain text paste, paste or edit a clip) to the running Ditto.
+	 * @param cmdInfo The parsed command line.
+	 * @return True when the command line held such a request (this instance exits).
+	 */
+	bool ForwardToRunningInstance(const DittoCommandLineInfo& cmdInfo);
+
+	/**
+	 * @brief Registers with the restart manager and creates the single instance mutex.
+	 * @return False when Ditto already runs (the running one is asked to show its tray icon).
+	 */
+	bool CreateSingleInstanceMutex();
+
+	/**
+	 * @brief EnterGroupID's step: makes lID (-1 for the history) the current group.
+	 * @param lID The group's clip id, or -1.
+	 * @param bResult Receives TRUE when the group was entered.
+	 * @return False when reading the group failed (reported); EnterGroupID then returns FALSE.
+	 */
+	bool OpenGroup(long lID, BOOL& bResult);
+
+	/**
+	 * @brief EnterGroupID's last step: refreshes the view when the group was entered and logs a slow switch.
+	 * @param bResult TRUE when the group was entered.
+	 * @param startTick GetTickCount64 at the start of EnterGroupID.
+	 */
+	void FinishEnterGroup(BOOL bResult, ULONGLONG startTick);
+
+	/**
+	 * @brief EditItems' step for one clip: writes it to a file and opens the editor (or the internal editor).
+	 * @param id The clip id; -1 for a new clip.
+	 * @param forceTextEdit True: edit RTF clips as text.
+	 * @param lastFileCheckId In/out: the next number tried for a new clip's file name.
+	 * @return True when an external editor was launched.
+	 */
+	bool EditItem(int id, bool forceTextEdit, int& lastFileCheckId);
+
+	/**
+	 * @brief Chooses the file kind and editor of a clip from its formats.
+	 * @param clip The clip, its formats loaded.
+	 * @param id The clip id; -1 for a new clip.
+	 * @param forceTextEdit True: edit RTF clips as text.
+	 * @param target Receives the choice.
+	 * @return False when the clip has no editable format.
+	 */
+	bool ChooseClipEditTarget(CClip& clip, int id, bool forceTextEdit, ClipEditTarget& target);
+
+	/**
+	 * @brief Opens a text or RTF clip in the internal editor when no external editor is set.
+	 * @param target The clip's edit target.
+	 * @param id The clip id.
+	 * @return True when the internal editor took the clip.
+	 */
+	bool EditInInternalEditor(const ClipEditTarget& target, int id);
+
+	/**
+	 * @brief The file a clip is edited in; a new clip gets the first free NewClip_n name.
+	 * @param id The clip id; negative for a new clip.
+	 * @param extension The file extension.
+	 * @param lastFileCheckId In/out: the next number tried for a new clip's file name.
+	 * @return The file path (empty when no free name was found).
+	 */
+	CString MakeEditFilePath(int id, const CString& extension, int& lastFileCheckId);
+
+	/**
+	 * @brief Opens a clip's file in the editor (or with the system mapping).
+	 * @param exePath The editor; empty for the system mapping.
+	 * @param savePath The clip's file.
+	 * @param id The clip id (for the log).
+	 * @return False when ShellExecuteEx failed.
+	 */
+	bool LaunchClipEditor(const CString& exePath, const CString& savePath, int id);
 };

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "..\Shared\ArrayEx.h"
+#include <array>
 #include <memory>
 #include <vector>
 
@@ -52,6 +53,54 @@ public:
 	static UINT GetModifier(DWORD dwHotKey);
 	static CString GetHotKeyDisplayStatic(DWORD dwHotKey);
 	static CString GetVirKeyName(unsigned int virtualKey);
+
+private:
+	/** @brief The display name of a key that GetKeyNameText does not name. */
+	struct NamedKey
+	{
+		/** @brief The virtual key code. */
+		unsigned int virtualKey{};
+		/** @brief The name shown for the key. */
+		const TCHAR* name{};
+	};
+
+	/** @brief Friendly names of the multimedia and browser keys (GetKeyNameText returns none for them). */
+	static constexpr std::array<NamedKey, 18> s_namedKeys{ {
+		{ VK_VOLUME_MUTE, _T("Volume Mute") },
+		{ VK_VOLUME_DOWN, _T("Volume Down") },
+		{ VK_VOLUME_UP, _T("Volume Up") },
+		{ VK_MEDIA_NEXT_TRACK, _T("Next Track") },
+		{ VK_MEDIA_PREV_TRACK, _T("Prev Track") },
+		{ VK_MEDIA_PLAY_PAUSE, _T("Play/Pause") },
+		{ VK_MEDIA_STOP, _T("Stop") },
+		{ VK_BROWSER_BACK, _T("Browser Back") },
+		{ VK_BROWSER_FORWARD, _T("Browser Forward") },
+		{ VK_BROWSER_REFRESH, _T("Browser Refresh") },
+		{ VK_BROWSER_STOP, _T("Browser Stop") },
+		{ VK_BROWSER_SEARCH, _T("Browser Search") },
+		{ VK_BROWSER_FAVORITES, _T("Browser Favorites") },
+		{ VK_BROWSER_HOME, _T("Browser Home") },
+		{ VK_LAUNCH_MAIL, _T("Launch Mail") },
+		{ VK_LAUNCH_MEDIA_SELECT, _T("Launch Media") },
+		{ VK_LAUNCH_APP1, _T("Launch App1") },
+		{ VK_LAUNCH_APP2, _T("Launch App2") },
+	} };
+
+	/** @brief The keys whose scan code needs the extended bit (MapVirtualKey strips it for them). */
+	static constexpr std::array<unsigned int, 12> s_extendedKeys{
+		VK_LEFT, VK_UP, VK_RIGHT, VK_DOWN, // arrow keys
+		VK_PRIOR, VK_NEXT, // page up and page down
+		VK_END, VK_HOME,
+		VK_INSERT, VK_DELETE,
+		VK_DIVIDE, // numpad slash
+		VK_NUMLOCK };
+
+	/**
+	 * @brief Tells whether a key is one whose scan code needs the extended bit.
+	 * @param virtualKey The virtual key code.
+	 * @return True for an arrow, page, home/end, insert/delete, numpad slash or num lock key.
+	 */
+	static bool IsExtendedKey(unsigned int virtualKey);
 };
 
 

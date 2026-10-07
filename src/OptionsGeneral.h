@@ -101,6 +101,46 @@ public:
 	afx_msg void OnEnChangePath();
 	afx_msg void OnClickedMaximumEntries();
 	afx_msg void OnClickedExpireEntries();
+
+private:
+	/** @brief OnApply's language step: stores the selected language file and loads it (reports a load error). */
+	void ApplyLanguage();
+
+	/**
+	 * @brief OnApply's database step: validates, creates or opens the database path the user entered.
+	 * @return False when OnApply must stop (the user declined to create it, or it is invalid or cannot be opened).
+	 */
+	bool ApplyDatabasePath();
+
+	/**
+	 * @brief Asks whether to create a missing database and creates it.
+	 * @param resolvedPath The database path, environment variables resolved.
+	 * @param bOpenNewDatabase Set to true when the database was created.
+	 * @return False when the user declined.
+	 */
+	bool PromptCreateDatabase(const CString& resolvedPath, bool& bOpenNewDatabase);
+
+	/**
+	 * @brief Stores the database path and opens the database (reports a failure).
+	 * @param toSavePath The path as entered (stored in the options).
+	 * @param resolvedPath The path with environment variables resolved (opened).
+	 * @return False when the database could not be opened.
+	 */
+	bool OpenNewDatabase(const CString& toSavePath, const CString& resolvedPath);
+
+	/** @brief OnApply's theme step: stores the selected theme and flags a theme change to the sheet. */
+	void ApplyTheme();
+
+	/**
+	 * @brief FillThemes' step: adds the theme files of a supported version to the theme list.
+	 * @param csFile The search pattern of the theme files.
+	 * @param csTheme The current theme; it is selected when found.
+	 * @return True when the current theme was found and selected.
+	 */
+	bool AddThemeFiles(const CString& csFile, const CString& csTheme);
+
+	/** @brief Selects the "follow windows theme" entry (item data 0) of the theme list. */
+	void SelectFollowWindowsTheme();
 };
 
 //{{AFX_INSERT_LOCATION}}

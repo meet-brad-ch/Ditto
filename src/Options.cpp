@@ -173,12 +173,8 @@ CGetSetOptions::~CGetSetOptions()
 
 }
 
-void CGetSetOptions::LoadSettings()
+void CGetSetOptions::LocateIniFile(const CString& exeDir)
 {
-	CString exeDir = CGetSetOptions::GetExeFileName();
-	exeDir = GetFilePath(exeDir);
-	FIX_CSTRING_PATH(exeDir);
-
 	CString windowsAppFile = exeDir + _T("WindowsApp");
 	CString chocolateyAppFile = exeDir + _T("chocolatey");
 	if (FileExists(windowsAppFile))
@@ -197,30 +193,44 @@ void CGetSetOptions::LoadSettings()
 	}
 	else
 	{
-		m_csIniFileName = GetIniFileName(true);
+		LocatePortableOrAppDataIniFile();
+	}
+}
 
-		CString portable = GetFilePath(m_csIniFileName);
-		portable += _T("portable");
-		if (FileExists(portable))
-		{
-			m_portable = true;
-		}
+void CGetSetOptions::LocatePortableOrAppDataIniFile()
+{
+	m_csIniFileName = GetIniFileName(true);
 
-		//first check if ini file is in app directory
-		if (m_portable || FileExists(m_csIniFileName))
+	CString portable = GetFilePath(m_csIniFileName);
+	portable += _T("portable");
+	if (FileExists(portable))
+	{
+		m_portable = true;
+	}
+
+	//first check if ini file is in app directory
+	if (m_portable || FileExists(m_csIniFileName))
+	{
+		m_bFromIni = true;
+	}
+	else
+	{
+		//next check if it's in app data
+		m_csIniFileName = GetIniFileName(false);
+		if (FileExists(m_csIniFileName))
 		{
 			m_bFromIni = true;
 		}
-		else
-		{
-			//next check if it's in app data
-			m_csIniFileName = GetIniFileName(false);
-			if (FileExists(m_csIniFileName))
-			{
-				m_bFromIni = true;
-			}
-		}
 	}
+}
+
+void CGetSetOptions::LoadSettings()
+{
+	CString exeDir = CGetSetOptions::GetExeFileName();
+	exeDir = GetFilePath(exeDir);
+	FIX_CSTRING_PATH(exeDir);
+
+	LocateIniFile(exeDir);
 
 	if(m_bFromIni)
 	{
@@ -585,51 +595,64 @@ long CGetSetOptions::GetProfileLong(CString csName, long lDefaultValue, CString 
 
 CString CGetSetOptions::GetProfileString(CString csName, CString csDefault, CString csNewPath, int maxSize)
 {
+	if(m_bFromIni && !m_bInConversion)
+	{
+		return GetIniProfileString(csName, csDefault, csNewPath, maxSize);
+	}
+
+	return GetRegistryProfileString(csName, csDefault, csNewPath, maxSize);
+}
+
+CString CGetSetOptions::GetIniProfileString(const CString& csName, const CString& csDefault, const CString& csNewPath, int maxSize)
+{
 	CString returnString;
 	DWORD dwBufLen = 0;
 
-	if(m_bFromIni && !m_bInConversion)
+	CString csApp(_T("Ditto"));
+
+	if(csNewPath.IsEmpty() == FALSE)
 	{
-		CString csApp(_T("Ditto"));
-
-		if(csNewPath.IsEmpty() == FALSE)
-		{
-			csApp = csNewPath;
-		}
-
-		bool doBreak = false;
-		dwBufLen = 10000;
-		bool setMaxSize = false;
-		while (true)
-		{
-			if (maxSize > -1 && static_cast<DWORD>(maxSize) < dwBufLen)
-			{
-				dwBufLen = maxSize;
-				setMaxSize = true;
-			}
-
-			// zero-filled: every TCHAR, not half the buffer (ZeroMemory took the count as bytes)
-			std::vector<TCHAR> buffer(dwBufLen);
-
-			DWORD readLength = GetPrivateProfileString(csApp, csName, csDefault, buffer.data(), dwBufLen, m_csIniFileName);
-
-			if (setMaxSize ||
-				readLength < (dwBufLen - 1))
-			{
-				returnString = buffer.data();
-				doBreak = true;
-			}
-
-			dwBufLen = dwBufLen * 2;
-
-			if (doBreak)
-			{
-				break;
-			}
-		}
-
-		return returnString;
+		csApp = csNewPath;
 	}
+
+	bool doBreak = false;
+	dwBufLen = 10000;
+	bool setMaxSize = false;
+	while (true)
+	{
+		if (maxSize > -1 && static_cast<DWORD>(maxSize) < dwBufLen)
+		{
+			dwBufLen = maxSize;
+			setMaxSize = true;
+		}
+
+		// zero-filled: every TCHAR, not half the buffer (ZeroMemory took the count as bytes)
+		std::vector<TCHAR> buffer(dwBufLen);
+
+		DWORD readLength = GetPrivateProfileString(csApp, csName, csDefault, buffer.data(), dwBufLen, m_csIniFileName);
+
+		if (setMaxSize ||
+			readLength < (dwBufLen - 1))
+		{
+			returnString = buffer.data();
+			doBreak = true;
+		}
+
+		dwBufLen = dwBufLen * 2;
+
+		if (doBreak)
+		{
+			break;
+		}
+	}
+
+	return returnString;
+}
+
+CString CGetSetOptions::GetRegistryProfileString(const CString& csName, const CString& csDefault, const CString& csNewPath, int maxSize)
+{
+	CString returnString;
+	DWORD dwBufLen = 0;
 
 	CString csPath(_T(REG_PATH));
 	if(csNewPath.IsEmpty() == FALSE)
@@ -1662,74 +1685,32 @@ CString CGetSetOptions::GetPath(long lPathID)
 	//U3_HOST_EXEC_PATH	  - %APPDATA%\U3\{device_serial_number}\{app_unique_id}\Exec
 	//U3_DEVICE_EXEC_PATH -	<U3_DEVICE_PATH>\System\Apps\{app_unique_id}\Exec
 
-	switch(lPathID)
+	for (const PathRule& rule : s_pathRules)
 	{
-	case PATH_HELP:
-		csDir += "Help\\";
-		break;
-	
-	case PATH_LANGUAGE:
-		csDir += "language\\";
-		break;
-
-	case PATH_THEMES:
-		csDir += "Themes\\";
-		break;
-
-	case PATH_LOG_FILE:if(CGetSetOptions::GetIsPortableDitto() == false)
-		csDir = GetAppDataPath();		
-
-		break;
-
-	case PATH_ADDINS:
-		csDir += "Addins\\";		
-		break;
-
-	case PATH_REMOTE_FILES:
-		if (CGetSetOptions::GetIsPortableDitto() == false)
+		if (rule.pathId == lPathID)
 		{
-			csDir = GetTempFilePath();			
+			ApplyPathRule(rule, csDir);
+			break;
 		}
-		csDir += "ReceivedFiles\\";
-		break;
-
-	case PATH_DRAG_FILES:
-		if (CGetSetOptions::GetIsPortableDitto() == false)
-		{
-			csDir = GetTempFilePath();
-		}
-		csDir += "DragFiles\\";
-		break;
-
-	case PATH_CLIP_DIFF:
-		if (CGetSetOptions::GetIsPortableDitto() == false)
-		{
-			csDir = GetTempFilePath();
-		}
-		csDir += _T("ClipCompare\\");
-		break;
-
-	case PATH_RESTORE_TEMP:
-		if (CGetSetOptions::GetIsPortableDitto() == false)
-		{
-			csDir = GetTempFilePath();
-		}
-		csDir += _T("RestoreDb\\");
-		break;
-
-	case PATH_EDIT_CLIPS:
-		if (CGetSetOptions::GetIsPortableDitto() == false)
-		{
-			csDir = GetTempFilePath();
-		}
-		csDir += _T("EditClips\\");
-		break;
-
 	}
 
 	CreateDirectory(csDir, NULL);
 
 	return csDir;
+}
+
+void CGetSetOptions::ApplyPathRule(const PathRule& rule, CString& csDir)
+{
+	if (rule.root == PathRoot::AppDataUnlessPortable && CGetSetOptions::GetIsPortableDitto() == false)
+	{
+		csDir = GetAppDataPath();
+	}
+	else if (rule.root == PathRoot::TempUnlessPortable && CGetSetOptions::GetIsPortableDitto() == false)
+	{
+		csDir = GetTempFilePath();
+	}
+
+	csDir += rule.subDir;
 }
 
 long CGetSetOptions::GetDittoRestoreClipboardDelay()

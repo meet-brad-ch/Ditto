@@ -237,13 +237,34 @@ BOOL COptionsGeneral::OnApply()
 	m_copyAppExclude.GetWindowText(stringVal);
 	CGetSetOptions::SetCopyAppExclude(stringVal);
 
+	ApplyLanguage();
+
+	if (!ApplyDatabasePath())
+	{
+		return FALSE;
+	}
+
+	CGetSetOptions::SetQuickPastePosition((int)m_popupPositionCombo.GetItemData(m_popupPositionCombo.GetCurSel()));
+
+	if (m_LogFont.lfWeight != 0)
+	{
+		CGetSetOptions::SetFont(m_LogFont);
+	}
+
+	ApplyTheme();
+
+	return CPropertyPage::OnApply();
+}
+
+void COptionsGeneral::ApplyLanguage()
+{
 	CString csLanguage;
 	if(m_cbLanguage.GetCurSel() >= 0)
 	{
 		m_cbLanguage.GetLBText(m_cbLanguage.GetCurSel(), csLanguage);
 		CGetSetOptions::SetLanguageFile(csLanguage);
 	}
-	
+
 	if(csLanguage.IsEmpty() == FALSE)
 	{
 		if(!theApp.m_Language.LoadLanguageFile(csLanguage))
@@ -254,7 +275,10 @@ BOOL COptionsGeneral::OnApply()
 			MessageBox(cs, _T("Ditto"), MB_OK);
 		}
 	}
+}
 
+bool COptionsGeneral::ApplyDatabasePath()
+{
 	CString toSavePath;
 	m_ePath.GetWindowText(toSavePath);
 	CString resolvedPath = CGetSetOptions::ResolvePath(toSavePath);
@@ -265,22 +289,9 @@ BOOL COptionsGeneral::OnApply()
 	{
 		if(FileExists(resolvedPath) == FALSE)
 		{
-			CString cs;
-			cs.Format(_T("The database %s does not exist.\n\nCreate a new database?"), resolvedPath.GetString());
-
-			if(MessageBox(cs, _T("Ditto"), MB_OKCANCEL) == IDOK)
+			if (!PromptCreateDatabase(resolvedPath, bOpenNewDatabase))
 			{
-				// -- create a new one
-				if(CreateDB(resolvedPath))
-				{
-					bOpenNewDatabase = true;
-				}
-				else
-					MessageBox(_T("Error Creating Database"));
-			}
-			else
-			{
-				return FALSE;
+				return false;
 			}
 		}
 		else
@@ -289,7 +300,7 @@ BOOL COptionsGeneral::OnApply()
 			{
 				MessageBox(_T("Invalid Database"), _T("Ditto"), MB_OK);
 				m_ePath.SetFocus();
-				return FALSE;
+				return false;
 			}
 			else
 			{
@@ -299,28 +310,56 @@ BOOL COptionsGeneral::OnApply()
 
 		if(bOpenNewDatabase)
 		{
-			CGetSetOptions::SetDBPath(toSavePath);
-
-			if(OpenDatabase(resolvedPath) == FALSE)
-			{
-				MessageBox(_T("Error Opening new database"), _T("Ditto"), MB_OK);
-				m_ePath.SetFocus();
-				return FALSE;
-			}
-			else
-			{
-				theApp.RefreshView();
-			}
+			return OpenNewDatabase(toSavePath, resolvedPath);
 		}
 	}
 
-	CGetSetOptions::SetQuickPastePosition((int)m_popupPositionCombo.GetItemData(m_popupPositionCombo.GetCurSel()));
+	return true;
+}
 
-	if (m_LogFont.lfWeight != 0)
+bool COptionsGeneral::PromptCreateDatabase(const CString& resolvedPath, bool& bOpenNewDatabase)
+{
+	CString cs;
+	cs.Format(_T("The database %s does not exist.\n\nCreate a new database?"), resolvedPath.GetString());
+
+	if(MessageBox(cs, _T("Ditto"), MB_OKCANCEL) == IDOK)
 	{
-		CGetSetOptions::SetFont(m_LogFont);
+		// -- create a new one
+		if(CreateDB(resolvedPath))
+		{
+			bOpenNewDatabase = true;
+		}
+		else
+			MessageBox(_T("Error Creating Database"));
+	}
+	else
+	{
+		return false;
 	}
 
+	return true;
+}
+
+bool COptionsGeneral::OpenNewDatabase(const CString& toSavePath, const CString& resolvedPath)
+{
+	CGetSetOptions::SetDBPath(toSavePath);
+
+	if(OpenDatabase(resolvedPath) == FALSE)
+	{
+		MessageBox(_T("Error Opening new database"), _T("Ditto"), MB_OK);
+		m_ePath.SetFocus();
+		return false;
+	}
+	else
+	{
+		theApp.RefreshView();
+	}
+
+	return true;
+}
+
+void COptionsGeneral::ApplyTheme()
+{
 	CString currentTheme = CGetSetOptions::GetTheme();
 
 	CString csTheme = _T("");
@@ -345,8 +384,6 @@ BOOL COptionsGeneral::OnApply()
 	{
 		m_pParent->m_themeChanged = TRUE;
 	}
-	
-	return CPropertyPage::OnApply();
 }
 
 BOOL COptionsGeneral::OnSetActive() 
@@ -483,6 +520,24 @@ void COptionsGeneral::FillThemes()
 		//_T("(Follow windows light/dark themes)"));
 	m_cbTheme.SetItemData(windowsSettingIndex, 0);
 
+	bool bSetCurSel = AddThemeFiles(csFile, csTheme);
+
+	int nIndex = m_cbTheme.AddString(DEFAULT_THEME);
+	m_cbTheme.SetItemData(nIndex, 1);
+	if (csTheme == DEFAULT_THEME)
+	{
+		m_cbTheme.SetCurSel(nIndex);
+		bSetCurSel = true;
+	}
+
+	if (bSetCurSel == false)
+	{
+		SelectFollowWindowsTheme();
+	}
+}
+
+bool COptionsGeneral::AddThemeFiles(const CString& csFile, const CString& csTheme)
+{
 	CFileFind find;
 	BOOL bCont = find.FindFile(csFile);
 	bool bSetCurSel = false;
@@ -508,24 +563,18 @@ void COptionsGeneral::FillThemes()
 		}
 	}
 
-	int nIndex = m_cbTheme.AddString(DEFAULT_THEME);
-	m_cbTheme.SetItemData(nIndex, 1);
-	if (csTheme == DEFAULT_THEME)
-	{
-		m_cbTheme.SetCurSel(nIndex);
-		bSetCurSel = true;
-	}
+	return bSetCurSel;
+}
 
-	if (bSetCurSel == false)
+void COptionsGeneral::SelectFollowWindowsTheme()
+{
+	int count = m_cbTheme.GetCount();
+	for (int i = 0; i < count; i++)
 	{
-		int count = m_cbTheme.GetCount();
-		for (int i = 0; i < count; i++)
+		if (m_cbTheme.GetItemData(i) == 0)
 		{
-			if (m_cbTheme.GetItemData(i) == 0)
-			{
-				m_cbTheme.SetCurSel(i);
-				break;
-			}
+			m_cbTheme.SetCurSel(i);
+			break;
 		}
 	}
 }

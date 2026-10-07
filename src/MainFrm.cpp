@@ -273,219 +273,191 @@ void CMainFrame::OnFirstExit()
 
 LRESULT CMainFrame::OnHotKey(WPARAM wParam, LPARAM /*lParam*/)
 {
-    if(theApp.m_pDittoHotKey && wParam == theApp.m_pDittoHotKey->m_Atom ||
-		theApp.m_pDittoHotKey2 && wParam == theApp.m_pDittoHotKey2->m_Atom ||
-		theApp.m_pDittoHotKey3 && wParam == theApp.m_pDittoHotKey3->m_Atom)
-    {
-        //If they still have the shift/ctrl keys down
-        if(m_keyStateModifiers != 0 && m_quickPaste.IsWindowVisibleEx())
-        {
-            Log(_T("On Show Ditto HotKey, key state modifiers are still down, moving selection"));
-
-            if(m_bMovedSelectionMoveKeyState == false)
-            {
-                Log(_T("Setting flag m_bMovedSelectionMoveKeyState to true, will paste when modifier keys are up"));
-            }
-
-            m_quickPaste.MoveSelection(true);
-            m_bMovedSelectionMoveKeyState = true;
-        }
-        else if(CGetSetOptions::m_HideDittoOnHotKeyIfAlreadyShown && m_quickPaste.IsWindowTopLevel() && CGetSetOptions::GetShowPersistent() == FALSE)
-        {
-            Log(_T("On Show Ditto HotKey, window is already visible, hiding window"));
-            m_quickPaste.HideQPasteWnd();
-        }
-        else
-        {
-            Log(_T("On Show Ditto HotKey, showing window"));
-
-			StartKeyModifierTimer();
-
-			ShowQPasteWithActiveWindowCheck();
-        }
-
-        //KillTimer(CLOSE_WINDOW_TIMER);
-        //SetTimer(CLOSE_WINDOW_TIMER, ONE_HOUR *24, 0);
-    }
-    else if(theApp.m_pPosOne && wParam == theApp.m_pPosOne->m_Atom)
-    {
-        Log(_T("Pos 1 hot key"));
-        DoFirstTenPositionsPaste(0);
-    }
-    else if(theApp.m_pPosTwo && wParam == theApp.m_pPosTwo->m_Atom)
-    {
-        Log(_T("Pos 2 hot key"));
-        DoFirstTenPositionsPaste(1);
-    }
-    else if(theApp.m_pPosThree && wParam == theApp.m_pPosThree->m_Atom)
-    {
-        Log(_T("Pos 3 hot key"));
-        DoFirstTenPositionsPaste(2);
-    }
-    else if(theApp.m_pPosFour && wParam == theApp.m_pPosFour->m_Atom)
-    {
-        Log(_T("Pos 4 hot key"));
-        DoFirstTenPositionsPaste(3);
-    }
-    else if(theApp.m_pPosFive && wParam == theApp.m_pPosFive->m_Atom)
-    {
-        Log(_T("Pos 5 hot key"));
-        DoFirstTenPositionsPaste(4);
-    }
-    else if(theApp.m_pPosSix && wParam == theApp.m_pPosSix->m_Atom)
-    {
-        Log(_T("Pos 6 hot key"));
-        DoFirstTenPositionsPaste(5);
-    }
-    else if(theApp.m_pPosSeven && wParam == theApp.m_pPosSeven->m_Atom)
-    {
-        Log(_T("Pos 7 hot key"));
-        DoFirstTenPositionsPaste(6);
-    }
-    else if(theApp.m_pPosEight && wParam == theApp.m_pPosEight->m_Atom)
-    {
-        Log(_T("Pos 8 hot key"));
-        DoFirstTenPositionsPaste(7);
-    }
-    else if(theApp.m_pPosNine && wParam == theApp.m_pPosNine->m_Atom)
-    {
-        Log(_T("Pos 9 hot key"));
-        DoFirstTenPositionsPaste(8);
-    }
-    else if(theApp.m_pPosTen && wParam == theApp.m_pPosTen->m_Atom)
-    {
-        Log(_T("Pos 10 hot key"));
-        DoFirstTenPositionsPaste(9);
-    }
-    else if(theApp.m_pCopyBuffer1 && wParam == theApp.m_pCopyBuffer1->m_Atom)
-    {
-        Log(_T("Copy buffer 1 hot key"));
-        theApp.m_CopyBuffer.StartCopy(0);
-    }
-    else if(theApp.m_pPasteBuffer1 && wParam == theApp.m_pPasteBuffer1->m_Atom)
-    {
-        Log(_T("Paste buffer 1 hot key"));
-        theApp.m_CopyBuffer.PastCopyBuffer(0);
-    }
-    else if(theApp.m_pCutBuffer1 && wParam == theApp.m_pCutBuffer1->m_Atom)
-    {
-        Log(_T("Cut buffer 1 hot key"));
-        theApp.m_CopyBuffer.StartCopy(0, true);
-    }
-    else if(theApp.m_pCopyBuffer2 && wParam == theApp.m_pCopyBuffer2->m_Atom)
-    {
-        Log(_T("Copy buffer 2 hot key"));
-        theApp.m_CopyBuffer.StartCopy(1);
-    }
-    else if(theApp.m_pPasteBuffer2 && wParam == theApp.m_pPasteBuffer2->m_Atom)
-    {
-        Log(_T("Paste buffer 2 hot key"));
-        theApp.m_CopyBuffer.PastCopyBuffer(1);
-    }
-    else if(theApp.m_pCutBuffer2 && wParam == theApp.m_pCutBuffer2->m_Atom)
-    {
-        Log(_T("Cut buffer 2 hot key"));
-        theApp.m_CopyBuffer.StartCopy(1, true);
-    }
-    else if(theApp.m_pCopyBuffer3 && wParam == theApp.m_pCopyBuffer3->m_Atom)
-    {
-        Log(_T("Copy buffer 3 hot key"));
-        theApp.m_CopyBuffer.StartCopy(2);
-    }
-    else if(theApp.m_pPasteBuffer3 && wParam == theApp.m_pPasteBuffer3->m_Atom)
-    {
-        Log(_T("Paste buffer 3 hot key"));
-        theApp.m_CopyBuffer.PastCopyBuffer(2);
-    }
-    else if(theApp.m_pCutBuffer3 && wParam == theApp.m_pCutBuffer3->m_Atom)
-    {
-        Log(_T("Cut buffer 3 hot key"));
-        theApp.m_CopyBuffer.StartCopy(2, true);
-    }
-	else if (theApp.m_pCopyBuffer4 && wParam == theApp.m_pCopyBuffer4->m_Atom)
+	if (IsShowDittoHotKey(wParam))
 	{
-		Log(_T("Copy buffer 4 hot key"));
-		theApp.m_CopyBuffer.StartCopy(3);
+		OnShowDittoHotKey();
+		return TRUE;
 	}
-	else if (theApp.m_pPasteBuffer4 && wParam == theApp.m_pPasteBuffer4->m_Atom)
+
+	if (DoFirstTenHotKey(wParam) || DoCopyBufferHotKey(wParam))
 	{
-		Log(_T("Paste buffer 4 hot key"));
-		theApp.m_CopyBuffer.PastCopyBuffer(3);
+		return TRUE;
 	}
-	else if (theApp.m_pCutBuffer4 && wParam == theApp.m_pCutBuffer4->m_Atom)
-	{
-		Log(_T("Cut buffer 4 hot key"));
-		theApp.m_CopyBuffer.StartCopy(3, true);
-	}
-	else if (theApp.m_pCopyBuffer5 && wParam == theApp.m_pCopyBuffer5->m_Atom)
-	{
-		Log(_T("Copy buffer 5 hot key"));
-		theApp.m_CopyBuffer.StartCopy(4);
-		}
-	else if (theApp.m_pPasteBuffer5 && wParam == theApp.m_pPasteBuffer5->m_Atom)
-	{
-		Log(_T("Paste buffer 5 hot key"));
-		theApp.m_CopyBuffer.PastCopyBuffer(4);
-	}
-	else if (theApp.m_pCutBuffer5 && wParam == theApp.m_pCutBuffer5->m_Atom)
-	{
-		Log(_T("Cut buffer 5 hot key"));
-		theApp.m_CopyBuffer.StartCopy(4, true);
-	}
-	else if(theApp.m_pTextOnlyPaste && wParam == theApp.m_pTextOnlyPaste->m_Atom)
+
+	if (IsHotKey(theApp.m_pTextOnlyPaste, wParam))
 	{
 		DoTextOnlyPaste();
 	}
-	else if(theApp.m_pSaveClipboard && wParam == theApp.m_pSaveClipboard->m_Atom)
+	else if (IsHotKey(theApp.m_pSaveClipboard, wParam))
 	{
 		OnFirstSavecurrentclipboard();
 	}
-	else if (theApp.m_pCopyAndSaveClipboard && wParam == theApp.m_pCopyAndSaveClipboard->m_Atom)
+	else if (IsHotKey(theApp.m_pCopyAndSaveClipboard, wParam))
 	{
-		Log(StrF(_T("START of copy and save clipboard, sending copy")));
-
-		theApp.m_activeWnd.SendCopy(CopyReasonEnum::COPY_TO_UNKOWN);
-
-		int delay = CGetSetOptions::GetCopyAndSveDelay();
-		Log(StrF(_T("Copy and save clipboard, sending copy, delaying %dms before saving clipboard"), delay));
-		Sleep(delay);
-
-		Log(StrF(_T("Copy and save clipboard, saving clipboard")));
-		OnFirstSavecurrentclipboard();
-
-		Log(StrF(_T("END of copy and save clipboard")));
+		DoCopyAndSaveClipboard();
 	}
 	else
 	{
-		for(int i = 0; i < g_HotKeys.GetCount(); i++)
-		{
-			if(g_HotKeys[i] != NULL && 
-				g_HotKeys[i]->m_Atom == wParam && 
-				g_HotKeys[i]->m_clipId > 0)
-			{
-				if(g_HotKeys[i]->m_hkType == CHotKey::PASTE_OPEN_CLIP)
-				{
-					Log(StrF(_T("Pasting clip from global shortcut, clipId: %d"), g_HotKeys[i]->m_clipId));
-					PasteOrShowGroup(g_HotKeys[i]->m_clipId, -1, FALSE, TRUE, false);
-				}
-				else if(g_HotKeys[i]->m_hkType == CHotKey::MOVE_TO_GROUP)
-				{
-					Log(StrF(_T("Global hot key to save clip to group Id: %d, Sending copy to save selection to this group"), g_HotKeys[i]->m_clipId));
-
-					KillTimer(GROUP_DOUBLE_CLICK);
-					m_doubleClickGroupId = -1;
-					m_doubleClickGroupStartTime = 0;
-
-					theApp.SetActiveGroupId(g_HotKeys[i]->m_clipId);
-					theApp.m_activeWnd.SendCopy(CopyReasonEnum::COPY_TO_GROUP);
-				}
-
-				break;
-			}
-		}
+		DoGlobalClipHotKey(wParam);
 	}
 
     return TRUE;
+}
+
+bool CMainFrame::IsHotKey(const CHotKey* hotKey, WPARAM wParam)
+{
+	return hotKey && wParam == hotKey->m_Atom;
+}
+
+bool CMainFrame::IsShowDittoHotKey(WPARAM wParam)
+{
+	return IsHotKey(theApp.m_pDittoHotKey, wParam) ||
+		IsHotKey(theApp.m_pDittoHotKey2, wParam) ||
+		IsHotKey(theApp.m_pDittoHotKey3, wParam);
+}
+
+void CMainFrame::OnShowDittoHotKey()
+{
+    //If they still have the shift/ctrl keys down
+    if(m_keyStateModifiers != 0 && m_quickPaste.IsWindowVisibleEx())
+    {
+        Log(_T("On Show Ditto HotKey, key state modifiers are still down, moving selection"));
+
+        if(m_bMovedSelectionMoveKeyState == false)
+        {
+            Log(_T("Setting flag m_bMovedSelectionMoveKeyState to true, will paste when modifier keys are up"));
+        }
+
+        m_quickPaste.MoveSelection(true);
+        m_bMovedSelectionMoveKeyState = true;
+    }
+    else if(CGetSetOptions::m_HideDittoOnHotKeyIfAlreadyShown && m_quickPaste.IsWindowTopLevel() && CGetSetOptions::GetShowPersistent() == FALSE)
+    {
+        Log(_T("On Show Ditto HotKey, window is already visible, hiding window"));
+        m_quickPaste.HideQPasteWnd();
+    }
+    else
+    {
+        Log(_T("On Show Ditto HotKey, showing window"));
+
+		StartKeyModifierTimer();
+
+		ShowQPasteWithActiveWindowCheck();
+    }
+
+    //KillTimer(CLOSE_WINDOW_TIMER);
+    //SetTimer(CLOSE_WINDOW_TIMER, ONE_HOUR *24, 0);
+}
+
+bool CMainFrame::DoFirstTenHotKey(WPARAM wParam)
+{
+	const std::array<CHotKey*, 10> positions{ theApp.m_pPosOne, theApp.m_pPosTwo, theApp.m_pPosThree, theApp.m_pPosFour, theApp.m_pPosFive,
+		theApp.m_pPosSix, theApp.m_pPosSeven, theApp.m_pPosEight, theApp.m_pPosNine, theApp.m_pPosTen };
+
+	for (int pos = 0; pos < static_cast<int>(positions.size()); pos++)
+	{
+		if (IsHotKey(positions[pos], wParam))
+		{
+			Log(StrF(_T("Pos %d hot key"), pos + 1));
+			DoFirstTenPositionsPaste(pos);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool CMainFrame::DoCopyBufferHotKey(WPARAM wParam)
+{
+	const std::array<CopyBufferHotKeys, 5> buffers{ {
+		{ theApp.m_pCopyBuffer1, theApp.m_pPasteBuffer1, theApp.m_pCutBuffer1 },
+		{ theApp.m_pCopyBuffer2, theApp.m_pPasteBuffer2, theApp.m_pCutBuffer2 },
+		{ theApp.m_pCopyBuffer3, theApp.m_pPasteBuffer3, theApp.m_pCutBuffer3 },
+		{ theApp.m_pCopyBuffer4, theApp.m_pPasteBuffer4, theApp.m_pCutBuffer4 },
+		{ theApp.m_pCopyBuffer5, theApp.m_pPasteBuffer5, theApp.m_pCutBuffer5 },
+	} };
+
+	for (int buffer = 0; buffer < static_cast<int>(buffers.size()); buffer++)
+	{
+		if (DoCopyBufferHotKey(buffers[buffer], buffer, wParam))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool CMainFrame::DoCopyBufferHotKey(const CopyBufferHotKeys& hotKeys, int buffer, WPARAM wParam)
+{
+	if (IsHotKey(hotKeys.copy, wParam))
+	{
+		Log(StrF(_T("Copy buffer %d hot key"), buffer + 1));
+		theApp.m_CopyBuffer.StartCopy(buffer);
+		return true;
+	}
+
+	if (IsHotKey(hotKeys.paste, wParam))
+	{
+		Log(StrF(_T("Paste buffer %d hot key"), buffer + 1));
+		theApp.m_CopyBuffer.PastCopyBuffer(buffer);
+		return true;
+	}
+
+	if (IsHotKey(hotKeys.cut, wParam))
+	{
+		Log(StrF(_T("Cut buffer %d hot key"), buffer + 1));
+		theApp.m_CopyBuffer.StartCopy(buffer, true);
+		return true;
+	}
+
+	return false;
+}
+
+void CMainFrame::DoCopyAndSaveClipboard()
+{
+	Log(StrF(_T("START of copy and save clipboard, sending copy")));
+
+	theApp.m_activeWnd.SendCopy(CopyReasonEnum::COPY_TO_UNKOWN);
+
+	int delay = CGetSetOptions::GetCopyAndSveDelay();
+	Log(StrF(_T("Copy and save clipboard, sending copy, delaying %dms before saving clipboard"), delay));
+	Sleep(delay);
+
+	Log(StrF(_T("Copy and save clipboard, saving clipboard")));
+	OnFirstSavecurrentclipboard();
+
+	Log(StrF(_T("END of copy and save clipboard")));
+}
+
+void CMainFrame::DoGlobalClipHotKey(WPARAM wParam)
+{
+	for(int i = 0; i < g_HotKeys.GetCount(); i++)
+	{
+		if(g_HotKeys[i] != NULL &&
+			g_HotKeys[i]->m_Atom == wParam &&
+			g_HotKeys[i]->m_clipId > 0)
+		{
+			if(g_HotKeys[i]->m_hkType == CHotKey::PASTE_OPEN_CLIP)
+			{
+				Log(StrF(_T("Pasting clip from global shortcut, clipId: %d"), g_HotKeys[i]->m_clipId));
+				PasteOrShowGroup(g_HotKeys[i]->m_clipId, -1, FALSE, TRUE, false);
+			}
+			else if(g_HotKeys[i]->m_hkType == CHotKey::MOVE_TO_GROUP)
+			{
+				Log(StrF(_T("Global hot key to save clip to group Id: %d, Sending copy to save selection to this group"), g_HotKeys[i]->m_clipId));
+
+				KillTimer(GROUP_DOUBLE_CLICK);
+				m_doubleClickGroupId = -1;
+				m_doubleClickGroupStartTime = 0;
+
+				theApp.SetActiveGroupId(g_HotKeys[i]->m_clipId);
+				theApp.m_activeWnd.SendCopy(CopyReasonEnum::COPY_TO_GROUP);
+			}
+
+			break;
+		}
+	}
 }
 
 void CMainFrame::ShowQPasteWithActiveWindowCheck()
@@ -749,157 +721,165 @@ void CMainFrame::DoDittoCopyBufferPaste(int nCopyBuffer)
 	}
 }
 
+// CLOSE_WINDOW_TIMER has no entry: its handler does nothing (closing the window on it is disabled)
+const std::array<CMainFrame::TimerHandler, 11> CMainFrame::s_timerHandlers{ {
+	{ HIDE_ICON_TIMER, &CMainFrame::OnHideIconTimer },
+	{ REMOVE_OLD_ENTRIES_TIMER, &CMainFrame::OnRemoveOldEntriesTimer },
+	{ REMOVE_OLD_TEMP_FILES, &CMainFrame::OnRemoveOldTempFilesTimer },
+	{ KEY_STATE_MODIFIERS, &CMainFrame::OnKeyStateModifiersTimer },
+	{ ACTIVE_WINDOW_TIMER, &CMainFrame::OnActiveWindowTimer },
+	{ READ_RANDOM_DB_FILE, &CMainFrame::OnReadRandomDbFileTimer },
+	{ GROUP_DOUBLE_CLICK, &CMainFrame::OnGroupDoubleClickTimer },
+	{ SCREEN_RESOLUTION_CHANGED, &CMainFrame::OnScreenResolutionChangedTimer },
+	{ DELAYED_SHOW_DITTO_TIMER, &CMainFrame::OnDelayedShowDittoTimer },
+	{ SET_WINDOWS_THEME_TIMER, &CMainFrame::OnSetWindowsThemeTimer },
+	{ CLOSE_NO_DB_WINDOW_TIMER, &CMainFrame::OnCloseNoDbWindowTimer },
+} };
+
 void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 {
-    switch(nIDEvent)
+	for (const TimerHandler& handler : s_timerHandlers)
+	{
+		if (handler.timerId == nIDEvent)
+		{
+			(this->*handler.handle)();
+			break;
+		}
+	}
+
+    CFrameWnd::OnTimer(nIDEvent);
+}
+
+void CMainFrame::OnHideIconTimer()
+{
+	KillTimer(HIDE_ICON_TIMER);
+	if (!CGetSetOptions::GetShowIconInSysTray())
+	{
+		m_trayIcon.Hide();
+	}
+}
+
+void CMainFrame::OnRemoveOldEntriesTimer()
+{
+	m_thread.FireDeleteEntries();
+}
+
+void CMainFrame::OnRemoveOldTempFilesTimer()
+{
+	m_thread.FireRemoveTempFiles();
+}
+
+void CMainFrame::OnKeyStateModifiersTimer()
+{
+    m_keyModifiersTimerCount++;
+    if(m_keyStateModifiers != 0)
     {
-        case HIDE_ICON_TIMER:
-        	{
-            	KillTimer(nIDEvent);
-            	if (!CGetSetOptions::GetShowIconInSysTray())
-            	{
-                	m_trayIcon.Hide();
-            	}
-        }
-			break;
+        BYTE keyState = CAccels::GetKeyStateModifiers();
+        //Have they release the key state modifiers yet(ctrl, shift, alt)
+        if((m_keyStateModifiers &keyState) == 0)
+        {
+            KillTimer(KEY_STATE_MODIFIERS);
+            long waitTime = static_cast<long>(GetTickCount64() - m_startKeyStateTime);
 
-        case CLOSE_WINDOW_TIMER:
+            if(m_bMovedSelectionMoveKeyState || m_keyModifiersTimerCount > CGetSetOptions::GetKeyStateWaitTimerCount())
             {
-                //m_quickPaste.CloseQPasteWnd();
-            }
-			break;
-
-        case REMOVE_OLD_ENTRIES_TIMER:
-			{
-                m_thread.FireDeleteEntries();
-            }
-			break;
-
-		case REMOVE_OLD_TEMP_FILES:
-			{
-            	m_thread.FireRemoveTempFiles();
-			}
-			break;
-
-        case KEY_STATE_MODIFIERS:
-            m_keyModifiersTimerCount++;
-            if(m_keyStateModifiers != 0)
-            {
-                BYTE keyState = CAccels::GetKeyStateModifiers();
-                //Have they release the key state modifiers yet(ctrl, shift, alt)
-                if((m_keyStateModifiers &keyState) == 0)
-                {
-                    KillTimer(KEY_STATE_MODIFIERS);
-                    long waitTime = static_cast<long>(GetTickCount64() - m_startKeyStateTime);
-
-                    if(m_bMovedSelectionMoveKeyState || m_keyModifiersTimerCount > CGetSetOptions::GetKeyStateWaitTimerCount())
-                    {
-                        Log(StrF(_T("Timer KEY_STATE_MODIFIERS timeout count hit(%d), count (%d), time (%d), Move Selection from Modifer (%d) sending paste"), CGetSetOptions::GetKeyStateWaitTimerCount(), m_keyModifiersTimerCount, waitTime, m_bMovedSelectionMoveKeyState));
-                        m_quickPaste.OnKeyStateUp();
-                    }
-                    else
-                    {
-                        Log(StrF(_T("Timer KEY_STATE_MODIFIERS count NOT hit(%d), count (%d) time (%d)"), CGetSetOptions::GetKeyStateWaitTimerCount(), m_keyModifiersTimerCount, waitTime));
-                        m_quickPaste.SetKeyModiferState(false);
-                    }
-
-                    m_keyStateModifiers = 0;
-                    m_keyModifiersTimerCount = 0;
-                    m_bMovedSelectionMoveKeyState = 0;
-                }
+                Log(StrF(_T("Timer KEY_STATE_MODIFIERS timeout count hit(%d), count (%d), time (%d), Move Selection from Modifer (%d) sending paste"), CGetSetOptions::GetKeyStateWaitTimerCount(), m_keyModifiersTimerCount, waitTime, m_bMovedSelectionMoveKeyState));
+                m_quickPaste.OnKeyStateUp();
             }
             else
             {
-                KillTimer(KEY_STATE_MODIFIERS);
+                Log(StrF(_T("Timer KEY_STATE_MODIFIERS count NOT hit(%d), count (%d) time (%d)"), CGetSetOptions::GetKeyStateWaitTimerCount(), m_keyModifiersTimerCount, waitTime));
+                m_quickPaste.SetKeyModiferState(false);
             }
-            break;
 
-        case ACTIVE_WINDOW_TIMER:
-			{
-				if(theApp.m_bShowingQuickPaste)
-				{
-					theApp.m_activeWnd.TrackActiveWnd(false);
-				}
-			}
-			break;
-
-		case READ_RANDOM_DB_FILE:
-			{
-				m_thread.FireReadDbFile();
-			}
-			break;
-
-		case GROUP_DOUBLE_CLICK:
-			{
-				KillTimer(GROUP_DOUBLE_CLICK);			
-
-				Log(StrF(_T("Processing single click of groupId %d in timer, opening ditto to this group"), m_doubleClickGroupId));
-
-				ULONGLONG maxDiff = static_cast<ULONGLONG>(CGetSetOptions::GetGroupDoubleClickTimeMS() * 1.5);
-				ULONGLONG diff = GetTickCount64() - m_doubleClickGroupStartTime;
-
-				if(diff < maxDiff)
-				{					
-					if(m_doubleClickGroupId > -1)
-					{
-						if (theApp.EnterGroupID(m_doubleClickGroupId, FALSE, TRUE))
-						{
-							theApp.m_activeWnd.TrackActiveWnd(true);
-							StartKeyModifierTimer();
-							m_quickPaste.ShowQPasteWnd(this, false, true, FALSE);
-						}
-					}
-				}
-				else
-				{	
-					Log(StrF(_T("Something happened and we didn't process the group timer in time, Id: %d, Diff ms: %d, maxDiff: %d"), m_doubleClickGroupId, diff, maxDiff));
-				}
-
-				m_doubleClickGroupId = -1;
-				m_doubleClickGroupStartTime = 0;
-			}
-			break;
-
-		case SCREEN_RESOLUTION_CHANGED:
-			{
-				KillTimer(SCREEN_RESOLUTION_CHANGED);
-				m_quickPaste.OnScreenResolutionChange();
-			}
-			break;
-		case DELAYED_SHOW_DITTO_TIMER:
-		{
-			KillTimer(DELAYED_SHOW_DITTO_TIMER);
-			m_quickPaste.ShowQPasteWnd(this, false, false, FALSE);
-		}
-		break;
-
-		case SET_WINDOWS_THEME_TIMER:
-		{
-			KillTimer(SET_WINDOWS_THEME_TIMER);
-			auto theme = CGetSetOptions::GetTheme();
-			if (theme == _T(""))
-			{
-				CGetSetOptions::m_Theme.Load(theme);
-
-				auto visible = m_quickPaste.IsWindowVisibleEx();
-				m_quickPaste.CloseQPasteWnd();
-
-				if (visible)
-				{
-					m_quickPaste.ShowQPasteWnd(this, true, false, true);
-				}
-			}
-		}
-		break;
-
-		case CLOSE_NO_DB_WINDOW_TIMER:
-			KillTimer(CLOSE_NO_DB_WINDOW_TIMER);
-			theApp.CloseNoDbWindow();
-			break;
-
+            m_keyStateModifiers = 0;
+            m_keyModifiersTimerCount = 0;
+            m_bMovedSelectionMoveKeyState = 0;
+        }
     }
+    else
+    {
+        KillTimer(KEY_STATE_MODIFIERS);
+    }
+}
 
-    CFrameWnd::OnTimer(nIDEvent);
+void CMainFrame::OnActiveWindowTimer()
+{
+	if(theApp.m_bShowingQuickPaste)
+	{
+		theApp.m_activeWnd.TrackActiveWnd(false);
+	}
+}
+
+void CMainFrame::OnReadRandomDbFileTimer()
+{
+	m_thread.FireReadDbFile();
+}
+
+void CMainFrame::OnGroupDoubleClickTimer()
+{
+	KillTimer(GROUP_DOUBLE_CLICK);
+
+	Log(StrF(_T("Processing single click of groupId %d in timer, opening ditto to this group"), m_doubleClickGroupId));
+
+	ULONGLONG maxDiff = static_cast<ULONGLONG>(CGetSetOptions::GetGroupDoubleClickTimeMS() * 1.5);
+	ULONGLONG diff = GetTickCount64() - m_doubleClickGroupStartTime;
+
+	if(diff < maxDiff)
+	{
+		if(m_doubleClickGroupId > -1)
+		{
+			if (theApp.EnterGroupID(m_doubleClickGroupId, FALSE, TRUE))
+			{
+				theApp.m_activeWnd.TrackActiveWnd(true);
+				StartKeyModifierTimer();
+				m_quickPaste.ShowQPasteWnd(this, false, true, FALSE);
+			}
+		}
+	}
+	else
+	{
+		Log(StrF(_T("Something happened and we didn't process the group timer in time, Id: %d, Diff ms: %d, maxDiff: %d"), m_doubleClickGroupId, diff, maxDiff));
+	}
+
+	m_doubleClickGroupId = -1;
+	m_doubleClickGroupStartTime = 0;
+}
+
+void CMainFrame::OnScreenResolutionChangedTimer()
+{
+	KillTimer(SCREEN_RESOLUTION_CHANGED);
+	m_quickPaste.OnScreenResolutionChange();
+}
+
+void CMainFrame::OnDelayedShowDittoTimer()
+{
+	KillTimer(DELAYED_SHOW_DITTO_TIMER);
+	m_quickPaste.ShowQPasteWnd(this, false, false, FALSE);
+}
+
+void CMainFrame::OnSetWindowsThemeTimer()
+{
+	KillTimer(SET_WINDOWS_THEME_TIMER);
+	auto theme = CGetSetOptions::GetTheme();
+	if (theme == _T(""))
+	{
+		CGetSetOptions::m_Theme.Load(theme);
+
+		auto visible = m_quickPaste.IsWindowVisibleEx();
+		m_quickPaste.CloseQPasteWnd();
+
+		if (visible)
+		{
+			m_quickPaste.ShowQPasteWnd(this, true, false, true);
+		}
+	}
+}
+
+void CMainFrame::OnCloseNoDbWindowTimer()
+{
+	KillTimer(CLOSE_NO_DB_WINDOW_TIMER);
+	theApp.CloseNoDbWindow();
 }
 
 LRESULT CMainFrame::OnShowTrayIcon(WPARAM wParam, LPARAM lParam)

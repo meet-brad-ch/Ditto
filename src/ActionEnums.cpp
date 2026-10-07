@@ -16,364 +16,185 @@ ActionEnums::~ActionEnums()
 {
 }
 
+const std::array<ActionEnums::ActionDescription, 117> ActionEnums::s_descriptions{ {
+	{ SHOWDESCRIPTION, "View Full Description" },
+	{ NEXTDESCRIPTION, "Next Full Description" },
+	{ PREVDESCRIPTION, "Previous Full Description" },
+	{ SHOWMENU, "Show Context Menu" },
+	{ SYSTEM_MENU, "Show System Context Menu" },
+	{ NEWGROUP, "New Group" },
+	{ NEWGROUPSELECTION, "New Group Selection" },
+	{ TOGGLEFILELOGGING, "Toggle On File Logging" },
+	{ TOGGLEOUTPUTDEBUGSTRING, "Toggle OutputDebugString Logging" },
+	{ CLOSEWINDOW, "Close Window" },
+	{ NEXTTABCONTROL, "NEXTTABCONTROL" },
+	{ PREVTABCONTROL, "PREVTABCONTROL" },
+	{ SHOWGROUPS, "View Groups" },
+	{ NEWCLIP, "New Clip" },
+	{ EDITCLIP, "Edit Clip" },
+	{ MODIFIER_ACTVE_SELECTIONUP, "MODIFIER_ACTVE_SELECTIONUP" },
+	{ MODIFIER_ACTVE_SELECTIONDOWN, "MODIFIER_ACTVE_SELECTIONDOWN" },
+	{ MODIFIER_ACTVE_MOVEFIRST, "MODIFIER_ACTVE_MOVEFIRST" },
+	{ MODIFIER_ACTVE_MOVELAST, "MODIFIER_ACTVE_MOVELAST" },
+	{ CANCELFILTER, "Cancel Filter" },
+	{ HOMELIST, "HOMELIST" },
+	{ BACKGRROUP, "Back Group" },
+	{ TOGGLESHOWPERSISTANT, "Toggle Show Persistent" },
+	{ PASTE_SELECTED, "Paste Selected" },
+	{ DELETE_SELECTED, "Delete Selected" },
+	{ CLIP_PROPERTIES, "Clip Properties" },
+	{ PASTE_SELECTED_PLAIN_TEXT, "Paste Selected Plain Text" },
+	{ MOVE_CLIP_TO_GROUP, "Move Clip To Group" },
+	{ ELEVATE_PRIVlEGES, "Option - Elevate Privileges" },
+	{ SHOW_IN_TASKBAR, "Option - Show In TaskBar" },
+	{ COMPARE_SELECTED_CLIPS, "Compare Selected Clips" },
+	{ SELECT_LEFT_SIDE_COMPARE, "Select Left File For Compare" },
+	{ SELECT_RIGHT_SITE_AND_DO_COMPARE, "Select Right File And Do Compare" },
+	{ EXPORT_TO_TEXT_FILE, "Export To Text File" },
+	{ EXPORT_TO_QR_CODE, "Export To QR Code" },
+	{ EXPORT_TO_BITMAP_FILE, "Export To Image File" },
+	{ SAVE_CURRENT_CLIPBOARD, "Save Current Clipboard" },
+	{ MOVE_CLIP_UP, "Move Clip Up" },
+	{ MOVE_CLIP_DOWN, "Move Clip Down" },
+	{ MOVE_CLIP_TOP, "Move Clip Top" },
+	{ FILTER_ON_SELECTED_CLIP, "Filter On Selected Clip" },
+	{ PASTE_UPPER_CASE, "Paste Upper Case" },
+	{ PASTE_LOWER_CASE, "Paste Lower Case" },
+	{ PASTE_CAPITALiZE, "Paste Capitalize" },
+	{ PASTE_SENTENCE_CASE, "Paste Sentence Case" },
+	{ PASTE_REMOVE_LINE_FEEDS, "Paste Remove Line Feeds" },
+	{ PASTE_ADD_ONE_LINE_FEED, "Paste Add One Line Feed" },
+	{ PASTE_ADD_TWO_LINE_FEEDS, "Paste Add Two Line Feeds" },
+	{ PASTE_TYPOGLYCEMIA, "Paste Typoglycemia" },
+	{ PASTE_POSITION_1, "Paste Position 1" },
+	{ PASTE_POSITION_2, "Paste Position 2" },
+	{ PASTE_POSITION_3, "Paste Position 3" },
+	{ PASTE_POSITION_4, "Paste Position 4" },
+	{ PASTE_POSITION_5, "Paste Position 5" },
+	{ PASTE_POSITION_6, "Paste Position 6" },
+	{ PASTE_POSITION_7, "Paste Position 7" },
+	{ PASTE_POSITION_8, "Paste Position 8" },
+	{ PASTE_POSITION_9, "Paste Position 9" },
+	{ PASTE_POSITION_10, "Paste Position 10" },
+	{ CONFIG_SHOW_FIRST_TEN_TEXT, "Option - Show text for first ten copy hot keys" },
+	{ CONFIG_SHOW_CLIP_WAS_PASTED, "Option - Show indicator a clip has been pasted" },
+	{ TOGGLE_LAST_GROUP_TOGGLE, "Toggle Last Group Toggle" },
+	{ MAKE_TOP_STICKY, "Make Top Sticky Clip" },
+	{ MAKE_LAST_STICKY, "Make Last Sticky Clip" },
+	{ REMOVE_STICKY, "Remove Sticky Setting" },
+	{ PASTE_ADD_CURRENT_TIME, "Paste Add Current Time" },
+	{ IMPORT_CLIP, "Import Clip" },
+	{ GLOBAl_HOTKEYS, "Global HotKeys" },
+	{ DELETE_CLIP_DATA, "Delete Clip Data" },
+	{ REPLACE_TOP_STICKY_CLIP, "Replace Top Sticky Clip" },
+	{ SAVE_CF_HDROP_FIlE_DATA, "Save copied file (cf_hdrop) contents into Ditto" },
+	{ TOGGLE_CLIPBOARD_CONNECTION, "Toggle clipboard connection" },
+	{ MOVE_SELECTION_UP, "Move Selection Up" },
+	{ MOVE_SELECTION_DOWN, "Move Selection Down" },
+	{ TOGGLE_DESCRIPTION_WORD_WRAP, "Toggle Description Word Wrap" },
+	{ APPLY_LAST_SEARCH, "Apply Last Search" },
+	{ TOGGLE_SEARCH_METHOD, "Toggle Search Method" },
+	{ MOVE_CLIP_LAST, "Move Clip Last" },
+	{ PASTE_DONT_MOVE_CLIP, "Paste, Don't Change Clip Order" },
+	{ PASTE_TRIM_WHITE_SPACE, "Paste, Trim White Space" },
+	{ PASTE_POSIXIFY_PATHS, "Paste, Posixify Paths" },
+	{ TRANSPARENCY_NONE, "Set Transparency None" },
+	{ TRANSPARENCY_5, "Set Transparency 5%" },
+	{ TRANSPARENCY_10, "Set Transparency 10%" },
+	{ TRANSPARENCY_15, "Set Transparency 15%" },
+	{ TRANSPARENCY_20, "Set Transparency 20%" },
+	{ TRANSPARENCY_25, "Set Transparency 25%" },
+	{ TRANSPARENCY_30, "Set Transparency 30%" },
+	{ TRANSPARENCY_35, "Set Transparency 35%" },
+	{ TRANSPARENCY_40, "Set Transparency 40%" },
+	{ TRANSPARENCY_TOGGLE, "Toggle Transparency Enabled" },
+	{ TRANSPARENCY_INCREASE, "Increase Transparency %" },
+	{ TRANSPARENCY_DECREASE, "Decrease Transparency %" },
+	{ SLUGIFY, "Slugify" },
+	{ INVERT_CASE, "Invert Case" },
+	{ COPY_SELECTION, "Copy Selection" },
+	{ FORCE_CLOSE_WINDOW, "Force Close Window" },
+	{ REFRESH_LIST, "Refresh List" },
+	{ DELETE_ALL_NON_USED_CLIPS, "Delete all non used clips" },
+	{ SET_DRAG_FILE_NAME, "Set Drag File Name" },
+	{ PASTE_CAMEL_CASE, "Paste CamelCase" },
+	{ PASTE_MULTI_IMAGE_HORIZONTAL, "Paste Muliple Images Horizontally" },
+	{ PASTE_MULTI_IMAGE_VERTICAL, "Paste Muliple Images Vertically" },
+	{ ASCII_TEXT_ONLY, "Asci Text Only" },
+	{ PASTE_POSITION_1_PLAIN_TEXT, "Paste Position 1 Plain Text Only" },
+	{ PASTE_POSITION_2_PLAIN_TEXT, "Paste Position 2 Plain Text Only" },
+	{ PASTE_POSITION_3_PLAIN_TEXT, "Paste Position 3 Plain Text Only" },
+	{ PASTE_POSITION_4_PLAIN_TEXT, "Paste Position 4 Plain Text Only" },
+	{ PASTE_POSITION_5_PLAIN_TEXT, "Paste Position 5 Plain Text Only" },
+	{ PASTE_POSITION_6_PLAIN_TEXT, "Paste Position 6 Plain Text Only" },
+	{ PASTE_POSITION_7_PLAIN_TEXT, "Paste Position 7 Plain Text Only" },
+	{ PASTE_POSITION_8_PLAIN_TEXT, "Paste Position 8 Plain Text Only" },
+	{ PASTE_POSITION_9_PLAIN_TEXT, "Paste Position 9 Plain Text Only" },
+	{ PASTE_POSITION_10_PLAIN_TEXT, "Paste Position 10 Plain Text Only" },
+	{ GENERATE_GUID, "Generate GUID" },
+	{ PASTE_AS_IMAGE, "Paste as Image" },
+	{ SHOW_STARRED_CLIPS, "Show Starred Clips" },
+} };
+
+const std::array<ActionEnums::DefaultShortcut, 31> ActionEnums::s_defaultShortcutsFirst{ {
+	{ ActionEnums::SHOWDESCRIPTION, VK_F3 },
+	{ ActionEnums::NEXTDESCRIPTION, 'N' },
+	{ ActionEnums::PREVDESCRIPTION, 'P' },
+	{ ActionEnums::NEWGROUP, ACCEL_MAKEKEY(VK_F7, HOTKEYF_CONTROL) },
+	{ ActionEnums::NEWGROUPSELECTION, VK_F7 },
+	{ ActionEnums::SHOWGROUPS, ACCEL_MAKEKEY('G', HOTKEYF_CONTROL) },
+	{ ActionEnums::NEWCLIP, ACCEL_MAKEKEY('N', HOTKEYF_CONTROL) },
+	{ ActionEnums::EDITCLIP, ACCEL_MAKEKEY('E', HOTKEYF_CONTROL) },
+	{ ActionEnums::CANCELFILTER, ACCEL_MAKEKEY('C', HOTKEYF_ALT) },
+	{ ActionEnums::TOGGLESHOWPERSISTANT, ACCEL_MAKEKEY(VK_SPACE, HOTKEYF_CONTROL) },
+	{ ActionEnums::CLIP_PROPERTIES, ACCEL_MAKEKEY(VK_RETURN, HOTKEYF_ALT) },
+	{ ActionEnums::PASTE_SELECTED_PLAIN_TEXT, ACCEL_MAKEKEY(VK_RETURN, HOTKEYF_SHIFT) },
+	{ ActionEnums::COMPARE_SELECTED_CLIPS, ACCEL_MAKEKEY(VK_F2, HOTKEYF_CONTROL) },
+	{ ActionEnums::PASTE_SELECTED, VK_RETURN },
+	{ ActionEnums::SHOWMENU, VK_MOUSE_RIGHT_CLICK },
+	{ PASTE_POSITION_1, ACCEL_MAKEKEY('1', HOTKEYF_CONTROL) },
+	{ PASTE_POSITION_2, ACCEL_MAKEKEY('2', HOTKEYF_CONTROL) },
+	{ PASTE_POSITION_3, ACCEL_MAKEKEY('3', HOTKEYF_CONTROL) },
+	{ PASTE_POSITION_4, ACCEL_MAKEKEY('4', HOTKEYF_CONTROL) },
+	{ PASTE_POSITION_5, ACCEL_MAKEKEY('5', HOTKEYF_CONTROL) },
+	{ PASTE_POSITION_6, ACCEL_MAKEKEY('6', HOTKEYF_CONTROL) },
+	{ PASTE_POSITION_7, ACCEL_MAKEKEY('7', HOTKEYF_CONTROL) },
+	{ PASTE_POSITION_8, ACCEL_MAKEKEY('8', HOTKEYF_CONTROL) },
+	{ PASTE_POSITION_9, ACCEL_MAKEKEY('9', HOTKEYF_CONTROL) },
+	{ PASTE_POSITION_10, ACCEL_MAKEKEY('0', HOTKEYF_CONTROL) },
+	{ CLOSEWINDOW, VK_ESCAPE },
+	{ FORCE_CLOSE_WINDOW, ACCEL_MAKEKEY(VK_ESCAPE, HOTKEYF_SHIFT) },
+	{ TOGGLE_DESCRIPTION_WORD_WRAP, 'W' },
+	{ COPY_SELECTION, ACCEL_MAKEKEY('C', HOTKEYF_CONTROL) },
+	{ REFRESH_LIST, VK_F5 },
+	{ SET_DRAG_FILE_NAME, VK_F4 },
+} };
+
+const std::array<ActionEnums::DefaultShortcut, 11> ActionEnums::s_defaultShortcutsSecond{ {
+	{ ActionEnums::PASTE_SELECTED, VK_MOUSE_DOUBLE_CLICK },
+	{ PASTE_POSITION_1, ACCEL_MAKEKEY(VK_NUMPAD1, HOTKEYF_CONTROL) },
+	{ PASTE_POSITION_2, ACCEL_MAKEKEY(VK_NUMPAD2, HOTKEYF_CONTROL) },
+	{ PASTE_POSITION_3, ACCEL_MAKEKEY(VK_NUMPAD3, HOTKEYF_CONTROL) },
+	{ PASTE_POSITION_4, ACCEL_MAKEKEY(VK_NUMPAD4, HOTKEYF_CONTROL) },
+	{ PASTE_POSITION_5, ACCEL_MAKEKEY(VK_NUMPAD5, HOTKEYF_CONTROL) },
+	{ PASTE_POSITION_6, ACCEL_MAKEKEY(VK_NUMPAD6, HOTKEYF_CONTROL) },
+	{ PASTE_POSITION_7, ACCEL_MAKEKEY(VK_NUMPAD7, HOTKEYF_CONTROL) },
+	{ PASTE_POSITION_8, ACCEL_MAKEKEY(VK_NUMPAD8, HOTKEYF_CONTROL) },
+	{ PASTE_POSITION_9, ACCEL_MAKEKEY(VK_NUMPAD9, HOTKEYF_CONTROL) },
+	{ PASTE_POSITION_10, ACCEL_MAKEKEY(VK_NUMPAD0, HOTKEYF_CONTROL) },
+} };
 
 CString ActionEnums::EnumDescription(ActionEnumValues value)
 {
 	CString val = _T("");
 
-	switch (value)
+	for (const ActionDescription& description : s_descriptions)
 	{
-	case SHOWDESCRIPTION:
-		val = "View Full Description";
-		break;
-	case NEXTDESCRIPTION:
-		val = "Next Full Description";
-		break;
-	case PREVDESCRIPTION:
-		val = "Previous Full Description";
-		break;
-	case SHOWMENU:
-		val = "Show Context Menu";
-		break;
-	case SYSTEM_MENU:
-		val = "Show System Context Menu";
-		break;
-	case NEWGROUP:
-		val = "New Group";
-		break;
-	case NEWGROUPSELECTION:
-		val = "New Group Selection";
-		break;
-	case TOGGLEFILELOGGING:
-		val = "Toggle On File Logging";
-		break;
-	case TOGGLEOUTPUTDEBUGSTRING:
-		val = "Toggle OutputDebugString Logging";
-		break;
-	case CLOSEWINDOW:
-		val = "Close Window";
-		break;
-	case NEXTTABCONTROL:
-		val = "NEXTTABCONTROL";
-		break;
-	case PREVTABCONTROL:
-		val = "PREVTABCONTROL";
-		break;
-	case SHOWGROUPS:
-		val = "View Groups";
-		break;
-	case NEWCLIP:
-		val = "New Clip";
-		break;
-	case EDITCLIP:
-		val = "Edit Clip";
-		break;
-	case MODIFIER_ACTVE_SELECTIONUP:
-		val = "MODIFIER_ACTVE_SELECTIONUP";
-		break;
-	case MODIFIER_ACTVE_SELECTIONDOWN:
-		val = "MODIFIER_ACTVE_SELECTIONDOWN";
-		break;
-	case MODIFIER_ACTVE_MOVEFIRST:
-		val = "MODIFIER_ACTVE_MOVEFIRST";
-		break;
-	case MODIFIER_ACTVE_MOVELAST:
-		val = "MODIFIER_ACTVE_MOVELAST";
-		break;
-	case CANCELFILTER:
-		val = "Cancel Filter";
-		break;
-	case HOMELIST:
-		val = "HOMELIST";
-		break;
-	case BACKGRROUP:
-		val = "Back Group";
-		break;
-	case TOGGLESHOWPERSISTANT:
-		val = "Toggle Show Persistent";
-		break;
-	case PASTE_SELECTED:
-		val = "Paste Selected";
-		break;
-	case DELETE_SELECTED:
-		val = "Delete Selected";
-		break;
-	case CLIP_PROPERTIES:
-		val = "Clip Properties";
-		break;
-	case PASTE_SELECTED_PLAIN_TEXT:
-		val = "Paste Selected Plain Text";
-		break;
-	case MOVE_CLIP_TO_GROUP:
-		val = "Move Clip To Group";
-		break;
-	case ELEVATE_PRIVlEGES:
-		val = "Option - Elevate Privileges";
-		break;
-	case SHOW_IN_TASKBAR:
-		val = "Option - Show In TaskBar";
-		break;
-	case COMPARE_SELECTED_CLIPS:
-		val = "Compare Selected Clips";
-		break;
-	case SELECT_LEFT_SIDE_COMPARE:
-		val = "Select Left File For Compare";
-		break;
-	case SELECT_RIGHT_SITE_AND_DO_COMPARE:
-		val = "Select Right File And Do Compare";
-		break;
-	case EXPORT_TO_TEXT_FILE:
-		val = "Export To Text File";
-		break;
-	case EXPORT_TO_QR_CODE:
-		val = "Export To QR Code";
-		break;
-	case EXPORT_TO_BITMAP_FILE:
-		val = "Export To Image File";
-		break;
-	case SAVE_CURRENT_CLIPBOARD:
-		val = "Save Current Clipboard";
-		break;
-	case MOVE_CLIP_UP:
-		val = "Move Clip Up";
-		break;
-	case MOVE_CLIP_DOWN:
-		val = "Move Clip Down";
-		break;
-	case MOVE_CLIP_TOP:
-		val = "Move Clip Top";
-		break;
-	case FILTER_ON_SELECTED_CLIP:
-		val = "Filter On Selected Clip";
-		break;
-	case PASTE_UPPER_CASE:
-		val = "Paste Upper Case";
-		break;
-	case PASTE_LOWER_CASE:
-		val = "Paste Lower Case";
-		break;
-	case PASTE_CAPITALiZE:
-		val = "Paste Capitalize";
-		break;
-	case PASTE_SENTENCE_CASE:
-		val = "Paste Sentence Case";
-		break;
-	case PASTE_REMOVE_LINE_FEEDS:
-		val = "Paste Remove Line Feeds";
-		break;
-	case PASTE_ADD_ONE_LINE_FEED:
-		val = "Paste Add One Line Feed";
-		break;
-	case PASTE_ADD_TWO_LINE_FEEDS:
-		val = "Paste Add Two Line Feeds";
-		break;
-	case PASTE_TYPOGLYCEMIA:
-		val = "Paste Typoglycemia";
-		break;
-	case PASTE_POSITION_1:
-		val = "Paste Position 1";
-		break;
-	case PASTE_POSITION_2:
-		val = "Paste Position 2";
-		break;
-	case PASTE_POSITION_3:
-		val = "Paste Position 3";
-		break;
-	case PASTE_POSITION_4:
-		val = "Paste Position 4";
-		break;
-	case PASTE_POSITION_5:
-		val = "Paste Position 5";
-		break;
-	case PASTE_POSITION_6:
-		val = "Paste Position 6";
-		break;
-	case PASTE_POSITION_7:
-		val = "Paste Position 7";
-		break;
-	case PASTE_POSITION_8:
-		val = "Paste Position 8";
-		break;
-	case PASTE_POSITION_9:
-		val = "Paste Position 9";
-		break;
-	case PASTE_POSITION_10:
-		val = "Paste Position 10";
-		break;
-	case CONFIG_SHOW_FIRST_TEN_TEXT:
-		val = "Option - Show text for first ten copy hot keys";
-		break;
-	case CONFIG_SHOW_CLIP_WAS_PASTED:
-		val = "Option - Show indicator a clip has been pasted";
-		break;
-	case TOGGLE_LAST_GROUP_TOGGLE:
-		val = "Toggle Last Group Toggle";
-		break;
-	case MAKE_TOP_STICKY:
-		val = "Make Top Sticky Clip";
-		break;
-	case MAKE_LAST_STICKY:
-		val = "Make Last Sticky Clip";
-		break;
-	case REMOVE_STICKY:
-		val = "Remove Sticky Setting";
-		break;
-	case PASTE_ADD_CURRENT_TIME:
-		val = "Paste Add Current Time";
-		break;
-	case IMPORT_CLIP:
-		val = "Import Clip";
-		break;
-	case GLOBAl_HOTKEYS:
-		val = "Global HotKeys";
-		break;
-	case DELETE_CLIP_DATA:
-		val = "Delete Clip Data";
-		break;
-	case REPLACE_TOP_STICKY_CLIP:
-		val = "Replace Top Sticky Clip";
-		break;
-	case SAVE_CF_HDROP_FIlE_DATA:
-		val = "Save copied file (cf_hdrop) contents into Ditto";
-		break;
-	case TOGGLE_CLIPBOARD_CONNECTION:
-		val = "Toggle clipboard connection";
-		break;
-	case MOVE_SELECTION_UP:
-		val = "Move Selection Up";
-		break;
-	case MOVE_SELECTION_DOWN:
-		val = "Move Selection Down";
-		break;
-	case TOGGLE_DESCRIPTION_WORD_WRAP:
-		val = "Toggle Description Word Wrap";
-		break;
-	case APPLY_LAST_SEARCH:
-		val = "Apply Last Search";
-		break;
-	case TOGGLE_SEARCH_METHOD:
-		val = "Toggle Search Method";
-		break;
-	case MOVE_CLIP_LAST:
-		val = "Move Clip Last";
-		break;
-	case PASTE_DONT_MOVE_CLIP:
-		val = "Paste, Don't Change Clip Order";
-		break;
-	case PASTE_TRIM_WHITE_SPACE:
-		val = "Paste, Trim White Space";
-		break;
-	case PASTE_POSIXIFY_PATHS:
-		val = "Paste, Posixify Paths";
-		break;
-	case TRANSPARENCY_NONE:
-		val = "Set Transparency None";
-		break;
-	case TRANSPARENCY_5:
-		val = "Set Transparency 5%";
-		break;
-	case TRANSPARENCY_10:
-		val = "Set Transparency 10%";
-		break;
-	case TRANSPARENCY_15:
-		val = "Set Transparency 15%";
-		break;
-	case TRANSPARENCY_20:
-		val = "Set Transparency 20%";
-		break;
-	case TRANSPARENCY_25:
-		val = "Set Transparency 25%";
-		break;
-	case TRANSPARENCY_30:
-		val = "Set Transparency 30%";
-		break;
-	case TRANSPARENCY_35:
-		val = "Set Transparency 35%";
-		break;
-	case TRANSPARENCY_40:
-		val = "Set Transparency 40%";
-		break;
-	case TRANSPARENCY_TOGGLE:
-		val = "Toggle Transparency Enabled";
-		break;
-	case TRANSPARENCY_INCREASE:
-		val = "Increase Transparency %";
-		break;
-	case TRANSPARENCY_DECREASE:
-		val = "Decrease Transparency %";
-		break;
-	case SLUGIFY:
-		val = "Slugify";
-		break;
-	case INVERT_CASE:
-		val = "Invert Case";
-		break;
-	case COPY_SELECTION:
-		val = "Copy Selection";
-		break;
-	case FORCE_CLOSE_WINDOW:
-		val = "Force Close Window";
-		break;
-	case REFRESH_LIST:
-		val = "Refresh List";
-		break;
-	case DELETE_ALL_NON_USED_CLIPS:
-		val = "Delete all non used clips";
-		break;
-	case SET_DRAG_FILE_NAME:
-		val = "Set Drag File Name";
-		break;
-	case PASTE_CAMEL_CASE:
-		val = "Paste CamelCase";
-		break;
-	case PASTE_MULTI_IMAGE_HORIZONTAL:
-		val = "Paste Muliple Images Horizontally";
-		break;
-	case PASTE_MULTI_IMAGE_VERTICAL:
-		val = "Paste Muliple Images Vertically";
-		break;
-	case ASCII_TEXT_ONLY:
-		val = "Asci Text Only";
-		break;
-	case PASTE_POSITION_1_PLAIN_TEXT:
-		val = "Paste Position 1 Plain Text Only";
-		break;
-	case PASTE_POSITION_2_PLAIN_TEXT:
-		val = "Paste Position 2 Plain Text Only";
-		break;
-	case PASTE_POSITION_3_PLAIN_TEXT:
-		val = "Paste Position 3 Plain Text Only";
-		break;
-	case PASTE_POSITION_4_PLAIN_TEXT:
-		val = "Paste Position 4 Plain Text Only";
-		break;
-	case PASTE_POSITION_5_PLAIN_TEXT:
-		val = "Paste Position 5 Plain Text Only";
-		break;
-	case PASTE_POSITION_6_PLAIN_TEXT:
-		val = "Paste Position 6 Plain Text Only";
-		break;
-	case PASTE_POSITION_7_PLAIN_TEXT:
-		val = "Paste Position 7 Plain Text Only";
-		break;
-	case PASTE_POSITION_8_PLAIN_TEXT:
-		val = "Paste Position 8 Plain Text Only";
-		break;
-	case PASTE_POSITION_9_PLAIN_TEXT:
-		val = "Paste Position 9 Plain Text Only";
-		break;
-	case PASTE_POSITION_10_PLAIN_TEXT:
-		val = "Paste Position 10 Plain Text Only";
-		break;
-	case GENERATE_GUID:
-		val = "Generate GUID";
-		break;
-	case PASTE_AS_IMAGE:
-		val = "Paste as Image";
-		break;
-	case SHOW_STARRED_CLIPS:
-		val = "Show Starred Clips";
-		break;
+		if (description.action == value)
+		{
+			val = description.text;
+			break;
+		}
 	}
 
 	CString translatedValue = theApp.m_Language.GetQuickPasteKeyboardString(value, val);
@@ -391,99 +212,22 @@ int ActionEnums::GetDefaultShortCutKeyA(ActionEnumValues value, int pos)
 	switch(pos)
 	{
 	case 0:
-		switch (value)
-		{
-		case ActionEnums::SHOWDESCRIPTION:
-			return VK_F3;
-		case ActionEnums::NEXTDESCRIPTION:
-			return 'N';
-		case ActionEnums::PREVDESCRIPTION:
-			return 'P';		
-		case ActionEnums::NEWGROUP:
-			return ACCEL_MAKEKEY(VK_F7, HOTKEYF_CONTROL);
-		case ActionEnums::NEWGROUPSELECTION:
-			return VK_F7;
-		case ActionEnums::SHOWGROUPS:
-			return ACCEL_MAKEKEY('G', HOTKEYF_CONTROL);
-		case ActionEnums::NEWCLIP:
-			return ACCEL_MAKEKEY('N', HOTKEYF_CONTROL);
-		case ActionEnums::EDITCLIP:
-			return ACCEL_MAKEKEY('E', HOTKEYF_CONTROL);
-		case ActionEnums::CANCELFILTER:
-			return ACCEL_MAKEKEY('C', HOTKEYF_ALT);
-		case ActionEnums::TOGGLESHOWPERSISTANT:
-			return ACCEL_MAKEKEY(VK_SPACE, HOTKEYF_CONTROL);
-		case ActionEnums::CLIP_PROPERTIES:
-			return ACCEL_MAKEKEY(VK_RETURN, HOTKEYF_ALT);
-		case ActionEnums::PASTE_SELECTED_PLAIN_TEXT:
-			return ACCEL_MAKEKEY(VK_RETURN, HOTKEYF_SHIFT);
-		case ActionEnums::COMPARE_SELECTED_CLIPS:
-			return ACCEL_MAKEKEY(VK_F2, HOTKEYF_CONTROL);
-		case ActionEnums::PASTE_SELECTED:
-			return VK_RETURN;
-		case ActionEnums::SHOWMENU:
-			return VK_MOUSE_RIGHT_CLICK;		
-		case PASTE_POSITION_1:
-			return ACCEL_MAKEKEY('1', HOTKEYF_CONTROL);
-		case PASTE_POSITION_2:
-			return ACCEL_MAKEKEY('2', HOTKEYF_CONTROL);
-		case PASTE_POSITION_3:
-			return ACCEL_MAKEKEY('3', HOTKEYF_CONTROL);
-		case PASTE_POSITION_4:
-			return ACCEL_MAKEKEY('4', HOTKEYF_CONTROL);
-		case PASTE_POSITION_5:
-			return ACCEL_MAKEKEY('5', HOTKEYF_CONTROL);
-		case PASTE_POSITION_6:
-			return ACCEL_MAKEKEY('6', HOTKEYF_CONTROL);
-		case PASTE_POSITION_7:
-			return ACCEL_MAKEKEY('7', HOTKEYF_CONTROL);
-		case PASTE_POSITION_8:
-			return ACCEL_MAKEKEY('8', HOTKEYF_CONTROL);
-		case PASTE_POSITION_9:
-			return ACCEL_MAKEKEY('9', HOTKEYF_CONTROL);
-		case PASTE_POSITION_10:
-			return ACCEL_MAKEKEY('0', HOTKEYF_CONTROL);
-		case CLOSEWINDOW:
-			return VK_ESCAPE;
-		case FORCE_CLOSE_WINDOW:
-			return ACCEL_MAKEKEY(VK_ESCAPE, HOTKEYF_SHIFT);
-		case TOGGLE_DESCRIPTION_WORD_WRAP:
-			return 'W';
-		case COPY_SELECTION:
-			return ACCEL_MAKEKEY('C', HOTKEYF_CONTROL);
-		case REFRESH_LIST:
-			return VK_F5;
-		case SET_DRAG_FILE_NAME:
-			return VK_F4;
-		}
-		break;
+		return FindDefaultShortcut(s_defaultShortcutsFirst, value);
 	case 1:
-		switch (value)
-		{		
-		case ActionEnums::PASTE_SELECTED:
-			return VK_MOUSE_DOUBLE_CLICK;
-		case PASTE_POSITION_1:
-			return ACCEL_MAKEKEY(VK_NUMPAD1, HOTKEYF_CONTROL);
-		case PASTE_POSITION_2:
-			return ACCEL_MAKEKEY(VK_NUMPAD2, HOTKEYF_CONTROL);
-		case PASTE_POSITION_3:
-			return ACCEL_MAKEKEY(VK_NUMPAD3, HOTKEYF_CONTROL);
-		case PASTE_POSITION_4:
-			return ACCEL_MAKEKEY(VK_NUMPAD4, HOTKEYF_CONTROL);
-		case PASTE_POSITION_5:
-			return ACCEL_MAKEKEY(VK_NUMPAD5, HOTKEYF_CONTROL);
-		case PASTE_POSITION_6:
-			return ACCEL_MAKEKEY(VK_NUMPAD6, HOTKEYF_CONTROL);
-		case PASTE_POSITION_7:
-			return ACCEL_MAKEKEY(VK_NUMPAD7, HOTKEYF_CONTROL);
-		case PASTE_POSITION_8:
-			return ACCEL_MAKEKEY(VK_NUMPAD8, HOTKEYF_CONTROL);
-		case PASTE_POSITION_9:
-			return ACCEL_MAKEKEY(VK_NUMPAD9, HOTKEYF_CONTROL);
-		case PASTE_POSITION_10:
-			return ACCEL_MAKEKEY(VK_NUMPAD0, HOTKEYF_CONTROL);
+		return FindDefaultShortcut(s_defaultShortcutsSecond, value);
+	}
+
+	return -1;
+}
+
+int ActionEnums::FindDefaultShortcut(std::span<const DefaultShortcut> shortcuts, ActionEnumValues value)
+{
+	for (const DefaultShortcut& shortcut : shortcuts)
+	{
+		if (shortcut.action == value)
+		{
+			return shortcut.key;
 		}
-		break;
 	}
 
 	return -1;
