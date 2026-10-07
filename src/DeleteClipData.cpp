@@ -514,7 +514,7 @@ void CDeleteClipData::OnLvnGetdispinfoList2(NMHDR *pNMHDR, LRESULT *pResult)
 	NMLVDISPINFO *pDispInfo = reinterpret_cast<NMLVDISPINFO*>(pNMHDR);
 	if (pDispInfo->item.mask & LVIF_TEXT)
 	{
-		if (pDispInfo->item.iItem >= 0 && pDispInfo->item.iItem < m_data.size())
+		if (pDispInfo->item.iItem >= 0 && static_cast<size_t>(pDispInfo->item.iItem) < m_data.size())
 		{
 			switch (pDispInfo->item.iSubItem)
 			{

@@ -29,7 +29,6 @@ src\clipids.cpp	CClipIDs::DeleteIDs	16
 src\clipids.cpp	CClipIDs::GetTypes	10
 src\clipids.cpp	CClipIDs::Render	13
 src\copyproperties.cpp	CCopyProperties::LoadDataFromCClip	25
-src\copyproperties.cpp	CCopyProperties::OnLbnSelchangeCopyData	10
 src\copyproperties.cpp	CCopyProperties::OnOK	11
 src\copythread.cpp	CCopyThread::OnClipboardChange	12
 src\cp_main.cpp	CCP_MainApp::EditItems	23

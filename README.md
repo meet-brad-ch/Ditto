@@ -124,7 +124,9 @@ Branch coverage), on failure too. Run time: about 2 min, or about 3.5 min with `
 runs the same job as `.github\workflows\build.yml` on this machine.
 - **Clean clone:** it clones the commit into `build\ci\<commit>\work`, so only committed files take
   part. Uncommitted changes are not built; the script says so.
-- **Steps:** `verify.ps1 -Analyze`, a Debug|x64 build, then the installer.
+- **Steps:** `verify.ps1 -Analyze`, `fuzz.ps1`, Debug|x64, Debug|Win32 and Release|Win32
+  builds (all `/W4 /WX`), then the installer. The ARM64 configurations are not built: this
+  machine has no ARM64 compiler or ARM64 MFC.
 - **Output:** `build\ci\<commit>\summary.md` holds each step's result, the §38 block, the
   installer's SHA256 and the per-test table. `build\ci\<commit>\artifacts\` holds the installer,
   the binaries, the test XML, the coverage report and the logs.

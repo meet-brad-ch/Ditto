@@ -92,7 +92,8 @@ BOOL CGroupCombo::SetCurSelOnItemData(long lItemData)
 
 	for(int i = 0; i < lCount; i++)
 	{
-		if(GetItemData(i) == lItemData)
+		// the item data holds a group id (a long) or -1
+		if(static_cast<long>(GetItemData(i)) == lItemData)
 		{
 			SetCurSel(i);
 			return TRUE;

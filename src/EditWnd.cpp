@@ -127,9 +127,8 @@ void CEditWnd::OnDpiChanged(CWnd* pParent, int dpi)
 
 	LoadToolbarDPI();
 
-	for (int i = 0; i < m_edits.size(); i++)
+	for (CDittoRulerRichEditCtrl* pEdit : m_edits)
 	{
-		CDittoRulerRichEditCtrl* pEdit = m_edits[i];
 		if (pEdit)
 		{
 			pEdit->OnDpiChanged(pParent, dpi);

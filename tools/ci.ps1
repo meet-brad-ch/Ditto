@@ -3,7 +3,7 @@
 #   1. clone the commit into build\ci\<commit>\work
 #   2. tools\verify.ps1 -Analyze (rebuild with /analyze, all gates, every test alone under ASan)
 #   3. tools\fuzz.ps1: every libFuzzer target for 60 s
-#   4. Debug|x64 solution build
+#   4. Debug|x64, Debug|Win32 and Release|Win32 solution builds
 #   5. the Inno Setup installer
 # Writes build\ci\<commit>\summary.md (steps, the section 38 block, the per-test table, installer
 # SHA256) and build\ci\<commit>\artifacts\ (installer, binaries, test XML, coverage, logs), then
@@ -60,12 +60,22 @@ try {
         powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $work 'tools\fuzz.ps1') -Seconds 60 *>&1 | ForEach-Object { "    $_" }
     }
 
-    Invoke-Step 'Debug|x64 build' {
+    # The other configurations (/W4 /WX like Release|x64): Debug code and 32-bit types show warnings
+    # Release|x64 does not. ARM64 is not built: this machine has no ARM64 compiler or MFC.
+    Invoke-Step 'Debug|x64, Debug|Win32 and Release|Win32 builds' {
         $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.VisualStudio.Component.VC.ATLMFC -property installationPath
         $vcpkgRoot = if ($env:VCPKG_ROOT) { $env:VCPKG_ROOT } else { 'C:\vcpkg' }
-        $out = & (Join-Path $vs 'MSBuild\Current\Bin\amd64\MSBuild.exe') (Join-Path $work 'CP_Main_10.sln') /p:Configuration=Debug /p:Platform=x64 "/p:VcpkgRoot=$vcpkgRoot" /m /nologo /v:m 2>&1
+        # one install up front: under /m every project would otherwise start its own vcpkg install
+        & (Join-Path $vcpkgRoot 'vcpkg.exe') install --triplet x86-windows-static-md "--x-manifest-root=$work" "--x-install-root=$(Join-Path $work 'vcpkg_installed\x86-windows-static-md')" --no-print-usage | Out-Null
         $code = $LASTEXITCODE
-        $out | Where-Object { "$_" -match ': (fatal )?error ' } | Select-Object -First 20 | ForEach-Object { "    $_" }
+        if ($code -ne 0) { "    vcpkg install x86-windows-static-md exit $code" }
+        foreach ($config in @(@('Debug', 'x64'), @('Debug', 'Win32'), @('Release', 'Win32'))) {
+            if ($code -ne 0) { break }
+            $out = & (Join-Path $vs 'MSBuild\Current\Bin\amd64\MSBuild.exe') (Join-Path $work 'CP_Main_10.sln') "/p:Configuration=$($config[0])" "/p:Platform=$($config[1])" "/p:VcpkgRoot=$vcpkgRoot" /m /nologo /v:m 2>&1
+            $code = $LASTEXITCODE
+            "    $($config[0])|$($config[1]): exit $code"
+            $out | Where-Object { "$_" -match ': (fatal )?error ' } | Select-Object -First 20 | ForEach-Object { "    $_" }
+        }
         $global:LASTEXITCODE = $code
     }
 

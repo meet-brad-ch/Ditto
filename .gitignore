@@ -61,10 +61,13 @@ Debug/portable
 *.map
 *.tlh
 /Addins/DittoUtil/Win32/Debug
+/Addins/DittoUtil/Win32/Release
 /Debug/EditClips
 /focusdll/Win32/Debug
 /ICU_Loader/Debug
+/ICU_Loader/Release
 /Win32/Debug
+/Win32/Release
 /Debug
 /Addins/DittoUtil/x64
 /focusdll/x64

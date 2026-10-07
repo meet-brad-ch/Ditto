@@ -282,7 +282,7 @@ void CEventThread::RunThread()
 		else
 		{
 			const int handleIndex = event - WAIT_OBJECT_0;
-			if (handleIndex < 0 || handleIndex >= handles.size())
+			if (handleIndex < 0 || static_cast<size_t>(handleIndex) >= handles.size())
 			{
 				Log(StrF(_T("CEventThread::RunThread() Error, Invalid handle index, index: %d, size: %d - Name %s"), handleIndex, handles.size(), m_threadName.GetString()));
 				continue;

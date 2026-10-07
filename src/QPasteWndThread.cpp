@@ -144,7 +144,9 @@ void CQPasteWndThread::OnLoadItems(void *param)
 					{
 						ATL::CCritSecLock csLock(pasteWnd->m_CritSection.m_sect);
 
-						if (pos < pasteWnd->m_listItems.size())
+						// pos starts at loadItemsIndex (never negative) and only grows
+						const size_t listPos{ static_cast<size_t>(pos) };
+						if (listPos < pasteWnd->m_listItems.size())
 						{
 							pasteWnd->m_listItems[pos] = table;
 
@@ -152,13 +154,13 @@ void CQPasteWndThread::OnLoadItems(void *param)
 
 							//Log(StrF(_T("updating list pos = %d, id: %d, size: %d"), pos, table.m_lID, pasteWnd->m_listItems.size() - 1));
 						}
-						else if (pos == pasteWnd->m_listItems.size())
+						else if (listPos == pasteWnd->m_listItems.size())
 						{
 							pasteWnd->m_listItems.push_back(table);
 							updateIndex = (int)pasteWnd->m_listItems.size() - 1;
 							//Log(StrF(_T("adding (same size) list pos = %d, id: %d, size: %d"), pasteWnd->m_listItems.size()-1, table.m_lID, pasteWnd->m_listItems.size() - 1));
 						}
-						else if (pos > pasteWnd->m_listItems.size())
+						else if (listPos > pasteWnd->m_listItems.size())
 						{
 							for (int toAdd = (int)pasteWnd->m_listItems.size()-1; toAdd < pos - 1; toAdd++)
 							{
@@ -254,8 +256,8 @@ void ReduceMapItems(CF_DibTypeMap &mapItem, CCriticalSection &critSection, CStri
 {
 	ATL::CCritSecLock csLock(critSection.m_sect);
 
-	int maxSize = 50;
-	int reduceToSize = 30;
+	const size_t maxSize{ 50 };
+	const int reduceToSize{ 30 };
 
 	if (mapItem.size() > maxSize)
 	{

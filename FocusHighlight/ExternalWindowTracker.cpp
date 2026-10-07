@@ -22,7 +22,6 @@ bool ExternalWindowTracker::IsAppWnd( HWND hWnd )
 
 bool ExternalWindowTracker::TrackActiveWnd()
 {
-	BOOL fromHook = true;
 	HWND newFocus = NULL;
 	HWND newActive = ::GetForegroundWindow();
 	

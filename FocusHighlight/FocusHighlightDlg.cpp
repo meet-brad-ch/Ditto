@@ -55,10 +55,10 @@ void CFocusHighlightDlg::OnTimer(UINT_PTR nIDEvent)
 			m_tracker.TrackActiveWnd();
 
 			CString cs;
-			cs.Format(_T("0x%08x - %s"), m_tracker.ActiveWnd(), m_tracker.ActiveWndName());
+			cs.Format(_T("0x%p - %s"), m_tracker.ActiveWnd(), m_tracker.ActiveWndName().GetString());
 			m_activeEdit.SetWindowText(cs);
 
-			cs.Format(_T("0x%08x - %s"), m_tracker.FocusWnd(), m_tracker.FocusWndName());
+			cs.Format(_T("0x%p - %s"), m_tracker.FocusWnd(), m_tracker.FocusWndName().GetString());
 			m_focusEdit.SetWindowText(cs);
 		}
 

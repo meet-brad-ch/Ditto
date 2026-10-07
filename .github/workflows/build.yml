@@ -2,7 +2,7 @@
 # - tools\verify.ps1 -Analyze: Release|x64 rebuild with /analyze and /WX (no warnings, no
 #   findings), the complexity ratchet, network and hardening scans, every unit test on its own,
 #   coverage, docs;
-# - a Debug|x64 build (catches configuration-only breakage);
+# - Debug|x64, Debug|Win32 and Release|Win32 builds (catch configuration-only breakage and warnings);
 # - the Inno Setup installer.
 # Results: a unit-test table in the run summary; the installer, binaries, test XML, coverage and
 # logs as artifacts. Nothing is published, signed or uploaded anywhere else.
@@ -77,12 +77,16 @@ jobs:
         if: always()
         run: powershell -NoProfile -ExecutionPolicy Bypass -File tools\test-summary.ps1 -Results build\test-results -Output $env:GITHUB_STEP_SUMMARY
 
-      - name: Debug|x64 build
+      - name: Debug|x64, Debug|Win32 and Release|Win32 builds
         shell: pwsh
         run: |
           $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
-          & (Join-Path $vs 'MSBuild\Current\Bin\amd64\MSBuild.exe') CP_Main_10.sln /p:Configuration=Debug /p:Platform=x64 "/p:VcpkgRoot=$env:VCPKG_ROOT" /m /nologo /v:m
-          if ($LASTEXITCODE -ne 0) { throw "Debug|x64 build failed ($LASTEXITCODE)" }
+          & (Join-Path $env:VCPKG_ROOT 'vcpkg.exe') install --triplet x86-windows-static-md "--x-install-root=vcpkg_installed\x86-windows-static-md" --no-print-usage
+          if ($LASTEXITCODE -ne 0) { throw "vcpkg install x86-windows-static-md failed ($LASTEXITCODE)" }
+          foreach ($config in @(@('Debug', 'x64'), @('Debug', 'Win32'), @('Release', 'Win32'))) {
+            & (Join-Path $vs 'MSBuild\Current\Bin\amd64\MSBuild.exe') CP_Main_10.sln "/p:Configuration=$($config[0])" "/p:Platform=$($config[1])" "/p:VcpkgRoot=$env:VCPKG_ROOT" /m /nologo /v:m
+            if ($LASTEXITCODE -ne 0) { throw "$($config[0])|$($config[1]) build failed ($LASTEXITCODE)" }
+          }
 
       - name: Installer
         shell: pwsh

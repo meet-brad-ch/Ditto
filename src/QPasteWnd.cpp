@@ -4309,7 +4309,8 @@ bool CQPasteWnd::DoMoveClipLast()
 				clip.ModifyMainTable();
 
 				//have we loaded all clips, if so then sort and select
-				if (m_listItems.size() == m_lstHeader.GetItemCount())
+				// a list control's item count is never negative
+				if (m_listItems.size() == static_cast<size_t>(m_lstHeader.GetItemCount()))
 				{
 					sort = SyncClipDataToArrayData(clip);
 				}
@@ -6296,7 +6297,7 @@ LRESULT CQPasteWnd::OnDeleteId(WPARAM wParam, LPARAM /*lParam*/)
 		std::vector<CMainTable>::iterator iter = m_listItems.begin();
 		while (iter != m_listItems.end())
 		{
-			if (iter->m_lID == wParam)
+			if (iter->m_lID == static_cast<int>(wParam))
 			{
 				Indexs.Add(index);
 				break;
