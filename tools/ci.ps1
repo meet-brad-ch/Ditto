@@ -31,13 +31,14 @@ $start = Get-Date
 $failed = $false
 
 function Invoke-Step([string] $name, [scriptblock] $body) {
-    if ($script:failed) { $script:steps.Add("| $name | skipped |"); Say "ci: SKIPPED $name"; return }
+    $cell = $name -replace '\|', '\|'   # a literal | would split the Markdown table cell
+    if ($script:failed) { $script:steps.Add("| $cell | skipped |"); Say "ci: SKIPPED $name"; return }
     Say "ci: $name"
     $t = Get-Date
     & $body
     $ok = $LASTEXITCODE -eq 0
     $minutes = ((Get-Date) - $t).TotalMinutes
-    $script:steps.Add(("| {0} | {1} ({2:N1} min) |" -f $name, $(if ($ok) { 'pass' } else { '**FAIL**' }), $minutes))
+    $script:steps.Add(("| {0} | {1} ({2:N1} min) |" -f $cell, $(if ($ok) { 'pass' } else { '**FAIL**' }), $minutes))
     if ($ok) { Say ("ci: ok   {0} ({1:N1} min)" -f $name, $minutes) }
     else { Say "ci: FAILED $name (exit $LASTEXITCODE)"; $script:failed = $true }
 }

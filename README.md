@@ -113,7 +113,10 @@ Branch coverage), on failure too. Run time: about 2 min, or about 3.5 min with `
 - the old ARM64 installer script (installer stage);
 - a C4244 warning and a C6011 null dereference in `src\ErrorReport.cpp`;
 - a 9-branch function in `src\` and in `lib\DittoCore`;
-- coverage measured against a raised minimum of 99 %.
+- coverage measured against a raised minimum of 99 %;
+- a C4244 committed on a temporary branch, caught by `tools\ci.ps1 -Ref <branch>`. On its first
+  real runs `ci.ps1` also found two problems that working-tree runs had hidden: a stale `#import`
+  header hiding two warnings, and the installer check skipping the clone.
 
 **Local CI:** `powershell -NoProfile -ExecutionPolicy Bypass -File tools\ci.ps1 [-Ref <commit>]`
 runs the same job as `.github\workflows\build.yml` on this machine.
