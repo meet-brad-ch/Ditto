@@ -69,7 +69,7 @@ public:
 	CString GetNotes()	{ return m_csNotes;			}
 	CString GetLangCode() { return m_csLangCode;	}
 
-	void	SetOnlyGetHeader(bool bVal)	{ m_bOnlyGetHeader = true;	}
+	void	SetOnlyGetHeader(bool bVal)	{ m_bOnlyGetHeader = bVal;	}
 	static CMenu* GetMenuPos(CMenu *pMenu, const CString &csLookingForMenuText, int &nMenuPos, bool returnChildIfOne = FALSE);
 
 	CString m_csLastError;

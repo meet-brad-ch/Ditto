@@ -58,11 +58,11 @@ public:
 
     CQuickPaste m_quickPaste;
 	CTrayNotifyIcon m_trayIcon;
-    ULONG m_ulCopyGap;
+    ULONG m_ulCopyGap{};
     CString m_csKeyboardPaste;
     CAlphaBlend m_Transparency;
     BYTE m_keyStateModifiers;
-    DWORD m_startKeyStateTime;
+    ULONGLONG m_startKeyStateTime{};
     bool m_bMovedSelectionMoveKeyState;
     short m_keyModifiersTimerCount;
     HWND m_tempFocusWnd;
@@ -71,7 +71,7 @@ public:
 	CDialog *m_pDeleteClips;
 	CPropertySheet *m_pOptions;
 	int m_doubleClickGroupId;
-	DWORD m_doubleClickGroupStartTime;
+	ULONGLONG m_doubleClickGroupStartTime{};
 	CPowerManager m_PowerManager;
 	int m_startupScreenWidth;
 	int m_startupScreenHeight;

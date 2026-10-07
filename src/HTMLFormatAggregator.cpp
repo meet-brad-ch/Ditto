@@ -11,7 +11,7 @@ CHTMLFormatAggregator::CHTMLFormatAggregator(const CStringW& separator) :
 {
 }
 
-bool CHTMLFormatAggregator::AddClip(LPVOID lpData, int nDataSize, int nPos, int nCount, UINT cfType)
+bool CHTMLFormatAggregator::AddClip(LPVOID lpData, int nDataSize, int nPos, int nCount, UINT /*cfType*/)
 {
 	if (nDataSize < 0)
 	{

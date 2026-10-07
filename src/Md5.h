@@ -30,6 +30,6 @@ private:
 	void byteReverse (unsigned char *buf, unsigned longs);
 
 	char *mp_s8ReadBuffer;
-	MD5Context ctx;
-	char   ms8_MD5[40]; // Output buffer
+	MD5Context ctx{};
+	char   ms8_MD5[40]{}; // Output buffer
 };

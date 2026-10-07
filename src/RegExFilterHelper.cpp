@@ -66,7 +66,7 @@ bool CRegExFilterData::MatchesRegEx(std::wstring &copiedText)
 		catch (regex_error e) 
 		{
 			CString w(e.what());
-			Log(StrF(_T("MatchesRegEx exception: %s, Code Is: %d"), w, e.code()));
+			Log(StrF(_T("MatchesRegEx exception: %s, Code Is: %d"), w.GetString(), e.code()));
 		}
 	}
 
@@ -121,7 +121,7 @@ bool CRegExFilterHelper::TextMatchFilters(CString &activeApp, std::wstring &copi
 		{
 			if (m_filters[i].MatchesRegEx(copiedText))
 			{
-				Log(StrF(_T("regex matches copied text NOT SAVING CLIP, regex: %s, text: %s, active app: %s"), m_filters[i].m_regEx.c_str(), copiedText.c_str(), activeApp));
+				Log(StrF(_T("regex matches copied text NOT SAVING CLIP, regex: %s, text: %s, active app: %s"), m_filters[i].m_regEx.c_str(), copiedText.c_str(), activeApp.GetString()));
 				return true;
 			}
 		}

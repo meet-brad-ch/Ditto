@@ -157,7 +157,7 @@ void CClipboardViewer::OnDestroy()
 	CWnd::OnDestroy();
 }
 
-LRESULT CClipboardViewer::OnClipboardChange(WPARAM wParam, LPARAM lPara)
+LRESULT CClipboardViewer::OnClipboardChange(WPARAM /*wParam*/, LPARAM /*lPara*/)
 {
 	Log(StrF(_T("OnClipboardChange - Start")));
 	ProcessClipboardChange();
@@ -206,7 +206,7 @@ void CClipboardViewer::ProcessClipboardChange()
 			{
 				if(ValidActiveWnd())
 				{          
-					Log(StrF(_T("OnDrawClipboard:: *** SetTimer *** %d"), GetTickCount()));
+					Log(StrF(_T("OnDrawClipboard:: *** SetTimer *** %llu"), GetTickCount64()));
 
 					KillTimer(TIMER_DRAW_CLIPBOARD);
 					SetTimer(TIMER_DRAW_CLIPBOARD, CGetSetOptions::m_lProcessDrawClipboardDelay, NULL);		
@@ -247,7 +247,7 @@ bool CClipboardViewer::ValidActiveWnd()
 
 	CString includeApps = CGetSetOptions::GetCopyAppInclude().MakeLower();
 
-	Log(StrF(_T("INCLUDE app names: %s, Active App: %s"), includeApps, m_activeWindow));
+	Log(StrF(_T("INCLUDE app names: %s, Active App: %s"), includeApps.GetString(), m_activeWindow.GetString()));
 
 	bool tokenMatch = false;
 
@@ -260,7 +260,7 @@ bool CClipboardViewer::ValidActiveWnd()
 		{
 			if(CWildCardMatch::WildMatch(line.Trim(), m_activeWindow, ""))
 			{
-				Log(StrF(_T("Inlclude app names Found Match %s - %s"), line, m_activeWindow));
+				Log(StrF(_T("Inlclude app names Found Match %s - %s"), line.GetString(), m_activeWindow.GetString()));
 
 				tokenMatch = true;
 				break;
@@ -274,7 +274,7 @@ bool CClipboardViewer::ValidActiveWnd()
 
 		if(excludeApps != "")
 		{
-			Log(StrF(_T("EXCLUDE app names %s, Active App: %s"), excludeApps, m_activeWindow));
+			Log(StrF(_T("EXCLUDE app names %s, Active App: %s"), excludeApps.GetString(), m_activeWindow.GetString()));
 
 			CTokenizer token2(excludeApps, CGetSetOptions::GetCopyAppSeparator());
 			CString line2;
@@ -284,7 +284,7 @@ bool CClipboardViewer::ValidActiveWnd()
 				{
 					if(CWildCardMatch::WildMatch(line2.Trim(), m_activeWindow, ""))
 					{
-						Log(StrF(_T("Exclude app names Found Match %s - %s - NOT SAVING COPY"), line2, m_activeWindow));
+						Log(StrF(_T("Exclude app names Found Match %s - %s - NOT SAVING COPY"), line2.GetString(), m_activeWindow.GetString()));
 
 						return false;
 					}
@@ -294,7 +294,7 @@ bool CClipboardViewer::ValidActiveWnd()
 	}
 	else
 	{
-		Log(StrF(_T("Didn't find a match to INCLUDE match %s, NOT SAVING COPY"), includeApps));
+		Log(StrF(_T("Didn't find a match to INCLUDE match %s, NOT SAVING COPY"), includeApps.GetString()));
 		return false;
 	}
 
@@ -313,13 +313,13 @@ void CClipboardViewer::OnTimer(UINT_PTR nIDEvent)
 		{
 			KillTimer(nIDEvent);
 		
-			DWORD dwNow = GetTickCount();
+			ULONGLONG dwNow = GetTickCount64();
 
 			if(dwNow - m_dwLastCopy > CGetSetOptions::m_dwSaveClipDelay || m_dwLastCopy > dwNow)
 			{
 				if (GetIgnoreClipboardChange() == false)				
 				{
-					Log(StrF(_T("OnDrawClipboard::OnTimer %d"), dwNow));
+					Log(StrF(_T("OnDrawClipboard::OnTimer %llu"), dwNow));
 
 					m_pHandler->OnClipboardChange(m_activeWindow);
 
@@ -328,7 +328,7 @@ void CClipboardViewer::OnTimer(UINT_PTR nIDEvent)
 			}
 			else
 			{
-				Log(StrF(_T("Clip copy to fast difference from last copy = %d"), (dwNow - m_dwLastCopy)));
+				Log(StrF(_T("Clip copy to fast difference from last copy = %llu"), (dwNow - m_dwLastCopy)));
 			}
 
 			m_activeWindow = _T("");
@@ -367,7 +367,7 @@ void CClipboardViewer::OnTimer(UINT_PTR nIDEvent)
 	CWnd::OnTimer(nIDEvent);
 }
 
-LRESULT CClipboardViewer::OnSetConnect(WPARAM wParam, LPARAM lParam)
+LRESULT CClipboardViewer::OnSetConnect(WPARAM wParam, LPARAM /*lParam*/)
 {
 	bool bConnect = wParam == TRUE;
 	SetConnect(bConnect);

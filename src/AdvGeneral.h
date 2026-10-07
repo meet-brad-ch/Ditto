@@ -15,7 +15,7 @@ public:
 	enum { IDD = IDD_ADV_OPTIONS };
 
 	CDialogResizer m_Resize;
-	bool m_mouseDownOnCaption;
+	bool m_mouseDownOnCaption{};
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support

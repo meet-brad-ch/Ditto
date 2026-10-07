@@ -11,7 +11,7 @@ bool DittoAddin(const CDittoInfo &DittoInfo, CDittoAddinInfo &info)
 	if(DittoInfo.ValidateSize() == false || info.ValidateSize() == false)
 	{
 		CString csError;
-		csError.Format(_T("PasteAnyAsText Addin - Passed in structures are of different size, DittoInfo Passed: %d, Local: %d, DittoAddinInfo Passed: %d, Local: %d"), DittoInfo.m_nSizeOfThis, sizeof(CDittoInfo), info.m_nSizeOfThis, sizeof(CDittoAddinInfo));
+		csError.Format(_T("PasteAnyAsText Addin - Passed in structures are of different size, DittoInfo Passed: %d, Local: %zu, DittoAddinInfo Passed: %d, Local: %zu"),DittoInfo.m_nSizeOfThis, sizeof(CDittoInfo), info.m_nSizeOfThis, sizeof(CDittoAddinInfo));
 		OutputDebugString(csError);
 		return false;
 	}
@@ -22,7 +22,7 @@ bool DittoAddin(const CDittoInfo &DittoInfo, CDittoAddinInfo &info)
 	return true;
 }
 
-bool SupportedFunctions(const CDittoInfo &DittoInfo, FunctionType type, std::vector<CFunction> &Functions)
+bool SupportedFunctions(const CDittoInfo & /*DittoInfo*/, FunctionType type, std::vector<CFunction> &Functions)
 {
 	switch(type)
 	{

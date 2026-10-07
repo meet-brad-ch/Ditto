@@ -493,7 +493,7 @@ INT_PTR COleClipSource::PutFormatOnClipboard(CClipFormats *pFormats)
 	{
 		pCF = &pFormats->ElementAt(i);
 
-		Log(StrF(_T("Setting clipboard type: %s to the clipboard"), GetFormatName(pCF->m_cfType)));
+		Log(StrF(_T("Setting clipboard type: %s to the clipboard"), GetFormatName(pCF->m_cfType).GetString()));
 
 		CacheGlobalData(pCF->m_cfType, pCF->m_hgData);
 		pCF->m_hgData = 0; // OLE owns it now
@@ -560,8 +560,10 @@ BOOL COleClipSource::OnRenderGlobalData(LPFORMATETC lpFormatEtc, HGLOBAL* phGlob
 	}
 	else
 	{
+		// m_delayRenderLockout holds a 32-bit tick value, so the difference uses 32-bit wrap-around arithmetic
+		const DWORD now = static_cast<DWORD>(GetTickCount64());
 		if (m_pasteOptions.m_delayRenderLockout > 0 &&
-			(GetTickCount() - m_pasteOptions.m_delayRenderLockout) < (DWORD)CGetSetOptions::GetDelayRenderLockout())
+			(now - m_pasteOptions.m_delayRenderLockout) < (DWORD)CGetSetOptions::GetDelayRenderLockout())
 		{
 			bInHere = false;
 			return false;
@@ -647,11 +649,11 @@ HGLOBAL COleClipSource::ConvertToFileDrop()
 			if (customDragName != _T(""))
 			{
 				name = customDragName;
-				file.Format(_T("%s%s.txt"), path, name);
+				file.Format(_T("%s%s.txt"), path.GetString(), name.GetString());
 			}
 			else
 			{
-				file.Format(_T("%s%s_%d.txt"), path, name, dragId++);
+				file.Format(_T("%s%s_%d.txt"), path.GetString(), name.GetString(), dragId++);
 			}
 
 			fileClip.WriteTextToFile(file, TRUE, FALSE, FALSE);
@@ -667,11 +669,11 @@ HGLOBAL COleClipSource::ConvertToFileDrop()
 			if (customDragName != _T(""))
 			{
 				name = customDragName;
-				file.Format(_T("%s%s.txt"), path, name);
+				file.Format(_T("%s%s.txt"), path.GetString(), name.GetString());
 			}
 			else
 			{
-				file.Format(_T("%s%s_%d.txt"), path, name, dragId++);
+				file.Format(_T("%s%s_%d.txt"), path.GetString(), name.GetString(), dragId++);
 			}
 
 			fileClip.WriteTextToFile(file, FALSE, TRUE, FALSE);
@@ -689,11 +691,11 @@ HGLOBAL COleClipSource::ConvertToFileDrop()
 			if (customDragName != _T(""))
 			{
 				name = customDragName;
-				file.Format(_T("%s%s.png"), path, name);
+				file.Format(_T("%s%s.png"), path.GetString(), name.GetString());
 			}
 			else
 			{
-				file.Format(_T("%s%s_%d.png"), path, name, dragId++);
+				file.Format(_T("%s%s_%d.png"), path.GetString(), name.GetString(), dragId++);
 			}
 
 			if (fileClip.WriteImageToFile(file))
@@ -757,7 +759,7 @@ void COleClipSource::PasteAsImage(CClip& clip)
 
 	if (path.IsEmpty() || !PathFileExists(path))
 	{
-		Log(StrF(_T("PasteAsImage - path not found: %s"), path));
+		Log(StrF(_T("PasteAsImage - path not found: %s"), path.GetString()));
 		return;
 	}
 
@@ -765,7 +767,7 @@ void COleClipSource::PasteAsImage(CClip& clip)
 	HRESULT hr = image.Load(path);
 	if (FAILED(hr))
 	{
-		Log(StrF(_T("PasteAsImage - failed to load image: %s"), path));
+		Log(StrF(_T("PasteAsImage - failed to load image: %s"), path.GetString()));
 		return;
 	}
 

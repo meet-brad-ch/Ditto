@@ -43,7 +43,7 @@ class CSymbolEdit : public CEdit
 	COLORREF m_colorPromptText;
 
 	CBrush m_brush;
-	COLORREF m_lastBrushColor;
+	COLORREF m_lastBrushColor{CLR_INVALID};
 
 	void DestroyIcon();
 

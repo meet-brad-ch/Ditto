@@ -43,7 +43,7 @@ public:
 	void SetTimeout( int timeout );
 
 	void AdjustPos( CPoint& pos );
-	void SetPos( CPoint& pos );
+	void SetPos( const CPoint& pos );
 	void SetPosInfo( bool bTop, bool bCenterY, bool bLeft, bool bCenterX );
 
 	void SendToolTipText( CString text );

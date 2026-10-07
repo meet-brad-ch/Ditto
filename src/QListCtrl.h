@@ -183,13 +183,13 @@ protected:
 	CAccels	m_Accels;
 	CMapIDtoCF m_RTFData;
 	CToolTipEx *m_pToolTip;
-	HWND m_toolTipHwnd;
+	HWND m_toolTipHwnd{};
 	CFont m_Font;
 	CFont m_boldFont;
 	IFormattedTextDraw *m_pFormatter;
 	bool m_allSelected;
 	int m_linesPerRow;
-	DWORD m_mouseOverScrollAreaStart;
+	ULONGLONG m_mouseOverScrollAreaStart{};
 	bool m_timerToHideScrollAreaSet;
 	CGdiImageDrawer m_groupFolder;
 	CGdiImageDrawer m_dontDeleteImage;

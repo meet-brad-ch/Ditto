@@ -41,7 +41,7 @@ protected:
 	bool DoActionClipProperties();
 	void UpdateMenuShortCut(CCmdUI *pCmdUI, DWORD action);
 
-	HWND m_NotificationWnd;
+	HWND m_NotificationWnd{};
 	CBitmap m_bmOpenFolder;
 	CBitmap m_bmClosedFolder;
 	bool m_bSendAllready;

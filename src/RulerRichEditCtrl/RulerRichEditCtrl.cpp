@@ -167,7 +167,7 @@ BOOL CRulerRichEditCtrl::Create( DWORD dwStyle, const RECT &rect, CWnd* pParentW
 	return result;
 }
 
-void CRulerRichEditCtrl::OnDpiChanged(CWnd* pParent, int dpi)
+void CRulerRichEditCtrl::OnDpiChanged(CWnd* /*pParent*/, int dpi)
 {
 	m_dpi.Update(dpi);
 	
@@ -257,8 +257,8 @@ BOOL CRulerRichEditCtrl::CreateRTFControl( BOOL autohscroll )
 #define SES_NOFOCUSLINKNOTIFY   32
 #endif 
 
-		DWORD style = SES_HYPERLINKTOOLTIPS | SES_NOFOCUSLINKNOTIFY;
-		m_rtf.SendMessage(EM_SETEDITSTYLE, style, style);
+		DWORD editStyle = SES_HYPERLINKTOOLTIPS | SES_NOFOCUSLINKNOTIFY;
+		m_rtf.SendMessage(EM_SETEDITSTYLE, editStyle, editStyle);
 
 		m_rtf.SendMessage(EM_AUTOURLDETECT, TRUE, 0);
  
@@ -537,7 +537,7 @@ LRESULT CRulerRichEditCtrl::OnGetText( WPARAM wParam, LPARAM lParam )
 
 }
 
-LRESULT CRulerRichEditCtrl::OnGetTextLength( WPARAM wParam, LPARAM lParam )
+LRESULT CRulerRichEditCtrl::OnGetTextLength( WPARAM /*wParam*/, LPARAM /*lParam*/ )
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnGetTextLength
 	Description :	The function handles the "WM_GETTEXTLENGTH" 
@@ -614,7 +614,7 @@ CString CRulerRichEditCtrl::GetText()
 	return CString(text.data());
 }
 
-void CRulerRichEditCtrl::SetMode( int mode )
+void CRulerRichEditCtrl::SetMode( int /*mode*/ )
 /* ============================================================
 	Function :		CRulerRichEditCtrl::SetMode
 	Description :	Sets the internal mode, that is, if the 

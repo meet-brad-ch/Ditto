@@ -39,15 +39,15 @@ protected:
 	afx_msg void OnMoving(UINT fwSide, LPRECT pRect);
 	afx_msg void OnEnterSizeMove();
 
-	unsigned char* m_bitmapData;
-	int m_imageSize;
+	unsigned char* m_bitmapData{};
+	int m_imageSize{};
 	CGdipButton m_ShowGroupsFolderBottom;
 	CGdiImageDrawer m_qrCodeDrawer;
-	int m_descRowHeight;
+	int m_descRowHeight{};
 	CFont m_font;
 	HBRUSH m_descBackground;
-	LOGFONT m_logFont;
-	int m_originalFontHeight;
+	LOGFONT m_logFont{};
+	int m_originalFontHeight{};
 	SnapWindow m_snap;
 
 	void MoveControls();

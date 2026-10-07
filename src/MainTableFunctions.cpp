@@ -66,7 +66,7 @@ void CMainTableFunctions::LoadAcceleratorKeys(CAccels& accels, CppSQLite3DB &db)
 	CATCH_SQLITE_EXCEPTION
 }
 
-CString CMainTableFunctions::GetDisplayText(int nMaxLines, const CString &OrigText)
+CString CMainTableFunctions::GetDisplayText(int /*nMaxLines*/, const CString &OrigText)
 {
 	CString text = OrigText;
 	// assign tabs to 2 spaces (rather than the default 8)

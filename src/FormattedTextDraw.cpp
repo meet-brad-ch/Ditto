@@ -44,8 +44,10 @@ HRESULT CFormattedTextDraw::put_RTFText(BSTR newVal)
 		SysFreeString(m_RTFText);
 	len = SysStringLen(newVal);
 	m_RTFText = SysAllocStringLen(newVal, len);
+	if (m_RTFText == NULL)
+		return E_OUTOFMEMORY;
 
-	if (!m_spTextServices) 
+	if (!m_spTextServices)
 		return S_FALSE;
 
 	// sized by the conversion itself: upstream allocated len + 1 bytes with an unchecked malloc,
@@ -153,68 +155,68 @@ HDC CFormattedTextDraw::TxGetDC()
 	return NULL;
 }
 
-INT CFormattedTextDraw::TxReleaseDC(HDC hdc)
+INT CFormattedTextDraw::TxReleaseDC(HDC /*hdc*/)
 {
 	return 1;
 }
 
-BOOL CFormattedTextDraw::TxShowScrollBar(INT fnBar, BOOL fShow)
+BOOL CFormattedTextDraw::TxShowScrollBar(INT /*fnBar*/, BOOL /*fShow*/)
 {
 	return FALSE;
 }
 
-BOOL CFormattedTextDraw::TxEnableScrollBar(INT fuSBFlags, INT fuArrowflags)
+BOOL CFormattedTextDraw::TxEnableScrollBar(INT /*fuSBFlags*/, INT /*fuArrowflags*/)
 {
 	return FALSE;
 }
 
-BOOL CFormattedTextDraw::TxSetScrollRange(INT fnBar, LONG nMinPos, INT nMaxPos, BOOL fRedraw)
+BOOL CFormattedTextDraw::TxSetScrollRange(INT /*fnBar*/, LONG /*nMinPos*/, INT /*nMaxPos*/, BOOL /*fRedraw*/)
 {
 	return FALSE;
 }
 
-BOOL CFormattedTextDraw::TxSetScrollPos(INT fnBar, INT nPos, BOOL fRedraw)
+BOOL CFormattedTextDraw::TxSetScrollPos(INT /*fnBar*/, INT /*nPos*/, BOOL /*fRedraw*/)
 {
 	return FALSE;
 }
 
-void CFormattedTextDraw::TxInvalidateRect(LPCRECT prc, BOOL fMode)
+void CFormattedTextDraw::TxInvalidateRect(LPCRECT /*prc*/, BOOL /*fMode*/)
 {
 }
 
-void CFormattedTextDraw::TxViewChange(BOOL fUpdate)
+void CFormattedTextDraw::TxViewChange(BOOL /*fUpdate*/)
 {
 }
 
-BOOL CFormattedTextDraw::TxCreateCaret(HBITMAP hbmp, INT xWidth, INT yHeight)
-{
-	return FALSE;
-}
-
-BOOL CFormattedTextDraw::TxShowCaret(BOOL fShow)
+BOOL CFormattedTextDraw::TxCreateCaret(HBITMAP /*hbmp*/, INT /*xWidth*/, INT /*yHeight*/)
 {
 	return FALSE;
 }
 
-BOOL CFormattedTextDraw::TxSetCaretPos(INT x, INT y)
+BOOL CFormattedTextDraw::TxShowCaret(BOOL /*fShow*/)
 {
 	return FALSE;
 }
 
-BOOL CFormattedTextDraw::TxSetTimer(UINT idTimer, UINT uTimeout)
+BOOL CFormattedTextDraw::TxSetCaretPos(INT /*x*/, INT /*y*/)
 {
 	return FALSE;
 }
 
-void CFormattedTextDraw::TxKillTimer(UINT idTimer)
+BOOL CFormattedTextDraw::TxSetTimer(UINT /*idTimer*/, UINT /*uTimeout*/)
+{
+	return FALSE;
+}
+
+void CFormattedTextDraw::TxKillTimer(UINT /*idTimer*/)
 {
 }
 
-void CFormattedTextDraw::TxScrollWindowEx(INT dx, INT dy, LPCRECT lprcScroll, LPCRECT lprcClip, HRGN hrgnUpdate, LPRECT lprcUpdate, UINT fuScroll)
+void CFormattedTextDraw::TxScrollWindowEx(INT /*dx*/, INT /*dy*/, LPCRECT /*lprcScroll*/, LPCRECT /*lprcClip*/, HRGN /*hrgnUpdate*/, LPRECT /*lprcUpdate*/, UINT /*fuScroll*/)
 {
 }
 
-void CFormattedTextDraw::TxSetCapture(BOOL fCapture)
+void CFormattedTextDraw::TxSetCapture(BOOL /*fCapture*/)
 {
 }
 
@@ -222,26 +224,26 @@ void CFormattedTextDraw::TxSetFocus()
 {
 }
 
-void CFormattedTextDraw::TxSetCursor(HCURSOR hcur, BOOL fText)
+void CFormattedTextDraw::TxSetCursor(HCURSOR /*hcur*/, BOOL /*fText*/)
 {
 }
 
-BOOL CFormattedTextDraw::TxScreenToClient(LPPOINT lppt)
-{
-	return FALSE;
-}
-
-BOOL CFormattedTextDraw::TxClientToScreen(LPPOINT lppt)
+BOOL CFormattedTextDraw::TxScreenToClient(LPPOINT /*lppt*/)
 {
 	return FALSE;
 }
 
-HRESULT	CFormattedTextDraw::TxActivate(LONG * plOldState)
+BOOL CFormattedTextDraw::TxClientToScreen(LPPOINT /*lppt*/)
+{
+	return FALSE;
+}
+
+HRESULT	CFormattedTextDraw::TxActivate(LONG * /*plOldState*/)
 {
 	return S_OK;
 }
 
-HRESULT	CFormattedTextDraw::TxDeactivate(LONG lNewState)
+HRESULT	CFormattedTextDraw::TxDeactivate(LONG /*lNewState*/)
 {
 	return S_OK;
 }
@@ -293,7 +295,7 @@ HRESULT	CFormattedTextDraw::TxGetScrollBars(DWORD *pdwScrollBar)
 	return S_OK;
 }
 
-HRESULT	CFormattedTextDraw::TxGetPasswordChar(TCHAR *pch)
+HRESULT	CFormattedTextDraw::TxGetPasswordChar(TCHAR * /*pch*/)
 {
 	return S_FALSE;
 }
@@ -304,7 +306,7 @@ HRESULT	CFormattedTextDraw::TxGetAcceleratorPos(LONG *pcp)
 	return S_OK;
 }
 
-HRESULT	CFormattedTextDraw::TxGetExtent(LPSIZEL lpExtent)
+HRESULT	CFormattedTextDraw::TxGetExtent(LPSIZEL /*lpExtent*/)
 {
 	return E_NOTIMPL;
 }
@@ -321,13 +323,13 @@ HRESULT	CFormattedTextDraw::OnTxParaFormatChange(const PARAFORMAT * ppf)
 	return S_OK;
 }
 
-HRESULT	CFormattedTextDraw::TxGetPropertyBits(DWORD dwMask, DWORD *pdwBits)
+HRESULT	CFormattedTextDraw::TxGetPropertyBits(DWORD /*dwMask*/, DWORD *pdwBits)
 {
 	*pdwBits = m_dwPropertyBits;
 	return S_OK;
 }
 
-HRESULT	CFormattedTextDraw::TxNotify(DWORD iNotify, void *pv)
+HRESULT	CFormattedTextDraw::TxNotify(DWORD /*iNotify*/, void * /*pv*/)
 {
 	return S_OK;
 }
@@ -337,7 +339,7 @@ HIMC CFormattedTextDraw::TxImmGetContext()
 	return NULL;
 }
 
-void CFormattedTextDraw::TxImmReleaseContext(HIMC himc)
+void CFormattedTextDraw::TxImmReleaseContext(HIMC /*himc*/)
 {
 }
 
@@ -427,7 +429,7 @@ HRESULT CFormattedTextDraw::InitDefaultParaFormat()
 //https://connect.microsoft.com/VisualStudio/feedback/details/551071/the-6-0a-sdk-is-missing-riched20-lib-for-x64
 HRESULT CreateRichEdit(ITextHost *pTextHost, IUnknown **ppUnk)
 {
-	HRESULT hr = -1;
+	HRESULT hr = E_FAIL;
 	PCreateTextServices TextServicesProc = NULL;
 	HMODULE hmod = LoadLibrary(_T("msftedit.dll"));
 	if (hmod) 

@@ -65,7 +65,7 @@ void CDittoWindow::DoCreate(CWnd *pWnd)
 	//m_windowIcon.LoadStdImageDPI(NewWindowIcon_24_14, NewWindowIcon_30, NewWindowIcon_36, NewWindowIcon_48, _T("PNG"));
 }
 
-void CDittoWindow::DoNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp)
+void CDittoWindow::DoNcCalcSize(BOOL /*bCalcValidRects*/,NCCALCSIZE_PARAMS FAR* lpncsp)
 {
 	//Decrease the client area	
 	if (m_captionPosition == CAPTION_LEFT)
@@ -96,7 +96,8 @@ UINT CDittoWindow::DoNcHitTest(CWnd *pWnd, CPoint point)
 
 	if(crWindow.PtInRect(point) == false)
 	{
-		return -1;
+		// Not handled: callers compare the result with -1, which is UINT_MAX as a UINT
+		return UINT_MAX;
 	}
 	
 	int x = point.x - crWindow.left;
@@ -169,7 +170,8 @@ UINT CDittoWindow::DoNcHitTest(CWnd *pWnd, CPoint point)
 			return HTCAPTION;
 	}
 
-	return -1;
+	// Not handled: callers compare the result with -1, which is UINT_MAX as a UINT
+	return UINT_MAX;
 }
 
 int CDittoWindow::IndexToPos(int index, bool horizontal)
@@ -476,7 +478,7 @@ void CDittoWindow::DrawChevronBtn(CWindowDC &dc, CWnd *pWnd)
 	}
 }
 
-void CDittoWindow::DrawWindowIcon(CWindowDC &dc, CWnd *pWnd)
+void CDittoWindow::DrawWindowIcon(CWindowDC & /*dc*/, CWnd * /*pWnd*/)
 {
 	//m_windowIcon.Draw(&dc, pWnd, m_crWindowIconBT.left, m_crWindowIconBT.top, false, false);
 }
@@ -581,7 +583,7 @@ int CDittoWindow::DoNcLButtonDown(CWnd *pWnd, UINT nHitTest, CPoint point)
 	return buttonPressed;
 }
 
-long CDittoWindow::DoNcLButtonUp(CWnd *pWnd, UINT nHitTest, CPoint point) 
+long CDittoWindow::DoNcLButtonUp(CWnd *pWnd, UINT /*nHitTest*/, CPoint point)
 {
 	m_buttonDownOnCaption = false;
 
@@ -653,7 +655,7 @@ long CDittoWindow::DoNcLButtonUp(CWnd *pWnd, UINT nHitTest, CPoint point)
 	return lRet;
 }
 
-void CDittoWindow::DoNcMouseMove(CWnd *pWnd, UINT nHitTest, CPoint point) 
+void CDittoWindow::DoNcMouseMove(CWnd *pWnd, UINT /*nHitTest*/, CPoint point)
 {
 	return;
 	CRect crWindow;
@@ -706,7 +708,7 @@ void CDittoWindow::DoNcMouseMove(CWnd *pWnd, UINT nHitTest, CPoint point)
 	}
 }
 
-bool CDittoWindow::DoPreTranslateMessage(MSG* pMsg) 
+bool CDittoWindow::DoPreTranslateMessage(MSG* /*pMsg*/)
 {
 	return true;
 }

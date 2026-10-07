@@ -26,7 +26,7 @@ private:
 		
 	HANDLE m_folderHandle;
 	FILE_NOTIFY_INFORMATION m_fileChangeBuffer[10000];
-	OVERLAPPED m_overlapped;
+	OVERLAPPED m_overlapped{};
 	std::map<CString, bool> m_filesToSave;
 	std::map<CString, int> m_newClipIds;
 

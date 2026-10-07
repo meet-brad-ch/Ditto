@@ -314,7 +314,7 @@ BOOL CEditWithButton::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
 	//show arrow cursor
 	if (!edit.PtInRect(pntCursor))
 	{
-		SetCursor(AfxGetApp()->LoadStandardCursor(MAKEINTRESOURCE(IDC_ARROW)));
+		SetCursor(AfxGetApp()->LoadStandardCursor(IDC_ARROW));
 		return TRUE;
 	}
 

@@ -23,7 +23,7 @@ protected:
 
 	CDialogResizer m_Resize;
 	CListCtrl	m_List;
-	HWND m_hWndParent;
+	HWND m_hWndParent{};
 	CShowTaskBarIcon m_showTaskbar;
 	DECLARE_MESSAGE_MAP()
 public:

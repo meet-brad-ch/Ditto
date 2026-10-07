@@ -95,7 +95,7 @@ void CGdiImageDrawer::Draw(CDC* pScreenDC, CDPI &dpi, CWnd *pWnd, CRect rc, bool
 	Draw(pScreenDC, dpi, pWnd, x, y, mouseHover, mouseDown);
 }
 
-void CGdiImageDrawer::Draw(CDC* pScreenDC, CDPI &dpi, CWnd *pWnd, int posX, int posY, bool mouseHover, bool mouseDown, int forceWidth, int forceHeight)
+void CGdiImageDrawer::Draw(CDC* pScreenDC, CDPI &dpi, CWnd *pWnd, int posX, int posY, bool /*mouseHover*/, bool mouseDown, int forceWidth, int forceHeight)
 {
 	int width = m_pStdImage->m_pBitmap->GetWidth();
 	if (forceWidth != INT_MAX)

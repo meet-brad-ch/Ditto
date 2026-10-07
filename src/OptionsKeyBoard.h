@@ -65,7 +65,7 @@ protected:
 //	BOOL RegisterHotKey(WORD wHotKey);
 //	BOOL ValidateHotKey(WORD wHotKey);
 
-	COptionsSheet *m_pParent;
+	COptionsSheet *m_pParent{};
 	CString m_csTitle;
 
 	// Generated message map functions

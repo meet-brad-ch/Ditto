@@ -312,7 +312,7 @@ int CProgressWnd::SetPos(int nPos)
 //    {
 //        m_nPrevPercent = nPercentage;
 //        strTitle.Format(_T("%s [%d%%]"),m_strTitle,nPercentage);
-		strTitle.Format(_T("%s"),m_strTitle);
+		strTitle.Format(_T("%s"),m_strTitle.GetString());
         SetWindowText(strTitle);
 //    }
     return m_wndProgress.SetPos(nPos);        
@@ -461,7 +461,7 @@ void CProgressWnd::SetTitleText(CString csTitle)
 	m_strTitle = csTitle;
 	
 	CString title;
-	title.Format(_T("%s"),m_strTitle);
+	title.Format(_T("%s"),m_strTitle.GetString());
 	
 	SetWindowText(title);
 }

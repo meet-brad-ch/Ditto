@@ -64,7 +64,7 @@ public:
 // Implementation
 protected:
 	
-	COptionsSheet *m_pParent;
+	COptionsSheet *m_pParent{};
 	CString m_csTitle;
 	CBrush m_brush;
 	LOGFONT m_LogFont;

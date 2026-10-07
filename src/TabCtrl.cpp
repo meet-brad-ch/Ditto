@@ -146,7 +146,7 @@ int CTabCtrlEx::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	return 0;
 }
 
-void CTabCtrlEx::OnDpiChanged(CWnd* pParent, int dpi)
+void CTabCtrlEx::OnDpiChanged(CWnd* /*pParent*/, int dpi)
 {
 	m_dpi.Update(dpi);
 
@@ -200,7 +200,7 @@ bool CTabCtrlEx::InsertItem(int nTab, const CString& csTabTitle, CWnd* pTabWnd)
 	tab.csTitle = csTabTitle;
 	tab.pWnd = pTabWnd;
 	tab.lWidth = GetTextWidth(csTabTitle);
-	tab.clrUnderline = -1;
+	tab.clrUnderline = CLR_INVALID; // no underline; same value the -1 checks below test for
 
 	m_Tabs.InsertAt(nTab, tab);
 	
@@ -1083,7 +1083,7 @@ void CTabCtrlEx::SwitchTabs(bool bNext)
 	ActivateTab(nNewTab, true);
 }
 
-void CTabCtrlEx::OnShowWindow(BOOL bShow, UINT nStatus)
+void CTabCtrlEx::OnShowWindow(BOOL bShow, UINT /*nStatus*/)
 {
 	if (bShow)
 	{

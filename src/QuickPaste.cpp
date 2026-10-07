@@ -33,7 +33,7 @@ CQuickPaste::~CQuickPaste()
 	}	
 }
 
-void CQuickPaste::Create(CWnd *pParent)
+void CQuickPaste::Create(CWnd * /*pParent*/)
 {
 	CPoint point;
 	CSize csSize;

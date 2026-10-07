@@ -252,7 +252,7 @@ bool CMultiLanguage::UpdateMenuToLanguage(CMenu *pMenu, LANGUAGE_ARRAY &Array)
 				CMenu *pNewMenu = GetMenuPos(pMenu, plItem->m_csEnglishLang, nMenuPos);
 				if(pNewMenu)
 				{
-					pNewMenu->ModifyMenu(nMenuPos, MF_BYPOSITION, -1, plItem->m_csForeignLang);
+					pNewMenu->ModifyMenu(nMenuPos, MF_BYPOSITION, static_cast<UINT_PTR>(-1), plItem->m_csForeignLang);
 				}
 			}
 		}
@@ -345,7 +345,7 @@ bool CMultiLanguage::LoadLanguageFile(CString csFile)
 	TiXmlDocument doc;
 	if(!doc.LoadFile(csPath.GetBuffer()))
 	{
-		m_csLastError.Format(_T("Error loading file %s - reason = %s, Line: %d, column: %d"), csFile, CTextConvert::AnsiToUnicode(doc.ErrorDesc()), doc.ErrorRow(), doc.ErrorCol());
+		m_csLastError.Format(_T("Error loading file %s - reason = %s, Line: %d, column: %d"), csFile.GetString(), CTextConvert::AnsiToUnicode(doc.ErrorDesc()).GetString(),doc.ErrorRow(), doc.ErrorCol());
 		Log(m_csLastError);
 		return false;
 	}
@@ -396,7 +396,7 @@ bool CMultiLanguage::LoadSection(TiXmlNode &doc, LANGUAGE_ARRAY &Array, CString 
 	TiXmlNode *node = doc.FirstChild(csSectionA);
 	if(!node)
 	{
-		m_csLastError.Format(_T("Error finding the section %s"), csSection);
+		m_csLastError.Format(_T("Error finding the section %s"), csSection.GetString());
 		//ASSERT(!m_csLastError);
 		Log(m_csLastError);
 		return false;
@@ -450,7 +450,7 @@ bool CMultiLanguage::LoadStringTableSection(TiXmlNode &doc, LANGUAGE_MAP &Map, C
 	if(!node)
 	{
 		CString cs;
-		cs.Format(_T("Error finding the section %s"), csSection);
+		cs.Format(_T("Error finding the section %s"), csSection.GetString());
 		ASSERT(!cs);
 		Log(cs);
 		return false;

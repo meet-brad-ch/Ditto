@@ -321,7 +321,7 @@ void CModernScrollBar::OnPaint()
 	memDC.SelectObject(pOldBitmap);
 }
 
-BOOL CModernScrollBar::OnEraseBkgnd(CDC* pDC)
+BOOL CModernScrollBar::OnEraseBkgnd(CDC* /*pDC*/)
 {
 	// Don't erase - we handle it in OnPaint
 	return TRUE;
@@ -388,7 +388,7 @@ void CModernScrollBar::OnMouseLeave()
 	CWnd::OnMouseLeave();
 }
 
-LRESULT CModernScrollBar::OnMouseHover(WPARAM wParam, LPARAM lParam)
+LRESULT CModernScrollBar::OnMouseHover(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	return 0;
 }
@@ -540,7 +540,7 @@ void CModernScrollBar::ScrollToPosition(int thumbPos)
 	Invalidate();
 }
 
-void CModernScrollBar::Show(bool animate)
+void CModernScrollBar::Show(bool /*animate*/)
 {
 	m_isVisible = true;
 	ShowWindow(SW_SHOWNA);
@@ -558,7 +558,7 @@ void CModernScrollBar::Show(bool animate)
 	UpdateScrollBar();
 }
 
-void CModernScrollBar::Hide(bool animate)
+void CModernScrollBar::Hide(bool /*animate*/)
 {
 	m_isVisible = false;
 	ShowWindow(SW_HIDE);

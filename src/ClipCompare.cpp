@@ -55,11 +55,11 @@ void CClipCompare::Compare(int leftId, int rightId)
 					SHELLEXECUTEINFO sei = { sizeof(sei) };
 					sei.lpFile = path;
 					CString csParam;
-					csParam.Format(_T("%s\"%s\" \"%s\""), params, leftFile, rightFile);
+					csParam.Format(_T("%s\"%s\" \"%s\""), params.GetString(), leftFile.GetString(), rightFile.GetString());
 					sei.lpParameters = csParam;
 					sei.nShow = SW_NORMAL;
 
-					Log(StrF(_T("Comparing two clips, left Id %d, right Id %d, Path: %s %s"), leftId, rightId, path, csParam));
+					Log(StrF(_T("Comparing two clips, left Id %d, right Id %d, Path: %s %s"), leftId, rightId, path.GetString(), csParam.GetString()));
 
 					if (!ShellExecuteEx(&sei))
 					{
@@ -229,13 +229,13 @@ CString CClipCompare::SaveToFile(int id, CClip *pClip, bool saveW, bool saveA, b
 	CString path;
 	CString pathCompare = CGetSetOptions::GetPath(PATH_CLIP_DIFF);
 	CString cs;
-	cs.Format(_T("%sditto_compare_%d.txt"), pathCompare, id);
+	cs.Format(_T("%sditto_compare_%d.txt"), pathCompare.GetString(), id);
 
 	if(FileExists(cs))
 	{
 		for(int i = 0; i < 1000; i++)
 		{			
-			cs.Format(_T("%sditto_compare_%d.txt"), pathCompare, id);
+			cs.Format(_T("%sditto_compare_%d.txt"), pathCompare.GetString(), id);
 			if(FileExists(cs))
 			{
 				path = cs;

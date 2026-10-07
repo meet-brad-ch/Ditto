@@ -134,7 +134,7 @@ void CDittoPopupWindow::PumpMessages()
 	}
 }
 
-void CDittoPopupWindow::OnLButtonUp(UINT nFlags, CPoint point)
+void CDittoPopupWindow::OnLButtonUp(UINT /*nFlags*/, CPoint /*point*/)
 {
 	if(m_groupId > 0)
 	{

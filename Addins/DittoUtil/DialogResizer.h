@@ -30,7 +30,7 @@ protected:
 		{			
 			m_nFlags = 0;
 		}
-		HWND m_hWnd;
+		HWND m_hWnd{};
 		int m_nFlags;
 	};
 
@@ -46,7 +46,7 @@ protected:
 
 	CArray< CDR_Data, CDR_Data > m_Controls;
 	CSize m_DlgSize;
-	HWND m_hWndParent;
+	HWND m_hWndParent{};
 
 protected:
 };

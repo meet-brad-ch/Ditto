@@ -108,9 +108,9 @@ protected:
 			lItemData = -1;
 		}
 		CString csTitle;
-		CWnd* pWnd;
-		long lWidth;
-		COLORREF clrUnderline;
+		CWnd* pWnd{};
+		long lWidth{};
+		COLORREF clrUnderline{};
 		long lItemData;
 	};
 

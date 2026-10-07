@@ -226,7 +226,7 @@ DWORD CALLBACK CRichEditCtrlEx::CBStreamIn(DWORD_PTR dwCookie, LPBYTE pbBuff, LO
 /*
 	Callback function to stream the RTF string out of the rich edit control.
 */
-DWORD CALLBACK CRichEditCtrlEx::CBStreamOut(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
+DWORD CALLBACK CRichEditCtrlEx::CBStreamOut(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG * /*pcb*/)
 {
 	// Address of our string var is in psEntry
 	CString *psEntry = (CString*) dwCookie;
@@ -283,7 +283,7 @@ CHARFORMAT CRichEditCtrlEx::GetCharFormat(DWORD dwMask)
 	return cf;
 }
 
-void CRichEditCtrlEx::SetCharStyle(int MASK, int STYLE, int nStart, int nEnd)
+void CRichEditCtrlEx::SetCharStyle(int MASK, int STYLE, int /*nStart*/, int /*nEnd*/)
 {
 	CHARFORMAT cf;
 	cf.cbSize = sizeof(CHARFORMAT);
@@ -491,7 +491,7 @@ void CRichEditCtrlEx::GetSystemFonts(CStringArray &saFontList)
 
 }
 
-BOOL CALLBACK CRichEditCtrlEx::CBEnumFonts(LPLOGFONT lplf, LPTEXTMETRIC lptm, DWORD dwType, LPARAM lpData)
+BOOL CALLBACK CRichEditCtrlEx::CBEnumFonts(LPLOGFONT lplf, LPTEXTMETRIC /*lptm*/, DWORD dwType, LPARAM lpData)
 {
 	// This function was written with the help of CCustComboBox, by Girish Bharadwaj.
 	// Available from Codeguru.
@@ -532,7 +532,7 @@ int CRichEditCtrlEx::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	return 0;
 }
 
-BOOL CRichEditCtrlEx::Create(LPCTSTR lpszClassName, LPCTSTR lpszWindowName, DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID, CCreateContext* pContext) 
+BOOL CRichEditCtrlEx::Create(LPCTSTR /*lpszClassName*/,LPCTSTR lpszWindowName, DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID, CCreateContext* pContext) 
 {
 	return CWnd::Create(_T("RichEdit50W"), lpszWindowName, dwStyle, rect, pParentWnd, nID, pContext);
 

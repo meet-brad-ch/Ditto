@@ -32,12 +32,12 @@ protected:
 	void EndRestoreThread();
 
 protected:
-	long m_lCurrentDittoBuffer;
+	long m_lCurrentDittoBuffer{};
 	CClipboardSaveRestore m_SavedClipboard;
 	bool m_bActive;
 	DWORD m_dwLastPaste;
 	CEvent m_ActiveTimer;
 	CEvent m_RestoreTimer;
 	CEvent m_Pasting;
-	CClipboardSaveRestoreCopyBuffer *m_pClipboard;
+	CClipboardSaveRestoreCopyBuffer *m_pClipboard{};
 };

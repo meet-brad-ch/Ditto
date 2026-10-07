@@ -21,7 +21,7 @@ bool CClipboardSaveRestore::Save(BOOL textOnly)
 
 	if(::OpenClipboard(theApp.m_MainhWnd))
 	{
-		int nFormat = EnumClipboardFormats(0);
+		UINT nFormat = EnumClipboardFormats(0);
 		while(nFormat != 0)
 		{
 			if(textOnly == false || (nFormat == CF_TEXT || nFormat == CF_UNICODETEXT || nFormat == CF_HDROP))
@@ -37,7 +37,8 @@ bool CClipboardSaveRestore::Save(BOOL textOnly)
 						{
 							//Copy the data locally
 							cf.m_hgData = NewGlobalP(pvData, size);	
-							cf.m_cfType = nFormat;
+							// Clipboard format ids are 16-bit values, so they fit a CLIPFORMAT
+							cf.m_cfType = static_cast<CLIPFORMAT>(nFormat);
 
 							m_Clipboard.Add(cf);
 

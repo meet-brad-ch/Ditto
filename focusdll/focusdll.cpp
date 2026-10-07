@@ -22,12 +22,13 @@ HINSTANCE hDllInst;
 #define KH_KEY_UP				0x02 // Key-up event
 #define KH_KEY_REPEAT			0x04 // Key-repeat event, the key is held down for long enough
 
-BOOL WINAPI DllMain(HINSTANCE hInstance,DWORD dwReason,LPVOID lpReserved)
+BOOL WINAPI DllMain(HINSTANCE hInstance,DWORD dwReason,LPVOID /*lpReserved*/)
 {
     switch(dwReason)
     {
-        case DLL_PROCESS_ATTACH:            
+        case DLL_PROCESS_ATTACH:
             hDllInst = hInstance;
+            break;
         case DLL_THREAD_ATTACH:
         case DLL_PROCESS_DETACH:
         case DLL_THREAD_DETACH:
@@ -57,7 +58,6 @@ LRESULT CALLBACK KeyboardProc(INT nCode, WPARAM wParam, LPARAM lParam)
 	if (nCode != HC_ACTION)
 		return ::CallNextHookEx(g_hKeyboardHook, nCode, wParam, lParam);
 
-	const BYTE VKCODE = (BYTE)wParam;
 	const BYTE KEYEVENT = GetKeyEventType(lParam);	
 
 	if(g_CaptureKeys && KEYEVENT == KH_KEY_DOWN)

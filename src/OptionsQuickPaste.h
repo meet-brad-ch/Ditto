@@ -49,7 +49,7 @@ public:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	//}}AFX_VIRTUAL
 protected:
-	COptionsSheet *m_pParent;
+	COptionsSheet *m_pParent{};
 
 	CFont m_Font;
 	LOGFONT m_LogFont;

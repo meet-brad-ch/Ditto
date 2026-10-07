@@ -150,7 +150,7 @@ bool CClipIDs::AggregateData(IClipAggregator &Aggregator, UINT cfType, BOOL bRev
 		if (textOnly &&
 			(cfType == CF_UNICODETEXT || cfType == CF_TEXT))
 		{
-			sqlCF_HDROP.Format(_T("OR Data.strClipBoardFormat = '%s'"), GetFormatName(CF_HDROP));
+			sqlCF_HDROP.Format(_T("OR Data.strClipBoardFormat = '%s'"), GetFormatName(CF_HDROP).GetString());
 		}
 
 		csSQL.Format(_T("SELECT * FROM Data ")
@@ -158,8 +158,9 @@ bool CClipIDs::AggregateData(IClipAggregator &Aggregator, UINT cfType, BOOL bRev
 			_T("WHERE (Data.strClipBoardFormat = '%s'")
 			_T(" %s) ")
 			_T("AND Main.lID = %d"),
-			GetFormatName(cfType),
-			sqlCF_HDROP,
+			// Clipboard format ids are 16-bit values, so they fit a CLIPFORMAT
+			GetFormatName(static_cast<CLIPFORMAT>(cfType)).GetString(),
+			sqlCF_HDROP.GetString(),
 			ElementAt(nIndex));
 
 		CppSQLite3Query q = theApp.m_db.execQuery(csSQL);
@@ -184,7 +185,7 @@ bool CClipIDs::AggregateData(IClipAggregator &Aggregator, UINT cfType, BOOL bRev
 }
 
 // Blindly Moves IDs into the lParentID Group sequentially with the given order
-BOOL CClipIDs::MoveTo(long lParentID, double dFirst, double dIncrement)
+BOOL CClipIDs::MoveTo(long lParentID, double /*dFirst*/, double /*dIncrement*/)
 {
 	try
 	{
@@ -214,7 +215,7 @@ BOOL CClipIDs::MoveTo(long lParentID, double dFirst, double dIncrement)
 
 			int ret = theApp.m_db.execDMLEx(sql);
 
-			Log(StrF(_T("MoveTo, Sql Ret: %d, SQL: %s"), ret, sql));
+			Log(StrF(_T("MoveTo, Sql Ret: %d, SQL: %s"), ret, sql.GetString()));
 		}
 	}
 	CATCH_SQLITE_EXCEPTION
@@ -439,7 +440,7 @@ BOOL CClipIDs::Export(CString csFilePath)
 
 	if(FileExists(csFilePath) && DeleteFile(csFilePath) == FALSE)
 	{
-		Log(StrF(_T("Export::Error deleting the file %s"), csFilePath));
+		Log(StrF(_T("Export::Error deleting the file %s"), csFilePath.GetString()));
 		return FALSE;
 	}
 

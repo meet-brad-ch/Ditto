@@ -242,7 +242,7 @@ void CSendKeys::AllKeysUp()
 		short val = GetKeyState(key);
 		if (val & 0x8000)
 		{
-			SendKeyUp(key);
+			SendKeyUp(static_cast<BYTE>(key)); // key is 0-255
 
 			//CString cs;
 			//cs.Format(_T("key was down, sending key up %d, value: %d\n"), key, val);
@@ -442,8 +442,9 @@ bool CSendKeys::SendKeys(LPCTSTR KeysString, bool Wait)
 
   m_bWinDown = m_bShiftDown = m_bLShiftDown = m_bRShiftDown = m_bControlDown = m_bLControlDown = m_bRControlDown = m_bAltDown = m_bUsingParens = false;
 
-  while (ch = *pKey)
+  while (*pKey)
   {
+    ch = *pKey;
     switch (ch)
     {
     // begin modifier group
@@ -517,7 +518,10 @@ bool CSendKeys::SendKeys(LPCTSTR KeysString, bool Wait)
         if (_tcsnicmp(KeyString, _T("VKEY"), 4) == 0)
         {
           p = KeyString + 4;
-          MKey = _ttoi(p);
+          const int vkey = _ttoi(p);
+          if (vkey < 0 || vkey > 0xFFFF)
+            return false;
+          MKey = static_cast<WORD>(vkey);
         }
         else if (_tcsnicmp(KeyString, _T("BEEP"), 4) == 0)
         {
@@ -566,7 +570,10 @@ bool CSendKeys::SendKeys(LPCTSTR KeysString, bool Wait)
             {
               p = KeyString + t;
               // Take the specified number of times
-              NumTimes = _ttoi(p);
+              const int numTimes = _ttoi(p);
+              if (numTimes < 0 || numTimes > 0xFFFF)
+                return false;
+              NumTimes = static_cast<WORD>(numTimes);
             }
 
             if (KeyNames[keyIdx].normalkey)
@@ -581,13 +588,14 @@ bool CSendKeys::SendKeys(LPCTSTR KeysString, bool Wait)
           {
             m_bLControlDown = (MKey == VK_LCONTROL);
             m_bRControlDown = (MKey == VK_RCONTROL);
-            SendKeyDown(MKey, 1, false);
+            // MKey is one of the single-byte VK_ codes tested above
+            SendKeyDown(static_cast<BYTE>(MKey), 1, false);
           }
           else if (MKey == VK_LSHIFT || MKey == VK_RSHIFT)
           {
             m_bLShiftDown = (MKey == VK_LSHIFT);
             m_bRShiftDown = (MKey == VK_RSHIFT);
-            SendKeyDown(MKey, 1, false);
+            SendKeyDown(static_cast<BYTE>(MKey), 1, false);
           }
           else
           {

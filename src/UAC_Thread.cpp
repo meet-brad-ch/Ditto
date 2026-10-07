@@ -24,7 +24,7 @@ CUAC_Thread::~CUAC_Thread(void)
 }
 
 
-void CUAC_Thread::OnTimeOut(void *param)
+void CUAC_Thread::OnTimeOut(void * /*param*/)
 {
 	bool close = false;
 	DWORD exitCode = 0;
@@ -55,10 +55,10 @@ void CUAC_Thread::OnTimeOut(void *param)
 	CloseHandle(hProcess);
 }
 
-void CUAC_Thread::OnEvent(int eventId, void *param)
+void CUAC_Thread::OnEvent(int eventId, void * /*param*/)
 {
-	DWORD startTick = GetTickCount();
-	Log(StrF(_T("Start of OnEvent, eventId: %s"), EnumName((eUacThreadEvents)eventId)));
+	ULONGLONG startTick = GetTickCount64();
+	Log(StrF(_T("Start of OnEvent, eventId: %s"), EnumName((eUacThreadEvents)eventId).GetString()));
 
 	switch((eUacThreadEvents)eventId)
 	{
@@ -76,8 +76,8 @@ void CUAC_Thread::OnEvent(int eventId, void *param)
 		break;
 	}
 
-	DWORD length = GetTickCount() - startTick;
-	Log(StrF(_T("End of OnEvent, eventId: %s, Time: %d(ms)"), EnumName((eUacThreadEvents)eventId), length));
+	ULONGLONG length = GetTickCount64() - startTick;
+	Log(StrF(_T("End of OnEvent, eventId: %s, Time: %llu(ms)"), EnumName((eUacThreadEvents)eventId).GetString(), length));
 }
 
 CString CUAC_Thread::EnumName(eUacThreadEvents e)
@@ -132,6 +132,11 @@ bool CUAC_Thread::StartProcess()
 
 	HANDLE mutex = CreateMutex(NULL, FALSE, mutexName);
 	DWORD dwError = GetLastError();
+	if(mutex == NULL)
+	{
+		Log(StrF(_T("CreateMutex %s failed, error: %d"), mutexName.GetString(), dwError));
+	}
+
 	if(dwError == ERROR_ALREADY_EXISTS)
 	{
 		Log(_T("Paste uac admin exe is already running just signalling paste"));
@@ -162,7 +167,10 @@ bool CUAC_Thread::StartProcess()
 		}
 	}
 
-	CloseHandle(mutex);
+	if(mutex != NULL)
+	{
+		CloseHandle(mutex);
+	}
 
 	return ret;
 }

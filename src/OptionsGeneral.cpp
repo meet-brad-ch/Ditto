@@ -249,7 +249,7 @@ BOOL COptionsGeneral::OnApply()
 		if(!theApp.m_Language.LoadLanguageFile(csLanguage))
 		{
 			CString cs;
-			cs.Format(_T("Error loading language file - %s - \n\n%s"), csLanguage, theApp.m_Language.m_csLastError);
+			cs.Format(_T("Error loading language file - %s - \n\n%s"), csLanguage.GetString(), theApp.m_Language.m_csLastError.GetString());
 
 			MessageBox(cs, _T("Ditto"), MB_OK);
 		}
@@ -266,7 +266,7 @@ BOOL COptionsGeneral::OnApply()
 		if(FileExists(resolvedPath) == FALSE)
 		{
 			CString cs;
-			cs.Format(_T("The database %s does not exist.\n\nCreate a new database?"), resolvedPath);
+			cs.Format(_T("The database %s does not exist.\n\nCreate a new database?"), resolvedPath.GetString());
 
 			if(MessageBox(cs, _T("Ditto"), MB_OKCANCEL) == IDOK)
 			{
@@ -427,17 +427,17 @@ void COptionsGeneral::OnButtonAbout()
 		csMessage.Format(_T("Language -  %s\n")
 						 _T("Version -   %d\n")
 						 _T("Author -   %s\n")
-						 _T("Notes -   %s"), csLanguage, 
-									   Lang.GetVersion(), 
-									   Lang.GetAuthor(), 
-									   Lang.GetNotes());
+						 _T("Notes -   %s"), csLanguage.GetString(),
+									   Lang.GetVersion(),
+									   Lang.GetAuthor().GetString(),
+									   Lang.GetNotes().GetString());
 
 		MessageBox(csMessage, _T("Ditto"), MB_OK);
 	}
 	else
 	{
 		CString csError;
-		csError.Format(_T("Error loading language file - %s - reason = "), csLanguage, Lang.m_csLastError);
+		csError.Format(_T("Error loading language file - %s - reason = %s"), csLanguage.GetString(), Lang.m_csLastError.GetString());
 
 		MessageBox(csError, _T("Ditto"), MB_OK);
 	}
@@ -551,17 +551,17 @@ void COptionsGeneral::OnBnClickedButtonTheme()
 		csMessage.Format(_T("Theme -  %s\n")
 			_T("Version -   %d\n")
 			_T("Author -   %s\n")
-			_T("Notes -   %s"), csTheme,
+			_T("Notes -   %s"), csTheme.GetString(),
 			theme.FileVersion(),
-			theme.Author(),
-			theme.Notes());
+			theme.Author().GetString(),
+			theme.Notes().GetString());
 
 		MessageBox(csMessage, _T("Ditto"), MB_OK);
 	}
 	else
 	{
 		CString csError;
-		csError.Format(_T("Error loading theme file - %s - reason = "), csTheme, theme.LastError());
+		csError.Format(_T("Error loading theme file - %s - reason = %s"), csTheme.GetString(), theme.LastError().GetString());
 
 		MessageBox(csError, _T("Ditto"), MB_OK);
 	}
@@ -582,7 +582,7 @@ void COptionsGeneral::OnBnClickedButtonDefaultFault()
 	m_btFont.SetWindowText(cs);	
 }
 
-int COptionsGeneral::GetFontSize(HWND hWnd, const LOGFONT& lf)
+int COptionsGeneral::GetFontSize(HWND /*hWnd*/, const LOGFONT& lf)
 {
 	//font is saved un scaled, so scale it with the default values to get the font size
 	int nFontSize = -::MulDiv(lf.lfHeight, 72, 96);

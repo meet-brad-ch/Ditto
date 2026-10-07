@@ -187,7 +187,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
     return 0;
 }
 
-LRESULT CMainFrame::OnPlainTextPaste(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnPlainTextPaste(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	DoTextOnlyPaste();
 	return 1;
@@ -273,7 +273,7 @@ void CMainFrame::OnFirstExit()
     this->SendMessage(WM_CLOSE, 0, 0);
 }
 
-LRESULT CMainFrame::OnHotKey(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnHotKey(WPARAM wParam, LPARAM /*lParam*/)
 {
     if(theApp.m_pDittoHotKey && wParam == theApp.m_pDittoHotKey->m_Atom ||
 		theApp.m_pDittoHotKey2 && wParam == theApp.m_pDittoHotKey2->m_Atom ||
@@ -502,7 +502,7 @@ void CMainFrame::ShowQPasteWithActiveWindowCheck()
 		if (exeName != _T(""))
 		{
 			theApp.TryEnterOldGroupState();
-			CString query = StrF(_T("SELECT lID FROM Main WHERE bIsGroup = 1 AND mText = '%s' COLLATE NOCASE"), exeName);
+			CString query = StrF(_T("SELECT lID FROM Main WHERE bIsGroup = 1 AND mText = '%s' COLLATE NOCASE"), exeName.GetString());
 			CppSQLite3Query q = theApp.m_db.execQueryEx(query);
 			if (q.eof() == false)
 			{
@@ -510,7 +510,7 @@ void CMainFrame::ShowQPasteWithActiveWindowCheck()
 				//this will revert back to the old group on hide of ditto
 				theApp.EnterGroupID(groupId, TRUE, TRUE);
 
-				Log(StrF(_T("Opening Ditto to Group based on found group name, name: %s, GroupId: %d"), exeName, groupId));
+				Log(StrF(_T("Opening Ditto to Group based on found group name, name: %s, GroupId: %d"), exeName.GetString(), groupId));
 			}
 			else
 			{
@@ -604,9 +604,9 @@ void CMainFrame::DoFirstTenPositionsPaste(int nPos)
 			}
 		}
 
-		CString query = StrF(_T("SELECT lID, bIsGroup FROM Main WHERE %s ORDER BY %s LIMIT 1 OFFSET %d"), strFilter, csSort, nPos);
+		CString query = StrF(_T("SELECT lID, bIsGroup FROM Main WHERE %s ORDER BY %s LIMIT 1 OFFSET %d"), strFilter.GetString(), csSort.GetString(), nPos);
 
-		Log(StrF(_T("Doing Last Ten Paste, Index: %d Query: %s"), nPos, query));
+		Log(StrF(_T("Doing Last Ten Paste, Index: %d Query: %s"), nPos, query.GetString()));
 
 		CppSQLite3Query q = theApp.m_db.execQueryEx(query);
 
@@ -624,7 +624,7 @@ void CMainFrame::StartKeyModifierTimer()
 	{
 		m_keyModifiersTimerCount = 0;
 		m_bMovedSelectionMoveKeyState = false;
-		m_startKeyStateTime = GetTickCount();
+		m_startKeyStateTime = GetTickCount64();
 		m_keyStateModifiers = CAccels::GetKeyStateModifiers();
 		SetTimer(KEY_STATE_MODIFIERS, 50, NULL);
 	}
@@ -646,8 +646,8 @@ void CMainFrame::PasteOrShowGroup(int dbId, BOOL updateClipTime, BOOL activeTarg
 		
 		if(isGroup)
 		{
-			DWORD maxDiff = (DWORD)CGetSetOptions::GetGroupDoubleClickTimeMS();
-			DWORD diff = GetTickCount() - m_doubleClickGroupStartTime;		
+			ULONGLONG maxDiff = static_cast<ULONGLONG>(CGetSetOptions::GetGroupDoubleClickTimeMS());
+			ULONGLONG diff = GetTickCount64() - m_doubleClickGroupStartTime;
 
 			if(m_doubleClickGroupId == dbId &&
 				diff < maxDiff)
@@ -664,7 +664,7 @@ void CMainFrame::PasteOrShowGroup(int dbId, BOOL updateClipTime, BOOL activeTarg
 			else
 			{
 				m_doubleClickGroupId = dbId;
-				m_doubleClickGroupStartTime = GetTickCount();
+				m_doubleClickGroupStartTime = GetTickCount64();
 
 				int doubleClickTime = CGetSetOptions::GetGroupDoubleClickTimeMS();
 
@@ -775,7 +775,7 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
                 if((m_keyStateModifiers &keyState) == 0)
                 {
                     KillTimer(KEY_STATE_MODIFIERS);
-                    long waitTime = (long)(GetTickCount() - m_startKeyStateTime);
+                    long waitTime = static_cast<long>(GetTickCount64() - m_startKeyStateTime);
 
                     if(m_bMovedSelectionMoveKeyState || m_keyModifiersTimerCount > CGetSetOptions::GetKeyStateWaitTimerCount())
                     {
@@ -820,8 +820,8 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 
 				Log(StrF(_T("Processing single click of groupId %d in timer, opening ditto to this group"), m_doubleClickGroupId));
 
-				DWORD maxDiff = (DWORD)(CGetSetOptions::GetGroupDoubleClickTimeMS() * 1.5);
-				DWORD diff = GetTickCount() - m_doubleClickGroupStartTime;					
+				ULONGLONG maxDiff = static_cast<ULONGLONG>(CGetSetOptions::GetGroupDoubleClickTimeMS() * 1.5);
+				ULONGLONG diff = GetTickCount64() - m_doubleClickGroupStartTime;
 
 				if(diff < maxDiff)
 				{					
@@ -925,7 +925,7 @@ void CMainFrame::OnUpdateFirstToggleConnectCV(CCmdUI *pCmdUI)
     theApp.UpdateMenuConnectCV(pCmdUI->m_pMenu, ID_FIRST_TOGGLECONNECTCV);
 }
 
-LRESULT CMainFrame::OnClipboardCopied(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnClipboardCopied(WPARAM wParam, LPARAM /*lParam*/)
 {
 	Log(_T("Start of function OnClipboardCopied, adding clip to thread for processing"));
 
@@ -1038,7 +1038,7 @@ bool CMainFrame::CloseAllOpenDialogs()
     return bRet;
 }
 
-LRESULT CMainFrame::OnErrorMsg(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnErrorMsg(WPARAM wParam, LPARAM /*lParam*/)
 {
 	CString csNewText = (TCHAR*)wParam;
 
@@ -1047,7 +1047,7 @@ LRESULT CMainFrame::OnErrorMsg(WPARAM wParam, LPARAM lParam)
 	return TRUE;
 }
 
-LRESULT CMainFrame::OnOwnedErrorMsg(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnOwnedErrorMsg(WPARAM wParam, LPARAM /*lParam*/)
 {
 	const std::unique_ptr<CString> message(reinterpret_cast<CString*>(wParam));
 
@@ -1118,7 +1118,7 @@ void CMainFrame::ShowEditWnd(CClipIDs& Ids)
 	}
 }
 
-LRESULT CMainFrame::OnEditWndClose(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnEditWndClose(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	m_pEditFrameWnd = NULL;
 	return TRUE;
@@ -1126,7 +1126,7 @@ LRESULT CMainFrame::OnEditWndClose(WPARAM wParam, LPARAM lParam)
 
 void CMainFrame::ShowErrorMessage(CString csTitle, CString csMessage)
 {
-    Log(StrF(_T("ShowErrorMessage %s - %s"), csTitle, csMessage));
+    Log(StrF(_T("ShowErrorMessage %s - %s"), csTitle.GetString(), csMessage.GetString()));
 	m_trayIcon.SetBalloonDetails(csMessage, csTitle, CTrayNotifyIcon::BalloonStyle::Error, CGetSetOptions::GetBalloonTimeout());
 }
 
@@ -1222,13 +1222,13 @@ void CMainFrame::OnFirstGlobalhotkeys()
 	}
 }
 
-LRESULT CMainFrame::OnShowOptions(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnShowOptions(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	OnFirstOption();
 	return 0;
 }
 
-LRESULT CMainFrame::OnOptionsClosed(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnOptionsClosed(WPARAM wParam, LPARAM /*lParam*/)
 {
 	BOOL themeChanged = (BOOL)wParam;
 	m_trayIcon.MinimiseToTray(this);
@@ -1268,7 +1268,7 @@ LRESULT CMainFrame::OnOptionsClosed(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-LRESULT CMainFrame::OnGlobalClipsClosed(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnGlobalClipsClosed(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	m_trayIcon.MinimiseToTray(this);
 	CAlphaBlend tran;
@@ -1292,7 +1292,7 @@ void CMainFrame::RefreshShowInTaskBar()
 	}
 }
 
-LRESULT CMainFrame::OnDeleteClipDataClosed(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnDeleteClipDataClosed(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	m_trayIcon.MinimiseToTray(this);
 	CAlphaBlend tran;
@@ -1327,7 +1327,7 @@ void CMainFrame::OnFirstDeleteclipdata()
 	}
 }
 
-LRESULT CMainFrame::OnSaveClipboardMessage(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnSaveClipboardMessage(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	OnFirstSavecurrentclipboard();
 	return TRUE;
@@ -1365,7 +1365,7 @@ void CMainFrame::OnFirstSavecurrentclipboard()
 	}
 }
 
-LRESULT CMainFrame::OnReAddTaskBarIcon(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnReAddTaskBarIcon(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	if(CGetSetOptions::GetShowIconInSysTray())
 	{
@@ -1374,7 +1374,7 @@ LRESULT CMainFrame::OnReAddTaskBarIcon(WPARAM wParam, LPARAM lParam)
 	return TRUE;
 }
 
-LRESULT CMainFrame::OnReOpenDatabase(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnReOpenDatabase(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	Log(StrF(_T("OnReOpenDatabase, Start closing and reopening database Delay: %d"), CGetSetOptions::GetWindowsResumeDelayReOpenDbMS()));
 
@@ -1403,7 +1403,7 @@ LRESULT CMainFrame::OnShowMsgWindow(WPARAM wParam, LPARAM lParam)
 	return TRUE;
 }
 
-LRESULT CMainFrame::OnShowDittoGroup(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnShowDittoGroup(WPARAM wParam, LPARAM /*lParam*/)
 {
 	int groupId = (int)wParam;
 	CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT bIsGroup FROM Main WHERE lID = %d"), groupId);
@@ -1423,7 +1423,7 @@ void CMainFrame::OnFirstFixupstickycliporder()
 	ReOrderStickyClips(-1, theApp.m_db);
 }
 
-LRESULT CMainFrame::OnResolutionChange(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnResolutionChange(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	if (m_startupScreenWidth != GetScreenWidth() ||
 		m_startupScreenHeight != GetScreenHeight())
@@ -1487,13 +1487,13 @@ void CMainFrame::OnFirstRestoredatabase()
 	RestoreDbPrompt(m_hWnd);
 }
 
-LRESULT CMainFrame::OnBackupDb(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnBackupDb(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	OnFirstBackupdatabase();
 	return TRUE;
 }
 
-LRESULT CMainFrame::OnRestoreDb(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnRestoreDb(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	OnFirstRestoredatabase();
 	return TRUE;
@@ -1512,13 +1512,13 @@ void CMainFrame::OnFirstDeleteallnonusedclips()
 	theApp.RefreshView();
 }
 
-LRESULT CMainFrame::OnPasteClip(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnPasteClip(WPARAM wParam, LPARAM /*lParam*/)
 {
 	PasteOrShowGroup((int)wParam, TRUE, FALSE, TRUE, false);
 	return TRUE;
 }
 
-LRESULT CMainFrame::OnEditClip(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnEditClip(WPARAM wParam, LPARAM /*lParam*/)
 {
 	CClipIDs IDs;
 	IDs.Add((int)wParam);

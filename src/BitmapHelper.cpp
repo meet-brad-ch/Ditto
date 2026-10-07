@@ -142,7 +142,7 @@ BOOL CBitmapHelper::GetCBitmap(CClipFormats& clips, CDC* pDC, CBitmap* pBitMap, 
 	graphics.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
 	graphics.SetPixelOffsetMode(Gdiplus::PixelOffsetModeHalf);
 
-	graphics.Clear(Gdiplus::Color::White);
+	graphics.Clear(Gdiplus::Color(static_cast<Gdiplus::ARGB>(Gdiplus::Color::White)));
 
 	int destX = 0;
 	int destY = 0;

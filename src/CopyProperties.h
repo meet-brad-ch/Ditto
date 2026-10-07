@@ -33,8 +33,8 @@ public:
 	CString	m_eDate;
 	CString m_lastPasteDate;
 	BOOL	m_bNeverAutoDelete;
-	BOOL m_hotKeyGlobal;
-	BOOL m_moveToGroupHotKeyGlobal;
+	BOOL m_hotKeyGlobal{};
+	BOOL m_moveToGroupHotKeyGlobal{};
 	//}}AFX_DATA
 
 
@@ -60,13 +60,13 @@ protected:
 	bool m_bDeletedData;
 	bool m_bHideOnKillFocus;
 	CDialogResizer m_Resize;
-	bool m_bInGroup;
+	bool m_bInGroup{};
 	bool m_bHandleKillFocus;
 	bool m_bSetToTopMost;
 	CClip *m_pMemoryClip;
 	CBrush m_brush;
 	CClip m_clip;
-	bool m_mouseDownOnCaption;
+	bool m_mouseDownOnCaption{};
 
 	void LoadDataIntoCClip(CClip &Clip);
 	void LoadDataFromCClip(CClip &Clip);

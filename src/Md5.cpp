@@ -237,7 +237,7 @@ void CMd5::MD5Final(unsigned char digest[16])
 */
 void CMd5::MD5Transform(unsigned long buf[4], unsigned long in[16])
 {
-	register unsigned long a, b, c, d;
+	unsigned long a, b, c, d;
 
 	a = buf[0];
 	b = buf[1];
@@ -328,7 +328,7 @@ void CMd5::MD5Transform(unsigned long buf[4], unsigned long in[16])
 
 
 #ifndef HIGHFIRST
-void CMd5::byteReverse(unsigned char *buf, unsigned longs)  
+void CMd5::byteReverse(unsigned char * /*buf*/, unsigned /*longs*/)
 {
 	// Nothing
 }

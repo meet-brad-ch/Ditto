@@ -195,8 +195,8 @@ BOOL CImageViewer::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 
 		if (oldScale > 0 && m_scale > 0)
 		{
-			delta.x = round((pt.x * (1 / oldScale)) - (pt.x * (1 / m_scale)));
-			delta.y = round((pt.y * (1 / oldScale)) - (pt.y * (1 / m_scale)));
+			delta.x = lround((pt.x * (1 / oldScale)) - (pt.x * (1 / m_scale)));
+			delta.y = lround((pt.y * (1 / oldScale)) - (pt.y * (1 / m_scale)));
 
 			m_scrollHelper.Update(delta);
 		}
@@ -273,14 +273,14 @@ void CImageViewer::OnLButtonUp(UINT nFlags, CPoint point)
 	CWnd::OnLButtonUp(nFlags, point);
 }
 
-BOOL CImageViewer::OnEraseBkgnd(CDC* pDC)
+BOOL CImageViewer::OnEraseBkgnd(CDC* /*pDC*/)
 {
 	//OutputDebugString(_T("image viewer OnEraseBkgnd\r\n"));
 	//return CWnd::OnEraseBkgnd(pDC);
 	return FALSE;
 }
 
-LRESULT CImageViewer::OnGesture(WPARAM wParam, LPARAM lParam)
+LRESULT CImageViewer::OnGesture(WPARAM /*wParam*/, LPARAM lParam)
 {
 	CPoint ptZoomCenter;
 	double k;
@@ -423,7 +423,7 @@ LRESULT CImageViewer::OnGesture(WPARAM wParam, LPARAM lParam)
 	return FALSE;
 }
 
-LRESULT CImageViewer::OnGestureNotify(WPARAM wParam, LPARAM lParam)
+LRESULT CImageViewer::OnGestureNotify(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	// This is the right place to define the list of gestures that this
 			// application will support. By populating GESTURECONFIG structure 

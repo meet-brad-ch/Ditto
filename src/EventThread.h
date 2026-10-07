@@ -14,8 +14,8 @@ public:
 	static unsigned int __stdcall EventThreadFnc(void* thisptr);
 
 protected:
-	virtual void OnEvent(int eventId, void *param)	{ return; }
-	virtual void OnTimeOut(void *param) { return; }
+	virtual void OnEvent(int /*eventId*/, void * /*param*/)	{ return; }
+	virtual void OnTimeOut(void * /*param*/) { return; }
 	void RunThread();
 	bool UndoFireEvent(int eventId);
 	HANDLE GetHandle(int eventId);

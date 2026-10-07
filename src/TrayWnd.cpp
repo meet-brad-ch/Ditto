@@ -25,7 +25,7 @@ BEGIN_MESSAGE_MAP(CTrayWnd, CWnd)
 	ON_REGISTERED_MESSAGE(WM_TASKBARCREATED, OnTaskBarCreated)
 END_MESSAGE_MAP()
 
-LRESULT CTrayWnd::OnTaskBarCreated(WPARAM wParam, LPARAM lParam)
+LRESULT CTrayWnd::OnTaskBarCreated(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	if(theApp.m_pMainFrame != NULL)
 	{

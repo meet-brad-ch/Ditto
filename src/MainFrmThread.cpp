@@ -28,7 +28,7 @@ void CMainFrmThread::AddClipToSave(CClip *pClip)
 	FireEvent(SAVE_CLIPS);
 }
 
-void CMainFrmThread::OnEvent(int eventId, void *param)
+void CMainFrmThread::OnEvent(int eventId, void * /*param*/)
 {
     switch((eCMainFrmThreadEvents)eventId)
     {
@@ -136,7 +136,7 @@ void CMainFrmThread::OnSaveClips()
 			}
 
 			CString *pMsg = new CString();
-			pMsg->Format(_T("Saved new clip \"%s\"\r\ndirectly to the group \"%s\""), pLocalClips->GetTail()->m_Desc.Left(35), groupName);
+			pMsg->Format(_T("Saved new clip \"%s\"\r\ndirectly to the group \"%s\""), pLocalClips->GetTail()->m_Desc.Left(35).GetString(), groupName.GetString());
 
 			theApp.m_pMainFrame->PostMessageW(WM_SHOW_MSG_WINDOW, (WPARAM) pMsg, pLocalClips->GetTail()->m_parentId);
 		}

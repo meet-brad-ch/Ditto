@@ -603,9 +603,9 @@ LRESULT CSymbolEdit::OnSetFont(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-HBRUSH CSymbolEdit::CtlColor(CDC* pDC, UINT n)
+HBRUSH CSymbolEdit::CtlColor(CDC* pDC, UINT /*n*/)
 {
-	COLORREF color = -1;	
+	COLORREF color = CLR_INVALID;
 
 	if (::GetFocus() == m_hWnd)
 	{
@@ -796,7 +796,7 @@ void CSymbolEdit::OnSelectSearchString(UINT idIn)
 		this->SetWindowTextW(cs);
 
 		this->SetFocus();
-		this->SetSel(-1);
+		this->SetSel(static_cast<DWORD>(-1));
 
 		this->Invalidate();
 
@@ -814,7 +814,7 @@ bool CSymbolEdit::ApplyLastSearch()
 		this->SetWindowTextW(cs);
 
 		this->SetFocus();
-		this->SetSel(-1);
+		this->SetSel(static_cast<DWORD>(-1));
 
 		this->Invalidate();
 
@@ -844,7 +844,7 @@ void CSymbolEdit::SetDpiInfo(CDPI *dpi)
 	Invalidate();
 }
 
-BOOL CSymbolEdit::OnEraseBkgnd(CDC* pDC)
+BOOL CSymbolEdit::OnEraseBkgnd(CDC* /*pDC*/)
 {
 	// TODO: Add your message handler code here and/or call default
 
@@ -853,7 +853,7 @@ BOOL CSymbolEdit::OnEraseBkgnd(CDC* pDC)
 }
 
 
-void CSymbolEdit::OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS* lpncsp)
+void CSymbolEdit::OnNcCalcSize(BOOL /*bCalcValidRects*/,NCCALCSIZE_PARAMS* lpncsp)
 {
 	CString text;
 	GetWindowText(text);
@@ -878,7 +878,7 @@ void CSymbolEdit::OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS* lpncsp)
 
 		CFont *pOld = pDC->SelectObject(pFont);
 		pDC->DrawText("Ky", rectText, DT_CALCRECT | DT_LEFT);
-		UINT uiVClientHeight = rectText.Height();
+		int uiVClientHeight = rectText.Height();
 
 		pDC->SelectObject(pOld);
 		ReleaseDC(pDC);
@@ -961,7 +961,7 @@ void CSymbolEdit::OnNcPaint()
 
 	//if ((text.GetLength() > 0 || this == GetFocus()) && m_windowDpi)
 	{
-		CWindowDC dc(this);
+		CWindowDC borderDc(this);
 
 		CRect rcFrame;
 		this->GetWindowRect(rcFrame);
@@ -974,7 +974,7 @@ void CSymbolEdit::OnNcPaint()
 
 		for (int x = 0; x < border; x++)
 		{
-			dc.FrameRect(rcBorder, &borderBrush);
+			borderDc.FrameRect(rcBorder, &borderBrush);
 			rcBorder.DeflateRect(1, 1, 1, 1);
 		}
 	}

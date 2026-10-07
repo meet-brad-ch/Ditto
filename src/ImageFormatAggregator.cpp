@@ -24,11 +24,12 @@ CImageFormatAggregator::~CImageFormatAggregator(void)
 	}
 }
 
-bool CImageFormatAggregator::AddClip(LPVOID lpData, int nDataSize, int nPos, int nCount, UINT cfType)
+bool CImageFormatAggregator::AddClip(LPVOID lpData, int nDataSize, int /*nPos*/, int /*nCount*/, UINT cfType)
 {
 	HGLOBAL hGlobal = ::NewGlobalP(lpData, nDataSize);
-	
-	CClipFormat data(cfType, hGlobal);
+
+	// Clipboard format ids are 16-bit values, so they fit a CLIPFORMAT
+	CClipFormat data(static_cast<CLIPFORMAT>(cfType), hGlobal);
 	//m_images owns the data now
 	data.AutoDeleteData(false);
 

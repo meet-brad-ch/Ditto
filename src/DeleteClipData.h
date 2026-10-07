@@ -21,7 +21,7 @@ public:
 	}
 
 	long m_lID;
-	long m_DatalID;
+	long m_DatalID{-1};
 	CString m_Desc;
 	CTime m_createdDateTime;
 	CTime m_lastUsedDateTime;
@@ -53,7 +53,7 @@ protected:
 
 	CDialogResizer m_Resize;
 	CListCtrl	m_clipList;
-	HWND m_hWndParent;
+	HWND m_hWndParent{};
 	CShowTaskBarIcon m_showTaskbar;
 	std::vector<CDeleteData> m_data;
 	std::vector<CDeleteData> m_toDelete;
@@ -86,6 +86,8 @@ protected:
 	// Shows the clip's image in the description window; reports a malformed image.
 	void SetDescriptionWindowImage(CClip& selectedClip);
 	void SaveClipDataItemToFile(CDeleteData item);
+	// Copies text into the list view's display buffer, cut to the buffer size.
+	void CopyDisplayText(LVITEM& item, LPCTSTR text);
 
 public:
 	CString m_clipTitle;

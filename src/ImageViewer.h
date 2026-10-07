@@ -25,7 +25,7 @@ public:
 
 	CPoint m_ptFirst;
 	CPoint m_ptSecond;
-	DWORD m_dwArguments;
+	DWORD m_dwArguments{};
 
 	double m_scale;
 

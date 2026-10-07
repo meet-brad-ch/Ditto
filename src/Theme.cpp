@@ -122,12 +122,12 @@ bool CTheme::Load(CString csTheme, bool bHeaderOnly, bool bCheckLastWriteTime)
 	m_LastWriteTime = LastWrite;
 	m_lastTheme = csTheme;
 
-	Log(StrF(_T("Loading Theme %s"), csPath));
+	Log(StrF(_T("Loading Theme %s"), csPath.GetString()));
 
 	TiXmlDocument doc;
 	if(!doc.LoadFile(csPath.GetBuffer()))
 	{
-		m_csLastError.Format(_T("Error loading Theme %s - reason = %s"), csPath, doc.ErrorDesc());
+		m_csLastError.Format(_T("Error loading Theme %s - reason = %hs"), csPath.GetString(), doc.ErrorDesc());
 		ASSERT(!m_csLastError);
 		Log(m_csLastError);
 		return false;
@@ -273,7 +273,7 @@ bool CTheme::LoadElement(TiXmlElement *pParent, CStringA csNode, COLORREF &Color
 	TiXmlElement *pColorNode = pParent->FirstChildElement(csNode);
 	if(pColorNode == NULL)
 	{
-		m_csLastError.Format(_T("Theme Load, error loading Node = %s"), csNode);
+		m_csLastError.Format(_T("Theme Load, error loading Node = %hs"), csNode.GetString());
 		Log(m_csLastError);
 		return false;
 	}
@@ -281,7 +281,7 @@ bool CTheme::LoadElement(TiXmlElement *pParent, CStringA csNode, COLORREF &Color
 	TiXmlNode *pColor = pColorNode->FirstChild();
 	if(pColor == NULL)
 	{
-		m_csLastError.Format(_T("Theme Load, error getting node text for = %s"), csNode);
+		m_csLastError.Format(_T("Theme Load, error getting node text for = %hs"), csNode.GetString());
 		Log(m_csLastError);
 		return false;
 	}
@@ -320,7 +320,7 @@ bool CTheme::LoadElement(TiXmlElement *pParent, CStringA csNode, COLORREF &Color
 		}
 		else
 		{
-			m_csLastError.Format(_T("Theme Load, malformed/incomplete RGB value for Node = %s, Value = %s"), csNode, csColor);
+			m_csLastError.Format(_T("Theme Load, malformed/incomplete RGB value for Node = %hs, Value = %s"), csNode.GetString(), csColor.GetString());
 			Log(m_csLastError);
 			return false;
 		}
@@ -354,7 +354,7 @@ bool CTheme::LoadElement(TiXmlElement *pParent, CStringA csNode, COLORREF &Color
 		}
 		else
 		{
-			m_csLastError.Format(_T("Theme Load, malformed/incomplete HSL value for Node = %s, Value = %s"), csNode, csColor);
+			m_csLastError.Format(_T("Theme Load, malformed/incomplete HSL value for Node = %hs, Value = %s"), csNode.GetString(), csColor.GetString());
 			Log(m_csLastError);
 			return false;
 		}

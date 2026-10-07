@@ -132,7 +132,7 @@ BOOL CCopyProperties::OnInitDialog()
 		CString text;
 		this->GetWindowText(text);
 		CString newText;
-		newText.Format(_T("%s - %d"), text, m_clip.ID());
+		newText.Format(_T("%s - %d"), text.GetString(), m_clip.ID());
 		this->SetWindowText(newText);
 	}
 
@@ -214,7 +214,7 @@ void CCopyProperties::LoadDataFromCClip(CClip &Clip)
 			TCHAR size[MAX_SIZE_BUFFER];
 			StrFormatByteSize(GlobalSize(pCF->m_hgData), size, MAX_SIZE_BUFFER);
 
-			cs.Format(_T("%s, %s"), GetFormatName(pCF->m_cfType), size);
+			cs.Format(_T("%s, %s"), GetFormatName(pCF->m_cfType).GetString(), size);
 			int nIndex = m_lCopyData.AddString(cs);
 			
 			if(m_lCopyID == -1 && pCF->m_dataId == -1)
@@ -554,9 +554,9 @@ void CCopyProperties::OnLbnSelchangeCopyData()
 			{
 				CClipFormat* pCF;
 				INT_PTR dataCount = pClip->m_Formats.GetSize();
-				for (int i = 0; i < dataCount; i++)
+				for (int formatIndex = 0; formatIndex < dataCount; formatIndex++)
 				{
-					pCF = &pClip->m_Formats.GetData()[i];
+					pCF = &pClip->m_Formats.GetData()[formatIndex];
 					if (pCF)
 					{
 						if (pCF->m_dataId == itemData)

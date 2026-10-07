@@ -21,7 +21,7 @@ public:
 	CString LastError()	{ return m_csLastError; }
 
 protected:
-	TCHAR m_DllName[MAX_PATH];
+	TCHAR m_DllName[MAX_PATH]{};
 	HMODULE m_hModule;
 	CDittoAddinInfo m_DittoAddinInfo;
 	CString m_csLastError;
@@ -29,6 +29,6 @@ protected:
 protected:
 	void Cleanup();
 
-	bool (__cdecl *m_SupportedFunctions)(const CDittoInfo&, FunctionType,std::vector<CFunction>&);
+	bool (__cdecl *m_SupportedFunctions)(const CDittoInfo&, FunctionType,std::vector<CFunction>&){};
 	bool SupportedFunctions(const CDittoInfo &DittoInfo, FunctionType type, std::vector<CFunction> &Functions);	
 };

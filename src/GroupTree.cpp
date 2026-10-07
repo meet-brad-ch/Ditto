@@ -182,7 +182,8 @@ void CGroupTree::FillTree()
 	m_bSendAllready = false;
 
 	HTREEITEM hItem = InsertItem(_T("-No Group-"), TVI_ROOT);
-	SetItemData(hItem, -1);
+	// -1 marks the "No Group" item; readers convert the item data back to int
+	SetItemData(hItem, static_cast<DWORD_PTR>(-1));
 
 	SetItemState(hItem, TVIS_EXPANDED, TVIS_EXPANDED);
 
@@ -226,7 +227,7 @@ void CGroupTree::FillTree(int parentID, HTREEITEM hParent)
 	CATCH_SQLITE_EXCEPTION	
 }
 
-void CGroupTree::OnSelchanged(NMHDR* pNMHDR, LRESULT* pResult) 
+void CGroupTree::OnSelchanged(NMHDR* pNMHDR, LRESULT* /*pResult*/)
 {
 	NM_TREEVIEW* pNMTreeView = (NM_TREEVIEW*)pNMHDR;
 	// TODO: Add your control notification handler code here
@@ -257,7 +258,7 @@ void CGroupTree::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 	}
 }
 
-void CGroupTree::OnDblclk(NMHDR* pNMHDR, LRESULT* pResult) 
+void CGroupTree::OnDblclk(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
 	HTREEITEM hItem =  GetNextItem(TVI_ROOT, TVGN_CARET);
 	if(hItem)
@@ -348,7 +349,7 @@ UINT CGroupTree::GetSelectedCount() const
 	return uCount;
 }
 
-void CGroupTree::OnRclickQuickPaste(NMHDR *pNMHDR, LRESULT *pResult)
+void CGroupTree::OnRclickQuickPaste(NMHDR * /*pNMHDR*/, LRESULT *pResult)
 {
 	if (m_showRightClickMenu == false)
 	{

@@ -49,7 +49,7 @@ int sqlite3_decode_binary(const unsigned char *in, unsigned char *out);
 
 CppSQLite3Exception::CppSQLite3Exception(const int nErrCode,
 									TCHAR* szErrMess,
-									bool bDeleteMsg/*=true*/) :
+									bool /*bDeleteMsg=true*/) :
 									mnErrCode(nErrCode)
 {
 	swprintf(mpszErrMess, _T("%s[%d]: %s"),
@@ -118,6 +118,7 @@ CppSQLite3Exception::~CppSQLite3Exception()
 
 CppSQLite3Query::CppSQLite3Query()
 {
+	mpDB = 0;
 	mpVM = 0;
 	mbEof = true;
 	mnCols = 0;
@@ -127,6 +128,7 @@ CppSQLite3Query::CppSQLite3Query()
 
 CppSQLite3Query::CppSQLite3Query(const CppSQLite3Query& rQuery)
 {
+	mpDB = rQuery.mpDB;
 	mpVM = rQuery.mpVM;
 	// Only one object can own the VM
 	const_cast<CppSQLite3Query&>(rQuery).mpVM = 0;
@@ -170,6 +172,7 @@ CppSQLite3Query& CppSQLite3Query::operator=(const CppSQLite3Query& rQuery)
 	catch (...)
 	{
 	}
+	mpDB = rQuery.mpDB;
 	mpVM = rQuery.mpVM;
 	// Only one object can own the VM
 	const_cast<CppSQLite3Query&>(rQuery).mpVM = 0;
@@ -1009,7 +1012,6 @@ sqlite3_stmt* CppSQLite3DB::compile(const TCHAR* szSQL)
 {
 	checkDB();
 
-	TCHAR* szError=0;
 	const TCHAR* szTail=0;
 	sqlite3_stmt* pVM;
 
@@ -1166,7 +1168,7 @@ int sqlite3_encode_binary(const unsigned char *in, int n, unsigned char *out){
       if( m==0 ) break;
     }
   }
-  out[0] = e;
+  out[0] = static_cast<unsigned char>(e); // e is an offset chosen from 1-255
   j = 1;
   for(i=0; i<n; i++){
     int c = (in[i] - e)&0xff;
@@ -1180,7 +1182,7 @@ int sqlite3_encode_binary(const unsigned char *in, int n, unsigned char *out){
       out[j++] = 1;
       out[j++] = 3;
     }else{
-      out[j++] = c;
+      out[j++] = static_cast<unsigned char>(c); // c is masked to 0-255 above
     }
   }
   out[j] = 0;

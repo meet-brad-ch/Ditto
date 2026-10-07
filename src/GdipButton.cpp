@@ -221,7 +221,7 @@ BOOL CGdipButton::LoadAltImage(UINT id, LPCTSTR pType)
 //	call the SetBkGnd function with a memory DC when it creates the background.
 //				
 //=============================================================================
-HBRUSH CGdipButton::CtlColor(CDC* pScreenDC, UINT nCtlColor) 
+HBRUSH CGdipButton::CtlColor(CDC* pScreenDC, UINT /*nCtlColor*/)
 {
 	if(!m_bHaveBitmaps)
 	{
@@ -295,12 +295,12 @@ HBRUSH CGdipButton::CtlColor(CDC* pScreenDC, UINT nCtlColor)
 				//m_dcStdP.BitBlt(0, 0, rect.Width(), rect.Height(), pDC, 0, 0, SRCCOPY);
 				//bmp.DeleteObject();
 
-				float width = (float)m_pStdImage->m_pBitmap->GetWidth();
-				float height = (float)m_pStdImage->m_pBitmap->GetHeight();
+				float pressedWidth = (float)m_pStdImage->m_pBitmap->GetWidth();
+				float pressedHeight = (float)m_pStdImage->m_pBitmap->GetHeight();
 
-				RectF grect; grect.X = 0, grect.Y = 0; grect.Width = width; grect.Height = height;
+				RectF pressedRect; pressedRect.X = 0, pressedRect.Y = 0; pressedRect.Width = pressedWidth; pressedRect.Height = pressedHeight;
 
-				graphics.DrawImage(*m_pStdImage, grect, -1, -1, width, height, UnitPixel);
+				graphics.DrawImage(*m_pStdImage, pressedRect, -1, -1, pressedWidth, pressedHeight, UnitPixel);
 
 				m_dcStdP.CreateCompatibleDC(pDC);
 				bmp.CreateCompatibleBitmap(pDC, rect.Width(), rect.Height());
@@ -323,12 +323,12 @@ HBRUSH CGdipButton::CtlColor(CDC* pScreenDC, UINT nCtlColor)
 				ImageAttributes ia;
 				ia.SetColorMatrix(&HotMat);
 
-				float width = (float)m_pStdImage->m_pBitmap->GetWidth();
-				float height = (float)m_pStdImage->m_pBitmap->GetHeight();
+				float hotWidth = (float)m_pStdImage->m_pBitmap->GetWidth();
+				float hotHeight = (float)m_pStdImage->m_pBitmap->GetHeight();
 
-				RectF grect; grect.X=0, grect.Y=0; grect.Width = width; grect.Height = height;
+				RectF hotRect; hotRect.X=0, hotRect.Y=0; hotRect.Width = hotWidth; hotRect.Height = hotHeight;
 
-				graphics.DrawImage(*m_pStdImage, grect, 0, 0, width, height, UnitPixel, &ia);
+				graphics.DrawImage(*m_pStdImage, hotRect, 0, 0, hotWidth, hotHeight, UnitPixel, &ia);
 
 				m_dcStdH.CreateCompatibleDC(pDC);
 				bmp.CreateCompatibleBitmap(pDC, rect.Width(), rect.Height());
@@ -351,12 +351,12 @@ HBRUSH CGdipButton::CtlColor(CDC* pScreenDC, UINT nCtlColor)
 				ImageAttributes ia;
 				ia.SetColorMatrix(&GrayMat);
 
-				float width = (float)m_pStdImage->m_pBitmap->GetWidth();
-				float height = (float)m_pStdImage->m_pBitmap->GetHeight();
+				float grayWidth = (float)m_pStdImage->m_pBitmap->GetWidth();
+				float grayHeight = (float)m_pStdImage->m_pBitmap->GetHeight();
 
-				RectF grect; grect.X=0, grect.Y=0; grect.Width = width; grect.Height = height;
+				RectF grayRect; grayRect.X=0, grayRect.Y=0; grayRect.Width = grayWidth; grayRect.Height = grayHeight;
 
-				graphics.DrawImage(*m_pStdImage, grect, 0, 0, width, height, UnitPixel, &ia);
+				graphics.DrawImage(*m_pStdImage, grayRect, 0, 0, grayWidth, grayHeight, UnitPixel, &ia);
 
 				m_dcGS.CreateCompatibleDC(pDC);
 				bmp.CreateCompatibleBitmap(pDC, rect.Width(), rect.Height());
@@ -515,7 +515,7 @@ BOOL CGdipButton::PreTranslateMessage(MSG* pMsg)
 //=============================================================================
 // overide the erase function
 //=============================================================================
-BOOL CGdipButton::OnEraseBkgnd(CDC* pDC) 
+BOOL CGdipButton::OnEraseBkgnd(CDC* /*pDC*/)
 {
 	return TRUE;
 }
@@ -571,7 +571,7 @@ void CGdipButton::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 }
 
 //=============================================================================
-LRESULT CGdipButton::OnMouseHover(WPARAM wparam, LPARAM lparam) 
+LRESULT CGdipButton::OnMouseHover(WPARAM /*wparam*/, LPARAM /*lparam*/)
 //=============================================================================
 {
 	m_bIsHovering = TRUE;
@@ -595,7 +595,7 @@ LRESULT CGdipButton::OnMouseHover(WPARAM wparam, LPARAM lparam)
 
 
 //=============================================================================
-LRESULT CGdipButton::OnMouseLeave(WPARAM wparam, LPARAM lparam)
+LRESULT CGdipButton::OnMouseLeave(WPARAM /*wparam*/, LPARAM /*lparam*/)
 //=============================================================================
 {
 	m_bIsTracking = FALSE;
@@ -652,8 +652,11 @@ void CGdipButton::SetBkGnd(CDC* pDC)
 //=============================================================================
 void CGdipButton::SetToolTipText(UINT nId, BOOL bActivate)
 {
-	// load string resource
-	m_tooltext.LoadString(nId);
+	// load string resource; a missing id is a programming error
+	if (!m_tooltext.LoadString(nId))
+	{
+		AfxThrowResourceException();
+	}
 
 	// If string resource is not empty
 	if (m_tooltext.IsEmpty() == FALSE)

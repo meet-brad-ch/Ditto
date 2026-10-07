@@ -89,7 +89,7 @@ bool ExternalWindowTracker::TrackActiveWnd(bool force)
 	{
 		if(m_dittoHasFocus == false)
 		{
-			Log(StrF(_T("Ditto has focus - Active: %s (%d), Focus: %s (%d), FromHook %d"), WndName(m_activeWnd), m_activeWnd, WndName(m_focusWnd), m_focusWnd, fromHook));
+			Log(StrF(_T("Ditto has focus - Active: %s (%d), Focus: %s (%d), FromHook %d"), WndName(m_activeWnd).GetString(), m_activeWnd, WndName(m_focusWnd).GetString(), m_focusWnd, fromHook));
 		}
 
 		m_dittoHasFocus = true;
@@ -111,19 +111,19 @@ bool ExternalWindowTracker::TrackActiveWnd(bool force)
 	if(theApp.QPasteWnd())
 		theApp.QPasteWnd()->UpdateStatus(true);
 
-	Log(StrF(_T("TargetActiveWindow Active: %s (%d), Focus: %s (%d), FromHook %d, IdleTime: %f"), WndName(m_activeWnd), m_activeWnd, WndName(m_focusWnd), m_focusWnd, fromHook, IdleSeconds()));
+	Log(StrF(_T("TargetActiveWindow Active: %s (%d), Focus: %s (%d), FromHook %d, IdleTime: %f"), WndName(m_activeWnd).GetString(), m_activeWnd, WndName(m_focusWnd).GetString(), m_focusWnd,fromHook, IdleSeconds()));
 
 	return true;
 }
 
 bool ExternalWindowTracker::WaitForActiveWnd(HWND activeWnd, int timeout)
 {
-	DWORD start = GetTickCount();
-	while(((int)(GetTickCount() - start)) < timeout)
+	ULONGLONG start = GetTickCount64();
+	while(static_cast<LONGLONG>(GetTickCount64() - start) < timeout)
 	{
 		if(::GetForegroundWindow() == activeWnd)
 		{
-			Log(StrF(_T("found focus wait %d"), GetTickCount()-start));
+			Log(StrF(_T("found focus wait %llu"), GetTickCount64()-start));
 			return true;
 		}
 
@@ -138,7 +138,7 @@ bool ExternalWindowTracker::WaitForActiveWnd(HWND activeWnd, int timeout)
 void ExternalWindowTracker::ActivateFocus(const HWND activeHwnd, const HWND focushWnd)
 {
 	CString csApp = GetProcessName(m_activeWnd);
-	Log(StrF(_T("SetFocus - AppName: %s, Active: %d, Focus: %d"), csApp, m_activeWnd, m_focusWnd));
+	Log(StrF(_T("SetFocus - AppName: %s, Active: %d, Focus: %d"), csApp.GetString(), m_activeWnd, m_focusWnd));
 
 	if (focushWnd != NULL) 
 	{
@@ -245,15 +245,15 @@ void ExternalWindowTracker::SendPaste(bool activateTarget)
 
 	if(activateTarget)
 	{
-		DWORD startTick = GetTickCount();
+		ULONGLONG startTick = GetTickCount64();
 
 		ActivateTarget();
 		theApp.PumpMessageEx();
 		WaitForActiveWnd(activeWnd, max(25, CGetSetOptions::WaitForActiveWndTimeout()));
-	
-		DWORD endTick = GetTickCount();
+
+		ULONGLONG endTick = GetTickCount64();
 		if((endTick-startTick) > 150)
-			Log(StrF(_T("Paste Timing Send Paste around activate Target: %d"), endTick-startTick));
+			Log(StrF(_T("Paste Timing Send Paste around activate Target: %llu"), endTick-startTick));
 	}
 	else
 	{
@@ -266,7 +266,7 @@ void ExternalWindowTracker::SendPaste(bool activateTarget)
 	DWORD sendKeysDelay = CGetSetOptions::RealSendKeysDelay();
 
 	m_dittoHasFocus = false;
-	Log(StrF(_T("Sending paste to app %s key stroke: %s, SeDelay: %d"), csPasteToApp, csPasteString, delay));
+	Log(StrF(_T("Sending paste to app %s key stroke: %s, SeDelay: %d"), csPasteToApp.GetString(), csPasteString.GetString(), delay));
 
 	bool pasteAsAdmin = false;
 
@@ -316,7 +316,7 @@ void ExternalWindowTracker::SendCopy(CopyReasonEnum::CopyReason copyReason)
 
 	theApp.PumpMessageEx();
 
-	Log(StrF(_T("Sending copy to app %s key stroke: %s, Delay: %d"), csToApp, csString, delay));
+	Log(StrF(_T("Sending copy to app %s key stroke: %s, Delay: %d"), csToApp.GetString(), csString.GetString(), delay));
 
 	bool pasteAsAdmin = false;
 
@@ -366,7 +366,7 @@ void ExternalWindowTracker::SendCut()
 
 	theApp.PumpMessageEx();
 	  
-	Log(StrF(_T("Sending cut to app %s key stroke: %s, Delay: %d"), csToApp, csString, delay));
+	Log(StrF(_T("Sending cut to app %s key stroke: %s, Delay: %d"), csToApp.GetString(), csString.GetString(), delay));
 
 
 	bool pasteAsAdmin = false;
@@ -455,7 +455,7 @@ CPoint ExternalWindowTracker::FocusCaret()
 	{
 		{
 			IAccessible* pIAccessible = NULL;
-			HRESULT hr = m_AccessibleObjectFromWindow(m_activeWnd, OBJID_CARET, __uuidof(IAccessible), (void**)&pIAccessible);
+			HRESULT hr = m_AccessibleObjectFromWindow(m_activeWnd, static_cast<DWORD>(OBJID_CARET),__uuidof(IAccessible), (void**)&pIAccessible);
 			if (hr == S_OK)
 			{
 				long left = 0, top = 0, width = 0, height = 0;

@@ -89,10 +89,11 @@ void CAddType::AddCommonTypes()
 	for (auto systemClipFormat : GetSystemClipFormats()) {
 		m_lbCandidateTypes.AddString(GetFormatName(systemClipFormat));
 	}
-	m_lbCandidateTypes.AddString(GetFormatName(RegisterClipboardFormat(CF_RTF)));
-	m_lbCandidateTypes.AddString(GetFormatName(RegisterClipboardFormat(CF_RTFNOOBJS)));
-	m_lbCandidateTypes.AddString(GetFormatName(RegisterClipboardFormat(CF_RETEXTOBJ)));
-	m_lbCandidateTypes.AddString(GetFormatName(RegisterClipboardFormat(_T("HTML Format"))));
+	// Registered formats are in 0xC000-0xFFFF, so they fit a CLIPFORMAT
+	m_lbCandidateTypes.AddString(GetFormatName(static_cast<CLIPFORMAT>(RegisterClipboardFormat(CF_RTF))));
+	m_lbCandidateTypes.AddString(GetFormatName(static_cast<CLIPFORMAT>(RegisterClipboardFormat(CF_RTFNOOBJS))));
+	m_lbCandidateTypes.AddString(GetFormatName(static_cast<CLIPFORMAT>(RegisterClipboardFormat(CF_RETEXTOBJ))));
+	m_lbCandidateTypes.AddString(GetFormatName(static_cast<CLIPFORMAT>(RegisterClipboardFormat(_T("HTML Format")))));
 }
 
 void CAddType::OnBnClickedRadioPrimaryTypes()

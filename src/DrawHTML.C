@@ -11,7 +11,7 @@
 enum { tNONE, tB, tBR, tFONT, tI, tP, tSUB, tSUP, tU, tNUMTAGS };
 struct
 {
-	char *mnemonic;
+	LPCTSTR mnemonic;
 	short token, param, block;
 } Tags[] = {
   { NULL,         tNONE, 0, 0},
@@ -229,14 +229,14 @@ int __stdcall DrawHTML(
 	SIZE size;
 	int Index, LineHeight;
 	POINT CurPos;
-	int WidthOfSPace, XPos;
+	int WidthOfSPace = 0, XPos;
 	BOOL WhiteSpace;
 	RECT rc;
 
 	if (hdc == NULL || lpString == NULL)
 		return 0;
 	if (nCount < 0)
-		nCount = _tcslen(lpString);
+		nCount = (int)_tcslen(lpString); /* C file: no static_cast; display strings are far below INT_MAX characters */
 
 	MaxHeight = INT_MAX;
 
@@ -394,7 +394,7 @@ int __stdcall DrawHTML(
 					else
 						SetRect(&rc, Left + XPos - WidthOfSPace, Top + Height,
 							Left + XPos, Top + Height + LineHeight);
-					DrawText(hdc, " ", 1, &rc, uFormat);
+					DrawText(hdc, _T(" "), 1, &rc, uFormat);
 				} /* if */
 			} /* if */
 			/* update current position */

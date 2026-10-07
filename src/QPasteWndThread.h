@@ -24,7 +24,7 @@ public:
     {
         FireEvent(DO_SET_LIST_COUNT);
     }
-    void FireLoadItems(bool firstLoad)
+    void FireLoadItems(bool /*firstLoad*/)
     {
         FireEvent(LOAD_ITEMS);
     }

@@ -16,7 +16,7 @@ CHotKey::CHotKey(CString name, DWORD defKey, bool bUnregOnShowDitto, HotKeyType 
 	m_bUnRegisterOnShowDitto(bUnregOnShowDitto),
 	m_clipId(0)
 {
-	m_Atom = ::GlobalAddAtom(StrF(_T("%s_%d"), m_Name, hkType));
+	m_Atom = ::GlobalAddAtom(StrF(_T("%s_%d"), m_Name.GetString(), hkType));
 	ASSERT(m_Atom);
 	m_Key = (DWORD)CGetSetOptions::GetProfileLong(m_Name, (long) defKey);
 	m_globalId = m_nextId;
@@ -500,7 +500,7 @@ bool CHotKeys::FindFirstConflict(ARRAY& keys, INT_PTR* pX, INT_PTR* pY)
 	bool bConflict = false;
 	INT_PTR i, j;
 	INT_PTR count = keys.GetSize();
-	DWORD key;
+	int key = 0;
 	for(i = 0; i < count && !bConflict; i++)
 	{
 		key = keys.ElementAt(i);

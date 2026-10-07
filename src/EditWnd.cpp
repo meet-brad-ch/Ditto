@@ -62,23 +62,23 @@ int CEditWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	CString csText;
 
 	m_toolBarControl.GetItemRect(m_toolBarControl.CommandToIndex(ID_BUTTON_NEW), cr);
-	csText.Format(_T("%s     Ctrl - N"), theApp.m_Language.GetString("New_Clip", "New Clip"));
+	csText.Format(_T("%s     Ctrl - N"), theApp.m_Language.GetString("New_Clip", "New Clip").GetString());
 	m_toolTipControl.AddTool(&m_toolBarControl, csText, cr, 1);
 
 	m_toolBarControl.GetItemRect(m_toolBarControl.CommandToIndex(ID_BUTTON_SAVE), cr);
-	csText.Format(_T("%s    Ctrl - S"), theApp.m_Language.GetString("Save", "Save"));
+	csText.Format(_T("%s    Ctrl - S"), theApp.m_Language.GetString("Save", "Save").GetString());
 	m_toolTipControl.AddTool(&m_toolBarControl, csText, cr, 2);
 
 	m_toolBarControl.GetItemRect(m_toolBarControl.CommandToIndex(ID_BUTTON_SAVE_ALL), cr);
-	csText.Format(_T("%s    Ctrl - Shift - S"), theApp.m_Language.GetString("Save_All", "Save All"));
+	csText.Format(_T("%s    Ctrl - Shift - S"), theApp.m_Language.GetString("Save_All", "Save All").GetString());
 	m_toolTipControl.AddTool(&m_toolBarControl, csText, cr, 3);
 
 	m_toolBarControl.GetItemRect(m_toolBarControl.CommandToIndex(ID_BUTTON_CLOSE), cr);
-	csText.Format(_T("%s    Escape"), theApp.m_Language.GetString("Close", "Close Current Tab"));
+	csText.Format(_T("%s    Escape"), theApp.m_Language.GetString("Close", "Close Current Tab").GetString());
 	m_toolTipControl.AddTool(&m_toolBarControl, csText, cr, 4);
 
 	m_toolBarControl.GetItemRect(m_toolBarControl.CommandToIndex(ID_BUTTON_SAVE_CLOSE_CLIPBOARD), cr);
-	csText.Format(_T("%s    Shift - Escape"), theApp.m_Language.GetString("Save_Close", "Save, Close and place on clipboard"));
+	csText.Format(_T("%s    Shift - Escape"), theApp.m_Language.GetString("Save_Close", "Save, Close and place on clipboard").GetString());
 	m_toolTipControl.AddTool(&m_toolBarControl, csText, cr, 4);
 
 	return 0;
@@ -225,7 +225,7 @@ bool CEditWnd::DoSaveItem(int index)
 		else
 		{
 			CString cs;
-			cs.Format(_T("%s '%s'"), theApp.m_Language.GetString("ErrorSaving", "Error saving clip"), m_tabControl.GetTabTitle(index));
+			cs.Format(_T("%s '%s'"), theApp.m_Language.GetString("ErrorSaving", "Error saving clip").GetString(), m_tabControl.GetTabTitle(index).GetString());
 			MessageBox(cs, _T("Ditto"), MB_OK);
 		}
 	}

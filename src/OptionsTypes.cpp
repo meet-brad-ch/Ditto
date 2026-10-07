@@ -68,7 +68,7 @@ BOOL COptionsTypes::OnApply()
 			{
 				m_List.GetText(i, csText);
 
-				theApp.m_db.execDMLEx(_T("INSERT INTO Types VALUES(NULL, '%s');"), csText);
+				theApp.m_db.execDMLEx(_T("INSERT INTO Types VALUES(NULL, '%s');"), csText.GetString());
 			}
 		}
 		CATCH_SQLITE_EXCEPTION
@@ -90,7 +90,8 @@ BOOL COptionsTypes::OnInitDialog()
 		if(q.eof())
 		{
 			m_List.AddString(_T("CF_TEXT"));
-			m_List.AddString(GetFormatName(RegisterClipboardFormat(CF_RTF)));
+			// Registered formats are in 0xC000-0xFFFF, so they fit a CLIPFORMAT
+			m_List.AddString(GetFormatName(static_cast<CLIPFORMAT>(RegisterClipboardFormat(CF_RTF))));
 			m_List.AddString(_T("CF_UNICODETEXT"));
 			m_List.AddString(_T("CF_HDROP"));
 			m_List.AddString(_T("CF_DIB"));

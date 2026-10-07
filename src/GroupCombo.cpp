@@ -38,7 +38,8 @@ void CGroupCombo::FillCombo()
 	ResetContent();
 
 	int nIndex = AddString(_T("-No Group-"));
-	SetItemData(nIndex, -1);
+	// -1 marks the "No Group" entry; readers convert the item data back to a signed id
+	SetItemData(nIndex, static_cast<DWORD_PTR>(-1));
 
 	FillCombo(-1, 1);
 }

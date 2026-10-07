@@ -52,7 +52,7 @@ public:
 	CLIPFORMAT m_cfType;
     HGLOBAL m_hgData;
 	bool m_autoDeleteData;
-	int m_dataId;
+	int m_dataId{-1};
 	int m_parentId;
 
 	CClipFormat(CLIPFORMAT cfType = 0, HGLOBAL hgData = 0, int parentId = -1);
@@ -115,7 +115,7 @@ public:
 	CClipFormats m_Formats;
 	CTime m_Time;
 	CString m_Desc;
-	ULONG m_lTotalCopySize;
+	ULONG m_lTotalCopySize{};
 	int m_parentId;
 	int m_dontAutoDelete;
 	int m_shortCut;
@@ -150,7 +150,7 @@ public:
 
 	void Clear();
 	void EmptyFormats();
-	bool AddFormat(CLIPFORMAT cfType, void* pData, UINT nLen, bool setDesc = false);
+	bool AddFormat(CLIPFORMAT cfType, void* pData, SIZE_T nLen, bool setDesc = false);
 	int LoadFromClipboard(CClipTypes* pClipTypes, bool checkClipboardIgnore = true, CString activeApp = _T(""));
 	bool SetDescFromText(HGLOBAL hgData, bool unicode);
 	bool SetDescFromType();

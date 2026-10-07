@@ -150,7 +150,11 @@ bool CGdiPlusBitmapResource::Load(LPCTSTR pName, LPCTSTR pType, HMODULE hInst)
 	if (!imageSize)
 		return false;
 
-	const void* pResourceData = ::LockResource(::LoadResource(hInst, hResource));
+	HGLOBAL hResourceData = ::LoadResource(hInst, hResource);
+	if (!hResourceData)
+		return false;
+
+	const void* pResourceData = ::LockResource(hResourceData);
 	if (!pResourceData)
 		return false;
 

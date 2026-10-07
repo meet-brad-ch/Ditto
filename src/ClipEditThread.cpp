@@ -74,7 +74,7 @@ void CClipEditThread::RefreshWatch()
 		&bytesReturned, &m_overlapped, NULL);
 }
 
-void CClipEditThread::OnTimeOut(void* param)
+void CClipEditThread::OnTimeOut(void* /*param*/)
 {
 	if (m_waitTimeout == MAX_TIMEOUT)
 	{
@@ -125,7 +125,7 @@ void CClipEditThread::OnTimeOut(void* param)
 	}
 }
 
-void CClipEditThread::OnEvent(int eventId, void* param)
+void CClipEditThread::OnEvent(int eventId, void* /*param*/)
 {
 	switch (eventId)
 	{
@@ -165,7 +165,7 @@ void CClipEditThread::OnFileChanged()
 					auto diff = CTime::GetCurrentTime() - startEdit;
 					if (diff.GetTotalSeconds() < CGetSetOptions::m_clipEditSaveDelayAfterLoadSeconds)
 					{
-						Log(StrF(_T("%s has changed close to when we started editing the file, diff: %lld, limit: %d, not handling change"), fileName, diff.GetTotalSeconds(), CGetSetOptions::m_clipEditSaveDelayAfterLoadSeconds));
+						Log(StrF(_T("%s has changed close to when we started editing the file, diff: %lld, limit: %d, not handling change"), fileName.GetString(), diff.GetTotalSeconds(), CGetSetOptions::m_clipEditSaveDelayAfterLoadSeconds));
 						addToChanges = false;
 					}
 				}
@@ -173,7 +173,7 @@ void CClipEditThread::OnFileChanged()
 				{
 					if (fileName.Find(newClipFileName, 0) == 0)
 					{
-						Log(StrF(_T("New clip file changed: %s, this was not in Ditto list of files we initiated the change for, not handling change"), fileName));						
+						Log(StrF(_T("New clip file changed: %s, this was not in Ditto list of files we initiated the change for, not handling change"), fileName.GetString()));						
 						addToChanges = false;
 					}
 				}
@@ -182,12 +182,12 @@ void CClipEditThread::OnFileChanged()
 			if (fileName.Find(editClipFileName, 0) == -1 && fileName.Find(newClipFileName, 0) == -1)
 			{
 				addToChanges = false;
-				Log(StrF(_T("File %s is not a Ditto file of format EditClip or NewClip, not handling change"), fileName));
+				Log(StrF(_T("File %s is not a Ditto file of format EditClip or NewClip, not handling change"), fileName.GetString()));
 			}
 
 			if (addToChanges)
 			{				
-				Log(StrF(_T("%s file changed, adding to list to be saved back to Ditto"), fileName));
+				Log(StrF(_T("%s file changed, adding to list to be saved back to Ditto"), fileName.GetString()));
 				m_filesToSave[fileName] = true;
 				fileModified = true;				
 			}
@@ -220,7 +220,7 @@ bool CClipEditThread::SaveToClip(CString filePath, int id)
 {
 	bool savedClip = false;
 
-	Log(StrF(_T("ClipFile: %s, ClipId: %d, has changed saving back to Ditto"), filePath, id));
+	Log(StrF(_T("ClipFile: %s, ClipId: %d, has changed saving back to Ditto"), filePath.GetString(), id));
 
 	if (id < 0)
 	{
@@ -259,13 +259,13 @@ bool CClipEditThread::SaveToClip(CString filePath, int id)
 	{
 		if (ReadImageFile(fullFilePath, cf_dibBytes, pngBytes) == false)
 		{
-			Log(StrF(_T("Error reading image file %s, clip id: %d, not saving"), fullFilePath, id));
+			Log(StrF(_T("Error reading image file %s, clip id: %d, not saving"), fullFilePath.GetString(), id));
 			return false;
 		}
 	}
 	else if (ReadFile(fullFilePath, unicode, unicodeText, utf8Text) == false)
 	{
-		Log(StrF(_T("Error reading text file %s, clip id: %d, not saving"), fullFilePath, id));
+		Log(StrF(_T("Error reading text file %s, clip id: %d, not saving"), fullFilePath.GetString(), id));
 		return false;
 	}
 
@@ -275,7 +275,7 @@ bool CClipEditThread::SaveToClip(CString filePath, int id)
 		cf_dibBytes.size() <= 0 &&
 		pngBytes.size() <= 0)
 	{
-		Log(StrF(_T("Not saving new clip that is empty, no text or image bytes, path: %s, clip id: %d, not saving"), fullFilePath, id));
+		Log(StrF(_T("Not saving new clip that is empty, no text or image bytes, path: %s, clip id: %d, not saving"), fullFilePath.GetString(), id));
 		return false;
 	}	
 
@@ -334,7 +334,7 @@ bool CClipEditThread::ReadFile(CString filePath, bool &unicode, CString &unicode
 		CString error;
 		ex.GetErrorMessage(error.GetBufferSetLength(200), 200);
 		error.ReleaseBuffer();
-		log(StrF(_T("LoadFormatsFromFile - Error opening file: %s, Error: %s\r\n"), filePath, error));
+		log(StrF(_T("LoadFormatsFromFile - Error opening file: %s, Error: %s\r\n"), filePath.GetString(), error.GetString()));
 		return false;
 	}
 
@@ -414,13 +414,13 @@ std::vector<BYTE> CImageToPNGBytes(const CImage& image, REFGUID guidFileType)
 	return pngBytes;
 }
 
-bool CClipEditThread::ReadImageFile(CString path, std::vector<BYTE> &cf_dibBytes, std::vector<BYTE> & pngBytes)
+bool CClipEditThread::ReadImageFile(CString path, std::vector<BYTE> &/*cf_dibBytes*/, std::vector<BYTE> & pngBytes)
 {
 	CImage image;
 	HRESULT hr = image.Load(path);
-	if (FAILED(hr)) 
+	if (FAILED(hr))
 	{
-		Log(StrF(_T("Failed to load image, %s"), path));
+		Log(StrF(_T("Failed to load image, %s"), path.GetString()));
 		return false;
 	}
 

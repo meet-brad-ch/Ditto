@@ -348,7 +348,7 @@ BOOL CTrayNotifyIcon::Show()
   return bSuccess;
 }
 
-void CTrayNotifyIcon::SetMenu(_In_ HMENU hMenu, UINT menuId)
+void CTrayNotifyIcon::SetMenu(_In_opt_ HMENU hMenu, UINT menuId)
 {
   m_Menu.DestroyMenu();
 
@@ -728,7 +728,7 @@ BOOL CTrayNotifyIcon::Create(_In_ CWindow* pNotifyWnd, _In_ UINT uID, _In_ LPCTS
   return bSuccess;
 }
 
-BOOL CTrayNotifyIcon::SetBalloonDetails(_In_ LPCTSTR pszBalloonText, _In_ LPCTSTR pszBalloonCaption, _In_ BalloonStyle style, _In_ UINT nTimeout, _In_ HICON hUserIcon, _In_ BOOL bNoSound, _In_ BOOL bLargeIcon, _In_ BOOL bRealtime, _In_ HICON hBalloonIcon)
+BOOL CTrayNotifyIcon::SetBalloonDetails(_In_ LPCTSTR pszBalloonText, _In_ LPCTSTR pszBalloonCaption, _In_ BalloonStyle style, _In_ UINT nTimeout, _In_opt_ HICON hUserIcon, _In_ BOOL bNoSound, _In_ BOOL bLargeIcon, _In_ BOOL bRealtime, _In_opt_ HICON hBalloonIcon)
 {
   if (!m_bCreated)
     return FALSE;

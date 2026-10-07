@@ -109,7 +109,7 @@ void CNoDbFrameWnd::OnTimer(UINT_PTR nIDEvent)
 void CNoDbFrameWnd::ShowNoDbMessage()
 {
 	CString msg = theApp.m_Language.GetString(_T("StartupNoDbMsg"), _T("Ditto was unable to open its database, waiting until it can be opened. Update the path in Options if needed. Path: "));
-	msg += StrF(_T(" %s"), CGetSetOptions::GetDBPath());
+	msg += StrF(_T(" %s"), CGetSetOptions::GetDBPath().GetString());
 	m_trayIcon.SetBalloonDetails(msg, _T("Ditto"), CTrayNotifyIcon::BalloonStyle::Info, CGetSetOptions::GetBalloonTimeout());
 }
 
@@ -138,7 +138,7 @@ void CNoDbFrameWnd::TryOpenDatabase()
 	}
 }
 
-LRESULT CNoDbFrameWnd::OnOptionsClosed(WPARAM wParam, LPARAM lParam)
+LRESULT CNoDbFrameWnd::OnOptionsClosed(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	delete m_pOptions;
 	m_pOptions = NULL;

@@ -25,7 +25,7 @@ protected:
 	class CFunctionLookup
 	{
 	public:
-		CDittoAddin *m_pAddin;
+		CDittoAddin *m_pAddin{};
 		CStringA m_csFunctionName;
 	};
 

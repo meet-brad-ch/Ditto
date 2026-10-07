@@ -28,7 +28,8 @@ bool CDittoRulerRichEditCtrl::LoadItem(long lID, CString csDesc)
 		return false;
 	}
 
-	Clip.m_cfType = RegisterClipboardFormat(CF_RTF);
+	// Registered formats are in 0xC000-0xFFFF, so they fit a CLIPFORMAT
+	Clip.m_cfType = static_cast<CLIPFORMAT>(RegisterClipboardFormat(CF_RTF));
 	if(theApp.GetClipData(lID, Clip) && Clip.m_hgData)
 	{
 		CString cs(Clip.GetAsCStringA());
@@ -79,21 +80,22 @@ long CDittoRulerRichEditCtrl::GetTypeFlags(long lID)
 	try
 	{
 		CLIPFORMAT cfType = CF_TEXT;
-		CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), lID, GetFormatName(cfType));
+		CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), lID, GetFormatName(cfType).GetString());
 		if(q.eof() == false)
 		{
 			lRet |= stCF_TEXT;
 		}
 
 		cfType = CF_UNICODETEXT;
-		q = theApp.m_db.execQueryEx(_T("SELECT lID FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), lID, GetFormatName(cfType));
+		q = theApp.m_db.execQueryEx(_T("SELECT lID FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), lID, GetFormatName(cfType).GetString());
 		if(q.eof() == false)
 		{
 			lRet |= stCF_UNICODETEXT;
 		}
 
-		cfType = RegisterClipboardFormat(_T("Rich Text Format"));
-		q = theApp.m_db.execQueryEx(_T("SELECT lID FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), lID, GetFormatName(cfType));
+		// Registered formats are in 0xC000-0xFFFF, so they fit a CLIPFORMAT
+		cfType = static_cast<CLIPFORMAT>(RegisterClipboardFormat(_T("Rich Text Format")));
+		q = theApp.m_db.execQueryEx(_T("SELECT lID FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), lID, GetFormatName(cfType).GetString());
 		if(q.eof() == false)
 		{
 			lRet |= stRTF;
@@ -108,7 +110,7 @@ void CDittoRulerRichEditCtrl::d()
 {
 	CString cs = m_rtf.GetText();
 	CString s;
-	s.Format(_T("error = %d, %s"), GetLastError(), cs);
+	s.Format(_T("error = %d, %s"), GetLastError(), cs.GetString());
 	MessageBox(s);
 }
 
@@ -217,7 +219,8 @@ bool CDittoRulerRichEditCtrl::LoadRTFData(CClip &Clip)
 
 	CStringA csRTF = CTextConvert::UnicodeToAnsi(csRTFOriginal);
 	CClipFormat format;
-	format.m_cfType = RegisterClipboardFormat(_T("Rich Text Format"));
+	// Registered formats are in 0xC000-0xFFFF, so they fit a CLIPFORMAT
+	format.m_cfType = static_cast<CLIPFORMAT>(RegisterClipboardFormat(_T("Rich Text Format")));
 	int nLength = csRTF.GetLength() + 1;
 	format.m_hgData = NewGlobalP(csRTF.GetBuffer(nLength), nLength);
 	Clip.m_Formats.Add(format);
@@ -277,7 +280,7 @@ bool CDittoRulerRichEditCtrl::CloseEdit(bool bPrompt, BOOL bUpdateDesc)
 		if(bPrompt)
 		{
 			CString cs;
-			cs.Format(_T("%s '%s'"), theApp.m_Language.GetString("SaveChanges", "Do you want to save changes to"), m_csDescription);
+			cs.Format(_T("%s '%s'"), theApp.m_Language.GetString("SaveChanges", "Do you want to save changes to").GetString(), m_csDescription.GetString());
 
 			::SetForegroundWindow(m_hWnd);
 			nRet = MessageBox(cs, _T("Ditto"), MB_YESNOCANCEL);
@@ -288,7 +291,7 @@ bool CDittoRulerRichEditCtrl::CloseEdit(bool bPrompt, BOOL bUpdateDesc)
 			if(SaveToDB(bUpdateDesc) == false)
 			{
 				CString cs;
-				cs.Format(_T("%s '%s'"), theApp.m_Language.GetString("ErrorSaving", "Error saving clip"), m_csDescription);
+				cs.Format(_T("%s '%s'"), theApp.m_Language.GetString("ErrorSaving", "Error saving clip").GetString(), m_csDescription.GetString());
 				MessageBox(cs, _T("Ditto"), MB_OK);
 			}
 		}

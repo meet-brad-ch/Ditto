@@ -114,7 +114,7 @@ public:
 
 // Minimal COM functionality
     HRESULT STDMETHODCALLTYPE QueryInterface( 
-        /* [in] */ REFIID riid,
+        /* [in] */ REFIID /*riid*/,
         /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvObject)
 	{
 		*ppvObject = NULL;

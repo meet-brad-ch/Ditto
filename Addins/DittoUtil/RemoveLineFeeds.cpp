@@ -76,7 +76,8 @@ bool CRemoveLineFeeds::Handle_CF_UNICODETEXT(IClipFormats *pFormats)
 
 bool CRemoveLineFeeds::Handle_RichText(IClipFormats *pFormats)
 {
-	CLIPFORMAT m_RTFFormat = ::RegisterClipboardFormat(_T("Rich Text Format"));
+	// Registered formats are in 0xC000-0xFFFF, so they fit a CLIPFORMAT
+	CLIPFORMAT m_RTFFormat = static_cast<CLIPFORMAT>(::RegisterClipboardFormat(_T("Rich Text Format")));
 
 	IClipFormat *pFormat = pFormats->FindFormatEx(m_RTFFormat);
 	if(pFormat == NULL)

@@ -233,7 +233,7 @@ BOOL CToolTipEx::Show(CPoint point)
 	if (m_csText.GetLength())
 	{
 		int wordCount = WordCount(m_csText);
-		m_clipData = StrF(_T("%s | Length: %d | Words: %d"), m_originalClipData, m_csText.GetLength(), wordCount);
+		m_clipData = StrF(_T("%s | Length: %d | Words: %d"), m_originalClipData.GetString(), m_csText.GetLength(), wordCount);
 	}
 
 	m_clipDataStatic.SetWindowText(m_clipData);
@@ -256,7 +256,7 @@ BOOL CToolTipEx::Show(CPoint point)
 
 	if (m_imageViewer.m_pGdiplusBitmap)
 	{
-		int percent = (m_imageViewer.m_scale - 1.0) * 100.0;
+		int percent = static_cast<int>((m_imageViewer.m_scale - 1.0) * 100.0);
 		m_clipData = m_originalClipData + _T(" | ") + StrF(_T("%d x %d, %d%%"), m_imageViewer.m_pGdiplusBitmap->GetWidth(), m_imageViewer.m_pGdiplusBitmap->GetHeight(), percent);
 
 		//OutputDebugString(_T("Showing image editor\r\n"));
@@ -549,7 +549,7 @@ BOOL CToolTipEx::OnMsg(MSG *pMsg)
 
 CRect CToolTipEx::GetBoundsRect()
 {
-	DWORD d = GetTickCount();
+	ULONGLONG d = GetTickCount64();
 
     CWindowDC dc(NULL);
 	int nLineWidth = 0;
@@ -615,10 +615,10 @@ CRect CToolTipEx::GetBoundsRect()
         }
     }
 
-	DWORD diff = GetTickCount() - d;
+	ULONGLONG diff = GetTickCount64() - d;
 	if (diff > 10)
 	{
-		Log(StrF(_T("Size To Content: %d\n"), diff));
+		Log(StrF(_T("Size To Content: %llu\n"), diff));
 	}
 
     return rect;
@@ -816,7 +816,7 @@ void CToolTipEx::HighlightSearchText()
 
 	cf.cbSize = sizeof(cf);
 	cf.dwMask = CFM_COLOR;
-	cf.dwEffects = CFE_BOLD | ~CFE_AUTOCOLOR;
+	cf.dwEffects = CFE_BOLD | ~static_cast<DWORD>(CFE_AUTOCOLOR);
 	cf.crTextColor = RGB(255, 0, 0);
 
 	m_RichEdit.SetRedraw(0);
@@ -874,12 +874,12 @@ void CToolTipEx::DoSearch()
 	{
 		//if needing to scroll back to the left make sure the full text is visible
 		//setSel scrolls to the end of the selection
-		int start = ft.chrgText.cpMin;
-		if (start < 0)
+		int matchStart = ft.chrgText.cpMin;
+		if (matchStart < 0)
 		{
-			start = 0;
+			matchStart = 0;
 		}
-		m_RichEdit.SetSel(start, start);
+		m_RichEdit.SetSel(matchStart, matchStart);
 		m_RichEdit.SetSel(ft.chrgText);
 	}
 	else
@@ -899,12 +899,12 @@ void CToolTipEx::DoSearch()
 		{
 			//if needing to scroll back to the left make sure the full text is visible
 			//setSel scrolls to the end of the selection
-			int start = ft.chrgText.cpMin;
-			if (start < 0)
+			int matchStart = ft.chrgText.cpMin;
+			if (matchStart < 0)
 			{
-				start = 0;
+				matchStart = 0;
 			}
-			m_RichEdit.SetSel(start, start);
+			m_RichEdit.SetSel(matchStart, matchStart);
 			m_RichEdit.SetSel(ft.chrgText);
 		}
 	}
@@ -1372,18 +1372,18 @@ void CToolTipEx::OnEnterSizeMove()
 }
 
 
-void CToolTipEx::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+void CToolTipEx::OnHScroll(UINT /*nSBCode*/, UINT /*nPos*/, CScrollBar* /*pScrollBar*/)
 {
 	int x = 9;
 	//m_scrollHelper.OnHScroll(nSBCode, nPos, pScrollBar);
 }
 
-LRESULT CToolTipEx::OnRefreshFooter(WPARAM wParam, LPARAM lParam)
+LRESULT CToolTipEx::OnRefreshFooter(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	m_clipData = m_originalClipData;
 	if (m_imageViewer.m_pGdiplusBitmap)
 	{
-		int percent = ((m_imageViewer.m_scale) * 100.0) + .5;	
+		int percent = static_cast<int>(((m_imageViewer.m_scale) * 100.0) + .5);
 		m_clipData = m_originalClipData + _T(" | ") + StrF(_T("%d x %d, %d%%"), m_imageViewer.m_pGdiplusBitmap->GetWidth(), m_imageViewer.m_pGdiplusBitmap->GetHeight(), percent);
 	}
 

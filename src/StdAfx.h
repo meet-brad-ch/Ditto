@@ -36,7 +36,9 @@
 
 #include <imm.h>
 #include <afxcontrolbars.h>
-#import "riched20.dll" raw_interfaces_only, raw_native_types, no_namespace, named_guids, exclude("UINT_PTR"), exclude("LONG_PTR") 
+// TOM's FindText collides with the Win32 FindText macro (nothing calls the TOM one), and the
+// remote-handle types are already declared by the Windows headers
+#import "riched20.dll" raw_interfaces_only, raw_native_types, no_namespace, named_guids, exclude("UINT_PTR"), exclude("LONG_PTR"), exclude("wireHWND", "_RemotableHandle", "__MIDL_IWinTypes_0009"), rename("FindText", "TomFindText")
 
 #pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 

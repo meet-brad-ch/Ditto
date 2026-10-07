@@ -48,10 +48,10 @@ public:
     bool m_bHasShortCut;
     bool m_bHasParent;
     CString m_QuickPaste;
-	double m_clipOrder;
-	double m_clipGroupOrder;
-	double m_stickyClipOrder;
-	double m_stickyClipGroupOrder;
+	double m_clipOrder{};
+	double m_clipGroupOrder{};
+	double m_stickyClipOrder{};
+	double m_stickyClipGroupOrder{};
 	__int64 m_dateCopied;
 	__int64 m_datePasted;
 
@@ -145,7 +145,7 @@ public:
 	CGdipButton m_systemMenu;
 	CGroupStatic m_noSearchResultsStatic;
 
-    long m_lRecordCount;
+    long m_lRecordCount{};
     bool m_bStopQuery;
     bool m_bHandleSearchTextChange;
     bool m_bModifersMoveActive;
@@ -175,7 +175,7 @@ public:
 	CAccel m_timerAction;
 	__int64 m_lastDbWrite;
 	bool m_pendingRefresh;
-	DWORD m_lastNonActiveMouseMove;
+	ULONGLONG m_lastNonActiveMouseMove{};
 
     void RefreshNc();
     void UpdateStatus(bool bRepaintImmediately = false); // regenerates the status (caption) text

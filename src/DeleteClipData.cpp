@@ -521,40 +521,34 @@ void CDeleteClipData::OnLvnGetdispinfoList2(NMHDR *pNMHDR, LRESULT *pResult)
 			{
 				case 0:
 				{
-					lstrcpyn(pDispInfo->item.pszText, StrF(_T("%d"), m_data[pDispInfo->item.iItem].m_lID), pDispInfo->item.cchTextMax);
-					pDispInfo->item.pszText[pDispInfo->item.cchTextMax - 1] = '\0';
+					CopyDisplayText(pDispInfo->item, StrF(_T("%d"), m_data[pDispInfo->item.iItem].m_lID));
 				}
 				break;
 				case 1:
 				{
-					  lstrcpyn(pDispInfo->item.pszText, m_data[pDispInfo->item.iItem].m_Desc, pDispInfo->item.cchTextMax);
-					  pDispInfo->item.pszText[pDispInfo->item.cchTextMax - 1] = '\0';
+					  CopyDisplayText(pDispInfo->item, m_data[pDispInfo->item.iItem].m_Desc);
 				}
 				break;
 				case 2:
 				{
-					lstrcpyn(pDispInfo->item.pszText, m_data[pDispInfo->item.iItem].m_quickPasteText, pDispInfo->item.cchTextMax);
-					pDispInfo->item.pszText[pDispInfo->item.cchTextMax - 1] = '\0';
+					CopyDisplayText(pDispInfo->item, m_data[pDispInfo->item.iItem].m_quickPasteText);
 				}
 				break;
 				case 3:
 				{
 					  COleDateTime dtTime(m_data[pDispInfo->item.iItem].m_createdDateTime.GetTime());
-					  lstrcpyn(pDispInfo->item.pszText, dtTime.Format(), pDispInfo->item.cchTextMax);
-					  pDispInfo->item.pszText[pDispInfo->item.cchTextMax - 1] = '\0';
+					  CopyDisplayText(pDispInfo->item, dtTime.Format());
 				}
 				break;
 				case 4:
-				{	
+				{
 					  COleDateTime dtTime(m_data[pDispInfo->item.iItem].m_lastUsedDateTime.GetTime());
-					  lstrcpyn(pDispInfo->item.pszText, dtTime.Format(), pDispInfo->item.cchTextMax);
-					  pDispInfo->item.pszText[pDispInfo->item.cchTextMax - 1] = '\0';
+					  CopyDisplayText(pDispInfo->item, dtTime.Format());
 				}
 				break;
 				case 5:
 				{
-					  lstrcpyn(pDispInfo->item.pszText, m_data[pDispInfo->item.iItem].m_clipboardFormat, pDispInfo->item.cchTextMax);
-					  pDispInfo->item.pszText[pDispInfo->item.cchTextMax - 1] = '\0';
+					  CopyDisplayText(pDispInfo->item, m_data[pDispInfo->item.iItem].m_clipboardFormat);
 				}
 				break;
 				case 6:
@@ -563,14 +557,29 @@ void CDeleteClipData::OnLvnGetdispinfoList2(NMHDR *pNMHDR, LRESULT *pResult)
 					  TCHAR szFileSize[MAX_FILE_SIZE_BUFFER];
 					  StrFormatByteSize(m_data[pDispInfo->item.iItem].m_dataSize, szFileSize, MAX_FILE_SIZE_BUFFER);
 
-					  lstrcpyn(pDispInfo->item.pszText, szFileSize, pDispInfo->item.cchTextMax);
-					  pDispInfo->item.pszText[pDispInfo->item.cchTextMax - 1] = '\0';
+					  CopyDisplayText(pDispInfo->item, szFileSize);
 				}
 				break;
 			}
 		}
 	}
 	*pResult = 0;
+}
+
+void CDeleteClipData::CopyDisplayText(LVITEM& item, LPCTSTR text)
+{
+	if (item.pszText == nullptr || item.cchTextMax <= 0)
+	{
+		Log(StrF(_T("List display buffer is missing, size: %d"), item.cchTextMax));
+		return;
+	}
+
+	// cutting the text at the column buffer size is the intended display behaviour
+	const errno_t result = _tcsncpy_s(item.pszText, static_cast<size_t>(item.cchTextMax), text, _TRUNCATE);
+	if (result != 0 && result != STRUNCATE)
+	{
+		Log(StrF(_T("Failed to copy list display text, error: %d"), result));
+	}
 }
 
 
@@ -904,7 +913,7 @@ BOOL CDeleteClipData::SetCaret(int nRow, BOOL bFocus)
 	if (bFocus)
 		return m_clipList.SetItemState(nRow, LVIS_FOCUSED, LVIS_FOCUSED);
 	else
-		return m_clipList.SetItemState(nRow, ~LVIS_FOCUSED, LVIS_FOCUSED);
+		return m_clipList.SetItemState(nRow, ~static_cast<UINT>(LVIS_FOCUSED), LVIS_FOCUSED);
 }
 
 BOOL CDeleteClipData::SetSelection(int nRow, BOOL bSelect)
@@ -912,7 +921,7 @@ BOOL CDeleteClipData::SetSelection(int nRow, BOOL bSelect)
 	if (bSelect)
 		return m_clipList.SetItemState(nRow, LVIS_SELECTED, LVIS_SELECTED);
 	else
-		return m_clipList.SetItemState(nRow, ~LVIS_SELECTED, LVIS_SELECTED);
+		return m_clipList.SetItemState(nRow, ~static_cast<UINT>(LVIS_SELECTED), LVIS_SELECTED);
 }
 
 void CDeleteClipData::CreateAndShowDescriptionWindow()
@@ -990,7 +999,7 @@ void CDeleteClipData::SetDescriptionWindowText(INT_PTR row)
 
 	if (theApp.m_GroupID > 0)
 	{
-		int sticky = selectedClip.m_stickyClipGroupOrder;
+		double sticky = selectedClip.m_stickyClipGroupOrder;
 		if (sticky != INVALID_STICKY)
 		{
 			clipData += _T(" | ");
@@ -999,7 +1008,7 @@ void CDeleteClipData::SetDescriptionWindowText(INT_PTR row)
 	}
 	else
 	{
-		int sticky = selectedClip.m_stickyClipOrder;
+		double sticky = selectedClip.m_stickyClipOrder;
 		if (sticky != INVALID_STICKY)
 		{
 			clipData += _T(" | ");
@@ -1035,20 +1044,20 @@ void CDeleteClipData::SetDescriptionWindowText(INT_PTR row)
 
 	if (format == nullptr)
 	{
-		IClipFormat* format = selectedClip.Clips()->FindFormatEx(GetFormatID(CF_RTF));
-		if (format != nullptr)
+		IClipFormat* rtfFormat = selectedClip.Clips()->FindFormatEx(GetFormatID(CF_RTF));
+		if (rtfFormat != nullptr)
 		{
-			m_pDescriptionWindow->SetRTFText(format->GetAsCStringA());
+			m_pDescriptionWindow->SetRTFText(rtfFormat->GetAsCStringA());
 		}
 	}
 
 	if (format == nullptr)
 	{
-		IClipFormat* format = selectedClip.Clips()->FindFormatEx(GetFormatID(_T("HTML Format")));
-		if (format != nullptr)
+		IClipFormat* htmlFormat = selectedClip.Clips()->FindFormatEx(GetFormatID(_T("HTML Format")));
+		if (htmlFormat != nullptr)
 		{
 			// show the HTML source as plain text; this fork has no HTML renderer
-			CString html = CTextConvert::Utf8ToUnicode(format->GetAsCStringA());
+			CString html = CTextConvert::Utf8ToUnicode(htmlFormat->GetAsCStringA());
 			m_pDescriptionWindow->SetToolTipText(html);
 		}
 	}
@@ -1079,7 +1088,7 @@ void CDeleteClipData::SetDescriptionWindowImage(CClip& selectedClip)
 	}
 }
 
-void CDeleteClipData::OnContextMenu(CWnd* pWnd, CPoint point)
+void CDeleteClipData::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 {
 	CMenu menu;
 	menu.LoadMenu(IDR_MENU_DELETE_CLIP_DATA); // Load your context menu from resource

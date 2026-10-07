@@ -302,17 +302,17 @@ void COptionsQuickPaste::OnBnClickedButtonTheme()
 		csMessage.Format(_T("Theme -  %s\n")
 			_T("Version -   %d\n")
 			_T("Author -   %s\n")
-			_T("Notes -   %s"), csTheme, 
-			theme.FileVersion(), 
-			theme.Author(), 
-			theme.Notes());
+			_T("Notes -   %s"), csTheme.GetString(),
+			theme.FileVersion(),
+			theme.Author().GetString(),
+			theme.Notes().GetString());
 
 		MessageBox(csMessage, _T("Ditto"), MB_OK);
 	}
 	else
 	{
 		CString csError;
-		csError.Format(_T("Error loading theme file - %s - reason = "), csTheme, theme.LastError());
+		csError.Format(_T("Error loading theme file - %s - reason = %s"), csTheme.GetString(), theme.LastError().GetString());
 
 		MessageBox(csError, _T("Ditto"), MB_OK);
 	}

@@ -10,7 +10,7 @@ CRichTextAggregator::CRichTextAggregator(const CStringW& separator) :
 {
 }
 
-bool CRichTextAggregator::AddClip(LPVOID lpData, int nDataSize, int nPos, int nCount, UINT cfType)
+bool CRichTextAggregator::AddClip(LPVOID lpData, int nDataSize, int /*nPos*/, int /*nCount*/, UINT /*cfType*/)
 {
 	// RTF is length-delimited: read up to the first null or the end of the blob
 	m_join.Add(DittoCore::ClipText::ReadAnsiBounded(lpData, static_cast<std::size_t>(nDataSize)));

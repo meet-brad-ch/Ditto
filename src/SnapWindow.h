@@ -13,7 +13,7 @@ public:
 
 private:
 	POINT snap_cur_pos;
-	RECT snap_rcWindow, snap_wa, *snap_prc;
+	RECT snap_rcWindow, snap_wa{};
 	int snap_x, snap_y;
 
 	BOOL isSnapClose(int a, int b);

@@ -489,7 +489,7 @@ int ActionEnums::GetDefaultShortCutKeyA(ActionEnumValues value, int pos)
 	return -1;
 }
 
-int ActionEnums::GetDefaultShortCutKeyB(ActionEnumValues value, int pos)
+int ActionEnums::GetDefaultShortCutKeyB(ActionEnumValues /*value*/, int pos)
 {
 	switch (pos)
 	{

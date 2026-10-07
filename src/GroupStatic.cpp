@@ -62,7 +62,7 @@ BOOL CGroupStatic::OnChildNotify(UINT message, WPARAM wParam, LPARAM lParam, LRE
    else
    {
    // Determine the current background color based on my parent window
-      static COLORREF clrPrevValid = -1;
+      static COLORREF clrPrevValid = CLR_INVALID;
       HWND hParent = ::GetParent(m_hWnd);
       HDC  hParentDc = ::GetDC(hParent);
 
@@ -117,7 +117,7 @@ void CGroupStatic::SetFont( int nPointSize, LPCTSTR lpszFaceName, CDC* pDC )
    CStatic::SetFont( m_pFont );
 }
 
-BOOL CGroupStatic::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message) 
+BOOL CGroupStatic::OnSetCursor(CWnd* /*pWnd*/, UINT /*nHitTest*/, UINT /*message*/)
 {
 	if (m_toggleCursorToHand)
 	{

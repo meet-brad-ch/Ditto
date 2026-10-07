@@ -287,7 +287,7 @@ void CQListCtrl::OnKeydown(NMHDR* pNMHDR, LRESULT* pResult)
 	*pResult = 0;
 }
 
-DROPEFFECT CQListCtrl::OnDragOver(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point)
+DROPEFFECT CQListCtrl::OnDragOver(COleDataObject* /*pDataObject*/, DWORD /*dwKeyState*/, CPoint /*point*/)
 {
 	return DROPEFFECT_COPY;
 }
@@ -346,7 +346,7 @@ BOOL CQListCtrl::SetSelection(int nRow, BOOL bSelect)
 	if (bSelect)
 		return SetItemState(nRow, LVIS_SELECTED, LVIS_SELECTED);
 	else
-		return SetItemState(nRow, ~LVIS_SELECTED, LVIS_SELECTED);
+		return SetItemState(nRow, ~static_cast<UINT>(LVIS_SELECTED), LVIS_SELECTED);
 }
 
 BOOL CQListCtrl::SetText(int nRow, int nCol, CString cs)
@@ -359,7 +359,7 @@ BOOL CQListCtrl::SetCaret(int nRow, BOOL bFocus)
 	if (bFocus)
 		return SetItemState(nRow, LVIS_FOCUSED, LVIS_FOCUSED);
 	else
-		return SetItemState(nRow, ~LVIS_FOCUSED, LVIS_FOCUSED);
+		return SetItemState(nRow, ~static_cast<UINT>(LVIS_FOCUSED), LVIS_FOCUSED);
 }
 
 long CQListCtrl::GetCaret()
@@ -463,7 +463,7 @@ void CQListCtrl::OnCustomdrawList(NMHDR* pNMHDR, LRESULT* pResult)
 		// Get the rect that bounds the text label.
 		GetItemRect(nItem, rcItem, LVIR_SELECTBOUNDS);
 
-		COLORREF OldColor = -1;
+		COLORREF OldColor = CLR_INVALID;
 		int nOldBKMode = -1;
 
 		CString csText;
@@ -649,7 +649,7 @@ void CQListCtrl::OnCustomdrawList(NMHDR* pNMHDR, LRESULT* pResult)
 		}
 
 		// restore the previous values
-		if (OldColor > -1)
+		if (OldColor != CLR_INVALID)
 			pDC->SetTextColor(OldColor);
 
 		if (nOldBKMode > -1)
@@ -853,7 +853,8 @@ void CQListCtrl::DrawCopiedColorCode(CString& csText, CRect& rcText, CDC* pDC)
 
 			// Use GDI+ for alpha blending
 			Gdiplus::Graphics graphics(pDC->GetSafeHdc());
-			Gdiplus::Color gdiplusColor(alpha, GetRValue(color), GetGValue(color), GetBValue(color));
+			// every caller passes an alpha in 0-255 (two hex digits or a value clamped to 0-1 times 255)
+			Gdiplus::Color gdiplusColor(static_cast<BYTE>(alpha), GetRValue(color), GetGValue(color), GetBValue(color));
 			Gdiplus::SolidBrush brush(gdiplusColor);
 			graphics.FillRectangle(&brush, Gdiplus::Rect(pastedRect.left, pastedRect.top, pastedRect.Width(), pastedRect.Height()));
 		}
@@ -1144,7 +1145,7 @@ BOOL CQListCtrl::DrawRtfText(int nItem, CRect& crRect, CDC* pDC)
 	{
 		m_rtfFormater.Create(_T(""), _T(""), WS_CHILD | WS_VSCROLL |
 			WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_NOHIDESEL |
-			ES_AUTOHSCROLL, CRect(0, 0, 0, 0), this, -1);
+			ES_AUTOHSCROLL, CRect(0, 0, 0, 0), this, static_cast<UINT>(-1));
 	}
 
 	if (m_pFormatter)
@@ -1250,7 +1251,7 @@ BOOL CQListCtrl::OnEraseBkgnd(CDC* pDC)
 	//return CListCtrl::OnEraseBkgnd(pDC);
 }
 
-BOOL CQListCtrl::OnToolTipText(UINT id, NMHDR* pNMHDR, LRESULT* pResult)
+BOOL CQListCtrl::OnToolTipText(UINT /*id*/, NMHDR* pNMHDR, LRESULT* pResult)
 {
 	// need to handle both ANSI and UNICODE versions of the message
 	TOOLTIPTEXTA* pTTTA = (TOOLTIPTEXTA*)pNMHDR;
@@ -1316,7 +1317,12 @@ BOOL CQListCtrl::OnToolTipText(UINT id, NMHDR* pNMHDR, LRESULT* pResult)
 			delete m_pwchTip;
 
 		m_pwchTip = new WCHAR[nLength];
-		lstrcpyn(m_pwchTip, strTipText, nLength - 1);
+		// the buffer is sized from the text, so the copy is never cut
+		const errno_t copyResult = wcsncpy_s(m_pwchTip, nLength, strTipText, _TRUNCATE);
+		if (copyResult != 0)
+		{
+			Log(StrF(_T("Failed to copy the tooltip text, error: %d"), copyResult));
+		}
 		m_pwchTip[nLength - 1] = 0;
 		pTTTW->lpszText = (LPTSTR)m_pwchTip;
 	}
@@ -1743,7 +1749,8 @@ bool CQListCtrl::ShowFullDescription(bool bFromAuto, bool fromNextPrev)
 			m_pToolTip->SetToolTipText(csDescription);
 		}
 
-		Clip.m_cfType = RegisterClipboardFormat(CF_RTF);
+		// registered clipboard format ids are 16-bit (0xC000-0xFFFF)
+		Clip.m_cfType = static_cast<CLIPFORMAT>(RegisterClipboardFormat(CF_RTF));
 
 		if (GetClipData(nItem, Clip) && Clip.m_hgData)
 		{
@@ -1892,10 +1899,11 @@ void CQListCtrl::LoadDittoCopyBufferHotkeys()
 	CCopyBufferItem Item;
 	CAccel a;
 
+	// the copy buffer command ids are negative; CAccel::Cmd keeps their bit pattern
 	CGetSetOptions::GetCopyBufferItem(0, Item);
 	if (Item.m_lCopyHotKey > 0)
 	{
-		a.Cmd = COPY_BUFFER_HOT_KEY_1_ID;
+		a.Cmd = static_cast<DWORD>(COPY_BUFFER_HOT_KEY_1_ID);
 		a.Key = Item.m_lCopyHotKey;
 		m_Accels.AddAccel(a);
 	}
@@ -1903,7 +1911,7 @@ void CQListCtrl::LoadDittoCopyBufferHotkeys()
 	CGetSetOptions::GetCopyBufferItem(1, Item);
 	if (Item.m_lCopyHotKey > 0)
 	{
-		a.Cmd = COPY_BUFFER_HOT_KEY_2_ID;
+		a.Cmd = static_cast<DWORD>(COPY_BUFFER_HOT_KEY_2_ID);
 		a.Key = Item.m_lCopyHotKey;
 		m_Accels.AddAccel(a);
 	}
@@ -1911,7 +1919,7 @@ void CQListCtrl::LoadDittoCopyBufferHotkeys()
 	CGetSetOptions::GetCopyBufferItem(2, Item);
 	if (Item.m_lCopyHotKey > 0)
 	{
-		a.Cmd = COPY_BUFFER_HOT_KEY_3_ID;
+		a.Cmd = static_cast<DWORD>(COPY_BUFFER_HOT_KEY_3_ID);
 		a.Key = Item.m_lCopyHotKey;
 		m_Accels.AddAccel(a);
 	}
@@ -1938,7 +1946,7 @@ BOOL CQListCtrl::SetItemCountEx(int iCount, DWORD dwFlags /* = 0 */)
 	return CListCtrl::SetItemCountEx(iCount, dwFlags);
 }
 
-void CQListCtrl::OnSelectionChange(NMHDR* pNMHDR, LRESULT* pResult)
+void CQListCtrl::OnSelectionChange(NMHDR* pNMHDR, LRESULT* /*pResult*/)
 {
 	NMLISTVIEW* pnmv = (NMLISTVIEW*)pNMHDR;
 
@@ -1966,7 +1974,7 @@ void CQListCtrl::OnSelectionChange(NMHDR* pNMHDR, LRESULT* pResult)
 			theApp.SetStatus(NULL, FALSE);
 	}
 
-	if (GetSelectedCount() == this->GetItemCount())
+	if (GetSelectedCount() == static_cast<UINT>(this->GetItemCount()))
 	{
 		if (m_allSelected == false)
 		{
@@ -2125,7 +2133,7 @@ void CQListCtrl::OnMouseMove(UINT nFlags, CPoint point)
 			// Show scrollbar immediately when mouse enters scrollbar area
 			if (m_mouseOverScrollAreaStart == 0)
 			{
-				m_mouseOverScrollAreaStart = GetTickCount();
+				m_mouseOverScrollAreaStart = GetTickCount64();
 				
 				// For modern scrollbar, notify parent
 				if (CGetSetOptions::m_useModernScrollBar)
@@ -2323,7 +2331,7 @@ void CQListCtrl::CreateSmallFont()
 	m_SmallFont = ::CreateFontIndirect(&lf);
 }
 
-void CQListCtrl::OnMouseHWheel(UINT nFlags, short zDelta, CPoint pt)
+void CQListCtrl::OnMouseHWheel(UINT /*nFlags*/, short zDelta, CPoint /*pt*/)
 {
 	if (zDelta < 0)
 	{

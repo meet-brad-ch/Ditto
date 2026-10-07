@@ -160,19 +160,20 @@ CCP_MainApp::CCP_MainApp() :
 	m_bAsynchronousRefreshView = true;
 	m_oldtStartUp = COleDateTime::GetCurrentTime();
 
-	m_RTFFormat = ::RegisterClipboardFormat(_T("Rich Text Format"));
-	m_HTML_Format = ::RegisterClipboardFormat(_T("HTML Format"));
-	m_PingFormat = ::RegisterClipboardFormat(_T("Ditto Ping Format"));
-	m_cfIgnoreClipboard = ::RegisterClipboardFormat(_T("Clipboard Viewer Ignore"));
-	m_cfDelaySavingData = ::RegisterClipboardFormat(_T("Ditto Delay Saving Data"));
-	m_DittoFileData = ::RegisterClipboardFormat(_T("Ditto File Data"));
+	// Registered clipboard formats are in the range 0xC000..0xFFFF, so they fit in a CLIPFORMAT.
+	m_RTFFormat = static_cast<CLIPFORMAT>(::RegisterClipboardFormat(_T("Rich Text Format")));
+	m_HTML_Format = static_cast<CLIPFORMAT>(::RegisterClipboardFormat(_T("HTML Format")));
+	m_PingFormat = static_cast<CLIPFORMAT>(::RegisterClipboardFormat(_T("Ditto Ping Format")));
+	m_cfIgnoreClipboard = static_cast<CLIPFORMAT>(::RegisterClipboardFormat(_T("Clipboard Viewer Ignore")));
+	m_cfDelaySavingData = static_cast<CLIPFORMAT>(::RegisterClipboardFormat(_T("Ditto Delay Saving Data")));
+	m_DittoFileData = static_cast<CLIPFORMAT>(::RegisterClipboardFormat(_T("Ditto File Data")));
 	m_PNG_Format = GetFormatID(_T("PNG"));
 
 	//https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats
-	m_excludeClipboardContentFromMonitorProcessing = RegisterClipboardFormat(L"ExcludeClipboardContentFromMonitorProcessing");
+	m_excludeClipboardContentFromMonitorProcessing = static_cast<CLIPFORMAT>(RegisterClipboardFormat(L"ExcludeClipboardContentFromMonitorProcessing"));
 
 	//https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats
-	m_canIncludeInClipboardHistory = RegisterClipboardFormat(L"CanIncludeInClipboardHistory");
+	m_canIncludeInClipboardHistory = static_cast<CLIPFORMAT>(RegisterClipboardFormat(L"CanIncludeInClipboardHistory"));
 
 	m_pNoDbMainFrame = NULL;
 	m_databaseOnNetworkShare = false;
@@ -209,7 +210,7 @@ void CCP_MainApp::ImportFileFromCommandLine(const CString& fileName)
 		ASSERT(FALSE);
 
 		CString csError;
-		csError.Format(_T("%s - Exception - %d - %s"), theApp.m_Language.GetString("Error_Parsing", "Error parsing exported clip"), e.errorCode(), e.errorMessage());
+		csError.Format(_T("%s - Exception - %d - %s"), theApp.m_Language.GetString("Error_Parsing", "Error parsing exported clip").GetString(), e.errorCode(), e.errorMessage());
 		ShowCommandLineError("Ditto", csError);
 	}
 	catch (const DittoCore::ClipboardFormatError& error)
@@ -390,7 +391,7 @@ BOOL CCP_MainApp::InitInstance()
 	if(m_hMutex == NULL ||
 		dwError == ERROR_ALREADY_EXISTS)
 	{
-		Log(StrF(_T("Ditto is already running, closing, mutex: %s"), csMutex));
+		Log(StrF(_T("Ditto is already running, closing, mutex: %s"), csMutex.GetString()));
 		HWND hWnd = (HWND)(LONG_PTR)CGetSetOptions::GetMainHWND();
 		if(hWnd)
 			::SendMessage(hWnd, WM_SHOW_TRAY_ICON, TRUE, TRUE);
@@ -398,14 +399,14 @@ BOOL CCP_MainApp::InitInstance()
 		return TRUE;
 	}
 
-	Log(StrF(_T("Starting up ditto with mutex: %s"), csMutex));
+	Log(StrF(_T("Starting up ditto with mutex: %s"), csMutex.GetString()));
 
 	CString csFile = CGetSetOptions::GetLanguageFile();
 	if(m_Language.LoadLanguageFile(csFile) == false)
 	{
-		CString cs;
-		cs.Format(_T("Error loading language file - %s - \n\n%s"), csFile, m_Language.m_csLastError);
-		Log(cs);
+		CString csLanguageError;
+		csLanguageError.Format(_T("Error loading language file - %s - \n\n%s"), csFile.GetString(), m_Language.m_csLastError.GetString());
+		Log(csLanguageError);
 
 		m_Language.LoadLanguageFile(_T("English.xml"));
 	}
@@ -661,7 +662,7 @@ CClipTypes* CCP_MainApp::LoadTypesFromDB()
 	if(pTypes->GetSize() <= 0)
 	{
 		pTypes->Add(CF_TEXT);
-		pTypes->Add(RegisterClipboardFormat(CF_RTF));
+		pTypes->Add(GetFormatID(CF_RTF));
 		pTypes->Add(CF_UNICODETEXT);
 		pTypes->Add(CF_HDROP);
 		pTypes->Add(CF_DIB);
@@ -780,7 +781,7 @@ BOOL CCP_MainApp::EnterGroupID(long lID, BOOL clearOldGroupState/* = TRUE*/, BOO
 	if(m_GroupID == lID)
 		return TRUE;
 
-	DWORD startTick = GetTickCount();
+	ULONGLONG startTick = GetTickCount64();
 
 	if(clearOldGroupState)
 	{
@@ -831,9 +832,9 @@ BOOL CCP_MainApp::EnterGroupID(long lID, BOOL clearOldGroupState/* = TRUE*/, BOO
 			QPasteWnd()->UpdateStatus(true);
 	}
 
-	DWORD endTick = GetTickCount();
+	ULONGLONG endTick = GetTickCount64();
 	if((endTick-startTick) > 150)
-		Log(StrF(_T("Paste Timing EnterParentId: %d"), endTick-startTick));
+		Log(StrF(_T("Paste Timing EnterParentId: %llu"), endTick-startTick));
 
 	return bResult;
 }
@@ -1002,7 +1003,7 @@ bool CCP_MainApp::ImportClips(HWND hWnd)
 
 			CString cs;
 			
-			cs.Format(_T("%s %d "), theApp.m_Language.GetString("Import_Successfully", "Successfully imported"), clip.m_importCount);
+			cs.Format(_T("%s %d "), theApp.m_Language.GetString("Import_Successfully", "Successfully imported").GetString(), clip.m_importCount);
 			if(clip.m_importCount == 1)
 				cs += theApp.m_Language.GetString("Clip", "clip");
 			else
@@ -1021,7 +1022,7 @@ bool CCP_MainApp::ImportClips(HWND hWnd)
 		ASSERT(FALSE);
 
 		CString csError;
-		csError.Format(_T("%s - Exception - %d - %s"), theApp.m_Language.GetString("Error_Parsing", "Error parsing exported clip"), e.errorCode(), e.errorMessage());
+		csError.Format(_T("%s - Exception - %d - %s"), theApp.m_Language.GetString("Error_Parsing", "Error parsing exported clip").GetString(), e.errorCode(), e.errorMessage());
 		MessageBox(hWnd, csError, _T("Ditto"), MB_OK);
 	}
 	catch (const DittoCore::ClipboardFormatError& error)
@@ -1036,7 +1037,7 @@ bool CCP_MainApp::ImportClips(HWND hWnd)
 
 void CCP_MainApp::ShowCommandLineError(CString csTitle, CString csMessage)
 {
-	Log(StrF(_T("ShowCommandLineError %s - %s"), csTitle, csMessage));
+	Log(StrF(_T("ShowCommandLineError %s - %s"), csTitle.GetString(), csMessage.GetString()));
 
 	CToolTipEx *pErrorWnd = new CToolTipEx;
 	pErrorWnd->Create(NULL);
@@ -1066,7 +1067,7 @@ BOOL CCP_MainApp::GetClipData(long parentId, CClipFormat &Clip)
 
 	try
 	{
-		CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT ooData FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), parentId, GetFormatName(Clip.m_cfType));
+		CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT ooData FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), parentId, GetFormatName(Clip.m_cfType).GetString());
 		if(q.eof() == false)
 		{
 			int nDataLen = 0;
@@ -1086,7 +1087,7 @@ BOOL CCP_MainApp::GetClipData(long parentId, CClipFormat &Clip)
 	return bRet;
 }
 
-bool CCP_MainApp::EditItems(CClipIDs &Ids, bool bShowError, bool forceTextEdit)
+bool CCP_MainApp::EditItems(CClipIDs &Ids, bool /*bShowError*/, bool forceTextEdit)
 {
 	bool ret = false;	
 	
@@ -1154,17 +1155,17 @@ bool CCP_MainApp::EditItems(CClipIDs &Ids, bool bShowError, bool forceTextEdit)
 		{
 			Log(StrF(_T("Clip id %d is a text or rtf file without a specific editor set, using internal editor"), Ids[i]));
 
-			CClipIDs id;
-			id.Add(Ids[i]);
-			m_pMainFrame->ShowEditWnd(id);
+			CClipIDs editIds;
+			editIds.Add(Ids[i]);
+			m_pMainFrame->ShowEditWnd(editIds);
 			continue;
 		}
 
-		CString startingFilePath = StrF(_T("%sEditClip_%d.%s"), CGetSetOptions::GetPath(PATH_EDIT_CLIPS), id, extension);
+		CString startingFilePath = StrF(_T("%sEditClip_%d.%s"), CGetSetOptions::GetPath(PATH_EDIT_CLIPS).GetString(), id, extension.GetString());
 
 		if (id == -1)
 		{
-			startingFilePath = StrF(_T("%sNewClip_1.%s"), CGetSetOptions::GetPath(PATH_EDIT_CLIPS), extension);
+			startingFilePath = StrF(_T("%sNewClip_1.%s"), CGetSetOptions::GetPath(PATH_EDIT_CLIPS).GetString(), extension.GetString());
 		}
 
 		CString savePath = startingFilePath;
@@ -1177,7 +1178,7 @@ bool CCP_MainApp::EditItems(CClipIDs &Ids, bool bShowError, bool forceTextEdit)
 
 			for (int y = lastFileCheckId; y < 1000000; y++)
 			{
-				CString testFilePath = StrF(_T("%sNewClip_%d.%s"), CGetSetOptions::GetPath(PATH_EDIT_CLIPS), y, extension);
+				CString testFilePath = StrF(_T("%sNewClip_%d.%s"), CGetSetOptions::GetPath(PATH_EDIT_CLIPS).GetString(), y, extension.GetString());
 
 				if (FileExists(testFilePath) == FALSE)
 				{
@@ -1208,13 +1209,13 @@ bool CCP_MainApp::EditItems(CClipIDs &Ids, bool bShowError, bool forceTextEdit)
 			sei.lpFile = exePath;
 			sei.lpParameters = savePath;
 
-			Log(StrF(_T("Launching editor path: %s, file: %s"), exePath, savePath));
+			Log(StrF(_T("Launching editor path: %s, file: %s"), exePath.GetString(), savePath.GetString()));
 		}
 		else
 		{
 			sei.lpFile = savePath;
 
-			Log(StrF(_T("Launching editor without specific exe path, file: %s"), savePath));
+			Log(StrF(_T("Launching editor without specific exe path, file: %s"), savePath.GetString()));
 		}
 		
 		sei.nShow = SW_NORMAL;
@@ -1326,14 +1327,14 @@ void CCP_MainApp::RefreshShowInTaskBar()
 void CCP_MainApp::SetActiveGroupId(int groupId)
 {
 	m_activeGroupId = groupId;
-	m_activeGroupStartTime = GetTickCount();
+	m_activeGroupStartTime = GetTickCount64();
 }
 
 int CCP_MainApp::GetActiveGroupId()
 {
 	int ret = -1;
-	DWORD maxDiff = CGetSetOptions::GetSaveToGroupTimeoutMS();
-	DWORD diff = GetTickCount() - m_activeGroupStartTime;
+	ULONGLONG maxDiff = CGetSetOptions::GetSaveToGroupTimeoutMS();
+	ULONGLONG diff = GetTickCount64() - m_activeGroupStartTime;
 
 	if(m_activeGroupId > -1 &&
 		diff < maxDiff)
@@ -1350,14 +1351,14 @@ int CCP_MainApp::GetActiveGroupId()
 void CCP_MainApp::SetCopyReason(CopyReasonEnum::CopyReason copyReason)
 {
 	m_copyReason = copyReason;
-	m_copyReasonStartTime = GetTickCount();
+	m_copyReasonStartTime = GetTickCount64();
 }
 
 CopyReasonEnum::CopyReason CCP_MainApp::GetCopyReason()
 {
 	CopyReasonEnum::CopyReason ret = CopyReasonEnum::COPY_TO_UNKOWN;
-	DWORD maxDiff = CGetSetOptions::GetCopyReasonTimeoutMS();
-	DWORD diff = GetTickCount() - m_copyReasonStartTime;
+	ULONGLONG maxDiff = CGetSetOptions::GetCopyReasonTimeoutMS();
+	ULONGLONG diff = GetTickCount64() - m_copyReasonStartTime;
 
 	if(m_copyReason != CopyReasonEnum::COPY_TO_UNKOWN &&
 		diff < maxDiff)

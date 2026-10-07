@@ -55,7 +55,7 @@ CString GetDefaultDBName()
 	int i = 1;
 	while (FileExists(csTempName))
 	{
-		csTempName.Format(_T("%sDitto_%d.db"), csDefaultPath, i);
+		csTempName.Format(_T("%sDitto_%d.db"), csDefaultPath.GetString(), i);
 		i++;
 	}
 	csDefaultPath = csTempName;
@@ -128,12 +128,12 @@ BOOL CheckDBExists(CString csDBPath)
 				_T("%s \"%s\",\n")
 				_T("%s,\n")
 				_T("\"%s\""),
-				theApp.m_Language.GetString("Database_Format", "Unrecognized Database Format"),
-				csDBPath,
-				theApp.m_Language.GetString("File_Renamed", "the file will be renamed"),
-				csMarkAsBad,
-				theApp.m_Language.GetString("New_Database", "and a new database will be created"),
-				csPath);
+				theApp.m_Language.GetString("Database_Format", "Unrecognized Database Format").GetString(),
+				csDBPath.GetString(),
+				theApp.m_Language.GetString("File_Renamed", "the file will be renamed").GetString(),
+				csMarkAsBad.GetString(),
+				theApp.m_Language.GetString("New_Database", "and a new database will be created").GetString(),
+				csPath.GetString());
 
 			AfxMessageBox(cs);
 
@@ -255,7 +255,7 @@ void ReOrderStickyClips(int parentID, CppSQLite3DB& db)
 	CATCH_SQLITE_EXCEPTION
 }
 
-BOOL ValidDB(CString csPath, BOOL bUpgrade)
+BOOL ValidDB(CString csPath, BOOL /*bUpgrade*/)
 {
 	try
 	{
@@ -466,11 +466,11 @@ BOOL BackupDB(CString dbPath, CString backupPath)
 
 	CString msg = theApp.m_Language.GetString("BackupDbMsg", "Backing up database");
 
-	status.Show(StrF(_T("Ditto - %s - %s"), msg, backupPath));
+	status.Show(StrF(_T("Ditto - %s - %s"), msg.GetString(), backupPath.GetString()));
 
 	BOOL ret = FALSE;
 
-	Log(StrF(_T("Start backing up db, from: %s to %s"), dbPath, backupPath));
+	Log(StrF(_T("Start backing up db, from: %s to %s"), dbPath.GetString(), backupPath.GetString()));
 
 	CString errorMessage = _T("");
 
@@ -503,7 +503,7 @@ BOOL BackupDB(CString dbPath, CString backupPath)
 							percentageComplete = percent;
 							Log(StrF(_T("backing up db percent done: %d"), percentageComplete));
 
-							status.Show(StrF(_T("Ditto - %02d%% %s - %s"), percentageComplete, msg, backupPath));
+							status.Show(StrF(_T("Ditto - %02d%% %s - %s"), percentageComplete, msg.GetString(), backupPath.GetString()));
 						}
 
 					} while (readBytes >= 65536);
@@ -531,12 +531,12 @@ BOOL BackupDB(CString dbPath, CString backupPath)
 	if (errorMessage != _T(""))
 	{
 		CString cs;
-		cs.Format(_T("Restore ERROR: %s"), errorMessage);
+		cs.Format(_T("Restore ERROR: %s"), errorMessage.GetString());
 		::SendMessage(theApp.m_MainhWnd, WM_SHOW_ERROR_MSG, (WPARAM)cs.GetBuffer(cs.GetLength()), 0);
 		cs.ReleaseBuffer();
 	}
 
-	Log(StrF(_T("Done restoring db, from: %s, errors: %s"), backupPath, errorMessage));
+	Log(StrF(_T("Done restoring db, from: %s, errors: %s"), backupPath.GetString(), errorMessage.GetString()));
 
 	return ret;
 }
@@ -547,11 +547,11 @@ BOOL RestoreDB(CString backupPath)
 	CPopup status((r.right - 500), r.bottom - 100, ::GetForegroundWindow());
 
 	CString msg = theApp.m_Language.GetString("RestoreDbMsg", "Restoring database");
-	status.Show(StrF(_T("Ditto - %s - %s"), msg, backupPath));
+	status.Show(StrF(_T("Ditto - %s - %s"), msg.GetString(), backupPath.GetString()));
 
 	BOOL ret = FALSE;
 
-	Log(StrF(_T("Start restoring db, from: %s"), backupPath));
+	Log(StrF(_T("Start restoring db, from: %s"), backupPath.GetString()));
 
 	CString errorMessage = _T("");
 
@@ -609,7 +609,7 @@ BOOL RestoreDB(CString backupPath)
 				int i = 1;
 				while (FileExists(newFullPath))
 				{
-					newFullPath.Format(_T("%s%s_%d.db"), path, backupPathPath.GetTitle(), i);
+					newFullPath.Format(_T("%s%s_%d.db"), path.GetString(), backupPathPath.GetTitle().GetString(), i);
 					i++;
 				}
 
@@ -622,7 +622,7 @@ BOOL RestoreDB(CString backupPath)
 				}
 				else
 				{
-					errorMessage.Format(_T("Failed to copy file %s to %s"), tempPath, newFullPath);
+					errorMessage.Format(_T("Failed to copy file %s to %s"), tempPath.GetString(), newFullPath.GetString());
 				}
 			}
 			else
@@ -632,7 +632,7 @@ BOOL RestoreDB(CString backupPath)
 		}
 		else
 		{
-			errorMessage.Format(_T("Failed to open file %s"), tempPath);
+			errorMessage.Format(_T("Failed to open file %s"), tempPath.GetString());
 		}
 	}
 	catch (CFileException* pEx)
@@ -649,12 +649,12 @@ BOOL RestoreDB(CString backupPath)
 	if (errorMessage != _T(""))
 	{
 		CString cs;
-		cs.Format(_T("Restore ERROR: %s"), errorMessage);
+		cs.Format(_T("Restore ERROR: %s"), errorMessage.GetString());
 		::SendMessage(theApp.m_MainhWnd, WM_SHOW_ERROR_MSG, (WPARAM)cs.GetBuffer(cs.GetLength()), 0);
 		cs.ReleaseBuffer();
 	}
 
-	Log(StrF(_T("Done restoring db, from: %s, error: %s"), backupPath, errorMessage));
+	Log(StrF(_T("Done restoring db, from: %s, error: %s"), backupPath.GetString(), errorMessage.GetString()));
 
 	theApp.RefreshView();
 

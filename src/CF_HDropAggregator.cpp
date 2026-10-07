@@ -4,7 +4,7 @@
 #include "FileDropList.h"
 #include "TextJoin.h"
 
-bool CCF_HDropAggregator::AddClip(LPVOID lpData, int nDataSize, int nPos, int nCount, UINT cfType)
+bool CCF_HDropAggregator::AddClip(LPVOID lpData, int nDataSize, int /*nPos*/, int /*nCount*/, UINT /*cfType*/)
 {
 	for (std::wstring& path : DittoCore::FileDropList::Parse(lpData, static_cast<std::size_t>(nDataSize)).Paths())
 	{

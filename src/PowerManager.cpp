@@ -8,7 +8,7 @@
 static HWND s_notifyHwnd;
 static ULONG CALLBACK PowerChanged(PVOID Context, ULONG Type, PVOID Setting);
 
-ULONG CALLBACK PowerChanged(PVOID Context, ULONG Type, PVOID Setting)
+ULONG CALLBACK PowerChanged(PVOID /*Context*/, ULONG Type, PVOID /*Setting*/)
 {
 	//a
 	//b

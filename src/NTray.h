@@ -146,7 +146,7 @@ public:
   static BOOL GetDynamicDCAndBitmap(_In_ CDC* pDC, _In_ CBitmap* pBitmap);
 
 //Modification of the menu to use as the context menu
-  void SetMenu(_In_ HMENU hMenu, UINT menuId);
+  void SetMenu(_In_opt_ HMENU hMenu, UINT menuId);
   CMenu& GetMenu();
   void SetDefaultMenuItem(_In_ UINT uItem, _In_ BOOL fByPos);
   void GetDefaultMenuItem(_Out_ UINT& uItem, _Out_ BOOL& fByPos) { uItem = m_nDefaultMenuItem; fByPos = m_bDefaultMenuItemByPos; };
@@ -159,7 +159,7 @@ public:
   BOOL IsHidden() const { return m_bHidden; };
 
 //Sets or gets the Balloon style tooltip settings
-  BOOL         SetBalloonDetails(_In_ LPCTSTR pszBalloonText, _In_ LPCTSTR pszBalloonCaption, _In_ BalloonStyle style, _In_ UINT nTimeout, _In_ HICON hUserIcon = NULL, _In_ BOOL bNoSound = TRUE, _In_ BOOL bLargeIcon = FALSE, _In_ BOOL bRealtime = FALSE, _In_ HICON hBalloonIcon = NULL);
+  BOOL         SetBalloonDetails(_In_ LPCTSTR pszBalloonText, _In_ LPCTSTR pszBalloonCaption, _In_ BalloonStyle style, _In_ UINT nTimeout, _In_opt_ HICON hUserIcon = NULL, _In_ BOOL bNoSound = TRUE, _In_ BOOL bLargeIcon = FALSE, _In_ BOOL bRealtime = FALSE, _In_opt_ HICON hBalloonIcon = NULL);
   String       GetBalloonText() const;
   String       GetBalloonCaption() const;
   BalloonStyle GetBalloonStyle() const;

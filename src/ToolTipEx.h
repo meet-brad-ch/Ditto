@@ -74,7 +74,7 @@ protected:
 	CRect m_rectMargin;
 	CString m_csText;
 	CFont m_Font;
-	int m_fontHeight;
+	int m_fontHeight{};
 	CStringA m_csRTF;
 	CRichEditCtrlEx m_RichEdit;
 	CWnd *m_pNotifyWnd;

@@ -167,7 +167,8 @@ BOOL CRRECToolbar::Create( CWnd* parent, CRect& rc, int resourceId)
 
 		TBBUTTONINFO tbi;
 		tbi.cbSize = sizeof( TBBUTTONINFO );
-		tbi.cx = m_dpi.Scale(100);
+		// DPI-scaled button widths are a few hundred pixels, well inside the WORD range
+		tbi.cx = static_cast<WORD>(m_dpi.Scale(100));
 		tbi.dwMask = TBIF_SIZE | 0x80000000;  // By index
 
 		SetButtonInfo(2, &tbi);
@@ -179,7 +180,7 @@ BOOL CRRECToolbar::Create( CWnd* parent, CRect& rc, int resourceId)
 			m_fontCombo.SetFont(&m_font);
 			m_fontCombo.FillCombo();
 			
-			tbi.cx = m_dpi.Scale(48);
+			tbi.cx = static_cast<WORD>(m_dpi.Scale(48));
 			SetButtonInfo(4, &tbi);
 			GetItemRect(4, &rect);
 
@@ -193,7 +194,7 @@ BOOL CRRECToolbar::Create( CWnd* parent, CRect& rc, int resourceId)
 				CString defaultText = _T("Automatic");
 				CString customText = _T("More Colours...");
 
-				tbi.cx = m_dpi.Scale(64);
+				tbi.cx = static_cast<WORD>(m_dpi.Scale(64));
 				SetButtonInfo(6, &tbi);
 				GetItemRect(6, &rect);
 
@@ -284,7 +285,7 @@ void CRRECToolbar::OnSelchangeSize()
 	
 }
 
-LRESULT CRRECToolbar::OnColorButton( WPARAM w, LPARAM l) 
+LRESULT CRRECToolbar::OnColorButton( WPARAM w, LPARAM /*l*/)
 /* ============================================================
 	Function :		CRRECToolbar::OnColorButton
 	Description :	Mapped to the color picker defined 

@@ -18,7 +18,7 @@ protected:
 	virtual ~CEditFrameWnd();
 
 	CEditWnd m_EditWnd;
-	HWND m_hNotifyWnd;
+	HWND m_hNotifyWnd{};
 	CDittoWindow m_DittoWindow;
 	CRect m_crIcon;
 	SnapWindow m_snap;

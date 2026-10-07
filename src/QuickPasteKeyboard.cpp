@@ -193,11 +193,11 @@ CString CQuickPasteKeyboard::GetShortCutText(KeyboardAB ab)
 	if (shA.IsEmpty() == FALSE &&
 		shB.IsEmpty() == FALSE)
 	{
-		combined.Format(_T("%s - %s"), shA, shB);
+		combined.Format(_T("%s - %s"), shA.GetString(), shB.GetString());
 	}
 	else if (shA.IsEmpty() == FALSE)
 	{
-		combined.Format(_T("%s"), shA);
+		combined.Format(_T("%s"), shA.GetString());
 	}
 
 	return combined;

@@ -9,12 +9,12 @@ public:
 	static unsigned int __stdcall MessagePumpThread(void* thisptr);
 
 protected:
-	virtual void TakeMsg(UINT msg, WPARAM wParam, LPARAM lParam)	{ return; }
+	virtual void TakeMsg(UINT /*msg*/, WPARAM /*wParam*/, LPARAM /*lParam*/)	{ return; }
 	void RunMessagePump();
 
-	UINT m_threadID;
-	uintptr_t m_thread;
-	HANDLE m_hEvt;
+	UINT m_threadID{};
+	uintptr_t m_thread{};
+	HANDLE m_hEvt{};
 
 public:
 	void Start();

@@ -207,8 +207,8 @@ protected:
 	CUAC_Thread* m_pUacPasteThread;
 
 	int m_activeGroupId;
-	DWORD m_activeGroupStartTime;
+	ULONGLONG m_activeGroupStartTime{};
 
 	CopyReasonEnum::CopyReason m_copyReason;
-	DWORD m_copyReasonStartTime;
+	ULONGLONG m_copyReasonStartTime{};
 };

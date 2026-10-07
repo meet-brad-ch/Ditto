@@ -46,17 +46,17 @@ bool CDittoAddins::LoadAll()
 	{
 		bCont = find.FindNextFile();
 
-		Log(StrF(_T("Ditto Addin - Trying to load addin file %s"), find.GetFilePath()));
+		Log(StrF(_T("Ditto Addin - Trying to load addin file %s"), find.GetFilePath().GetString()));
 
 		CDittoAddin *pAddin = new CDittoAddin;
 		if(pAddin->DoLoad(find.GetFilePath(), DittoInfo))
 		{
-			Log(StrF(_T("Ditto Addin - Success, loaded addin: %s"), find.GetFilePath()));
+			Log(StrF(_T("Ditto Addin - Success, loaded addin: %s"), find.GetFilePath().GetString()));
 			m_Addins.push_back(pAddin);
 		}
 		else
 		{
-			Log(StrF(_T("Ditto Addin - Failed loading Adding Error: %s"), pAddin->LastError()));
+			Log(StrF(_T("Ditto Addin - Failed loading Adding Error: %s"), pAddin->LastError().GetString()));
 
 			delete pAddin;
 			pAddin = NULL;
@@ -108,7 +108,7 @@ bool CDittoAddins::AddPrePasteAddinsToMenu(CMenu *pMenu)
 				m_FunctionMap.SetAt(nMenuId, lookup);
 
 				CString menuName;
-				menuName.Format(_T("%s - %s"), pAddin->DisplayName(), pAddin->m_PrePasteFunctions[0].m_csDisplayName);
+				menuName.Format(_T("%s - %s"), pAddin->DisplayName().GetString(), pAddin->m_PrePasteFunctions[0].m_csDisplayName.GetString());
 
 				::AppendMenu(AllAddinsMenu, MF_ENABLED, nMenuId, menuName);
 				bRet = true;
@@ -158,13 +158,13 @@ void CDittoAddins::AboutScreenText(CStringArray &arr)
 		if(pAddin)
 		{
 			CString csLine;
-			csLine.Format(_T("%s Ver: %d, Ver2: %d"), pAddin->DisplayName(), pAddin->Version(), pAddin->PrivateVersion());
+			csLine.Format(_T("%s Ver: %d, Ver2: %d"), pAddin->DisplayName().GetString(),pAddin->Version(), pAddin->PrivateVersion());
 			arr.Add(csLine);
 			INT_PTR subCount = pAddin->m_PrePasteFunctions.size();
 			for(int x = 0; x < subCount; x++)
 			{
 				CString csLine2;
-				csLine2.Format(_T("    %s (%s)"), pAddin->m_PrePasteFunctions[x].m_csDisplayName, pAddin->m_PrePasteFunctions[x].m_csDetailDescription);
+				csLine2.Format(_T("    %s (%s)"), pAddin->m_PrePasteFunctions[x].m_csDisplayName.GetString(), pAddin->m_PrePasteFunctions[x].m_csDetailDescription.GetString());
 				arr.Add(csLine2);
 			}
 			arr.Add("");

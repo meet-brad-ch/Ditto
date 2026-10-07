@@ -26,14 +26,14 @@ CQPasteWndThread::~CQPasteWndThread(void)
     CloseHandle(m_SearchingEvent);
 }
 
-void CQPasteWndThread::OnTimeOut(void *param)
+void CQPasteWndThread::OnTimeOut(void * /*param*/)
 {
 }
 
 void CQPasteWndThread::OnEvent(int eventId, void *param)
 {
-	DWORD startTick = GetTickCount();
-	Log(StrF(_T("Start of OnEvent, eventId: %s"), EnumName((eCQPasteWndThreadEvents)eventId)));
+	ULONGLONG startTick = GetTickCount64();
+	Log(StrF(_T("Start of OnEvent, eventId: %s"), EnumName((eCQPasteWndThreadEvents)eventId).GetString()));
 
     switch((eCQPasteWndThreadEvents)eventId)
     {
@@ -54,8 +54,8 @@ void CQPasteWndThread::OnEvent(int eventId, void *param)
             break;
     }
 
-	DWORD length = GetTickCount() - startTick;
-	Log(StrF(_T("End of OnEvent, eventId: %s, Time: %d(ms)"), EnumName((eCQPasteWndThreadEvents)eventId), length));
+	ULONGLONG length = GetTickCount64() - startTick;
+	Log(StrF(_T("End of OnEvent, eventId: %s, Time: %llu(ms)"), EnumName((eCQPasteWndThreadEvents)eventId).GetString(), length));
 }
 
 void CQPasteWndThread::OnSetListCount(void *param)
@@ -67,7 +67,7 @@ void CQPasteWndThread::OnSetListCount(void *param)
     DWORD dRet = WaitForSingleObject(UpdateTimeEvent, 2000);
 
     ResetEvent(m_SearchingEvent);
-    long lTick = GetTickCount();
+    ULONGLONG lTick = GetTickCount64();
 
 	CString countSQL = m_countSql;
 
@@ -82,7 +82,7 @@ void CQPasteWndThread::OnSetListCount(void *param)
 
     SetEvent(m_SearchingEvent);
 
-    Log(StrF(_T("Set list count = %d, time = %d"), lRecordCount, GetTickCount() - lTick));
+    Log(StrF(_T("Set list count = %d, time = %llu"), lRecordCount, GetTickCount64() - lTick));
 }
 
 void CQPasteWndThread::OnLoadItems(void *param)
@@ -93,14 +93,14 @@ void CQPasteWndThread::OnLoadItems(void *param)
 
 	while(true)
 	{
-		long startTick = GetTickCount();
+		ULONGLONG startTick = GetTickCount64();
 	    int loadItemsIndex = 0;
 	    int loadItemsCount = 0;
 	    int loadCount = 0;
 		CString localSql = m_sql;
 	    bool clearFirstLoadItem = false;
 		bool firstLoad = false;
-		int listSize = 0;
+		size_t listSize = 0;
 
 		{
 			ATL::CCritSecLock csLock(pasteWnd->m_CritSection.m_sect);
@@ -120,7 +120,7 @@ void CQPasteWndThread::OnLoadItems(void *param)
 	    {
 			try
 			{
-				Log(StrF(_T("Load Items start = %d, count = %d, list size: %d"), loadItemsIndex, loadItemsCount, listSize));
+				Log(StrF(_T("Load Items start = %d, count = %d, list size: %zu"), loadItemsIndex, loadItemsCount, listSize));
 
 				int pos = loadItemsIndex;
 				CString limit;
@@ -195,28 +195,29 @@ void CQPasteWndThread::OnLoadItems(void *param)
 					pos++;
 				}
 
-				DWORD loadCount = GetTickCount() - startTick;
-				DWORD countCountStart = GetTickCount();
-				DWORD countCount = 0;
-				DWORD acceleratorCount = 0;
+				ULONGLONG loadTime = GetTickCount64() - startTick;
+				ULONGLONG countCountStart = GetTickCount64();
+				ULONGLONG countCount = 0;
+				ULONGLONG acceleratorCount = 0;
 
 				if(firstLoad)
 				{
-					::PostMessage(pasteWnd->m_hWnd, NM_REFRESH_ROW, -2, 0);
+					// OnRefeshRow reads the clip id back as an int, so -2 survives the WPARAM round trip.
+					::PostMessage(pasteWnd->m_hWnd, NM_REFRESH_ROW, static_cast<WPARAM>(-2), 0);
 					//allow the next thread message to process, this should be the message to set the list count
 
 					OnSetListCount(param);
-					
-					countCount = GetTickCount() - countCountStart;
-					DWORD acceleratorCountStart = GetTickCount();
-					 
+
+					countCount = GetTickCount64() - countCountStart;
+					ULONGLONG acceleratorCountStart = GetTickCount64();
+
 					OnLoadAccelerators(param);
 
-					acceleratorCount = GetTickCount() - acceleratorCountStart;
+					acceleratorCount = GetTickCount64() - acceleratorCountStart;
 				}
 				else
 				{
-					::PostMessage(pasteWnd->m_hWnd, NM_REFRESH_ROW, -1, 0);
+					::PostMessage(pasteWnd->m_hWnd, NM_REFRESH_ROW, static_cast<WPARAM>(-1), 0);
 				}
 
 				if(clearFirstLoadItem)
@@ -226,7 +227,7 @@ void CQPasteWndThread::OnLoadItems(void *param)
 					pasteWnd->m_loadItems.erase(pasteWnd->m_loadItems.begin());
 				}
 
-				Log(StrF(_T("Load items End count = %d, Total Time = %d, LoadItems: %d, Count: %d, Accel: %d"), loadCount, GetTickCount() - startTick, loadCount, countCount, acceleratorCount));
+				Log(StrF(_T("Load items End count = %d, Total Time = %llu, LoadItems: %llu, Count: %llu, Accel: %llu"), loadCount, GetTickCount64() - startTick, loadTime, countCount, acceleratorCount));
 			}
 			catch (CppSQLite3Exception& e)	\
 			{								\
@@ -267,7 +268,7 @@ void ReduceMapItems(CF_DibTypeMap &mapItem, CCriticalSection &critSection, CStri
 		{
 			if (std::binary_search(counterArray.begin(), counterArray.end(), iterDib->second.m_counter) == false)
 			{
-				Log(StrF(_T("reduced size of %s cache, Id: %d, Row: %d"), mapName, iterDib->second.m_parentId, iterDib->second.m_clipRow));
+				Log(StrF(_T("reduced size of %s cache, Id: %d, Row: %d"), mapName.GetString(), iterDib->second.m_parentId, iterDib->second.m_clipRow));
 
 				mapItem.erase(iterDib++);
 			}
@@ -277,7 +278,7 @@ void ReduceMapItems(CF_DibTypeMap &mapItem, CCriticalSection &critSection, CStri
 			}
 		}
 
-		Log(StrF(_T("reduced size of %s cache, count: %d"), mapName, mapItem.size()));
+		Log(StrF(_T("reduced size of %s cache, count: %d"), mapName.GetString(), mapItem.size()));
 	}
 }
 
@@ -343,7 +344,7 @@ void CQPasteWndThread::OnLoadExtraData(void *param)
 
 		if (loadClip)
 		{
-			DWORD startLoadClipData = GetTickCount();
+			ULONGLONG startLoadClipData = GetTickCount64();
 
 			BOOL foundClipData = theApp.GetClipData(it->m_parentId, *it);
 			if (foundClipData == false &&
@@ -357,16 +358,16 @@ void CQPasteWndThread::OnLoadExtraData(void *param)
 
 			if (foundClipData)
 			{
-				DWORD timeTook = GetTickCount() - startLoadClipData;
+				ULONGLONG timeTook = GetTickCount64() - startLoadClipData;
 				if (timeTook > 20)
 				{
-					Log(StrF(_T("GetClipData for clip %d, took: %d"), it->m_parentId, timeTook));
+					Log(StrF(_T("GetClipData for clip %d, took: %llu"), it->m_parentId, timeTook));
 				}
 
 				if (it->m_cfType == CF_DIB ||
 					it->m_cfType == theApp.m_PNG_Format)
 				{
-					DWORD startConvertImage = GetTickCount();
+					ULONGLONG startConvertImage = GetTickCount64();
 
 					HDC dc = GetDC(NULL);
 
@@ -374,10 +375,10 @@ void CQPasteWndThread::OnLoadExtraData(void *param)
 
 					ReleaseDC(NULL, dc);
 
-					DWORD timeTook = GetTickCount() - startConvertImage;
-					if (timeTook > 20)
+					ULONGLONG convertTime = GetTickCount64() - startConvertImage;
+					if (convertTime > 20)
 					{
-						Log(StrF(_T("GetDibFittingToHeight for clip %d, took: %d"), it->m_parentId, GetTickCount() - startConvertImage));
+						Log(StrF(_T("GetDibFittingToHeight for clip %d, took: %llu"), it->m_parentId, convertTime));
 					}
 
 					{

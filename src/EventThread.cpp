@@ -2,6 +2,12 @@
 #include "EventThread.h"
 #include "Misc.h"
 
+#include <sddl.h>
+
+#include <memory>
+#include <stdexcept>
+#include <string>
+
 #define EXIT_EVENT -1
 #define REBUILD_EVENTS -2
 
@@ -66,16 +72,26 @@ void CEventThread::AddEvent(int eventId, CString name)
 {
 	//handle creating events cross users/cross process
 	//https://stackoverflow.com/questions/29976596/shared-global-event-between-a-service-user-mode-processes-doesnt-work
-	SECURITY_DESCRIPTOR sd;
-	InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION);
-	SetSecurityDescriptorDacl(&sd, TRUE, NULL, FALSE);
+	// The elevated and the normal Ditto process (different tokens of the same user) both open these
+	// Global\UAC_* events with EVENT_ALL_ACCESS. Upstream used a NULL DACL (everyone, anonymous
+	// included); all access for Authenticated Users covers both processes.
+	PSECURITY_DESCRIPTOR descriptor{};
+	if (!ConvertStringSecurityDescriptorToSecurityDescriptor(_T("D:(A;;GA;;;AU)"), SDDL_REVISION_1, &descriptor, nullptr))
+	{
+		throw std::runtime_error("could not build the security descriptor of a UAC event (error " + std::to_string(::GetLastError()) + ")");
+	}
+	const std::unique_ptr<void, decltype(&::LocalFree)> descriptorOwner(descriptor, &::LocalFree);
 
-	SECURITY_ATTRIBUTES sa = { 0 };
+	SECURITY_ATTRIBUTES sa{};
 	sa.nLength = sizeof(sa);
 	sa.bInheritHandle = FALSE;
-	sa.lpSecurityDescriptor = &sd;
+	sa.lpSecurityDescriptor = descriptor;
 
 	HANDLE handle = CreateEvent(&sa, FALSE, FALSE, name);
+	if (handle == NULL)
+	{
+		throw std::runtime_error("could not create a UAC event (error " + std::to_string(::GetLastError()) + ")");
+	}
 
 	{
 		ATL::CCritSecLock csLock(m_lock.m_sect);
@@ -173,7 +189,7 @@ void CEventThread::WaitForThreadToExit(int waitTime)
 
 void CEventThread::Stop(int waitTime) 
 {
-	Log(StrF(_T("Start of CEventThread::Stop(int waitTime) %d - Name: %s"), waitTime, m_threadName));
+	Log(StrF(_T("Start of CEventThread::Stop(int waitTime) %d - Name: %s"), waitTime, m_threadName.GetString()));
 
 	if(m_threadRunning)
 	{
@@ -182,17 +198,18 @@ void CEventThread::Stop(int waitTime)
 
 		if(waitTime > 0)
 		{
-			if (WAIT_OBJECT_0 != WaitForSingleObject(m_hEvt, waitTime))
+			// wait on the thread handle (signalled for good once the thread has ended) and log each
+			// period it is late. Upstream killed it with TerminateThread after waitTime, which can
+			// leave a lock it held (the database lock, the heap) taken forever; a thread that never
+			// ends now shows in the log by name.
+			while (WAIT_TIMEOUT == WaitForSingleObject(m_thread, waitTime))
 			{
-				Log(_T("Start of TerminateThread CEventThread::Stop(int waitTime) "));
-				TerminateThread(m_thread, 0);
-				Log(_T("End of TerminateThread CEventThread::Stop(int waitTime) "));
-				m_threadRunning = false;
+				Log(StrF(_T("CEventThread::Stop - %s has not ended after another %d ms, still waiting"), m_threadName.GetString(), waitTime));
 			}
 		}
 	}
 
-	Log(StrF(_T("End of CEventThread::Stop(int waitTime) %d - Name: %s"), waitTime, m_threadName));
+	Log(StrF(_T("End of CEventThread::Stop(int waitTime) %d - Name: %s"), waitTime, m_threadName.GetString()));
 };
 
 void CEventThread::GetHandleVector(std::vector<HANDLE> &handles)
@@ -227,7 +244,7 @@ void CEventThread::CheckForRebuildHandleVector(std::vector<HANDLE>& handles)
 
 void CEventThread::RunThread()
 {
-	Log(StrF(_T("Start of CEventThread::RunThread() Name: %s"), m_threadName));
+	Log(StrF(_T("Start of CEventThread::RunThread() Name: %s"), m_threadName.GetString()));
 
 	m_threadRunning = true;
 	m_threadWasStarted = true;
@@ -254,7 +271,7 @@ void CEventThread::RunThread()
 
 			LocalFree(messageBuffer);
 
-			Log(StrF(_T("CEventThread::RunThread() Error, error: %s - Name %s"), message, m_threadName));
+			Log(StrF(_T("CEventThread::RunThread() Error, error: %s - Name %s"), message.GetString(), m_threadName.GetString()));
 
 			Sleep(1000);
 		}
@@ -267,7 +284,7 @@ void CEventThread::RunThread()
 			const int handleIndex = event - WAIT_OBJECT_0;
 			if (handleIndex < 0 || handleIndex >= handles.size())
 			{
-				Log(StrF(_T("CEventThread::RunThread() Error, Invalid handle index, index: %d, size: %d - Name %s"), handleIndex, handles.size(), m_threadName));
+				Log(StrF(_T("CEventThread::RunThread() Error, Invalid handle index, index: %d, size: %d - Name %s"), handleIndex, handles.size(), m_threadName.GetString()));
 				continue;
 			}
 
@@ -283,9 +300,9 @@ void CEventThread::RunThread()
 			}
 			else
 			{
-				Log(StrF(_T("Start of CEventThread::RunThread() - OnEvent %d - Name %s"), eventId, m_threadName));
+				Log(StrF(_T("Start of CEventThread::RunThread() - OnEvent %d - Name %s"), eventId, m_threadName.GetString()));
 				OnEvent(eventId, m_param);
-				Log(StrF(_T("End of CEventThread::RunThread() - OnEvent %d - Name: %s"), eventId, m_threadName));
+				Log(StrF(_T("End of CEventThread::RunThread() - OnEvent %d - Name: %s"), eventId, m_threadName.GetString()));
 			}
 		}
 	}
@@ -294,7 +311,7 @@ void CEventThread::RunThread()
 
 	SetEvent(m_hEvt);
 
-	Log(StrF(_T("End of CEventThread::RunThread() Name: %s"), m_threadName));
+	Log(StrF(_T("End of CEventThread::RunThread() Name: %s"), m_threadName.GetString()));
 
 	m_threadRunning = false;
 }

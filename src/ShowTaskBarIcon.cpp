@@ -14,9 +14,9 @@ CShowTaskBarIcon::CShowTaskBarIcon(void)
 
 CShowTaskBarIcon::~CShowTaskBarIcon(void)
 {
-	::InterlockedDecrement(&m_refCount);
+	const long remainingRefs = ::InterlockedDecrement(&m_refCount);
 
-	if(m_hWnd && ::IsWindow(m_hWnd) && m_refCount == 0)
+	if(m_hWnd && ::IsWindow(m_hWnd) && remainingRefs == 0)
 	{
 		theApp.m_pMainFrame->m_trayIcon.MinimiseToTray(theApp.m_pMainFrame);
 	}	

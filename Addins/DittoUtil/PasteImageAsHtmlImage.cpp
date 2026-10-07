@@ -79,7 +79,7 @@ bool CPasteImageAsHtmlImage::ConvertPathToHtmlImageTag(const CDittoInfo &DittoIn
 							csFile.Find(_T(".png")) != -1)
 						{
 							CString csFormat;
-							csFormat.Format(_T("<IMG src=\"file:///%s\">"), csOrigfile);
+							csFormat.Format(_T("<IMG src=\"file:///%s\">"), csOrigfile.GetString());
 							if(nFile < nNumFiles-1)
 							{
 								csFormat += _T("<br>");

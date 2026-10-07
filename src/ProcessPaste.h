@@ -33,8 +33,8 @@ public:
 	struct MarkAsPastedData 
 	{
 		CClipIDs ids;
-		bool pastedFromGroup;
-		bool updateClipOrder;
+		bool pastedFromGroup{};
+		bool updateClipOrder{};
 	};
 	
 	CProcessPaste();

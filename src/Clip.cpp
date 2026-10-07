@@ -80,7 +80,7 @@ HGLOBAL COleDataObjectEx::GetGlobalData(CLIPFORMAT cfFormat, LPFORMATETC lpForma
 		{
 			Log( StrF(
 				_T("COleDataObjectEx::GetGlobalData(\"%s\"): ERROR: Invalid (NULL) data returned."),
-				GetFormatName(cfFormat) ) );
+				GetFormatName(cfFormat).GetString() ) );
 			::GlobalFree( hGlobal );
 			hGlobal = NULL;
 		}
@@ -112,7 +112,7 @@ HGLOBAL COleDataObjectEx::GetGlobalData(CLIPFORMAT cfFormat, LPFORMATETC lpForma
 	{
 		Log( StrF(
 			_T("COleDataObjectEx::GetGlobalData(\"%s\"): ERROR: Invalid (NULL) data returned."),
-			GetFormatName(cfFormat)));
+			GetFormatName(cfFormat).GetString()));
 		::GlobalFree(hGlobal);
 		hGlobal = NULL;
 	}
@@ -129,7 +129,7 @@ std::shared_ptr<CClipTypes> COleDataObjectEx::GetAvailableTypes()
 	if (!OpenClipboard(theApp.m_MainhWnd))
 		return types;
 
-	int format = 0;
+	UINT format = 0;
 	do
 	{
 		format = EnumClipboardFormats(format);
@@ -137,7 +137,8 @@ std::shared_ptr<CClipTypes> COleDataObjectEx::GetAvailableTypes()
 		// See https://learn.microsoft.com/en-us/windows/win32/dataxchg/standard-clipboard-formats
 		if (format == 0 || format == CF_MAX)
 			continue;
-		types->Add(format);
+		// clipboard format ids are 16-bit (registered formats are 0xC000-0xFFFF)
+		types->Add(static_cast<CLIPFORMAT>(format));
 	} while (format != 0);
 
 	CloseClipboard();
@@ -365,7 +366,7 @@ void CClip::EmptyFormats()
 }
 
 // Adds a new Format to this Clip by copying the given data.
-bool CClip::AddFormat(CLIPFORMAT cfType, void* pData, UINT nLen, bool setDesc)
+bool CClip::AddFormat(CLIPFORMAT cfType, void* pData, SIZE_T nLen, bool setDesc)
 {
 	ASSERT(pData && nLen);
 	HGLOBAL hGlobal = ::NewGlobalP(pData, nLen);
@@ -400,7 +401,7 @@ bool CClip::AddFormat(CLIPFORMAT cfType, void* pData, UINT nLen, bool setDesc)
 }
 
 // Fills this CClip with the contents of the clipboard.
-int CClip::LoadFromClipboard(CClipTypes* pClipTypes, bool checkClipboardIgnore, CString activeApp)
+int CClip::LoadFromClipboard(CClipTypes* pClipTypes, bool /*checkClipboardIgnore*/, CString activeApp)
 {
 	if(pClipTypes == NULL || pClipTypes->GetSize() == 0)
 	{
@@ -490,7 +491,7 @@ int CClip::LoadFromClipboard(CClipTypes* pClipTypes, bool checkClipboardIgnore, 
 		}
 		bIsDescSet = SetDescFromText(cfDesc.m_hgData, true);
 
-		Log(StrF(_T("Tried to set description from cf_unicode text, Set: %d, Desc: [%s]"), bIsDescSet, m_Desc.Left(30)));
+		Log(StrF(_T("Tried to set description from cf_unicode text, Set: %d, Desc: [%s]"), bIsDescSet, m_Desc.Left(30).GetString()));
 	}
 
 	if(bIsDescSet == false)
@@ -514,7 +515,7 @@ int CClip::LoadFromClipboard(CClipTypes* pClipTypes, bool checkClipboardIgnore, 
 
 			bIsDescSet = SetDescFromText(cfDesc.m_hgData, false);
 
-			Log(StrF(_T("Tried to set description from cf_text text, Set: %d, Desc: [%s]"), bIsDescSet, m_Desc.Left(30)));
+			Log(StrF(_T("Tried to set description from cf_text text, Set: %d, Desc: [%s]"), bIsDescSet, m_Desc.Left(30).GetString()));
 		}
 	}
 
@@ -532,12 +533,12 @@ int CClip::LoadFromClipboard(CClipTypes* pClipTypes, bool checkClipboardIgnore, 
 			oleData.IsDataAvailable(CF_TEXT) &&
 			CGetSetOptions::GetIgnoreAnnoyingCFDIBSet(TRUE).count(activeApp.MakeLower()))
 		{
-			Log(StrF(_T("Ignore CF_DIB from %s"), activeApp));
+			Log(StrF(_T("Ignore CF_DIB from %s"), activeApp.GetString()));
 			continue;
 		}
 
 		BOOL bSuccess = false;
-		Log(StrF(_T("Begin try and load type %s"), GetFormatName(cf.m_cfType)));
+		Log(StrF(_T("Begin try and load type %s"), GetFormatName(cf.m_cfType).GetString()));
 		
 		// is this the description we already fetched?
 		if(cf.m_cfType == cfDesc.m_cfType)
@@ -547,7 +548,7 @@ int CClip::LoadFromClipboard(CClipTypes* pClipTypes, bool checkClipboardIgnore, 
 		}
 		else if(!oleData.IsDataAvailable(cf.m_cfType))
 		{
-			Log(StrF(_T("End of load - Data is not available for type %s"), GetFormatName(cf.m_cfType)));
+			Log(StrF(_T("End of load - Data is not available for type %s"), GetFormatName(cf.m_cfType).GetString()));
 			continue;
 		}
 		else
@@ -558,7 +559,7 @@ int CClip::LoadFromClipboard(CClipTypes* pClipTypes, bool checkClipboardIgnore, 
 				if (cf.m_hgData != NULL)
 					break;
 
-				Log(StrF(_T("Tried to get data for type: %s, data is NULL, try: %d"), GetFormatName(cf.m_cfType), tries + 1));
+				Log(StrF(_T("Tried to get data for type: %s, data is NULL, try: %d"), GetFormatName(cf.m_cfType).GetString(), tries + 1));
 				Sleep(5);
 			}
 		}
@@ -571,7 +572,7 @@ int CClip::LoadFromClipboard(CClipTypes* pClipTypes, bool checkClipboardIgnore, 
 				if(CGetSetOptions::m_lMaxClipSizeInBytes > 0 && (int)nSize > CGetSetOptions::m_lMaxClipSizeInBytes)
 				{
 					CString cs;
-					cs.Format(_T("Maximum clip size reached max size = %d, clip size = %d"), CGetSetOptions::m_lMaxClipSizeInBytes, nSize);
+					cs.Format(_T("Maximum clip size reached max size = %d, clip size = %Id"), CGetSetOptions::m_lMaxClipSizeInBytes, nSize);
 					Log(cs);
 
 					oleData.Release();
@@ -587,12 +588,12 @@ int CClip::LoadFromClipboard(CClipTypes* pClipTypes, bool checkClipboardIgnore, 
 			{
 				ASSERT(FALSE); // a valid GlobalMem with 0 size is strange
 				cf.Free();
-				Log(StrF(_T("Data length is 0 for type %s"), GetFormatName(cf.m_cfType)));
+				Log(StrF(_T("Data length is 0 for type %s"), GetFormatName(cf.m_cfType).GetString()));
 			}
 			cf.m_hgData = 0; // m_Formats owns it now
 		}
 
-		Log(StrF(_T("End of load - type %s, Success: %d"), GetFormatName(cf.m_cfType), bSuccess));
+		Log(StrF(_T("End of load - type %s, Success: %d"), GetFormatName(cf.m_cfType).GetString(), bSuccess));
 	}
 
 	Log(StrF(_T("End enumerating over supported types, Count: %d"), numTypes));
@@ -603,7 +604,7 @@ int CClip::LoadFromClipboard(CClipTypes* pClipTypes, bool checkClipboardIgnore, 
 	{
 		SetDescFromType();
 
-		Log(StrF(_T("Setting description from type, Desc: [%s]"), m_Desc.Left(30)));
+		Log(StrF(_T("Setting description from type, Desc: [%s]"), m_Desc.Left(30).GetString()));
 	}
 	
 	// if the description was in a type that is not supported,
@@ -882,7 +883,7 @@ bool CClip::AddToMainTable()
 		record.lastPasteDate = CTime::GetCurrentTime().GetTime();
 		m_id = Repository().InsertClip(record);
 
-		Log(StrF(_T("Added clip to main table, Id: %d, ParentId: %d Desc: %s, Order: %f, GroupOrder: %f"), m_id, m_parentId, m_Desc, m_clipOrder, m_clipGroupOrder));
+		Log(StrF(_T("Added clip to main table, Id: %d, ParentId: %d Desc: %s, Order: %f, GroupOrder: %f"), m_id, m_parentId, m_Desc.GetString(), m_clipOrder, m_clipGroupOrder));
 
 		m_LastAddedCRC = m_CRC;
 		m_lastAddedID = m_id;
@@ -1224,7 +1225,7 @@ HGLOBAL CClip::LoadFormat(int id, UINT cfType)
 
 bool CClip::LoadFormats(int id, bool bOnlyLoad_CF_TEXT, bool includeRichTextForTextOnly, int dataId)
 {
-	DWORD startTick = GetTickCount();
+	ULONGLONG startTick = GetTickCount64();
 	m_Formats.RemoveAll();
 
 	try
@@ -1259,9 +1260,9 @@ bool CClip::LoadFormats(int id, bool bOnlyLoad_CF_TEXT, bool includeRichTextForT
 	}
 	CATCH_SQLITE_EXCEPTION_AND_RETURN(false)
 
-	DWORD endTick = GetTickCount();
+	ULONGLONG endTick = GetTickCount64();
 	if((endTick-startTick) > 150)
-		Log(StrF(_T("Paste Timing LoadFormats: %d, ClipId: %d"), endTick-startTick, id));
+		Log(StrF(_T("Paste Timing LoadFormats: %llu, ClipId: %d"), endTick-startTick, id));
 
 	return m_Formats.GetSize() > 0;
 }

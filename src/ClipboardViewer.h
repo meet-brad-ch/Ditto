@@ -47,7 +47,7 @@ public:
 
 	bool GetIgnoreClipboardChange();
 
-	DWORD m_dwLastCopy;
+	ULONGLONG m_dwLastCopy;
 
 	// Generated message map functions
 protected:

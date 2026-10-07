@@ -9,6 +9,8 @@
 #include "ActionEnums.h"
 #include "..\Shared\Tokenizer.h"
 #include <set>
+#include <stdexcept>
+#include <string>
 #include <Wincrypt.h>
 
 using namespace nsPath;
@@ -428,9 +430,14 @@ CString CGetSetOptions::GetAppDataPath()
 	{
 		if (SUCCEEDED(::SHGetMalloc(&pMalloc)))
 		{
-			LPITEMIDLIST pidlPrograms;
+			LPITEMIDLIST pidlPrograms{};
 
-			SHGetSpecialFolderLocation(NULL, CSIDL_LOCAL_APPDATA, &pidlPrograms);
+			const HRESULT hr = SHGetSpecialFolderLocation(NULL, CSIDL_LOCAL_APPDATA, &pidlPrograms);
+			if (FAILED(hr))
+			{
+				pMalloc->Release();
+				throw std::runtime_error("SHGetSpecialFolderLocation(CSIDL_LOCAL_APPDATA) failed with HRESULT " + std::to_string(hr));
+			}
 
 			TCHAR string[MAX_PATH];
 			SHGetPathFromIDList(pidlPrograms, string);
@@ -447,9 +454,14 @@ CString CGetSetOptions::GetAppDataPath()
 	{
 		if (SUCCEEDED(::SHGetMalloc(&pMalloc)))
 		{
-			LPITEMIDLIST pidlPrograms;
+			LPITEMIDLIST pidlPrograms{};
 
-			SHGetSpecialFolderLocation(NULL, CSIDL_LOCAL_APPDATA, &pidlPrograms);
+			const HRESULT hr = SHGetSpecialFolderLocation(NULL, CSIDL_LOCAL_APPDATA, &pidlPrograms);
+			if (FAILED(hr))
+			{
+				pMalloc->Release();
+				throw std::runtime_error("SHGetSpecialFolderLocation(CSIDL_LOCAL_APPDATA) failed with HRESULT " + std::to_string(hr));
+			}
 
 			TCHAR string[MAX_PATH];
 			SHGetPathFromIDList(pidlPrograms, string);
@@ -466,9 +478,14 @@ CString CGetSetOptions::GetAppDataPath()
 	{
 		if (SUCCEEDED(::SHGetMalloc(&pMalloc)))
 		{
-			LPITEMIDLIST pidlPrograms;
+			LPITEMIDLIST pidlPrograms{};
 
-			SHGetSpecialFolderLocation(NULL, CSIDL_APPDATA, &pidlPrograms);
+			const HRESULT hr = SHGetSpecialFolderLocation(NULL, CSIDL_APPDATA, &pidlPrograms);
+			if (FAILED(hr))
+			{
+				pMalloc->Release();
+				throw std::runtime_error("SHGetSpecialFolderLocation(CSIDL_APPDATA) failed with HRESULT " + std::to_string(hr));
+			}
 
 			TCHAR string[MAX_PATH];
 			SHGetPathFromIDList(pidlPrograms, string);
@@ -503,7 +520,7 @@ CString CGetSetOptions::GetTempFilePath()
 long CGetSetOptions::GetResolutionProfileLong(CString csName, long lDefaultValue, CString csNewPath)
 {
 	CString resName;
-	resName.Format(_T("(%dx%d)_%s"), GetScreenWidth(), GetScreenHeight(), csName);
+	resName.Format(_T("(%dx%d)_%s"), GetScreenWidth(), GetScreenHeight(), csName.GetString());
 
 	long value = GetProfileLong(resName, INT_MIN, csNewPath);
 
@@ -518,7 +535,7 @@ long CGetSetOptions::GetResolutionProfileLong(CString csName, long lDefaultValue
 BOOL CGetSetOptions::SetResolutionProfileLong(CString csName, long lValue)
 {
 	CString resName;
-	resName.Format(_T("(%dx%d)_%s"), GetScreenWidth(), GetScreenHeight(), csName);
+	resName.Format(_T("(%dx%d)_%s"), GetScreenWidth(), GetScreenHeight(), csName.GetString());
 
 	return SetProfileLong(resName, lValue);
 }
@@ -583,7 +600,7 @@ CString CGetSetOptions::GetProfileString(CString csName, CString csDefault, CStr
 		bool setMaxSize = false;
 		while (true)
 		{
-			if (maxSize > -1 && maxSize < dwBufLen)
+			if (maxSize > -1 && static_cast<DWORD>(maxSize) < dwBufLen)
 			{
 				dwBufLen = maxSize;
 				setMaxSize = true;
@@ -629,7 +646,7 @@ CString CGetSetOptions::GetProfileString(CString csName, CString csDefault, CStr
 		if (lResult == ERROR_SUCCESS &&
 			dwBufLen > 0)
 		{
-			if (maxSize > -1 && maxSize < dwBufLen)
+			if (maxSize > -1 && static_cast<DWORD>(maxSize) < dwBufLen)
 			{
 				dwBufLen = maxSize;
 			}
@@ -733,14 +750,24 @@ BOOL CGetSetOptions::GetProfileFont(CString csSection, LOGFONT &font)
 	font.lfEscapement = GetPrivateProfileInt(csSection, _T("Escapement"), 0, m_csIniFileName);
 	font.lfOrientation = GetPrivateProfileInt(csSection, _T("Orientation"), 0, m_csIniFileName);
 	font.lfWeight = GetPrivateProfileInt(csSection, _T("Weight"), 0, m_csIniFileName);
-	font.lfItalic = GetPrivateProfileInt(csSection, _T("Italic"), 0, m_csIniFileName);
-	font.lfUnderline = GetPrivateProfileInt(csSection, _T("Underline"), 0, m_csIniFileName);
-	font.lfStrikeOut = GetPrivateProfileInt(csSection, _T("StrikeOut"), 0, m_csIniFileName);
-	font.lfCharSet = GetPrivateProfileInt(csSection, _T("CharSet"), 0, m_csIniFileName);
-	font.lfOutPrecision = GetPrivateProfileInt(csSection, _T("OutPrecision"), 0, m_csIniFileName);
-	font.lfClipPrecision = GetPrivateProfileInt(csSection, _T("ClipPrecision"), 0, m_csIniFileName);
-	font.lfQuality = GetPrivateProfileInt(csSection, _T("Quality"), 0, m_csIniFileName);
-	font.lfPitchAndFamily = GetPrivateProfileInt(csSection, _T("PitchAndFamily"), 0, m_csIniFileName);
+	// The BYTE fields are written from BYTE values, so a larger value means a damaged ini file.
+	auto readByte = [&csSection](LPCTSTR key) -> BYTE
+	{
+		const UINT value = GetPrivateProfileInt(csSection, key, 0, m_csIniFileName);
+		if (value > MAXBYTE)
+		{
+			throw std::out_of_range(std::string("Font setting out of range in the ini file: ") + CStringA(key).GetString());
+		}
+		return static_cast<BYTE>(value);
+	};
+	font.lfItalic = readByte(_T("Italic"));
+	font.lfUnderline = readByte(_T("Underline"));
+	font.lfStrikeOut = readByte(_T("StrikeOut"));
+	font.lfCharSet = readByte(_T("CharSet"));
+	font.lfOutPrecision = readByte(_T("OutPrecision"));
+	font.lfClipPrecision = readByte(_T("ClipPrecision"));
+	font.lfQuality = readByte(_T("Quality"));
+	font.lfPitchAndFamily = readByte(_T("PitchAndFamily"));
 	GetPrivateProfileString(csSection, _T("FaceName"), _T(""), font.lfFaceName, _countof(font.lfFaceName), m_csIniFileName);
 
 	return TRUE;

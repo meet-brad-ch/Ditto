@@ -21,6 +21,10 @@ UINT CMessagePumpThread::MessagePumpThread(void* thisptr)
 void CMessagePumpThread::Start() 
 {
 	m_hEvt = CreateEvent(NULL, FALSE, FALSE, NULL);
+	if (NULL == m_hEvt)
+	{
+		throw "Could not create thread start event";
+	}
 
 	m_thread = _beginthreadex(NULL, 0, MessagePumpThread, this, 0, &m_threadID);
 	if (0 == m_thread)

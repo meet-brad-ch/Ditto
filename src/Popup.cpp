@@ -134,7 +134,7 @@ void CPopup::SetTimeout( int timeout )
 	::SendMessage(m_hTTWnd, TTM_SETDELAYTIME, TTDT_AUTOMATIC, timeout);
 }
 
-void CPopup::SetPos( CPoint& pos )
+void CPopup::SetPos( const CPoint& pos )
 {
 	m_Pos = pos;
 }

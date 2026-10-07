@@ -13,6 +13,7 @@
 #include "ClipboardFormatError.h"
 #include <new>
 #include <regex>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -50,7 +51,7 @@ void log(const TCHAR* msg, bool bFromSendRecieve, CString csFile, long lLine)
 
 	CString csFileLine;
 	csFile = GetFileName(csFile);
-	csFileLine.Format(_T("%s %d] "), csFile, lLine);
+	csFileLine.Format(_T("%s %d] "), csFile.GetString(), lLine);
 	csText += csFileLine;
 	
 	csText += msg;
@@ -105,7 +106,8 @@ double IdleSeconds()
 	LASTINPUTINFO info; 
 	info.cbSize = sizeof(info);
 	GetLastInputInfo(&info);   
-	DWORD currentTick  = GetTickCount();
+	// Compared with LASTINPUTINFO::dwTime, a 32-bit tick value, so keep 32-bit wrap-around arithmetic.
+	DWORD currentTick  = static_cast<DWORD>(GetTickCount64());
 
 	if(g_funnyGetTickCountAdjustment == -1)
 	{
@@ -354,9 +356,10 @@ CLIPFORMAT GetFormatID(LPCTSTR cbName)
 		return CF_DSPENHMETAFILE;
 	else if (STRCMP(cbName, _T("CF_DIBV5")) == 0)
 		return CF_DIBV5;
-	
-	
-	return ::RegisterClipboardFormat(cbName);
+
+
+	// Registered clipboard formats are in the range 0xC000..0xFFFF, so they fit in a CLIPFORMAT.
+	return static_cast<CLIPFORMAT>(::RegisterClipboardFormat(cbName));
 }
 
 //Do not change these these are stored in the database
@@ -459,7 +462,7 @@ typedef struct
 	int		nMonitorCount;		// Total number of monitors found, -1 for monitor search method
 }	MONITOR_ENUM_PARAM;
 #define	MONITOR_SEARCH_METOHD	0x00000001
-BOOL CALLBACK MyMonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData)
+BOOL CALLBACK MyMonitorEnumProc(HMONITOR /*hMonitor*/, HDC /*hdcMonitor*/, LPRECT lprcMonitor, LPARAM dwData)
 {
 	// Typecast param
 	MONITOR_ENUM_PARAM* pParam = (MONITOR_ENUM_PARAM*)dwData;
@@ -630,7 +633,7 @@ BOOL DeleteFormats(int parentID, ARRAY& formatIDs)
 		INT_PTR count = formatIDs.GetSize();
 		for(int i = 0; i < count; i++)
 		{
-			int count = theApp.m_db.execDMLEx(_T("DELETE FROM Data WHERE lID = %d;"), formatIDs[i]);
+			theApp.m_db.execDMLEx(_T("DELETE FROM Data WHERE lID = %d;"), formatIDs[i]);
 		}
 
 		CClip clip;
@@ -871,7 +874,7 @@ CString UWP_AppName(HWND active_window, DWORD ownerpid)
 
 CString GetProcessName(HWND hWnd, DWORD processId) 
 {
-	DWORD startTick = GetTickCount();
+	ULONGLONG startTick = GetTickCount64();
 
 	CString	strProcessName;
 	DWORD Id = processId;
@@ -922,11 +925,11 @@ CString GetProcessName(HWND hWnd, DWORD processId)
 		strProcessName = UWP_AppName(hWnd, Id);
 	}
 
-	DWORD endTick = GetTickCount();
-	DWORD diff = endTick - startTick;
+	ULONGLONG endTick = GetTickCount64();
+	ULONGLONG diff = endTick - startTick;
 	if(diff > 5)
 	{
-		Log(StrF(_T("GetProcessName Time (ms): %d, pid: %d, name: %s"), endTick-startTick, Id, strProcessName));
+		Log(StrF(_T("GetProcessName Time (ms): %llu, pid: %d, name: %s"), diff, Id, strProcessName.GetString()));
 	}
 
 	return strProcessName;
@@ -983,7 +986,7 @@ void DeleteFolderFiles(CString csDir, BOOL checkFileLastAccess, CTimeSpan lastAc
 	if (csDir.Find(_T("\\ReceivedFiles\\")) == -1 && csDir.Find(_T("\\DragFiles\\")) == -1 && csDir.Find(_T("ClipCompare")) == -1 && csDir.Find(_T("EditClips")) == -1)
 		return;
 
-	Log(StrF(_T("Deleting files in Folder %s Check Last Access %d"), csDir, checkFileLastAccess));
+	Log(StrF(_T("Deleting files in Folder %s Check Last Access %d"), csDir.GetString(), checkFileLastAccess));
 
 	FIX_CSTRING_PATH(csDir);
 
@@ -994,7 +997,7 @@ void DeleteFolderFiles(CString csDir, BOOL checkFileLastAccess, CTimeSpan lastAc
 	CFileFind Find;
 
 	CString csFindString;
-	csFindString.Format(_T("%s*.*"), csDir);
+	csFindString.Format(_T("%s*.*"), csDir.GetString());
 
 	BOOL bFound = Find.FindFile(csFindString);
 	while(bFound)
@@ -1010,13 +1013,13 @@ void DeleteFolderFiles(CString csDir, BOOL checkFileLastAccess, CTimeSpan lastAc
 			//Delete the remote copied file if it hasn't been used for the last day
 			if(ctFile < ctOld)
 			{
-				Log(StrF(_T("Deleting temp file %s"), Find.GetFilePath()));
+				Log(StrF(_T("Deleting temp file %s"), Find.GetFilePath().GetString()));
 				DeleteFile(Find.GetFilePath());
 			}
 		}
 		else
 		{
-			Log(StrF(_T("Deleting temp file %s"), Find.GetFilePath()));
+			Log(StrF(_T("Deleting temp file %s"), Find.GetFilePath().GetString()));
 			DeleteFile(Find.GetFilePath());
 		}
 	}
@@ -1133,7 +1136,7 @@ int FindNoCaseAndInsert(CString& mainStr, CString& findStr, CString preInsert, C
 	return replaceCount;
 }
 
-void OnInitMenuPopupEx(CMenu *pPopupMenu, UINT nIndex, BOOL bSysMenu, CWnd *pWnd)
+void OnInitMenuPopupEx(CMenu *pPopupMenu, UINT /*nIndex*/, BOOL /*bSysMenu*/, CWnd *pWnd)
 {
 	ASSERT(pPopupMenu != NULL);
 	// Check the enabled state of various menu items.
@@ -1158,9 +1161,9 @@ void OnInitMenuPopupEx(CMenu *pPopupMenu, UINT nIndex, BOOL bSysMenu, CWnd *pWnd
 			(hParentMenu = ::GetMenu(pParent->m_hWnd)) != NULL)
 		{
 			int nIndexMax = ::GetMenuItemCount(hParentMenu);
-			for (int nIndex = 0; nIndex < nIndexMax; nIndex++)
+			for (int nMenuIndex = 0; nMenuIndex < nIndexMax; nMenuIndex++)
 			{
-				if (::GetSubMenu(hParentMenu, nIndex) == pPopupMenu->m_hMenu)
+				if (::GetSubMenu(hParentMenu, nMenuIndex) == pPopupMenu->m_hMenu)
 				{
 					// When popup is found, m_pParentMenu is containing menu.
 					state.m_pParentMenu = CMenu::FromHandle(hParentMenu);
@@ -1220,8 +1223,12 @@ CString NewGuidString()
 {
 	CString guidString;
 
-	GUID guid;
-	CoCreateGuid(&guid);
+	GUID guid{};
+	const HRESULT hr = CoCreateGuid(&guid);
+	if (FAILED(hr))
+	{
+		throw std::runtime_error("CoCreateGuid failed with HRESULT " + std::to_string(hr));
+	}
 	guidString.Format(_T("%08lX-%04hX-%04hX-%02hhX%02hhX-%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX"),
 		guid.Data1, guid.Data2, guid.Data3,
 		guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3],
@@ -1253,7 +1260,7 @@ CString FolderPath(int folderId)
 			}
 
 			folder = _T("Group Path: \\");
-			for (int folderPos = arr.GetCount() - 1; folderPos >= 0; folderPos--)
+			for (INT_PTR folderPos = arr.GetCount() - 1; folderPos >= 0; folderPos--)
 			{
 				folder += _T("\\");
 				folder += arr[folderPos];
@@ -1291,7 +1298,7 @@ BOOL DarkAppWindows10Setting()
 
 DWORD Windows10AccentColor()
 {
-	DWORD color = -1;
+	DWORD color = MAXDWORD;
 	BOOL darkMode = false;
 	HKEY hkKey;
 	long lResult = ::RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\DWM"), NULL, KEY_READ, &hkKey);
@@ -1413,10 +1420,10 @@ BOOL BackupDbPrompt(HWND hwnd)
 
 int WordCount(const CString &text)
 {
-	#define OUT 0
-	#define IN 1
+	constexpr int outsideWord = 0;
+	constexpr int insideWord = 1;
 
-	int state = OUT;
+	int state = outsideWord;
 	unsigned wc = 0; // word count
 
 	// Scan all characters one by one
@@ -1426,11 +1433,11 @@ int WordCount(const CString &text)
 		
 		if (str == ' ' || str == '\r' || str == '\n' || str == '\t')
 		{
-			state = OUT;
+			state = outsideWord;
 		}
-		else if (state == OUT)
+		else if (state == outsideWord)
 		{
-			state = IN;
+			state = insideWord;
 			wc++;
 		}
 	}
@@ -1467,7 +1474,8 @@ VersionInfo GetRunningVersion()
 		csFileName.ReleaseBuffer();
 		if ((lpData = (unsigned char*)malloc(dwSize)) != NULL)
 		{
-			if (GetFileVersionInfo(csFileName.GetBuffer(csFileName.GetLength()), dwHandle, dwSize, lpData) != 0)
+			// The handle parameter of GetFileVersionInfo is ignored and must be 0.
+			if (GetFileVersionInfo(csFileName.GetBuffer(csFileName.GetLength()), 0, dwSize, lpData) != 0)
 			{
 				if (VerQueryValue(lpData, _T("\\"), (LPVOID*)&lpFFI, &iBuffSize) != 0)
 				{

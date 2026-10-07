@@ -49,6 +49,7 @@ class CDittoInfo
 public:
 	CDittoInfo()
 	{
+		m_nPrivateVersion = DITTO_ADD_IN_VERSION;
 		m_nVersion = 0;
 		m_hWndDitto = NULL;
 		m_nSizeOfThis = sizeof(CDittoInfo);
@@ -138,7 +139,8 @@ public:
 		else if(StrCmp(cbName, _T("CF_DSPENHMETAFILE")) == 0)
 			return CF_DSPENHMETAFILE;
 
-		return ::RegisterClipboardFormat(cbName);
+		// Registered formats are in 0xC000-0xFFFF (0 on failure), so they fit a CLIPFORMAT
+		return static_cast<CLIPFORMAT>(::RegisterClipboardFormat(cbName));
 	}
 
 	//Do not change these these are stored in the database

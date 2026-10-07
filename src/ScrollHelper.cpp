@@ -133,7 +133,7 @@ void CScrollHelper::ScrollToOrigin(bool scrollLeft, bool scrollTop)
     }
 }
 
-void CScrollHelper::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+void CScrollHelper::OnHScroll(UINT nSBCode, UINT /*nPos*/, CScrollBar* pScrollBar)
 {
     if ( m_attachWnd == NULL )
         return;
@@ -204,7 +204,7 @@ void CScrollHelper::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
     }
 }
 
-void CScrollHelper::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+void CScrollHelper::OnVScroll(UINT nSBCode, UINT /*nPos*/, CScrollBar* pScrollBar)
 {
     if ( m_attachWnd == NULL )
         return;
@@ -326,7 +326,7 @@ BOOL CScrollHelper::Update(CPoint changes)
 	return 1;
 }
 
-BOOL CScrollHelper::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
+BOOL CScrollHelper::OnMouseWheel(UINT /*nFlags*/, short zDelta, CPoint /*pt*/)
 {
     if ( m_attachWnd == NULL )
         return FALSE;
@@ -370,7 +370,7 @@ BOOL CScrollHelper::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
     return TRUE;
 }
 
-BOOL CScrollHelper::OnMouseHWheel(UINT nFlags, short zDelta, CPoint pt)
+BOOL CScrollHelper::OnMouseHWheel(UINT /*nFlags*/, short zDelta, CPoint /*pt*/)
 {
 	if (m_attachWnd == NULL)
 		return FALSE;
@@ -414,7 +414,7 @@ BOOL CScrollHelper::OnMouseHWheel(UINT nFlags, short zDelta, CPoint pt)
 	return TRUE;
 }
 
-void CScrollHelper::OnSize(UINT nType, int cx, int cy)
+void CScrollHelper::OnSize(UINT /*nType*/, int /*cx*/, int /*cy*/)
 {
     UpdateScrollInfo();
 }

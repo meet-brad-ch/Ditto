@@ -136,7 +136,7 @@ bool CFormatSQL::AddToSQL(CString cs, eSpecialTypes &eNOTValue, eSpecialTypes &e
 
 	if (CGetSetOptions::GetRegExTextSearch())
 	{
-		csThisSQL.Format(_T("%s REGEXP \'%s\'"), m_csVariable, cs);
+		csThisSQL.Format(_T("%s REGEXP \'%s\'"), m_csVariable.GetString(), cs.GetString());
 	}
 	else if (CGetSetOptions::GetSimpleTextSearch())
 	{
@@ -146,22 +146,22 @@ bool CFormatSQL::AddToSQL(CString cs, eSpecialTypes &eNOTValue, eSpecialTypes &e
 			local.Replace(_T("%"), _T("\\%"));
 			
 			//escape the % character, https://www.sqlitetutorial.net/sqlite-like/
-			csThisSQL.Format(_T("%s LIKE \'%%%s%%\' ESCAPE \'\\\'"), m_csVariable, local);
+			csThisSQL.Format(_T("%s LIKE \'%%%s%%\' ESCAPE \'\\\'"), m_csVariable.GetString(), local.GetString());
 		}
 		else
 		{
-			csThisSQL.Format(_T("%s LIKE \'%%%s%%\'"), m_csVariable, cs);
+			csThisSQL.Format(_T("%s LIKE \'%%%s%%\'"), m_csVariable.GetString(), cs.GetString());
 		}
 	}
 	else if (cs.Find(_T("%")) < 0)
 	{
-		csThisSQL.Format(_T("%s%sLIKE \'%%%s%%\'"), m_csVariable, GetKeyWordString(eNOTValue), cs);
+		csThisSQL.Format(_T("%s%sLIKE \'%%%s%%\'"), m_csVariable.GetString(), GetKeyWordString(eNOTValue).GetString(), cs.GetString());
 	}
 	else
 	{
 		CString local(cs);
 		local.Replace(_T("%"), _T("\\%"));
-		csThisSQL.Format(_T("%s%sLIKE \'%%%s%%\' ESCAPE \'\\\'"), m_csVariable, GetKeyWordString(eNOTValue), local);
+		csThisSQL.Format(_T("%s%sLIKE \'%%%s%%\' ESCAPE \'\\\'"), m_csVariable.GetString(), GetKeyWordString(eNOTValue).GetString(), local.GetString());
 	}
 
 	if(m_csWhere.GetLength() > 0)
