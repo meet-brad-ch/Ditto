@@ -1,5 +1,8 @@
 #pragma once
 
+#include <memory>
+#include <vector>
+
 #include "DittoRulerRichEditCtrl.h"
 #include "TabCtrl.h"
 #include "ClipIds.h"
@@ -24,7 +27,8 @@ protected:
 	CTabCtrlEx m_tabControl;
 	CToolBar m_toolBarControl;
 	CToolTipCtrl m_toolTipControl;
-	std::vector<CDittoRulerRichEditCtrl*> m_edits;
+	/** @brief The open edit controls (owned), one per tab in tab order. */
+	std::vector<std::unique_ptr<CDittoRulerRichEditCtrl>> m_edits{};
 	CButton m_updateDescriptionButton;
 	CFont m_font;
 	long m_lastSaveID;

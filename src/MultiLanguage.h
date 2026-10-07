@@ -7,6 +7,9 @@
 
 #include "XmlFile.h"
 
+#include <map>
+#include <vector>
+
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -27,9 +30,11 @@ public:
 	CString m_csForeignLang;
 };
 
-typedef CArray<CLangItem*, CLangItem*> LANGUAGE_ARRAY;
+// The items of one section, in file order
+typedef std::vector<CLangItem> LANGUAGE_ARRAY;
 
-typedef CMap<CString, LPCTSTR, CLangItem*, CLangItem*> LANGUAGE_MAP;
+// The string table items by their ID text
+typedef std::map<CString, CLangItem> LANGUAGE_MAP;
 
 class CMultiLanguage  
 {

@@ -8,6 +8,7 @@
 #include "DibHeader.h"
 #include "GlobalBytes.h"
 
+#include <memory>
 #include <span>
 
 #ifdef _DEBUG
@@ -56,8 +57,8 @@ BOOL CBitmapHelper::GetCBitmap(void* pClip2, CDC* pDC, CBitmap* pBitMap, int nMa
 	if (nMaxHeight < 0)
 		return false;
 
-	Gdiplus::Bitmap* gdipBitmap = pClip->CreateGdiplusBitmap();
-	if (gdipBitmap == NULL)
+	const std::unique_ptr<Gdiplus::Bitmap> gdipBitmap{ pClip->CreateGdiplusBitmap() };
+	if (gdipBitmap == nullptr)
 	{
 		return false;
 	}
@@ -66,7 +67,6 @@ BOOL CBitmapHelper::GetCBitmap(void* pClip2, CDC* pDC, CBitmap* pBitMap, int nMa
 	const UINT gdipWidth = gdipBitmap->GetWidth();
 	if (gdipHeight == 0 || gdipWidth == 0)
 	{
-		delete gdipBitmap;
 		return false;
 	}
 
@@ -94,10 +94,9 @@ BOOL CBitmapHelper::GetCBitmap(void* pClip2, CDC* pDC, CBitmap* pBitMap, int nMa
 	graphics.SetInterpolationMode(interpolationMode);
 	graphics.SetCompositingMode(Gdiplus::CompositingModeSourceOver);
 	graphics.SetPixelOffsetMode(Gdiplus::PixelOffsetModeHalf);
-	graphics.DrawImage(gdipBitmap, dest, 0, 0, gdipWidth, gdipHeight, Gdiplus::UnitPixel, &attrs);
+	graphics.DrawImage(gdipBitmap.get(), dest, 0, 0, gdipWidth, gdipHeight, Gdiplus::UnitPixel, &attrs);
 
 	MemDc2.SelectObject(oldBitmap2);
-	delete gdipBitmap;
 
 	return true;
 }
@@ -155,28 +154,26 @@ BOOL CBitmapHelper::GetCBitmap(CClipFormats& clips, CDC* pDC, CBitmap* pBitMap, 
 			clip.m_cfType != theApp.m_PNG_Format)
 			continue;
 
-		Gdiplus::Bitmap* gdipBitmap = clip.CreateGdiplusBitmap();
-		if (gdipBitmap == NULL)
+		const std::unique_ptr<Gdiplus::Bitmap> gdipBitmap{ clip.CreateGdiplusBitmap() };
+		if (gdipBitmap == nullptr)
 			continue;
 
 		const UINT gdipHeight = gdipBitmap->GetHeight();
 		const UINT gdipWidth = gdipBitmap->GetWidth();
 		if (gdipHeight == 0 || gdipWidth == 0)
 		{
-			delete gdipBitmap;
 			continue;
 		}
 
 		Gdiplus::Rect dest(destX, destY, gdipBitmap->GetWidth(), gdipBitmap->GetHeight());
 		Gdiplus::ImageAttributes attrs;
-		graphics.DrawImage(gdipBitmap, dest, 0, 0, gdipBitmap->GetWidth(), gdipBitmap->GetHeight(), Gdiplus::UnitPixel, &attrs);
+		graphics.DrawImage(gdipBitmap.get(), dest, 0, 0, gdipBitmap->GetWidth(), gdipBitmap->GetHeight(), Gdiplus::UnitPixel, &attrs);
 
 		if (horizontal)
 			destX += gdipBitmap->GetWidth();
 		else
 			destY += gdipBitmap->GetHeight();
 
-		delete gdipBitmap;
 		bRet = TRUE;
 	}
 

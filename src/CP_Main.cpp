@@ -141,7 +141,6 @@ CCP_MainApp::CCP_MainApp() :
 	m_copyReasonStartTime = 0;
 	m_activeGroupId = -1;
 	m_activeGroupStartTime = 0;
-	m_pUacPasteThread = NULL;
 	m_bAppRunning = false;
 	m_bAppExiting = false;
 	m_connectOnStartup = -1;
@@ -274,7 +273,7 @@ BOOL CCP_MainApp::InitInstanceBody()
 		mutex.Format(_T("DittoAdminPaste_%d"), cmdInfo.m_uacPID);
 		m_adminPasteMutex = CreateMutex(NULL, FALSE, mutex);
 
-		m_pUacPasteThread = new CUAC_Thread(cmdInfo.m_uacPID);
+		m_pUacPasteThread = std::make_unique<CUAC_Thread>(cmdInfo.m_uacPID);
 		m_pUacPasteThread->Start();
 		m_pUacPasteThread->WaitForThreadToExit(INT_MAX);
 
@@ -432,7 +431,7 @@ BOOL CCP_MainApp::InitInstanceBody()
 	int nRet = CheckDBExists(CGetSetOptions::GetDBPath());
 	if(nRet == FALSE)
 	{
-		m_pNoDbMainFrame = new CNoDbFrameWnd();
+		m_pNoDbMainFrame = std::make_unique<CNoDbFrameWnd>().release(); // ownership: the frame window itself (CFrameWnd::PostNcDestroy deletes it)
 		m_pMainWnd = m_pNoDbMainFrame;
 				
 		m_pNoDbMainFrame->LoadFrame(IDR_MAINFRAME, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL, NULL);
@@ -450,7 +449,7 @@ BOOL CCP_MainApp::InitInstanceBody()
 
 void CCP_MainApp::CreateMainWnd()
 {
-	CMainFrame* pFrame = new CMainFrame;
+	CMainFrame* pFrame{std::make_unique<CMainFrame>().release()}; // ownership: the frame window itself (CFrameWnd::PostNcDestroy deletes it, also when LoadFrame fails)
 	m_pMainWnd = m_pMainFrame = pFrame;
 
 	if (!pFrame->LoadFrame(IDR_MAINFRAME, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL, NULL))
@@ -471,8 +470,8 @@ void CCP_MainApp::CloseNoDbWindow()
 {
 	if (m_pNoDbMainFrame != NULL)
 	{
-		m_pNoDbMainFrame->CloseWindow();
-		delete m_pNoDbMainFrame;
+		// the frame deletes itself once its window is destroyed (CFrameWnd::PostNcDestroy)
+		m_pNoDbMainFrame->DestroyWindow();
 		m_pNoDbMainFrame = NULL;
 	}
 }
@@ -485,47 +484,47 @@ bool CCP_MainApp::AfterMainCreate()
 
 	g_HotKeys.Init(m_MainhWnd);
 
-	// create hotkeys here.  They are automatically deleted on exit
-	m_pDittoHotKey = new CHotKey(CString("DittoHotKey"), 704); //704 is ctrl-tilda
-	m_pDittoHotKey2 = new CHotKey(CString("DittoHotKey2"));
-	m_pDittoHotKey3 = new CHotKey(CString("DittoHotKey3"));
+	// create hotkeys here.  g_HotKeys owns them and destroys them on exit
+	m_pDittoHotKey = &g_HotKeys.Create(CString("DittoHotKey"), 704); //704 is ctrl-tilda
+	m_pDittoHotKey2 = &g_HotKeys.Create(CString("DittoHotKey2"));
+	m_pDittoHotKey3 = &g_HotKeys.Create(CString("DittoHotKey3"));
 
-	m_pPosOne = new CHotKey("Position1", 0, true);
-	m_pPosTwo = new CHotKey("Position2", 0, true);
-	m_pPosThree = new CHotKey("Position3", 0, true);
-	m_pPosFour = new CHotKey("Position4", 0, true);
-	m_pPosFive = new CHotKey("Position5", 0, true);
-	m_pPosSix = new CHotKey("Position6", 0, true);
-	m_pPosSeven = new CHotKey("Position7", 0, true);
-	m_pPosEight = new CHotKey("Position8", 0, true);
-	m_pPosNine = new CHotKey("Position9", 0, true);
-	m_pPosTen = new CHotKey("Position10", 0, true);
+	m_pPosOne = &g_HotKeys.Create("Position1", 0, true);
+	m_pPosTwo = &g_HotKeys.Create("Position2", 0, true);
+	m_pPosThree = &g_HotKeys.Create("Position3", 0, true);
+	m_pPosFour = &g_HotKeys.Create("Position4", 0, true);
+	m_pPosFive = &g_HotKeys.Create("Position5", 0, true);
+	m_pPosSix = &g_HotKeys.Create("Position6", 0, true);
+	m_pPosSeven = &g_HotKeys.Create("Position7", 0, true);
+	m_pPosEight = &g_HotKeys.Create("Position8", 0, true);
+	m_pPosNine = &g_HotKeys.Create("Position9", 0, true);
+	m_pPosTen = &g_HotKeys.Create("Position10", 0, true);
 
-	m_pCopyBuffer1 = new CHotKey("CopyBufferCopyHotKey_0", 0, true);
-	m_pPasteBuffer1 = new CHotKey("CopyBufferPasteHotKey_0", 0, true);
-	m_pCutBuffer1 = new CHotKey("CopyBufferCutHotKey_0", 0, true);
-	
-	m_pCopyBuffer2 = new CHotKey("CopyBufferCopyHotKey_1", 0, true);
-	m_pPasteBuffer2 = new CHotKey("CopyBufferPasteHotKey_1", 0, true);
-	m_pCutBuffer2 = new CHotKey("CopyBufferCutHotKey_1", 0, true);
+	m_pCopyBuffer1 = &g_HotKeys.Create("CopyBufferCopyHotKey_0", 0, true);
+	m_pPasteBuffer1 = &g_HotKeys.Create("CopyBufferPasteHotKey_0", 0, true);
+	m_pCutBuffer1 = &g_HotKeys.Create("CopyBufferCutHotKey_0", 0, true);
 
-	m_pCopyBuffer3 = new CHotKey("CopyBufferCopyHotKey_2", 0, true);
-	m_pPasteBuffer3 = new CHotKey("CopyBufferPasteHotKey_2", 0, true);
-	m_pCutBuffer3 = new CHotKey("CopyBufferCutHotKey_2", 0, true);
+	m_pCopyBuffer2 = &g_HotKeys.Create("CopyBufferCopyHotKey_1", 0, true);
+	m_pPasteBuffer2 = &g_HotKeys.Create("CopyBufferPasteHotKey_1", 0, true);
+	m_pCutBuffer2 = &g_HotKeys.Create("CopyBufferCutHotKey_1", 0, true);
 
-	m_pCopyBuffer4 = new CHotKey("CopyBufferCopyHotKey_3", 0, true);
-	m_pPasteBuffer4 = new CHotKey("CopyBufferPasteHotKey_3", 0, true);
-	m_pCutBuffer4 = new CHotKey("CopyBufferCutHotKey_3", 0, true);
+	m_pCopyBuffer3 = &g_HotKeys.Create("CopyBufferCopyHotKey_2", 0, true);
+	m_pPasteBuffer3 = &g_HotKeys.Create("CopyBufferPasteHotKey_2", 0, true);
+	m_pCutBuffer3 = &g_HotKeys.Create("CopyBufferCutHotKey_2", 0, true);
 
-	m_pCopyBuffer5 = new CHotKey("CopyBufferCopyHotKey_4", 0, true);
-	m_pPasteBuffer5 = new CHotKey("CopyBufferPasteHotKey_4", 0, true);
-	m_pCutBuffer5 = new CHotKey("CopyBufferCutHotKey_4", 0, true);
+	m_pCopyBuffer4 = &g_HotKeys.Create("CopyBufferCopyHotKey_3", 0, true);
+	m_pPasteBuffer4 = &g_HotKeys.Create("CopyBufferPasteHotKey_3", 0, true);
+	m_pCutBuffer4 = &g_HotKeys.Create("CopyBufferCutHotKey_3", 0, true);
 
-	m_pTextOnlyPaste = new CHotKey("TextOnlyPaste", 0, true);
+	m_pCopyBuffer5 = &g_HotKeys.Create("CopyBufferCopyHotKey_4", 0, true);
+	m_pPasteBuffer5 = &g_HotKeys.Create("CopyBufferPasteHotKey_4", 0, true);
+	m_pCutBuffer5 = &g_HotKeys.Create("CopyBufferCutHotKey_4", 0, true);
 
-	m_pSaveClipboard = new CHotKey("SaveClipboard", 0, false);
+	m_pTextOnlyPaste = &g_HotKeys.Create("TextOnlyPaste", 0, true);
 
-	m_pCopyAndSaveClipboard = new CHotKey("CopyAndSaveClipboard", 0, false);	
+	m_pSaveClipboard = &g_HotKeys.Create("SaveClipboard", 0, false);
+
+	m_pCopyAndSaveClipboard = &g_HotKeys.Create("CopyAndSaveClipboard", 0, false);
 
 	m_editThread.StartWatchingFolderForChanges();
 
@@ -558,12 +557,9 @@ void CCP_MainApp::LoadGlobalClips()
 				int shortcut = q.getIntField(_T("lShortCut"));
 				CString desc = q.getStringField(_T("mText"));
 
-				//Constructor will add to a global list and free
-				CHotKey* globalHotKey = new CHotKey(StrF(_T("GlobalClip: %d"), id), shortcut, true, CHotKey::PASTE_OPEN_CLIP, desc);
-				if(globalHotKey != NULL)
-				{
-					globalHotKey->m_clipId = id;
-				}
+				// g_HotKeys owns the key and destroys it
+				CHotKey& globalHotKey{g_HotKeys.Create(StrF(_T("GlobalClip: %d"), id), shortcut, true, CHotKey::PASTE_OPEN_CLIP, desc)};
+				globalHotKey.m_clipId = id;
 
 				q.nextRow();
 			}
@@ -578,12 +574,9 @@ void CCP_MainApp::LoadGlobalClips()
 				int shortcut = q2.getIntField(_T("MoveToGroupShortCut"));
 				CString desc = q2.getStringField(_T("mText"));
 
-				//Constructor will add to a global list and free
-				CHotKey* globalHotKey = new CHotKey(StrF(_T("MoveToGroup: %d"), id), shortcut, true, CHotKey::MOVE_TO_GROUP, desc);
-				if(globalHotKey != NULL)
-				{
-					globalHotKey->m_clipId = id;
-				}
+				// g_HotKeys owns the key and destroys it
+				CHotKey& globalHotKey{g_HotKeys.Create(StrF(_T("MoveToGroup: %d"), id), shortcut, true, CHotKey::MOVE_TO_GROUP, desc)};
+				globalHotKey.m_clipId = id;
 
 				q2.nextRow();
 			}
@@ -608,8 +601,8 @@ void CCP_MainApp::BeforeMainClose()
 bool CCP_MainApp::StartCopyThread()
 {
 	ASSERT( m_MainhWnd );
-	CClipTypes* pTypes = LoadTypesFromDB();
-	if (pTypes == NULL)
+	std::unique_ptr<CClipTypes> pTypes{LoadTypesFromDB()};
+	if (!pTypes)
 	{
 		// LoadTypesFromDB reported why; without the clip types the copy thread cannot work
 		return false;
@@ -619,7 +612,7 @@ bool CCP_MainApp::StartCopyThread()
 	// - true = use Asynchronous communication (PostMessage)
 	// - true = enable copying on clipboard changes
 	// - pTypes = the supported types to use
-	m_CopyThread.Init(CCopyConfig(m_MainhWnd, true, true, pTypes));
+	m_CopyThread.Init(CCopyConfig(m_MainhWnd, true, true, std::move(pTypes)));
 	
 	if(m_connectOnStartup == FALSE || CGetSetOptions::GetConnectedToClipboard() == FALSE)
 	{
@@ -682,8 +675,8 @@ void CCP_MainApp::UpdateMenuConnectCV(CMenu* pMenu, UINT nMenuID)
 	}
 }
 
-// Allocates a new CClipTypes
-CClipTypes* CCP_MainApp::LoadTypesFromDB()
+// Allocates a new CClipTypes; null when the database read failed (reported)
+std::unique_ptr<CClipTypes> CCP_MainApp::LoadTypesFromDB()
 {
 	std::unique_ptr<CClipTypes> pTypes{std::make_unique<CClipTypes>()};
 
@@ -700,7 +693,7 @@ CClipTypes* CCP_MainApp::LoadTypesFromDB()
 	catch (CppSQLite3Exception& e)
 	{
 		CErrorReport::Show(StrF(_T("Loading the clipboard types to save from the clip database failed: %s"), e.errorMessage()));
-		return NULL;
+		return nullptr;
 	}
 
 	if(pTypes->GetSize() <= 0)
@@ -714,16 +707,16 @@ CClipTypes* CCP_MainApp::LoadTypesFromDB()
 		pTypes->Add(GetFormatID(_T("PNG")));
 	}
 
-	return pTypes.release();
+	return pTypes;
 }
 
 void CCP_MainApp::ReloadTypes()
 {
-	CClipTypes* pTypes = LoadTypesFromDB();
+	std::unique_ptr<CClipTypes> pTypes{LoadTypesFromDB()};
 
 	if(pTypes)
 	{
-		m_CopyThread.SetSupportedTypes(pTypes);
+		m_CopyThread.SetSupportedTypes(std::move(pTypes));
 	}
 }
 
@@ -957,13 +950,13 @@ int CCP_MainApp::ExitInstance()
 
 	m_db.close();
 
-	if(m_pUacPasteThread != NULL)
+	if(m_pUacPasteThread)
 	{
 		if(m_pUacPasteThread->ThreadWasStarted() == false)
 		{
 			m_pUacPasteThread->FireExit();
 		}
-		delete m_pUacPasteThread;
+		m_pUacPasteThread.reset();
 	}
 
 	Gdiplus::GdiplusShutdown(m_gdiplusToken);
@@ -1095,8 +1088,14 @@ void CCP_MainApp::ShowCommandLineError(CString csTitle, CString csMessage)
 {
 	Log(StrF(_T("ShowCommandLineError %s - %s"), csTitle.GetString(), csMessage.GetString()));
 
-	CToolTipEx *pErrorWnd = new CToolTipEx;
-	pErrorWnd->Create(NULL);
+	// handed off before Create: MFC's CWnd::CreateEx calls PostNcDestroy on every failure path,
+	// so a failed Create has already deleted the window object
+	CToolTipEx* pErrorWnd{std::make_unique<CToolTipEx>().release()}; // ownership: the window itself (CToolTipEx::PostNcDestroy deletes it)
+	if (!pErrorWnd->Create(NULL))
+	{
+		AfxMessageBox(csTitle + "\n\n" + csMessage, MB_OK | MB_ICONERROR);
+		return;
+	}
 	pErrorWnd->SetToolTipText(csTitle + "\n\n" + csMessage);
 
 	CPoint pt;
@@ -1330,7 +1329,7 @@ CQPasteWnd* CCP_MainApp::QPasteWnd()
 { 
 	if(m_pMainFrame != NULL)
 	{
-		return m_pMainFrame->m_quickPaste.m_pwndPaste; 
+		return m_pMainFrame->m_quickPaste.m_pwndPaste.get(); 
 	}
 
 	return NULL;
@@ -1338,9 +1337,9 @@ CQPasteWnd* CCP_MainApp::QPasteWnd()
 
 bool CCP_MainApp::UACPaste()
 {
-	if(m_pUacPasteThread == NULL)
+	if(!m_pUacPasteThread)
 	{
-		m_pUacPasteThread = new CUAC_Thread(GetCurrentProcessId());
+		m_pUacPasteThread = std::make_unique<CUAC_Thread>(GetCurrentProcessId());
 	}
 
 	return m_pUacPasteThread->UACPaste();
@@ -1348,9 +1347,9 @@ bool CCP_MainApp::UACPaste()
 
 bool CCP_MainApp::UACCopy()
 {
-	if(m_pUacPasteThread == NULL)
+	if(!m_pUacPasteThread)
 	{
-		m_pUacPasteThread = new CUAC_Thread(GetCurrentProcessId());
+		m_pUacPasteThread = std::make_unique<CUAC_Thread>(GetCurrentProcessId());
 	}
 
 	return m_pUacPasteThread->UACCopy();
@@ -1358,9 +1357,9 @@ bool CCP_MainApp::UACCopy()
 
 bool CCP_MainApp::UACCut()
 {
-	if(m_pUacPasteThread == NULL)
+	if(!m_pUacPasteThread)
 	{
-		m_pUacPasteThread = new CUAC_Thread(GetCurrentProcessId());
+		m_pUacPasteThread = std::make_unique<CUAC_Thread>(GetCurrentProcessId());
 	}
 
 	return m_pUacPasteThread->UACCut();
@@ -1368,7 +1367,7 @@ bool CCP_MainApp::UACCut()
 
 bool CCP_MainApp::UACThreadRunning()
 {
-	if(m_pUacPasteThread != NULL)
+	if(m_pUacPasteThread)
 	{
 		return m_pUacPasteThread->IsRunning();
 	}

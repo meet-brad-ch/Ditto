@@ -164,7 +164,7 @@ BOOL CAdvGeneral::OnInitDialog()
 	HICON b = (HICON)LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME), IMAGE_ICON, 64, 64, LR_SHARED);
 	SetIcon(b, TRUE);
 
-	CMFCPropertyGridProperty * pGroupTest = new CMFCPropertyGridProperty( _T( "Ditto" ) );
+	CMFCPropertyGridProperty * pGroupTest = MakeGridProperty<CMFCPropertyGridProperty>( _T( "Ditto" ) );
 	m_propertyGrid.AddProperty(pGroupTest);
 
 	m_Resize.SetParent(m_hWnd);
@@ -183,7 +183,7 @@ BOOL CAdvGeneral::OnInitDialog()
 
 	m_propertyGrid.SetFont(this->GetFont());	
 
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Activate window delay (100ms default)"), (long)CGetSetOptions::SendKeysDelay(), _T(""), SETTING_ACTIVATE_WINDOW_DELAY));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Activate window delay (100ms default)"), (long)CGetSetOptions::SendKeysDelay(), _T(""), SETTING_ACTIVATE_WINDOW_DELAY));
 
 	AddTrueFalse(pGroupTest, _T("Add file drop when dragging clips"), CGetSetOptions::GetAddCFHDROP_OnDrag(), SETTING_ADD_CF_HDROP_ON_DRAG);
 
@@ -192,24 +192,24 @@ BOOL CAdvGeneral::OnInitDialog()
 
 	AddTrueFalse(pGroupTest, _T("Always show scroll bar"), CGetSetOptions::GetShowScrollBar(), SETTING_ALWAYS_SHOW_SCROLL_BAR);
 	AddTrueFalse(pGroupTest, _T("Use modern scroll bar"), CGetSetOptions::GetUseModernScrollBar(), SETTING_USE_MODERN_SCROLLBAR);
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Amount of text to save for description"), CGetSetOptions::m_bDescTextSize, _T(""), SETTING_DESC_SIZE));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Amount of text to save for description"), CGetSetOptions::m_bDescTextSize, _T(""), SETTING_DESC_SIZE));
 	AddTrueFalse(pGroupTest, _T("Center window below cursor or caret"), CGetSetOptions::GetCenterWindowBelowCursorOrCaret(), SETTING_CENTER_WINDOW_BELOW_CURSOR_CARET);
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Copy and save clipboard delay (ms)"), (long)CGetSetOptions::GetCopyAndSveDelay(), _T(""), SETTING_COPY_SAVE_DELAY));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Copy and save clipboard delay (ms)"), (long)CGetSetOptions::GetCopyAndSveDelay(), _T(""), SETTING_COPY_SAVE_DELAY));
 
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Clip edit save delay after load"), (long)(CGetSetOptions::GetClipEditSaveDelayAfterLoadSeconds()), _T(""), SETTING_CLIP_EDIT_SAVE_DELAY_AFTER_LOAD));
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Clip edit save delay after Save"), (long)(CGetSetOptions::GetClipEditSaveDelayAfterSaveSeconds()), _T(""), SETTING_ClIP_EDIT_SAVE_DELAY_AFTER_SAVE));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Clip edit save delay after load"), (long)(CGetSetOptions::GetClipEditSaveDelayAfterLoadSeconds()), _T(""), SETTING_CLIP_EDIT_SAVE_DELAY_AFTER_LOAD));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Clip edit save delay after Save"), (long)(CGetSetOptions::GetClipEditSaveDelayAfterSaveSeconds()), _T(""), SETTING_ClIP_EDIT_SAVE_DELAY_AFTER_SAVE));
 
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Clipboard restore delay after copy buffer sent paste (ms, default: 750)"), (long)(CGetSetOptions::GetDittoRestoreClipboardDelay()), _T(""), SETTING_CLIPBOARD_RESTORE_AFTER_COPY_BUFFER_DELAY));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Clipboard restore delay after copy buffer sent paste (ms, default: 750)"), (long)(CGetSetOptions::GetDittoRestoreClipboardDelay()), _T(""), SETTING_CLIPBOARD_RESTORE_AFTER_COPY_BUFFER_DELAY));
 
 	CString defaultPasteString = CGetSetOptions::GetDefaultPasteString();
 	CString defaultCopyString = CGetSetOptions::GetDefaultCopyString();
 	CString defaultCutString = CGetSetOptions::GetDefaultCutString();
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Default paste string"), defaultPasteString, _T(""), SETTING_DEFAULT_PASTE_STRING));
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Default copy string"), defaultCopyString, _T(""), SETTING_DEFAULT_COPY_STRING));
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Default cut string"), defaultCutString, _T(""), SETTING_DEFAULT_CUT_STRING));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Default paste string"), defaultPasteString, _T(""), SETTING_DEFAULT_PASTE_STRING));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Default copy string"), defaultCopyString, _T(""), SETTING_DEFAULT_COPY_STRING));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Default cut string"), defaultCutString, _T(""), SETTING_DEFAULT_CUT_STRING));
 	
 	static TCHAR BASED_CODE szDiffFilter[] = _T("Diff Applications(*.exe)|*.exe||");
-	CMFCPropertyGridFileProperty* pDiffProp = new CMFCPropertyGridFileProperty(_T("Diff application path"), TRUE, CGetSetOptions::GetDiffApp(), _T("exe"), 0, szDiffFilter, (LPCTSTR)0, SETTING_DIFF_APP);
+	CMFCPropertyGridFileProperty* pDiffProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("Diff application path"), TRUE, CGetSetOptions::GetDiffApp(), _T("exe"), 0, szDiffFilter, (LPCTSTR)0, SETTING_DIFF_APP);
 	pGroupTest->AddSubItem(pDiffProp);
 
 	AddTrueFalse(pGroupTest, _T("Diff save compare files as utf8"), CGetSetOptions::GetPreferUtf8ForCompare(), SETTING_USE_UTF8_FOR_DIFF);
@@ -218,12 +218,12 @@ BOOL CAdvGeneral::OnInitDialog()
 
 	AddTrueFalse(pGroupTest, _T("Do not hide Ditto window on deactivate"), CGetSetOptions::GetDoNotHideOnDeactivate(), SETTING_DO_NOT_HIDE_ON_DEACTIVATE);
 
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Double shortcut keystroke timeout)"), (long)CGetSetOptions::GetDoubleKeyStrokeTimeout(), _T(""), SETTING_DOUBLE_KEYSTROKE_TIMEOUT));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Double shortcut keystroke timeout)"), (long)CGetSetOptions::GetDoubleKeyStrokeTimeout(), _T(""), SETTING_DOUBLE_KEYSTROKE_TIMEOUT));
 
 	AddTrueFalse(pGroupTest, _T("Draw swatch for hex, RGB, and HSL colors"), CGetSetOptions::GetDrawCopiedColorCode(), SETTING_DRAW_COPIED_COLOR_CODE);
 
 	AddTrueFalse(pGroupTest, _T("Draw RTF text in list (for RTF types) (could increase memory usage an display speed)"), CGetSetOptions::GetDrawRTF(), SETTING_DRAW_RTF);
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Editor default font size"), (long)CGetSetOptions::GetEditorDefaultFontSize(), _T(""), SETTING_EDITOR_FONT_SIZE));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Editor default font size"), (long)CGetSetOptions::GetEditorDefaultFontSize(), _T(""), SETTING_EDITOR_FONT_SIZE));
 	AddTrueFalse(pGroupTest, _T("Enforce clipboard ignore formats"), CGetSetOptions::GetEnforceClipboardIgnoreFormats(), SETTING_ENFORCE_CLIPBOARD_IGNORE_FORMATS);
 	AddTrueFalse(pGroupTest, _T("Elevated privileges to paste into elevated apps"), CGetSetOptions::GetPasteAsAdmin(), SETTING_PASTE_AS_ADMIN);
 	AddTrueFalse(pGroupTest, _T("Ensure Ditto is always connected to the clipboard"), CGetSetOptions::GetEnsureConnectToClipboard(), SETTING_ENSURE_CONNECTED);
@@ -233,38 +233,38 @@ BOOL CAdvGeneral::OnInitDialog()
 
 	AddTrueFalse(pGroupTest, _T("Find as you type"), CGetSetOptions::GetFindAsYouType(), SETTING_FIND_AS_TYPE);
 
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("First ten hot keys start index"), (long)CGetSetOptions::GetFirstTenHotKeysStart(), _T(""), SETTING_FIRST_TEN_HOTKEYS_START));
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("First ten hot keys font size"), (long)CGetSetOptions::GetFirstTenHotKeysFontSize(), _T(""), SETTING_FIRST_TEN_HOTKEYS_FONT_SIZE));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("First ten hot keys start index"), (long)CGetSetOptions::GetFirstTenHotKeysStart(), _T(""), SETTING_FIRST_TEN_HOTKEYS_START));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("First ten hot keys font size"), (long)CGetSetOptions::GetFirstTenHotKeysFontSize(), _T(""), SETTING_FIRST_TEN_HOTKEYS_FONT_SIZE));
 
 	AddTrueFalse(pGroupTest, _T("Hide Ditto on hot key if Ditto is visible"), CGetSetOptions::GetHideDittoOnHotKeyIfAlreadyShown(), SETTING_HIDE_ON_HOTKEY_IF_VISIBLE);
 
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Ignore copies faster than (ms) (default: 500)"), (long)CGetSetOptions::GetSaveClipDelay(), _T(""), SETTING_IGNORE_FALSE_COPIES_DELAY));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Ignore copies faster than (ms) (default: 500)"), (long)CGetSetOptions::GetSaveClipDelay(), _T(""), SETTING_IGNORE_FALSE_COPIES_DELAY));
 	CString ignoreAnnoyingCFDIB = CGetSetOptions::GetIgnoreAnnoyingCFDIB();
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Ignore CF_DIB when a clip is detected as text content"), ignoreAnnoyingCFDIB, _T("Case insensitive. Recommended option is \"excel.exe; onenote.exe; powerpnt.exe\" "), SETTING_IGNORE_ANNOYING_CF_DIB));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Ignore CF_DIB when a clip is detected as text content"), ignoreAnnoyingCFDIB, _T("Case insensitive. Recommended option is \"excel.exe; onenote.exe; powerpnt.exe\" "), SETTING_IGNORE_ANNOYING_CF_DIB));
 
 	static TCHAR BASED_CODE szImageEditorFilter[] = _T("Applications(*.exe)|*.exe||");
-	CMFCPropertyGridFileProperty* pImageEditorProp = new CMFCPropertyGridFileProperty(_T("Image editor path (empty for system mapping)"), TRUE, CGetSetOptions::GetImageEditorPath(), _T("exe"), 0, szImageEditorFilter, (LPCTSTR)0, SETTING_IMAGE_EDITOR_PATH);
+	CMFCPropertyGridFileProperty* pImageEditorProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("Image editor path (empty for system mapping)"), TRUE, CGetSetOptions::GetImageEditorPath(), _T("exe"), 0, szImageEditorFilter, (LPCTSTR)0, SETTING_IMAGE_EDITOR_PATH);
 	pGroupTest->AddSubItem(pImageEditorProp);
 
-	pGroupTest->AddSubItem( new CMFCPropertyGridProperty(_T("Maximum clip size in bytes (0 for no limit)"), CGetSetOptions::m_lMaxClipSizeInBytes, _T(""), SETTING_MAX_CLIP_SIZE));
+	pGroupTest->AddSubItem( MakeGridProperty<CMFCPropertyGridProperty>(_T("Maximum clip size in bytes (0 for no limit)"), CGetSetOptions::m_lMaxClipSizeInBytes, _T(""), SETTING_MAX_CLIP_SIZE));
 		
 	AddTrueFalse(pGroupTest, _T("Maintain search view"), CGetSetOptions::GetMaintainSearchView(), SETTING_MAINTAIN_SEARCH_VIEW);
 
 	AddTrueFalse(pGroupTest, _T("Move selection on open hot key"), CGetSetOptions::GetMoveSelectionOnOpenHotkey(), SETTING_MOVE_SELECTION_ON_OPEN_HOTKEY);
 	
 	CString multiPasteSeparator = CGetSetOptions::GetMultiPasteSeparator(false);
-	pGroupTest->AddSubItem( new CMFCPropertyGridProperty(_T("Multi-paste clip separator ([LF] = line feed)"), multiPasteSeparator, _T(""), SETTING_CLIP_SEPARATOR));
+	pGroupTest->AddSubItem( MakeGridProperty<CMFCPropertyGridProperty>(_T("Multi-paste clip separator ([LF] = line feed)"), multiPasteSeparator, _T(""), SETTING_CLIP_SEPARATOR));
 
 	AddTrueFalse(pGroupTest, _T("Multi-paste in reverse order"), CGetSetOptions::m_bMultiPasteReverse, SETTING_MULTIPASTE_REVERSE_ORDER);
 
 	AddTrueFalse(pGroupTest, _T("Open to group same as active exe"), CGetSetOptions::GetOpenToGroupByActiveExe(), SETTING_OPEN_TO_GROUP_AS_ACTIVE_EXE);
 
 	static TCHAR BASED_CODE szFilter[] = _T("Sounds(*.wav)|*.wav||");
-	CMFCPropertyGridFileProperty* pFileProp = new CMFCPropertyGridFileProperty(_T("On copy play the sound"), TRUE, CGetSetOptions::GetPlaySoundOnCopy(), _T("wav"), 0, szFilter, (LPCTSTR)0, SETTING_COPY_PLAY_SOUND);
+	CMFCPropertyGridFileProperty* pFileProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("On copy play the sound"), TRUE, CGetSetOptions::GetPlaySoundOnCopy(), _T("wav"), 0, szFilter, (LPCTSTR)0, SETTING_COPY_PLAY_SOUND);
 	pGroupTest->AddSubItem(pFileProp);
 
 	static TCHAR BASED_CODE szTextEditorFilter[] = _T("Applications(*.exe)|*.exe||");
-	CMFCPropertyGridFileProperty* pTextEditorProp = new CMFCPropertyGridFileProperty(_T("Text editor path (empty for system mapping)"), TRUE, CGetSetOptions::GetTextEditorPath(), _T("exe"), 0, szTextEditorFilter, (LPCTSTR)0, SETTING_TEXT_EDITOR_PATH);
+	CMFCPropertyGridFileProperty* pTextEditorProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("Text editor path (empty for system mapping)"), TRUE, CGetSetOptions::GetTextEditorPath(), _T("exe"), 0, szTextEditorFilter, (LPCTSTR)0, SETTING_TEXT_EDITOR_PATH);
 	pGroupTest->AddSubItem(pTextEditorProp);
 
 	AddTrueFalse(pGroupTest, _T("Paste clip in active window after selection"), CGetSetOptions::GetSendPasteAfterSelection(), SETTING_PASTE_IN_ACTIVE_WINDOW);	
@@ -278,16 +278,16 @@ BOOL CAdvGeneral::OnInitDialog()
 	AddTrueFalse(pGroupTest, _T("Regex case insensitive search"), CGetSetOptions::GetRegexCaseInsensitive(), SETTING_REGEX_CASE_INSENSITIVE);
 
 	static TCHAR BASED_CODE szRTFEditorFilter[] = _T("Applications(*.exe)|*.exe||");
-	CMFCPropertyGridFileProperty* pRTFEditorProp = new CMFCPropertyGridFileProperty(_T("RTF editor path"), TRUE, CGetSetOptions::GetRTFEditorPath(), _T("exe"), 0, szRTFEditorFilter, (LPCTSTR)0, SETTING_RTF_EDITOR_PATH);
+	CMFCPropertyGridFileProperty* pRTFEditorProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("RTF editor path"), TRUE, CGetSetOptions::GetRTFEditorPath(), _T("exe"), 0, szRTFEditorFilter, (LPCTSTR)0, SETTING_RTF_EDITOR_PATH);
 	pGroupTest->AddSubItem(pRTFEditorProp);
 
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Save clipboard delay (ms, default: 100)"), (long)(CGetSetOptions::GetProcessDrawClipboardDelay()), _T(""), SETTING_CLIPBOARD_SAVE_DELAY));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Save clipboard delay (ms, default: 100)"), (long)(CGetSetOptions::GetProcessDrawClipboardDelay()), _T(""), SETTING_CLIPBOARD_SAVE_DELAY));
 
 	AddTrueFalse(pGroupTest, _T("Save multi-pastes"), CGetSetOptions::GetSaveMultiPaste(), SETTING_SAVE_MULTI_PASTE);
 
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Selected index"), (long)(CGetSetOptions::SelectedIndex()+1), _T(""), SETTING_SELECTED_INDEX));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Selected index"), (long)(CGetSetOptions::SelectedIndex()+1), _T(""), SETTING_SELECTED_INDEX));
 
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Send keys delay (ms)"), (long)CGetSetOptions::RealSendKeysDelay(), _T(""), SETTING_SEND_KEYS_DELAY));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Send keys delay (ms)"), (long)CGetSetOptions::RealSendKeysDelay(), _T(""), SETTING_SEND_KEYS_DELAY));
 
 
 	AddTrueFalse(pGroupTest, _T("Show clips that are in groups in main list"), CGetSetOptions::GetShowAllClipsInMainList(), SETTING_SHOW_GROUP_CLIPS_IN_LIST);
@@ -302,18 +302,18 @@ BOOL CAdvGeneral::OnInitDialog()
 	AddTrueFalse(pGroupTest, _T("Show thumbnails(for CF_DIB and PNG types) (could increase memory usage and display speed)"), CGetSetOptions::GetDrawThumbnail(), SETTING_DRAW_THUMBNAILS);
 	
 	CString slugifySeparator = CGetSetOptions::GetSlugifySeparator();
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Slugify Separator (default: -)"), slugifySeparator, _T(""), SETTING_SLUGIFY_SEPARATOR));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Slugify Separator (default: -)"), slugifySeparator, _T(""), SETTING_SLUGIFY_SEPARATOR));
 
 	AddTrueFalse(pGroupTest, _T("Support all types ignoring supported type list (default: false))"), CGetSetOptions::GetSupportAllTypes(), SETTING_SUPPORT_ALL_TYPES);
 
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Text lines per clip"), CGetSetOptions::GetLinesPerRow(), _T(""), SETTING_LINES_PER_ROW));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Text lines per clip"), CGetSetOptions::GetLinesPerRow(), _T(""), SETTING_LINES_PER_ROW));
 
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Tooltip display time(ms) max of 32000 (-1 default (5 seconds), 0 to turn off)"), CGetSetOptions::m_tooltipTimeout, _T(""), SETTING_TOOLTIP_TIMEOUT));
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Tooltip maximum display lines"), (long)CGetSetOptions::GetMaxToolTipLines(), _T(""), SETTING_TOOLTIP_LINES));
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Tooltip display characters"), (long)CGetSetOptions::GetMaxToolTipCharacters(), _T(""), SETTING_TOOLTIP_CHARACTERS));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Tooltip display time(ms) max of 32000 (-1 default (5 seconds), 0 to turn off)"), CGetSetOptions::m_tooltipTimeout, _T(""), SETTING_TOOLTIP_TIMEOUT));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Tooltip maximum display lines"), (long)CGetSetOptions::GetMaxToolTipLines(), _T(""), SETTING_TOOLTIP_LINES));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Tooltip display characters"), (long)CGetSetOptions::GetMaxToolTipCharacters(), _T(""), SETTING_TOOLTIP_CHARACTERS));
 
 	AddTrueFalse(pGroupTest, _T("Transparency enabled"), CGetSetOptions::GetEnableTransparency(), SETTING_ENABLE_TRANSPARENCY);
-	pGroupTest->AddSubItem(new CMFCPropertyGridProperty(_T("Transparency percentage"), CGetSetOptions::GetTransparencyPercent(), _T(""), SETTING_TRANSPARENCY));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Transparency percentage"), CGetSetOptions::GetTransparencyPercent(), _T(""), SETTING_TRANSPARENCY));
 	AddTrueFalse(pGroupTest, _T("Update description on clip edit"), CGetSetOptions::GetUpdateDescWhenSavingClip(), SETTING_UPDATE_DESC_ON_CLIP_EDIT);
 	AddTrueFalse(pGroupTest, _T("Update clip order on paste"), CGetSetOptions::GetUpdateTimeOnPaste(), SETTING_UPDATE_ORDER_ON_PASTE);
 	AddTrueFalse(pGroupTest, _T("Update clip Order on ctrl-c"), CGetSetOptions::GetUpdateClipOrderOnCtrlC(), SETTING_UPDATE_ORDER_ON_CTRL_C);
@@ -321,7 +321,7 @@ BOOL CAdvGeneral::OnInitDialog()
 	AddTrueFalse(pGroupTest, _T("Write debug to file"), CGetSetOptions::GetEnableDebugLogging(), SETTING_DEBUG_TO_FILE);
 	AddTrueFalse(pGroupTest, _T("Write debug to OutputDebugString"), CGetSetOptions::GetEnableDebugLogging(), SETTING_DEBUG_TO_OUTPUT_STRING);
 
-	CMFCPropertyGridProperty * regexFilterGroup = new CMFCPropertyGridProperty(_T("Exclude clips by Regular Expressions"));
+	CMFCPropertyGridProperty * regexFilterGroup = MakeGridProperty<CMFCPropertyGridProperty>(_T("Exclude clips by Regular Expressions"));
 	m_propertyGrid.AddProperty(regexFilterGroup);
 
 	CString processFilterDesc = _T("Process making the copy first must match this before the Regex will be applied (empty or * for all processes) (separate multiples by ;)");
@@ -358,36 +358,36 @@ BOOL CAdvGeneral::OnInitDialog()
 	CString regexFilter15 = CGetSetOptions::GetRegexFilter(14);
 	CString regexProcessName15 = CGetSetOptions::GetRegexFilterByProcessName(14);
 
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("1 Regex"), regexFilter1, regexFilterDesc, SETTING_REGEX_FILTERING_1));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("1 Process Name"), regexProcessName1, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_1));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("2 Regex"), regexFilter2, regexFilterDesc, SETTING_REGEX_FILTERING_2));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("2 Process Name"), regexProcessName2, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_2));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("3 Regex"), regexFilter3, regexFilterDesc, SETTING_REGEX_FILTERING_3));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("3 Process Name"), regexProcessName3, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_3));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("4 Regex"), regexFilter4, regexFilterDesc, SETTING_REGEX_FILTERING_4));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("4 Process Name"), regexProcessName4, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_4));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("5 Regex"), regexFilter5, regexFilterDesc, SETTING_REGEX_FILTERING_5));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("5 Process Name"), regexProcessName5, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_5));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("6 Regex"), regexFilter6, regexFilterDesc, SETTING_REGEX_FILTERING_6));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("6 Process Name"), regexProcessName6, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_6));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("7 Regex"), regexFilter7, regexFilterDesc, SETTING_REGEX_FILTERING_7));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("7 Process Name"), regexProcessName7, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_7));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("8 Regex"), regexFilter8, regexFilterDesc, SETTING_REGEX_FILTERING_8));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("8 Process Name"), regexProcessName8, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_8));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("9 Regex"), regexFilter9, regexFilterDesc, SETTING_REGEX_FILTERING_9));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("9 Process Name"), regexProcessName9, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_9));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("10 Regex"), regexFilter10, regexFilterDesc, SETTING_REGEX_FILTERING_10));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("10 Process Name"), regexProcessName10, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_10));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("11 Regex"), regexFilter11, regexFilterDesc, SETTING_REGEX_FILTERING_11));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("11 Process Name"), regexProcessName11, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_11));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("12 Regex"), regexFilter12, regexFilterDesc, SETTING_REGEX_FILTERING_12));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("12 Process Name"), regexProcessName12, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_12));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("13 Regex"), regexFilter13, regexFilterDesc, SETTING_REGEX_FILTERING_13));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("13 Process Name"), regexProcessName13, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_13));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("14 Regex"), regexFilter14, regexFilterDesc, SETTING_REGEX_FILTERING_14));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("14 Process Name"), regexProcessName14, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_14));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("15 Regex"), regexFilter15, regexFilterDesc, SETTING_REGEX_FILTERING_15));
-	regexFilterGroup->AddSubItem(new CMFCPropertyGridProperty(_T("15 Process Name"), regexProcessName15, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_15));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("1 Regex"), regexFilter1, regexFilterDesc, SETTING_REGEX_FILTERING_1));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("1 Process Name"), regexProcessName1, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_1));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("2 Regex"), regexFilter2, regexFilterDesc, SETTING_REGEX_FILTERING_2));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("2 Process Name"), regexProcessName2, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_2));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("3 Regex"), regexFilter3, regexFilterDesc, SETTING_REGEX_FILTERING_3));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("3 Process Name"), regexProcessName3, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_3));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("4 Regex"), regexFilter4, regexFilterDesc, SETTING_REGEX_FILTERING_4));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("4 Process Name"), regexProcessName4, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_4));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("5 Regex"), regexFilter5, regexFilterDesc, SETTING_REGEX_FILTERING_5));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("5 Process Name"), regexProcessName5, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_5));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("6 Regex"), regexFilter6, regexFilterDesc, SETTING_REGEX_FILTERING_6));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("6 Process Name"), regexProcessName6, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_6));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("7 Regex"), regexFilter7, regexFilterDesc, SETTING_REGEX_FILTERING_7));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("7 Process Name"), regexProcessName7, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_7));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("8 Regex"), regexFilter8, regexFilterDesc, SETTING_REGEX_FILTERING_8));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("8 Process Name"), regexProcessName8, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_8));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("9 Regex"), regexFilter9, regexFilterDesc, SETTING_REGEX_FILTERING_9));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("9 Process Name"), regexProcessName9, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_9));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("10 Regex"), regexFilter10, regexFilterDesc, SETTING_REGEX_FILTERING_10));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("10 Process Name"), regexProcessName10, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_10));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("11 Regex"), regexFilter11, regexFilterDesc, SETTING_REGEX_FILTERING_11));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("11 Process Name"), regexProcessName11, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_11));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("12 Regex"), regexFilter12, regexFilterDesc, SETTING_REGEX_FILTERING_12));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("12 Process Name"), regexProcessName12, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_12));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("13 Regex"), regexFilter13, regexFilterDesc, SETTING_REGEX_FILTERING_13));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("13 Process Name"), regexProcessName13, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_13));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("14 Regex"), regexFilter14, regexFilterDesc, SETTING_REGEX_FILTERING_14));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("14 Process Name"), regexProcessName14, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_14));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("15 Regex"), regexFilter15, regexFilterDesc, SETTING_REGEX_FILTERING_15));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("15 Process Name"), regexProcessName15, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_15));
 
 	regexFilterGroup->Expand(FALSE);
 
@@ -402,11 +402,11 @@ void CAdvGeneral::AddTrueFalse(CMFCPropertyGridProperty * pGroupTest, CString de
 		stringValue = _T("True");
 	}
 
-	CMFCPropertyGridProperty *pCombo = new CMFCPropertyGridProperty(desc, stringValue, _T(""), settingId);
+	std::unique_ptr<CMFCPropertyGridProperty> pCombo{ std::make_unique<CMFCPropertyGridProperty>(desc, stringValue, _T(""), settingId) };
 	pCombo->AddOption(_T("True"));
 	pCombo->AddOption(_T("False"));
 	pCombo->AllowEdit(FALSE);
-	pGroupTest->AddSubItem(pCombo);
+	pGroupTest->AddSubItem(pCombo.release()); // ownership: the property grid
 }
 
 void CAdvGeneral::OnBnClickedOk()

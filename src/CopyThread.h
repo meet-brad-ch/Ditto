@@ -2,39 +2,39 @@
 
 #include "ClipboardViewer.h"
 #include <afxmt.h>
+#include <memory>
 
 struct CCopyConfig
 {
 public:
 	// WM_CLIPBOARD_COPIED is sent to this window when a copy is made.
-	HWND        m_hClipHandler;
+	HWND        m_hClipHandler{};
 	// true to use PostMessage (asynchronous)
 	// false to use SendMessage (synchronous)
-	bool        m_bAsyncCopy;
+	bool        m_bAsyncCopy{};
 	// true to create a copy of the clipboard contents when it changes
 	// false to ignore changes in the clipboard
-	bool        m_bCopyOnChange;
-	// the supported types which are copied from the clipboard when it changes.
-	CClipTypes* m_pSupportedTypes; // ONLY accessed from CopyThread
+	bool        m_bCopyOnChange{};
+	// the supported types which are copied from the clipboard when it changes; this config owns them
+	std::unique_ptr<CClipTypes> m_pSupportedTypes{}; // ONLY accessed from CopyThread
 
 	CCopyConfig( HWND hClipHandler = NULL,
 	             bool bAsyncCopy = false,
 				 bool bCopyOnChange = false,
-				 CClipTypes* pSupportedTypes = NULL )
+				 std::unique_ptr<CClipTypes> pSupportedTypes = nullptr )
+		: m_hClipHandler(hClipHandler),
+		  m_bAsyncCopy(bAsyncCopy),
+		  m_bCopyOnChange(bCopyOnChange),
+		  m_pSupportedTypes(std::move(pSupportedTypes))
 	{
-		m_hClipHandler = hClipHandler;
-		m_bAsyncCopy = bAsyncCopy;
-		m_bCopyOnChange = bCopyOnChange;
-		m_pSupportedTypes = pSupportedTypes;
 	}
 
-	void DeleteTypes()
+	// Copies the settings of another config; the supported types stay with their owner
+	void CopySettingsFrom(const CCopyConfig& other)
 	{
-		if( m_pSupportedTypes )
-		{
-			delete m_pSupportedTypes;
-			m_pSupportedTypes = NULL;
-		}
+		m_hClipHandler = other.m_hClipHandler;
+		m_bAsyncCopy = other.m_bAsyncCopy;
+		m_bCopyOnChange = other.m_bCopyOnChange;
 	}
 };
 
@@ -58,7 +58,7 @@ public:
 
 	// CopyThread Local (accessed from this CopyThread)
 	// window owned by this thread which handles clipboard viewer messages
-	CClipboardViewer*   m_pClipboardViewer; // permanent during lifetime of thread
+	std::unique_ptr<CClipboardViewer> m_pClipboardViewer{}; // permanent during lifetime of thread
 	CCopyConfig         m_LocalConfig;
 
 	// Called within Copy Thread:
@@ -74,7 +74,7 @@ public:
 	bool GetConnectCV();
 	void SetConnectCV(bool bConnect);
 
-	void SetSupportedTypes(CClipTypes* pTypes); // CopyThread will own pTypes
+	void SetSupportedTypes(std::unique_ptr<CClipTypes> pTypes); // CopyThread owns pTypes from now on
 	HWND SetClipHandler(HWND hWnd); // returns previous value
 	HWND GetClipHandler();
 	bool SetCopyOnChange(bool bVal); // returns previous value

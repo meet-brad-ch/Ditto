@@ -1,32 +1,37 @@
 #pragma once
 
+#include <memory>
+
 class CGdiPlusBitmap
 {
 public:
-	Gdiplus::Bitmap* m_pBitmap;
+	/** @brief The loaded bitmap (owned); empty when nothing is loaded. */
+	std::unique_ptr<Gdiplus::Bitmap> m_pBitmap{};
 
 public:
-	CGdiPlusBitmap()							{ m_pBitmap = NULL; }
-	CGdiPlusBitmap(LPCWSTR pFile)				{ m_pBitmap = NULL; Load(pFile); }
+	CGdiPlusBitmap()							{ }
+	CGdiPlusBitmap(LPCWSTR pFile)				{ Load(pFile); }
 	virtual ~CGdiPlusBitmap()					{ Empty(); }
 
-	void Empty()								{ delete m_pBitmap; m_pBitmap = NULL; }
+	/** @brief Frees the loaded bitmap. */
+	void Empty()								{ m_pBitmap.reset(); }
 
 	bool Load(LPCWSTR pFile)
 	{
 		Empty();
-		m_pBitmap = Gdiplus::Bitmap::FromFile(pFile);
+		m_pBitmap.reset(Gdiplus::Bitmap::FromFile(pFile));
 		return m_pBitmap->GetLastStatus() == Gdiplus::Ok;
 	}
 
 	bool Loads(LPCWSTR pFile)
 	{
 		Empty();
-		m_pBitmap = Gdiplus::Bitmap::FromFile(pFile);
+		m_pBitmap.reset(Gdiplus::Bitmap::FromFile(pFile));
 		return m_pBitmap->GetLastStatus() == Gdiplus::Ok;
 	}
 
-	operator Gdiplus::Bitmap*() const			{ return m_pBitmap; }
+	/** @brief The loaded bitmap (non-owning), NULL when nothing is loaded. */
+	operator Gdiplus::Bitmap*() const			{ return m_pBitmap.get(); }
 };
 
 
@@ -113,15 +118,14 @@ public:
 				IStream* pStream = NULL;
 				if (::CreateStreamOnHGlobal(m_hBuffer, FALSE, &pStream) == S_OK)
 				{
-					m_pBitmap = Gdiplus::Bitmap:: FromStream(pStream);
+					m_pBitmap.reset(Gdiplus::Bitmap:: FromStream(pStream));
 					pStream->Release();
 					if (m_pBitmap)
-					{ 
+					{
 						if (m_pBitmap->GetLastStatus() == Gdiplus::Ok)
 							return true;
 
-						delete m_pBitmap;
-						m_pBitmap = NULL;
+						m_pBitmap.reset();
 					}
 				}
 				::GlobalUnlock(m_hBuffer);
@@ -186,15 +190,14 @@ bool CGdiPlusBitmapResource::Load(LPCTSTR pName, LPCTSTR pType, HMODULE hInst)
 			IStream* pStream = NULL;
 			if (::CreateStreamOnHGlobal(m_hBuffer, FALSE, &pStream) == S_OK)
 			{
-				m_pBitmap = Gdiplus::Bitmap:: FromStream(pStream);
+				m_pBitmap.reset(Gdiplus::Bitmap:: FromStream(pStream));
 				pStream->Release();
 				if (m_pBitmap)
-				{ 
+				{
 					if (m_pBitmap->GetLastStatus() == Gdiplus::Ok)
 						return true;
 
-					delete m_pBitmap;
-					m_pBitmap = NULL;
+					m_pBitmap.reset();
 				}
 			}
 			::GlobalUnlock(m_hBuffer);

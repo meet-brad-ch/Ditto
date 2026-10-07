@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "sendkeys.h"
 
+#include <vector>
+
 /* 
 * ----------------------------------------------------------------------------- 
 * Copyright (c) 2004 lallous <lallousx86@yahoo.com>
@@ -699,27 +701,26 @@ bool CSendKeys::AppActivate(LPCTSTR WindowTitle, LPCTSTR WindowClass)
     if (WindowClass)
       l2 = _tcslen(WindowClass);
 
-    LPTSTR titleclass = new TCHAR [l1 + l2 + 5];
-
-    memset(titleclass, '\0', l1+l2+5);
+    // zero-filled: "title\0class\0"
+    std::vector<TCHAR> titleclass{};
+    titleclass.assign(l1 + l2 + 5, _T('\0'));
 
     if (WindowTitle)
-      _tcscpy(titleclass, WindowTitle);
+      _tcscpy(titleclass.data(), WindowTitle);
 
     titleclass[l1] = 0;
 
     if (WindowClass)
-      _tcscpy(titleclass+l1+1, WindowClass);
+      _tcscpy(titleclass.data()+l1+1, WindowClass);
 
     // >>
 
     enumwindow_t t;
 
     t.hwnd = NULL;
-    t.str  = titleclass;
+    t.str  = titleclass.data();
     ::EnumWindows(enumwindowsProc, (LPARAM) & t);
     w = t.hwnd;
-    delete [] titleclass;
   }
 
   if (w == NULL)

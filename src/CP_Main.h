@@ -24,6 +24,7 @@
 #include "UAC_Thread.h"
 #include "ICU_String.h"
 #include "ClipEditThread.h"
+#include <memory>
 
 
 extern class CCP_MainApp theApp;
@@ -46,12 +47,14 @@ public:
 
 	// MainFrame
 	HWND m_MainhWnd;
+	// non-owning: each frame window deletes itself (CFrameWnd::PostNcDestroy)
 	CMainFrame* m_pMainFrame;
 	CFrameWnd* m_pNoDbMainFrame;
 	bool AfterMainCreate();  // called after main window creation; false: Ditto cannot run (reported)
 	void BeforeMainClose();  // called before main window close
 
 // System-wide HotKeys
+	// g_HotKeys owns every hot key; the CHotKey* members below are non-owning pointers into it
 	CHotKey* m_pDittoHotKey; // activate ditto's qpaste window
 	CHotKey* m_pDittoHotKey2; // activate ditto's qpaste window
 	CHotKey* m_pDittoHotKey3; // activate ditto's qpaste window
@@ -112,7 +115,7 @@ public:
 	BOOL GetClipData(long lID, CClipFormat& Clip);
 	bool EditItems(CClipIDs& Ids, bool bShowError, bool forceTextEdit);
 
-	CClipTypes* LoadTypesFromDB(); // returns a "new" allocated object
+	std::unique_ptr<CClipTypes> LoadTypesFromDB(); // a new types array; null when the database read failed
 	void ReloadTypes();
 	void RefreshView(CopyReasonEnum::CopyReason copyReason = CopyReasonEnum::COPY_TO_UNKOWN); // refreshes the view if it is visible
 	void RefreshClipInUI(int clipId, int updateFlags);
@@ -204,7 +207,7 @@ protected:
 	void ShowCommandLineError(CString csTitle, CString csMessage);
 	// Puts an exported clip file given on the command line on the clipboard; reports any error
 	void ImportFileFromCommandLine(const CString& fileName);
-	CUAC_Thread* m_pUacPasteThread;
+	std::unique_ptr<CUAC_Thread> m_pUacPasteThread{}; // owned; created on the first UAC paste/copy/cut
 
 	int m_activeGroupId;
 	ULONGLONG m_activeGroupStartTime{};

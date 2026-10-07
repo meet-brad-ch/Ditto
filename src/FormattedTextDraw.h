@@ -88,8 +88,6 @@ public:
 		SetRectEmpty(&m_rcClient);
 		SetRectEmpty(&m_rcViewInset);
 
-		m_pCF = (CHARFORMAT2W*) malloc(sizeof(CHARFORMAT2W));
-
 		InitDefaultCharFormat();
 		InitDefaultParaFormat();
 		m_spTextServices = NULL;
@@ -105,7 +103,6 @@ public:
 		if (m_RTFText != NULL)
 			SysFreeString(m_RTFText);
 
-		free(m_pCF);
 		if (m_spTextServices != NULL)
 			m_spTextServices->Release();
 		if (m_spTextDocument != NULL)
@@ -195,7 +192,8 @@ public:
 	int				nPixelsPerInchX;    // Pixels per logical inch along width
 	int				nPixelsPerInchY;    // Pixels per logical inch along height
 
-	CHARFORMAT2W	*m_pCF;
+	/** @brief The default character format the text services read through TxGetCharFormat. */
+	CHARFORMAT2W	m_CF{};
 	PARAFORMAT2		m_PF;
 	DWORD			m_dwScrollbar;		// Scroll bar style
 	DWORD			m_dwPropertyBits;	// Property bits

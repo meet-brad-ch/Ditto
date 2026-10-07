@@ -262,7 +262,7 @@ HRESULT	CFormattedTextDraw::TxGetViewInset(LPRECT prc)
 
 HRESULT CFormattedTextDraw::TxGetCharFormat(const CHARFORMATW **ppCF)
 {
-	*ppCF = m_pCF;
+	*ppCF = &m_CF;
 	return S_OK;
 }
 
@@ -313,7 +313,7 @@ HRESULT	CFormattedTextDraw::TxGetExtent(LPSIZEL /*lpExtent*/)
 
 HRESULT CFormattedTextDraw::OnTxCharFormatChange(const CHARFORMATW * pcf)
 {
-	memcpy(m_pCF, pcf, pcf->cbSize);
+	memcpy(&m_CF, pcf, pcf->cbSize);
 	return S_OK;
 }
 
@@ -412,7 +412,7 @@ HRESULT CFormattedTextDraw::CharFormatFromHFONT(CHARFORMAT2W* pCF, HFONT hFont)
 
 HRESULT CFormattedTextDraw::InitDefaultCharFormat()
 {
-	return CharFormatFromHFONT(m_pCF, NULL);
+	return CharFormatFromHFONT(&m_CF, NULL);
 }
 
 HRESULT CFormattedTextDraw::InitDefaultParaFormat()

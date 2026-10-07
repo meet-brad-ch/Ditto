@@ -306,8 +306,7 @@ void CToolTipEx::GetWindowRectEx(LPRECT lpRect)
 
 BOOL CToolTipEx::Hide()
 {
-	delete m_imageViewer.m_pGdiplusBitmap;
-	m_imageViewer.m_pGdiplusBitmap = NULL;
+	m_imageViewer.m_pGdiplusBitmap.reset();
 
 	SaveWindowSize();	
 	ShowWindow(SW_HIDE);
@@ -360,7 +359,7 @@ void CToolTipEx::PostNcDestroy()
 {
 	CWnd::PostNcDestroy();
 
-	delete this;
+	delete this; // ownership: the window (a self-deleting window ends here)
 }
 
 BOOL CToolTipEx::PreTranslateMessage(MSG *pMsg)
@@ -692,12 +691,9 @@ BOOL CToolTipEx::SetLogFont(LPLOGFONT lpLogFont, BOOL bRedraw /*=TRUE*/)
     return TRUE;
 }
 
-void CToolTipEx::SetGdiplusBitmap(Gdiplus::Bitmap *gdiplusBitmap)
+void CToolTipEx::SetGdiplusBitmap(std::unique_ptr<Gdiplus::Bitmap> gdiplusBitmap)
 {
-	delete m_imageViewer.m_pGdiplusBitmap;
-	m_imageViewer.m_pGdiplusBitmap = NULL;
-
-	m_imageViewer.m_pGdiplusBitmap = gdiplusBitmap;
+	m_imageViewer.m_pGdiplusBitmap = std::move(gdiplusBitmap);
 	m_imageViewer.UpdateBitmapSize(true);
 	Invalidate();
 }
@@ -1120,7 +1116,7 @@ void CToolTipEx::OnOptions()
 		{
 			cmSubMenu->CheckMenuItem(ID_FIRST_VIEWASIMAGE, MF_CHECKED);
 		}
-		if (m_imageViewer.m_pGdiplusBitmap == NULL)
+		if (m_imageViewer.m_pGdiplusBitmap == nullptr)
 		{
 			cmSubMenu->EnableMenuItem(ID_FIRST_VIEWASIMAGE, MF_DISABLED);
 		}

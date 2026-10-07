@@ -653,13 +653,13 @@ CString CGetSetOptions::GetProfileString(CString csName, CString csDefault, CStr
 			}
 
 			dwBufLen++;
-			TCHAR *szString = new TCHAR[dwBufLen];
-			ZeroMemory(szString, dwBufLen);
+			// zero filled, so the text is always terminated
+			std::vector<TCHAR> buffer{};
+			buffer.resize(dwBufLen);
 
-			lResult = ::RegQueryValueEx(hkKey, csName, NULL, NULL, (LPBYTE)szString, &dwBufLen);
+			lResult = ::RegQueryValueEx(hkKey, csName, NULL, NULL, reinterpret_cast<LPBYTE>(buffer.data()), &dwBufLen);
 
-			returnString = szString;
-			delete[] szString;
+			returnString = buffer.data();
 		}
 
 		RegCloseKey(hkKey);
@@ -794,34 +794,35 @@ BOOL CGetSetOptions::SetProfileFont(CString csSection, LOGFONT &font)
 	return TRUE;
 }
 
-LPVOID CGetSetOptions::GetProfileData(CString csName, DWORD &dwLength)
+std::vector<BYTE> CGetSetOptions::GetProfileData(CString csName)
 {
 	if(m_bFromIni && !m_bInConversion)
 	{
 		ASSERT(!"GetProfileData not supported in .ini settings");
-		return NULL;
+		return {};
 	}
 
-	HKEY hkKey;
+	// closes the key on every return
+	ATL::CRegKey key{};
+	if(key.Open(HKEY_CURRENT_USER, _T(REG_PATH), KEY_READ) != ERROR_SUCCESS)
+		return {};
 
-	long lResult = RegOpenKeyEx(HKEY_CURRENT_USER, _T(REG_PATH),
-		NULL, KEY_READ, &hkKey);
-
-	lResult = ::RegQueryValueEx(hkKey , csName, NULL, NULL, NULL, &dwLength);
-
-	if(lResult != ERROR_SUCCESS)
-		return NULL;
-
-	LPVOID lpVoid = new BYTE[dwLength];
-
-	lResult = ::RegQueryValueEx(hkKey , csName, NULL, NULL, (LPBYTE)lpVoid, &dwLength);
-
-	RegCloseKey(hkKey);
+	DWORD dwLength{};
+	long lResult{::RegQueryValueEx(key.m_hKey, csName, NULL, NULL, NULL, &dwLength)};
 
 	if(lResult != ERROR_SUCCESS)
-		return NULL;
+		return {};
 
-	return lpVoid;
+	std::vector<BYTE> data{};
+	data.resize(dwLength);
+
+	lResult = ::RegQueryValueEx(key.m_hKey, csName, NULL, NULL, data.data(), &dwLength);
+
+	if(lResult != ERROR_SUCCESS)
+		return {};
+
+	data.resize(dwLength);
+	return data;
 }
 
 BOOL CGetSetOptions::GetShowIconInSysTray() 
@@ -1397,24 +1398,18 @@ BOOL CGetSetOptions::GetFont(LOGFONT &font)
 	}
 	else
 	{
-		DWORD dwLength = 0;
-		LPVOID lpVoid = GetProfileData("DisplayFont6", dwLength);
-		if(lpVoid)
+		const std::vector<BYTE> data{GetProfileData("DisplayFont6")};
+		if(!data.empty())
 		{
-			if(sizeof(font) == dwLength)
+			if(sizeof(font) == data.size())
 			{
-				memcpy(&font, lpVoid, dwLength);
-				delete[] lpVoid;
-				lpVoid = NULL;
+				memcpy(&font, data.data(), data.size());
 				return TRUE;
 			}
 			else
 			{
 				ASSERT(!"invalid font struct size");
 			}
-
-			delete[] lpVoid;
-			lpVoid = NULL;
 		}
 	}
 

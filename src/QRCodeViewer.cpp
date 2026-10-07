@@ -15,16 +15,10 @@ IMPLEMENT_DYNAMIC(QRCodeViewer, CWnd)
 
 QRCodeViewer::QRCodeViewer()
 {
-	m_descBackground = NULL;
-
 }
 
 QRCodeViewer::~QRCodeViewer()
 {
-	if(m_descBackground != NULL)
-	{
-		DeleteObject(m_descBackground);
-	}
 }
 
 BEGIN_MESSAGE_MAP(QRCodeViewer, CWnd)
@@ -46,20 +40,21 @@ BEGIN_MESSAGE_MAP(QRCodeViewer, CWnd)
 END_MESSAGE_MAP()
 
 
-BOOL QRCodeViewer::CreateEx(CWnd *pParentWnd, std::vector<std::byte> bitmap, CString desc, int rowHeight, LOGFONT logFont)
+BOOL QRCodeViewer::LoadQrBitmap(std::vector<std::byte> bitmap)
+{
+	// before the window exists: a bitmap GDI+ cannot read fails the load (the caller reports
+	// it); LoadRaw copies the bytes into its own buffer
+	return m_qrCodeDrawer.LoadRaw(reinterpret_cast<unsigned char*>(bitmap.data()), static_cast<int>(bitmap.size()));
+}
+
+BOOL QRCodeViewer::CreateEx(CWnd *pParentWnd, CString desc, int rowHeight, LOGFONT logFont)
 {
 	// Get the class name and create the window
 	CString szClassName = AfxRegisterWndClass(CS_CLASSDC | CS_SAVEBITS, LoadCursor(NULL, IDC_ARROW));
 
-	// before the window exists: a bitmap GDI+ cannot read fails the creation (the caller reports
-	// it); LoadRaw copies the bytes into its own buffer
-	if (!m_qrCodeDrawer.LoadRaw(reinterpret_cast<unsigned char*>(bitmap.data()), static_cast<int>(bitmap.size())))
-	{
-		return FALSE;
-	}
-
 	m_descRowHeight = rowHeight;
-	m_descBackground = CreateSolidBrush(RGB(255, 255, 255));
+	m_descBackground.DeleteObject();
+	m_descBackground.CreateSolidBrush(RGB(255, 255, 255));
 	m_logFont = logFont;
 	m_originalFontHeight = logFont.lfHeight;
 
@@ -183,7 +178,7 @@ void QRCodeViewer::PostNcDestroy()
 {
     CWnd::PostNcDestroy();
 
-    delete this;
+    delete this; // ownership: the window (a self-deleting window ends here)
 }
 
 void QRCodeViewer::OnNcPaint()
@@ -254,7 +249,7 @@ HBRUSH QRCodeViewer::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 	{
 		pDC->SetBkColor(RGB(255,255,255));
 
-		return m_descBackground;
+		return static_cast<HBRUSH>(m_descBackground.GetSafeHandle());
 	}
 
 	// TODO:  Return a different brush if the default is not desired

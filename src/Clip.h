@@ -75,7 +75,7 @@ public:
 	// The format's UTF-16 text up to the first null or the end of the block; empty without data
 	CString GetAsCString();
 	
-	Gdiplus::Bitmap *CreateGdiplusBitmap();
+	std::unique_ptr<Gdiplus::Bitmap> CreateGdiplusBitmap();
 };
 
 /*----------------------------------------------------------------------------*\
@@ -206,7 +206,7 @@ public:
 
 	bool AddFileDataToData(CString &errorMessage);
 
-	Gdiplus::Bitmap *CreateGdiplusBitmap();
+	std::unique_ptr<Gdiplus::Bitmap> CreateGdiplusBitmap();
 	
 protected:
 	// Adds the Main row and the Data rows, and clears another clip's top-sticky setting, in one
@@ -285,15 +285,27 @@ private:
 	CClipList
 \*----------------------------------------------------------------------------*/
 
-class CClipList : public CList<CClip*,CClip*>
+// An ordered list of clips that owns them
+class CClipList
 {
 public:
-	~CClipList();
+	// Appends a clip at the end; the list owns it from now on
+	void Add(std::unique_ptr<CClip> clip);
+	// Moves all clips into the returned list, in order; this list is empty afterwards
+	CClipList TakeAll();
 	// returns the number of clips actually saved
 	// while this does empty the Format Data, it does not delete the Clips.
 	int AddToDB( bool bLatestOrder = false);
+	// The clip added last; the list must not be empty
+	CClip& Last();
+	// The number of clips in the list
+	size_t Count() const { return m_clips.size(); }
+	// True when the list holds no clips
+	bool IsEmpty() const { return m_clips.empty(); }
 
-	const CClipList& operator=(const CClipList &cliplist);
+private:
+	// The clips, in the order they were added
+	std::vector<std::unique_ptr<CClip>> m_clips{};
 };
 
 #endif // !defined(AFX_PROCESSCOPY_H__185CBB6F_4B63_4397_8FF9_E18D777DA506__INCLUDED_)

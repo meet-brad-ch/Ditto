@@ -26,6 +26,9 @@
 
 #pragma once
 
+#include <memory>
+#include <type_traits>
+
 #include "GdiImageDrawer.h"
 #include "Accels.h"
 #include "DPI.h"
@@ -36,9 +39,19 @@ class CSymbolEdit : public CEdit
 {
 	DECLARE_DYNAMIC(CSymbolEdit)
 
+	/** @brief Destroys an icon handle: the deleter of m_hSymbolIcon. */
+	struct IconDestroyer
+	{
+		/**
+		 * @brief Destroys the icon.
+		 * @param hIcon the icon handle.
+		 */
+		void operator()(HICON hIcon) const { ::DestroyIcon(hIcon); }
+	};
+
 	CFont m_fontPrompt;
-	HICON m_hSymbolIcon;
-	bool m_bInternalIcon;
+	/** @brief The symbol icon (owned, also when handed in by SetSymbolIcon(HICON)); empty when there is none. */
+	std::unique_ptr<std::remove_pointer_t<HICON>, IconDestroyer> m_hSymbolIcon{};
 	CString m_strPromptText;
 	COLORREF m_colorPromptText;
 

@@ -115,7 +115,7 @@ __int64 GetLastWriteTime(const CString &csFile);
 #define WM_CV_IS_CONNECTED		WM_USER + 202
 #define WM_CLOSE_APP			WM_USER + 204
 #define WM_REFRESH_VIEW			WM_USER + 205
-#define WM_CLIPBOARD_COPIED		WM_USER + 206
+#define WM_CLIPBOARD_COPIED		WM_USER + 206	// wParam: CClip* owned by the receiver (CMainFrame::OnClipboardCopied)
 #define WM_SHOW_OWNED_ERROR_MSG	WM_USER + 207	// wParam: CString* owned by the receiver (CErrorReport)
 #define WM_FOCUS_CHANGED		WM_USER + 209
 #define WM_CV_GETCONNECT		WM_USER + 211
@@ -132,7 +132,7 @@ __int64 GetLastWriteTime(const CString &csFile);
 #define WM_SAVE_CLIPBOARD WM_USER + 223
 #define WM_READD_TASKBAR_ICON WM_USER + 224
 #define WM_REOPEN_DATABASE WM_USER + 225
-#define WM_SHOW_MSG_WINDOW WM_USER + 226
+#define WM_SHOW_MSG_WINDOW WM_USER + 226	// wParam: CString* owned by the receiver (CMainFrame::OnShowMsgWindow)
 #define WM_SHOW_DITTO_GROUP WM_USER + 227
 #define WM_PLAIN_TEXT_PASTE WM_USER + 228
 #define WM_RESTORE_DB	WM_USER + 230

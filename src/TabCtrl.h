@@ -127,7 +127,10 @@ protected:
 	CBrush m_brNonSelectedTab;
 	CPen m_penGray;
 	CPen m_penBlack;
-	CFont *m_pFntText, *m_pFntBoldText;
+	/** @brief The font of the inactive tabs; empty until SetTabHeight. */
+	CFont m_fntText{};
+	/** @brief The font of the active tab; empty until SetTabHeight. */
+	CFont m_fntBoldText{};
 	ButtonState m_btnState[2];
 	bool m_bBtnEnabled[2];
 	int m_nLeftShifted;

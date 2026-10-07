@@ -8,12 +8,12 @@ template <class Concrete, class GdipImage>
 class ImageHelper abstract
 {
 public:
-	static GdipImage* GdipImageFromHGLOBAL(HGLOBAL hGlobal) {
+	static std::unique_ptr<GdipImage> GdipImageFromHGLOBAL(HGLOBAL hGlobal) {
 		CComPtr<IStream> stream = StreamFromHGLOBAL(hGlobal);
 		if (!stream)
-			return NULL;
+			return nullptr;
 
-		return GdipImage::FromStream(stream);
+		return std::unique_ptr<GdipImage>{ GdipImage::FromStream(stream) };
 	};
 	static std::shared_ptr<CImage> CImageFromHGLOBAL(HGLOBAL hGlobal) {
 		CComPtr<IStream> stream = StreamFromHGLOBAL(hGlobal);

@@ -214,18 +214,14 @@ CString CClipFormat::GetAsCString()
 	return CString(text.c_str(), static_cast<int>(text.size()));
 }
 
-Gdiplus::Bitmap *CClipFormat::CreateGdiplusBitmap()
+std::unique_ptr<Gdiplus::Bitmap> CClipFormat::CreateGdiplusBitmap()
 {
 	if (this->m_cfType != CF_DIB && this->m_cfType != theApp.m_PNG_Format)
-		return NULL;
+		return nullptr;
 
-	Gdiplus::Bitmap *gdipBitmap;
 	if (this->m_cfType == theApp.m_PNG_Format)
-		gdipBitmap = PNGImageHelper::GdipImageFromHGLOBAL(this->m_hgData);
-	else
-		gdipBitmap = DIBImageHelper::GdipImageFromHGLOBAL(this->m_hgData);
-
-	return gdipBitmap;
+		return PNGImageHelper::GdipImageFromHGLOBAL(this->m_hgData);
+	return DIBImageHelper::GdipImageFromHGLOBAL(this->m_hgData);
 }
 
 /*----------------------------------------------------------------------------*\
@@ -1696,7 +1692,7 @@ bool CClip::AddFileDataToData(CString &errorMessage)
 	return addedFileData;
 }
 
-Gdiplus::Bitmap *CClip::CreateGdiplusBitmap()
+std::unique_ptr<Gdiplus::Bitmap> CClip::CreateGdiplusBitmap()
 {
 	CClipFormat *png = this->m_Formats.FindFormat(GetFormatID(_T("PNG")));
 	if (png != NULL)
@@ -1751,14 +1747,23 @@ bool CClip::SaveFromEditWnd(BOOL bUpdateDesc)
 CClipList
 \*----------------------------------------------------------------------------*/
 
-CClipList::~CClipList()
+void CClipList::Add(std::unique_ptr<CClip> clip)
 {
-	CClip* pClip;
-	while(GetCount())
-	{
-		pClip = RemoveHead();
-		delete pClip;
-	}
+	ASSERT(clip);
+	m_clips.push_back(std::move(clip));
+}
+
+CClipList CClipList::TakeAll()
+{
+	CClipList taken{};
+	taken.m_clips.swap(m_clips);
+	return taken;
+}
+
+CClip& CClipList::Last()
+{
+	ASSERT(!m_clips.empty());
+	return *m_clips.back();
 }
 
 // returns the number of clips actually saved
@@ -1767,21 +1772,18 @@ int CClipList::AddToDB(bool bLatestOrder)
 {
 	Log(_T("AddToDB - Start"));
 
-	int savedCount = 0;
-	CClip* pClip;
-	POSITION pos;
-	bool bResult;
-	
-	INT_PTR remaining = GetCount();
-	pos = GetHeadPosition();
-	while(pos)
+	int savedCount{0};
+	bool bResult{false};
+
+	INT_PTR remaining{static_cast<INT_PTR>(m_clips.size())};
+	for(const std::unique_ptr<CClip>& clip : m_clips)
 	{
 		Log(StrF(_T("AddToDB - while(pos), Start Remaining %d"), remaining));
 		remaining--;
-		
-		pClip = GetNext(pos);
+
+		CClip* pClip{clip.get()};
 		ASSERT(pClip);
-		
+
 		if(bLatestOrder)
 		{
 			pClip->MakeLatestOrder();
@@ -1800,27 +1802,4 @@ int CClipList::AddToDB(bool bLatestOrder)
 	Log(StrF(_T("AddToDB - Start, count: %d"), savedCount));
 	
 	return savedCount;
-}
-
-const CClipList& CClipList::operator=(const CClipList &cliplist)
-{
-	POSITION pos;
-	CClip* pClip;
-	
-	pos = cliplist.GetHeadPosition();
-	while(pos)
-	{
-		pClip = cliplist.GetNext(pos);
-		ASSERT(pClip);
-
-		CClip *pNewClip = new CClip;
-		if(pNewClip)
-		{
-			*pNewClip = *pClip;
-			
-			AddTail(pNewClip);
-		}
-	}
-	
-	return *this;
 }

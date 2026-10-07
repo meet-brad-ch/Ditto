@@ -3,6 +3,8 @@
 #include "ClipboardSaveRestore.h"
 #include "afxmt.h"
 
+#include <memory>
+
 class CClipboardSaveRestoreCopyBuffer : public CClipboardSaveRestore
 {
 public:
@@ -39,5 +41,6 @@ protected:
 	CEvent m_ActiveTimer;
 	CEvent m_RestoreTimer;
 	CEvent m_Pasting;
-	CClipboardSaveRestoreCopyBuffer *m_pClipboard{};
+	// The clipboard saved by PastCopyBuffer; DelayRestoreClipboard takes it over and restores it
+	std::unique_ptr<CClipboardSaveRestoreCopyBuffer> m_pClipboard{};
 };

@@ -133,8 +133,8 @@ int CDittoRulerRichEditCtrl::SaveToDB(BOOL bUpdateDesc)
 	try
 	{
 		//only save the types if they have them set as save types, mainly rtf type
-		CClipTypes* pTypes = theApp.LoadTypesFromDB();
-		if (pTypes == NULL)
+		const std::unique_ptr<CClipTypes> pTypes{theApp.LoadTypesFromDB()};
+		if (!pTypes)
 		{
 			return FALSE; // LoadTypesFromDB reported the failure
 		}

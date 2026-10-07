@@ -9,6 +9,8 @@
 #include "NTray.h"
 #include "EditFrameWnd.h"
 
+#include <memory>
+
 #define CLOSE_WINDOW_TIMER				1	
 #define HIDE_ICON_TIMER					2
 #define REMOVE_OLD_ENTRIES_TIMER		3
@@ -67,9 +69,10 @@ public:
     short m_keyModifiersTimerCount;
     HWND m_tempFocusWnd{};
     CMainFrmThread m_thread;
-	CDialog *m_pGlobalClips;
-	CDialog *m_pDeleteClips;
-	CPropertySheet *m_pOptions;
+	// The modeless dialogs while open; each is destroyed when its WM_*_CLOSED message arrives
+	std::unique_ptr<CDialog> m_pGlobalClips{};
+	std::unique_ptr<CDialog> m_pDeleteClips{};
+	std::unique_ptr<CPropertySheet> m_pOptions{};
 	int m_doubleClickGroupId;
 	ULONGLONG m_doubleClickGroupStartTime{};
 	CPowerManager m_PowerManager;
@@ -84,13 +87,13 @@ public:
 	void StartKeyModifierTimer();
 
 	bool PasteQuickPasteEntry(CString csQuickPaste);
-    bool SaveQuickPasteEntry(CString csQuickPaste, CClipList *pClipList);
     void ShowErrorMessage(CString csTitle, CString csMessage);
     bool CloseAllOpenDialogs();
 	void DoTextOnlyPaste();
 	void RefreshShowInTaskBar();
 
     void ShowEditWnd(CClipIDs &Ids);
+    // The open edit frame (it deletes itself in PostNcDestroy); null when closed
     CEditFrameWnd* m_pEditFrameWnd;
 
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "RichEditCtrlEx.h"
 #include "WndEx.h"
 #include "DittoWindow.h"
@@ -26,7 +28,11 @@ public:
 	BOOL Hide();
 	void SetToolTipText(const CString &csText);
 	void SetRTFText(const CStringA &rtf);
-	void SetGdiplusBitmap(Gdiplus::Bitmap *gdiplusBitmap);
+	/**
+	 * @brief Shows an image (replacing the previous one) and takes ownership of it.
+	 * @param gdiplusBitmap the image; empty to show none.
+	 */
+	void SetGdiplusBitmap(std::unique_ptr<Gdiplus::Bitmap> gdiplusBitmap);
 	void SetNotifyWnd(CWnd *pNotify)		{ m_pNotifyWnd = pNotify;	}
 	void HideWindowInXMilliSeconds(long lms);
 	CRect GetBoundsRect();

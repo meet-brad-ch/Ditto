@@ -4,6 +4,7 @@
 #include "RegExFilterHelper.h"
 #include "ClipSavePolicy.h"
 #include <set>
+#include <vector>
 
 #define MAX_COPY_BUFFER	3
 class CCopyBufferItem
@@ -90,7 +91,8 @@ public:
 	static CString GetProfileString(CString csName, CString csDefault, CString csNewPath = _T(""), int maxSize = -1);
 	static BOOL	SetProfileString(CString csName, CString csValue);
 
-	static LPVOID GetProfileData(CString csName, DWORD &dwLength);
+	// The registry value's bytes; empty when the value does not exist or cannot be read
+	static std::vector<BYTE> GetProfileData(CString csName);
 	static BOOL	SetProfileData(CString csName, LPVOID lpData, DWORD dwLength);
 
 	static BOOL SetQuickPasteSize(CSize size);

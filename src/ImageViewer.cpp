@@ -16,13 +16,11 @@ CImageViewer::CImageViewer()
 {
 	m_scrollHelper.AttachWnd(this);
 	m_hoveringOverImage = false;
-	m_pGdiplusBitmap = NULL;
 	m_scale = 1;
 }
 
 CImageViewer::~CImageViewer()
 {
-	delete m_pGdiplusBitmap;
 }
 
 
@@ -75,7 +73,7 @@ BOOL CImageViewer::Create(CWnd* pParent)
 
 void CImageViewer::UpdateBitmapSize(bool setScale)
 {
-	if (m_pGdiplusBitmap != NULL)
+	if (m_pGdiplusBitmap != nullptr)
 	{
 		if (setScale)
 		{
@@ -145,7 +143,7 @@ void CImageViewer::OnPaint()
 		int nW = (int)(rect.Width() * (1 / m_scale));
 		int nH = (int)(rect.Height() * (1 / m_scale));
 
-		graphics.DrawImage(m_pGdiplusBitmap, dest, s.cx, s.cy, nW, nH, Gdiplus::UnitPixel, &attrs);
+		graphics.DrawImage(m_pGdiplusBitmap.get(), dest, s.cx, s.cy, nW, nH, Gdiplus::UnitPixel, &attrs);
 
 		//OutputDebugString(StrF(_T("OnPaint, Width: %d, New Width: %d\r\n"), rect.Width(), (int)nW));
 	}

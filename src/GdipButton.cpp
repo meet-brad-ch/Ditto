@@ -42,9 +42,6 @@ static char THIS_FILE[] = __FILE__;
 
 CGdipButton::CGdipButton()
 {
-	m_pStdImage = NULL;
-	m_pAltImage = NULL;
-
 	m_bHaveBitmaps = FALSE;
 	m_bHaveAltImage = FALSE;
 
@@ -58,15 +55,10 @@ CGdipButton::CGdipButton()
 
 	m_nCurType = STD_TYPE;
 
-	m_pToolTip = NULL;
-
 }
 
 CGdipButton::~CGdipButton()
 {
-	if(m_pStdImage) delete m_pStdImage;
-	if(m_pAltImage) delete m_pAltImage;
-	if(m_pToolTip)	delete m_pToolTip;
 }
 
 
@@ -156,18 +148,15 @@ BOOL CGdipButton::LoadStdImageDPI(int dpi, UINT id96, UINT id120, UINT id144, UI
 //=============================================================================
 BOOL CGdipButton::LoadStdImage(UINT id, LPCTSTR pType)
 {
-	m_pStdImage = new CGdiPlusBitmapResource;
+	m_pStdImage = std::make_unique<CGdiPlusBitmapResource>();
 	return m_pStdImage->Load(id, pType);
 }
 
 void CGdipButton::Reset()
 {
-	delete m_pStdImage;
-	m_pStdImage = NULL;
-	delete m_pAltImage;
-	m_pAltImage = NULL;
-	delete m_pToolTip;
-	m_pToolTip = NULL;
+	m_pStdImage.reset();
+	m_pAltImage.reset();
+	m_pToolTip.reset();
 
 	m_bHaveBitmaps = FALSE;
 	m_bHaveAltImage = FALSE;
@@ -199,7 +188,7 @@ void CGdipButton::Reset()
 BOOL CGdipButton::LoadAltImage(UINT id, LPCTSTR pType)
 {
 	m_bHaveAltImage = TRUE;
-	m_pAltImage = new CGdiPlusBitmapResource;
+	m_pAltImage = std::make_unique<CGdiPlusBitmapResource>();
 	return (m_pAltImage->Load(id, pType));
 }
 
@@ -494,7 +483,7 @@ BOOL CGdipButton::PreTranslateMessage(MSG* pMsg)
 	if (pMsg->message == WM_LBUTTONDBLCLK)
 		pMsg->message = WM_LBUTTONDOWN;
 
-	if (m_pToolTip != NULL)
+	if (m_pToolTip != nullptr)
 	{
 		if (::IsWindow(m_pToolTip->m_hWnd))
 		{
@@ -575,7 +564,7 @@ LRESULT CGdipButton::OnMouseHover(WPARAM /*wparam*/, LPARAM /*lparam*/)
 	// Create a new Tooltip with new Button Size and Location
 	SetToolTipText(m_tooltext);
 
-	if (m_pToolTip != NULL)
+	if (m_pToolTip != nullptr)
 	{
 		if (::IsWindow(m_pToolTip->m_hWnd))
 		{
@@ -690,9 +679,9 @@ void CGdipButton::SetToolTipText(CString spText, BOOL bActivate)
 void CGdipButton::InitToolTip()
 //=============================================================================
 {
-	if (m_pToolTip == NULL)
+	if (m_pToolTip == nullptr)
 	{
-		m_pToolTip = new CToolTipCtrl;
+		m_pToolTip = std::make_unique<CToolTipCtrl>();
 		// Create ToolTip control
 		m_pToolTip->Create(this);
 		m_pToolTip->Activate(TRUE);
@@ -704,10 +693,6 @@ void CGdipButton::DeleteToolTip()
 //=============================================================================
 {
 	// Destroy Tooltip incase the size of the button has changed.
-	if (m_pToolTip != NULL)
-	{
-		delete m_pToolTip;
-		m_pToolTip = NULL;
-	}
+	m_pToolTip.reset();
 }
 

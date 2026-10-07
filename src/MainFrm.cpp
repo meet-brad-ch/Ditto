@@ -99,9 +99,6 @@ CMainFrame::CMainFrame()
     m_startKeyStateTime = 0;
     m_bMovedSelectionMoveKeyState = false;
     m_keyModifiersTimerCount = 0;
-	m_pGlobalClips = NULL;
-	m_pOptions = NULL;
-	m_pDeleteClips = NULL;
 	m_doubleClickGroupId = -1;
 	m_doubleClickGroupStartTime = 0;
 }
@@ -947,11 +944,12 @@ LRESULT CMainFrame::OnClipboardCopied(WPARAM wParam, LPARAM /*lParam*/)
 {
 	Log(_T("Start of function OnClipboardCopied, adding clip to thread for processing"));
 
-	CClip *pClip = (CClip*)wParam;
-	if(pClip != NULL)
+	// retakes the clip released by the sender (CCopyThread::OnClipboardChange or OnFirstSavecurrentclipboard)
+	std::unique_ptr<CClip> clip{reinterpret_cast<CClip*>(wParam)};
+	if(clip)
 	{
-		m_thread.AddClipToSave(pClip);
-	} 
+		m_thread.AddClipToSave(std::move(clip));
+	}
     
     Log(_T("End of function OnClipboardCopied"));	
     return TRUE;
@@ -1101,8 +1099,14 @@ void CMainFrame::ShowEditWnd(CClipIDs& Ids)
 	bool bCreatedWindow = false;
 	if (m_pEditFrameWnd == NULL)
 	{
-		m_pEditFrameWnd = new CEditFrameWnd;
-		m_pEditFrameWnd->LoadFrame(IDR_MAINFRAME);
+		m_pEditFrameWnd = std::make_unique<CEditFrameWnd>().release(); // ownership: the frame deletes itself in PostNcDestroy (also when LoadFrame fails); m_pEditFrameWnd only observes it until WM_EDIT_WND_CLOSING
+		if (!m_pEditFrameWnd->LoadFrame(IDR_MAINFRAME))
+		{
+			// the failed frame is already deleted
+			m_pEditFrameWnd = NULL;
+			CErrorReport::Show(_T("Opening the edit window failed."));
+			return;
+		}
 		bCreatedWindow = true;
 	}
 	if (m_pEditFrameWnd)
@@ -1192,42 +1196,38 @@ void CMainFrame::OnFirstNewclip()
 
 void CMainFrame::OnFirstOption()
 {
-	if(m_pOptions != NULL)
+	if(m_pOptions)
 	{
 		::SetForegroundWindow(m_pOptions->m_hWnd);
 	}
 	else
 	{
-		m_pOptions = new COptionsSheet(_T(""));
+		auto options{std::make_unique<COptionsSheet>(_T(""))};
+		options->SetNotifyWnd(m_hWnd);
+		m_pOptions = std::move(options);
 
-		if(m_pOptions != NULL)
-		{
-			((COptionsSheet*)m_pOptions)->SetNotifyWnd(m_hWnd);
-			m_pOptions->Create();
-			m_pOptions->ShowWindow(SW_SHOW);
-		}
+		m_pOptions->Create();
+		m_pOptions->ShowWindow(SW_SHOW);
 	}
 }
 
 void CMainFrame::OnFirstGlobalhotkeys()
 {
-	if(m_pGlobalClips != NULL)
+	if(m_pGlobalClips)
 	{
 		::SetForegroundWindow(m_pGlobalClips->m_hWnd);
 	}
 	else
 	{
-		m_pGlobalClips = new GlobalClips();
+		auto globalClips{std::make_unique<GlobalClips>()};
+		globalClips->SetNotifyWnd(m_hWnd);
+		m_pGlobalClips = std::move(globalClips);
 
 		CAlphaBlend tran;
 		tran.SetTransparent(m_hWnd, 0, 1);
 
-		if(m_pGlobalClips != NULL)
-		{
-			((GlobalClips*)m_pGlobalClips)->SetNotifyWnd(m_hWnd);
-			m_pGlobalClips->Create(IDD_GLOBAL_CLIPS, NULL);
-			m_pGlobalClips->ShowWindow(SW_SHOW);
-		}
+		m_pGlobalClips->Create(IDD_GLOBAL_CLIPS, NULL);
+		m_pGlobalClips->ShowWindow(SW_SHOW);
 	}
 }
 
@@ -1244,8 +1244,7 @@ LRESULT CMainFrame::OnOptionsClosed(WPARAM wParam, LPARAM /*lParam*/)
 	CAlphaBlend tran;
 	tran.SetTransparent(m_hWnd, 255, 0);
 
-	delete m_pOptions;
-	m_pOptions = NULL;
+	m_pOptions.reset();
 
 	if (themeChanged)
 	{
@@ -1283,8 +1282,7 @@ LRESULT CMainFrame::OnGlobalClipsClosed(WPARAM /*wParam*/, LPARAM /*lParam*/)
 	CAlphaBlend tran;
 	tran.SetTransparent(m_hWnd, 255, 0);
 
-	delete m_pGlobalClips;
-	m_pGlobalClips = NULL;
+	m_pGlobalClips.reset();
 
 	return 0;
 }
@@ -1307,8 +1305,7 @@ LRESULT CMainFrame::OnDeleteClipDataClosed(WPARAM /*wParam*/, LPARAM /*lParam*/)
 	CAlphaBlend tran;
 	tran.SetTransparent(m_hWnd, 255, 0);
 
-	delete m_pDeleteClips;
-	m_pDeleteClips = NULL;
+	m_pDeleteClips.reset();
 
 	return 0;
 }
@@ -1316,23 +1313,21 @@ LRESULT CMainFrame::OnDeleteClipDataClosed(WPARAM /*wParam*/, LPARAM /*lParam*/)
 void CMainFrame::OnFirstDeleteclipdata()
 {
 	//this->ShowWindow(SW_HIDE);
-	if (m_pDeleteClips != NULL)
+	if (m_pDeleteClips)
 	{
 		::SetForegroundWindow(m_pDeleteClips->m_hWnd);
 	}
 	else
 	{
-		m_pDeleteClips = new CDeleteClipData();
+		auto deleteClips{std::make_unique<CDeleteClipData>()};
+		deleteClips->SetNotifyWnd(m_hWnd);
+		m_pDeleteClips = std::move(deleteClips);
 
 		CAlphaBlend tran;
 		tran.SetTransparent(m_hWnd, 0, 1);
 
-		if (m_pDeleteClips != NULL)
-		{
-			((CDeleteClipData*) m_pDeleteClips)->SetNotifyWnd(m_hWnd);
-			m_pDeleteClips->Create(IDD_DELETE_CLIP_DATA, NULL);
-			m_pDeleteClips->ShowWindow(SW_SHOW);
-		}
+		m_pDeleteClips->Create(IDD_DELETE_CLIP_DATA, NULL);
+		m_pDeleteClips->ShowWindow(SW_SHOW);
 	}
 }
 
@@ -1370,7 +1365,7 @@ void CMainFrame::OnFirstSavecurrentclipboard()
 	Log(_T("Loaded clips from the clipboard, sending message to save to the db"));
 	if(::PostMessage(m_hWnd, WM_CLIPBOARD_COPIED, reinterpret_cast<WPARAM>(clip.get()), 0))
 	{
-		clip.release();  // the WM_CLIPBOARD_COPIED handler owns it now
+		clip.release(); // ownership: CMainFrame::OnClipboardCopied retakes it in a std::unique_ptr
 	}
 }
 
@@ -1407,11 +1402,11 @@ LRESULT CMainFrame::OnReOpenDatabase(WPARAM /*wParam*/, LPARAM /*lParam*/)
 
 LRESULT CMainFrame::OnShowMsgWindow(WPARAM wParam, LPARAM /*lParam*/)
 {
-	CString *pMsg = (CString*)wParam;
+	// retakes the message released by CMainFrmThread::OnSaveClips
+	const std::unique_ptr<CString> message{reinterpret_cast<CString*>(wParam)};
 
-	m_trayIcon.SetBalloonDetails(pMsg->GetBuffer(), _T("Ditto"), CTrayNotifyIcon::BalloonStyle::Info, CGetSetOptions::GetBalloonTimeout());
+	m_trayIcon.SetBalloonDetails(message->GetBuffer(), _T("Ditto"), CTrayNotifyIcon::BalloonStyle::Info, CGetSetOptions::GetBalloonTimeout());
 
-	delete pMsg;
 	return TRUE;
 }
 

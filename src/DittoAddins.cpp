@@ -16,17 +16,6 @@ bool CDittoAddins::UnloadAll()
 {
 	Log(StrF(_T("Ditto Addin - Unloading all addins Count: %d"), m_Addins.size()));
 
-	INT_PTR count = m_Addins.size();
-	for(int i = 0; i < count; i++)
-	{
-		CDittoAddin *pAddin = m_Addins[i];
-		if(pAddin)
-		{
-			delete pAddin;
-			pAddin = NULL;
-		}
-	}
-
 	m_Addins.clear();
 
 	return true;
@@ -48,18 +37,16 @@ bool CDittoAddins::LoadAll()
 
 		Log(StrF(_T("Ditto Addin - Trying to load addin file %s"), find.GetFilePath().GetString()));
 
-		CDittoAddin *pAddin = new CDittoAddin;
+		auto pAddin{std::make_unique<CDittoAddin>()};
 		if(pAddin->DoLoad(find.GetFilePath(), DittoInfo))
 		{
 			Log(StrF(_T("Ditto Addin - Success, loaded addin: %s"), find.GetFilePath().GetString()));
-			m_Addins.push_back(pAddin);
+			m_Addins.push_back(std::move(pAddin));
 		}
 		else
 		{
+			// the failed addin is deleted at the end of this iteration
 			Log(StrF(_T("Ditto Addin - Failed loading Adding Error: %s"), pAddin->LastError().GetString()));
-
-			delete pAddin;
-			pAddin = NULL;
 		}
 	}
 
@@ -75,10 +62,9 @@ bool CDittoAddins::AddPrePasteAddinsToMenu(CMenu *pMenu)
 
 	HMENU AllAddinsMenu = ::CreateMenu();
 
-	INT_PTR count = m_Addins.size();
-	for(int i = 0; i < count; i++)
+	for(const std::unique_ptr<CDittoAddin>& addin : m_Addins)
 	{
-		CDittoAddin *pAddin = m_Addins[i];
+		CDittoAddin *pAddin{addin.get()};
 		if(pAddin)
 		{
 			INT_PTR subCount = pAddin->m_PrePasteFunctions.size();
@@ -151,10 +137,9 @@ void CDittoAddins::LoadDittoInfo(CDittoInfo &DittoInfo)
 
 void CDittoAddins::AboutScreenText(CStringArray &arr)
 {
-	INT_PTR count = m_Addins.size();
-	for(int i = 0; i < count; i++)
+	for(const std::unique_ptr<CDittoAddin>& addin : m_Addins)
 	{
-		CDittoAddin *pAddin = m_Addins[i];
+		CDittoAddin *pAddin{addin.get()};
 		if(pAddin)
 		{
 			CString csLine;

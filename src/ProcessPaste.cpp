@@ -14,15 +14,19 @@ static char THIS_FILE[]=__FILE__;
 
 CProcessPaste::CProcessPaste()
 {
-	m_pOle = new COleClipSource;
+	m_pOle = std::make_unique<COleClipSource>().release(); // ownership: COM reference count (one reference, held by this object until SetClipboard or InternalRelease)
 	m_bSendPaste = true;
 	m_bActivateTarget = true;
 	m_pastedFromGroup = false;
 }
 
 CProcessPaste::~CProcessPaste()
-{	
-	delete m_pOle;
+{
+	// a COM object: dropping the last reference deletes it (never delete it directly)
+	if (m_pOle != nullptr)
+	{
+		m_pOle->InternalRelease();
+	}
 }
 
 // Error boundary of a paste or drag: whatever stops the operation (malformed clip data, a database
@@ -151,7 +155,7 @@ void CProcessPaste::MarkAsPasted(bool updateClipOrder)
 	CGetSetOptions::SetTripPasteCount(-1);
 	CGetSetOptions::SetTotalPasteCount(-1);
 
-	MarkAsPastedData* pData = new MarkAsPastedData();
+	auto pData{std::make_unique<MarkAsPastedData>()};
 	for (int i = 0; i < clips.GetCount(); i++)
 	{
 		pData->ids.Add(clips.ElementAt(i));
@@ -160,7 +164,10 @@ void CProcessPaste::MarkAsPasted(bool updateClipOrder)
 	pData->updateClipOrder = updateClipOrder;
 
 	//Moved to a thread because when running from from U3 devices the write is time consuming
-	AfxBeginThread(CProcessPaste::MarkAsPastedThread, (LPVOID)pData, THREAD_PRIORITY_LOWEST);
+	if (AfxBeginThread(CProcessPaste::MarkAsPastedThread, pData.get(), THREAD_PRIORITY_LOWEST) != nullptr)
+	{
+		pData.release(); // ownership: MarkAsPastedThread retakes it in a std::unique_ptr
+	}
 
 	Log(_T("End of MarkAsPasted"));
 }

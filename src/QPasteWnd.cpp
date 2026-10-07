@@ -4169,17 +4169,24 @@ bool CQPasteWnd::ShowQRCode(const CString& clipText, const CString& description)
 
 	auto viewer = std::make_unique<QRCodeViewer>();
 
-	LOGFONT lf;
-	CGetSetOptions::GetFont(lf);
-
-	if (!viewer->CreateEx(this, std::move(bitmap), description, m_lstHeader.GetRowHeight(), lf))
+	// before any window exists: on failure the unique_ptr deletes the viewer
+	if (!viewer->LoadQrBitmap(std::move(bitmap)))
 	{
 		CErrorReport::Show(StrF(_T("Ditto could not create the QR code window (error %u)."), ::GetLastError()));
 		return false;
 	}
 
-	// the window owns itself from here on: QRCodeViewer::PostNcDestroy deletes it
-	viewer.release()->ShowWindow(SW_SHOW);
+	LOGFONT lf;
+	CGetSetOptions::GetFont(lf);
+
+	QRCodeViewer *pViewer{ viewer.release() }; // ownership: the window (PostNcDestroy deletes it, also when Create fails)
+	if (!pViewer->CreateEx(this, description, m_lstHeader.GetRowHeight(), lf))
+	{
+		CErrorReport::Show(StrF(_T("Ditto could not create the QR code window (error %u)."), ::GetLastError()));
+		return false;
+	}
+
+	pViewer->ShowWindow(SW_SHOW);
 	return true;
 }
 

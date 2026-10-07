@@ -204,9 +204,7 @@ CQListCtrl::CQListCtrl()
 {
 	m_linesPerRow = 1;
 	m_windowDpi = NULL;
-	m_SmallFont = NULL;
 	m_pToolTip = NULL;
-	m_pFormatter = NULL;
 	m_allSelected = false;
 	m_rowHeight = 50;
 	m_mouseOverScrollAreaStart = 0;
@@ -217,19 +215,9 @@ CQListCtrl::CQListCtrl()
 
 CQListCtrl::~CQListCtrl()
 {
-	if (m_SmallFont)
-		::DeleteObject(m_SmallFont);
-
 	m_Font.DeleteObject();
 
 	m_boldFont.DeleteObject();
-
-	if (m_pFormatter)
-	{
-		delete m_pFormatter;
-		m_pFormatter = NULL;
-	}
-
 }
 
 // returns the position 1-10 if the index is in the FirstTen block else -1
@@ -621,7 +609,7 @@ void CQListCtrl::OnCustomdrawList(NMHDR* pNMHDR, LRESULT* pResult)
 			crHotKey.left += m_windowDpi->Scale(1 + extraFromClipWasPaste);
 			crHotKey.top += m_windowDpi->Scale(1 + extraFromClipWasPaste);
 
-			HFONT hOldFont = (HFONT)pDC->SelectObject(m_SmallFont);
+			CFont* pOldFont{ pDC->SelectObject(&m_SmallFont) };
 			COLORREF localOldTextColor = pDC->SetTextColor(CGetSetOptions::m_Theme.ListSmallQuickPasteIndexColor());
 
 			CPen pen(PS_SOLID, 0, CGetSetOptions::m_Theme.ListSmallQuickPasteIndexColor());
@@ -632,7 +620,7 @@ void CQListCtrl::OnCustomdrawList(NMHDR* pNMHDR, LRESULT* pResult)
 			pDC->MoveTo(CPoint(rcItem.left + m_windowDpi->Scale(8 + extraFromClipWasPaste), rcItem.top));
 			pDC->LineTo(CPoint(rcItem.left + m_windowDpi->Scale(8 + extraFromClipWasPaste), rcItem.bottom));
 
-			pDC->SelectObject(hOldFont);
+			pDC->SelectObject(pOldFont);
 			pDC->SetTextColor(localOldTextColor);
 			pDC->SelectObject(pOldPen);
 		}
@@ -1124,9 +1112,9 @@ BOOL CQListCtrl::DrawRtfText(int nItem, CRect& crRect, CDC* pDC)
 	if (pThumbnail->m_hgData == NULL)
 		return FALSE;
 
-	if (m_pFormatter == NULL)
+	if (m_pFormatter == nullptr)
 	{
-		m_pFormatter = new CFormattedTextDraw;
+		m_pFormatter = std::make_unique<CFormattedTextDraw>();
 		m_pFormatter->Create();
 	}
 
@@ -1495,7 +1483,7 @@ void CQListCtrl::SetToolTipImage(int nItem, CClipFormat& Clip)
 			Clip.m_cfType = cfType;
 			if (GetClipData(nItem, Clip) && Clip.m_hgData)
 			{
-				m_pToolTip->SetGdiplusBitmap(Clip.CreateGdiplusBitmap());
+				m_pToolTip->SetGdiplusBitmap(std::unique_ptr<Gdiplus::Bitmap>(Clip.CreateGdiplusBitmap()));
 				return;
 			}
 		}
@@ -1560,10 +1548,7 @@ bool CQListCtrl::ShowFullDescription(bool bFromAuto, bool fromNextPrev)
 			m_pToolTip->DestroyWindow();
 		}
 
-		m_pToolTip = new CToolTipEx;
-		m_pToolTip->Create(this);
-		m_toolTipHwnd = m_pToolTip->GetSafeHwnd();
-		m_pToolTip->SetNotifyWnd(GetParent());
+		CreateToolTip();
 	}
 	else if (VALID_TOOLTIP)
 	{
@@ -1574,7 +1559,7 @@ bool CQListCtrl::ShowFullDescription(bool bFromAuto, bool fromNextPrev)
 			pt = r.TopLeft();
 		}
 
-		m_pToolTip->SetGdiplusBitmap(NULL);
+		m_pToolTip->SetGdiplusBitmap(nullptr);
 		m_pToolTip->SetRTFText("");
 		m_pToolTip->SetToolTipText(_T(""));
 		m_pToolTip->SetFolderPath(_T(""));
@@ -2263,13 +2248,32 @@ void CQListCtrl::SetDpiInfo(CDPI* dpi)
 	m_stickyImage.Reset();
 	m_stickyImage.LoadStdImageDPI(m_windowDpi->GetDPI(), IDB_STICKY_16_16, IDB_STICKY_20_20, IDB_STICKY_24_24, IDB_STICKY_24_24, IDB_STICKY_32_32, _T("PNG"));
 
-	DeleteObject(m_SmallFont);
-
 	CreateSmallFont();
+}
+
+void CQListCtrl::CreateToolTip()
+{
+	m_pToolTip = NULL;
+	m_toolTipHwnd = NULL;
+
+	// a self-deleting window: CWnd::CreateEx calls PostNcDestroy on failure too, so the window
+	// owns the object from the Create call on
+	CToolTipEx *pToolTip{ std::make_unique<CToolTipEx>().release() }; // ownership: the window (PostNcDestroy deletes it, also when Create fails)
+	if (pToolTip->Create(this) == FALSE)
+	{
+		AfxThrowResourceException();
+	}
+
+	m_pToolTip = pToolTip;
+	m_toolTipHwnd = m_pToolTip->GetSafeHwnd();
+	m_pToolTip->SetNotifyWnd(GetParent());
 }
 
 void CQListCtrl::CreateSmallFont()
 {
+	// QPasteWnd calls this directly as well: free the previous font first
+	m_SmallFont.DeleteObject();
+
 	LOGFONT lf;
 
 	lf.lfHeight = -MulDiv(CGetSetOptions::GetFirstTenHotKeysFontSize(), m_windowDpi->GetDPI(), 72);
@@ -2287,7 +2291,7 @@ void CQListCtrl::CreateSmallFont()
 	lf.lfPitchAndFamily = VARIABLE_PITCH | FF_DONTCARE;
 	lstrcpy(lf.lfFaceName, _T("Small Font"));
 
-	m_SmallFont = ::CreateFontIndirect(&lf);
+	m_SmallFont.CreateFontIndirect(&lf);
 }
 
 void CQListCtrl::OnMouseHWheel(UINT /*nFlags*/, short zDelta, CPoint /*pt*/)

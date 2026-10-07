@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DittoAddin.h"
+#include <memory>
 #include <vector>
 #include <afxtempl.h>
 
@@ -20,11 +21,13 @@ public:
 	void AboutScreenText(CStringArray &arr);
 
 protected:
-	std::vector<CDittoAddin*> m_Addins;
+	// The loaded addins; this object owns them
+	std::vector<std::unique_ptr<CDittoAddin>> m_Addins;
 
 	class CFunctionLookup
 	{
 	public:
+		// One of m_Addins (not owned)
 		CDittoAddin *m_pAddin{};
 		CStringA m_csFunctionName;
 	};

@@ -2,6 +2,7 @@
 #include "EventThread.h"
 #include "Clip.h"
 #include <afxmt.h>
+#include <memory>
 
 class CMainFrmThread : public CEventThread
 {
@@ -23,7 +24,8 @@ public:
     void FireRemoveTempFiles() { FireEvent(REMOVE_TEMP_FILES); }
 	void FireReadDbFile() { FireEvent(READ_DB_FILE); }
 
-	void AddClipToSave(CClip *pClip);
+	// Queues a copied clip for saving on this thread; the thread owns it from now on
+	void AddClipToSave(std::unique_ptr<CClip> clip);
 
 protected:
     virtual void OnEvent(int eventId, void *param);

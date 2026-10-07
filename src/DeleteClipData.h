@@ -63,6 +63,7 @@ protected:
 	bool m_applyingDelete;
 	bool m_cancelDelete;
 
+	/** @brief The description window (non-owning: the window deletes itself in PostNcDestroy). */
 	CToolTipEx* m_pDescriptionWindow;
 
 

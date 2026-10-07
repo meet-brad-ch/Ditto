@@ -5,30 +5,27 @@
 
 CGdiImageDrawer::CGdiImageDrawer()
 {
-	m_pStdImage = NULL;
 }
 
 CGdiImageDrawer::~CGdiImageDrawer()
 {
-	delete m_pStdImage;
 }
 
 void CGdiImageDrawer::Reset()
 {
-	delete m_pStdImage;
-	m_pStdImage = NULL;
+	m_pStdImage.reset();
 
 }
 
 BOOL CGdiImageDrawer::LoadStdImage(UINT id, LPCTSTR pType)
 {
-	m_pStdImage = new CGdiPlusBitmapResource;
+	m_pStdImage = std::make_unique<CGdiPlusBitmapResource>();
 	return m_pStdImage->Load(id, pType);
 }
 
 BOOL CGdiImageDrawer::LoadRaw(unsigned char* bitmapData, int imageSize)
 {
-	m_pStdImage = new CGdiPlusBitmapResource;
+	m_pStdImage = std::make_unique<CGdiPlusBitmapResource>();
 	return m_pStdImage->LoadRaw(bitmapData, imageSize);
 }
 

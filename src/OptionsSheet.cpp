@@ -30,54 +30,34 @@ COptionsSheet::COptionsSheet(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectP
 	:CPropertySheet(pszCaption, pParentWnd, iSelectPage)
 {
 	m_themeChanged = FALSE;
-	m_pKeyBoardOptions = NULL;
-	m_pGeneralOptions = NULL;
-	//m_pQuickPasteOptions = NULL;
-	m_pCopyBuffers = NULL;
-	m_pStats = NULL;
-	m_pTypes = NULL;
-	m_pAbout = NULL;
-	m_pCopyBuffers = NULL;
-	m_pQuickPasteShortCuts = NULL;
-	
-	m_pUtilites = NULL;
 	m_hWndParent = NULL;
 
 	EnableStackedTabs(TRUE);
 
-	m_pGeneralOptions = new COptionsGeneral;
-	m_pKeyBoardOptions = new COptionsKeyBoard;
+	m_pGeneralOptions = std::make_unique<COptionsGeneral>();
+	m_pKeyBoardOptions = std::make_unique<COptionsKeyBoard>();
 	//m_pQuickPasteOptions = new COptionsQuickPaste;
-	m_pQuickPasteShortCuts = new CQuickPasteKeyboard;
+	m_pQuickPasteShortCuts = std::make_unique<CQuickPasteKeyboard>();
 
-	m_pCopyBuffers = new COptionsCopyBuffers;
-	m_pStats = new COptionsStats;
-	m_pTypes = new COptionsTypes;
-	m_pAbout = new CAbout;
+	m_pCopyBuffers = std::make_unique<COptionsCopyBuffers>();
+	m_pStats = std::make_unique<COptionsStats>();
+	m_pTypes = std::make_unique<COptionsTypes>();
+	m_pAbout = std::make_unique<CAbout>();
 
-	AddPage(m_pGeneralOptions);
-	AddPage(m_pTypes);
-	AddPage(m_pKeyBoardOptions);
-	AddPage(m_pCopyBuffers);
+	AddPage(m_pGeneralOptions.get());
+	AddPage(m_pTypes.get());
+	AddPage(m_pKeyBoardOptions.get());
+	AddPage(m_pCopyBuffers.get());
 	//AddPage(m_pQuickPasteOptions);
-	AddPage(m_pQuickPasteShortCuts);
-	AddPage(m_pStats);
-	AddPage(m_pAbout);
+	AddPage(m_pQuickPasteShortCuts.get());
+	AddPage(m_pStats.get());
+	AddPage(m_pAbout.get());
 
-	
+
 }
 
 COptionsSheet::~COptionsSheet()
 {
-	delete m_pGeneralOptions;
-	delete m_pKeyBoardOptions;
-	//delete m_pQuickPasteOptions;
-	delete m_pCopyBuffers;
-	delete m_pStats;
-	delete m_pTypes;
-	delete m_pAbout;	
-	delete m_pUtilites;
-	delete m_pQuickPasteShortCuts;	
 }
 
 BEGIN_MESSAGE_MAP(COptionsSheet, CPropertySheet)

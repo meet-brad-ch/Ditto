@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "CGdiPlusBitmap.h"
 #include "DPI.h"
 
@@ -21,7 +23,8 @@ public:
 	void Reset();
 
 protected:
-	CGdiPlusBitmapResource* m_pStdImage;
+	/** @brief The loaded image (owned); empty until a Load call or after Reset. */
+	std::unique_ptr<CGdiPlusBitmapResource> m_pStdImage{};
 	//CDC*	m_pCurBtn;		// current pointer to one of the above
 	//CDC		m_dcStd;		// standard button
 

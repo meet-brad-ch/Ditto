@@ -6,6 +6,8 @@
 #endif // _MSC_VER > 1000
 // QListCtrl.h : header file
 //
+#include <memory>
+
 #include "..\Shared\ArrayEx.h"
 #include "ToolTipEx.h"
 #include "FormattedTextDraw.h"
@@ -165,6 +167,14 @@ public:
 	void LoadCopyOrCutToClipboard();
 
 protected:
+	/**
+	 * @brief Creates the description tool tip window and hands it to the window itself.
+	 *
+	 * Sets m_pToolTip and m_toolTipHwnd; both stay empty when the window cannot be created (a
+	 * failed Create has already deleted the object through PostNcDestroy).
+	 * @throws CResourceException when the window cannot be created.
+	 */
+	void CreateToolTip();
 	BOOL GetClipData(int nItem, CClipFormat &Clip);
 	// Puts the item's image (DIB, else PNG) into the tooltip; reports a malformed image.
 	void SetToolTipImage(int nItem, CClipFormat& Clip);
@@ -180,14 +190,17 @@ protected:
 	// The tool tip texts handed to the tool tip control; they must outlive OnToolTipText
 	CStringW m_toolTipTextW{};
 	CStringA m_toolTipTextA{};
-	HFONT m_SmallFont;
+	/** @brief The font of the first-ten hot key numbers; empty until CreateSmallFont. */
+	CFont m_SmallFont{};
 	CAccels	m_Accels;
 	CMapIDtoCF m_RTFData;
+	/** @brief The description tool tip (non-owning: the window deletes itself in PostNcDestroy). */
 	CToolTipEx *m_pToolTip;
 	HWND m_toolTipHwnd{};
 	CFont m_Font;
 	CFont m_boldFont;
-	IFormattedTextDraw *m_pFormatter;
+	/** @brief The RTF thumbnail renderer (owned); created on first use. */
+	std::unique_ptr<IFormattedTextDraw> m_pFormatter{};
 	bool m_allSelected;
 	int m_linesPerRow;
 	ULONGLONG m_mouseOverScrollAreaStart{};

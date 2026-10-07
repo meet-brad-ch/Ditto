@@ -8,6 +8,8 @@
 //
 //#include "ShowTaskBarIcon.h"
 
+#include <memory>
+
 
 /////////////////////////////////////////////////////////////////////////////
 // COptionsSheet
@@ -46,15 +48,22 @@ protected:
 
 	HWND m_hWndParent;
 
-	CPropertyPage *m_pKeyBoardOptions;
-	CPropertyPage *m_pGeneralOptions;
+	// the option pages (owned); the sheet's AddPage keeps non-owning pointers to them
+	/** @brief The keyboard page. */
+	std::unique_ptr<CPropertyPage> m_pKeyBoardOptions{};
+	/** @brief The general page. */
+	std::unique_ptr<CPropertyPage> m_pGeneralOptions{};
 	CPropertyPage *m_pQuickPasteOptions{};
-	CPropertyPage *m_pUtilites;
-	CPropertyPage *m_pStats;
-	CPropertyPage *m_pTypes;
-	CPropertyPage *m_pAbout;
-	CPropertyPage *m_pCopyBuffers;
-	CPropertyPage *m_pQuickPasteShortCuts;
+	/** @brief The statistics page. */
+	std::unique_ptr<CPropertyPage> m_pStats{};
+	/** @brief The supported types page. */
+	std::unique_ptr<CPropertyPage> m_pTypes{};
+	/** @brief The about page. */
+	std::unique_ptr<CPropertyPage> m_pAbout{};
+	/** @brief The copy buffers page. */
+	std::unique_ptr<CPropertyPage> m_pCopyBuffers{};
+	/** @brief The quick paste shortcuts page. */
+	std::unique_ptr<CPropertyPage> m_pQuickPasteShortCuts{};
 
 	//CShowTaskBarIcon m_taskBar;
 

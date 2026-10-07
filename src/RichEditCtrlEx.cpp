@@ -5,6 +5,8 @@
 #include "RichEditCtrlEx.h"
 #include "..\Shared\TextConvert.h"
 
+#include <vector>
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -145,15 +147,10 @@ CString CRichEditCtrlEx::GetText()
 	nSize = nSize * 2;
 	stex.cb = nSize;
 
-	TCHAR *pText = new TCHAR[nSize];
-	if(pText)
-	{
-		SendMessage(EM_GETTEXTEX, (WPARAM)&stex, (LPARAM)pText); 
-		sText = pText;
-
-		delete []pText;
-		pText = NULL;
-	}
+	std::vector<TCHAR> text{};
+	text.assign(static_cast<size_t>(nSize), _T('\0'));
+	SendMessage(EM_GETTEXTEX, (WPARAM)&stex, (LPARAM)text.data());
+	sText = text.data();
 #else
 	// Stream out here.
 	EDITSTREAM es;

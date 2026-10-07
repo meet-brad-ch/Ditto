@@ -23,6 +23,7 @@
 class CProcessPaste
 {
 public:
+	// One COM reference to the data source; null once SetClipboard or InternalRelease took it
 	COleClipSource*	m_pOle;
 	bool m_bSendPaste;
 	bool m_bActivateTarget;

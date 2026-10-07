@@ -19,8 +19,24 @@ public:
 	virtual ~QRCodeViewer();
 
 	CDittoWindow m_DittoWindow;
-	// bitmap: a BMP file image of the QR code (DittoCore::QrBitmap::Render)
-	BOOL CreateEx(CWnd *pParentWnd, std::vector<std::byte> bitmap, CString desc, int rowHeight, LOGFONT font);
+	/**
+	 * @brief Loads the QR code image; call it before CreateEx, while the caller still owns the object.
+	 * @param bitmap a BMP file image of the QR code (DittoCore::QrBitmap::Render).
+	 * @return FALSE when GDI+ cannot read the image (the caller reports it).
+	 */
+	BOOL LoadQrBitmap(std::vector<std::byte> bitmap);
+	/**
+	 * @brief Creates the window around the image LoadQrBitmap loaded.
+	 *
+	 * The object is self-deleting: from this call on the window owns it, also when the creation
+	 * fails (CWnd::CreateEx then calls PostNcDestroy), so the caller must not touch it after FALSE.
+	 * @param pParentWnd the window to center on.
+	 * @param desc the clip description shown below the code.
+	 * @param rowHeight the height of the description row.
+	 * @param font the description font.
+	 * @return FALSE when the window cannot be created.
+	 */
+	BOOL CreateEx(CWnd *pParentWnd, CString desc, int rowHeight, LOGFONT font);
 
 	CStatic m_desc;
 
@@ -46,7 +62,8 @@ protected:
 	CGdiImageDrawer m_qrCodeDrawer;
 	int m_descRowHeight{};
 	CFont m_font;
-	HBRUSH m_descBackground;
+	/** @brief The white background brush of the description control; empty until Create. */
+	CBrush m_descBackground{};
 	LOGFONT m_logFont{};
 	int m_originalFontHeight{};
 	SnapWindow m_snap;

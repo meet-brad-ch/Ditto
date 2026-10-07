@@ -29,7 +29,9 @@
 // GdipButton.h : header file
 //
 
-class CGdiPlusBitmapResource;
+#include <memory>
+
+#include "CGdiPlusBitmap.h"
 /////////////////////////////////////////////////////////////////////////////
 // CGdipButton window
 
@@ -89,11 +91,14 @@ protected:
 
 	int		m_nCurType;
 
-	CGdiPlusBitmapResource* m_pAltImage;
-	CGdiPlusBitmapResource* m_pStdImage;
+	/** @brief The alternate image (owned); empty until LoadAltImage. */
+	std::unique_ptr<CGdiPlusBitmapResource> m_pAltImage{};
+	/** @brief The standard image (owned); empty until LoadStdImage. */
+	std::unique_ptr<CGdiPlusBitmapResource> m_pStdImage{};
 
 	CString			m_tooltext;
-	CToolTipCtrl*	m_pToolTip;
+	/** @brief The button's tooltip control (owned); empty until InitToolTip. */
+	std::unique_ptr<CToolTipCtrl>	m_pToolTip{};
 	
 	void	InitToolTip();
 

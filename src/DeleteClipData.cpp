@@ -12,6 +12,7 @@
 #include "Misc.h"
 #include "ProgressWnd.h"
 #include <algorithm>
+#include <memory>
 #include "../Shared/TextConvert.h"
 #include "../resource.h"
 #include "CopyProperties.h"
@@ -217,8 +218,8 @@ void CDeleteClipData::CloseDescriptionWindow()
 	if (m_pDescriptionWindow != nullptr)
 	{
 		m_pDescriptionWindow->CloseWindow();
+		// DestroyWindow deletes the object too (CToolTipEx::PostNcDestroy)
 		m_pDescriptionWindow->DestroyWindow();
-		delete m_pDescriptionWindow;
 		m_pDescriptionWindow = nullptr;
 	}
 }
@@ -930,8 +931,14 @@ void CDeleteClipData::CreateAndShowDescriptionWindow()
 {
 	if (m_pDescriptionWindow == nullptr)
 	{
-		m_pDescriptionWindow = new CToolTipEx;
-		m_pDescriptionWindow->Create(this);
+		// a self-deleting window: CWnd::CreateEx calls PostNcDestroy on failure too, so the
+		// window owns the object from the Create call on
+		CToolTipEx *pWindow{ std::make_unique<CToolTipEx>().release() }; // ownership: the window (PostNcDestroy deletes it, also when Create fails)
+		if (pWindow->Create(this) == FALSE)
+		{
+			AfxThrowResourceException();
+		}
+		m_pDescriptionWindow = pWindow;
 		m_pDescriptionWindow->SetNotifyWnd(GetParent());
 	}
 
@@ -956,7 +963,7 @@ void CDeleteClipData::CreateAndShowDescriptionWindow()
 
 void CDeleteClipData::SetDescriptionWindowText(INT_PTR row)
 {
-	m_pDescriptionWindow->SetGdiplusBitmap(NULL);
+	m_pDescriptionWindow->SetGdiplusBitmap(nullptr);
 	m_pDescriptionWindow->SetRTFText("");
 	m_pDescriptionWindow->SetToolTipText(_T(""));
 	m_pDescriptionWindow->SetFolderPath(_T(""));

@@ -22,7 +22,6 @@ CHotKey::CHotKey(CString name, DWORD defKey, bool bUnregOnShowDitto, HotKeyType 
 	m_globalId = m_nextId;
 	m_nextId++;
 	m_hkType = hkType;
-	g_HotKeys.Add(this);
 }
 
 CHotKey::~CHotKey()
@@ -327,16 +326,17 @@ CHotKeys::CHotKeys() : m_hWnd(NULL)
 
 CHotKeys::~CHotKeys()
 {
-	CHotKey* pHotKey;
-	INT_PTR count = GetSize();
-	for(int i=0; i < count; i++)
+	// destroy the keys in index order (each unregisters itself while m_hWnd is still set)
+	for(std::unique_ptr<CHotKey>& key : m_keys)
 	{
-		pHotKey = ElementAt(i);
-		if(pHotKey)
-		{
-			delete pHotKey;
-		}
+		key.reset();
 	}
+}
+
+CHotKey& CHotKeys::Create(CString name, DWORD defKey, bool bUnregOnShowDitto, CHotKey::HotKeyType hkType, CString description)
+{
+	m_keys.push_back(std::make_unique<CHotKey>(name, defKey, bUnregOnShowDitto, hkType, description));
+	return *m_keys.back();
 }
 
 INT_PTR CHotKeys::Find(CHotKey* pHotKey)
@@ -357,7 +357,9 @@ bool CHotKeys::Remove(CHotKey* pHotKey)
 	INT_PTR i = Find(pHotKey);
 	if(i >= 0)
 	{
-		RemoveAt(i);
+		// take the key out of the registry first, then destroy it
+		std::unique_ptr<CHotKey> removed{std::move(m_keys[static_cast<size_t>(i)])};
+		m_keys.erase(m_keys.begin() + i);
 		return true;
 	}
 	return false;
@@ -366,19 +368,13 @@ bool CHotKeys::Remove(CHotKey* pHotKey)
 bool CHotKeys::Remove(int clipId, CHotKey::HotKeyType hkType)
 {
 	INT_PTR count = GetSize();
-	for(int i=0; i < count; i++)
+	for(INT_PTR i = 0; i < count; i++)
 	{
-		if(ElementAt(i) != NULL && 
+		if(ElementAt(i) != NULL &&
 			ElementAt(i)->m_clipId == clipId &&
 			ElementAt(i)->m_hkType == hkType)
 		{
-			CHotKey *pKey = ElementAt(i);
-
-			RemoveAt(i);
-
-			delete pKey;
-
-			return true;
+			return Remove(ElementAt(i));
 		}
 	}
 	return false;
@@ -401,21 +397,14 @@ BOOL CHotKeys::ValidateClip(int clipId, DWORD key, CString desc, CHotKey::HotKey
 
 	if(pKey == NULL)
 	{
-		pKey = new CHotKey(desc, key, true, hkType);
-	}
-	   
-	BOOL ret = FALSE;
-
-	if(pKey != NULL)
-	{
-		pKey->m_Key = key;
-		pKey->m_Name = desc;
-		pKey->m_clipId = clipId;
-
-		ret = CHotKey::ValidateHotKey(key);
+		pKey = &Create(desc, key, true, hkType);
 	}
 
-	return ret;
+	pKey->m_Key = key;
+	pKey->m_Name = desc;
+	pKey->m_clipId = clipId;
+
+	return CHotKey::ValidateHotKey(key);
 }
 
 void CHotKeys::LoadAllKeys()

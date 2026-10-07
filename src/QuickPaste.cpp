@@ -21,16 +21,11 @@ static char THIS_FILE[]=__FILE__;
 CQuickPaste::CQuickPaste()
 {
 	m_forceResizeOnNextShow = false;
-	m_pwndPaste = NULL;
 }
 
 CQuickPaste::~CQuickPaste()
 {
-	if(m_pwndPaste)
-	{
-		delete m_pwndPaste;
-		m_pwndPaste = NULL;
-	}	
+	m_pwndPaste.reset();
 }
 
 BOOL CQuickPaste::CloseQPasteWnd()
@@ -44,9 +39,8 @@ BOOL CQuickPaste::CloseQPasteWnd()
 		}
 
 		Log(_T("CloseQPasteWnd called closing qpastewnd"));
-		
-		delete m_pwndPaste;
-		m_pwndPaste = NULL;
+
+		m_pwndPaste.reset();
 
 		theApp.m_bShowingQuickPaste = false;
 	}
@@ -68,8 +62,7 @@ void CQuickPaste::ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboa
 
 		Log(_T("CloseQPasteWnd called closing qpastewnd from keyboard"));
 
-		delete m_pwndPaste;
-		m_pwndPaste = NULL;
+		m_pwndPaste.reset();
 
 		theApp.m_db.close();
 		OpenDatabase(CGetSetOptions::GetDBPath());
@@ -77,7 +70,7 @@ void CQuickPaste::ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboa
 		return;
 	}
 
-	if(CGetSetOptions::m_bShowPersistent && m_pwndPaste != NULL)
+	if(CGetSetOptions::m_bShowPersistent && m_pwndPaste != nullptr)
 	{
 		m_pwndPaste->ShowWindow(SW_SHOW);
 		m_pwndPaste->MinMaxWindow(FORCE_MAX);
@@ -92,13 +85,7 @@ void CQuickPaste::ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboa
 	CSize csSize;
 	
 	if(!m_pwndPaste)
-		m_pwndPaste = new CQPasteWnd;
-	
-	if(!m_pwndPaste)
-	{
-		ASSERT(FALSE);
-		return;
-	}
+		m_pwndPaste = std::make_unique<CQPasteWnd>();
 
 	m_pwndPaste->MinMaxWindow(FORCE_MAX);
 	
@@ -345,7 +332,7 @@ bool CQuickPaste::IsWindowTopLevel()
 
 void CQuickPaste::OnScreenResolutionChange()
 {
-	if(m_pwndPaste != NULL &&
+	if(m_pwndPaste != nullptr &&
 		::IsWindow(m_pwndPaste->m_hWnd) &&
 		m_pwndPaste->IsIconic() == FALSE &&
 		IsWindowVisibleEx())

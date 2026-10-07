@@ -59,62 +59,35 @@ void CMultiLanguage::ClearArrays()
 
 void CMultiLanguage::ClearArray(LANGUAGE_ARRAY &Array)
 {
-	INT_PTR size = Array.GetSize();
-	for(int i = 0; i < size; i++)
-	{
-		CLangItem *plItem = Array[i];
-
-		delete plItem;
-		plItem = NULL;
-	}
-	Array.RemoveAll();
+	Array.clear();
 }
 
 void CMultiLanguage::ClearMap(LANGUAGE_MAP &Map)
 {
-	POSITION pos = Map.GetStartPosition();
-
-	CLangItem *plItem;
-	CString csKey;
-
-	while(pos)
-	{
-		Map.GetNextAssoc(pos, csKey, plItem);
-
-		if(plItem)
-		{
-			delete plItem;
-			plItem = NULL;
-		}
-	}
-
-	Map.RemoveAll();
+	Map.clear();
 }
 
 CString CMultiLanguage::GetString(CString csID, CString csDefault)
 {
-	CLangItem *pItem;
-	
-	if(m_StringMap.Lookup(csID, pItem) == FALSE)
+	const LANGUAGE_MAP::const_iterator found{m_StringMap.find(csID)};
+	if(found == m_StringMap.end())
 	{
 		return csDefault;
 	}
 
-	if(pItem->m_csForeignLang.GetLength() <= 0)
+	if(found->second.m_csForeignLang.GetLength() <= 0)
 		return csDefault;
 
-	return pItem->m_csForeignLang;
+	return found->second.m_csForeignLang;
 }
 
 CString CMultiLanguage::GetGlobalHotKeyString(CString csID, CString csDefault)
 {
-	INT_PTR size = m_GlobalHotKeys.GetSize();
-	for(int i = 0; i < size; i++)
+	for(const CLangItem& item : m_GlobalHotKeys)
 	{
-		CLangItem *plItem = m_GlobalHotKeys[i];
-		if(plItem->m_csID == csID)
+		if(item.m_csID == csID)
 		{
-			return plItem->m_csForeignLang;
+			return item.m_csForeignLang;
 		}
 	}
 
@@ -123,13 +96,11 @@ CString CMultiLanguage::GetGlobalHotKeyString(CString csID, CString csDefault)
 
 CString CMultiLanguage::GetDeleteClipDataString(CString csID, CString csDefault)
 {
-	INT_PTR size = m_DeleteClipData.GetSize();
-	for(int i = 0; i < size; i++)
+	for(const CLangItem& item : m_DeleteClipData)
 	{
-		CLangItem *plItem = m_DeleteClipData[i];
-		if(plItem->m_csID == csID)
+		if(item.m_csID == csID)
 		{
-			return plItem->m_csForeignLang;
+			return item.m_csForeignLang;
 		}
 	}
 
@@ -138,13 +109,11 @@ CString CMultiLanguage::GetDeleteClipDataString(CString csID, CString csDefault)
 
 CString CMultiLanguage::GetQuickPasteKeyboardString(int id, CString csDefault)
 {
-	INT_PTR size = m_OptionsQuickPasteKeyboard.GetSize();
-	for (int i = 0; i < size; i++)
+	for (const CLangItem& item : m_OptionsQuickPasteKeyboard)
 	{
-		CLangItem *plItem = m_OptionsQuickPasteKeyboard[i];
-		if (plItem->m_nID == id)
+		if (item.m_nID == id)
 		{
-			return plItem->m_csForeignLang;
+			return item.m_csForeignLang;
 		}
 	}
 
@@ -233,26 +202,23 @@ bool CMultiLanguage::UpdateDeleteClipData(CWnd *pParent)
 
 bool CMultiLanguage::UpdateMenuToLanguage(CMenu *pMenu, LANGUAGE_ARRAY &Array)
 {
-	INT_PTR size = Array.GetSize();
-	for(int i = 0; i < size; i++)
+	for(const CLangItem& item : Array)
 	{
-		CLangItem *plItem = Array[i];
-
-		if(plItem->m_csForeignLang.GetLength() > 0)
+		if(item.m_csForeignLang.GetLength() > 0)
 		{
-			if(plItem->m_nID > 0)
+			if(item.m_nID > 0)
 			{
-				pMenu->ModifyMenu(plItem->m_nID, MF_BYCOMMAND, plItem->m_nID, plItem->m_csForeignLang);
+				pMenu->ModifyMenu(item.m_nID, MF_BYCOMMAND, item.m_nID, item.m_csForeignLang);
 			}
 			else
 			{
 				//If an item doesn't have a menu id then its a group menu
 				//just search for the text and update the text with the foreign text
-				int nMenuPos;
-				CMenu *pNewMenu = GetMenuPos(pMenu, plItem->m_csEnglishLang, nMenuPos);
+				int nMenuPos{};
+				CMenu *pNewMenu = GetMenuPos(pMenu, item.m_csEnglishLang, nMenuPos);
 				if(pNewMenu)
 				{
-					pNewMenu->ModifyMenu(nMenuPos, MF_BYPOSITION, static_cast<UINT_PTR>(-1), plItem->m_csForeignLang);
+					pNewMenu->ModifyMenu(nMenuPos, MF_BYPOSITION, static_cast<UINT_PTR>(-1), item.m_csForeignLang);
 				}
 			}
 		}
@@ -263,25 +229,22 @@ bool CMultiLanguage::UpdateMenuToLanguage(CMenu *pMenu, LANGUAGE_ARRAY &Array)
 
 bool CMultiLanguage::UpdateWindowToLanguage(CWnd *pParent, LANGUAGE_ARRAY &Array)
 {
-	INT_PTR size = Array.GetSize();
-	for(int i = 0; i < size; i++)
+	for(const CLangItem& item : Array)
 	{
-		CLangItem *plItem = Array[i];
-
-		if(plItem->m_csForeignLang.GetLength() > 0)
+		if(item.m_csForeignLang.GetLength() > 0)
 		{
-			if(plItem->m_nID > 0)
+			if(item.m_nID > 0)
 			{
-				CWnd *pWnd = pParent->GetDlgItem(plItem->m_nID);
+				CWnd *pWnd = pParent->GetDlgItem(item.m_nID);
 				if(pWnd)
 				{
-					pWnd->SetWindowText(plItem->m_csForeignLang);
+					pWnd->SetWindowText(item.m_csForeignLang);
 				}
 			}
 			//If item id is -1 then set the title for the dialog
-			else if(plItem->m_nID == -1)
+			else if(item.m_nID == -1)
 			{
-				pParent->SetWindowText(plItem->m_csForeignLang);
+				pParent->SetWindowText(item.m_csForeignLang);
 			}
 		}
 	}
@@ -417,25 +380,22 @@ bool CMultiLanguage::LoadSection(const tinyxml2::XMLElement &doc, LANGUAGE_ARRAY
  		ForeignNode = ItemElement->FirstChild();
  		if(ForeignNode)
  		{
-			CLangItem *plItem = new CLangItem;
-			if(plItem)
+			CLangItem item{};
+			item.m_csEnglishLang = ItemElement->Attribute("English_Text");
+			csID = ItemElement->Attribute("ID");
+			item.m_nID = ATOI(csID);
+			if(item.m_nID == 0)
 			{
-				plItem->m_csEnglishLang = ItemElement->Attribute("English_Text");
-				csID = ItemElement->Attribute("ID");
-				plItem->m_nID = ATOI(csID);
-				if(plItem->m_nID == 0)
-				{
-					plItem->m_csID = csID;
-				}
- 				
-				LPCSTR Value = ForeignNode->Value();
-				plItem->m_csForeignLang = CTextConvert::Utf8ToUnicode(Value);
-
-				//Replace the literal "\n" with line feeds
- 				plItem->m_csForeignLang.Replace(_T("\\n"), csLineFeed);
-
-				Array.Add(plItem);
+				item.m_csID = csID;
 			}
+
+			LPCSTR Value = ForeignNode->Value();
+			item.m_csForeignLang = CTextConvert::Utf8ToUnicode(Value);
+
+			//Replace the literal "\n" with line feeds
+ 			item.m_csForeignLang.Replace(_T("\\n"), csLineFeed);
+
+			Array.push_back(item);
  		}		
 
 		ItemElement = ItemElement->NextSiblingElement();
@@ -467,22 +427,23 @@ bool CMultiLanguage::LoadStringTableSection(const tinyxml2::XMLElement &doc, LAN
 	//<Item English_Text = "Use Ctrl - Num" ID= "32777"></Item>
 	while(ItemElement)
 	{
-		CLangItem *plItem = new CLangItem;
+		CLangItem item{};
 
-		plItem->m_csEnglishLang = ItemElement->Attribute("English_Text");
-		plItem->m_csID = ItemElement->Attribute("ID");
+		item.m_csEnglishLang = ItemElement->Attribute("English_Text");
+		item.m_csID = ItemElement->Attribute("ID");
 
 		ForeignNode = ItemElement->FirstChild();
-		if(ForeignNode) 
+		if(ForeignNode)
 		{
 			LPCSTR Value = ForeignNode->Value();
-			plItem->m_csForeignLang = CTextConvert::Utf8ToUnicode(Value);
+			item.m_csForeignLang = CTextConvert::Utf8ToUnicode(Value);
 
 			//Replace the literal "\n" with line feeds
-			plItem->m_csForeignLang.Replace(_T("\\n"), csLineFeed);
+			item.m_csForeignLang.Replace(_T("\\n"), csLineFeed);
 		}
 
-		Map.SetAt(plItem->m_csID, plItem);
+		// a repeated ID replaces the earlier item
+		Map.insert_or_assign(item.m_csID, item);
 
 		ItemElement = ItemElement->NextSiblingElement();
 	}

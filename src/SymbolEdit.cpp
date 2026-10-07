@@ -18,8 +18,6 @@
 IMPLEMENT_DYNAMIC(CSymbolEdit, CEdit)
 
 CSymbolEdit::CSymbolEdit() :
-	m_hSymbolIcon(NULL),
-	m_bInternalIcon(false),
 	m_colorPromptText(RGB(127, 127, 127)),
 	m_centerTextDiff(0)
 {
@@ -346,9 +344,8 @@ bool CSymbolEdit::ShowSearchHistoryMenu()
 
 void CSymbolEdit::DestroyIcon()
 {
-	// if icon was loaded internally, destroy it
-	if (m_bInternalIcon || m_hSymbolIcon != NULL)
-		::DestroyIcon(m_hSymbolIcon);
+	// the icon is owned whether it was loaded internally or handed in: destroy it
+	m_hSymbolIcon.reset();
 }
 
 void CSymbolEdit::PreSubclassWindow()
@@ -360,10 +357,7 @@ void CSymbolEdit::SetSymbolIcon(HICON hIcon, BOOL redraw)
 {
 	DestroyIcon();
 
-	m_hSymbolIcon = hIcon;
-
-	// icon was not loaded internally
-	m_bInternalIcon = false;
+	m_hSymbolIcon.reset(hIcon);
 
 	RecalcLayout();
 
@@ -375,18 +369,15 @@ void CSymbolEdit::SetSymbolIcon(UINT id, BOOL redraw)
 {
 	DestroyIcon();
 
-	m_hSymbolIcon = (HICON)::LoadImage(
+	m_hSymbolIcon.reset(static_cast<HICON>(::LoadImage(
 		AfxGetResourceHandle(),
 		MAKEINTRESOURCE(id),
 		IMAGE_ICON,
 		16,
 		16,
-		LR_DEFAULTCOLOR | LR_LOADTRANSPARENT);
+		LR_DEFAULTCOLOR | LR_LOADTRANSPARENT)));
 
-	ASSERT(m_hSymbolIcon != NULL);
-
-	// icon was loaded internally
-	m_bInternalIcon = true;
+	ASSERT(m_hSymbolIcon != nullptr);
 
 	RecalcLayout();
 
@@ -483,7 +474,7 @@ void CSymbolEdit::OnPaint()
 			dc.m_hDC,
 			rect.right - width - 1,
 			1,
-			m_hSymbolIcon,
+			m_hSymbolIcon.get(),
 			width,
 			height,
 			0,
@@ -622,7 +613,7 @@ HBRUSH CSymbolEdit::CtlColor(CDC* pDC, UINT /*n*/)
 
 	if (color != m_lastBrushColor)
 	{
-		DeleteObject(m_brush);
+		m_brush.DeleteObject();
 		m_brush.CreateSolidBrush(color);
 		m_lastBrushColor = color;
 	}

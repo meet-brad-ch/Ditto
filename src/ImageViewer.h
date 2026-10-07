@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "ScrollHelper.h"
 #include "Clip.h"
 
@@ -13,7 +15,8 @@ public:
 	CImageViewer();
 	virtual ~CImageViewer();
 
-	Gdiplus::Bitmap *m_pGdiplusBitmap;
+	/** @brief The image shown (owned); empty when there is none. */
+	std::unique_ptr<Gdiplus::Bitmap> m_pGdiplusBitmap{};
 	CScrollHelper m_scrollHelper;
 
 	void UpdateBitmapSize(bool setScale);

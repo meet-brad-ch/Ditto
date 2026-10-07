@@ -6,6 +6,8 @@
 #include "FocusHighlight.h"
 #include "FocusHighlightDlg.h"
 
+#include <memory>
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -56,7 +58,7 @@ BOOL CFocusHighlightApp::InitInstance()
 
 	// Create the shell manager, in case the dialog contains
 	// any shell tree view or shell list view controls.
-	CShellManager *pShellManager = new CShellManager;
+	const std::unique_ptr<CShellManager> pShellManager{ std::make_unique<CShellManager>() };
 
 	// Standard initialization
 	// If you are not using these features and wish to reduce the size
@@ -81,11 +83,7 @@ BOOL CFocusHighlightApp::InitInstance()
 		//  dismissed with Cancel
 	}
 
-	// Delete the shell manager created above.
-	if (pShellManager != NULL)
-	{
-		delete pShellManager;
-	}
+	// the shell manager created above is deleted when pShellManager goes out of scope
 
 	// Since the dialog has been closed, return FALSE so that we exit the
 	//  application, rather than start the application's message pump.

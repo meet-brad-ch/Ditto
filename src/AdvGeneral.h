@@ -3,6 +3,9 @@
 #include "DialogResizer.h"
 #include <afxcoll.h>
 
+#include <memory>
+#include <utility>
+
 class CAdvGeneral : public CDialogEx
 {
 	DECLARE_DYNAMIC(CAdvGeneral)
@@ -19,6 +22,19 @@ public:
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+	/**
+	 * @brief Creates a property grid item for AddProperty/AddSubItem, which take ownership of it.
+	 * @tparam T the property type.
+	 * @tparam Args the constructor argument types.
+	 * @param args the constructor arguments.
+	 * @return the new item; the caller hands it to the property grid at once.
+	 */
+	template <typename T, typename... Args>
+	static T* MakeGridProperty(Args&&... args)
+	{
+		return std::make_unique<T>(std::forward<Args>(args)...).release(); // ownership: the property grid
+	}
 
 	void AddTrueFalse(CMFCPropertyGridProperty * pGroupTest, CString desc, BOOL value, int settingId);
 	void Search(bool fromSelection);

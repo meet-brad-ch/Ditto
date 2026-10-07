@@ -674,13 +674,13 @@ void COptionsGeneral::OnBnClickedButtonPreviewTheme()
 {
 	if (theApp.m_pMainFrame != NULL)
 	{
-		CQPasteWnd* pPasteWnd = theApp.m_pMainFrame->m_quickPaste.m_pwndPaste;
+		CQPasteWnd* pPasteWnd = theApp.m_pMainFrame->m_quickPaste.m_pwndPaste.get();
 
 		// If the window doesn't exist yet, create/show it first (will load persisted theme)
 		if (pPasteWnd == NULL || IsWindow(pPasteWnd->m_hWnd) == FALSE)
 		{
 			theApp.m_pMainFrame->m_quickPaste.ShowQPasteWnd(theApp.m_pMainFrame, true, false, TRUE);
-			pPasteWnd = theApp.m_pMainFrame->m_quickPaste.m_pwndPaste;
+			pPasteWnd = theApp.m_pMainFrame->m_quickPaste.m_pwndPaste.get();
 		}
 
 		// Ensure it is visible before applying preview theme

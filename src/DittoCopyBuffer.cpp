@@ -166,29 +166,27 @@ bool CDittoCopyBuffer::PastCopyBuffer(long lCopyBuffer)
 
 		if(q.eof() == false)
 		{
-			m_pClipboard = new CClipboardSaveRestoreCopyBuffer;
-			if(m_pClipboard)
+			m_pClipboard = std::make_unique<CClipboardSaveRestoreCopyBuffer>();
+			//Save the clipboard,
+			//then put the new data on the clipboard
+			//then send a paste
+			//then wait a little and restore the original clipboard data
+			if(m_pClipboard->Save(false))
 			{
-				//Save the clipboard, 
-				//then put the new data on the clipboard
-				//then send a paste
-				//then wait a little and restore the original clipboard data
-				if(m_pClipboard->Save(false))
-				{
-					theApp.m_pMainFrame->PasteOrShowGroup(q.getIntField(_T("lID")), -1, FALSE, TRUE, false);
+				theApp.m_pMainFrame->PasteOrShowGroup(q.getIntField(_T("lID")), -1, FALSE, TRUE, false);
 
-					m_pClipboard->m_lRestoreDelay = CGetSetOptions::GetDittoRestoreClipboardDelay();
+				m_pClipboard->m_lRestoreDelay = CGetSetOptions::GetDittoRestoreClipboardDelay();
 
-					Log(StrF(_T("PastCopyBuffer sent paste, starting thread to restore clipboard, Delay = %d"), m_pClipboard->m_lRestoreDelay));
+				Log(StrF(_T("PastCopyBuffer sent paste, starting thread to restore clipboard, Delay = %d"), m_pClipboard->m_lRestoreDelay));
 
-					AfxBeginThread(CDittoCopyBuffer::DelayRestoreClipboard, (LPVOID)this, THREAD_PRIORITY_LOWEST);
+				// the thread takes m_pClipboard over; this thread does not touch it until m_Pasting is set
+				AfxBeginThread(CDittoCopyBuffer::DelayRestoreClipboard, (LPVOID)this, THREAD_PRIORITY_LOWEST);
 
-					bRet = true;
-				}
-				else
-				{
-					Log(_T("PastCopyBuffer failed to save clipboard"));
-				}
+				bRet = true;
+			}
+			else
+			{
+				Log(_T("PastCopyBuffer failed to save clipboard"));
 			}
 		}
 	}
@@ -219,7 +217,8 @@ UINT CDittoCopyBuffer::DelayRestoreClipboard(LPVOID pParam)
 	CDittoCopyBuffer *pBuffer = (CDittoCopyBuffer*)pParam;
 	if(pBuffer)
 	{
-		CClipboardSaveRestoreCopyBuffer *pLocalClipboard = pBuffer->m_pClipboard;
+		// owns the clipboard saved by PastCopyBuffer from now on
+		std::unique_ptr<CClipboardSaveRestoreCopyBuffer> pLocalClipboard{std::move(pBuffer->m_pClipboard)};
 
 		// signaled (EndRestoreThread) and timed out both mean: restore now
 		if(WaitForSingleObject(pBuffer->m_RestoreTimer, pLocalClipboard->m_lRestoreDelay) == WAIT_FAILED)
@@ -243,8 +242,8 @@ UINT CDittoCopyBuffer::DelayRestoreClipboard(LPVOID pParam)
 			}
 		}
 
-		delete pLocalClipboard;
-		pLocalClipboard = NULL;
+		// freed before the next paste may start
+		pLocalClipboard.reset();
 
 		pBuffer->m_Pasting.SetEvent();
 	}

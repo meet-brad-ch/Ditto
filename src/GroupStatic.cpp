@@ -19,7 +19,6 @@ CGroupStatic::CGroupStatic()
 	m_dwTextColor = 0;
 	m_dwBkColor = RGB(255, 255, 255);
 	m_toggleCursorToHand = false;
-	m_pFont = NULL;
 }
 
 CGroupStatic::~CGroupStatic()
@@ -104,17 +103,14 @@ BOOL CGroupStatic::OnChildNotify(UINT message, WPARAM wParam, LPARAM lParam, LRE
 *************************************************************************/
 void CGroupStatic::SetFont( int nPointSize, LPCTSTR lpszFaceName, CDC* pDC )
 {
-   // If a font has been allocated, delete it
-   if( m_pFont )
-      delete m_pFont;
-
-   m_pFont = new CFont;
+   // If a font has been created, delete it
+   m_font.DeleteObject();
 
    // Create a font using the given attributes
-   m_pFont->CreatePointFont( nPointSize, lpszFaceName, pDC );
+   m_font.CreatePointFont( nPointSize, lpszFaceName, pDC );
 
    // Set the window's current font to the specified font
-   CStatic::SetFont( m_pFont );
+   CStatic::SetFont( &m_font );
 }
 
 BOOL CGroupStatic::OnSetCursor(CWnd* /*pWnd*/, UINT /*nHitTest*/, UINT /*message*/)

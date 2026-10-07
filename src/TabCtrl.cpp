@@ -38,8 +38,6 @@ CTabCtrlEx::CTabCtrlEx()
 	m_bBtnEnabled[1] = false;
 	m_nLeftShifted = 0;
 	m_nPrevWidth = 0;
-	m_pFntText = NULL;
-	m_pFntBoldText = NULL;
 	m_bSetFocusToNewlySelectedTab = true;
 
 	m_SelectedColor = (COLORREF)GetSysColor(COLOR_BTNFACE);
@@ -48,14 +46,6 @@ CTabCtrlEx::CTabCtrlEx()
 
 CTabCtrlEx::~CTabCtrlEx()
 {
-	if (m_pFntText)
-		delete m_pFntText;
-	m_pFntText = NULL;
-
-	if (m_pFntBoldText)
-		delete m_pFntBoldText;
-
-	m_pFntBoldText = NULL;
 }
 
 
@@ -164,29 +154,15 @@ void CTabCtrlEx::SetTabHeight(int nTabHeight)
 {
 	m_nTabHeight = nTabHeight;
 
-	// Delete the old font and create a new one
-	if (m_pFntText)
-		delete m_pFntText;
-	m_pFntText = new CFont;
-	
-	if (m_pFntText)
-	{
-		// Set the regular font
-		m_pFntText->CreateFont(-(m_nTabHeight*7/10), 0, 0, 0, FW_LIGHT, FALSE, FALSE, 0, DEFAULT_CHARSET,
-			OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, _T("Arial Unicode MS"));
-	}
+	// Delete the old font and create a new one: the regular font
+	m_fntText.DeleteObject();
+	m_fntText.CreateFont(-(m_nTabHeight*7/10), 0, 0, 0, FW_LIGHT, FALSE, FALSE, 0, DEFAULT_CHARSET,
+		OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, _T("Arial Unicode MS"));
 
-	// Delete the old font and create a new one
-	if (m_pFntBoldText)
-		delete m_pFntBoldText;
-	m_pFntBoldText = new CFont;
-
-	if (m_pFntBoldText)
-	{
-		// Set the bold font
-		m_pFntBoldText->CreateFont(-(m_nTabHeight*7/10), 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, 0, DEFAULT_CHARSET,
-			OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, _T("Arial Unicode MS"));
-	}
+	// Delete the old font and create a new one: the bold font
+	m_fntBoldText.DeleteObject();
+	m_fntBoldText.CreateFont(-(m_nTabHeight*7/10), 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, 0, DEFAULT_CHARSET,
+		OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, _T("Arial Unicode MS"));
 }
 
 bool CTabCtrlEx::AddItem(const CString& csTabTitle, CWnd* pTabWnd)
@@ -288,7 +264,7 @@ int CTabCtrlEx::GetTextWidth(const CString& csText)
 	if (pDC)
 	{
 		// Select the font
-		CFont *pPrevFont = pDC->SelectObject(m_pFntBoldText);
+		CFont *pPrevFont = pDC->SelectObject(&m_fntBoldText);
 		
 		// Get the width
 		int nWidth = pDC->GetTextExtent(csText).cx;
@@ -694,12 +670,12 @@ void CTabCtrlEx::DrawTabEx(int nTab, CDC *pDC, CRect& rcTab)
 	if (nTab == GetActiveTab())
 	{
 		pDC->FillSolidRect(rcTab, m_SelectedColor);
-		pFont = m_pFntBoldText;
+		pFont = &m_fntBoldText;
 	}
 	else
 	{
 		pDC->FillSolidRect(rcTab, m_NonSelectedColor);
-		pFont = m_pFntText;
+		pFont = &m_fntText;
 	}
 
 	//Don't draw a line on the item before the selected tab

@@ -129,7 +129,7 @@ void CEditWnd::OnDpiChanged(CWnd* pParent, int dpi)
 
 	LoadToolbarDPI();
 
-	for (CDittoRulerRichEditCtrl* pEdit : m_edits)
+	for (const std::unique_ptr<CDittoRulerRichEditCtrl>& pEdit : m_edits)
 	{
 		if (pEdit)
 		{
@@ -197,7 +197,7 @@ bool CEditWnd::DoSaveItem(int index)
 	bool bRet = false;
 	BOOL bUpdateDesc = m_updateDescriptionButton.GetCheck();
 
-	CDittoRulerRichEditCtrl *pEdit = m_edits[index];
+	CDittoRulerRichEditCtrl *pEdit = m_edits[index].get();
 	if(pEdit)
 	{
 		int nRet = pEdit->SaveToDB(bUpdateDesc);
@@ -287,7 +287,7 @@ bool CEditWnd::AddItem(int id)
 		int nTab = m_tabControl.GetTabCount();
 		m_tabControl.SetActiveTab(nTab-1);
 
-		m_edits.push_back(pEdit.release());
+		m_edits.push_back(std::move(pEdit));
 		bRet = true;
 	}
 
@@ -300,7 +300,7 @@ int CEditWnd::IsIDAlreadyInEdit(int id, bool bSetFocus)
 	INT_PTR size = m_edits.size();
 	for(int i = 0; i < size; i++)
 	{
-		CDittoRulerRichEditCtrl *pEdit = m_edits[i];
+		CDittoRulerRichEditCtrl *pEdit = m_edits[i].get();
 		if(pEdit)
 		{
 			if(pEdit->GetDBID() == id)
@@ -323,13 +323,12 @@ void CEditWnd::OnDestroy()
 	INT_PTR size = m_edits.size();
 	for(int i = 0; i < size; i++)
 	{
-		CDittoRulerRichEditCtrl *pEdit = m_edits[i];
+		CDittoRulerRichEditCtrl *pEdit = m_edits[i].get();
 		if(pEdit)
 		{
 			pEdit->DestroyWindow();
 
-			delete pEdit;
-			pEdit = NULL;
+			m_edits[i].reset();
 		}
 	}
 
@@ -345,7 +344,7 @@ void CEditWnd::OnSetFocus(CWnd* pOldWnd)
 	int nTab = m_tabControl.GetActiveTab();
 	if(nTab >= 0 && nTab < (int)m_edits.size())
 	{
-		CDittoRulerRichEditCtrl *pEdit = m_edits[nTab];
+		CDittoRulerRichEditCtrl *pEdit = m_edits[nTab].get();
 		if(pEdit)
 		{
 			pEdit->SetFocus();
@@ -358,9 +357,9 @@ bool CEditWnd::CloseEdits(bool bPrompt)
 	BOOL bUpdateDesc = m_updateDescriptionButton.GetCheck();
 
 	int nTab = 0;
-	for(std::vector<CDittoRulerRichEditCtrl*>::iterator it = m_edits.begin(); it != m_edits.end();)
+	for(std::vector<std::unique_ptr<CDittoRulerRichEditCtrl>>::iterator it = m_edits.begin(); it != m_edits.end();)
 	{
-		CDittoRulerRichEditCtrl *pEdit = *it;
+		CDittoRulerRichEditCtrl *pEdit = it->get();
 		if(pEdit)
 		{
 			if(pEdit->CloseEdit(bPrompt, bUpdateDesc) == false)
@@ -368,9 +367,8 @@ bool CEditWnd::CloseEdits(bool bPrompt)
 
 			m_tabControl.DeleteItem(nTab);
 			pEdit->DestroyWindow();
-			delete pEdit;
-			pEdit = NULL;
 
+			// erasing the entry deletes the control
 			it = m_edits.erase(it);
 		}
 		else
@@ -389,15 +387,14 @@ void CEditWnd::OnClose()
 	int activeTab = m_tabControl.GetActiveTab();
 	if(activeTab >= 0 && activeTab < (int)m_edits.size())
 	{
-		CDittoRulerRichEditCtrl *pEdit = m_edits[activeTab];
+		CDittoRulerRichEditCtrl *pEdit = m_edits[activeTab].get();
 		if(pEdit)
 		{
 			if(pEdit->CloseEdit(true, bUpdateDesc))
 			{
 				m_tabControl.DeleteItem(activeTab);
 				pEdit->DestroyWindow();
-				delete pEdit;
-				pEdit = NULL;
+				// erasing the entry deletes the control
 				m_edits.erase(m_edits.begin()+ activeTab);
 
 				if(m_edits.size() <= 0)

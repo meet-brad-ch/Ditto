@@ -24,11 +24,12 @@ END_MESSAGE_MAP()
 
 CNoDbFrameWnd::CNoDbFrameWnd()
 {
-	m_pOptions = NULL;
 	m_pDittoHotKey = NULL;
 	m_pDittoHotKey2 = NULL;
 	m_pDittoHotKey3 = NULL;
 }
+
+CNoDbFrameWnd::~CNoDbFrameWnd() = default;
 
 int CNoDbFrameWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
@@ -51,9 +52,9 @@ int CNoDbFrameWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	g_HotKeys.Init(m_hWnd);
 
-	m_pDittoHotKey = new CHotKey(CString("DittoHotKey"), 704); //704 is ctrl-tilda
-	m_pDittoHotKey2 = new CHotKey(CString("DittoHotKey2"));
-	m_pDittoHotKey3 = new CHotKey(CString("DittoHotKey3"));
+	m_pDittoHotKey = &g_HotKeys.Create(CString("DittoHotKey"), 704); //704 is ctrl-tilda
+	m_pDittoHotKey2 = &g_HotKeys.Create(CString("DittoHotKey2"));
+	m_pDittoHotKey3 = &g_HotKeys.Create(CString("DittoHotKey3"));
 
 	g_HotKeys.RegisterAll();
 
@@ -62,20 +63,16 @@ int CNoDbFrameWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CNoDbFrameWnd::OnFirstOptions()
 {
-	if (m_pOptions != NULL)
+	if (m_pOptions)
 	{
 		::SetForegroundWindow(m_pOptions->m_hWnd);
 	}
 	else
 	{
-		m_pOptions = new COptionsSheet(_T(""));
-
-		if (m_pOptions != NULL)
-		{
-			((COptionsSheet*)m_pOptions)->SetNotifyWnd(m_hWnd);
-			m_pOptions->Create();
-			m_pOptions->ShowWindow(SW_SHOW);
-		}
+		m_pOptions = std::make_unique<COptionsSheet>(_T(""));
+		m_pOptions->SetNotifyWnd(m_hWnd);
+		m_pOptions->Create();
+		m_pOptions->ShowWindow(SW_SHOW);
 	}
 }
 
@@ -118,16 +115,14 @@ void CNoDbFrameWnd::TryOpenDatabase()
 	if (IsDatabaseOpen() ||
 		CheckDBExists(CGetSetOptions::GetDBPath()))
 	{
+		// the registry owns the keys: Remove destroys them
 		g_HotKeys.Remove(m_pDittoHotKey);
-		delete m_pDittoHotKey;
 		m_pDittoHotKey = NULL;
 
 		g_HotKeys.Remove(m_pDittoHotKey2);
-		delete m_pDittoHotKey2;
 		m_pDittoHotKey2 = NULL;
 
 		g_HotKeys.Remove(m_pDittoHotKey3);
-		delete m_pDittoHotKey3;
 		m_pDittoHotKey3 = NULL;
 
 		KillTimer(TIMER_OPEN_DB);
@@ -140,8 +135,7 @@ void CNoDbFrameWnd::TryOpenDatabase()
 
 LRESULT CNoDbFrameWnd::OnOptionsClosed(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
-	delete m_pOptions;
-	m_pOptions = NULL;
+	m_pOptions.reset();
 
 	TryOpenDatabase();
 

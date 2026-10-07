@@ -42,7 +42,8 @@ public:
 protected:
 	COLORREF m_dwTextColor;
 	COLORREF m_dwBkColor;
-	CFont*   m_pFont;
+	/** @brief The font set by SetFont; empty until then. */
+	CFont    m_font{};
 	CBrush   m_brush;
 	CString  m_strBuff;        // Holds the static controls contents before & after the control is displayed
 	bool m_toggleCursorToHand;

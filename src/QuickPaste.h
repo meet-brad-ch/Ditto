@@ -10,6 +10,7 @@
 #endif // _MSC_VER > 1000
 
 #include "QPasteWnd.h"
+#include <memory>
 
 class CQuickPaste  
 {
@@ -31,7 +32,7 @@ public:
 	void OnScreenResolutionChange();
 
 //protected:
-	CQPasteWnd *m_pwndPaste;
+	std::unique_ptr<CQPasteWnd> m_pwndPaste{}; // the quick paste window, owned; null until first shown
 
 protected:
 	bool m_forceResizeOnNextShow;

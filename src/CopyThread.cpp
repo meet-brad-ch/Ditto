@@ -23,7 +23,6 @@ IMPLEMENT_DYNCREATE(CCopyThread, CWinThread)
 CCopyThread::CCopyThread():
 	m_bQuit(false),
 	m_bConfigChanged(false),
-	m_pClipboardViewer(NULL),
 	m_connectOnStartup(true)
 {
 	m_bAutoDelete = false;
@@ -31,14 +30,11 @@ CCopyThread::CCopyThread():
 
 CCopyThread::~CCopyThread()
 {
-	m_LocalConfig.DeleteTypes();
-	m_SharedConfig.DeleteTypes();
-	delete m_pClipboardViewer;
 }
 
 BOOL CCopyThread::InitInstance()
 {
-	m_pClipboardViewer = new CClipboardViewer(this);
+	m_pClipboardViewer = std::make_unique<CClipboardViewer>(this);
 	m_pClipboardViewer->m_connectOnStartup = m_connectOnStartup;
 
 	// the window is created within this thread and therefore uses its message queue
@@ -75,7 +71,7 @@ void CCopyThread::OnClipboardChange(CString activeWindow)
 	pClip->m_copyReason = theApp.GetCopyReason();
 
 	COleDataObjectEx oleData;
-	CClipTypes* pSupportedTypes = m_LocalConfig.m_pSupportedTypes;
+	CClipTypes* pSupportedTypes = m_LocalConfig.m_pSupportedTypes.get();
 
 	// If we are copying from a Ditto Buffer or use advanced option
 	// then save all to the database, so when we paste this it will paste 
@@ -137,7 +133,7 @@ void CCopyThread::OnClipboardChange(CString activeWindow)
 	{
 		if(::PostMessage(m_LocalConfig.m_hClipHandler, WM_CLIPBOARD_COPIED, reinterpret_cast<WPARAM>(pClip.get()), 0))
 		{
-			pClip.release();
+			pClip.release(); // ownership: CMainFrame::OnClipboardCopied retakes it in a std::unique_ptr
 		}
 		else
 		{
@@ -146,7 +142,7 @@ void CCopyThread::OnClipboardChange(CString activeWindow)
 	}
 	else
 	{
-		::SendMessage(m_LocalConfig.m_hClipHandler, WM_CLIPBOARD_COPIED, reinterpret_cast<WPARAM>(pClip.release()), 0);
+		::SendMessage(m_LocalConfig.m_hClipHandler, WM_CLIPBOARD_COPIED, reinterpret_cast<WPARAM>(pClip.release()), 0); // ownership: CMainFrame::OnClipboardCopied retakes it in a std::unique_ptr
 	}
 
 	Log(_T("OnClipboardChange - End"));
@@ -157,27 +153,15 @@ void CCopyThread::SyncConfig()
 	// atomic read
 	if(m_bConfigChanged)
 	{
-		CClipTypes* pTypes = NULL;
-		
 		ATL::CCritSecLock csLock(m_cs.m_sect);
-		
-		pTypes = m_LocalConfig.m_pSupportedTypes;
-		
-		m_LocalConfig = m_SharedConfig;
-		
-		// NULL means that it shouldn't have been sync'ed
-		if( m_SharedConfig.m_pSupportedTypes == NULL )
-		{	// let m_LocalConfig keep its types
-			m_LocalConfig.m_pSupportedTypes = pTypes; // undo sync
-			pTypes = NULL; // nothing to delete
-		}
-		else
-			m_SharedConfig.m_pSupportedTypes = NULL; // now owned by LocalConfig
-		
-		// delete old types
-		if( pTypes )
+
+		m_LocalConfig.CopySettingsFrom(m_SharedConfig);
+
+		// null means that the types shouldn't be sync'ed: m_LocalConfig keeps its types
+		if( m_SharedConfig.m_pSupportedTypes )
 		{
-			delete pTypes;
+			// now owned by LocalConfig; its old types are deleted
+			m_LocalConfig.m_pSupportedTypes = std::move(m_SharedConfig.m_pSupportedTypes);
 		}
 	}
 }
@@ -194,22 +178,18 @@ bool CCopyThread::GetConnectCV()
 
 void CCopyThread::SetConnectCV(bool bConnect)
 {
-	if(m_pClipboardViewer != NULL && m_pClipboardViewer->m_hWnd != NULL)
+	if(m_pClipboardViewer && m_pClipboardViewer->m_hWnd != NULL)
 	{
 		::SendMessage( m_pClipboardViewer->m_hWnd, WM_SETCONNECT, bConnect, 0 );
 	}
 }
 
-void CCopyThread::SetSupportedTypes( CClipTypes* pTypes )
+void CCopyThread::SetSupportedTypes( std::unique_ptr<CClipTypes> pTypes )
 {
 	ATL::CCritSecLock csLock(m_cs.m_sect);
 
-	if(m_SharedConfig.m_pSupportedTypes)
-	{
-		delete m_SharedConfig.m_pSupportedTypes;
-	}
-
-	m_SharedConfig.m_pSupportedTypes = pTypes;
+	// types not yet taken by SyncConfig are deleted
+	m_SharedConfig.m_pSupportedTypes = std::move(pTypes);
 	m_bConfigChanged = true;
 }
 
@@ -270,10 +250,12 @@ bool CCopyThread::GetAsyncCopy()
 
 void CCopyThread::Init(CCopyConfig cfg)
 {
-	ASSERT(m_LocalConfig.m_pSupportedTypes == NULL);
-	m_LocalConfig = m_SharedConfig = cfg;
+	ASSERT(!m_LocalConfig.m_pSupportedTypes);
+	m_SharedConfig.CopySettingsFrom(cfg);
+	m_SharedConfig.m_pSupportedTypes.reset();
+	m_LocalConfig.CopySettingsFrom(cfg);
 	// let m_LocalConfig own the m_pSupportedTypes
-	m_SharedConfig.m_pSupportedTypes = NULL;
+	m_LocalConfig.m_pSupportedTypes = std::move(cfg.m_pSupportedTypes);
 }
 
 bool CCopyThread::Quit()
