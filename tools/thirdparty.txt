@@ -1,0 +1,36 @@
+# Untouched third-party code: files whose code was never changed for Ditto after they were
+# imported (checked with `git log --follow -p -w` per file; moves, whitespace and comment edits
+# do not count). They are never edited: a newer release may replace them (Phase T), nothing else.
+# Every gate (complexity, allocation, globals) skips them; the project files silence their
+# warnings and code analysis. One repo-relative path per line; '#' starts a comment.
+# Third-party code that Ditto did change is Ditto's own code and is not listed here.
+
+# SQLite3 Multiple Ciphers 2.5.1 (SQLite 3.53.4)
+src\sqlite\sqlite3mc_amalgamation.c
+src\sqlite\sqlite3mc_amalgamation.h
+
+# SQLite 3.53.4: ext/icu/icu.c and the extension headers of the same release
+ICU_Loader\icu.c
+ICU_Loader\sqlite3.h
+ICU_Loader\sqlite3ext.h
+
+# Chris Maunder's colour picker (the ruler editor's colour button)
+src\RulerRichEditCtrl\External\ColourPicker.cpp
+src\RulerRichEditCtrl\External\ColourPicker.h
+src\RulerRichEditCtrl\External\ColourPopup.cpp
+src\RulerRichEditCtrl\External\ColourPopup.h
+
+# Johan Rosengren's ruler editor helpers
+src\RulerRichEditCtrl\FontComboBox.cpp
+src\RulerRichEditCtrl\FontComboBox.h
+src\RulerRichEditCtrl\SizeComboBox.cpp
+src\RulerRichEditCtrl\SizeComboBox.h
+src\RulerRichEditCtrl\StdGrfx.cpp
+src\RulerRichEditCtrl\StdGrfx.h
+
+# Wildcard matching (include/exclude apps by name)
+src\WildCardMatch.cpp
+src\WildCardMatch.h
+
+# Window edge snapping (SnapWindow.h was changed for Ditto: it is Ditto's own)
+src\SnapWindow.cpp

@@ -6,7 +6,9 @@
 #   3. checks every built binary for ASLR, DEP and Control Flow Guard
 #   4. greps all sources for network APIs and network DLL names
 #   5. checks every installer script for firewall rules, URL launches and a Windows 10 minimum
-#   6. rejects raw allocation (new/delete/malloc/free) in lib\ and tests\
+#   6. raw allocation (new/delete/malloc/free) and globals (free functions, global/static variables,
+#      macros): none in contract code; legacy code held by shrink-only baselines
+#      (tools\gates\allocation.ps1, globals.ps1; untouched third-party code: tools\thirdparty.txt)
 #      - complexity: lib\ and tests\ below CC 10; legacy CC >= 10 held by tools\baselines\complexity.tsv
 #   7. runs every unit test on its own: DittoTests (AddressSanitizer build) and AppTests
 #      - coverage: line coverage of lib\DittoCore >= 90 % (Debug|x64 test build)
@@ -16,7 +18,7 @@
 #   -SkipBuild        reuse the last build (the warnings checks are then NOT VERIFIED)
 #   -Analyze          run MSVC code analysis (/analyze, NativeRecommendedRules) in the rebuild; any
 #                     finding fails the build (about 7 min)
-#   -UpdateBaselines  rewrite the complexity baseline after a passing run; it may only shrink
+#   -UpdateBaselines  rewrite the complexity, allocation and globals baselines after a passing run; they may only shrink
 param([switch] $SkipBuild, [switch] $Analyze, [switch] $UpdateBaselines)
 
 $ErrorActionPreference = 'Stop'
@@ -205,44 +207,20 @@ foreach ($iss in $issFiles) {
 if ($issFindings -gt 0) { Fail "installer: $issFindings findings (firewall rules, URL launches or OS version)" }
 Say "installer: ok   $($issFiles.Count) script(s): no firewall rules or URL launches, Windows 10 or later"
 
-# ---- 6. no raw allocation in contract code ------------------------------------------
-# Owner rule: no new/delete/malloc/free; smart pointers and containers only. Deleted functions
-# ('= delete'), comments and the text of string and character literals are not allocations.
-$allocPattern = '\bnew\b|\bdelete\b|\b(malloc|calloc|realloc|free)\s*\('
-$contractFiles = @(Get-ChildItem (Join-Path $repo 'lib'), (Join-Path $repo 'tests') -Recurse -File -Include *.cpp, *.h)
-$allocFindings = 0
-foreach ($f in $contractFiles) {
-    $n = 0
-    $inBlock = $false   # inside a /* ... */ (or Doxygen /** ... */) comment
-    foreach ($line in [IO.File]::ReadLines($f.FullName)) {
-        $n++
-        $code = ''
-        $rest = $line
-        while ($rest.Length -gt 0) {
-            if ($inBlock) {
-                $end = $rest.IndexOf('*/')
-                if ($end -lt 0) { $rest = '' } else { $rest = $rest.Substring($end + 2); $inBlock = $false }
-                continue
-            }
-            $lineComment = $rest.IndexOf('//')
-            $blockStart = $rest.IndexOf('/*')
-            if ($blockStart -ge 0 -and ($lineComment -lt 0 -or $blockStart -lt $lineComment)) {
-                $code += $rest.Substring(0, $blockStart); $rest = $rest.Substring($blockStart + 2); $inBlock = $true
-            }
-            elseif ($lineComment -ge 0) { $code += $rest.Substring(0, $lineComment); $rest = '' }
-            else { $code += $rest; $rest = '' }
-        }
-        $code = $code -replace '=\s*delete\b', ''
-        # text in string and character literals is not code ("new shequel" in the slug table)
-        $code = $code -replace '"(\\.|[^"\\])*"', '""' -replace "'(\\.|[^'\\])*'", "''"
-        if ($code -cmatch $allocPattern) {
-            Say ("allocation: FAIL {0}:{1}: {2}" -f $f.FullName.Substring($repo.Length + 1), $n, $line.Trim())
-            $allocFindings++
-        }
-    }
-}
-if ($allocFindings -gt 0) { Fail "allocation: $allocFindings raw allocations in lib\ or tests\" }
-Say "allocation: ok   $($contractFiles.Count) files in lib\ and tests\, no raw new/delete/malloc/free"
+# ---- 6. no raw allocation, no globals, no macros ----------------------------------------
+# Owner rules: smart pointers and containers only; behaviour in classes, no global state; avoid
+# macros. Contract code (lib\, tests\) has none; legacy code is held by shrink-only baselines
+# (tools\baselines\allocation.tsv, globals.tsv). Untouched third-party code (tools\thirdparty.txt)
+# is skipped by every gate.
+$gateArgs = @{ Repo = $repo }
+if ($UpdateBaselines) { $gateArgs['Update'] = $true }
+$gate = Invoke-Gate 'allocation.ps1' $gateArgs
+if ($gate.ExitCode -ne 0) { Fail 'raw allocation above the baseline or in contract code' 'Lint' }
+$allocationSummary = $gate.Summary
+$gate = Invoke-Gate 'globals.ps1' $gateArgs
+if ($gate.ExitCode -ne 0) { Fail 'a global, free function or macro above the baseline or in lib\' 'Lint' }
+$globalsSummary = $gate.Summary
+$report['Lint'] += "; raw allocation: none in contract code, legacy $allocationSummary; globals/free functions/macros: none in lib\, legacy $globalsSummary"
 
 # ---- 6b. cyclomatic complexity (lizard) -----------------------------------------------
 # Contract code stays below CC 10; legacy functions at CC >= 10 may not grow (baseline ratchet).
@@ -312,6 +290,6 @@ $docOut | Where-Object { "$_".Trim() } | Select-Object -First 20 | ForEach-Objec
 if ($docCode -ne 0) { Fail "docs: doxygen exit $docCode (undocumented or wrongly documented code)" }
 Say 'docs: ok   contract code fully documented (tools\Doxyfile.contract)'
 
-Say "VERIFY OK: build, imports and hardening ($($binaries.Count) binaries), source ($($files.Count) files), installer scripts ($($issFiles.Count)), allocation, complexity, tests ($($testNames.Count)), coverage, docs"
+Say "VERIFY OK: build, imports and hardening ($($binaries.Count) binaries), source ($($files.Count) files), installer scripts ($($issFiles.Count)), allocation, globals, complexity, tests ($($testNames.Count)), coverage, docs"
 Write-Report
 exit 0

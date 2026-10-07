@@ -2,7 +2,7 @@
 #  - contract code (lib\, tests\): no function may reach CC 10, ever;
 #  - legacy code: every function at CC >= 10 is held in tools\baselines\complexity.tsv by
 #    tools\ratchet.ps1, so no new function may reach 10 and no listed function may get worse.
-# Vendored code (src\sqlite, and SQLite's icu.c and headers in ICU_Loader) is not measured.
+# Untouched third-party code (tools\thirdparty.txt) is not measured (tools\gates\sources.ps1).
 # Functions are keyed by (file, qualified name); overloads share the key and keep the highest CC.
 param(
     [Parameter(Mandatory)] [string] $Repo,
@@ -12,13 +12,8 @@ $ErrorActionPreference = 'Stop'
 function Say([string] $m) { Write-Output "$(Get-Date -Format 'HH:mm:ss') $m" }
 $limit = 10
 
-$dirs = 'src', 'Shared', 'Addins', 'ICU_Loader', 'focusdll', 'lib', 'tests'
-$vendored = '^(src\\sqlite\\|ICU_Loader\\(icu\.c|sqlite3\.h|sqlite3ext\.h)$)'
-$files = foreach ($d in $dirs) {
-    Get-ChildItem (Join-Path $Repo $d) -Recurse -File -Include *.c, *.cpp, *.h, *.hpp |
-        ForEach-Object { $_.FullName.Substring($Repo.Length + 1) } |
-        Where-Object { $_ -notmatch $vendored }
-}
+. (Join-Path $PSScriptRoot 'sources.ps1')
+$files = Get-OwnSources $Repo
 $outDir = Join-Path $Repo 'build\logs'
 New-Item -ItemType Directory $outDir -Force | Out-Null
 $fileList = Join-Path $outDir 'complexity-files.txt'

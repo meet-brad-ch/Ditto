@@ -85,10 +85,19 @@ Branch coverage), on failure too. Run time: about 2 min, or about 3.5 min with `
    WebBrowser APIs, network DLL names and `ShellExecute` of an `http(s)://` URL.
 5. It checks every Inno Setup script (`*.iss`): no firewall rules (netsh), no URL launches, and a
    `MinVersion` of Windows 10 or later.
-6. It rejects raw allocation (`new`, `delete`, `malloc`, `free`) in `lib\` and `tests\`.
-   - **Complexity:** lizard measures our own C/C++ code (vendored sqlite excluded). No function in `lib\` or `tests\` may reach CC 10. The legacy functions at
-     CC 10 or more are listed in `tools\baselines\complexity.tsv`, and none may get worse or be
-     added.
+6. It checks Ditto's own C/C++ code (tracked files; the untouched third-party files in
+   `tools\thirdparty.txt` are skipped by every gate). Contract code (`lib\`, `tests\`) must be
+   clean; legacy code is held by baselines in `tools\baselines\` that may only shrink
+   (`-UpdateBaselines` rewrites them after a passing run).
+   - **Allocation** (`tools\gates\allocation.ps1`): no raw `new`, `delete`, `malloc`, `free`. A
+     handoff to a framework owner is allowed when its line says so: `// ownership: <owner>`.
+   - **Globals** (`tools\gates\globals.ps1`): no free functions, global or static variables, or
+     macros (include guards and `resource.h` excepted). The accepted exceptions, each with its
+     reason, are in `tools\gates\globals-allow.txt`: the MFC `theApp` objects, focus.dll's
+     shared-segment hook state, and DLL entry points, hook procedures and exports.
+   - **Complexity** (`tools\gates\complexity.ps1`, lizard): no function in `lib\` or `tests\`
+     may reach CC 10. The legacy functions at CC 10 or more are listed in
+     `tools\baselines\complexity.tsv`, and none may get worse or be added.
 7. It runs every GoogleTest in `tests\` on its own (`--gtest_filter`), under AddressSanitizer. Each
    test writes its result to `build\test-results\<test>.xml`.
    - **Coverage:** Microsoft code coverage (it ships with Visual Studio) runs the Debug|x64 test

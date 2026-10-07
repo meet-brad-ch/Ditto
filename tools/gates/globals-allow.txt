@@ -1,0 +1,37 @@
+# The accepted exceptions to "no globals" (owner decision 2026-10-07). One per line:
+# path<TAB>kind<TAB>name<TAB>reason  (kinds and paths as tools\gates\globals.ps1 reports them).
+# Nothing else may be added here without the owner's decision.
+
+# (1) MFC requires exactly one global CWinApp object per module
+src\CP_Main.cpp	global-variable	theApp	MFC requires one global CWinApp object; it owns the composition root
+Addins\DittoUtil\DittoUtil.cpp	global-variable	theApp	MFC requires one global CWinApp object in an MFC DLL
+FocusHighlight\FocusHighlight.cpp	global-variable	theApp	MFC requires one global CWinApp object
+
+# (2) focusdll's hook state lives in a shared data segment: the hook runs inside other processes
+focusdll\focusdll.cpp	global-variable	hHook	shared data segment of the focus hook (read by the hook in other processes)
+focusdll\focusdll.cpp	global-variable	hFocusWnd	shared data segment of the focus hook (read by the hook in other processes)
+focusdll\focusdll.cpp	global-variable	hNotifyWnd	shared data segment of the focus hook (read by the hook in other processes)
+focusdll\focusdll.cpp	global-variable	uMessage	shared data segment of the focus hook (read by the hook in other processes)
+focusdll\focusdll.cpp	global-variable	g_hKeyboardHook	shared data segment of the keyboard hook (read by the hook in other processes)
+focusdll\focusdll.cpp	global-variable	g_CaptureKeys	shared data segment of the keyboard hook (read by the hook in other processes)
+focusdll\focusdll.cpp	global-variable	g_uKeyboardMessage	shared data segment of the keyboard hook (read by the hook in other processes)
+focusdll\focusdll.cpp	global-variable	g_hKeyboardNotifyWnd	shared data segment of the keyboard hook (read by the hook in other processes)
+
+# (3) DLL entry points, Windows hook procedures and exported functions are free functions by contract
+focusdll\focusdll.cpp	free-function	DllMain	the DLL entry point Windows calls
+focusdll\focusdll.cpp	free-function	HookProc	a Windows hook procedure (SetWindowsHookEx)
+focusdll\focusdll.cpp	free-function	KeyboardProc	a Windows hook procedure (SetWindowsHookEx)
+focusdll\focusdll.cpp	free-function	MonitorFocusChanges	exported function of focus.dll
+focusdll\focusdll.cpp	free-function	StopMonitoringFocusChanges	exported function of focus.dll
+focusdll\focusdll.cpp	free-function	MonitorKeyboardChanges	exported function of focus.dll
+focusdll\focusdll.cpp	free-function	StopMonitoringKeyboardChanges	exported function of focus.dll
+focusdll\focusdll.cpp	free-function	GetCurrentFocus	exported function of focus.dll
+focusdll\focusdll.cpp	free-function	SetCaptureKeys	exported function of focus.dll
+focusdll\focusdll.cpp	free-function	GetCaptureKeys	exported function of focus.dll
+Addins\DittoUtil\Exports.cpp	free-function	DittoAddin	exported add-in entry point Ditto loads with GetProcAddress
+Addins\DittoUtil\Exports.cpp	free-function	SupportedFunctions	exported add-in entry point Ditto loads with GetProcAddress
+Addins\DittoUtil\Exports.cpp	free-function	PasteAnyAsText	exported add-in function Ditto calls by name
+Addins\DittoUtil\Exports.cpp	free-function	ConvertPathToHtmlImageTag	exported add-in function Ditto calls by name
+Addins\DittoUtil\Exports.cpp	free-function	ClearReadOnlyFlag	exported add-in function Ditto calls by name
+Addins\DittoUtil\Exports.cpp	free-function	SetReadOnlyFlag	exported add-in function Ditto calls by name
+Addins\DittoUtil\Exports.cpp	free-function	RemoveLineFeeds	exported add-in function Ditto calls by name

@@ -452,9 +452,9 @@
     <ClCompile Include="src\RegExFilterHelper.cpp" />
     <ClCompile Include="src\RichEditCtrlEx.cpp" />
     <ClCompile Include="src\RichTextAggregator.cpp" />
-    <!-- Untouched third-party sources (the ruler editor's colour picker and combo boxes,
-         sqlite3mc): their code was never changed for Ditto, so their warnings and code analysis
-         are off (README, Decisions). Changed ones are Ditto's code.
+    <!-- Untouched third-party sources (listed in tools\thirdparty.txt): their code was never
+         changed for Ditto, so their warnings and code analysis are off. Changed ones are Ditto's
+         code. (WildCardMatch and SnapWindow.cpp are untouched too but compile without warnings.)
          The ruleset options are cleared as well: cl lets /analyze:ruleset override /analyze-. -->
     <ClCompile Include="src\RulerRichEditCtrl\External\ColourPicker.cpp">
       <WarningLevel>TurnOffAllWarnings</WarningLevel>

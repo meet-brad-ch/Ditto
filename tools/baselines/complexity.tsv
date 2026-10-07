@@ -11,7 +11,7 @@ src\advgeneral.cpp	CAdvGeneral::OnBnClickedOk	185
 src\advgeneral.cpp	CAdvGeneral::Search	13
 src\clip.cpp	CClip::AddFileDataToData	15
 src\clip.cpp	CClip::AddToDB	10
-src\clip.cpp	CClip::LoadFromClipboard	36
+src\clip.cpp	CClip::LoadFromClipboard	35
 src\clip.cpp	CClip::SaveFormats	10
 src\clip.cpp	CClip::WriteTextToFile	11
 src\clip_importexport.cpp	CClip_ImportExport::ImportFromSqliteDB	14
@@ -126,11 +126,6 @@ src\qpastewndthread.cpp	CQPasteWndThread::OnLoadItems	14
 src\quickpaste.cpp	CQuickPaste::ShowQPasteWnd	44
 src\quickpastekeyboard.cpp	CQuickPasteKeyboard::LoadHotKey	41
 src\quickpastekeyboard.cpp	CQuickPasteKeyboard::OnBnClickedAssign	15
-src\rulerricheditctrl\external\colourpicker.cpp	CColourPicker::DrawItem	10
-src\rulerricheditctrl\external\colourpopup.cpp	CColourPopup::DrawCell	21
-src\rulerricheditctrl\external\colourpopup.cpp	CColourPopup::GetIndex	12
-src\rulerricheditctrl\external\colourpopup.cpp	CColourPopup::OnKeyDown	34
-src\rulerricheditctrl\external\colourpopup.cpp	CColourPopup::SetWindowSize	15
 src\rulerricheditctrl\rrectoolbar.cpp	CRRECToolbar::Create	12
 src\rulerricheditctrl\rulerricheditctrl.cpp	CRulerRichEditCtrl::DoFont	13
 src\rulerricheditctrl\rulerricheditctrl.cpp	CRulerRichEditCtrl::PreTranslateMessage	20
@@ -142,6 +137,8 @@ src\searcheditbox.cpp	CSearchEditBox::PreTranslateMessage	17
 src\sendkeys.cpp	CSendKeys::PopUpShiftKeys	10
 src\sendkeys.cpp	CSendKeys::SendKeys	26
 src\specialpasteoptions.h	CSpecialPasteOptions::LimitFormatsToText	16
+src\sqlite\cppsqlite3.cpp	CppSQLite3Exception::errorCodeAsString	30
+src\sqlite\cppsqlite3.cpp	sqlite3_encode_binary	11
 src\symboledit.cpp	CSymbolEdit::OnPaint	11
 src\symboledit.cpp	CSymbolEdit::PreTranslateMessage	28
 src\tabctrl.cpp	CTabCtrlEx::ResizeTabWindow	17
@@ -153,4 +150,3 @@ src\tooltipex.cpp	CToolTipEx::OnOptions	15
 src\tooltipex.cpp	CToolTipEx::OnTimer	13
 src\tooltipex.cpp	CToolTipEx::PreTranslateMessage	16
 src\tooltipex.cpp	CToolTipEx::Show	13
-src\wildcardmatch.cpp	CWildCardMatch::WildMatch	28
