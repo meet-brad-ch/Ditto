@@ -230,3 +230,43 @@ TEST(FileDropList, RejectsWideListWithOddTrailingByte)
 
 	EXPECT_THROW(ParseBlock(block), ClipboardFormatError);
 }
+
+TEST(FileDropList, BuildMatchesTheHandMadeBlock)
+{
+	const std::vector<std::wstring> paths{ L"C:\a.txt", L"C:\long folder\b.bin" };
+
+	const std::vector<std::byte> built = FileDropList::Build(paths);
+	const std::vector<std::uint8_t> expected = DropBlockBuilder::Wide(paths);
+
+	ASSERT_EQ(built.size(), expected.size());
+	EXPECT_EQ(std::memcmp(built.data(), expected.data(), built.size()), 0);
+}
+
+TEST(FileDropList, BuiltBlockParsesBackToItsPaths)
+{
+	const std::vector<std::wstring> paths{ L"C:\a.txt", std::wstring(400, L'x') };
+	const std::vector<std::byte> block = FileDropList::Build(paths);
+
+	EXPECT_EQ(FileDropList::Parse(block.data(), block.size()).Paths(), paths);
+}
+
+TEST(FileDropList, BuildsEmptyList)
+{
+	const std::vector<std::byte> block = FileDropList::Build({});
+
+	EXPECT_TRUE(FileDropList::Parse(block.data(), block.size()).Paths().empty());
+}
+
+TEST(FileDropList, BuildRejectsEmptyPath)
+{
+	const std::vector<std::wstring> paths{ L"C:\a.txt", L"" };
+
+	EXPECT_THROW(FileDropList::Build(paths), ClipboardFormatError);
+}
+
+TEST(FileDropList, BuildRejectsPathWithNull)
+{
+	const std::vector<std::wstring> paths{ std::wstring(L"C:\a\0b", 6) };
+
+	EXPECT_THROW(FileDropList::Build(paths), ClipboardFormatError);
+}

@@ -66,6 +66,7 @@
     <ClCompile Include="GlobalBytesTests.cpp" />
     <ClCompile Include="GlobalFileDropTests.cpp" />
     <ClCompile Include="RtfTests.cpp" />
+    <ClCompile Include="TextJoinTests.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

@@ -562,7 +562,6 @@
     <ClCompile Include="src\ErrorReport.cpp" />
     <ClCompile Include="src\EventThread.cpp" />
     <ClCompile Include="src\ExternalWindowTracker.cpp" />
-    <ClCompile Include="src\FileRecieve.cpp" />
     <ClCompile Include="src\FormatSQL.cpp" />
     <ClCompile Include="src\FormattedTextDraw.cpp" />
     <ClCompile Include="src\GdiImageDrawer.cpp" />
@@ -812,7 +811,6 @@
     <ClInclude Include="src\ErrorReport.h" />
     <ClInclude Include="src\EventThread.h" />
     <ClInclude Include="src\ExternalWindowTracker.h" />
-    <ClInclude Include="src\FileRecieve.h" />
     <ClInclude Include="src\FormatSQL.h" />
     <ClInclude Include="src\FormattedTextDraw.h" />
     <ClInclude Include="src\GdiImageDrawer.h" />

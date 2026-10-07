@@ -56,6 +56,7 @@
     <ClInclude Include="GlobalLockGuard.h" />
     <ClInclude Include="RtfJoin.h" />
     <ClInclude Include="RtfNormalizer.h" />
+    <ClInclude Include="TextJoin.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ByteCursor.cpp" />

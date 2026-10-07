@@ -310,6 +310,17 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   The ARM64 script still added firewall rules for TCP 23443 and launched URLs, and the portable
   one packaged files that no longer exist (`DittoU.exe`, `sqlite3.dll`, `zlib1.dll`). The
   installer gate now checks every `.iss` file.
+- 2026-10-06: Multi-clip text and file lists are joined by `DittoCore::TextJoin`, and CF_HDROP
+  blocks are built by `DittoCore::FileDropList::Build` (Phase C8).
+  - **`CFileRecieve` is gone:** it built CF_HDROP in a raw `new TCHAR[]` buffer (a byte count
+    used as a character count, so twice the size needed). Its send/receive logging and the
+    `LogSendReceiveErrors` option, left over from the removed network code, are gone with it.
+  - **Separators:** a separator now goes only between items. Before, it was added after every
+    clip except the last by position, so a skipped last clip (an empty file list) left a
+    separator at the end of the pasted text.
+  - **Import:** a clip's CF_UNICODETEXT written back to the clipboard on import got 1
+    terminating byte instead of a whole 2-byte character, so readers could run past the text.
+  - **Tests:** 10 unit tests; the `hdrop` fuzz target also checks a Build/Parse round trip.
 - 2026-10-06: Multi-clip RTF paste is joined by `DittoCore::RtfJoin`, and the RTF
   normalization for duplicate detection lives in `DittoCore::RtfNormalizer` (Phase C7).
   - **Three or more clips:** upstream removed `{\rtf1` from the last document only, so every

@@ -1058,7 +1058,7 @@ void COleClipSource::ApplyDriveReplacements(
 	}
 }
 
-bool COleClipSource::SaveFileDataRecord(HGLOBAL record, CFileRecieve& dropFiles)
+bool COleClipSource::SaveFileDataRecord(HGLOBAL record, std::vector<std::wstring>& dropFiles)
 {
 	const DittoCore::GlobalBytes block(record);
 	const std::vector<DittoCore::FileDataEntry> files = DittoCore::FileDataRecord::Parse(block.Bytes());
@@ -1081,7 +1081,7 @@ bool COleClipSource::SaveFileDataRecord(HGLOBAL record, CFileRecieve& dropFiles)
 		CFile target(newFilePath, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary);
 		target.Write(file.data.data(), static_cast<UINT>(file.data.size()));
 		target.Close();
-		dropFiles.AddFile(newFilePath);
+		dropFiles.push_back(newFilePath.GetString());
 	}
 	return !files.empty();
 }
@@ -1106,7 +1106,7 @@ CString COleClipSource::UniqueFileName(const CString& originalPath, std::set<CSt
 
 void COleClipSource::SaveDittoFileDataToFile(CClip &clip)
 {
-	CFileRecieve hDrpData;
+	std::vector<std::wstring> hDrpData;
 	CClipFormat* pCF;
 	int hDropIndex = -1;
 	bool savedFile = false;
@@ -1132,7 +1132,7 @@ void COleClipSource::SaveDittoFileDataToFile(CClip &clip)
 			clip.m_Formats.RemoveAt(hDropIndex);
 		}
 
-		CClipFormat cf(CF_HDROP, hDrpData.CreateCF_HDROPBuffer());
+		CClipFormat cf(CF_HDROP, CCF_HDropAggregator::NewDropBlock(hDrpData));
 		clip.m_Formats.Add(cf);
 
 		//clip.m_Formats now owns the global data
@@ -1357,7 +1357,7 @@ HGLOBAL COleClipSource::ConvertToFileDrop()
 	CString path = CGetSetOptions::GetPath(PATH_DRAG_FILES);
 	CreateDirectory(path, NULL);
 
-	CFileRecieve fileList;
+	std::vector<std::wstring> fileList;
 
 	int dragId = CGetSetOptions::GetDragId();
 	int origDragId = dragId;
@@ -1389,7 +1389,7 @@ HGLOBAL COleClipSource::ConvertToFileDrop()
 			}
 
 			fileClip.WriteTextToFile(file, TRUE, FALSE, FALSE);
-			fileList.AddFile(file);
+			fileList.push_back(file.GetString());
 			continue;
 		}
 
@@ -1409,7 +1409,7 @@ HGLOBAL COleClipSource::ConvertToFileDrop()
 			}
 
 			fileClip.WriteTextToFile(file, FALSE, TRUE, FALSE);
-			fileList.AddFile(file);
+			fileList.push_back(file.GetString());
 			continue;
 		}
 
@@ -1432,7 +1432,7 @@ HGLOBAL COleClipSource::ConvertToFileDrop()
 
 			if (fileClip.WriteImageToFile(file))
 			{
-				fileList.AddFile(file);
+				fileList.push_back(file.GetString());
 			}
 		}
 	}
@@ -1443,7 +1443,7 @@ HGLOBAL COleClipSource::ConvertToFileDrop()
 		CGetSetOptions::SetDragId(dragId);
 	}
 
-	HGLOBAL hData = fileList.CreateCF_HDROPBuffer();
+	HGLOBAL hData = CCF_HDropAggregator::NewDropBlock(fileList);
 
 	return hData;
 }

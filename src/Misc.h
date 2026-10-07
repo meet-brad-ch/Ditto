@@ -79,8 +79,6 @@ CString GetErrorString(int err);
 
 double IdleSeconds();
 
-#define LogSendRecieveInfo(cs) logsendrecieveinfo(cs, __FILE__, __LINE__);
-void logsendrecieveinfo(CString cs, CString csFile = _T(""), long lLine = -1);
 
 // Utility Functions
 CString StrF(const TCHAR * pszFormat, ...);

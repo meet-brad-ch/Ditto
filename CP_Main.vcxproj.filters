@@ -121,9 +121,6 @@
     <ClCompile Include="src\ExternalWindowTracker.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\FileRecieve.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\FormatSQL.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -569,9 +566,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\ExternalWindowTracker.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\FileRecieve.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\FormatSQL.h">

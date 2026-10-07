@@ -77,12 +77,6 @@ void log(const TCHAR* msg, bool bFromSendRecieve, CString csFile, long lLine)
 	AppendToFile(csExeFile, csText);
 }
 
-void logsendrecieveinfo(CString cs, CString csFile, long lLine)
-{
-	if(CGetSetOptions::m_bLogSendReceiveErrors)
-		log(cs, true, csFile, lLine);
-}
-
 CString GetErrorString( int err )
 {
 	CString str;

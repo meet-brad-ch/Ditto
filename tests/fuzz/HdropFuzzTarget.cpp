@@ -9,9 +9,11 @@
 #include "GlobalFileDrop.h"
 
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <memory>
 #include <type_traits>
+#include <vector>
 
 #include <windows.h>
 
@@ -19,12 +21,14 @@ void HdropFuzzTarget::Run(std::span<const std::byte> input) const
 {
 	try
 	{
-		std::size_t total{};
-		for (const std::wstring& path : DittoCore::FileDropList::Parse(input.data(), input.size()).Paths())
+		const std::vector<std::wstring> paths = DittoCore::FileDropList::Parse(input.data(), input.size()).Paths();
+		// Build must write a block that parses back to the same paths (a parsed path is never
+		// empty and never holds a null, so Build accepts every parsed list)
+		const std::vector<std::byte> built = DittoCore::FileDropList::Build(paths);
+		if (DittoCore::FileDropList::Parse(built.data(), built.size()).Paths() != paths)
 		{
-			total += path.size();
+			std::abort();   // a finding: Build and Parse disagree
 		}
-		static_cast<void>(total);
 	}
 	catch (const DittoCore::ClipboardFormatError&)
 	{

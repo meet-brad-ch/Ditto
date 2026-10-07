@@ -33,6 +33,7 @@ INPUT                  = lib/DittoCore/ByteCursor.h \
                          lib/DittoCore/RtfJoin.cpp \
                          lib/DittoCore/RtfNormalizer.h \
                          lib/DittoCore/RtfNormalizer.cpp \
+                         lib/DittoCore/TextJoin.h \
                          src/ErrorReport.h \
                          src/FileDialogPath.h \
                          src/FileDialogPath.cpp \

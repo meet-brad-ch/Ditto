@@ -9,8 +9,9 @@
 #include <string>
 
 /**
- * @brief Fuzzes CF_HDROP parsing: DittoCore::FileDropList::Parse on the raw bytes and
- *        DittoCore::GlobalFileDrop::Read on the same bytes in a global memory block.
+ * @brief Fuzzes CF_HDROP parsing: DittoCore::FileDropList::Parse on the raw bytes, with a
+ *        Build/Parse round trip of every parsed list, and DittoCore::GlobalFileDrop::Read on
+ *        the same bytes in a global memory block.
  */
 class HdropFuzzTarget final : public FuzzTarget
 {

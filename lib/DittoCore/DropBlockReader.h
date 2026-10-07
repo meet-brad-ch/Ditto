@@ -22,6 +22,10 @@ namespace DittoCore
 	public:
 		/// Size of the DROPFILES header in bytes.
 		static constexpr std::size_t HeaderSize{ 20 };
+		/// Offset of DROPFILES::pFiles in the header.
+		static constexpr std::size_t FilesOffsetPosition{ 0 };
+		/// Offset of DROPFILES::fWide in the header.
+		static constexpr std::size_t WideFlagPosition{ 16 };
 
 		/**
 		 * @brief Prepares reading a CF_HDROP block.
@@ -40,11 +44,6 @@ namespace DittoCore
 		std::vector<std::wstring> ReadPaths() const;
 
 	private:
-		/// Offset of DROPFILES::pFiles in the header.
-		static constexpr std::size_t FilesOffsetPosition{ 0 };
-		/// Offset of DROPFILES::fWide in the header.
-		static constexpr std::size_t WideFlagPosition{ 16 };
-
 		/**
 		 * @brief Reads a 32-bit value from the header.
 		 * @param position Byte offset, inside the header.

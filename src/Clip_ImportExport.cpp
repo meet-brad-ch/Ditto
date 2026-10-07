@@ -163,7 +163,8 @@ bool CClip_ImportExport::PlaceCF_TEXT_AND_CF_UNICODETEXT_OnClipboard(CStringA& c
 		if (csCF_UNICODETEXT.IsEmpty() == FALSE)
 		{
 			long lLen = csCF_UNICODETEXT.GetLength() * sizeof(wchar_t);
-			HGLOBAL hGlobal = NewGlobalP(csCF_UNICODETEXT.GetBuffer(lLen), lLen + 1);
+			// with a whole wide terminator; upstream added 1 byte, half of one
+			HGLOBAL hGlobal = NewGlobalP(csCF_UNICODETEXT.GetBuffer(lLen), lLen + sizeof(wchar_t));
 			csCF_UNICODETEXT.ReleaseBuffer();
 			SetClipboardData(CF_UNICODETEXT, hGlobal);
 

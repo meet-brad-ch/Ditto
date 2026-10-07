@@ -5,12 +5,11 @@
 #include "ClipText.h"
 #include "FileDropList.h"
 
-CCF_TextAggregator::CCF_TextAggregator(CStringA csSepator) :
-	m_csSeparator(csSepator)
-{
-}
+#include <string>
+#include <vector>
 
-CCF_TextAggregator::~CCF_TextAggregator(void)
+CCF_TextAggregator::CCF_TextAggregator(const CStringA& separator) :
+	m_join(std::string_view(separator.GetString(), separator.GetLength()))
 {
 }
 
@@ -19,42 +18,22 @@ bool CCF_TextAggregator::AddClip(LPVOID lpData, int nDataSize, int nPos, int nCo
 	const std::size_t size = static_cast<std::size_t>(nDataSize);
 	if (cfType == CF_HDROP)
 	{
-		CStringA hDropFiles = _T("");
+		std::vector<std::string> lines;
 		for (const std::wstring& path : DittoCore::FileDropList::Parse(lpData, size).Paths())
 		{
-			hDropFiles += CTextConvert::UnicodeToAnsi(CString(path.c_str()));
-			hDropFiles += "\r\n";
+			const CStringA ansi = CTextConvert::UnicodeToAnsi(CString(path.c_str()));
+			lines.emplace_back(ansi.GetString(), ansi.GetLength());
 		}
-
-		if (hDropFiles != _T(""))
-		{
-			m_csNewText += hDropFiles;
-
-			if (nPos != nCount - 1)
-			{
-				m_csNewText += m_csSeparator;
-			}
-
-			return true;
-		}
-		return false;
+		return m_join.AddLines(lines);
 	}
 
-	m_csNewText += DittoCore::ClipText::ReadAnsi(lpData, size).c_str();
-	
-	if(nPos != nCount-1)
-	{
-		m_csNewText += m_csSeparator;
-	}
-
+	m_join.Add(DittoCore::ClipText::ReadAnsi(lpData, size));
 	return true;
 }
 
 HGLOBAL CCF_TextAggregator::GetHGlobal()
 {
-	long lLen = m_csNewText.GetLength();
-	HGLOBAL hGlobal = NewGlobalP(m_csNewText.GetBuffer(lLen), lLen+sizeof(char));
-	m_csNewText.ReleaseBuffer();
-
-	return hGlobal;
+	const std::string& text = m_join.Result();
+	// with its terminating null
+	return NewGlobalP(const_cast<char*>(text.c_str()), text.size() + 1);
 }

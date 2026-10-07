@@ -38,7 +38,6 @@ BOOL CGetSetOptions::m_bAllwaysShowDescription;
 long CGetSetOptions::m_bDoubleClickingOnCaptionDoes;
 BOOL CGetSetOptions::m_bPrompForNewGroupName;
 BOOL CGetSetOptions::m_bSendPasteOnFirstTenHotKeys;
-BOOL CGetSetOptions::m_bLogSendReceiveErrors;
 BOOL CGetSetOptions::m_HideDittoOnHotKeyIfAlreadyShown;
 BOOL CGetSetOptions::m_bDrawThumbnail;
 BOOL CGetSetOptions::m_bDrawCopiedColorCode;
@@ -258,7 +257,6 @@ void CGetSetOptions::LoadSettings()
 	m_bDoubleClickingOnCaptionDoes = GetDoubleClickingOnCaptionDoes();
 	m_bPrompForNewGroupName = GetPrompForNewGroupName();
 	m_bSendPasteOnFirstTenHotKeys = GetSendPasteOnFirstTenHotKeys();
-	m_bLogSendReceiveErrors = GetLogSendReceiveErrors();
 	m_HideDittoOnHotKeyIfAlreadyShown = GetHideDittoOnHotKeyIfAlreadyShown();
 	m_bDrawThumbnail = GetDrawThumbnail();
 	m_bDrawCopiedColorCode = GetDrawCopiedColorCode();
@@ -374,7 +372,6 @@ void CGetSetOptions::ConverSettingsToIni()
 	SetPrompForNewGroupName(GetPrompForNewGroupName());
 	SetSendPasteOnFirstTenHotKeys(GetSendPasteOnFirstTenHotKeys());
 
-	SetLogSendReceiveErrors(GetLogSendReceiveErrors());
 	SetHideDittoOnHotKeyIfAlreadyShown(GetHideDittoOnHotKeyIfAlreadyShown());
 
 	LOGFONT font;
@@ -1328,18 +1325,6 @@ void CGetSetOptions::SetSendPasteOnFirstTenHotKeys(BOOL bOption)
 BOOL CGetSetOptions::GetSendPasteOnFirstTenHotKeys()				
 {	
 	return GetProfileLong("SendPasteOnFirstTenHotKeys", TRUE); 
-}
-
-void CGetSetOptions::SetLogSendReceiveErrors(BOOL bOption)
-{
-	m_bLogSendReceiveErrors = bOption;
-
-	SetProfileLong("LogSendReceiveErrors", bOption);
-}
-
-BOOL CGetSetOptions::GetLogSendReceiveErrors()
-{
-	return GetProfileLong("LogSendReceiveErrors", FALSE);
 }
 
 BOOL CGetSetOptions::GetHideDittoOnHotKeyIfAlreadyShown()

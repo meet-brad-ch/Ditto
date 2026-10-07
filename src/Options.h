@@ -223,9 +223,6 @@ public:
 	static void		SetSendPasteOnFirstTenHotKeys(BOOL bOption);
 	static BOOL		GetSendPasteOnFirstTenHotKeys();
 
-	static BOOL		m_bLogSendReceiveErrors;
-	static void		SetLogSendReceiveErrors(BOOL bOption);
-	static BOOL		GetLogSendReceiveErrors();
 
 	static BOOL		m_HideDittoOnHotKeyIfAlreadyShown;
 	static BOOL		GetHideDittoOnHotKeyIfAlreadyShown();

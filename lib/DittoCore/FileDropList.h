@@ -5,6 +5,8 @@
 #pragma once
 
 #include <cstddef>
+#include <span>
+#include <string_view>
 #include <string>
 #include <utility>
 #include <vector>
@@ -31,6 +33,16 @@ namespace DittoCore
 		static FileDropList Parse(const void* data, std::size_t size);
 
 		/**
+		 * @brief Builds a CF_HDROP block: a DROPFILES header, then each path as UTF-16 with its
+		 *        terminator, then an empty path that ends the list.
+		 * @param paths The paths.
+		 * @return The block.
+		 * @throws ClipboardFormatError When a path is empty or contains a null character; either
+		 *         would end the list early.
+		 */
+		static std::vector<std::byte> Build(std::span<const std::wstring> paths);
+
+		/**
 		 * @brief The paths of this list.
 		 * @return The paths, valid while the list lives.
 		 */
@@ -51,6 +63,13 @@ namespace DittoCore
 		 * @param paths The parsed paths.
 		 */
 		explicit FileDropList(std::vector<std::wstring> paths);
+
+		/**
+		 * @brief Appends UTF-16 text and its terminator.
+		 * @param block The block being built.
+		 * @param text The text.
+		 */
+		static void AppendWide(std::vector<std::byte>& block, std::wstring_view text);
 
 		/// The parsed paths.
 		std::vector<std::wstring> m_paths{};
