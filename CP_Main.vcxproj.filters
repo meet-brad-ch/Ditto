@@ -91,9 +91,6 @@
     <ClCompile Include="src\CP_Main.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Crc32Dynamic.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\DatabaseUtilities.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -503,9 +500,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\CP_Main_i.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Crc32Dynamic.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\DatabaseUtilities.h">

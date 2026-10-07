@@ -50,6 +50,7 @@
     <ClCompile Include="..\lib\DittoCore\ClipOrder.cpp" />
     <ClCompile Include="..\lib\DittoCore\ClipSavePolicy.cpp" />
     <ClCompile Include="..\lib\DittoCore\ClipText.cpp" />
+    <ClCompile Include="..\lib\DittoCore\Crc32.cpp" />
     <ClCompile Include="..\lib\DittoCore\DatabasePath.cpp" />
     <ClCompile Include="..\lib\DittoCore\DibHeader.cpp" />
     <ClCompile Include="..\lib\DittoCore\DropBlockReader.cpp" />
@@ -71,6 +72,7 @@
     <ClCompile Include="ClipOrderTests.cpp" />
     <ClCompile Include="ClipSavePolicyTests.cpp" />
     <ClCompile Include="ClipTextTests.cpp" />
+    <ClCompile Include="Crc32Tests.cpp" />
     <ClCompile Include="DatabasePathTests.cpp" />
     <ClCompile Include="DibHeaderTests.cpp" />
     <ClCompile Include="DtoCodecTests.cpp" />

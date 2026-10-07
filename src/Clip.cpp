@@ -6,7 +6,6 @@
 #include "CP_Main.h"
 #include "Clip.h"
 #include "DatabaseUtilities.h"
-#include "Crc32Dynamic.h"
 #include "sqlite\CppSQLite3.h"
 #include "..\Shared\TextConvert.h"
 #include "zlib.h"
@@ -827,8 +826,7 @@ int CClip::FindDuplicate()
 
 DWORD CClip::GenerateCRC()
 {
-	CCrc32Dynamic crc32;
-	DWORD dwCRC = 0xFFFFFFFF;
+	DittoCore::Crc32 crc;
 	const bool adjust = SavePolicy().Settings().adjustForCrc;
 
 	const INT_PTR size = m_Formats.GetSize();
@@ -837,21 +835,21 @@ DWORD CClip::GenerateCRC()
 		const CClipFormat& format = m_Formats.ElementAt(i);
 		if (format.m_hgData != NULL)
 		{
-			AddToCrc(crc32, format, adjust, dwCRC);
+			AddToCrc(crc, format, adjust);
 		}
 	}
-	return ~dwCRC;
+	return crc.Value();
 }
 
-void CClip::AddToCrc(CCrc32Dynamic& crc32, const CClipFormat& format, bool adjust, DWORD& crc)
+void CClip::AddToCrc(DittoCore::Crc32& crc, const CClipFormat& format, bool adjust)
 {
 	const DittoCore::GlobalBytes block(format.m_hgData);
 	std::span<const std::byte> bytes = block.Bytes();
 	if (adjust && format.m_cfType == theApp.m_RTFFormat)
 	{
 		// In Word and Outlook the \datastore section and the rsid values change on every copy: leave them out
-		std::string normalized = DittoCore::RtfNormalizer::Normalize(DittoCore::ClipText::ReadAnsiBounded(bytes));
-		crc32.GenerateCrc32(reinterpret_cast<LPBYTE>(normalized.data()), static_cast<DWORD>(normalized.size()), crc);
+		const std::string normalized = DittoCore::RtfNormalizer::Normalize(DittoCore::ClipText::ReadAnsiBounded(bytes));
+		crc.Add(std::as_bytes(std::span(normalized.data(), normalized.size())));
 		return;
 	}
 	if (adjust)
@@ -859,7 +857,7 @@ void CClip::AddToCrc(CCrc32Dynamic& crc32, const CClipFormat& format, bool adjus
 		// some programs put text in a block larger than the text: only the text counts
 		bytes = TextBytesWithTerminator(format.m_cfType, bytes);
 	}
-	crc32.GenerateCrc32(reinterpret_cast<LPBYTE>(const_cast<std::byte*>(bytes.data())), static_cast<DWORD>(bytes.size()), crc);
+	crc.Add(bytes);
 }
 
 std::span<const std::byte> CClip::TextBytesWithTerminator(CLIPFORMAT type, std::span<const std::byte> bytes)

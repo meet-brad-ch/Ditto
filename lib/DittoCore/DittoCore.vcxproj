@@ -45,6 +45,7 @@
     <ClInclude Include="ClipSavePolicy.h" />
     <ClInclude Include="ClipboardFormatError.h" />
     <ClInclude Include="ClipText.h" />
+    <ClInclude Include="Crc32.h" />
     <ClInclude Include="DatabasePath.h" />
     <ClInclude Include="DibHeader.h" />
     <ClInclude Include="DibLayout.h" />
@@ -75,6 +76,7 @@
     <ClCompile Include="ClipOrder.cpp" />
     <ClCompile Include="ClipSavePolicy.cpp" />
     <ClCompile Include="ClipText.cpp" />
+    <ClCompile Include="Crc32.cpp" />
     <ClCompile Include="DatabasePath.cpp" />
     <ClCompile Include="DibHeader.cpp" />
     <ClCompile Include="DtoCodec.cpp" />

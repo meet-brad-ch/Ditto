@@ -16,7 +16,7 @@
 #include <span>
 #include <string>
 #include <vector>
-#include "Crc32Dynamic.h"
+#include "Crc32.h"
 #include "ClipRepository.h"
 #include "ClipSavePolicy.h"
 #include "RegExFilterHelper.h"
@@ -273,7 +273,7 @@ private:
 
 	// Adds one format's data to the clip's CRC; with adjust, ignores the parts that change on every
 	// copy (RTF datastore and rsid values, text block slack)
-	static void AddToCrc(CCrc32Dynamic& crc32, const CClipFormat& format, bool adjust, DWORD& crc);
+	static void AddToCrc(DittoCore::Crc32& crc, const CClipFormat& format, bool adjust);
 
 	// CF_TEXT and CF_UNICODETEXT bytes up to and including the terminator, within the block;
 	// other formats unchanged
