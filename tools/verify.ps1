@@ -9,7 +9,7 @@
 #   6. raw allocation (new/delete/malloc/free) and globals (free functions, global/static variables,
 #      macros): none in contract code; legacy code held by shrink-only baselines
 #      (tools\gates\allocation.ps1, globals.ps1; untouched third-party code: tools\thirdparty.txt)
-#      - complexity: lib\ and tests\ below CC 10; legacy CC >= 10 held by tools\baselines\complexity.tsv
+#      - complexity: every function of the own code below CC 10 (tools\gates\complexity.ps1)
 #   7. runs every unit test on its own: DittoTests (AddressSanitizer build) and AppTests
 #      - coverage: line coverage of lib\DittoCore >= 90 % (Debug|x64 test build)
 #   8. checks with Doxygen that the contract code is fully documented
@@ -18,7 +18,7 @@
 #   -SkipBuild        reuse the last build (the warnings checks are then NOT VERIFIED)
 #   -Analyze          run MSVC code analysis (/analyze, NativeRecommendedRules) in the rebuild; any
 #                     finding fails the build (about 7 min)
-#   -UpdateBaselines  rewrite the complexity, allocation and globals baselines after a passing run; they may only shrink
+#   -UpdateBaselines  rewrite the allocation and globals baselines after a passing run; they may only shrink
 param([switch] $SkipBuild, [switch] $Analyze, [switch] $UpdateBaselines)
 
 $ErrorActionPreference = 'Stop'
@@ -223,14 +223,12 @@ $globalsSummary = $gate.Summary
 $report['Lint'] += "; raw allocation: none in contract code, legacy $allocationSummary; globals/free functions/macros: none in lib\, legacy $globalsSummary"
 
 # ---- 6b. cyclomatic complexity (lizard) -----------------------------------------------
-# Contract code stays below CC 10; legacy functions at CC >= 10 may not grow (baseline ratchet).
-$complexityArgs = @{ Repo = $repo }
-if ($UpdateBaselines) { $complexityArgs['Update'] = $true }
-$gate = Invoke-Gate 'complexity.ps1' $complexityArgs
-if ($gate.ExitCode -ne 0) { Fail 'a function is above its complexity limit or baseline' 'Cyclomatic complexity' }
-$measured = ($gate.Lines | Where-Object { "$_" -match 'contract code max CC (\d+); (\d+) legacy' } | Select-Object -First 1)
-$null = "$measured" -match 'contract code max CC (\d+); (\d+) legacy'
-$report['Cyclomatic complexity'] = "PASS (lib\ and tests\ max CC $($Matches[1]) < 10; $($Matches[2]) legacy functions at CC >= 10 held by the baseline, $($gate.Summary))"
+# Every function of Ditto's own code stays below CC 10 (no baseline since Phase L2).
+$gate = Invoke-Gate 'complexity.ps1' @{ Repo = $repo }
+if ($gate.ExitCode -ne 0) { Fail 'a function is at or above complexity 10' 'Cyclomatic complexity' }
+$measured = ($gate.Lines | Where-Object { "$_" -match '(\d+) functions in (\d+) files; max CC (\d+)' } | Select-Object -First 1)
+$null = "$measured" -match '(\d+) functions in (\d+) files; max CC (\d+)'
+$report['Cyclomatic complexity'] = "PASS (all own code: $($Matches[1]) functions in $($Matches[2]) files, max CC $($Matches[3]) < 10)"
 
 # ---- 7. unit tests (each test on its own) ------------------------------------------------
 # DittoTests (lib\DittoCore) is an AddressSanitizer build; AppTests (the app layer against an

@@ -95,9 +95,9 @@ Branch coverage), on failure too. Run time: about 2 min, or about 3.5 min with `
      macros (include guards and `resource.h` excepted). The accepted exceptions, each with its
      reason, are in `tools\gates\globals-allow.txt`: the MFC `theApp` objects, focus.dll's
      shared-segment hook state, and DLL entry points, hook procedures and exports.
-   - **Complexity** (`tools\gates\complexity.ps1`, lizard): no function in `lib\` or `tests\`
-     may reach CC 10. The legacy functions at CC 10 or more are listed in
-     `tools\baselines\complexity.tsv`, and none may get worse or be added.
+   - **Complexity** (`tools\gates\complexity.ps1`, lizard): no function of Ditto's own code
+     (`lib\`, `tests\` and the app alike) may reach CC 10. Untouched third-party files
+     (`tools\thirdparty.txt`) are not measured.
 7. It runs every GoogleTest in `tests\` on its own (`--gtest_filter`), under AddressSanitizer. Each
    test writes its result to `build\test-results\<test>.xml`.
    - **Coverage:** Microsoft code coverage (it ships with Visual Studio) runs the Debug|x64 test
@@ -111,11 +111,12 @@ Branch coverage), on failure too. Run time: about 2 min, or about 3.5 min with `
 
 `-SkipBuild` skips stage 1, so the warnings and analysis checks are NOT VERIFIED.
 
-**Complexity baseline** (`tools\baselines\complexity.tsv`, read by `tools\ratchet.ps1`):
-- It holds the legacy functions at CC 10 or more.
+**Allocation and globals baselines** (`tools\baselines\allocation.tsv`, `globals.tsv`, read by
+`tools\ratchet.ps1`):
+- They hold the per-file counts of the legacy code (allocation: now empty).
 - A count above its baseline fails, and so does an entry missing from it.
-- `verify.ps1 -UpdateBaselines` rewrites it only when nothing rose, so it can only shrink.
-  Commit the smaller file after a cleanup.
+- `verify.ps1 -UpdateBaselines` rewrites them only when nothing rose, so they can only shrink.
+  Commit the smaller files after a cleanup.
 
 **Planted faults the gates caught:**
 - a seeded `WSAStartup` line and a copied `curl.exe`;
@@ -383,7 +384,7 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
     `tinystr.cpp` and `tinyxmlerror.cpp`, and the ruler editor's `ColourPicker`, `ColourPopup`,
     `FontComboBox.cpp`, `SizeComboBox.cpp` and `StdGrfx.cpp`.
   - **Changed for Ditto, fixed like our code:** `tinyxml.cpp/.h` (Unicode paths), `Path`,
-    `memdc.h`, `EditWithButton`, `DrawHTML`, `GdipButton`, `SymbolEdit`, `SendKeys`,
+    `memdc.h`, `EditWithButton`, `DrawHTML` (the C++ class `HtmlTextDrawer` since Phase L2), `GdipButton`, `SymbolEdit`, `SendKeys`,
     `CppSQLite3`, `NTray`, `AlphaBlend`, `FormattedTextDraw`, `RulerRichEditCtrl`, `RRECToolbar`,
     `RulerRichEdit` and `ICU_Loader\icu.cpp` (replaced in Phase T by SQLite's untouched `icu.c`).
   - **Headers outside the repo** (Windows SDK, MFC, the STL, vcpkg's gtest and zlib) are
@@ -435,6 +436,20 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
     conversions), an ambiguous ternary and `bind`, and a dead `CGdipButton::Test`. The untouched `ColourPopup.cpp` keeps `/permissive`
     and compiles without the shared precompiled header, which a different conformance mode
     cannot use.
+- 2026-10-07: The legacy app meets the smart-pointer and complexity rules (Phases L1, L2).
+  - **Smart pointers only (L1):** no raw `new`/`delete`/`malloc`/`free` is left in own code
+    (allocation gate 223 → 0). Self-deleting MFC windows are handed to the window before
+    `Create`, because `CWnd::CreateEx` calls `PostNcDestroy` itself when creation fails; the line
+    says so with `// ownership:`. DYNCREATE frames use their `CreateObject` factory.
+    `IClipFormat::CreateGdiplusBitmap` keeps its raw-pointer add-in ABI; Ditto calls
+    `LoadGdiplusBitmap` (`std::unique_ptr`).
+  - **Complexity below 10 everywhere (L2):** the 152 legacy functions at CC 10 or more (total
+    3056; worst `CAdvGeneral::OnBnClickedOk` 185) are split into private member functions and
+    `static constexpr`/`static const` tables (actions, settings, hot keys, format names), with
+    the behaviour unchanged. The complexity baseline is deleted: the limit applies to all own
+    code. Free functions that needed helpers forward to a class (`PathRootParser`,
+    `DatabaseLocator`, `DatabaseSchemaUpgrader`, `CMarkerInserter`, `CMenuPopupUpdater`); the
+    forwarders go in Phase L3. `DrawHTML.C` became the C++ class `HtmlTextDrawer`.
 - 2026-10-07: Third-party code is replaced by maintained releases where one exists (Phase T,
   owner decision); untouched third-party code is otherwise never changed.
   - **sqlite3mc:** SQLite3 Multiple Ciphers 2.5.1 (SQLite 3.53.4), was 2.3.5 (3.53.2).
