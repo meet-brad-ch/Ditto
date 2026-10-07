@@ -310,6 +310,18 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   The ARM64 script still added firewall rules for TCP 23443 and launched URLs, and the portable
   one packaged files that no longer exist (`DittoU.exe`, `sqlite3.dll`, `zlib1.dll`). The
   installer gate now checks every `.iss` file.
+- 2026-10-06: Exported `.dto` files are compressed and read by `DittoCore::DtoCodec` (Phase C9).
+  - **Untrusted size:** a `.dto` file stores each format's original size, and upstream
+    allocated that many bytes (`new Bytef[lOriginalSize]`) before looking at the data, so a
+    small file could make Ditto allocate gigabytes. The size is now refused when it is
+    negative, above 1 GiB, or more than deflate can produce from the stored bytes, and the
+    result must have exactly that size.
+  - **Errors are shown:** a format that does not uncompress stops the import with a message.
+    Before, it was logged and the clip was imported without that format. An export that
+    cannot compress a format stops with a message instead of writing an empty format.
+  - **Import count:** the "Successfully imported N clip(s)" message assigned 1 to the count
+    in its condition (`m_importCount = 1`), so it always said "clip".
+  - **Tests:** 9 unit tests; fuzz target `dto`.
 - 2026-10-06: Multi-clip text and file lists are joined by `DittoCore::TextJoin`, and CF_HDROP
   blocks are built by `DittoCore::FileDropList::Build` (Phase C8).
   - **`CFileRecieve` is gone:** it built CF_HDROP in a raw `new TCHAR[]` buffer (a byte count

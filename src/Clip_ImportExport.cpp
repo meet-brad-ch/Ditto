@@ -2,7 +2,9 @@
 #include "CP_Main.h"
 #include ".\clip_importexport.h"
 #include "sqlite/CppSQLite3.h"
-#include "zlib.h"
+#include "ClipboardFormatError.h"
+#include "DtoCodec.h"
+#include "GlobalBytes.h"
 #include "Misc.h"
 #include <basetsd.h>
 #include <minwindef.h>
@@ -11,8 +13,11 @@
 #include <WinUser.h>
 #include <afx.h>
 #include <afxstr.h>
-#include <zconf.h>
 #include "Clip.h"
+
+#include <span>
+#include <string>
+#include <vector>
 
 #define CURRENT_EXPORT_VERSION 1
 
@@ -46,28 +51,11 @@ bool CClip_ImportExport::ExportToSqliteDB(CppSQLite3DB& db)
 
 			stmt.bind(1, lId);
 			stmt.bind(2, GetFormatName(pCF->m_cfType));
-			INT_PTR originalSize = GlobalSize(pCF->m_hgData);
-			stmt.bind(3, (int)originalSize);
 
-			const unsigned char* Data = (const unsigned char*)GlobalLock(pCF->m_hgData);
-			if (Data)
-			{
-				//First compress the data
-				INT_PTR zippedSize = compressBound((ULONG)originalSize);
-				Bytef* pZipped = new Bytef[zippedSize];
-				if (pZipped)
-				{
-					INT_PTR zipReturn = compress(pZipped, (uLongf*)&zippedSize, (const Bytef*)Data, (ULONG)originalSize);
-					if (zipReturn == Z_OK)
-					{
-						stmt.bind(4, pZipped, (int)zippedSize);
-					}
-
-					delete[]pZipped;
-					pZipped = NULL;
-				}
-			}
-			GlobalUnlock(pCF->m_hgData);
+			const DittoCore::GlobalBytes block(pCF->m_hgData);
+			const std::vector<std::byte> compressed = DittoCore::DtoCodec::Compress(block.Bytes());
+			stmt.bind(3, static_cast<int>(block.Bytes().size()));
+			stmt.bind(4, reinterpret_cast<const unsigned char*>(compressed.data()), static_cast<int>(compressed.size()));
 
 			stmt.execDML();
 			stmt.reset();
@@ -242,46 +230,24 @@ bool CClip_ImportExport::ImportFromSqliteV1(CppSQLite3DB& db, CppSQLite3Query& q
 		while (qData.eof() == false)
 		{
 			cf.m_cfType = GetFormatID(qData.getStringField(_T("strClipBoardFormat")));
-			long lOriginalSize = qData.getIntField(_T("lOriginalSize"));
+			const long long originalSize = qData.getInt64Field(_T("lOriginalSize"));
 
 			int nDataLen = 0;
 			const unsigned char* cData = qData.getBlobField(_T("ooData"), nDataLen);
-			if (cData != NULL)
+			if (cData == NULL || nDataLen < 0)
 			{
-				Bytef* pUnZippedData = new Bytef[lOriginalSize];
-				if (pUnZippedData)
-				{
-					//the data in the exported file is compressed so uncompress it now
-					int nRet = uncompress(pUnZippedData, (uLongf*)&lOriginalSize, (Bytef*)cData, nDataLen);
-					if (nRet == Z_OK)
-					{
-						cf.m_hgData = NewGlobalP(pUnZippedData, lOriginalSize);
-						if (cf.m_hgData)
-						{
-							m_Formats.Add(cf);
-							cf.m_hgData = NULL; //m_format owns m_hgData now
-						}
-						else
-						{
-							Log(StrF(_T("Error allocating NewGlobalP size = %d"), lOriginalSize));
-							ASSERT(FALSE);
-						}
-					}
-					else
-					{
-						Log(_T("Error uncompressing data from zlib"));
-						ASSERT(FALSE);
-					}
-
-					delete[]pUnZippedData;
-					pUnZippedData = NULL;
-				}
-				else
-				{
-					Log(StrF(_T("Error allocating memory to unzip size = %d"), lOriginalSize));
-					ASSERT(FALSE);
-				}
+				throw DittoCore::ClipboardFormatError("the exported clip has a format without data");
 			}
+			// the size comes from the file: DtoCodec checks it before allocating
+			const std::vector<std::byte> data = DittoCore::DtoCodec::Uncompress(
+				std::span(reinterpret_cast<const std::byte*>(cData), static_cast<std::size_t>(nDataLen)), originalSize);
+			cf.m_hgData = NewGlobalP(const_cast<std::byte*>(data.data()), data.size());
+			if (cf.m_hgData == NULL)
+			{
+				throw DittoCore::ClipboardFormatError("no memory for an imported format of " + std::to_string(data.size()) + " bytes");
+			}
+			m_Formats.Add(cf);
+			cf.m_hgData = NULL; //m_format owns m_hgData now
 
 			qData.nextRow();
 		}

@@ -30,10 +30,18 @@
       <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <Link>
+      <AdditionalDependencies>zlibd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\lib\DittoCore\ByteCursor.cpp" />
@@ -41,6 +49,7 @@
     <ClCompile Include="..\..\lib\DittoCore\ClipText.cpp" />
     <ClCompile Include="..\..\lib\DittoCore\DibHeader.cpp" />
     <ClCompile Include="..\..\lib\DittoCore\DropBlockReader.cpp" />
+    <ClCompile Include="..\..\lib\DittoCore\DtoCodec.cpp" />
     <ClCompile Include="..\..\lib\DittoCore\FileDataRecord.cpp" />
     <ClCompile Include="..\..\lib\DittoCore\FileDropList.cpp" />
     <ClCompile Include="..\..\lib\DittoCore\GlobalBytes.cpp" />
@@ -51,6 +60,7 @@
     <ClCompile Include="CfHtmlFuzzTarget.cpp" />
     <ClCompile Include="ClipTextFuzzTarget.cpp" />
     <ClCompile Include="DibFuzzTarget.cpp" />
+    <ClCompile Include="DtoFuzzTarget.cpp" />
     <ClCompile Include="FileDataFuzzTarget.cpp" />
     <ClCompile Include="FuzzMain.cpp" />
     <ClCompile Include="FuzzSession.cpp" />
@@ -61,6 +71,7 @@
     <ClInclude Include="CfHtmlFuzzTarget.h" />
     <ClInclude Include="ClipTextFuzzTarget.h" />
     <ClInclude Include="DibFuzzTarget.h" />
+    <ClInclude Include="DtoFuzzTarget.h" />
     <ClInclude Include="FileDataFuzzTarget.h" />
     <ClInclude Include="FuzzSession.h" />
     <ClInclude Include="FuzzTarget.h" />

@@ -10,6 +10,8 @@
 #include "richtextaggregator.h"
 #include "htmlformataggregator.h"
 #include "Popup.h"
+#include "ClipboardFormatError.h"
+#include "ErrorReport.h"
 
 // allocate an HGLOBAL of the given Format Type representing these Clip IDs.
 HGLOBAL CClipIDs::Render(UINT cfType)
@@ -464,6 +466,11 @@ BOOL CClipIDs::Export(CString csFilePath)
 		}
 
 		db.close();
+	}
+	catch (const DittoCore::ClipboardFormatError& error)
+	{
+		CErrorReport::Show(StrF(_T("Export stopped: a clip could not be exported (%s)."), CString(error.what()).GetString()));
+		return FALSE;
 	}
 	CATCH_SQLITE_EXCEPTION
 

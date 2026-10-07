@@ -16,6 +16,8 @@ INPUT                  = lib/DittoCore/ByteCursor.h \
                          lib/DittoCore/DibHeader.h \
                          lib/DittoCore/DibHeader.cpp \
                          lib/DittoCore/DibLayout.h \
+                         lib/DittoCore/DtoCodec.h \
+                         lib/DittoCore/DtoCodec.cpp \
                          lib/DittoCore/DropBlockReader.h \
                          lib/DittoCore/DropBlockReader.cpp \
                          lib/DittoCore/FileDataEntry.h \

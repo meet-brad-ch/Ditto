@@ -30,7 +30,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
     <Link>
-      <AdditionalDependencies>gtest.lib;gtest_main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gtest.lib;gtest_main.lib;zlibd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
@@ -40,7 +40,7 @@
       <PreprocessorDefinitions>NDEBUG;_DISABLE_STL_ANNOTATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>gtest.lib;gtest_main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gtest.lib;gtest_main.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -50,6 +50,7 @@
     <ClCompile Include="..\lib\DittoCore\DatabasePath.cpp" />
     <ClCompile Include="..\lib\DittoCore\DibHeader.cpp" />
     <ClCompile Include="..\lib\DittoCore\DropBlockReader.cpp" />
+    <ClCompile Include="..\lib\DittoCore\DtoCodec.cpp" />
     <ClCompile Include="..\lib\DittoCore\FileDataRecord.cpp" />
     <ClCompile Include="..\lib\DittoCore\FileDropList.cpp" />
     <ClCompile Include="..\lib\DittoCore\GlobalBytes.cpp" />
@@ -61,6 +62,7 @@
     <ClCompile Include="ClipTextTests.cpp" />
     <ClCompile Include="DatabasePathTests.cpp" />
     <ClCompile Include="DibHeaderTests.cpp" />
+    <ClCompile Include="DtoCodecTests.cpp" />
     <ClCompile Include="FileDataRecordTests.cpp" />
     <ClCompile Include="FileDropListTests.cpp" />
     <ClCompile Include="GlobalBytesTests.cpp" />

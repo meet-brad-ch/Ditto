@@ -7,6 +7,7 @@
 #include "CfHtmlFuzzTarget.h"
 #include "ClipTextFuzzTarget.h"
 #include "DibFuzzTarget.h"
+#include "DtoFuzzTarget.h"
 #include "FileDataFuzzTarget.h"
 #include "HdropFuzzTarget.h"
 #include "RtfFuzzTarget.h"
@@ -25,6 +26,7 @@ std::vector<std::unique_ptr<FuzzTarget>> FuzzSession::AllTargets()
 	targets.push_back(std::make_unique<CfHtmlFuzzTarget>());
 	targets.push_back(std::make_unique<ClipTextFuzzTarget>());
 	targets.push_back(std::make_unique<DibFuzzTarget>());
+	targets.push_back(std::make_unique<DtoFuzzTarget>());
 	targets.push_back(std::make_unique<FileDataFuzzTarget>());
 	targets.push_back(std::make_unique<HdropFuzzTarget>());
 	targets.push_back(std::make_unique<RtfFuzzTarget>());

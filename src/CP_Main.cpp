@@ -259,7 +259,13 @@ BOOL CCP_MainApp::InitInstance()
 			CString csError;
 			csError.Format(_T("%s - Exception - %d - %s"), theApp.m_Language.GetString("Error_Parsing", "Error parsing exported clip"), e.errorCode(), e.errorMessage());
 			ShowCommandLineError("Ditto", csError);
-		}	
+		}
+		catch (const DittoCore::ClipboardFormatError& error)
+		{
+			CString csError;
+			csError.Format(_T("%s - %s"), theApp.m_Language.GetString("Error_Parsing", "Error parsing exported clip").GetString(), CString(error.what()).GetString());
+			ShowCommandLineError("Ditto", csError);
+		}
 
 		return FALSE;
 	}
@@ -993,7 +999,7 @@ bool CCP_MainApp::ImportClips(HWND hWnd)
 			CString cs;
 			
 			cs.Format(_T("%s %d "), theApp.m_Language.GetString("Import_Successfully", "Successfully imported"), clip.m_importCount);
-			if(clip.m_importCount = 1)
+			if(clip.m_importCount == 1)
 				cs += theApp.m_Language.GetString("Clip", "clip");
 			else
 				cs += theApp.m_Language.GetString("Clips", "clips");
@@ -1013,7 +1019,13 @@ bool CCP_MainApp::ImportClips(HWND hWnd)
 		CString csError;
 		csError.Format(_T("%s - Exception - %d - %s"), theApp.m_Language.GetString("Error_Parsing", "Error parsing exported clip"), e.errorCode(), e.errorMessage());
 		MessageBox(hWnd, csError, _T("Ditto"), MB_OK);
-	}	
+	}
+	catch (const DittoCore::ClipboardFormatError& error)
+	{
+		CString csError;
+		csError.Format(_T("%s - %s"), theApp.m_Language.GetString("Error_Parsing", "Error parsing exported clip").GetString(), CString(error.what()).GetString());
+		MessageBox(hWnd, csError, _T("Ditto"), MB_OK);
+	}
 
 	return true;
 }
