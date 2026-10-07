@@ -177,8 +177,9 @@ protected:
     COLORREF HslToRgb(double h, double s, double l);
 		
 	void DrawCheckerboard(CDC* pDC, CRect rect);
-	WCHAR *m_pwchTip;
-	TCHAR *m_pchTip;
+	// The tool tip texts handed to the tool tip control; they must outlive OnToolTipText
+	CStringW m_toolTipTextW{};
+	CStringA m_toolTipTextA{};
 	HFONT m_SmallFont;
 	CAccels	m_Accels;
 	CMapIDtoCF m_RTFData;

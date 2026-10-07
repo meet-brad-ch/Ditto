@@ -202,8 +202,6 @@ void InitializeColorNameMap()
 
 CQListCtrl::CQListCtrl()
 {
-	m_pchTip = NULL;
-	m_pwchTip = NULL;
 	m_linesPerRow = 1;
 	m_windowDpi = NULL;
 	m_SmallFont = NULL;
@@ -219,12 +217,6 @@ CQListCtrl::CQListCtrl()
 
 CQListCtrl::~CQListCtrl()
 {
-	if (m_pchTip != NULL)
-		delete m_pchTip;
-
-	if (m_pwchTip != NULL)
-		delete m_pwchTip;
-
 	if (m_SmallFont)
 		::DeleteObject(m_SmallFont);
 
@@ -1250,8 +1242,6 @@ BOOL CQListCtrl::OnEraseBkgnd(CDC* pDC)
 
 BOOL CQListCtrl::OnToolTipText(UINT /*id*/, NMHDR* pNMHDR, LRESULT* pResult)
 {
-	// need to handle both ANSI and UNICODE versions of the message
-	TOOLTIPTEXTW* pTTTW = (TOOLTIPTEXTW*)pNMHDR;
 	CString strTipText;
 
 	UINT_PTR nID = pNMHDR->idFrom;
@@ -1273,52 +1263,18 @@ BOOL CQListCtrl::OnToolTipText(UINT /*id*/, NMHDR* pNMHDR, LRESULT* pResult)
 	//Replace the tabs with spaces, the tooltip didn't like the \t s
 	strTipText.Replace(_T("\t"), _T("  "));
 
-	int nLength = strTipText.GetLength() + 2;
-
-#ifndef _UNICODE
+	// the tool tip control asks for ANSI or wide text; each gets its own encoding, kept in a
+	// member because the control reads it after this handler returns
 	if (pNMHDR->code == TTN_NEEDTEXTA)
 	{
-		if (m_pchTip != NULL)
-			delete m_pchTip;
-
-		m_pchTip = new TCHAR[nLength];
-		lstrcpyn(m_pchTip, strTipText, nLength - 1);
-		m_pchTip[nLength - 1] = 0;
-		pTTTW->lpszText = (WCHAR*)m_pchTip;
+		m_toolTipTextA = CStringA(strTipText);
+		reinterpret_cast<TOOLTIPTEXTA*>(pNMHDR)->lpszText = const_cast<LPSTR>(m_toolTipTextA.GetString());
 	}
 	else
 	{
-		if (m_pwchTip != NULL)
-			delete m_pwchTip;
-
-		m_pwchTip = new WCHAR[nLength];
-		_mbstowcsz(m_pwchTip, strTipText, nLength - 1);
-		m_pwchTip[nLength - 1] = 0; // end of text
-		pTTTW->lpszText = (WCHAR*)m_pwchTip;
+		m_toolTipTextW = strTipText;
+		reinterpret_cast<TOOLTIPTEXTW*>(pNMHDR)->lpszText = const_cast<LPWSTR>(m_toolTipTextW.GetString());
 	}
-#else
-	if (pNMHDR->code == TTN_NEEDTEXTA)
-	{
-		if (m_pchTip != NULL)
-			delete m_pchTip;
-
-		m_pchTip = new TCHAR[nLength];
-		STRNCPY(m_pchTip, strTipText, nLength - 1);
-		m_pchTip[nLength - 1] = 0; // end of text
-		pTTTW->lpszText = (LPTSTR)m_pchTip;
-	}
-	else
-	{
-		if (m_pwchTip != NULL)
-			delete m_pwchTip;
-
-		m_pwchTip = new WCHAR[nLength];
-		// the buffer is sized from the text: the text and its terminator always fit
-		std::copy_n(strTipText.GetString(), strTipText.GetLength() + 1, m_pwchTip);
-		m_pwchTip[nLength - 1] = 0;
-		pTTTW->lpszText = (LPTSTR)m_pwchTip;
-	}
-#endif
 	* pResult = 0;
 
 	return TRUE;    // message was handled
