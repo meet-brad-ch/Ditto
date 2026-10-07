@@ -91,7 +91,7 @@ void CCopyThread::OnClipboardChange(CString activeWindow)
 	try
 	{
 		Log(_T("LoadFromClipboard - Before"));
-		bResult = pClip->LoadFromClipboard(pSupportedTypes, true, activeWindow);
+		bResult = pClip->LoadFromClipboard(pSupportedTypes, CGetSetOptions::m_regexHelper, true, activeWindow);
 		Log(_T("LoadFromClipboard - After"));
 
 		if(bResult == FALSE)
@@ -103,7 +103,7 @@ void CCopyThread::OnClipboardChange(CString activeWindow)
 				Sleep(delay);
 
 				Log(_T("LoadFromClipboard #2 - Before"));
-				bResult = pClip->LoadFromClipboard(pSupportedTypes, true, activeWindow);
+				bResult = pClip->LoadFromClipboard(pSupportedTypes, CGetSetOptions::m_regexHelper, true, activeWindow);
 				Log(_T("LoadFromClipboard #2 - After"));
 			}
 			else

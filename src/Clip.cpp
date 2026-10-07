@@ -28,7 +28,9 @@
 #include "ClipOrder.h"
 #include "DittoDbTransaction.h"
 #include <algorithm>
+#include <cstdint>
 #include <set>
+#include <stdexcept>
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -295,6 +297,21 @@ CClip::CClip() :
 	m_addToDbStickyEnum = AddToDbStickyEnum::INVALID;
 }
 
+CClip::CClip(DittoCore::ClipSavePolicy savePolicy) :
+	CClip()
+{
+	m_savePolicy.emplace(std::move(savePolicy));
+}
+
+const DittoCore::ClipSavePolicy& CClip::SavePolicy()
+{
+	if (!m_savePolicy.has_value())
+	{
+		m_savePolicy.emplace(CGetSetOptions::GetClipSaveSettings());
+	}
+	return *m_savePolicy;
+}
+
 CClip::~CClip()
 {
 	EmptyFormats();
@@ -401,7 +418,7 @@ bool CClip::AddFormat(CLIPFORMAT cfType, void* pData, SIZE_T nLen, bool setDesc)
 }
 
 // Fills this CClip with the contents of the clipboard.
-int CClip::LoadFromClipboard(CClipTypes* pClipTypes, bool /*checkClipboardIgnore*/, CString activeApp)
+int CClip::LoadFromClipboard(CClipTypes* pClipTypes, CRegExFilterHelper& regexFilters, bool /*checkClipboardIgnore*/, CString activeApp)
 {
 	if(pClipTypes == NULL || pClipTypes->GetSize() == 0)
 	{
@@ -423,7 +440,7 @@ int CClip::LoadFromClipboard(CClipTypes* pClipTypes, bool /*checkClipboardIgnore
 		return FALSE;
 	}
 	
-	if (CGetSetOptions::m_enforceClipboardIgnoreFormats)
+	if (SavePolicy().Settings().enforceIgnoreFormats)
 	{
 		//https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats
 		if (::IsClipboardFormatAvailable(theApp.m_excludeClipboardContentFromMonitorProcessing))
@@ -452,7 +469,7 @@ int CClip::LoadFromClipboard(CClipTypes* pClipTypes, bool /*checkClipboardIgnore
 	oleData.EnsureClipboardObject();
 
 	//https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats
-	if (CGetSetOptions::m_enforceClipboardIgnoreFormats &&
+	if (SavePolicy().Settings().enforceIgnoreFormats &&
 		oleData.IsDataAvailable(theApp.m_canIncludeInClipboardHistory))
 	{
 		HGLOBAL includeInHistory = oleData.GetGlobalData(theApp.m_canIncludeInClipboardHistory);
@@ -531,7 +548,7 @@ int CClip::LoadFromClipboard(CClipTypes* pClipTypes, bool /*checkClipboardIgnore
 
 		if (cf.m_cfType == CF_DIB &&
 			oleData.IsDataAvailable(CF_TEXT) &&
-			CGetSetOptions::GetIgnoreAnnoyingCFDIBSet(TRUE).count(activeApp.MakeLower()))
+			SavePolicy().IgnoresDibFrom(std::wstring(activeApp.MakeLower().GetString())))
 		{
 			Log(StrF(_T("Ignore CF_DIB from %s"), activeApp.GetString()));
 			continue;
@@ -569,10 +586,10 @@ int CClip::LoadFromClipboard(CClipTypes* pClipTypes, bool /*checkClipboardIgnore
 			nSize = GlobalSize(cf.m_hgData);
 			if(nSize > 0)
 			{
-				if(CGetSetOptions::m_lMaxClipSizeInBytes > 0 && (int)nSize > CGetSetOptions::m_lMaxClipSizeInBytes)
+				if(SavePolicy().TooLarge(static_cast<std::uint64_t>(nSize)))
 				{
 					CString cs;
-					cs.Format(_T("Maximum clip size reached max size = %d, clip size = %Id"), CGetSetOptions::m_lMaxClipSizeInBytes, nSize);
+					cs.Format(_T("Maximum clip size reached max size = %lld, clip size = %Id"), SavePolicy().Settings().maxClipSizeInBytes, nSize);
 					Log(cs);
 
 					oleData.Release();
@@ -625,7 +642,7 @@ int CClip::LoadFromClipboard(CClipTypes* pClipTypes, bool /*checkClipboardIgnore
 	if (this->m_Desc != _T(""))
 	{
 		std::wstring stringData(this->m_Desc);
-		if (CGetSetOptions::m_regexHelper.TextMatchFilters(activeApp, stringData))
+		if (regexFilters.TextMatchFilters(activeApp, stringData))
 		{
 			return -1;
 		}
@@ -651,9 +668,10 @@ bool CClip::SetDescFromText(HGLOBAL hgData, bool unicode)
 		m_Desc = CString(CStringA(text.c_str(), static_cast<int>(text.size())));
 	}
 
-	if(m_Desc.GetLength() > CGetSetOptions::m_bDescTextSize)
+	const std::size_t descriptionLength{ SavePolicy().Settings().descriptionLength };
+	if(static_cast<std::size_t>(m_Desc.GetLength()) > descriptionLength)
 	{
-		m_Desc = m_Desc.Left(CGetSetOptions::m_bDescTextSize);
+		m_Desc = m_Desc.Left(static_cast<int>(descriptionLength));
 	}
 
 	return true;
@@ -750,8 +768,9 @@ bool CClip::AddToDB(bool bCheckForDuplicates)
 
 	if(bResult)
 	{
-		if(CGetSetOptions::m_csPlaySoundOnCopy.IsEmpty() == FALSE)
-			PlaySound(CGetSetOptions::m_csPlaySoundOnCopy, NULL, SND_FILENAME|SND_ASYNC);
+		const std::wstring& sound = SavePolicy().Settings().playSoundOnCopy;
+		if(!sound.empty())
+			PlaySound(sound.c_str(), NULL, SND_FILENAME|SND_ASYNC);
 	}
 	
 	// should be emptied by AddToDataTable
@@ -792,22 +811,16 @@ bool CClip::MoveDuplicateToTop()
 // returning -1 here would have saved a second copy of the clip
 int CClip::FindDuplicate()
 {
-	//If they are allowing duplicates still check
-	//the last copied item
-	if(CGetSetOptions::m_bAllowDuplicates)
+	switch (SavePolicy().DuplicateCheckFor(m_CRC, m_LastAddedCRC))
 	{
-		if (CGetSetOptions::m_allowBackToBackDuplicates == FALSE)
-		{
-			if (m_CRC == m_LastAddedCRC)
-				return m_lastAddedID;
-		}
-	}
-	else
-	{
+	case DittoCore::DuplicateCheck::LastAdded:
+		return m_lastAddedID;
+	case DittoCore::DuplicateCheck::AnyByCrc:
 		return Repository().FindByCrc(m_CRC).value_or(-1);
+	case DittoCore::DuplicateCheck::None:
+		return -1;
 	}
-
-	return -1;
+	throw std::logic_error("unknown duplicate check");
 }
 
 
@@ -816,7 +829,7 @@ DWORD CClip::GenerateCRC()
 {
 	CCrc32Dynamic crc32;
 	DWORD dwCRC = 0xFFFFFFFF;
-	const bool adjust = CGetSetOptions::GetAdjustClipsForCRC() != FALSE;
+	const bool adjust = SavePolicy().Settings().adjustForCrc;
 
 	const INT_PTR size = m_Formats.GetSize();
 	for (INT_PTR i = 0; i < size; i++)
@@ -1632,7 +1645,7 @@ bool CClip::AddFileDataToData(CString &errorMessage)
 	}
 
 	CString newDesc = _T("File Contents - ");
-	const ULONGLONG maxSize = (ULONGLONG)CGetSetOptions::GetMaxFileContentsSize();
+	const ULONGLONG maxSize = SavePolicy().Settings().maxFileContentsSize;
 	std::vector<CopiedFile> copied;
 	for (const std::wstring& path : files)
 	{

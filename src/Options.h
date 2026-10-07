@@ -2,6 +2,7 @@
 
 #include "Theme.h"
 #include "RegExFilterHelper.h"
+#include "ClipSavePolicy.h"
 #include <set>
 
 #define MAX_COPY_BUFFER	3
@@ -622,6 +623,8 @@ public:
 	static CString m_ignoreAnnoyingCFDIB;
 	static void SetIgnoreAnnoyingCFDIB(CString val);
 	static std::set<CString> GetIgnoreAnnoyingCFDIBSet(BOOL useCache = FALSE);
+	// The options that decide how a copied clip is saved, for injection into CClip
+	static DittoCore::ClipSaveSettings GetClipSaveSettings();
 
 	static BOOL GetRegexCaseInsensitive();
 	static void SetRegexCaseInsensitive(BOOL val);

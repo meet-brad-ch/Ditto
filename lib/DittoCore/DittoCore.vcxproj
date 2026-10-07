@@ -42,6 +42,7 @@
     <ClInclude Include="CfHtml.h" />
     <ClInclude Include="CfHtmlFragment.h" />
     <ClInclude Include="ClipOrder.h" />
+    <ClInclude Include="ClipSavePolicy.h" />
     <ClInclude Include="ClipboardFormatError.h" />
     <ClInclude Include="ClipText.h" />
     <ClInclude Include="DatabasePath.h" />
@@ -71,6 +72,7 @@
     <ClCompile Include="CaseTransforms.cpp" />
     <ClCompile Include="CfHtml.cpp" />
     <ClCompile Include="ClipOrder.cpp" />
+    <ClCompile Include="ClipSavePolicy.cpp" />
     <ClCompile Include="ClipText.cpp" />
     <ClCompile Include="DatabasePath.cpp" />
     <ClCompile Include="DibHeader.cpp" />

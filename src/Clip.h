@@ -19,6 +19,8 @@
 #include "tinyxml\tinyxml.h"
 #include "Crc32Dynamic.h"
 #include "ClipRepository.h"
+#include "ClipSavePolicy.h"
+#include "RegExFilterHelper.h"
 #include "..\Shared\IClip.h"
 #include "Misc.h"
 
@@ -104,8 +106,12 @@ public:
 class CClip : public IClip
 {
 public:
+	// Takes the save settings from the options when they are first needed
 	CClip();
+	// Saves with the given settings instead of the options
+	explicit CClip(DittoCore::ClipSavePolicy savePolicy);
 	~CClip();
+	// Copies the clip's data; the save settings stay this clip's own
 	const CClip& operator=(const CClip &clip);
 
 	static DWORD m_LastAddedCRC;
@@ -151,7 +157,8 @@ public:
 	void Clear();
 	void EmptyFormats();
 	bool AddFormat(CLIPFORMAT cfType, void* pData, SIZE_T nLen, bool setDesc = false);
-	int LoadFromClipboard(CClipTypes* pClipTypes, bool checkClipboardIgnore = true, CString activeApp = _T(""));
+	// regexFilters: the text filters that keep a copy out of the history
+	int LoadFromClipboard(CClipTypes* pClipTypes, CRegExFilterHelper& regexFilters, bool checkClipboardIgnore = true, CString activeApp = _T(""));
 	bool SetDescFromText(HGLOBAL hgData, bool unicode);
 	bool SetDescFromType();
 	bool AddToDB(bool bCheckForDuplicates = true);
@@ -242,6 +249,9 @@ private:
 	static std::optional<int> ParentFilter(int parentId);
 	// The repository over theApp's database
 	static CClipRepository Repository();
+	// The save settings: the injected ones, or the options' (read once, when first needed)
+	const DittoCore::ClipSavePolicy& SavePolicy();
+	std::optional<DittoCore::ClipSavePolicy> m_savePolicy{};
 	// This clip's Main row, and back
 	ClipRecord ToRecord() const;
 	void FromRecord(const ClipRecord& record);

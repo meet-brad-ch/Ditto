@@ -2807,6 +2807,26 @@ std::set<CString> CGetSetOptions::GetIgnoreAnnoyingCFDIBSet(BOOL useCache)
 	return processSet;
 }
 
+DittoCore::ClipSaveSettings CGetSetOptions::GetClipSaveSettings()
+{
+	DittoCore::ClipSaveSettings settings{};
+	settings.allowDuplicates = m_bAllowDuplicates != FALSE;
+	settings.allowBackToBackDuplicates = m_allowBackToBackDuplicates != FALSE;
+	settings.adjustForCrc = GetAdjustClipsForCRC() != FALSE;
+	settings.enforceIgnoreFormats = m_enforceClipboardIgnoreFormats != FALSE;
+	settings.maxClipSizeInBytes = m_lMaxClipSizeInBytes;
+	// a length of 0 or less kept no description text before, and keeps none now
+	settings.descriptionLength = m_bDescTextSize > 0 ? static_cast<std::size_t>(m_bDescTextSize) : 0;
+	// the same conversion CClip made: a negative setting reads as no limit
+	settings.maxFileContentsSize = static_cast<std::uint64_t>(static_cast<std::int64_t>(GetMaxFileContentsSize()));
+	for (const CString& app : GetIgnoreAnnoyingCFDIBSet(TRUE))
+	{
+		settings.ignoreDibFromApps.insert(std::wstring(app.GetString()));
+	}
+	settings.playSoundOnCopy = m_csPlaySoundOnCopy.GetString();
+	return settings;
+}
+
 BOOL CGetSetOptions::GetRegexCaseInsensitive()
 {
 	return GetProfileLong("RegexCaseInsensitive", TRUE);

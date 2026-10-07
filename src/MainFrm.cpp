@@ -1356,7 +1356,7 @@ void CMainFrame::OnFirstSavecurrentclipboard()
 	auto clip = std::make_unique<CClip>();
 	try
 	{
-		if(!clip->LoadFromClipboard(types.get(), false, _T("")))
+		if(!clip->LoadFromClipboard(types.get(), CGetSetOptions::m_regexHelper, false, _T("")))
 		{
 			Log(_T("Failed to load clips from the clipboard, not saving to db"));
 			return;
