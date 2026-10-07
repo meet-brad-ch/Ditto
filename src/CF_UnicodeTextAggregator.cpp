@@ -11,7 +11,7 @@ CCF_UnicodeTextAggregator::CCF_UnicodeTextAggregator(const CStringW& separator) 
 {
 }
 
-bool CCF_UnicodeTextAggregator::AddClip(LPVOID lpData, int nDataSize, int nPos, int nCount, UINT cfType)
+bool CCF_UnicodeTextAggregator::AddClip(LPVOID lpData, int nDataSize, int /*nPos*/, int /*nCount*/, UINT cfType)
 {
 	const std::size_t size = static_cast<std::size_t>(nDataSize);
 	if (cfType == CF_HDROP)

@@ -412,13 +412,10 @@ CString GetFormatName(CLIPFORMAT cbType)
 		//Not a default type get the name from the clipboard
 		if (cbType != 0)
 		{
+			// zero-initialized: a failed call leaves an empty name; upstream returned the
+			// uninitialized buffer, so a failed call gave stack garbage
 			TCHAR szFormat[256]{};
-			// upstream returned the buffer without checking, so a failed call gave stack garbage
-			if (GetClipboardFormatName(cbType, szFormat, _countof(szFormat)) == 0)
-			{
-				Log(StrF(_T("GetClipboardFormatName failed for format %u, error %u"), cbType, ::GetLastError()));
-				break;
-			}
+			GetClipboardFormatName(cbType, szFormat, _countof(szFormat));
 			return szFormat;
 		}
 		break;

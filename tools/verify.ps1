@@ -205,7 +205,7 @@ Say "installer: ok   $($issFiles.Count) script(s): no firewall rules or URL laun
 
 # ---- 6. no raw allocation in contract code ------------------------------------------
 # Owner rule: no new/delete/malloc/free; smart pointers and containers only. Deleted functions
-# ('= delete') and comments are not allocations.
+# ('= delete'), comments and the text of string and character literals are not allocations.
 $allocPattern = '\bnew\b|\bdelete\b|\b(malloc|calloc|realloc|free)\s*\('
 $contractFiles = @(Get-ChildItem (Join-Path $repo 'lib'), (Join-Path $repo 'tests') -Recurse -File -Include *.cpp, *.h)
 $allocFindings = 0
@@ -231,6 +231,8 @@ foreach ($f in $contractFiles) {
             else { $code += $rest; $rest = '' }
         }
         $code = $code -replace '=\s*delete\b', ''
+        # text in string and character literals is not code ("new shequel" in the slug table)
+        $code = $code -replace '"(\\.|[^"\\])*"', '""' -replace "'(\\.|[^'\\])*'", "''"
         if ($code -cmatch $allocPattern) {
             Say ("allocation: FAIL {0}:{1}: {2}" -f $f.FullName.Substring($repo.Length + 1), $n, $line.Trim())
             $allocFindings++

@@ -1,4 +1,3 @@
-addins\dittoutil\pasteanyastext.cpp	PasteAnyAsText::SelectClipToPasteAsText	13
 addins\dittoutil\pasteimageashtmlimage.cpp	CPasteImageAsHtmlImage::ConvertPathToHtmlImageTag	20
 addins\dittoutil\readonlyflag.cpp	CReadOnlyFlag::ResetReadOnlyFlag	12
 addins\dittoutil\textconvert.cpp	CTextConvert::ConvertFromUTF8	13
@@ -13,11 +12,9 @@ src\actionenums.cpp	ActionEnums::GetDefaultShortCutKeyA	45
 src\advgeneral.cpp	CAdvGeneral::OnBnClickedOk	185
 src\advgeneral.cpp	CAdvGeneral::Search	13
 src\clip.cpp	CClip::AddFileDataToData	15
-src\clip.cpp	CClip::AddToDB	12
+src\clip.cpp	CClip::AddToDB	10
 src\clip.cpp	CClip::LoadFormats	13
 src\clip.cpp	CClip::LoadFromClipboard	36
-src\clip.cpp	CClip::MoveDown	17
-src\clip.cpp	CClip::MoveUp	17
 src\clip.cpp	CClip::SaveFormats	12
 src\clip.cpp	CClip::WriteTextToFile	11
 src\clip_importexport.cpp	CClip_ImportExport::ImportFromSqliteDB	14
@@ -38,7 +35,7 @@ src\copyproperties.cpp	CCopyProperties::OnOK	11
 src\copythread.cpp	CCopyThread::OnClipboardChange	12
 src\cp_main.cpp	CCP_MainApp::EditItems	23
 src\cp_main.cpp	CCP_MainApp::EnterGroupID	12
-src\cp_main.cpp	CCP_MainApp::InitInstance	31
+src\cp_main.cpp	CCP_MainApp::InitInstance	29
 src\cp_main.cpp	DittoCommandLineInfo::ParseParam	15
 src\databaseutilities.cpp	CheckDBExists	13
 src\databaseutilities.cpp	RemoveOldEntries	17
@@ -94,17 +91,10 @@ src\ntray.cpp	CTrayNotifyIcon::Create	21
 src\ntray.cpp	CTrayNotifyIcon::GetDynamicDCAndBitmap	15
 src\ntray.cpp	CTrayNotifyIcon::OnTrayNotification	12
 src\ntray.cpp	CTrayNotifyIcon::SetBalloonDetails	11
-src\oleclipsource.cpp	COleClipSource::AsciiOnly	11
-src\oleclipsource.cpp	COleClipSource::CamelCase	17
-src\oleclipsource.cpp	COleClipSource::Capitalize	11
-src\oleclipsource.cpp	COleClipSource::ConvertDrivesASCII	10
-src\oleclipsource.cpp	COleClipSource::ConvertDrivesWide	10
 src\oleclipsource.cpp	COleClipSource::ConvertToFileDrop	13
 src\oleclipsource.cpp	COleClipSource::DoImmediateRender	34
 src\oleclipsource.cpp	COleClipSource::OnRenderGlobalData	12
 src\oleclipsource.cpp	COleClipSource::PlainTextFilter	10
-src\oleclipsource.cpp	COleClipSource::SentenceCase	17
-src\oleclipsource.cpp	COleClipSource::Typoglycemia	10
 src\options.cpp	CGetSetOptions::GetPath	17
 src\options.cpp	CGetSetOptions::GetProfileString	17
 src\options.cpp	CGetSetOptions::LoadSettings	12

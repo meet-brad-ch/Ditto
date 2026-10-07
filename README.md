@@ -316,7 +316,7 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
     callback copied from the start every time, so RTF longer than one chunk repeated its
     beginning. It now streams a `std::string` sized by the conversion, from the read position.
   - **Format names:** a failed `GetClipboardFormatName` returned an uninitialized buffer as the
-    name; it now logs and returns "ERROR" like the other unknown case.
+    name; the buffer is zero-initialized now, so the name is empty.
   - **Image join:** the window DC taken for joining images was never released, and the image
     blocks were freed only after a successful join.
   - **Paste any as text** (add-in): every null was turned into a space, the terminator too, so

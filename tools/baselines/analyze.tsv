@@ -70,10 +70,9 @@ C6258	src\eventthread.cpp	1
 C6271	src\optionsgeneral.cpp	2
 C6271	src\optionsquickpaste.cpp	1
 C6276	src\drawhtml.c	1
-C6282	src\cp_main.cpp	1
 C6282	src\qpastewnd.cpp	1
 C6284	addins\dittoutil\pasteimageashtmlimage.cpp	1
-C6284	src\clip.cpp	3
+C6284	src\clip.cpp	2
 C6284	src\clipcompare.cpp	3
 C6284	src\clipids.cpp	2
 C6284	src\copyproperties.cpp	2
@@ -84,9 +83,9 @@ C6284	src\dittorulerricheditctrl.cpp	3
 C6284	src\editwnd.cpp	6
 C6284	src\formatsql.cpp	5
 C6284	src\mainfrmthread.cpp	1
-C6284	src\misc.cpp	3
+C6284	src\misc.cpp	2
 C6284	src\multilanguage.cpp	3
-C6284	src\oleclipsource.cpp	7
+C6284	src\oleclipsource.cpp	6
 C6284	src\options.cpp	2
 C6284	src\optionsgeneral.cpp	6
 C6284	src\optionsquickpaste.cpp	2
@@ -103,7 +102,7 @@ C6385	src\sqlite\sqlite3mc_amalgamation.c	10
 C6386	src\qrcode\rsecc.c	2
 C6386	src\sqlite\sqlite3mc_amalgamation.c	1
 C6387	src\cgdiplusbitmap.h	1
-C6387	src\formattedtextdraw.cpp	2
+C6387	src\formattedtextdraw.cpp	1
 C6387	src\mainfrm.cpp	2
 C6387	src\messagepumpthread.cpp	1
 C6387	src\nodbframewnd.cpp	1

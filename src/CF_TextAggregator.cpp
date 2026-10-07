@@ -13,7 +13,7 @@ CCF_TextAggregator::CCF_TextAggregator(const CStringA& separator) :
 {
 }
 
-bool CCF_TextAggregator::AddClip(LPVOID lpData, int nDataSize, int nPos, int nCount, UINT cfType)
+bool CCF_TextAggregator::AddClip(LPVOID lpData, int nDataSize, int /*nPos*/, int /*nCount*/, UINT cfType)
 {
 	const std::size_t size = static_cast<std::size_t>(nDataSize);
 	if (cfType == CF_HDROP)

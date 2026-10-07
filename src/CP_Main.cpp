@@ -184,6 +184,41 @@ CCP_MainApp::~CCP_MainApp()
 	
 }
 
+void CCP_MainApp::ImportFileFromCommandLine(const CString& fileName)
+{
+	try
+	{
+		CGetSetOptions::m_bEnableDebugLogging = CGetSetOptions::GetEnableDebugLogging();
+
+		CppSQLite3DB db;
+		db.open(fileName);
+
+		CClip_ImportExport clip;
+		if(clip.ImportFromSqliteDB(db, false, true))
+		{
+			ShowCommandLineError("Ditto", theApp.m_Language.GetString("Importing_Good", "Clip placed on clipboard"));
+		}
+		else
+		{
+			ShowCommandLineError("Ditto", theApp.m_Language.GetString("Error_Importing", "Error importing exported clip"));
+		}
+	}
+	catch (CppSQLite3Exception& e)
+	{
+		ASSERT(FALSE);
+
+		CString csError;
+		csError.Format(_T("%s - Exception - %d - %s"), theApp.m_Language.GetString("Error_Parsing", "Error parsing exported clip"), e.errorCode(), e.errorMessage());
+		ShowCommandLineError("Ditto", csError);
+	}
+	catch (const DittoCore::ClipboardFormatError& error)
+	{
+		CString csError;
+		csError.Format(_T("%s - %s"), theApp.m_Language.GetString("Error_Parsing", "Error parsing exported clip").GetString(), CString(error.what()).GetString());
+		ShowCommandLineError("Ditto", csError);
+	}
+}
+
 BOOL CCP_MainApp::InitInstance()
 {	
 	INITCOMMONCONTROLSEX InitCtrls;
@@ -234,39 +269,7 @@ BOOL CCP_MainApp::InitInstance()
 	}
 	else if(cmdInfo.m_strFileName.IsEmpty() == FALSE)
 	{
-		try
-		{
-			CGetSetOptions::m_bEnableDebugLogging = CGetSetOptions::GetEnableDebugLogging();
-
-			CClip_ImportExport Clip;
-			CppSQLite3DB db;
-			db.open(cmdInfo.m_strFileName);
-
-			CClip_ImportExport clip;
-			if(clip.ImportFromSqliteDB(db, false, true))
-			{
-				ShowCommandLineError("Ditto", theApp.m_Language.GetString("Importing_Good", "Clip placed on clipboard"));
-			}
-			else
-			{
-				ShowCommandLineError("Ditto", theApp.m_Language.GetString("Error_Importing", "Error importing exported clip"));
-			}
-		}
-		catch (CppSQLite3Exception& e)
-		{
-			ASSERT(FALSE);
-
-			CString csError;
-			csError.Format(_T("%s - Exception - %d - %s"), theApp.m_Language.GetString("Error_Parsing", "Error parsing exported clip"), e.errorCode(), e.errorMessage());
-			ShowCommandLineError("Ditto", csError);
-		}
-		catch (const DittoCore::ClipboardFormatError& error)
-		{
-			CString csError;
-			csError.Format(_T("%s - %s"), theApp.m_Language.GetString("Error_Parsing", "Error parsing exported clip").GetString(), CString(error.what()).GetString());
-			ShowCommandLineError("Ditto", csError);
-		}
-
+		ImportFileFromCommandLine(cmdInfo.m_strFileName);
 		return FALSE;
 	}
 	else if(cmdInfo.m_bConnect || cmdInfo.m_bDisconnect)

@@ -202,6 +202,8 @@ public:
 
 protected:
 	void ShowCommandLineError(CString csTitle, CString csMessage);
+	// Puts an exported clip file given on the command line on the clipboard; reports any error
+	void ImportFileFromCommandLine(const CString& fileName);
 	CUAC_Thread* m_pUacPasteThread;
 
 	int m_activeGroupId;
