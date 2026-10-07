@@ -123,7 +123,7 @@ src\qpastewnd.cpp	CQPasteWnd::SetMenuChecks	53
 src\qpastewnd.cpp	CQPasteWnd::ShowProperties	10
 src\qpastewndthread.cpp	CQPasteWndThread::OnLoadExtraData	23
 src\qpastewndthread.cpp	CQPasteWndThread::OnLoadItems	14
-src\quickpaste.cpp	CQuickPaste::ShowQPasteWnd	44
+src\quickpaste.cpp	CQuickPaste::ShowQPasteWnd	43
 src\quickpastekeyboard.cpp	CQuickPasteKeyboard::LoadHotKey	41
 src\quickpastekeyboard.cpp	CQuickPasteKeyboard::OnBnClickedAssign	15
 src\rulerricheditctrl\rrectoolbar.cpp	CRRECToolbar::Create	12
