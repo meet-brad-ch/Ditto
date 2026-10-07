@@ -112,6 +112,7 @@ BOOL QRCodeViewer::CreateEx(CWnd *pParentWnd, unsigned char* bitmapData, int ima
 	else
 	{
 		delete[] m_bitmapData;
+		return FALSE;
 	}
 
 	return TRUE;
@@ -302,7 +303,11 @@ LRESULT QRCodeViewer::OnDpiChanged(WPARAM wParam, LPARAM lParam)
 
 	m_font.DeleteObject();
 	m_font.CreateFontIndirect(&m_logFont);
-	m_desc.SetFont(&m_font);
+	// the description is missing when its creation failed (reported in CreateEx)
+	if (m_desc.GetSafeHwnd() != NULL)
+	{
+		m_desc.SetFont(&m_font);
+	}
 
 	return TRUE;
 }

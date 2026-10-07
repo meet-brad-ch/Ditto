@@ -26,6 +26,7 @@
 #include "ProcessPaste.h"
 #include "QPasteWnd.h"
 #include <algorithm>
+#include <memory>
 #include <signal.h>
 #include "CreateQRCodeImage.h"
 #include "QRCodeViewer.h"
@@ -4148,15 +4149,21 @@ bool CQPasteWnd::DoExportToQRCode()
 
 				if (bitmapData != NULL)
 				{
-					QRCodeViewer* viewer = new QRCodeViewer();
+					auto viewer = std::make_unique<QRCodeViewer>();
 
 					LOGFONT lf;
 					CGetSetOptions::GetFont(lf);
 
-					viewer->CreateEx(this, bitmapData, imageSize, clip.Description(), m_lstHeader.GetRowHeight(), lf);
-					viewer->ShowWindow(SW_SHOW);
-
-					ret = true;
+					if (viewer->CreateEx(this, bitmapData, imageSize, clip.Description(), m_lstHeader.GetRowHeight(), lf))
+					{
+						// the window owns itself from here on: QRCodeViewer::PostNcDestroy deletes it
+						viewer.release()->ShowWindow(SW_SHOW);
+						ret = true;
+					}
+					else
+					{
+						CErrorReport::Show(StrF(_T("Ditto could not create the QR code window (error %u)."), ::GetLastError()));
+					}
 				}
 			}
 		}
