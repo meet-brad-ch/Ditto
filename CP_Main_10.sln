@@ -23,6 +23,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DittoTests", "tests\DittoTe
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DittoFuzz", "tests\fuzz\DittoFuzz.vcxproj", "{3E8B5A21-4C7D-4F09-9A6E-2D1F80C3B754}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AppTests", "tests\AppTests\AppTests.vcxproj", "{5D9F2C61-7A3B-4E8D-B1C2-6E7F8091A2B3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -109,6 +111,14 @@ Global
 		{6A1C2F43-8E57-4C1D-9B2A-3D4E5F607182}.Release|x64.Build.0 = Release|x64
 		{7B2D3054-9F68-4D2E-8C3B-4E5F60718293}.Release|x64.ActiveCfg = Release|x64
 		{7B2D3054-9F68-4D2E-8C3B-4E5F60718293}.Release|x64.Build.0 = Release|x64
+		{5D9F2C61-7A3B-4E8D-B1C2-6E7F8091A2B3}.Debug|ARM64.ActiveCfg = Debug|x64
+		{5D9F2C61-7A3B-4E8D-B1C2-6E7F8091A2B3}.Debug|Win32.ActiveCfg = Debug|x64
+		{5D9F2C61-7A3B-4E8D-B1C2-6E7F8091A2B3}.Debug|x64.ActiveCfg = Debug|x64
+		{5D9F2C61-7A3B-4E8D-B1C2-6E7F8091A2B3}.Debug|x64.Build.0 = Debug|x64
+		{5D9F2C61-7A3B-4E8D-B1C2-6E7F8091A2B3}.Release|ARM64.ActiveCfg = Release|x64
+		{5D9F2C61-7A3B-4E8D-B1C2-6E7F8091A2B3}.Release|Win32.ActiveCfg = Release|x64
+		{5D9F2C61-7A3B-4E8D-B1C2-6E7F8091A2B3}.Release|x64.ActiveCfg = Release|x64
+		{5D9F2C61-7A3B-4E8D-B1C2-6E7F8091A2B3}.Release|x64.Build.0 = Release|x64
 		{3E8B5A21-4C7D-4F09-9A6E-2D1F80C3B754}.Debug|ARM64.ActiveCfg = Debug|x64
 		{3E8B5A21-4C7D-4F09-9A6E-2D1F80C3B754}.Debug|Win32.ActiveCfg = Debug|x64
 		{3E8B5A21-4C7D-4F09-9A6E-2D1F80C3B754}.Debug|x64.ActiveCfg = Debug|x64

@@ -511,6 +511,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\ClipRepository.cpp" />
     <ClCompile Include="src\DittoDbTransaction.cpp" />
     <ClCompile Include="src\DittoDb.cpp" />
     <ClCompile Include="src\RandomRange.cpp" />
@@ -765,6 +766,9 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\FormatRecord.h" />
+    <ClInclude Include="src\ClipRecord.h" />
+    <ClInclude Include="src\ClipRepository.h" />
     <ClInclude Include="src\DittoDbTransaction.h" />
     <ClInclude Include="src\DittoDb.h" />
     <ClInclude Include="src\RandomRange.h" />

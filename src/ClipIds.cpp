@@ -12,6 +12,7 @@
 #include "Popup.h"
 #include "ClipboardFormatError.h"
 #include "ErrorReport.h"
+#include "DittoDbTransaction.h"
 
 // allocate an HGLOBAL of the given Format Type representing these Clip IDs.
 HGLOBAL CClipIDs::Render(UINT cfType)
@@ -257,7 +258,8 @@ BOOL CClipIDs::CopyTo(int parentId)
 		
 	try
 	{
-		theApp.m_db.execDML(_T("begin transaction;"));
+		// rolled back if a statement throws; upstream's manual begin was left open then
+		CDittoDbTransaction transaction(theApp.m_db);
 
 		for(int i = 0; i < count; i++)
 		{
@@ -283,7 +285,7 @@ BOOL CClipIDs::CopyTo(int parentId)
 			}
 		}
 
-		theApp.m_db.execDML(_T("commit transaction;"));
+		transaction.Commit();
 	}
 	CATCH_SQLITE_EXCEPTION
 		

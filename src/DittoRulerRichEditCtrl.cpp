@@ -161,8 +161,8 @@ int CDittoRulerRichEditCtrl::SaveToDB(BOOL bUpdateDesc)
 			return FALSE;
 		}
 
-		theApp.m_db.execDML(_T("begin transaction;"));
-
+		// no transaction around this: SaveFromEditWnd and AddToDB are each one transaction, and
+		// upstream's transaction here stayed open while the properties dialog was shown
 		if(m_lID >= 0)
 		{
 			Clip.SaveFromEditWnd(bUpdateDesc);
@@ -185,8 +185,6 @@ int CDittoRulerRichEditCtrl::SaveToDB(BOOL bUpdateDesc)
 		}
 
 		nRet = SAVED_CLIP_TO_DB;
-
-		theApp.m_db.execDML(_T("commit transaction;"));
 
 		if(bUpdateDesc)
 			theApp.RefreshView();

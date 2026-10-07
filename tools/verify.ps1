@@ -8,7 +8,7 @@
 #   5. checks every installer script for firewall rules, URL launches and a Windows 10 minimum
 #   6. rejects raw allocation (new/delete/malloc/free) in lib\ and tests\
 #      - complexity: lib\ and tests\ below CC 10; legacy CC >= 10 held by tools\baselines\complexity.tsv
-#   7. runs every unit test on its own (AddressSanitizer build)
+#   7. runs every unit test on its own: DittoTests (AddressSanitizer build) and AppTests
 #      - coverage: line coverage of lib\DittoCore >= 90 % (Debug|x64 test build)
 #   8. checks with Doxygen that the contract code is fully documented
 # Prints one timestamped line per check and exits 1 on the first failed stage.
@@ -252,31 +252,42 @@ $measured = ($gate.Lines | Where-Object { "$_" -match 'contract code max CC (\d+
 $null = "$measured" -match 'contract code max CC (\d+); (\d+) legacy'
 $report['Cyclomatic complexity'] = "PASS (lib\ and tests\ max CC $($Matches[1]) < 10; $($Matches[2]) legacy functions at CC >= 10 held by the baseline, $($gate.Summary))"
 
-# ---- 7. unit tests (each test on its own, AddressSanitizer build) -----------------------
-$testExe = Join-Path $repo 'build\DittoTests\x64\Release\DittoTests.exe'
-if (-not (Test-Path $testExe)) { Fail "tests: $testExe not found (run without -SkipBuild)" }
+# ---- 7. unit tests (each test on its own) ------------------------------------------------
+# DittoTests (lib\DittoCore) is an AddressSanitizer build; AppTests (the app layer against an
+# in-memory database) is MFC and runs without ASan. Suite names differ between the programs, so
+# the result files (one per test, named after it) do not collide.
+$testPrograms = @(
+    [pscustomobject]@{ Name = 'DittoTests'; Exe = (Join-Path $repo 'build\DittoTests\x64\Release\DittoTests.exe') },
+    [pscustomobject]@{ Name = 'AppTests'; Exe = (Join-Path $repo 'build\AppTests\x64\Release\AppTests.exe') }
+)
 $env:PATH = "$($dumpbin.DirectoryName);$env:PATH"   # clang_rt.asan_dynamic-x86_64.dll lives next to dumpbin
-$suite = ''
-$testNames = @(& $testExe --gtest_list_tests | ForEach-Object {
-    if ($_ -match '^(\w+)\.$') { $suite = $Matches[1] } elseif ($_ -match '^\s+(\w+)') { "$suite.$($Matches[1])" } })
-if ($LASTEXITCODE -ne 0 -or $testNames.Count -eq 0) { Fail "tests: could not list tests (exit $LASTEXITCODE)" }
-$testFailures = 0
 $resultsDir = Join-Path $repo 'build\test-results'   # one GoogleTest XML per test, for the CI summary
 if (Test-Path $resultsDir) { Remove-Item -LiteralPath $resultsDir -Recurse -Force }
 New-Item -ItemType Directory $resultsDir | Out-Null
-[IO.File]::WriteAllLines((Join-Path $resultsDir 'tests.txt'), [string[]]$testNames)   # the expected set
-foreach ($name in $testNames) {
-    $out = & $testExe "--gtest_filter=$name" --gtest_brief=1 "--gtest_output=xml:$(Join-Path $resultsDir "$name.xml")" 2>&1 | Out-String
-    if ($LASTEXITCODE -ne 0) {
-        Say "tests: FAIL $name"
-        ($out -split "`n" | Where-Object { $_ -match 'error|Failure|AddressSanitizer' } | Select-Object -First 5) | ForEach-Object { Say "    $($_.Trim())" }
-        $testFailures++
+$testNames = @()
+$testFailures = 0
+foreach ($program in $testPrograms) {
+    if (-not (Test-Path $program.Exe)) { Fail "tests: $($program.Exe) not found (run without -SkipBuild)" }
+    $suite = ''
+    $names = @(& $program.Exe --gtest_list_tests | ForEach-Object {
+        if ($_ -match '^(\w+)\.$') { $suite = $Matches[1] } elseif ($_ -match '^\s+(\w+)') { "$suite.$($Matches[1])" } })
+    if ($LASTEXITCODE -ne 0 -or $names.Count -eq 0) { Fail "tests: could not list the tests of $($program.Name) (exit $LASTEXITCODE)" }
+    foreach ($name in $names) {
+        $out = & $program.Exe "--gtest_filter=$name" --gtest_brief=1 "--gtest_output=xml:$(Join-Path $resultsDir "$name.xml")" 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 0) {
+            Say "tests: FAIL $name ($($program.Name))"
+            ($out -split "`n" | Where-Object { $_ -match 'error|Failure|AddressSanitizer' } | Select-Object -First 5) | ForEach-Object { Say "    $($_.Trim())" }
+            $testFailures++
+        }
+        else { Say "tests: PASS $name" }
     }
-    else { Say "tests: PASS $name" }
+    Say "tests: $($program.Name) ran $($names.Count) tests"
+    $testNames += $names
 }
+[IO.File]::WriteAllLines((Join-Path $resultsDir 'tests.txt'), [string[]]$testNames)   # the expected set
 if ($testFailures -gt 0) { Fail "$testFailures of $($testNames.Count) tests failed" 'Unit tests' }
-Say "tests: ok   $($testNames.Count) tests, each run on its own under ASan"
-$report['Unit tests'] = "PASS ($($testNames.Count)/$($testNames.Count), each test in its own process, AddressSanitizer build)"
+Say "tests: ok   $($testNames.Count) tests, each run on its own (DittoTests under ASan)"
+$report['Unit tests'] = "PASS ($($testNames.Count)/$($testNames.Count), each test in its own process; DittoTests in an AddressSanitizer build)"
 
 # ---- 7b. coverage (Microsoft code coverage, Debug|x64 test build) -------------------------
 $gate = Invoke-Gate 'coverage.ps1' @{ Repo = $repo; VsPath = $vs }

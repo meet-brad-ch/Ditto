@@ -186,13 +186,13 @@ public:
 	bool tableExists(const TCHAR* szTable);
 
 	int execDMLEx(LPCTSTR szSQL,...);
-    int execDML(const TCHAR* szSQL);
+    virtual int execDML(const TCHAR* szSQL);
 
 	CppSQLite3Query execQueryEx(LPCTSTR szSQL,...);
-    CppSQLite3Query execQuery(const TCHAR* szSQL);
+    virtual CppSQLite3Query execQuery(const TCHAR* szSQL);
 
 	int execScalarEx(LPCTSTR szSQL,...);
-    int execScalar(const TCHAR* szSQL);
+    virtual int execScalar(const TCHAR* szSQL);
 
     CppSQLite3Statement compileStatement(const TCHAR* szSQL);
 

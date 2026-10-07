@@ -342,9 +342,26 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   - **Fixed:** a format saved without data reused the previous format's memory, so two formats
     freed one block (it is now left out and logged); `LoadFormat` returned `false` as a handle;
     clearing another clip's top-sticky setting always reported "not changed".
-  - **Not done yet (C11b):** moving the remaining SQL from `CClip` into a `CClipRepository` with
-    an injected database and settings, and an AppTests project that tests it against an
-    in-memory database.
+- 2026-10-06: The clip SQL is in `CClipRepository`, tested by AppTests (Phase C11, second part).
+  - **Repository:** `CClipRepository` takes the database as a parameter and works on plain
+    records (`ClipRecord`, `FormatRecord`), so it builds and is tested without `CClip` or the
+    app. `CClip` converts its members and formats to records and back. Every value is bound;
+    the order columns are an enum, never text from outside.
+  - **AppTests:** a new MFC GoogleTest program (`tests\AppTests`) tests the repository and the
+    database lock against an in-memory SQLite database (17 tests). `verify.ps1` runs the tests
+    of both programs, each test on its own.
+  - **Nested transactions:** part 1 made saving a clip a transaction, but copying clips to a
+    group already ran inside one, and SQLite cannot nest `BEGIN`, so the copy would have failed.
+    An inner `CDittoDbTransaction` is a savepoint now. The three remaining manual
+    `begin`/`commit` pairs (copy to group, `SaveFormats`, the editor's save) became
+    transactions; upstream left them open when a statement threw. The editor's save no longer
+    keeps a transaction open while its properties dialog is shown.
+  - **Every statement waits for an open transaction:** `execDML`, `execQuery` and `execScalar`
+    are virtual and locked in `CDittoDb`, so a statement from another thread no longer runs
+    inside (and is rolled back with) a transaction it does not belong to. Prepared statements
+    run without the lock, except inserts through `InsertReturningId`.
+  - **Settings stay global:** the duplicate options and the sound are still read from
+    `CGetSetOptions` in `CClip`; injecting them waits for Phase F.
 - 2026-10-06: The special-paste transforms live in DittoCore (Phase C10): `CaseTransforms` (with
   an injected `ICaseMapper`, ICU in the app), `TextTransforms`, `RtfTransforms`, `Typoglycemia`
   (with an injected `IRandomRange`) and `Slugifier`. `OleClipSource` keeps one helper that reads

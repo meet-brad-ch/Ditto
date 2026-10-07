@@ -18,6 +18,7 @@
 #include <vector>
 #include "tinyxml\tinyxml.h"
 #include "Crc32Dynamic.h"
+#include "ClipRepository.h"
 #include "..\Shared\IClip.h"
 #include "Misc.h"
 
@@ -216,23 +217,25 @@ private:
 	// its column, and whether the clip is sticky there
 	struct OrderSlot
 	{
-		bool inGroup{};
+		CClipRepository::OrderColumn column{};
 		bool sticky{};
-		CString column{};
-		CString stickyColumn{};
+		std::optional<int> parentId{};
 		double* order{};
 	};
 
 	// The order slot of this clip in the main list (parentId < 0) or a group
 	OrderSlot SlotFor(int parentId);
-	// The SQL that finds the nearest order above (up) or below a given order in the slot's list
-	static CString NeighbourSql(const OrderSlot& slot, bool up);
-	// Runs NeighbourSql for one order; nullopt when there is no clip beyond it
-	static std::optional<double> NeighbourOrder(const CString& sql, int parentId, double from);
 	// Moves the clip one place up or down in its list (midpoint of the two neighbours)
 	void Move(int parentId, bool up);
 	// The highest or lowest order of a column in the main list or a group; nullopt when empty
-	static std::optional<double> EdgeOrder(const CString& column, bool sticky, int parentId, bool highest);
+	static std::optional<double> EdgeOrder(CClipRepository::OrderColumn column, bool sticky, int parentId, bool highest);
+	// The repository's parent filter: the group for parentId > -1, all clips otherwise
+	static std::optional<int> ParentFilter(int parentId);
+	// The repository over theApp's database
+	static CClipRepository Repository();
+	// This clip's Main row, and back
+	ClipRecord ToRecord() const;
+	void FromRecord(const ClipRecord& record);
 
 	// A file read for "Ditto File Data": its UTF-8 path, the MD5 of its contents, the contents
 	struct CopiedFile

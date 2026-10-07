@@ -132,7 +132,8 @@ BEGIN_MESSAGE_MAP(CCP_MainApp, CWinApp)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
-CCP_MainApp::CCP_MainApp()
+CCP_MainApp::CCP_MainApp() :
+	m_db([](const CString& text) { Log(text); })
 {
 	m_copyReason = CopyReasonEnum::COPY_TO_UNKOWN;
 	m_copyReasonStartTime = 0;
