@@ -177,7 +177,13 @@ public:
 
     virtual ~CppSQLite3DB();
 
+    // Opens szFile; on failure the connection is closed again and CppSQLite3Exception thrown
     void open(const TCHAR* szFile);
+
+    // Loads a SQLite extension DLL into the open connection (Ditto: ICU_Loader.dll,
+    // sqlite3_icu_init). Loading is enabled for the C API only, and only during this call.
+    // Throws CppSQLite3Exception with SQLite's message when the extension cannot be loaded.
+    void loadExtension(const char* szFile, const char* szEntryPoint);
 
     void SetRegexCaseInsensitive(bool insensitive);
 
@@ -216,6 +222,9 @@ private:
     sqlite3_stmt* compile(const TCHAR* szSQL);
 
     void checkDB();
+
+    // Builds the exception from the connection's last error, closes the connection, throws
+    [[noreturn]] void throwAndClose(int nErrCode);
 
     sqlite3* mpDB;
     int mnBusyTimeoutMs;

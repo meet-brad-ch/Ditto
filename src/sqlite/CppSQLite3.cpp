@@ -29,6 +29,8 @@
 #include "CppSQLite3.h"
 #include <cstdlib>
 #include "..\UnicodeMacros.h"
+#include <atlconv.h>
+#include <memory>
 #include <regex>
 
 
@@ -804,22 +806,56 @@ void CppSQLite3DB::open(const TCHAR* szFile)
 
 	if (nRet != SQLITE_OK)
 	{
-		SQLITE3_ERRMSG(mpDB);
-		throw CppSQLite3Exception(nRet, (TCHAR*)szError, DONT_DELETE_MSG);
+		throwAndClose(nRet);
 	}
 
 	nRet = sqlite3_create_function(mpDB, "regexp", 2, SQLITE_ANY, 0, &sqlite_regexp, 0, 0);
 	if (nRet != SQLITE_OK)
 	{
-		SQLITE3_ERRMSG(mpDB);
-		throw CppSQLite3Exception(nRet, (TCHAR*)szError, DONT_DELETE_MSG);
+		throwAndClose(nRet);
 	}
 
 	setBusyTimeout(mnBusyTimeoutMs);
+}
 
-	sqlite3_enable_load_extension(mpDB, 1);
-	char* e;
-	sqlite3_load_extension(mpDB, "ICU_Loader.dll", "sqlite3_icu_init", &e);
+void CppSQLite3DB::loadExtension(const char* szFile, const char* szEntryPoint)
+{
+	checkDB();
+
+	// the C API only: SQL cannot call load_extension()
+	int nRet = sqlite3_db_config(mpDB, SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION, 1, nullptr);
+	if (nRet != SQLITE_OK)
+	{
+		throwAndClose(nRet);
+	}
+
+	char* szLoadError{};
+	nRet = sqlite3_load_extension(mpDB, szFile, szEntryPoint, &szLoadError);
+	const std::unique_ptr<char, decltype(&sqlite3_free)> loadError{ szLoadError, &sqlite3_free };
+	if (nRet != SQLITE_OK)
+	{
+		CString message;
+		message.Format(_T("loading %s failed: %s"), CString(CA2W(szFile, CP_UTF8)).GetString(),
+			szLoadError ? CString(CA2W(szLoadError, CP_UTF8)).GetString() : _T("no message"));
+		CppSQLite3Exception error(nRet, message.GetBuffer(), DONT_DELETE_MSG);
+		close();
+		throw error;
+	}
+
+	nRet = sqlite3_db_config(mpDB, SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION, 0, nullptr);
+	if (nRet != SQLITE_OK)
+	{
+		throwAndClose(nRet);
+	}
+}
+
+void CppSQLite3DB::throwAndClose(int nErrCode)
+{
+	SQLITE3_ERRMSG(mpDB);
+	// the exception copies the message before close() frees it
+	CppSQLite3Exception error(nErrCode, (TCHAR*)szError, DONT_DELETE_MSG);
+	close();
+	throw error;
 }
 
 void CppSQLite3DB::SetRegexCaseInsensitive(bool insensitive)

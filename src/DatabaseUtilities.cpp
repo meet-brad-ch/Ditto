@@ -189,6 +189,8 @@ BOOL OpenDatabase(CString dbPath)
 
 		theApp.m_db.close();
 		theApp.m_db.open(dbPath);
+		// ICU: Unicode case folding for LIKE, upper/lower and the regexp search
+		theApp.m_db.loadExtension("ICU_Loader.dll", "sqlite3_icu_init");
 
 		theApp.m_db.setBusyTimeout(CGetSetOptions::GetDbTimeout());
 		theApp.m_db.SetRegexCaseInsensitive(CGetSetOptions::GetRegexCaseInsensitive());
