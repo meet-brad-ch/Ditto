@@ -17,13 +17,13 @@ void CAccels::AddAccel(CAccel a)
 	m_multiMap.insert(pair<DWORD, CAccel>(a.Key, a));
 }
 
-void CAccels::AddAccel(DWORD cmd, DWORD key, DWORD key2, CString refData)
+void CAccels::AddAccel(DWORD cmd, DWORD key, DWORD key2)
 {
 	if ((int)key2 <= 0)
 	{
 		key2 = 0;
 	}
-	CAccel a(key, cmd, key2, refData);
+	CAccel a(key, cmd, key2);
 
 	m_multiMap.insert(pair<DWORD, CAccel>(key, a));
 }
@@ -33,13 +33,12 @@ void CAccels::RemoveAll()
 	m_multiMap.clear();
 }
 
-CString CAccels::GetCmdKeyText(DWORD cmd, CString refData)
+CString CAccels::GetCmdKeyText(DWORD cmd)
 {
 	CString cmdShortcutText;
 	for (multimap<DWORD, CAccel>::iterator it = m_multiMap.begin(); it != m_multiMap.end(); ++it)
 	{
-		if (it->second.Cmd == cmd &&
-			(refData == _T("") || it->second.RefData == refData))
+		if (it->second.Cmd == cmd)
 		{
 			if (it->second.Key != 0)
 			{

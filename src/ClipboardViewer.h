@@ -31,7 +31,6 @@ public:
 	bool	m_bIsConnected;
 	bool	m_connectOnStartup;
 	CString m_activeWindow;
-	CString m_activeWindowTitle;
 
 	// m_pHandler->OnClipboardChange is called when the clipboard changes.
 	CCopyThread*	m_pHandler;

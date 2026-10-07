@@ -5,7 +5,6 @@
 #include "CP_Main.h"
 #include "AdvGeneral.h"
 #include "afxdialogex.h"
-#include "ScriptEditor.h"
 #include "DimWnd.h"
 #include "MoveToGroupDlg.h"
 #include "SQlite/CppSQLite3.h"
@@ -34,8 +33,6 @@ BEGIN_MESSAGE_MAP(CAdvGeneral, CDialogEx)
 	ON_BN_CLICKED(IDOK, &CAdvGeneral::OnBnClickedOk)
 	ON_WM_SIZE()
 	ON_BN_CLICKED(IDC_BT_COMPACT_AND_REPAIR, &CAdvGeneral::OnBnClickedBtCompactAndRepair)
-	ON_BN_CLICKED(IDC_BUTTON_COPY_SCRIPTS, &CAdvGeneral::OnBnClickedButtonCopyScripts)
-	ON_BN_CLICKED(IDC_BUTTON_PASTE_SCRIPTS, &CAdvGeneral::OnBnClickedButtonPasteScripts2)
 	ON_WM_GETMINMAXINFO()
 	ON_WM_NCLBUTTONDOWN()
 	ON_EN_CHANGE(IDC_EDIT_ADV_FILTER, &CAdvGeneral::OnEnChangeAdvFilter)
@@ -174,8 +171,6 @@ BOOL CAdvGeneral::OnInitDialog()
 	m_Resize.AddControl(IDOK, DR_MoveTop | DR_MoveLeft);
 	m_Resize.AddControl(IDCANCEL, DR_MoveTop | DR_MoveLeft);
 	m_Resize.AddControl(IDC_BT_COMPACT_AND_REPAIR, DR_MoveTop);
-	m_Resize.AddControl(IDC_BUTTON_COPY_SCRIPTS, DR_MoveTop);
-	m_Resize.AddControl(IDC_BUTTON_PASTE_SCRIPTS, DR_MoveTop);
 	m_Resize.AddControl(IDC_EDIT_ADV_FILTER, DR_SizeWidth);
 	m_Resize.AddControl(IDC_BUTTON_NEXT_MATCH, DR_MoveLeft);
 
@@ -983,32 +978,6 @@ void CAdvGeneral::OnBnClickedBtCompactAndRepair()
 			theApp.m_db.execQuery(_T("VACUUM"));
 		}
 		CATCH_SQLITE_EXCEPTION
-	}
-}
-
-void CAdvGeneral::OnBnClickedButtonCopyScripts()
-{
-	CDimWnd dim(this);
-
-	CScriptEditor e(this);
-	e.m_title = _T("Copy Scripts");
-	e.m_xml.Load(CGetSetOptions::GetCopyScriptsXml());
-	if (e.DoModal() == IDOK)
-	{
-		CGetSetOptions::SetCopyScriptsXml(e.m_xml.Save());
-	}
-}
-
-void CAdvGeneral::OnBnClickedButtonPasteScripts2()
-{
-	CDimWnd dim(this);
-
-	CScriptEditor e(this);
-	e.m_title = _T("Paste Scripts");
-	e.m_xml.Load(CGetSetOptions::GetPasteScriptsXml());
-	if (e.DoModal() == IDOK)
-	{
-		CGetSetOptions::SetPasteScriptsXml(e.m_xml.Save());
 	}
 }
 

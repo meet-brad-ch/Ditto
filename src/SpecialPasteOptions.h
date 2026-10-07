@@ -23,7 +23,6 @@ public:
 	CClipFormats *m_pPasteFormats;
 	DWORD m_delayRenderLockout;
 	bool m_dragDropFilesOnly;
-	CString m_pasteScriptGuid;
 	bool m_updateClipOrder;
 	bool m_trimWhiteSpace;
 	bool m_PosixifyPaths;

@@ -169,7 +169,7 @@ public:
 	void Clear();
 	void EmptyFormats();
 	bool AddFormat(CLIPFORMAT cfType, void* pData, UINT nLen, bool setDesc = false);
-	int LoadFromClipboard(CClipTypes* pClipTypes, bool checkClipboardIgnore = true, CString activeApp = _T(""), CString activeAppTitle = _T(""));
+	int LoadFromClipboard(CClipTypes* pClipTypes, bool checkClipboardIgnore = true, CString activeApp = _T(""));
 	bool SetDescFromText(HGLOBAL hgData, bool unicode);
 	bool SetDescFromType();
 	bool AddToDB(bool bCheckForDuplicates = true);

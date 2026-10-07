@@ -1,4 +1,4 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 
 #include "stdafx.h"
@@ -294,7 +294,6 @@ BEGIN_MESSAGE_MAP(CQPasteWnd, CWndEx)
 	ON_COMMAND(ID_IMPORT_IMPORTCOPIEDFILE, &CQPasteWnd::OnImportImportcopiedfile)
 	ON_UPDATE_COMMAND_UI(ID_IMPORT_IMPORTCOPIEDFILE, &CQPasteWnd::OnUpdateImportImportcopiedfile)
 	ON_UPDATE_COMMAND_UI(32775, &CQPasteWnd::OnUpdate32775)
-	ON_COMMAND_RANGE(ChaiScriptMenuStartId, (ChaiScriptMenuStartId + MaxChaiScripts + 1), OnChaiScriptPaste)
 	ON_MESSAGE(WM_DPICHANGED, OnDpiChanged)
 	ON_COMMAND(ID_CLIPORDER_MOVETOLAST, &CQPasteWnd::OnCliporderMovetolast)
 	ON_UPDATE_COMMAND_UI(ID_CLIPORDER_MOVETOLAST, &CQPasteWnd::OnUpdateCliporderMovetolast)
@@ -564,19 +563,6 @@ void CQPasteWnd::LoadShortcuts()
 						}
 					}
 				}
-			}
-		}
-	}
-
-	for (auto& element : CGetSetOptions::m_pasteScripts.m_list)
-	{
-		for (int i = 0; i < 10; i++)
-		{
-			int a = CGetSetOptions::GetActionShortCutA(ActionEnums::PASTE_SCRIPT, i, element.m_guid);
-			if (a > 0)
-			{
-				int b = CGetSetOptions::GetActionShortCutB(ActionEnums::PASTE_SCRIPT, i, element.m_guid);
-				m_actions.AddAccel(ActionEnums::PASTE_SCRIPT, a, b, element.m_guid);
 			}
 		}
 	}
@@ -1684,14 +1670,6 @@ void CQPasteWnd::ShowRightClickMenu()
 		}
 
 		theApp.m_Addins.AddPrePasteAddinsToMenu(cmSubMenu);
-
-		CString specialPaste("Special Paste");
-		int nPos = -1;
-		CMenu* sendToMenu = CMultiLanguage::GetMenuPos(cmSubMenu, specialPaste, nPos, TRUE);
-		if (sendToMenu != NULL)
-		{
-			CGetSetOptions::m_pasteScripts.AddToMenu(sendToMenu, &m_actions);
-		}
 
 		AddShowStarredClipsMenuItem(cmSubMenu);
 
@@ -3163,9 +3141,6 @@ bool CQPasteWnd::DoAction(CAccel a)
 	case ActionEnums::TOGGLE_SEARCH_METHOD:
 		ret = DoActionToggleSearchMethod();
 		break;
-	case ActionEnums::PASTE_SCRIPT:
-		ret = DoActionPasteScript(a.RefData);
-		break;
 	case ActionEnums::PASTE_DONT_MOVE_CLIP:
 		ret = DoActionPasteDontMoveClip();
 		break;
@@ -3296,15 +3271,6 @@ bool CQPasteWnd::DoActionPastePosixifyPaths()
 {
 	CSpecialPasteOptions pasteOptions;
 	pasteOptions.m_PosixifyPaths = true;
-	OpenSelection(pasteOptions);
-
-	return true;
-}
-
-bool CQPasteWnd::DoActionPasteScript(CString scriptGuid)
-{
-	CSpecialPasteOptions pasteOptions;
-	pasteOptions.m_pasteScriptGuid = scriptGuid;
 	OpenSelection(pasteOptions);
 
 	return true;
@@ -7143,19 +7109,6 @@ void CQPasteWnd::OnUpdateImportImportcopiedfile(CCmdUI* pCmdUI)
 	}
 
 	UpdateMenuShortCut(pCmdUI, ActionEnums::SAVE_CF_HDROP_FIlE_DATA);
-}
-
-void CQPasteWnd::OnChaiScriptPaste(UINT idIn)
-{
-	CSpecialPasteOptions pasteOptions;
-	UINT index = idIn - ChaiScriptMenuStartId;
-
-	if (index >= 0 &&
-		index < CGetSetOptions::m_pasteScripts.m_list.size())
-	{
-		pasteOptions.m_pasteScriptGuid = CGetSetOptions::m_pasteScripts.m_list[index].m_guid;
-		OpenSelection(pasteOptions);
-	}
 }
 
 void CQPasteWnd::OnCliporderMovetolast()

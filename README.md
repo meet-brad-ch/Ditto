@@ -20,6 +20,10 @@ What this fork removed (found by reading upstream a80fd35):
 - **Hand-offs to other programs.** URLs go to the browser through ShellExecute: Help, Web Search,
   Translate, Gmail, the QR URL and links. Email goes to the mail client through MAPI.
 
+- **ChaiScript.** The on-copy and on-paste script engine and its editor (Options → Advanced) are
+  removed: an embedded interpreter running user scripts on every clip is attack surface the
+  owner does not use.
+
 Upstream has no update check, telemetry or HTTP client. `httplib.h` and `sqlite/sqcloud.*` were
 in the repo but were never compiled. They are deleted too.
 
@@ -240,6 +244,20 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   The ARM64 script still added firewall rules for TCP 23443 and launched URLs, and the portable
   one packaged files that no longer exist (`DittoU.exe`, `sqlite3.dll`, `zlib1.dll`). The
   installer gate now checks every `.iss` file.
+- 2026-10-06: Removed ChaiScript (owner decision): `src\chaiscript\` and its 8 wrapper and
+  editor files, plus the script hooks in copy, paste, the paste menu and the shortcut editor.
+  - `PASTE_SCRIPT` keeps its number and is marked `Removed`.
+  - Saved `CopyScriptsXml`, `PasteScriptsXml` and `QP_ShortCut_94_<guid>_*` settings are left in
+    place and ignored.
+  - Also removed:
+    - the script-only parameters (`refData` on shortcuts and accelerators, the active window
+      title on copy);
+    - 22 resource IDs;
+    - the `/bigobj` option, which only ChaiScript needed; Release and Debug x64 build without it.
+  - Fixed a call that passed the active app name as the "check clipboard ignore" flag on the
+    copy retry path.
+- 2026-10-06: Debug builds use `/Zi` instead of `/ZI`. Edit and Continue cannot be combined with
+  the global Control Flow Guard, which had broken every Debug build.
 - 2026-10-06: Ditto keeps the clip history when its settings are gone. Before, the uninstaller
   deleted `HKCU\Software\Ditto` (`uninsdeletekey`), including the database path `DBPath3`. On the
   next start Ditto had no path. It created an empty `Ditto_1.db` next to the existing `Ditto.db`,

@@ -245,7 +245,6 @@ public:
 	bool DoActionToggleDescriptionWordWrap();
 	bool DoActionApplyLastSearch();
 	bool DoActionToggleSearchMethod();
-	bool DoActionPasteScript(CString scriptGuid);
 	bool DoActionMoveSelectionUp();
 	bool DoModifierActiveActionSelectionUp();
 	bool DoModifierActiveActionSelectionDown();
@@ -443,7 +442,6 @@ protected:
     afx_msg void OnUpdateMenuEdititem(CCmdUI *pCmdUI);
     afx_msg void OnUpdateMenuNewclip(CCmdUI *pCmdUI);
     afx_msg void OnAddinSelect(UINT id);
-	afx_msg void OnChaiScriptPaste(UINT idIn);
     afx_msg LRESULT OnSelectAll(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnShowHideScrollBar(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnUpdateScrollBar(WPARAM wParam, LPARAM lParam);

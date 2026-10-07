@@ -30,13 +30,6 @@ public:
 	class KeyboardArray
 	{
 	public:
-		KeyboardArray()
-		{
-			m_refData = _T("");
-		}
-
-		CString m_refData;
-
 		KeyboardAB Array[10];
 	};
 

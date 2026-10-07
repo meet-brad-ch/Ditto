@@ -2,7 +2,6 @@
 
 #include "Theme.h"
 #include "RegExFilterHelper.h"
-#include "ChaiScriptXml.h"
 #include <set>
 
 #define MAX_COPY_BUFFER	3
@@ -484,11 +483,11 @@ public:
 	static BOOL GetShowMsgWndOnCopyToGroup();
 	static void SetShowMsgWndOnCopyToGroup(BOOL val);
 
-	static int GetActionShortCutA(DWORD action, int pos, CString refData = _T(""));
-	static void SetActionShortCutA(int action, DWORD shortcut, int pos, CString refData = _T(""));
+	static int GetActionShortCutA(DWORD action, int pos);
+	static void SetActionShortCutA(int action, DWORD shortcut, int pos);
 
-	static int GetActionShortCutB(DWORD action, int pos, CString refData = _T(""));
-	static void SetActionShortCutB(int action, DWORD shortcut, int pos, CString refData = _T(""));
+	static int GetActionShortCutB(DWORD action, int pos);
+	static void SetActionShortCutB(int action, DWORD shortcut, int pos);
 
 	static BOOL	m_bShowAlwaysOnTopWarning;
 	static BOOL GetShowAlwaysOnTopWarning();
@@ -544,14 +543,6 @@ public:
 
 	static BOOL GetShowStartupMessage();
 	static void SetShowStartupMessage(int val);
-
-	static CChaiScriptXml m_copyScripts;
-	static CString GetCopyScriptsXml();
-	static void SetCopyScriptsXml(CString val);
-
-	static CChaiScriptXml m_pasteScripts;
-	static CString GetPasteScriptsXml();
-	static void SetPasteScriptsXml(CString val);
 
 	static long m_tooltipTimeout;
 	static long GetToolTipTimeout();
@@ -633,7 +624,7 @@ public:
 	static CString GetIgnoreAnnoyingCFDIB(BOOL useCache = FALSE);
 	static CString m_ignoreAnnoyingCFDIB;
 	static void SetIgnoreAnnoyingCFDIB(CString val);
-	static set<CString> GetIgnoreAnnoyingCFDIBSet(BOOL useCache = FALSE);
+	static std::set<CString> GetIgnoreAnnoyingCFDIBSet(BOOL useCache = FALSE);
 
 	static BOOL GetRegexCaseInsensitive();
 	static void SetRegexCaseInsensitive(BOOL val);

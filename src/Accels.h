@@ -16,15 +16,13 @@ public:
 	DWORD Key2;
     DWORD Cmd;
 	int RefId;
-	CString RefData;
 
-    CAccel(DWORD key = 0, DWORD cmd = 0, DWORD key2 = 0, CString refData = _T(""))
+    CAccel(DWORD key = 0, DWORD cmd = 0, DWORD key2 = 0)
     {
         Key = key;
 		Key2 = key2;
         Cmd = cmd;
 		RefId = 0;
-		RefData = refData;
     }
 };
 
@@ -38,11 +36,11 @@ public:
 
     void AddAccel(CAccel a);
 
-	void AddAccel(DWORD cmd, DWORD key, DWORD key2 = 0, CString refData = _T(""));
+	void AddAccel(DWORD cmd, DWORD key, DWORD key2 = 0);
 
 	void RemoveAll();
 
-	CString GetCmdKeyText(DWORD cmd, CString refData = _T(""));
+	CString GetCmdKeyText(DWORD cmd);
 
     // handles a key's first WM_KEYDOWN or WM_SYSKEYDOWN message.
     // it uses GetKeyState to test for modifiers.

@@ -55,7 +55,7 @@ int CCopyThread::ExitInstance()
 }
 
 // Called within Copy Thread:
-void CCopyThread::OnClipboardChange(CString activeWindow, CString activeWindowTitle)
+void CCopyThread::OnClipboardChange(CString activeWindow)
 {
 	Log(_T("OnClipboardChange - Start"));
 
@@ -91,7 +91,7 @@ void CCopyThread::OnClipboardChange(CString activeWindow, CString activeWindowTi
 	try
 	{
 		Log(_T("LoadFromClipboard - Before"));
-		bResult = pClip->LoadFromClipboard(pSupportedTypes, true, activeWindow, activeWindowTitle);
+		bResult = pClip->LoadFromClipboard(pSupportedTypes, true, activeWindow);
 		Log(_T("LoadFromClipboard - After"));
 
 		if(bResult == FALSE)
@@ -103,7 +103,7 @@ void CCopyThread::OnClipboardChange(CString activeWindow, CString activeWindowTi
 				Sleep(delay);
 
 				Log(_T("LoadFromClipboard #2 - Before"));
-				bResult = pClip->LoadFromClipboard(pSupportedTypes, activeWindow);
+				bResult = pClip->LoadFromClipboard(pSupportedTypes, true, activeWindow);
 				Log(_T("LoadFromClipboard #2 - After"));
 			}
 			else

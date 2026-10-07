@@ -40,12 +40,6 @@
     <ClCompile Include="src\CF_UnicodeTextAggregator.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\ChaiScriptOnCopy.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ChaiScriptXml.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\Clip.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -101,9 +95,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\DittoAddins.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\DittoChaiScript.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\DittoCopyBuffer.cpp">
@@ -298,9 +289,6 @@
     <ClCompile Include="src\SaveAnimation.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\ScriptEditor.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\ScrollHelper.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -490,12 +478,6 @@
     <ClInclude Include="src\CGdiPlusBitmap.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\ChaiScriptOnCopy.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ChaiScriptXml.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\Clip.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -557,9 +539,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\DittoAddins.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\DittoChaiScript.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\DittoCopyBuffer.h">
@@ -764,9 +743,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\SaveAnimation.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ScriptEditor.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\ScrollHelper.h">

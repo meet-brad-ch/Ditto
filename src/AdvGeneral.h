@@ -34,8 +34,6 @@ public:
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnBnClickedBtCompactAndRepair();
-	afx_msg void OnBnClickedButtonCopyScripts();
-	afx_msg void OnBnClickedButtonPasteScripts2();
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
 	afx_msg void OnNcLButtonDown(UINT nHitTest, CPoint point);
 	virtual BOOL PreTranslateMessage(MSG* pMsg);

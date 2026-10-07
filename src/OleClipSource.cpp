@@ -13,8 +13,6 @@
 #include "ClipboardFormatError.h"
 #include "Path.h"
 #include "Md5.h"
-#include "DittoChaiScript.h"
-#include "ChaiScriptOnCopy.h"
 #include "Slugify.h"
 #include "ImageFormatAggregator.h"
 #include "BitmapHelper.h"
@@ -238,45 +236,6 @@ BOOL COleClipSource::DoImmediateRender()
 	}
 
 	SaveDittoFileDataToFile(clip);
-
-	if (m_pasteOptions.m_pasteScriptGuid != _T(""))
-	{
-		for (auto & element : CGetSetOptions::m_pasteScripts.m_list)
-		{
-			if (element.m_guid == m_pasteOptions.m_pasteScriptGuid)
-			{
-				try
-				{
-					Log(StrF(_T("Start of paste script name: %s, script: %s"), element.m_name, element.m_script));
-
-					ChaiScriptOnCopy onPaste;
-					CDittoChaiScript clipData(&clip, "", "");
-					if (onPaste.ProcessScript(clipData, (LPCSTR)CTextConvert::UnicodeToAnsi(element.m_script)) == false)
-					{
-						Log(StrF(_T("End of paste script name: %s, returned false, not saving this copy to Ditto, last Error: %s"), element.m_name, onPaste.m_lastError));
-
-						return FALSE;
-					}
-
-					Log(StrF(_T("End of paste script name: %s, returned true, last Error: %s"), element.m_name, onPaste.m_lastError));
-				}
-				catch (CException *ex)
-				{
-					TCHAR szCause[255];
-					ex->GetErrorMessage(szCause, 255);
-					CString cs;
-					cs.Format(_T("chai script paste exception: %s"), szCause);
-					Log(cs);
-				}
-				catch (...)
-				{
-					Log(_T("chai script paste exception 2"));
-				}
-
-				break;
-			}
-		}
-	}
 
 	return PutFormatOnClipboard(&clip.m_Formats) > 0;
 }

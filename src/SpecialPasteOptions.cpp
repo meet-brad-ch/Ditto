@@ -17,7 +17,6 @@ CSpecialPasteOptions::CSpecialPasteOptions()
 	m_pasteAddingDateTime = false;
 	m_delayRenderLockout = 0;
 	m_dragDropFilesOnly = false;
-	m_pasteScriptGuid = _T("");
 	m_updateClipOrder = true;
 	m_trimWhiteSpace = false;
 	m_PosixifyPaths = false;

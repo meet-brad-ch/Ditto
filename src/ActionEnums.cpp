@@ -257,9 +257,6 @@ CString ActionEnums::EnumDescription(ActionEnumValues value)
 	case MOVE_CLIP_LAST:
 		val = "Move Clip Last";
 		break;
-	case PASTE_SCRIPT:
-		val = "Paste Script";
-		break;
 	case PASTE_DONT_MOVE_CLIP:
 		val = "Paste, Don't Change Clip Order";
 		break;
@@ -509,7 +506,7 @@ bool ActionEnums::UserConfigurable(ActionEnumValues value)
 	static const std::array internalOnly{
 		NEXTTABCONTROL, PREVTABCONTROL,
 		MODIFIER_ACTVE_SELECTIONUP, MODIFIER_ACTVE_SELECTIONDOWN, MODIFIER_ACTVE_MOVEFIRST, MODIFIER_ACTVE_MOVELAST,
-		BACKGRROUP, DELETE_SELECTED, TOGGLEFILELOGGING, TOGGLEOUTPUTDEBUGSTRING, HOMELIST, PASTE_SCRIPT };
+		BACKGRROUP, DELETE_SELECTED, TOGGLEFILELOGGING, TOGGLEOUTPUTDEBUGSTRING, HOMELIST };
 
 	const bool internal{ std::find(internalOnly.begin(), internalOnly.end(), value) != internalOnly.end() };
 	return !internal && !Removed(value);
@@ -522,7 +519,8 @@ bool ActionEnums::Removed(ActionEnumValues value)
 		SEND_TO_FRIEND_6, SEND_TO_FRIEND_7, SEND_TO_FRIEND_8, SEND_TO_FRIEND_9, SEND_TO_FRIEND_10,
 		SEND_TO_FRIEND_11, SEND_TO_FRIEND_12, SEND_TO_FRIEND_13, SEND_TO_FRIEND_14, SEND_TO_FRIEND_15,
 		PROMPT_SEND_TO_FRIEND, EXPORT_TO_GOOGLE_TRANSLATE, EXPORT_TO_WEB_SEARCH,
-		EMAILTO_BODY, EMAILTO_ATTACH_EXPORT, EMAILTO_ATTACH_CONTENT, GMAIL };
+		EMAILTO_BODY, EMAILTO_ATTACH_EXPORT, EMAILTO_ATTACH_CONTENT, GMAIL,
+		PASTE_SCRIPT };
 
 	return std::find(removed.begin(), removed.end(), value) != removed.end();
 }

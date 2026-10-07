@@ -88,7 +88,6 @@ CString StrF(const TCHAR * pszFormat, ...);
 BYTE GetEscapeChar( BYTE ch );
 CString RemoveEscapes( const TCHAR* str );
 
-CString GetWndText( HWND hWnd );
 // returns true if the given window is owned by this process
 bool IsAppWnd( HWND hWnd );
 
@@ -196,7 +195,6 @@ CString NewGuidString();
 
 CString FolderPath(int folderId);
 
-CString TopLevelWindowText(DWORD pid);
 
 BOOL DarkAppWindows10Setting();
 DWORD Windows10AccentColor();

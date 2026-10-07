@@ -12,8 +12,6 @@
 #include "zlib.h"
 #include "Misc.h"
 #include "Md5.h"
-#include "ChaiScriptOnCopy.h"
-#include "DittoChaiScript.h"
 #include "ImageHelper.h"
 
 #include <Mmsystem.h>
@@ -348,7 +346,7 @@ bool CClip::AddFormat(CLIPFORMAT cfType, void* pData, UINT nLen, bool setDesc)
 }
 
 // Fills this CClip with the contents of the clipboard.
-int CClip::LoadFromClipboard(CClipTypes* pClipTypes, bool checkClipboardIgnore, CString activeApp, CString activeAppTitle)
+int CClip::LoadFromClipboard(CClipTypes* pClipTypes, bool checkClipboardIgnore, CString activeApp)
 {
 	if(pClipTypes == NULL || pClipTypes->GetSize() == 0)
 	{
@@ -584,85 +582,6 @@ int CClip::LoadFromClipboard(CClipTypes* pClipTypes, bool checkClipboardIgnore, 
 	{
 		Log(_T("No clip types were in supported types array"));
 		return FALSE;
-	}
-
-	bool calledOnCopyScript = false;
-	try
-	{
-		for (auto & listItem : CGetSetOptions::m_copyScripts.m_list)
-		{
-			if (listItem.m_active)
-			{
-				Log(StrF(_T("Start of process copy name: %s, script: %s"), listItem.m_name, listItem.m_script));
-
-				ChaiScriptOnCopy onCopy;
-				CDittoChaiScript clipData(this, (LPCSTR)CTextConvert::UnicodeToAnsi(activeApp), (LPCSTR)CTextConvert::UnicodeToAnsi(activeAppTitle));
-				if (onCopy.ProcessScript(clipData, (LPCSTR)CTextConvert::UnicodeToAnsi(listItem.m_script)) == false)
-				{
-					Log(StrF(_T("End of process copy name: %s, returned false, not saving this copy to Ditto, last Error: %s"), listItem.m_name, onCopy.m_lastError));
-
-					return -1;
-				}
-
-				calledOnCopyScript = true;
-
-				Log(StrF(_T("End of process copy name: %s, returned true, last Error: %s"), listItem.m_name, onCopy.m_lastError));
-			}
-			else
-			{
-				Log(StrF(_T("Script is not active, not processing name: %s, script: %s"), listItem.m_name, listItem.m_script));
-			}
-		}
-	}
-	catch (CException *ex)
-	{
-		TCHAR szCause[255];
-		ex->GetErrorMessage(szCause, 255);
-		CString cs;
-		cs.Format(_T("save copy exception: %s"), szCause);
-		Log(cs);
-	}
-	catch (...)
-	{
-		Log(_T("save copy exception 2"));	
-	}
-
-	//copy script could have changed the data, make sure the description matches
-	if (calledOnCopyScript)
-	{
-		auto uString = this->GetUnicodeTextFormat();
-		if (uString != _T(""))
-		{
-			if (uString.GetLength() > CGetSetOptions::m_bDescTextSize)
-			{
-				m_Desc = uString.Left(CGetSetOptions::m_bDescTextSize);
-			}
-			else
-			{
-				m_Desc = uString;
-			}
-		}
-		else
-		{
-			auto aString = this->GetCFTextTextFormat();
-			if (aString != "")
-			{
-				if (aString.GetLength() > CGetSetOptions::m_bDescTextSize)
-				{
-					m_Desc = aString.Left(CGetSetOptions::m_bDescTextSize);
-				}
-				else
-				{
-					m_Desc = aString;
-				}
-			}
-			else
-			{
-				SetDescFromType();
-			}
-		}
-
-		Log(StrF(_T("Called on copy script, this could change the description, regenerated desc: %s"), m_Desc));
 	}
 
 	if (this->m_Desc != _T(""))

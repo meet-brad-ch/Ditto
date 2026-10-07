@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|ARM64">
@@ -191,7 +191,6 @@
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
-      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -251,7 +250,6 @@
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
-      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -309,7 +307,6 @@
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
-      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -365,7 +362,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
-      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -424,7 +420,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
-      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -482,7 +477,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
-      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -536,8 +530,6 @@
     <ClCompile Include="src\CF_HDropAggregator.cpp" />
     <ClCompile Include="src\CF_TextAggregator.cpp" />
     <ClCompile Include="src\CF_UnicodeTextAggregator.cpp" />
-    <ClCompile Include="src\ChaiScriptOnCopy.cpp" />
-    <ClCompile Include="src\ChaiScriptXml.cpp" />
     <ClCompile Include="src\Clip.cpp" />
     <ClCompile Include="src\ClipboardSaveRestore.cpp" />
     <ClCompile Include="src\ClipboardViewer.cpp" />
@@ -558,7 +550,6 @@
     <ClCompile Include="src\DimWnd.cpp" />
     <ClCompile Include="src\DittoAddin.cpp" />
     <ClCompile Include="src\DittoAddins.cpp" />
-    <ClCompile Include="src\DittoChaiScript.cpp" />
     <ClCompile Include="src\DittoCopyBuffer.cpp" />
     <ClCompile Include="src\DittoDropTarget.cpp" />
     <ClCompile Include="src\DittoPopupWindow.cpp" />
@@ -709,7 +700,6 @@
     <ClCompile Include="src\RulerRichEditCtrl\SizeComboBox.cpp" />
     <ClCompile Include="src\RulerRichEditCtrl\StdGrfx.cpp" />
     <ClCompile Include="src\SaveAnimation.cpp" />
-    <ClCompile Include="src\ScriptEditor.cpp" />
     <ClCompile Include="src\ScrollHelper.cpp" />
     <ClCompile Include="src\SearchEditBox.cpp" />
     <ClCompile Include="src\SelectDB.cpp" />
@@ -793,8 +783,6 @@
     <ClInclude Include="src\CF_TextAggregator.h" />
     <ClInclude Include="src\CF_UnicodeTextAggregator.h" />
     <ClInclude Include="src\CGdiPlusBitmap.h" />
-    <ClInclude Include="src\ChaiScriptOnCopy.h" />
-    <ClInclude Include="src\ChaiScriptXml.h" />
     <ClInclude Include="src\Clip.h" />
     <ClInclude Include="src\ClipboardSaveRestore.h" />
     <ClInclude Include="src\ClipboardViewer.h" />
@@ -817,7 +805,6 @@
     <ClInclude Include="src\DimWnd.h" />
     <ClInclude Include="src\DittoAddin.h" />
     <ClInclude Include="src\DittoAddins.h" />
-    <ClInclude Include="src\DittoChaiScript.h" />
     <ClInclude Include="src\DittoCopyBuffer.h" />
     <ClInclude Include="src\DittoDropTarget.h" />
     <ClInclude Include="src\DittoPopupWindow.h" />
@@ -911,7 +898,6 @@
     <ClInclude Include="src\RulerRichEditCtrl\SizeComboBox.h" />
     <ClInclude Include="src\RulerRichEditCtrl\StdGrfx.h" />
     <ClInclude Include="src\SaveAnimation.h" />
-    <ClInclude Include="src\ScriptEditor.h" />
     <ClInclude Include="src\ScrollHelper.h" />
     <ClInclude Include="src\SearchEditBox.h" />
     <ClInclude Include="src\SelectDB.h" />

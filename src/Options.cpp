@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "Options.h"
 #include "AlphaBlend.h"
 #include "Misc.h"
@@ -70,8 +70,6 @@ BOOL CGetSetOptions::m_useModernScrollBar = TRUE;
 BOOL CGetSetOptions::m_bShowAlwaysOnTopWarning = TRUE;
 CRegExFilterHelper CGetSetOptions::m_regexHelper;
 CString CGetSetOptions::m_ignoreAnnoyingCFDIB = "";
-CChaiScriptXml CGetSetOptions::m_copyScripts;
-CChaiScriptXml CGetSetOptions::m_pasteScripts;
 long CGetSetOptions::m_tooltipTimeout;
 BOOL CGetSetOptions::m_cleanRTFBeforeDrawing = TRUE;
 int CGetSetOptions::m_doubleKeyStrokeTimeout = 350;
@@ -303,17 +301,6 @@ void CGetSetOptions::LoadSettings()
 	}
 
 	m_Theme.Load(GetTheme());
-
-	m_copyScripts.Load(GetCopyScriptsXml());
-	if (m_copyScripts.m_assignedGuidOnLoad)
-	{
-		SetCopyScriptsXml(m_copyScripts.Save());
-	}
-	m_pasteScripts.Load(GetPasteScriptsXml());
-	if (m_pasteScripts.m_assignedGuidOnLoad)
-	{
-		SetPasteScriptsXml(m_pasteScripts.Save());
-	}
 
 	m_tooltipTimeout = GetToolTipTimeout();
 }
@@ -2305,17 +2292,10 @@ void CGetSetOptions::SetShowMsgWndOnCopyToGroup(BOOL val)
 	SetProfileLong("ShowMsgWndOnCopyToGroup", val);
 }
 
-int CGetSetOptions::GetActionShortCutA(DWORD action, int pos, CString refData)
+int CGetSetOptions::GetActionShortCutA(DWORD action, int pos)
 {
 	CString actionText;
-	if (refData != _T(""))
-	{
-		actionText.Format(_T("QP_ShortCut_%d_%s_%d_A"), action, refData, pos);
-	}
-	else
-	{
-		actionText.Format(_T("QP_ShortCut_%d_%d_A"), action, pos);
-	}
+	actionText.Format(_T("QP_ShortCut_%d_%d_A"), action, pos);
 	int ret = GetProfileLong(actionText, -1);
 	if (ret == -1)
 	{
@@ -2325,31 +2305,17 @@ int CGetSetOptions::GetActionShortCutA(DWORD action, int pos, CString refData)
 	return ret;
 }
 
-void CGetSetOptions::SetActionShortCutA(int action, DWORD shortcut, int pos, CString refData)
+void CGetSetOptions::SetActionShortCutA(int action, DWORD shortcut, int pos)
 {
 	CString actionText;
-	if (refData != _T(""))
-	{
-		actionText.Format(_T("QP_ShortCut_%d_%s_%d_A"), action, refData, pos);
-	}
-	else
-	{
-		actionText.Format(_T("QP_ShortCut_%d_%d_A"), action, pos);
-	}
+	actionText.Format(_T("QP_ShortCut_%d_%d_A"), action, pos);
 	SetProfileLong(actionText, shortcut);
 }
 
-int CGetSetOptions::GetActionShortCutB(DWORD action, int pos, CString refData)
+int CGetSetOptions::GetActionShortCutB(DWORD action, int pos)
 {
 	CString actionText;
-	if (refData != _T(""))
-	{
-		actionText.Format(_T("QP_ShortCut_%d_%s_%d_B"), action, refData, pos);
-	}
-	else
-	{
-		actionText.Format(_T("QP_ShortCut_%d_%d_B"), action, pos);
-	}
+	actionText.Format(_T("QP_ShortCut_%d_%d_B"), action, pos);
 	int ret = GetProfileLong(actionText, -1);
 	if (ret == -1)
 	{
@@ -2359,17 +2325,10 @@ int CGetSetOptions::GetActionShortCutB(DWORD action, int pos, CString refData)
 	return ret;
 }
 
-void CGetSetOptions::SetActionShortCutB(int action, DWORD shortcut, int pos, CString refData)
+void CGetSetOptions::SetActionShortCutB(int action, DWORD shortcut, int pos)
 {
 	CString actionText;
-	if (refData != _T(""))
-	{
-		actionText.Format(_T("QP_ShortCut_%d_%s_%d_B"), action, refData, pos);
-	}
-	else
-	{
-		actionText.Format(_T("QP_ShortCut_%d_%d_B"), action, pos);
-	}
+	actionText.Format(_T("QP_ShortCut_%d_%d_B"), action, pos);
 	SetProfileLong(actionText, shortcut);
 }
 
@@ -2557,28 +2516,6 @@ BOOL CGetSetOptions::GetShowStartupMessage()
 void CGetSetOptions::SetShowStartupMessage(int val)
 {
 	SetProfileLong(_T("ShowStartupMessage"), val);
-}
-
-CString CGetSetOptions::GetCopyScriptsXml()
-{
-	return GetProfileString("CopyScriptsXml", "");
-}
-
-void CGetSetOptions::SetCopyScriptsXml(CString val)
-{
-	m_copyScripts.Load(val);
-	SetProfileString(_T("CopyScriptsXml"), val);
-}
-
-CString CGetSetOptions::GetPasteScriptsXml()
-{
-	return GetProfileString("PasteScriptsXml", "");
-}
-
-void CGetSetOptions::SetPasteScriptsXml(CString val)
-{
-	m_pasteScripts.Load(val);
-	SetProfileString(_T("PasteScriptsXml"), val);
 }
 
 long CGetSetOptions::GetToolTipTimeout()
@@ -2826,10 +2763,10 @@ void CGetSetOptions::SetIgnoreAnnoyingCFDIB(CString val)
 	SetProfileString("IgnoreAnnoyingCFDIB", val);
 }
 
-set<CString> CGetSetOptions::GetIgnoreAnnoyingCFDIBSet(BOOL useCache)
+std::set<CString> CGetSetOptions::GetIgnoreAnnoyingCFDIBSet(BOOL useCache)
 {
 	CString rawString = CGetSetOptions::GetIgnoreAnnoyingCFDIB(useCache);
-	set<CString> processSet;
+	std::set<CString> processSet;
 	CTokenizer token(rawString, _T(";"));
 	CString process;
 	while (token.Next(process))
