@@ -295,6 +295,16 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   The ARM64 script still added firewall rules for TCP 23443 and launched URLs, and the portable
   one packaged files that no longer exist (`DittoU.exe`, `sqlite3.dll`, `zlib1.dll`). The
   installer gate now checks every `.iss` file.
+- 2026-10-06: Every project builds as C++20 (owner decision, Phase C0). `Directory.Build.targets`
+  sets the standard once, in place of 29 per-project settings.
+  - `/std:c++20` implies `/permissive-`. The contract code (`lib\`, `tests\`) and ICU_Loader keep
+    conformance mode on.
+  - The legacy MFC code would have 118 conformance errors in 20 files, mostly the vendored colour
+    popup, the Advanced Options grid and CppSQLite3. It stays `/permissive` until Phase D.
+  - Fixed in the move: `Shared\ArrayEx.h` (two-phase lookup) and `Shared\TextConvert.h`
+    (copy-initialization through ATL conversions).
+  - The one new C++20 warning (C5054) exposed `CFile::bufferWrite`, a buffer command, used as an
+    open flag. It is now `CFile::modeWrite`, which has the same value.
 - 2026-10-06: Removed ChaiScript (owner decision): `src\chaiscript\` and its 8 wrapper and
   editor files, plus the script hooks in copy, paste, the paste menu and the shortcut editor.
   - `PASTE_SCRIPT` keeps its number and is marked `Removed`.

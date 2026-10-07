@@ -569,7 +569,7 @@ BOOL RestoreDB(CString backupPath)
 		{
 			CFile file;
 			CFileException ex;
-			if (file.Open(tempPath, CFile::bufferWrite | CFile::modeCreate, &ex))
+			if (file.Open(tempPath, CFile::modeWrite | CFile::modeCreate, &ex))
 			{
 				ULONGLONG totalReadSize = 0;
 				int readBytes = 0;
