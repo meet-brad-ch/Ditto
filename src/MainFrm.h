@@ -65,7 +65,7 @@ public:
     ULONGLONG m_startKeyStateTime{};
     bool m_bMovedSelectionMoveKeyState;
     short m_keyModifiersTimerCount;
-    HWND m_tempFocusWnd;
+    HWND m_tempFocusWnd{};
     CMainFrmThread m_thread;
 	CDialog *m_pGlobalClips;
 	CDialog *m_pDeleteClips;
@@ -73,8 +73,8 @@ public:
 	int m_doubleClickGroupId;
 	ULONGLONG m_doubleClickGroupStartTime{};
 	CPowerManager m_PowerManager;
-	int m_startupScreenWidth;
-	int m_startupScreenHeight;
+	int m_startupScreenWidth{};
+	int m_startupScreenHeight{};
     CRichEditCtrlEx m_richEditTextConverter;
 
     void DoDittoCopyBufferPaste(int nCopyBuffer);

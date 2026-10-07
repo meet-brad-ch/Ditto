@@ -1,7 +1,7 @@
 # Quality gate for the local-only Ditto fork.
 #   1. installs vcpkg.json dependencies, then rebuilds Release|x64 with a build log
 #      - warnings: none (every project builds with /W4 /WX; the log is checked too)
-#      - analyze (-Analyze): no code analysis finding (findings are errors under /WX)
+#      - analyze (-Analyze): no code analysis finding (the build log check fails on any)
 #   2. scans the imports of every built .exe/.dll for network DLLs
 #   3. checks every built binary for ASLR, DEP and Control Flow Guard
 #   4. greps all sources for network APIs and network DLL names
@@ -106,9 +106,10 @@ if (-not $SkipBuild) {
     Say ("build: OK in {0:N1} min" -f $minutes)
     $report['Build'] = "PASS (Release|x64 rebuild, {0} projects, {1:N1} min)" -f $outputs.Count, $minutes
 
-    # Every project builds with /W4 /WX (Directory.Build.targets): a compiler warning or, under
-    # -Analyze, a code analysis finding already failed the build above. The log is checked as
-    # well, for any compiler or linker warning a project could still let through.
+    # Every project builds with /W4 /WX (Directory.Build.targets): a compiler warning already
+    # failed the build above. /WX does not make every code analysis finding an error (C26495
+    # findings left the build passing, 2026-10-07), so under -Analyze this log check is what
+    # fails on a finding, as on any compiler or linker warning a project could still let through.
     $warnings = @([IO.File]::ReadLines($buildLog) | Where-Object { $_ -match ':\s+(?:command line\s+)?warning\s+(?:C|LNK)\d+\s*:' } |
         ForEach-Object { ($_ -replace '^\s*\d+>', '').Trim() } | Sort-Object -Unique)
     if ($warnings.Count -gt 0) {
@@ -117,7 +118,7 @@ if (-not $SkipBuild) {
     }
     Say 'warnings: ok   none (/W4 /WX in every project)'
     $report['Lint'] = 'PASS (zero compiler and linker warnings, /W4 /WX)'
-    if ($Analyze) { $report['Static analysis'] = 'PASS (zero /analyze NativeRecommendedRules findings, as errors under /WX)' }
+    if ($Analyze) { $report['Static analysis'] = 'PASS (zero /analyze NativeRecommendedRules findings in the build log)' }
     else { $report['Static analysis'] = 'NOT VERIFIED (run with -Analyze)' }
 }
 else {

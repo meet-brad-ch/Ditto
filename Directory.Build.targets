@@ -13,8 +13,9 @@
            ICU_Loader) keep it; the legacy MFC code (118 conformance errors) stays /permissive until
            Phase D fixes it. -->
       <ConformanceMode Condition="'%(ClCompile.ConformanceMode)' != 'true'">false</ConformanceMode>
-      <!-- /W4 /WX everywhere (owner, 2026-10-07): a warning, or a code analysis finding when
-           analysis runs, fails the build. Untouched third-party files are silenced per file. -->
+      <!-- /W4 /WX everywhere (owner, 2026-10-07): a warning fails the build. /WX does not make
+           every code analysis finding an error; tools\verify.ps1 fails on any finding in the
+           build log. Untouched third-party files are silenced per file. -->
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <!-- Headers included with angle brackets (Windows SDK, MFC, the STL, vcpkg's gtest and zlib)

@@ -90,7 +90,7 @@ protected:
 	CString m_clipData;
 	CString m_originalClipData;
 	CFont m_clipDataFont;
-	bool m_saveWindowLockout;
+	bool m_saveWindowLockout{};
 	int m_clipRow;
 	bool m_showPersistant;
 	CAccels *m_pToolTipActions;
@@ -100,7 +100,7 @@ protected:
 	CString m_folderPath;
 	bool m_showingText;
 	bool m_showingRTF;
-	bool m_showingImage;
+	bool m_showingImage{};
 
 protected:
 	CString GetFieldFromString(CString ref, int nIndex, TCHAR ch);	

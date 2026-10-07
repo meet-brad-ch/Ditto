@@ -146,7 +146,7 @@ public:
 	CGroupStatic m_noSearchResultsStatic;
 
     long m_lRecordCount{};
-    bool m_bStopQuery;
+    bool m_bStopQuery{};
     bool m_bHandleSearchTextChange;
     bool m_bModifersMoveActive;
 
@@ -221,7 +221,7 @@ public:
 	DROPEFFECT OnDragEnter(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point);
 	BOOL OnDrop(COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoint point);
 	void OnDragLeave();
-	COleDropTarget *m_pDropTarget;
+	COleDropTarget *m_pDropTarget{};
 
 	bool DoAction(CAccel a);
 	bool DoAction(DWORD cmd);

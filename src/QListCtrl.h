@@ -190,7 +190,7 @@ protected:
 	bool m_allSelected;
 	int m_linesPerRow;
 	ULONGLONG m_mouseOverScrollAreaStart{};
-	bool m_timerToHideScrollAreaSet;
+	bool m_timerToHideScrollAreaSet{};
 	CGdiImageDrawer m_groupFolder;
 	CGdiImageDrawer m_dontDeleteImage;
 	CGdiImageDrawer m_inFolderImage;

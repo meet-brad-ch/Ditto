@@ -73,8 +73,9 @@ Branch coverage), on failure too. Run time: about 2 min, or about 3.5 min with `
      also checked for any compiler or linker warning. Untouched third-party files are silenced
      per file (see Decisions).
    - **No code analysis findings (`-Analyze`):** the same rebuild runs `/analyze` with
-     NativeRecommendedRules; under `/WX` a finding fails the build. Without `-Analyze`, static
-     analysis is NOT VERIFIED.
+     NativeRecommendedRules. `/WX` does not make every finding an error (C26495 findings left
+     the build passing), so the build log check is what fails on a finding. Without
+     `-Analyze`, static analysis is NOT VERIFIED.
 2. It runs `dumpbin /imports` on every `.exe`/`.dll` in `Release64`. No binary may import
    ws2_32, wsock32, mswsock, wininet, winhttp, urlmon, mapi32, dnsapi, iphlpapi, webio or
    httpapi.
@@ -350,7 +351,7 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   its library) is untouched, and its warnings and code analysis are switched off. Measured with
   `git log --follow -p -w` per file:
   - **Untouched, silenced per file in the project files:** the sqlite3mc amalgamation,
-    libqrencode (`src\QRCode\*`, with `QRGenerator.cpp`), TinyXML's `tinyxmlparser.cpp`,
+    libqrencode (`src\QRCode\*`), TinyXML's `tinyxmlparser.cpp`,
     `tinystr.cpp` and `tinyxmlerror.cpp`, and the ruler editor's `ColourPicker`, `ColourPopup`,
     `FontComboBox.cpp`, `SizeComboBox.cpp` and `StdGrfx.cpp`.
   - **Changed for Ditto, fixed like our code:** `tinyxml.cpp/.h` (Unicode paths), `Path`,
@@ -359,6 +360,23 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
     `RulerRichEdit` and `ICU_Loader\icu.cpp`.
   - **Headers outside the repo** (Windows SDK, MFC, the STL, vcpkg's gtest and zlib) are
     included with angle brackets and treated as external: no warnings, no analysis.
+  - **Silencing analysis per file:** besides `EnablePREfast=false`, the ruleset options are
+    cleared for those files, because cl lets a later `/analyze:ruleset` override `/analyze-`
+    (warning D9025; checked with a probe compile).
+  - **Deleted:** `src\QRCode\QRGenerator.cpp`, libqrencode's sample program (a `_tmain` that
+    Ditto never calls).
+  - **The fixes** (about 850 sites, details in the commits) also fixed real bugs: an assignment
+    in `HideQPasteWindow`'s condition ignored callers that asked to keep the search view; the
+    HTML-drawing tag table held wide strings in `char*` fields, so tag lookups read past them;
+    `CppSQLite3Query` left its database pointer unset; several error messages lost their
+    reason (`%s` missing, narrow strings in a wide `%s`); the list's text colour was never
+    restored after drawing.
+  - **Event threads:** the UAC events get a DACL for Authenticated Users instead of a NULL DACL
+    (anonymous access); stopping a thread no longer kills it with `TerminateThread` after 5 s
+    (it could leave the database or heap lock held), it waits and logs which thread is late.
+  - **Gate:** every project builds with `/W4 /WX`, and `verify.ps1` fails on any warning or
+    code analysis finding in the build log (`/WX` lets C26495 findings pass); the warnings and
+    analysis ratchets are gone.
 - 2026-10-06: The clip SQL is in `CClipRepository`, tested by AppTests (Phase C11, second part).
   - **Repository:** `CClipRepository` takes the database as a parameter and works on plain
     records (`ClipRecord`, `FormatRecord`), so it builds and is tested without `CClip` or the
