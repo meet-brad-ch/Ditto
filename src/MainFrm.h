@@ -152,4 +152,9 @@ DECLARE_MESSAGE_MAP()public:
     afx_msg LRESULT OnPasteClip(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnEditClip(WPARAM wParam, LPARAM lParam);
     afx_msg void OnSetFocus(CWnd* pOldWnd);
+
+private:
+	// PasteOrShowGroup's clip branch: ends a pending group double press and pastes the clip;
+	// an argument of -1 keeps the option's current value
+	void PasteSingleClip(int dbId, BOOL updateClipTime, BOOL activeTarget, BOOL sendPaste, bool pastedFromGroup);
 };

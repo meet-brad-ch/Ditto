@@ -853,17 +853,7 @@ BOOL CCP_MainApp::EnterGroupID(long lID, BOOL clearOldGroupState/* = TRUE*/, BOO
 	default: // Normal Group
 		try
 		{
-			CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lParentID, mText, bIsGroup FROM Main WHERE lID = %d"), lID);
-			if(q.eof() == false)
-			{
-				if(q.getIntField(_T("bIsGroup")) > 0)
-				{
-					m_GroupID = lID;
-					m_GroupParentID = q.getIntField(_T("lParentID"));
-					m_GroupText = q.getStringField(_T("mText"));
-					bResult = TRUE;
-				}
-			}
+			bResult = EnterStoredGroup(lID);
 		}
 		catch (CppSQLite3Exception& e)
 		{
@@ -883,6 +873,24 @@ BOOL CCP_MainApp::EnterGroupID(long lID, BOOL clearOldGroupState/* = TRUE*/, BOO
 	ULONGLONG endTick = GetTickCount64();
 	if((endTick-startTick) > 150)
 		Log(StrF(_T("Paste Timing EnterParentId: %llu"), endTick-startTick));
+
+	return bResult;
+}
+
+BOOL CCP_MainApp::EnterStoredGroup(long lID)
+{
+	BOOL bResult{FALSE};
+	CppSQLite3Query q{theApp.m_db.execQueryEx(_T("SELECT lParentID, mText, bIsGroup FROM Main WHERE lID = %d"), lID)};
+	if(q.eof() == false)
+	{
+		if(q.getIntField(_T("bIsGroup")) > 0)
+		{
+			m_GroupID = lID;
+			m_GroupParentID = q.getIntField(_T("lParentID"));
+			m_GroupText = q.getStringField(_T("mText"));
+			bResult = TRUE;
+		}
+	}
 
 	return bResult;
 }

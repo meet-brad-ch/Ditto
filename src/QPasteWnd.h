@@ -581,4 +581,8 @@ public:
 	afx_msg void OnUpdateSpecialpastePastenewguid(CCmdUI* pCmdUI);
 	afx_msg void OnSpecialpastePasteAsImage();
 	afx_msg void OnUpdateSpecialpastePasteAsImage(CCmdUI* pCmdUI);
+
+private:
+	// OnGetToolTipText's clip text: the clip's lines, each ended with "\r\n", up to the max tool tip lines
+	static CString ToolTipClipLines(const CString& clipText);
 };

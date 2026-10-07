@@ -218,6 +218,10 @@ protected:
 	AddToDbStickyEnum::AddToDbSticky m_addToDbStickyEnum;
 
 private:
+	// AddToDB's duplicate step: when a saved clip has this clip's CRC, moves it to the top of its
+	// lists, takes its id and returns true; false when there is no duplicate
+	bool MoveDuplicateToTop();
+
 	// Where a clip's position lives for one list: the order member that MoveUp/MoveDown change,
 	// its column, and whether the clip is sticky there
 	struct OrderSlot

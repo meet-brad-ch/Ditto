@@ -343,32 +343,9 @@ BOOL CClipIDs::DeleteIDs(bool fromClipWindow, CppSQLite3DB& db)
 
 			Log(StrF(_T("Delete clip Id: %d"), clipId));
 
-			bool cont = false;
-			bool bGroup = false;
-			{
-				CppSQLite3Query q = db.execQueryEx(_T("SELECT bIsGroup FROM Main WHERE lId = %d"), clipId);
-				cont = !q.eof();
-				if(cont)
-				{
-					bGroup = q.getIntField(_T("bIsGroup")) > 0;
-				}
-			}
+			AddExistingClipToDelete(db, clipId, sqlIn);
 
-			if(cont)
-			{			
-				if(bGroup)
-				{
-					db.execDMLEx(_T("UPDATE Main SET lParentID = -1 WHERE lParentID = %d;"), clipId);
-				}
-
-				if(sqlIn.GetLength() > 0)
-				{
-					sqlIn += ", ";
-				}
-				sqlIn += StrF(_T("%d"), clipId);
-			}
-
-			if(index > 0 && 
+			if(index > 0 &&
 				(index % batchCount) == 0)
 			{
 				if(bAllowShow)
@@ -414,6 +391,34 @@ BOOL CClipIDs::DeleteIDs(bool fromClipWindow, CppSQLite3DB& db)
 	Log(StrF(_T("End delete clips, Count: %d"), count));
 
 	return bRet;
+}
+
+void CClipIDs::AddExistingClipToDelete(CppSQLite3DB& db, int clipId, CString& sqlIn)
+{
+	bool cont{false};
+	bool bGroup{false};
+	{
+		CppSQLite3Query q{db.execQueryEx(_T("SELECT bIsGroup FROM Main WHERE lId = %d"), clipId)};
+		cont = !q.eof();
+		if(cont)
+		{
+			bGroup = q.getIntField(_T("bIsGroup")) > 0;
+		}
+	}
+
+	if(cont)
+	{
+		if(bGroup)
+		{
+			db.execDMLEx(_T("UPDATE Main SET lParentID = -1 WHERE lParentID = %d;"), clipId);
+		}
+
+		if(sqlIn.GetLength() > 0)
+		{
+			sqlIn += ", ";
+		}
+		sqlIn += StrF(_T("%d"), clipId);
+	}
 }
 
 BOOL CClipIDs::CreateExportSqliteDB(CppSQLite3DB &db)
@@ -473,22 +478,8 @@ BOOL CClipIDs::Export(CString csFilePath)
 
 		if(CreateExportSqliteDB(db) == FALSE)
 			return FALSE;
-	
-		for(int i = 0; i < count; i++)
-		{
-			int nID = ElementAt(i);
 
-			CClip_ImportExport clip;
-			
-			if(clip.LoadMainTable(nID))
-			{
-				if(clip.LoadFormats(nID))
-				{
-					clip.ExportToSqliteDB(db);
-					bRet = TRUE;
-				}
-			}
-		}
+		bRet = ExportClips(db);
 
 		db.close();
 	}
@@ -501,6 +492,29 @@ BOOL CClipIDs::Export(CString csFilePath)
 	{
 		CErrorReport::Show(StrF(_T("Exporting the clips to %s failed: %s"), csFilePath.GetString(), e.errorMessage()));
 		return FALSE;
+	}
+
+	return bRet;
+}
+
+BOOL CClipIDs::ExportClips(CppSQLite3DB& db)
+{
+	BOOL bRet{FALSE};
+	INT_PTR count{GetSize()};
+	for(int i = 0; i < count; i++)
+	{
+		int nID{ElementAt(i)};
+
+		CClip_ImportExport clip{};
+
+		if(clip.LoadMainTable(nID))
+		{
+			if(clip.LoadFormats(nID))
+			{
+				clip.ExportToSqliteDB(db);
+				bRet = TRUE;
+			}
+		}
 	}
 
 	return bRet;

@@ -617,45 +617,8 @@ void CDeleteClipData::ApplyDelete()
 			progress.SetText(_T("Deleting selected items"));
 			progress.SetStep(1);
 
-			INT_PTR count = rowsToDelete.size();
-			for (INT_PTR i = count - 1; i >= 0; i--)
-			{
-				progress.PeekAndPump();
-				if (m_cancelDelete || progress.Cancelled())
-				{
-					break;
-				}
-				progress.StepIt();
+			DeleteRows(rowsToDelete, progress);
 
-				int row = rowsToDelete[i];
-
-				CDeleteData data = m_data[row];
-				try
-				{
-					//Sleep(100);
-					theApp.m_db.execDMLEx(_T("DELETE FROM Data where lID = %d"), data.m_DatalID);
-
-					//If there are no more children for this clip then delete the parent
-					theApp.m_db.execDMLEx(_T("DELETE FROM Main where lID IN ")
-						_T("(")
-						_T("SELECT Main.lID ")
-						_T("FROM Main ")
-						_T("LEFT OUTER JOIN Data on Data.lParentID = Main.lID ")
-						_T("WHERE bIsGroup = 0 AND Main.lID = %d ")
-						_T("Group by Main.lID ")
-						_T("having Count(Data.lID) = 0 ")
-						_T(")"), data.m_lID);
-
-					m_data.erase(m_data.begin() + row);
-				}
-				catch (CppSQLite3Exception& e)
-				{
-					CErrorReport::Show(StrF(_T("Deleting clip data id %ld (clip id %ld) failed, the remaining items were not deleted: %s"), data.m_DatalID, data.m_lID, e.errorMessage()));
-					// stop deleting; the refresh below still shows the items deleted so far
-					break;
-				}
-			}
-			
 			progress.StepIt();
 			progress.SetText(_T("Refreshing database size"));
 			SetDbSize();			
@@ -682,6 +645,48 @@ void CDeleteClipData::ApplyDelete()
 		m_applyingDelete = false;
 		m_clipList.EnableWindow();
 		m_clipList.SetFocus();
+	}
+}
+
+void CDeleteClipData::DeleteRows(const std::vector<int>& rowsToDelete, CProgressWnd& progress)
+{
+	INT_PTR count{static_cast<INT_PTR>(rowsToDelete.size())};
+	for (INT_PTR i = count - 1; i >= 0; i--)
+	{
+		progress.PeekAndPump();
+		if (m_cancelDelete || progress.Cancelled())
+		{
+			break;
+		}
+		progress.StepIt();
+
+		int row{rowsToDelete[i]};
+
+		CDeleteData data{m_data[row]};
+		try
+		{
+			//Sleep(100);
+			theApp.m_db.execDMLEx(_T("DELETE FROM Data where lID = %d"), data.m_DatalID);
+
+			//If there are no more children for this clip then delete the parent
+			theApp.m_db.execDMLEx(_T("DELETE FROM Main where lID IN ")
+				_T("(")
+				_T("SELECT Main.lID ")
+				_T("FROM Main ")
+				_T("LEFT OUTER JOIN Data on Data.lParentID = Main.lID ")
+				_T("WHERE bIsGroup = 0 AND Main.lID = %d ")
+				_T("Group by Main.lID ")
+				_T("having Count(Data.lID) = 0 ")
+				_T(")"), data.m_lID);
+
+			m_data.erase(m_data.begin() + row);
+		}
+		catch (CppSQLite3Exception& e)
+		{
+			CErrorReport::Show(StrF(_T("Deleting clip data id %ld (clip id %ld) failed, the remaining items were not deleted: %s"), data.m_DatalID, data.m_lID, e.errorMessage()));
+			// stop deleting; the refresh below still shows the items deleted so far
+			break;
+		}
 	}
 }
 

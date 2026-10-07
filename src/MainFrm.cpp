@@ -681,42 +681,47 @@ void CMainFrame::PasteOrShowGroup(int dbId, BOOL updateClipTime, BOOL activeTarg
 		}
 		else
 		{
-			KillTimer(GROUP_DOUBLE_CLICK);
-			m_doubleClickGroupId = -1;
-			m_doubleClickGroupStartTime = 0;
-
-			BOOL bItWas = CGetSetOptions::m_bUpdateTimeOnPaste;
-			if (updateClipTime != -1)
-			{				
-				CGetSetOptions::m_bUpdateTimeOnPaste = updateClipTime;
-			}
-
-			CProcessPaste paste;
-			paste.m_pastedFromGroup = pastedFromGroup;
-			paste.GetClipIDs().Add(dbId);
-
-			if (activeTarget != -1)
-			{
-				paste.m_bActivateTarget = activeTarget ? true : false;;
-			}
-
-			if (sendPaste != -1)
-			{
-				paste.m_bSendPaste = sendPaste ? true : false;
-			}
-			paste.DoPaste();
-			theApp.OnPasteCompleted();
-
-			if (updateClipTime != -1)
-			{
-				CGetSetOptions::m_bUpdateTimeOnPaste = bItWas;
-			}
+			PasteSingleClip(dbId, updateClipTime, activeTarget, sendPaste, pastedFromGroup);
 		}
 	}
 	catch (CppSQLite3Exception& e)
 	{
 		CErrorReport::Show(StrF(_T("Pasting clip or group id %d failed: %s"), dbId, e.errorMessage()));
 		return;
+	}
+}
+
+void CMainFrame::PasteSingleClip(int dbId, BOOL updateClipTime, BOOL activeTarget, BOOL sendPaste, bool pastedFromGroup)
+{
+	KillTimer(GROUP_DOUBLE_CLICK);
+	m_doubleClickGroupId = -1;
+	m_doubleClickGroupStartTime = 0;
+
+	BOOL bItWas{CGetSetOptions::m_bUpdateTimeOnPaste};
+	if (updateClipTime != -1)
+	{
+		CGetSetOptions::m_bUpdateTimeOnPaste = updateClipTime;
+	}
+
+	CProcessPaste paste{};
+	paste.m_pastedFromGroup = pastedFromGroup;
+	paste.GetClipIDs().Add(dbId);
+
+	if (activeTarget != -1)
+	{
+		paste.m_bActivateTarget = activeTarget ? true : false;;
+	}
+
+	if (sendPaste != -1)
+	{
+		paste.m_bSendPaste = sendPaste ? true : false;
+	}
+	paste.DoPaste();
+	theApp.OnPasteCompleted();
+
+	if (updateClipTime != -1)
+	{
+		CGetSetOptions::m_bUpdateTimeOnPaste = bItWas;
 	}
 }
 

@@ -50,6 +50,9 @@ public:
 
 private:
 	BOOL RunAtBoundary(LPCTSTR operation, const std::function<BOOL()>& body);
+	// MarkAsPastedThread's order step for one clip: gives it the newest group order (pastedFromGroup)
+	// or the newest main order, so it moves to the top of its list
+	static void MoveToTopOrder(int id, bool pastedFromGroup);
 };
 
 #endif // !defined(AFX_PROCESSPASTE_H__185CBB6F_4B63_4397_8FF9_E18D777DA506__INCLUDED_)

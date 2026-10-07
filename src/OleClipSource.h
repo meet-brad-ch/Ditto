@@ -76,4 +76,9 @@ protected:
 	void AsciiOnly(CClip& clip);
 	void PutGuidOntoClipboard(CClip& clip);
 	void PasteAsImage(CClip& clip);
+
+private:
+	// DoImmediateRender's multi-clip text paste: adds the clips' text, unicode text and, unless the
+	// paste is limited to text, HDROP, RTF and HTML, each joined with the multi-paste separator
+	void AggregateTextFormats(CClip& clip);
 };

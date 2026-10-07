@@ -37,6 +37,14 @@ public:
 protected:
 	BOOL CreateExportSqliteDB(CppSQLite3DB &db);
 
+private:
+	// DeleteIDs' step for one clip: if it is still in Main, moves a group's children to the
+	// top level and appends the clip's id to the IN list
+	void AddExistingClipToDelete(CppSQLite3DB& db, int clipId, CString& sqlIn);
+	// Export's work: writes every clip whose Main row and formats load into db; TRUE when at
+	// least one clip was written
+	BOOL ExportClips(CppSQLite3DB& db);
+
 protected:
-	
+
 };

@@ -5455,17 +5455,7 @@ void CQPasteWnd::OnGetToolTipText(NMHDR* pNMHDR, LRESULT* /*pResult*/)
 		{
 			CString clipText = q.getStringField(1);
 
-			int lines = 0;
-			int maxLines = CGetSetOptions::GetMaxToolTipLines();
-			CTokenizer tokenizer(clipText, "\r\n");
-			CString token;
-			while (tokenizer.Next(token))
-			{
-				cs += token + "\r\n";
-				if (lines > maxLines)
-					break;
-				lines++;
-			}
+			cs += ToolTipClipLines(clipText);
 
 
 #ifdef _DEBUG
@@ -5548,6 +5538,24 @@ void CQPasteWnd::OnGetToolTipText(NMHDR* pNMHDR, LRESULT* /*pResult*/)
 		CErrorReport::Show(StrF(_T("Loading the clip's tool tip failed: %s"), e.errorMessage()));
 		return;
 	}
+}
+
+CString CQPasteWnd::ToolTipClipLines(const CString& clipText)
+{
+	CString cs{};
+	int lines{0};
+	int maxLines{CGetSetOptions::GetMaxToolTipLines()};
+	CTokenizer tokenizer{clipText, "\r\n"};
+	CString token{};
+	while (tokenizer.Next(token))
+	{
+		cs += token + "\r\n";
+		if (lines > maxLines)
+			break;
+		lines++;
+	}
+
+	return cs;
 }
 
 void CQPasteWnd::OnFindItem(NMHDR* pNMHDR, LRESULT* pResult)

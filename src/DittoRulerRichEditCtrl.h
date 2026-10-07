@@ -26,4 +26,8 @@ protected:
 
 	bool LoadRTFData(CClip &Clip);
 	bool LoadTextData(CClip &Clip);
+
+private:
+	// The eSaveTypes flags of the saved clip types: stRTF for rtf, stCF_TEXT | stCF_UNICODETEXT for text
+	static int SaveTypesOf(CClipTypes& types);
 };

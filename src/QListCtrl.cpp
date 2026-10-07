@@ -1603,56 +1603,7 @@ bool CQListCtrl::ShowFullDescription(bool bFromAuto, bool fromNextPrev)
 			CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID, lDate, lastPasteDate, lDontAutoDelete, QuickPasteText, lShortCut, globalShortCut, stickyClipOrder, stickyClipGroupOrder, lParentID FROM Main WHERE lID = %d"), clipId);
 			if (q.eof() == false)
 			{
-				CString clipData;
-				COleDateTime time((time_t)q.getInt64Field(_T("lDate")));
-				clipData += "Added: " + time.Format();
-
-				COleDateTime modified((time_t)q.getInt64Field(_T("lastPasteDate")));
-				clipData += _T(" | Last Used: ") + modified.Format();
-
-				if (q.getIntField(_T("lDontAutoDelete")) > 0)
-				{
-					clipData += _T(" | Never Auto Delete");
-				}
-
-				CString csQuickPaste = q.getStringField(_T("QuickPasteText"));
-				if (csQuickPaste.IsEmpty() == FALSE)
-				{
-					clipData += _T(" | Quick Paste = ");
-					clipData += csQuickPaste;
-				}
-
-				int shortCut = q.getIntField(_T("lShortCut"));
-				if (shortCut > 0)
-				{
-					clipData += _T(" | ");
-					clipData += CHotKey::GetHotKeyDisplayStatic(shortCut);
-
-					BOOL globalShortCut = q.getIntField(_T("globalShortCut"));
-					if (globalShortCut)
-					{
-						clipData += _T(" - Global Shortcut Key");
-					}
-				}
-
-				if (theApp.m_GroupID > 0)
-				{
-					int sticky = q.getIntField(_T("stickyClipGroupOrder"));
-					if (sticky != INVALID_STICKY)
-					{
-						clipData += _T(" | ");
-						clipData += _T(" - Sticky In Group");
-					}
-				}
-				else
-				{
-					int sticky = q.getIntField(_T("stickyClipOrder"));
-					if (sticky != INVALID_STICKY)
-					{
-						clipData += _T(" | ");
-						clipData += _T(" - Sticky");
-					}
-				}
+				CString clipData{ClipDataText(q)};
 
 				int parentId = q.getIntField(_T("lParentID"));
 				if (parentId > 0)
@@ -1718,6 +1669,62 @@ bool CQListCtrl::ShowFullDescription(bool bFromAuto, bool fromNextPrev)
 	}
 
 	return true;
+}
+
+CString CQListCtrl::ClipDataText(CppSQLite3Query& q)
+{
+	CString clipData{};
+	COleDateTime time{(time_t)q.getInt64Field(_T("lDate"))};
+	clipData += "Added: " + time.Format();
+
+	COleDateTime modified{(time_t)q.getInt64Field(_T("lastPasteDate"))};
+	clipData += _T(" | Last Used: ") + modified.Format();
+
+	if (q.getIntField(_T("lDontAutoDelete")) > 0)
+	{
+		clipData += _T(" | Never Auto Delete");
+	}
+
+	CString csQuickPaste{q.getStringField(_T("QuickPasteText"))};
+	if (csQuickPaste.IsEmpty() == FALSE)
+	{
+		clipData += _T(" | Quick Paste = ");
+		clipData += csQuickPaste;
+	}
+
+	int shortCut{q.getIntField(_T("lShortCut"))};
+	if (shortCut > 0)
+	{
+		clipData += _T(" | ");
+		clipData += CHotKey::GetHotKeyDisplayStatic(shortCut);
+
+		BOOL globalShortCut{q.getIntField(_T("globalShortCut"))};
+		if (globalShortCut)
+		{
+			clipData += _T(" - Global Shortcut Key");
+		}
+	}
+
+	if (theApp.m_GroupID > 0)
+	{
+		int sticky{q.getIntField(_T("stickyClipGroupOrder"))};
+		if (sticky != INVALID_STICKY)
+		{
+			clipData += _T(" | ");
+			clipData += _T(" - Sticky In Group");
+		}
+	}
+	else
+	{
+		int sticky{q.getIntField(_T("stickyClipOrder"))};
+		if (sticky != INVALID_STICKY)
+		{
+			clipData += _T(" | ");
+			clipData += _T(" - Sticky");
+		}
+	}
+
+	return clipData;
 }
 
 void CQListCtrl::GetToolTipText(int nItem, CString& csText)

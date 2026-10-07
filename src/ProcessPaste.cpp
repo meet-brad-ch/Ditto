@@ -199,34 +199,7 @@ UINT CProcessPaste::MarkAsPastedThread(LPVOID pParam)
 				{
 					int id = pData->ids.ElementAt(i);
 					clipId = id;
-					if (pData->pastedFromGroup)
-					{
-						CppSQLite3Query q = theApp.m_db.execQuery(_T("SELECT clipGroupOrder FROM Main ORDER BY clipGroupOrder DESC LIMIT 1"));
-
-						if (q.eof() == false)
-						{
-							double latestDate = q.getFloatField(_T("clipGroupOrder"));
-							latestDate += 1;
-
-							Log(StrF(_T("Setting clipId: %d, GroupOrder: %f"), id, latestDate));
-
-							theApp.m_db.execDMLEx(_T("UPDATE Main SET clipGroupOrder = %f where lID = %d;"), latestDate, id);
-						}
-					}
-					else
-					{
-						CppSQLite3Query q = theApp.m_db.execQuery(_T("SELECT clipOrder FROM Main ORDER BY clipOrder DESC LIMIT 1"));
-
-						if (q.eof() == false)
-						{
-							double latestDate = q.getFloatField(_T("clipOrder"));
-							latestDate += 1;
-
-							Log(StrF(_T("Setting clipId: %d, order: %f"), id, latestDate));
-
-							theApp.m_db.execDMLEx(_T("UPDATE Main SET clipOrder = %f where lID = %d;"), latestDate, id);
-						}
-					}
+					MoveToTopOrder(id, pData->pastedFromGroup);
 				}
 			}
 
@@ -260,4 +233,36 @@ UINT CProcessPaste::MarkAsPastedThread(LPVOID pParam)
 
 	UpdateTimeEvent.SetEvent();
 	return bRet;
+}
+
+void CProcessPaste::MoveToTopOrder(int id, bool pastedFromGroup)
+{
+	if (pastedFromGroup)
+	{
+		CppSQLite3Query q{theApp.m_db.execQuery(_T("SELECT clipGroupOrder FROM Main ORDER BY clipGroupOrder DESC LIMIT 1"))};
+
+		if (q.eof() == false)
+		{
+			double latestDate{q.getFloatField(_T("clipGroupOrder"))};
+			latestDate += 1;
+
+			Log(StrF(_T("Setting clipId: %d, GroupOrder: %f"), id, latestDate));
+
+			theApp.m_db.execDMLEx(_T("UPDATE Main SET clipGroupOrder = %f where lID = %d;"), latestDate, id);
+		}
+	}
+	else
+	{
+		CppSQLite3Query q{theApp.m_db.execQuery(_T("SELECT clipOrder FROM Main ORDER BY clipOrder DESC LIMIT 1"))};
+
+		if (q.eof() == false)
+		{
+			double latestDate{q.getFloatField(_T("clipOrder"))};
+			latestDate += 1;
+
+			Log(StrF(_T("Setting clipId: %d, order: %f"), id, latestDate));
+
+			theApp.m_db.execDMLEx(_T("UPDATE Main SET clipOrder = %f where lID = %d;"), latestDate, id);
+		}
+	}
 }

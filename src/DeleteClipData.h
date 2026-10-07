@@ -7,6 +7,8 @@
 #include <vector>
 #include "afxcmn.h"
 
+class CProgressWnd;
+
 // CDeleteClipData dialog
 
 class CClip;
@@ -126,4 +128,9 @@ public:
 	void ShowClipPropertiesWindow();
 	virtual void OnCancel();
 	afx_msg void OnBnClickedBtCompactAndRepair();
+
+private:
+	// ApplyDelete's delete loop: deletes the rows' data items from the last row back, stepping the
+	// progress; stops on cancel, or after reporting the first item that fails to delete
+	void DeleteRows(const std::vector<int>& rowsToDelete, CProgressWnd& progress);
 };

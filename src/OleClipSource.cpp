@@ -113,55 +113,7 @@ BOOL COleClipSource::DoImmediateRender()
 		}
 		else
 		{
-			CStringA SepA = CTextConvert::UnicodeToAnsi(CGetSetOptions::GetMultiPasteSeparator());
-			CCF_TextAggregator CFText(SepA);
-			if (m_ClipIDs.AggregateData(CFText, CF_TEXT, CGetSetOptions::m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
-			{
-				CClipFormat cf(CF_TEXT, CFText.GetHGlobal());
-				clip.m_Formats.Add(cf);
-				//clip.m_Formats now owns the global data
-				cf.m_autoDeleteData = false;
-			}
-
-			CStringW SepW = CGetSetOptions::GetMultiPasteSeparator();
-			CCF_UnicodeTextAggregator CFUnicodeText(SepW);
-			if (m_ClipIDs.AggregateData(CFUnicodeText, CF_UNICODETEXT, CGetSetOptions::m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
-			{
-				CClipFormat cf(CF_UNICODETEXT, CFUnicodeText.GetHGlobal());
-				clip.m_Formats.Add(cf);
-				//clip.m_Formats now owns the global data
-				cf.m_autoDeleteData = false;
-			}
-
-			if (m_pasteOptions.LimitFormatsToText() == false)
-			{
-				CCF_HDropAggregator HDrop;
-				if (m_ClipIDs.AggregateData(HDrop, CF_HDROP, CGetSetOptions::m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
-				{
-					CClipFormat cf(CF_HDROP, HDrop.GetHGlobal());
-					clip.m_Formats.Add(cf);
-					//clip.m_Formats now owns the global data
-					cf.m_autoDeleteData = false;
-				}
-
-				CRichTextAggregator RichText(SepW);
-				if (m_ClipIDs.AggregateData(RichText, theApp.m_RTFFormat, CGetSetOptions::m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
-				{
-					CClipFormat cf(theApp.m_RTFFormat, RichText.GetHGlobal());
-					clip.m_Formats.Add(cf);
-					//clip.m_Formats now owns the global data
-					cf.m_autoDeleteData = false;
-				}
-
-				CHTMLFormatAggregator Html(SepW);
-				if (m_ClipIDs.AggregateData(Html, theApp.m_HTML_Format, CGetSetOptions::m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
-				{
-					CClipFormat cf(theApp.m_HTML_Format, Html.GetHGlobal());
-					clip.m_Formats.Add(cf);
-					//clip.m_Formats now owns the global data
-					cf.m_autoDeleteData = false;
-				}
-			}
+			AggregateTextFormats(clip);
 		}
 	}
 
@@ -253,6 +205,59 @@ BOOL COleClipSource::DoImmediateRender()
 	SaveDittoFileDataToFile(clip);
 
 	return PutFormatOnClipboard(&clip.m_Formats) > 0;
+}
+
+void COleClipSource::AggregateTextFormats(CClip& clip)
+{
+	CStringA SepA = CTextConvert::UnicodeToAnsi(CGetSetOptions::GetMultiPasteSeparator());
+	CCF_TextAggregator CFText(SepA);
+	if (m_ClipIDs.AggregateData(CFText, CF_TEXT, CGetSetOptions::m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
+	{
+		CClipFormat cf(CF_TEXT, CFText.GetHGlobal());
+		clip.m_Formats.Add(cf);
+		//clip.m_Formats now owns the global data
+		cf.m_autoDeleteData = false;
+	}
+
+	CStringW SepW = CGetSetOptions::GetMultiPasteSeparator();
+	CCF_UnicodeTextAggregator CFUnicodeText(SepW);
+	if (m_ClipIDs.AggregateData(CFUnicodeText, CF_UNICODETEXT, CGetSetOptions::m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
+	{
+		CClipFormat cf(CF_UNICODETEXT, CFUnicodeText.GetHGlobal());
+		clip.m_Formats.Add(cf);
+		//clip.m_Formats now owns the global data
+		cf.m_autoDeleteData = false;
+	}
+
+	if (m_pasteOptions.LimitFormatsToText() == false)
+	{
+		CCF_HDropAggregator HDrop;
+		if (m_ClipIDs.AggregateData(HDrop, CF_HDROP, CGetSetOptions::m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
+		{
+			CClipFormat cf(CF_HDROP, HDrop.GetHGlobal());
+			clip.m_Formats.Add(cf);
+			//clip.m_Formats now owns the global data
+			cf.m_autoDeleteData = false;
+		}
+
+		CRichTextAggregator RichText(SepW);
+		if (m_ClipIDs.AggregateData(RichText, theApp.m_RTFFormat, CGetSetOptions::m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
+		{
+			CClipFormat cf(theApp.m_RTFFormat, RichText.GetHGlobal());
+			clip.m_Formats.Add(cf);
+			//clip.m_Formats now owns the global data
+			cf.m_autoDeleteData = false;
+		}
+
+		CHTMLFormatAggregator Html(SepW);
+		if (m_ClipIDs.AggregateData(Html, theApp.m_HTML_Format, CGetSetOptions::m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
+		{
+			CClipFormat cf(theApp.m_HTML_Format, Html.GetHGlobal());
+			clip.m_Formats.Add(cf);
+			//clip.m_Formats now owns the global data
+			cf.m_autoDeleteData = false;
+		}
+	}
 }
 
 void COleClipSource::TransformText(CClip &clip, const std::function<std::wstring(std::wstring_view)>& transform)

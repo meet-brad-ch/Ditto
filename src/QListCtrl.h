@@ -226,6 +226,11 @@ protected:
 public:
 	afx_msg void OnKillFocus(CWnd* pNewWnd);
 	afx_msg void OnMouseHWheel(UINT nFlags, short zDelta, CPoint pt);
+
+private:
+	// ShowFullDescription's clip data line from the clip's Main row: added and last used dates, never
+	// auto delete, quick paste text, shortcut and sticky state
+	static CString ClipDataText(CppSQLite3Query& q);
 };
 
 /////////////////////////////////////////////////////////////////////////////

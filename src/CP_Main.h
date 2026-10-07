@@ -219,4 +219,11 @@ private:
 	 * @throws std::exception When a start-up step fails.
 	 */
 	BOOL InitInstanceBody();
+	/**
+	 * @brief EnterGroupID's database step: makes lID the current group when Main holds it as a group.
+	 * @param lID The clip id of the group to enter.
+	 * @return TRUE when the group was entered, FALSE when lID is missing or not a group.
+	 * @throws CppSQLite3Exception When the query fails; EnterGroupID reports it.
+	 */
+	BOOL EnterStoredGroup(long lID);
 };

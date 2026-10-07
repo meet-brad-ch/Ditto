@@ -270,6 +270,38 @@ void ReOrderStickyClips(int parentID, CppSQLite3DB& db)
 	}
 }
 
+// ValidDB's sticky-order step: when the Main_NoGroup index is missing, sets the unset sticky orders
+// and creates the sticky-order indexes; a failed step is ignored, as the index may exist already
+static void UpgradeStickyOrderIndexes(CppSQLite3DB& db)
+{
+	try
+	{
+		CppSQLite3Query q{db.execQuery(_T("PRAGMA index_info(Main_NoGroup);"))};
+		int count{0};
+		while (q.eof() == false)
+		{
+			count++;
+			q.nextRow();
+		}
+
+		if (count == 0)
+		{
+			db.execDML(_T("Update Main set stickyClipOrder = -(2147483647) where stickyClipOrder IS NULL;"));
+			db.execDML(_T("Update Main set stickyClipGroupOrder = -(2147483647) where stickyClipGroupOrder IS NULL;"));
+			db.execDML(_T("Update Main set stickyClipOrder = -(2147483647) where stickyClipOrder = 0;"));
+			db.execDML(_T("Update Main set stickyClipGroupOrder = -(2147483647) where stickyClipGroupOrder = 0;"));
+
+			db.execDML(_T("CREATE INDEX Main_NoGroup ON Main(bIsGroup ASC, stickyClipOrder DESC, clipOrder DESC);"));
+			db.execDML(_T("CREATE INDEX Main_InGroup ON Main(lParentId ASC, bIsGroup ASC, stickyClipGroupOrder DESC, clipGroupOrder DESC);"));
+			db.execDML(_T("CREATE INDEX Data_ParentId_Format ON Data(lParentID COLLATE BINARY ASC, strClipBoardFormat COLLATE NOCASE ASC);"));
+		}
+	}
+	catch (CppSQLite3Exception& e)
+	{
+		e.errorCode();
+	}
+}
+
 BOOL ValidDB(CString csPath, BOOL /*bUpgrade*/)
 {
 	try
@@ -417,32 +449,7 @@ BOOL ValidDB(CString csPath, BOOL /*bUpgrade*/)
 			e.errorCode();
 		}
 
-		try
-		{
-			CppSQLite3Query q = db.execQuery(_T("PRAGMA index_info(Main_NoGroup);"));
-			int count = 0;
-			while (q.eof() == false)
-			{
-				count++;
-				q.nextRow();
-			}
-
-			if (count == 0)
-			{
-				db.execDML(_T("Update Main set stickyClipOrder = -(2147483647) where stickyClipOrder IS NULL;"));
-				db.execDML(_T("Update Main set stickyClipGroupOrder = -(2147483647) where stickyClipGroupOrder IS NULL;"));
-				db.execDML(_T("Update Main set stickyClipOrder = -(2147483647) where stickyClipOrder = 0;"));
-				db.execDML(_T("Update Main set stickyClipGroupOrder = -(2147483647) where stickyClipGroupOrder = 0;"));
-
-				db.execDML(_T("CREATE INDEX Main_NoGroup ON Main(bIsGroup ASC, stickyClipOrder DESC, clipOrder DESC);"));
-				db.execDML(_T("CREATE INDEX Main_InGroup ON Main(lParentId ASC, bIsGroup ASC, stickyClipGroupOrder DESC, clipGroupOrder DESC);"));
-				db.execDML(_T("CREATE INDEX Data_ParentId_Format ON Data(lParentID COLLATE BINARY ASC, strClipBoardFormat COLLATE NOCASE ASC);"));
-			}
-		}
-		catch (CppSQLite3Exception& e)
-		{
-			e.errorCode();
-		}
+		UpgradeStickyOrderIndexes(db);
 
 		try
 		{
@@ -752,6 +759,80 @@ BOOL RepairDatabase()
 	return TRUE;
 }
 
+// RemoveOldEntries' max-entries step: deletes the plain clips (no shortcut, not kept, not in a group,
+// not sticky) beyond the newest GetMaxEntries clips
+static void RemoveClipsOverMaxEntries(CppSQLite3DB& db)
+{
+	long lMax{CGetSetOptions::GetMaxEntries()};
+	if (lMax >= 0)
+	{
+		CClipIDs IDs{};
+		int clipId{};
+
+		CppSQLite3Query q{db.execQueryEx(_T("SELECT lID, lShortCut, lParentID, lDontAutoDelete, stickyClipOrder, stickyClipGroupOrder FROM Main WHERE bIsGroup = 0 ORDER BY clipOrder DESC LIMIT -1 OFFSET %d"), lMax)};
+		while (q.eof() == false)
+		{
+			int shortcut{q.getIntField(_T("lShortCut"))};
+			int dontDelete{q.getIntField(_T("lDontAutoDelete"))};
+			int parentId{q.getIntField(_T("lParentID"))};
+			double stickyClipOrder{q.getFloatField(_T("stickyClipOrder"))};
+			double stickyClipGroupOrder{q.getFloatField(_T("stickyClipGroupOrder"))};
+
+			//Only delete entries that have no shortcut and don't have the flag set and aren't in groups and
+			if (shortcut == 0 &&
+				dontDelete == 0 &&
+				parentId <= 0 &&
+				stickyClipOrder == -(2147483647) &&
+				stickyClipGroupOrder == -(2147483647))
+			{
+				clipId = q.getIntField(_T("lID"));
+				IDs.Add(clipId);
+				Log(StrF(_T("From MaxEntries - Deleting Id: %d"), clipId));
+			}
+
+			q.nextRow();
+		}
+
+		if (IDs.GetCount() > 0)
+		{
+			IDs.DeleteIDs(false, db);
+		}
+	}
+}
+
+// RemoveOldEntries' expiry step: deletes the plain clips (no shortcut, not kept, not in a group,
+// not sticky) last pasted more than GetExpiredEntries days ago
+static void RemoveExpiredClips(CppSQLite3DB& db)
+{
+	long lExpire{CGetSetOptions::GetExpiredEntries()};
+
+	if (lExpire)
+	{
+		CTime now{CTime::GetCurrentTime()};
+		now -= CTimeSpan(lExpire, 0, 0, 0);
+
+		CClipIDs IDs{};
+
+		CppSQLite3Query q{db.execQueryEx(_T("SELECT lID FROM Main ")
+			_T("WHERE lastPasteDate < %d AND ")
+			_T("bIsGroup = 0 AND lShortCut = 0 AND lParentID <= 0 AND lDontAutoDelete = 0 AND stickyClipOrder = -(2147483647) AND stickyClipGroupOrder = -(2147483647)"), (int)now.GetTime())};
+
+		while (q.eof() == false)
+		{
+			IDs.Add(q.getIntField(_T("lID")));
+
+			Log(StrF(_T("From Clips Expire - Deleting Id: %d"), q.getIntField(_T("lID"))));
+
+			q.nextRow();
+		}
+
+		if (IDs.GetCount() > 0)
+		{
+			IDs.DeleteIDs(false, db);
+		}
+	}
+}
+
 BOOL RemoveOldEntries(bool checkIdleTime)
 {
 	Log(StrF(_T("Beginning of RemoveOldEntries MaxEntries: %d - Keep days: %d"), CGetSetOptions::GetMaxEntries(), CGetSetOptions::GetExpiredEntries()));
@@ -764,72 +845,12 @@ BOOL RemoveOldEntries(bool checkIdleTime)
 
 		if (CGetSetOptions::GetCheckForMaxEntries())
 		{
-			long lMax = CGetSetOptions::GetMaxEntries();
-			if (lMax >= 0)
-			{
-				CClipIDs IDs;
-				int clipId;
-
-				CppSQLite3Query q = db.execQueryEx(_T("SELECT lID, lShortCut, lParentID, lDontAutoDelete, stickyClipOrder, stickyClipGroupOrder FROM Main WHERE bIsGroup = 0 ORDER BY clipOrder DESC LIMIT -1 OFFSET %d"), lMax);
-				while (q.eof() == false)
-				{
-					int shortcut = q.getIntField(_T("lShortCut"));
-					int dontDelete = q.getIntField(_T("lDontAutoDelete"));
-					int parentId = q.getIntField(_T("lParentID"));
-					double stickyClipOrder = q.getFloatField(_T("stickyClipOrder"));
-					double stickyClipGroupOrder = q.getFloatField(_T("stickyClipGroupOrder"));
-
-					//Only delete entries that have no shortcut and don't have the flag set and aren't in groups and 
-					if (shortcut == 0 &&
-						dontDelete == 0 &&
-						parentId <= 0 &&
-						stickyClipOrder == -(2147483647) &&
-						stickyClipGroupOrder == -(2147483647))
-					{
-						clipId = q.getIntField(_T("lID"));
-						IDs.Add(clipId);
-						Log(StrF(_T("From MaxEntries - Deleting Id: %d"), clipId));
-					}
-
-					q.nextRow();
-				}
-
-				if (IDs.GetCount() > 0)
-				{
-					IDs.DeleteIDs(false, db);
-				}
-			}
+			RemoveClipsOverMaxEntries(db);
 		}
 
 		if (CGetSetOptions::GetCheckForExpiredEntries())
 		{
-			long lExpire = CGetSetOptions::GetExpiredEntries();
-
-			if (lExpire)
-			{
-				CTime now = CTime::GetCurrentTime();
-				now -= CTimeSpan(lExpire, 0, 0, 0);
-
-				CClipIDs IDs;
-
-				CppSQLite3Query q = db.execQueryEx(_T("SELECT lID FROM Main ")
-					_T("WHERE lastPasteDate < %d AND ")
-					_T("bIsGroup = 0 AND lShortCut = 0 AND lParentID <= 0 AND lDontAutoDelete = 0 AND stickyClipOrder = -(2147483647) AND stickyClipGroupOrder = -(2147483647)"), (int)now.GetTime());
-
-				while (q.eof() == false)
-				{
-					IDs.Add(q.getIntField(_T("lID")));
-
-					Log(StrF(_T("From Clips Expire - Deleting Id: %d"), q.getIntField(_T("lID"))));
-
-					q.nextRow();
-				}
-
-				if (IDs.GetCount() > 0)
-				{
-					IDs.DeleteIDs(false, db);
-				}
-			}
+			RemoveExpiredClips(db);
 		}
 
 		int toDeleteCount = db.execScalar(_T("SELECT COUNT(clipID) FROM MainDeletes"));

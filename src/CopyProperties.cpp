@@ -316,46 +316,11 @@ void CCopyProperties::OnOK()
 	{
 		if(m_lCopyID == -1 && m_pMemoryClip != NULL)
 		{
-			LoadDataIntoCClip(*m_pMemoryClip);
-
-			m_DeletedData.SortDescending();
-			INT_PTR count = m_DeletedData.GetSize();
-			for(int i = 0; i < count; i++)
-			{
-				m_pMemoryClip->m_Formats.RemoveAt(m_DeletedData[i]);
-			}
+			SaveToMemoryClip();
 		}
-		else
+		else if(SaveToStoredClip() == false)
 		{
-			CClip clip;
-			if(clip.LoadMainTable(m_lCopyID))
-			{
-				LoadDataIntoCClip(clip);
-
-				if(CheckGlobalHotKey(clip) == FALSE)
-				{
-					if(MessageBox(_T("Error registering global hot key\n\nContinue?"), _T(""), MB_OKCANCEL |MB_ICONWARNING) != IDOK)
-					{
-						return;
-					}
-				}
-
-				if(CheckMoveToGroupGlobalHotKey(clip) == FALSE)
-				{
-					if(MessageBox(_T("Error registering global move to group hot key\n\nContinue?"), _T(""), MB_OKCANCEL |MB_ICONWARNING) != IDOK)
-					{
-						return;
-					}
-				}
-
-				if(clip.ModifyMainTable())
-				{
-					if(m_bDeletedData)
-					{    
-						DeleteFormats(m_lCopyID, m_DeletedData);
-					}
-				}
-			}
+			return;
 		}
 
 		m_bHandleKillFocus = true;
@@ -368,6 +333,53 @@ void CCopyProperties::OnOK()
 	}
 
 	CDialog::OnOK();
+}
+
+void CCopyProperties::SaveToMemoryClip()
+{
+	LoadDataIntoCClip(*m_pMemoryClip);
+
+	m_DeletedData.SortDescending();
+	INT_PTR count{m_DeletedData.GetSize()};
+	for(int i = 0; i < count; i++)
+	{
+		m_pMemoryClip->m_Formats.RemoveAt(m_DeletedData[i]);
+	}
+}
+
+bool CCopyProperties::SaveToStoredClip()
+{
+	CClip clip{};
+	if(clip.LoadMainTable(m_lCopyID))
+	{
+		LoadDataIntoCClip(clip);
+
+		if(CheckGlobalHotKey(clip) == FALSE)
+		{
+			if(MessageBox(_T("Error registering global hot key\n\nContinue?"), _T(""), MB_OKCANCEL |MB_ICONWARNING) != IDOK)
+			{
+				return false;
+			}
+		}
+
+		if(CheckMoveToGroupGlobalHotKey(clip) == FALSE)
+		{
+			if(MessageBox(_T("Error registering global move to group hot key\n\nContinue?"), _T(""), MB_OKCANCEL |MB_ICONWARNING) != IDOK)
+			{
+				return false;
+			}
+		}
+
+		if(clip.ModifyMainTable())
+		{
+			if(m_bDeletedData)
+			{
+				DeleteFormats(m_lCopyID, m_DeletedData);
+			}
+		}
+	}
+
+	return true;
 }
 
 BOOL CCopyProperties::CheckGlobalHotKey(CClip &clip)

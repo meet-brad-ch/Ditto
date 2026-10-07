@@ -718,29 +718,10 @@ bool CClip::AddToDB(bool bCheckForDuplicates)
 		m_CRC = GenerateCRC();
 
 		if(bCheckForDuplicates &&
-			m_parentId < 0)
-		{	
-			int nID = FindDuplicate();
-			if(nID >= 0)
-			{
-				MakeLatestOrder();
-				MakeLatestGroupOrder();
-
-				// the duplicate moves to the top instead of a second copy being saved
-				CClipRepository repository = Repository();
-				repository.SetOrder(nID, CClipRepository::OrderColumn::Clip, m_clipOrder);
-				if(m_parentId > -1)
-				{
-					repository.SetOrder(nID, CClipRepository::OrderColumn::ClipGroup, m_clipGroupOrder);
-				}
-
-				m_id = nID;
-
-				Log(StrF(_T("Found duplicate clip in db, Id: %d, ParentId: %d crc: %d, NewOrder: %f, GroupOrder %f"),
-										nID, m_parentId, m_CRC, m_clipOrder, m_clipGroupOrder));
-
-				return true;
-			}
+			m_parentId < 0 &&
+			MoveDuplicateToTop())
+		{
+			return true;
 		}
 	}
 	catch (CppSQLite3Exception& e)
@@ -777,6 +758,33 @@ bool CClip::AddToDB(bool bCheckForDuplicates)
 	//ASSERT(m_Formats.GetSize() == 0);
 	
 	return bResult;
+}
+
+bool CClip::MoveDuplicateToTop()
+{
+	int nID{FindDuplicate()};
+	if(nID < 0)
+	{
+		return false;
+	}
+
+	MakeLatestOrder();
+	MakeLatestGroupOrder();
+
+	// the duplicate moves to the top instead of a second copy being saved
+	CClipRepository repository{Repository()};
+	repository.SetOrder(nID, CClipRepository::OrderColumn::Clip, m_clipOrder);
+	if(m_parentId > -1)
+	{
+		repository.SetOrder(nID, CClipRepository::OrderColumn::ClipGroup, m_clipGroupOrder);
+	}
+
+	m_id = nID;
+
+	Log(StrF(_T("Found duplicate clip in db, Id: %d, ParentId: %d crc: %d, NewOrder: %f, GroupOrder %f"),
+							nID, m_parentId, m_CRC, m_clipOrder, m_clipGroupOrder));
+
+	return true;
 }
 
 // if a duplicate exists, set recset to the duplicate and return true

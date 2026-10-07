@@ -87,6 +87,13 @@ public:
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	afx_msg void OnLbnSelchangeCopyData();
 	afx_msg void OnNcLButtonDown(UINT nHitTest, CPoint point);
+
+private:
+	// OnOK's work for a clip not yet saved: writes the dialog into it and removes the deleted formats
+	void SaveToMemoryClip();
+	// OnOK's work for a saved clip: writes the dialog into its Main row, registers its hot keys and
+	// deletes the removed formats; false when the user cancels after a hot key error
+	bool SaveToStoredClip();
 };
 
 //{{AFX_INSERT_LOCATION}}

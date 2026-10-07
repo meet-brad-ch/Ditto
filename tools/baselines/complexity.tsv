@@ -33,7 +33,7 @@ src\copyproperties.cpp	CCopyProperties::OnOK	11
 src\copythread.cpp	CCopyThread::OnClipboardChange	12
 src\cp_main.cpp	CCP_MainApp::EditItems	23
 src\cp_main.cpp	CCP_MainApp::EnterGroupID	12
-src\cp_main.cpp	CCP_MainApp::InitInstance	29
+src\cp_main.cpp	CCP_MainApp::InitInstanceBody	29
 src\cp_main.cpp	DittoCommandLineInfo::ParseParam	15
 src\databaseutilities.cpp	CheckDBExists	13
 src\databaseutilities.cpp	RemoveOldEntries	17
