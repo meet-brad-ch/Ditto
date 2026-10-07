@@ -1,5 +1,6 @@
 # Quality gate for the local-only Ditto fork.
-#   1. installs vcpkg.json dependencies, then builds Release|x64
+#   1. installs vcpkg.json dependencies, then rebuilds Release|x64 with a build log
+#      - warnings: the build's warnings may not exceed tools\baselines\warnings.tsv
 #   2. scans the imports of every built .exe/.dll for network DLLs
 #   3. checks every built binary for ASLR, DEP and Control Flow Guard
 #   4. greps all sources for network APIs and network DLL names
@@ -8,8 +9,10 @@
 #   7. runs every unit test on its own (AddressSanitizer build)
 #   8. checks with Doxygen that the contract code is fully documented
 # Prints one timestamped line per check and exits 1 on the first failed stage.
-# Usage (repo root):  powershell -NoProfile -ExecutionPolicy Bypass -File tools\verify.ps1 [-SkipBuild]
-param([switch] $SkipBuild)
+# Usage (repo root):  powershell -NoProfile -ExecutionPolicy Bypass -File tools\verify.ps1 [-SkipBuild] [-UpdateBaselines]
+#   -SkipBuild        reuse the last build (the warnings gate is then NOT VERIFIED)
+#   -UpdateBaselines  rewrite the ratchet baselines after a passing run; they may only shrink
+param([switch] $SkipBuild, [switch] $UpdateBaselines)
 
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path -Parent $PSScriptRoot
@@ -36,9 +39,13 @@ if (-not $SkipBuild) {
     Say 'vcpkg: install from vcpkg.json (x64-windows-static-md)'
     & $vcpkg install --triplet x64-windows-static-md "--x-manifest-root=$repo" "--x-install-root=$(Join-Path $repo 'vcpkg_installed\x64-windows-static-md')" --no-print-usage | Out-Null
     if ($LASTEXITCODE -ne 0) { Fail "vcpkg install exit $LASTEXITCODE" }
-    Say 'build: Release|x64'
+    # a full rebuild: an incremental build reports only the warnings of the files it recompiles
+    Say 'build: Release|x64 (rebuild)'
+    $buildLogDir = Join-Path $repo 'build\logs'
+    New-Item -ItemType Directory $buildLogDir -Force | Out-Null
+    $buildLog = Join-Path $buildLogDir 'build.log'
     $start = Get-Date
-    $out = & $msbuild $sln /p:Configuration=Release /p:Platform=x64 "/p:VcpkgRoot=$vcpkgRoot" /m /nologo /v:m 2>&1
+    $out = & $msbuild $sln /t:Rebuild /p:Configuration=Release /p:Platform=x64 "/p:VcpkgRoot=$vcpkgRoot" /m /nologo /v:m "/flp:logfile=$buildLog;verbosity=normal" 2>&1
     $code = $LASTEXITCODE
     $errors = @($out | Where-Object { "$_" -match ': (fatal )?error ' })
     $errors | Select-Object -First 30 | ForEach-Object { Say "  $_" }
@@ -47,7 +54,13 @@ if (-not $SkipBuild) {
     if ($outputs.Count -eq 0) { Fail 'build reported no project outputs' }
     $outputs | ForEach-Object { Say ("  " + ("$_".Trim() -replace '^.*\\([^\\]+\.vcxproj) -> ', '$1 -> ')) }
     Say ("build: OK in {0:N1} min" -f ((Get-Date) - $start).TotalMinutes)
+
+    $warningArgs = @{ Repo = $repo; Log = $buildLog }
+    if ($UpdateBaselines) { $warningArgs['Update'] = $true }
+    & (Join-Path $PSScriptRoot 'gates\warnings.ps1') @warningArgs
+    if ($LASTEXITCODE -ne 0) { Fail 'warnings: the build has warnings above the baseline' }
 }
+else { Say 'warnings: NOT VERIFIED (-SkipBuild: no fresh build log)' }
 
 # ---- 2. import scan ----------------------------------------------------------
 $bannedDlls = 'ws2_32', 'wsock32', 'mswsock', 'wininet', 'winhttp', 'urlmon', 'mapi32', 'dnsapi', 'iphlpapi', 'webio', 'httpapi'

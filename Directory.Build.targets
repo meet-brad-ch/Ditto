@@ -7,6 +7,8 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0A00;WINVER=0x0A00;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <!-- /W4 everywhere; the legacy warnings are held by the ratchet in tools\baselines\warnings.tsv -->
+      <WarningLevel>Level4</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <ControlFlowGuard>Guard</ControlFlowGuard>
       <!-- /ZI (Edit and Continue) cannot be combined with /guard:cf: use a plain program database -->
