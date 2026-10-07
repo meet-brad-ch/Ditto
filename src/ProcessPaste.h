@@ -15,6 +15,8 @@
 #include "OleClipSource.h"
 #include "SpecialPasteOptions.h"
 
+#include <functional>
+
 /*------------------------------------------------------------------*\
 	CProcessPaste
 \*------------------------------------------------------------------*/
@@ -45,6 +47,9 @@ public:
 
 	void MarkAsPasted(bool updateClipOrder);
 	static UINT MarkAsPastedThread(LPVOID pParam);
+
+private:
+	BOOL RunAtBoundary(LPCTSTR operation, const std::function<BOOL()>& body);
 };
 
 #endif // !defined(AFX_PROCESSPASTE_H__185CBB6F_4B63_4397_8FF9_E18D777DA506__INCLUDED_)

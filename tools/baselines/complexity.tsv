@@ -31,7 +31,6 @@ src\clipcompare.cpp	CClipCompare::Compare	13
 src\clipcompare.cpp	CClipCompare::GetComparePath	23
 src\clipeditthread.cpp	CClipEditThread::OnFileChanged	14
 src\clipeditthread.cpp	CClipEditThread::SaveToClip	22
-src\clipids.cpp	CClipIDs::AggregateData	10
 src\clipids.cpp	CClipIDs::DeleteIDs	16
 src\clipids.cpp	CClipIDs::GetTypes	10
 src\clipids.cpp	CClipIDs::Render	13

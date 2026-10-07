@@ -295,6 +295,16 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   The ARM64 script still added firewall rules for TCP 23443 and launched URLs, and the portable
   one packaged files that no longer exist (`DittoU.exe`, `sqlite3.dll`, `zlib1.dll`). The
   installer gate now checks every `.iss` file.
+- 2026-10-06: A multi-clip paste no longer hides errors (Phase C1).
+  - `CClipIDs::AggregateData` ended in `catch(...) {}` and a log-and-continue SQLite catch, so a
+    malformed clip or a database error during a multi-clip paste vanished silently.
+  - Both now reach the paste boundaries: `COleClipSource::OnRenderGlobalData` (it reports and
+    returns FALSE) and `CProcessPaste::DoPaste`/`DoDrag` (one guarded run with the message).
+  - A database error now shows its code and text instead of "generic exception".
+  - `CF_TEXT` multi-paste no longer pulls in file lists unless the paste is text-only. A
+    precedence bug had made it always do so.
+  - The paste data object is released only after it was handed to the clipboard. Before, it
+    leaked when an error came before that.
 - 2026-10-06: Every project builds as C++20 (owner decision, Phase C0). `Directory.Build.targets`
   sets the standard once, in place of 29 per-project settings.
   - `/std:c++20` implies `/permissive-`. The contract code (`lib\`, `tests\`) and ICU_Loader keep

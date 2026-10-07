@@ -3,6 +3,8 @@
 #include "ClipIds.h"
 #include "SpecialPasteOptions.h"
 
+#include <optional>
+
 /*------------------------------------------------------------------*\
 	COleClipSource
 \*------------------------------------------------------------------*/
@@ -31,6 +33,8 @@ public:
 protected:
 	CClipFormats m_DelayRenderedFormats;
 	bool m_convertToHDROPOnDelayRender;
+
+	std::optional<HGLOBAL> RenderClipsOrReport(CLIPFORMAT format);
 
 	void DoUpperLowerCase(CClip &clip, bool upper);
 	void Capitalize(CClip &clip);

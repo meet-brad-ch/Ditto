@@ -124,67 +124,57 @@ void CClipIDs::GetTypes(CClipTypes& types)
 	}
 }
 
+// Adds the cfType data of every clip to Aggregator. Errors are not handled here: a malformed clip
+// (DittoCore::ClipboardFormatError) or a database error (CppSQLite3Exception) stops the paste at its
+// boundary (COleClipSource::OnRenderGlobalData, CProcessPaste::DoPaste/DoDrag), which reports it.
 bool CClipIDs::AggregateData(IClipAggregator &Aggregator, UINT cfType, BOOL bReverse, bool textOnly)
 {
 	CString csSQL;
-	LPWSTR Text = NULL;
-	int nTextSize = 0;
 	INT_PTR numIDs = GetSize();
 	bool bRet = false;
 
-	try
+	INT_PTR nIndex;
+	for(int i=0; i < numIDs; i++)
 	{
-		INT_PTR nIndex;
-		for(int i=0; i < numIDs; i++)
+		nIndex = i;
+		if(bReverse)
 		{
-			nIndex = i;
-			if(bReverse)
+			nIndex = numIDs - i - 1;
+		}
+
+		// a text-only paste also takes file lists, as their paths
+		CString sqlCF_HDROP = _T("");
+		if (textOnly &&
+			(cfType == CF_UNICODETEXT || cfType == CF_TEXT))
+		{
+			sqlCF_HDROP.Format(_T("OR Data.strClipBoardFormat = '%s'"), GetFormatName(CF_HDROP));
+		}
+
+		csSQL.Format(_T("SELECT * FROM Data ")
+			_T("INNER JOIN Main ON Main.lID = Data.lParentID ")
+			_T("WHERE (Data.strClipBoardFormat = '%s'")
+			_T(" %s) ")
+			_T("AND Main.lID = %d"),
+			GetFormatName(cfType),
+			sqlCF_HDROP,
+			ElementAt(nIndex));
+
+		CppSQLite3Query q = theApp.m_db.execQuery(csSQL);
+
+		if(q.eof() == false)
+		{
+			int nDataLen = 0;
+			LPVOID pData = (LPVOID)q.getBlobField(_T("ooData"), nDataLen);
+			if(pData == NULL)
 			{
-				nIndex = numIDs - i - 1;
+				continue;
 			}
 
-			CString sqlCF_HDROP = _T("");
-			if (textOnly &&
-				cfType == CF_UNICODETEXT || cfType == CF_TEXT)
+			if(Aggregator.AddClip(pData, nDataLen, (int)i, (int)numIDs, GetFormatID(q.getStringField(_T("strClipBoardFormat")))))
 			{
-				sqlCF_HDROP.Format(_T("OR Data.strClipBoardFormat = '%s'"), GetFormatName(CF_HDROP));
-			}
-
-			csSQL.Format(_T("SELECT * FROM Data ")
-				_T("INNER JOIN Main ON Main.lID = Data.lParentID ")
-				_T("WHERE (Data.strClipBoardFormat = '%s'")
-				_T(" %s) ")
-				_T("AND Main.lID = %d"),
-				GetFormatName(cfType),
-				sqlCF_HDROP,
-				ElementAt(nIndex));
-
-			CppSQLite3Query q = theApp.m_db.execQuery(csSQL);
-
-			if(q.eof() == false)
-			{
-				int nDataLen = 0;
-				LPVOID pData = (LPVOID)q.getBlobField(_T("ooData"), nDataLen);
-				if(pData == NULL)
-				{
-					continue;
-				}
-
-				if(Aggregator.AddClip(pData, nDataLen, (int)i, (int)numIDs, GetFormatID(q.getStringField(_T("strClipBoardFormat")))))
-				{
-					bRet |= true;
-				}
-			}
-			else
-			{
-				bRet |= false;
+				bRet = true;
 			}
 		}
-	}
-	CATCH_SQLITE_EXCEPTION
-		catch(...)
-	{
-
 	}
 
 	return bRet;

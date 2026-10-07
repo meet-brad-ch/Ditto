@@ -1246,6 +1246,27 @@ INT_PTR COleClipSource::PutFormatOnClipboard(CClipFormats *pFormats)
 	return count;
 }
 
+// Renders the pasted clips in the given format. OnRenderGlobalData is a COM callback that no
+// exception may leave: a malformed clip or a database error is shown to the user and gives no value.
+std::optional<HGLOBAL> COleClipSource::RenderClipsOrReport(CLIPFORMAT format)
+{
+	try
+	{
+		return m_ClipIDs.Render(format);
+	}
+	catch (const DittoCore::ClipboardFormatError& error)
+	{
+		CErrorReport::Show(StrF(_T("Ditto could not provide %s for the paste: the clip's data is malformed (%s)."),
+			GetFormatName(format).GetString(), CString(error.what()).GetString()));
+	}
+	catch (CppSQLite3Exception& error)
+	{
+		CErrorReport::Show(StrF(_T("Ditto could not provide %s for the paste: database error %d (%s)."),
+			GetFormatName(format).GetString(), error.errorCode(), error.errorMessage()));
+	}
+	return std::nullopt;
+}
+
 BOOL COleClipSource::OnRenderGlobalData(LPFORMATETC lpFormatEtc, HGLOBAL* phGlobal)
 {
 	static bool bInHere = false;
@@ -1278,18 +1299,13 @@ BOOL COleClipSource::OnRenderGlobalData(LPFORMATETC lpFormatEtc, HGLOBAL* phGlob
 
 		if(m_ClipIDs.GetCount() > 0)
 		{
-			try
+			const std::optional<HGLOBAL> rendered = RenderClipsOrReport(lpFormatEtc->cfFormat);
+			if (!rendered)
 			{
-				hData = m_ClipIDs.Render(lpFormatEtc->cfFormat);
-			}
-			catch (const DittoCore::ClipboardFormatError& error)
-			{
-				// COM callback: no exception may leave it; FALSE tells the target the render failed
-				CErrorReport::Show(StrF(_T("Ditto could not provide %s for the paste: the clip's data is malformed (%s)."),
-					GetFormatName(lpFormatEtc->cfFormat).GetString(), CString(error.what()).GetString()));
 				bInHere = false;
-				return FALSE;
+				return FALSE;   // FALSE tells the target the render failed
 			}
+			hData = *rendered;
 
 			if (m_convertToHDROPOnDelayRender &&
 				hData == NULL &&

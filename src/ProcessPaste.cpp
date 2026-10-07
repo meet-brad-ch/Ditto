@@ -23,16 +23,47 @@ CProcessPaste::~CProcessPaste()
 	delete m_pOle;
 }
 
+// Error boundary of a paste or drag: whatever stops the operation (malformed clip data, a database
+// error, an MFC or any other exception) ends it and is kept in m_lastErrorMessage for the caller
+// to show.
+BOOL CProcessPaste::RunAtBoundary(LPCTSTR operation, const std::function<BOOL()>& body)
+{
+	try
+	{
+		return body();
+	}
+	catch (const DittoCore::ClipboardFormatError& error)
+	{
+		m_lastErrorMessage.Format(_T("the clip's data is malformed (%s)"), CString(error.what()).GetString());
+	}
+	catch (CppSQLite3Exception& error)
+	{
+		m_lastErrorMessage.Format(_T("database error %d (%s)"), error.errorCode(), error.errorMessage());
+	}
+	catch (CException* ex)
+	{
+		TCHAR szCause[255]{};
+		ex->GetErrorMessage(szCause, _countof(szCause));
+		ex->Delete();
+		m_lastErrorMessage.Format(_T("%s exception: %s"), operation, szCause);
+	}
+	catch (...)
+	{
+		m_lastErrorMessage.Format(_T("%s generic exception"), operation);
+	}
+	Log(m_lastErrorMessage);
+	return FALSE;
+}
+
 BOOL CProcessPaste::DoPaste()
 {
-	BOOL ret = FALSE;
-
-	try
+	bool handedToClipboard{ false };
+	const BOOL ret = RunAtBoundary(_T("Paste"), [this, &handedToClipboard]() -> BOOL
 	{
 		m_pOle->m_pasteOptions = m_pasteOptions;
 		if (!m_pOle->DoImmediateRender())
 		{
-			return ret;
+			return FALSE;
 		}
 
 		// MarkAsPasted() must be done first since it makes use of
@@ -55,6 +86,7 @@ BOOL CProcessPaste::DoPaste()
 		}
 
 		m_pOle->SetClipboard(); // m_pOle is now managed by the OLE clipboard
+		handedToClipboard = true;
 
 		if (m_bSendPaste)
 		{
@@ -66,67 +98,32 @@ BOOL CProcessPaste::DoPaste()
 			Log(_T("Activating active window"));
 			theApp.m_activeWnd.ActivateTarget();
 		}
+		return TRUE;
+	});
 
-		ret = TRUE;
-	
-	}
-	catch (const DittoCore::ClipboardFormatError& error)
+	if (handedToClipboard)
 	{
-		m_lastErrorMessage.Format(_T("the clip's data is malformed (%s)"), CString(error.what()).GetString());
-		Log(m_lastErrorMessage);
+		// The Clipboard now owns the allocated memory and will delete this data object when new
+		// data is put on the Clipboard. Until then the destructor still owns it.
+		m_pOle = NULL;
 	}
-	catch (CException *ex)
-	{
-		TCHAR szCause[255];
-		ex->GetErrorMessage(szCause, 255);
-		m_lastErrorMessage.Format(_T("Paste exception: %s"), szCause);
-		Log(m_lastErrorMessage);
-	}
-	catch (...) 
-	{
-		m_lastErrorMessage = _T("Paste generic exception");
-		Log(m_lastErrorMessage);
-	}
-
-	// The Clipboard now owns the allocated memory
-	// and will delete this data object
-	// when new data is put on the Clipboard
-	m_pOle = NULL; // m_pOle should not be accessed past this point
-
 	return ret;
 }
 
 BOOL CProcessPaste::DoDrag()
 {
-	BOOL ret = FALSE;
-	try
+	const BOOL ret = RunAtBoundary(_T("Drag drop"), [this]() -> BOOL
 	{
 		m_pOle->m_pasteOptions = m_pasteOptions;
 		m_pOle->DoDelayRender();
 		DROPEFFECT de = m_pOle->DoDragDrop(DROPEFFECT_COPY);
-		if (de != DROPEFFECT_NONE)
+		if (de == DROPEFFECT_NONE)
 		{
-			MarkAsPasted(m_pasteOptions.m_updateClipOrder);
-			ret = TRUE;
-		}		
-	}
-	catch (const DittoCore::ClipboardFormatError& error)
-	{
-		m_lastErrorMessage.Format(_T("the clip's data is malformed (%s)"), CString(error.what()).GetString());
-		Log(m_lastErrorMessage);
-	}
-	catch (CException *ex)
-	{
-		TCHAR szCause[255];
-		ex->GetErrorMessage(szCause, 255);
-		m_lastErrorMessage.Format(_T("Drag drop exception: %s"), szCause);
-		Log(m_lastErrorMessage);
-	}
-	catch (...)
-	{
-		m_lastErrorMessage = _T("Drag drop generic exception");
-		Log(m_lastErrorMessage);
-	}
+			return FALSE;
+		}
+		MarkAsPasted(m_pasteOptions.m_updateClipOrder);
+		return TRUE;
+	});
 
 	try
 	{
