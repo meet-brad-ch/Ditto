@@ -184,7 +184,7 @@ Say "source: ok   $($files.Count) files, no network APIs or DLL names"
 # ---- 5. installer scripts --------------------------------------------------------
 # Every Inno Setup script in the repo: no firewall rules, no post-install URL launches, and a
 # MinVersion of Windows 10 or later.
-$issFiles = @(Get-ChildItem $repo -Recurse -Filter *.iss | Where-Object { $_.FullName -notmatch '\\(build|vcpkg_installed|Release64)\\' })
+$issFiles = @(Get-ChildItem $repo -Recurse -Filter *.iss | Where-Object { $_.FullName.Substring($repo.Length + 1) -notmatch '^(build|vcpkg_installed|Release64)\\' })
 if ($issFiles.Count -eq 0) { Fail 'installer: no .iss script found' }
 $issPattern = '(?i)\b(netsh|advfirewall|firewall)\b|^\s*Filename:\s*https?://|\bshellexec\b'
 $issFindings = 0
