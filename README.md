@@ -86,8 +86,7 @@ Branch coverage), on failure too. Run time: about 2 min, or about 3.5 min with `
 5. It checks every Inno Setup script (`*.iss`): no firewall rules (netsh), no URL launches, and a
    `MinVersion` of Windows 10 or later.
 6. It rejects raw allocation (`new`, `delete`, `malloc`, `free`) in `lib\` and `tests\`.
-   - **Complexity:** lizard measures our own C/C++ code (vendored sqlite and TinyXml
-     excluded). No function in `lib\` or `tests\` may reach CC 10. The legacy functions at
+   - **Complexity:** lizard measures our own C/C++ code (vendored sqlite excluded). No function in `lib\` or `tests\` may reach CC 10. The legacy functions at
      CC 10 or more are listed in `tools\baselines\complexity.tsv`, and none may get worse or be
      added.
 7. It runs every GoogleTest in `tests\` on its own (`--gtest_filter`), under AddressSanitizer. Each

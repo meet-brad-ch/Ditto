@@ -138,7 +138,7 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;Winmm.lib;Version.lib;Shlwapi.lib;crypt32.lib;zlib.lib;nayuki-qr-code-generator.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;Winmm.lib;Version.lib;Shlwapi.lib;crypt32.lib;zlib.lib;nayuki-qr-code-generator.lib;tinyxml2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>release\Ditto.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -196,7 +196,7 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;Winmm.lib;Version.lib;Shlwapi.lib;zlib.lib;nayuki-qr-code-generator.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;Winmm.lib;Version.lib;Shlwapi.lib;zlib.lib;nayuki-qr-code-generator.lib;tinyxml2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>release64\Ditto.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -250,7 +250,7 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;Winmm.lib;Pdh.lib;Version.lib;Shlwapi.lib;crypt32.lib;zlibd.lib;nayuki-qr-code-generator.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;Winmm.lib;Pdh.lib;Version.lib;Shlwapi.lib;crypt32.lib;zlibd.lib;nayuki-qr-code-generator.lib;tinyxml2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>debug\Ditto.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -307,7 +307,7 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;Winmm.lib;Pdh.lib;Version.lib;Shlwapi.lib;zlibd.lib;nayuki-qr-code-generator.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;Winmm.lib;Pdh.lib;Version.lib;Shlwapi.lib;zlibd.lib;nayuki-qr-code-generator.lib;tinyxml2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>debug64\Ditto.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -455,9 +455,9 @@
     <ClCompile Include="src\RegExFilterHelper.cpp" />
     <ClCompile Include="src\RichEditCtrlEx.cpp" />
     <ClCompile Include="src\RichTextAggregator.cpp" />
-    <!-- Untouched third-party sources (TinyXML's parser, the ruler editor's colour picker and
-         combo boxes, sqlite3mc): their code was never changed for Ditto, so their warnings and
-         code analysis are off (README, Decisions). Changed ones are Ditto's code.
+    <!-- Untouched third-party sources (the ruler editor's colour picker and combo boxes,
+         sqlite3mc): their code was never changed for Ditto, so their warnings and code analysis
+         are off (README, Decisions). Changed ones are Ditto's code.
          The ruleset options are cleared as well: cl lets /analyze:ruleset override /analyze-. -->
     <ClCompile Include="src\RulerRichEditCtrl\External\ColourPicker.cpp">
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
@@ -535,51 +535,13 @@
     <ClCompile Include="src\SymbolEdit.cpp" />
     <ClCompile Include="src\TabCtrl.cpp" />
     <ClCompile Include="src\Theme.cpp" />
-    <ClCompile Include="src\TinyXml\tinystr.cpp">
-      <WarningLevel>TurnOffAllWarnings</WarningLevel>
-      <EnablePREfast>false</EnablePREfast>
-      <PREfastRulesetFile />
-      <PREfastRulesetDirectories />
-      <PREfastProjectDirectory />
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="src\TinyXml\tinyxml.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="src\TinyXml\tinyxmlerror.cpp">
-      <WarningLevel>TurnOffAllWarnings</WarningLevel>
-      <EnablePREfast>false</EnablePREfast>
-      <PREfastRulesetFile />
-      <PREfastRulesetDirectories />
-      <PREfastProjectDirectory />
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="src\TinyXml\tinyxmlparser.cpp">
-      <WarningLevel>TurnOffAllWarnings</WarningLevel>
-      <EnablePREfast>false</EnablePREfast>
-      <PREfastRulesetFile />
-      <PREfastRulesetDirectories />
-      <PREfastProjectDirectory />
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="src\ToolTipEx.cpp" />
     <ClCompile Include="src\TrayWnd.cpp" />
     <ClCompile Include="src\UAC_Helper.cpp" />
     <ClCompile Include="src\UAC_Thread.cpp" />
     <ClCompile Include="src\WildCardMatch.cpp" />
     <ClCompile Include="src\WndEx.cpp" />
+    <ClCompile Include="src\XmlFile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="CP_Main.rc">
@@ -727,8 +689,6 @@
     <ClInclude Include="src\SymbolEdit.h" />
     <ClInclude Include="src\TabCtrl.h" />
     <ClInclude Include="src\Theme.h" />
-    <ClInclude Include="src\TinyXml\tinystr.h" />
-    <ClInclude Include="src\TinyXml\tinyxml.h" />
     <ClInclude Include="src\ToolTipEx.h" />
     <ClInclude Include="src\TrayWnd.h" />
     <ClInclude Include="src\UAC_Helper.h" />
@@ -736,6 +696,7 @@
     <ClInclude Include="src\UnicodeMacros.h" />
     <ClInclude Include="src\WildCardMatch.h" />
     <ClInclude Include="src\WndEx.h" />
+    <ClInclude Include="src\XmlFile.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CP_Main.rgs" />

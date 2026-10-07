@@ -342,15 +342,16 @@ bool CMultiLanguage::LoadLanguageFile(CString csFile)
 		return false;
 	}
 
-	TiXmlDocument doc;
-	if(!doc.LoadFile(csPath.GetBuffer()))
+	// collapsed whitespace, as TinyXML (Ditto's earlier parser) read the language files
+	tinyxml2::XMLDocument doc(true, tinyxml2::COLLAPSE_WHITESPACE);
+	if(CXmlFile::Load(doc, csPath) != tinyxml2::XML_SUCCESS)
 	{
-		m_csLastError.Format(_T("Error loading file %s - reason = %s, Line: %d, column: %d"), csFile.GetString(), CTextConvert::AnsiToUnicode(doc.ErrorDesc()).GetString(),doc.ErrorRow(), doc.ErrorCol());
+		m_csLastError.Format(_T("Error loading file %s - reason = %s, Line: %d"), csFile.GetString(), CTextConvert::AnsiToUnicode(doc.ErrorStr()).GetString(), doc.ErrorLineNum());
 		Log(m_csLastError);
 		return false;
 	}
 
-	TiXmlElement *ItemHeader = doc.FirstChildElement("Ditto_Language_File");
+	tinyxml2::XMLElement *ItemHeader = doc.FirstChildElement("Ditto_Language_File");
 	if(!ItemHeader)
 	{
 		m_csLastError.Format(_T("Error finding the section Ditto_Language_File"));
@@ -390,10 +391,10 @@ bool CMultiLanguage::LoadLanguageFile(CString csFile)
 	return true;
 }
 
-bool CMultiLanguage::LoadSection(TiXmlNode &doc, LANGUAGE_ARRAY &Array, CString csSection)
+bool CMultiLanguage::LoadSection(const tinyxml2::XMLElement &doc, LANGUAGE_ARRAY &Array, CString csSection)
 {
 	CStringA csSectionA = CTextConvert::UnicodeToAnsi(csSection);
-	TiXmlNode *node = doc.FirstChild(csSectionA);
+	const tinyxml2::XMLElement *node = doc.FirstChildElement(csSectionA);
 	if(!node)
 	{
 		m_csLastError.Format(_T("Error finding the section %s"), csSection.GetString());
@@ -402,11 +403,11 @@ bool CMultiLanguage::LoadSection(TiXmlNode &doc, LANGUAGE_ARRAY &Array, CString 
 		return false;
 	}
 
-	TiXmlNode* ForeignNode;
+	const tinyxml2::XMLNode* ForeignNode{};
 	CString csID;
 	CString csLineFeed("\n");
-		
-	TiXmlElement *ItemElement = node->FirstChildElement();
+
+	const tinyxml2::XMLElement *ItemElement = node->FirstChildElement();
 
 	//load all items for this section
 	//they look like
@@ -443,10 +444,10 @@ bool CMultiLanguage::LoadSection(TiXmlNode &doc, LANGUAGE_ARRAY &Array, CString 
 	return true;
 }
 
-bool CMultiLanguage::LoadStringTableSection(TiXmlNode &doc, LANGUAGE_MAP &Map, CString csSection)
+bool CMultiLanguage::LoadStringTableSection(const tinyxml2::XMLElement &doc, LANGUAGE_MAP &Map, CString csSection)
 {
 	CStringA csSectionA = CTextConvert::UnicodeToAnsi(csSection);
-	TiXmlNode *node = doc.FirstChild(csSectionA);
+	const tinyxml2::XMLElement *node = doc.FirstChildElement(csSectionA);
 	if(!node)
 	{
 		CString cs;
@@ -457,9 +458,9 @@ bool CMultiLanguage::LoadStringTableSection(TiXmlNode &doc, LANGUAGE_MAP &Map, C
 	}
 
 	CString csLineFeed("\n");
-	TiXmlNode* ForeignNode;
-		
-	TiXmlElement *ItemElement = node->FirstChildElement();
+	const tinyxml2::XMLNode* ForeignNode{};
+
+	const tinyxml2::XMLElement *ItemElement = node->FirstChildElement();
 
 	//load all items for this section
 	//they look like

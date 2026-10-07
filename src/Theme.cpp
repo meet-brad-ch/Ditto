@@ -124,16 +124,17 @@ bool CTheme::Load(CString csTheme, bool bHeaderOnly, bool bCheckLastWriteTime)
 
 	Log(StrF(_T("Loading Theme %s"), csPath.GetString()));
 
-	TiXmlDocument doc;
-	if(!doc.LoadFile(csPath.GetBuffer()))
+	// collapsed whitespace, as TinyXML (Ditto's earlier parser) read the theme files
+	tinyxml2::XMLDocument doc(true, tinyxml2::COLLAPSE_WHITESPACE);
+	if(CXmlFile::Load(doc, csPath) != tinyxml2::XML_SUCCESS)
 	{
-		m_csLastError.Format(_T("Error loading Theme %s - reason = %hs"), csPath.GetString(), doc.ErrorDesc());
+		m_csLastError.Format(_T("Error loading Theme %s - reason = %hs"), csPath.GetString(), doc.ErrorStr());
 		ASSERT(!m_csLastError);
 		Log(m_csLastError);
 		return false;
 	}
 
-	TiXmlElement *ItemHeader = doc.FirstChildElement("Ditto_Theme_File");
+	const tinyxml2::XMLElement *ItemHeader = doc.FirstChildElement("Ditto_Theme_File");
 	if(!ItemHeader)
 	{
 		m_csLastError.Format(_T("Error finding the section Ditto_Theme_File"));
@@ -256,21 +257,21 @@ COLORREF HslToRgb(float h, float s, float l)
 	return RGB(r, g, b);
 }
 
-bool CTheme::LoadColor(TiXmlElement *pParent, CStringA csNode, COLORREF &Color)
+bool CTheme::LoadColor(const tinyxml2::XMLElement *pParent, CStringA csNode, COLORREF &Color)
 {
 	int intValue = 0;
 	return LoadElement(pParent, csNode, Color, intValue);
 }
 
-bool CTheme::LoadInt(TiXmlElement *pParent, CStringA csNode, int &intValue)
+bool CTheme::LoadInt(const tinyxml2::XMLElement *pParent, CStringA csNode, int &intValue)
 {
 	COLORREF colorValue = 0;
 	return LoadElement(pParent, csNode, colorValue, intValue);
 }
 
-bool CTheme::LoadElement(TiXmlElement *pParent, CStringA csNode, COLORREF &Color, int &intValue)
+bool CTheme::LoadElement(const tinyxml2::XMLElement *pParent, CStringA csNode, COLORREF &Color, int &intValue)
 {
-	TiXmlElement *pColorNode = pParent->FirstChildElement(csNode);
+	const tinyxml2::XMLElement *pColorNode = pParent->FirstChildElement(csNode);
 	if(pColorNode == NULL)
 	{
 		m_csLastError.Format(_T("Theme Load, error loading Node = %hs"), csNode.GetString());
@@ -278,7 +279,7 @@ bool CTheme::LoadElement(TiXmlElement *pParent, CStringA csNode, COLORREF &Color
 		return false;
 	}
 
-	TiXmlNode *pColor = pColorNode->FirstChild();
+	const tinyxml2::XMLNode *pColor = pColorNode->FirstChild();
 	if(pColor == NULL)
 	{
 		m_csLastError.Format(_T("Theme Load, error getting node text for = %hs"), csNode.GetString());

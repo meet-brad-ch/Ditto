@@ -6,6 +6,7 @@
 #include "cp_main.h"
 #include "QListCtrl.h"
 #include "..\Shared\TextConvert.h"
+#include <tinyxml2.h>
 
 // CSymbolEdit
 
@@ -189,43 +190,42 @@ BOOL CSymbolEdit::PreTranslateMessage(MSG* pMsg)
 
 CString CSymbolEdit::SavePastSearches()
 {
-	TiXmlDocument doc;
+	tinyxml2::XMLDocument doc;
 
-	TiXmlElement* outer = new TiXmlElement("PastSearches");
-	doc.LinkEndChild(outer);
+	// the document owns the elements it creates
+	tinyxml2::XMLElement* outer = doc.NewElement("PastSearches");
+	doc.InsertEndChild(outer);
 
 	int count = (int)m_searches.GetCount();
 	for (int i = 0; i < count; i++)
-	{		
-		TiXmlElement* searchElement = new TiXmlElement("Search");
+	{
+		tinyxml2::XMLElement* searchElement = doc.NewElement("Search");
 
 		CStringA t = CTextConvert::UnicodeToUTF8(m_searches[i]);
 		searchElement->SetAttribute("text", t);
 
-		outer->LinkEndChild(searchElement);
+		outer->InsertEndChild(searchElement);
 	}
 
-	TiXmlPrinter printer;
-	printer.SetLineBreak("");
-	doc.Accept(&printer);
-	CString cs = printer.CStr();
-
-	return cs;
+	tinyxml2::XMLPrinter printer(nullptr, true);
+	doc.Print(&printer);
+	// the XML is UTF-8; it was converted as ANSI before, which garbled non-ASCII searches
+	return CTextConvert::Utf8ToUnicode(printer.CStr());
 }
 
 void CSymbolEdit::LoadPastSearches(CString values)
 {
 	m_searches.RemoveAll();
 
-	TiXmlDocument doc;
+	tinyxml2::XMLDocument doc;
 	CStringA xmlA = CTextConvert::UnicodeToUTF8(values);
 	doc.Parse(xmlA);
 
-	TiXmlElement *ItemHeader = doc.FirstChildElement("PastSearches");
+	const tinyxml2::XMLElement *ItemHeader = doc.FirstChildElement("PastSearches");
 
 	if (ItemHeader != NULL)
 	{
-		TiXmlElement *ItemElement = ItemHeader->FirstChildElement();
+		const tinyxml2::XMLElement *ItemElement = ItemHeader->FirstChildElement();
 
 		int count = 0;
 
@@ -233,7 +233,8 @@ void CSymbolEdit::LoadPastSearches(CString values)
 		{
 			if (count < LIST_MAX_COUNT)
 			{
-				CString item = ItemElement->Attribute("text");
+				// the attribute is UTF-8
+				CString item = CTextConvert::Utf8ToUnicode(ItemElement->Attribute("text"));
 
 				CString toAdd = item.Left(MAX_SAVED_SEARCH_LENGTH);
 				if (toAdd != _T(""))

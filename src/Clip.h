@@ -16,7 +16,6 @@
 #include <span>
 #include <string>
 #include <vector>
-#include "tinyxml\tinyxml.h"
 #include "Crc32Dynamic.h"
 #include "ClipRepository.h"
 #include "ClipSavePolicy.h"

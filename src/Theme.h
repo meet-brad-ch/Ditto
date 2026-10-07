@@ -1,7 +1,6 @@
 #pragma once
 
-#include "tinyxml\Tinyxml.h"
-#include "tinyxml\tinystr.h"
+#include "XmlFile.h"
 
 class CTheme
 {
@@ -60,10 +59,10 @@ public:
 	CString LastError() const { return m_csLastError; }
 
 protected:
-	bool LoadElement(TiXmlElement *pParent, CStringA csNode, COLORREF &Color, int &intValue);
+	bool LoadElement(const tinyxml2::XMLElement *pParent, CStringA csNode, COLORREF &Color, int &intValue);
 
-	bool LoadInt(TiXmlElement *pParent, CStringA csNode, int &intValue);
-	bool LoadColor(TiXmlElement *pParent, CStringA csNode, COLORREF &Color);
+	bool LoadInt(const tinyxml2::XMLElement *pParent, CStringA csNode, int &intValue);
+	bool LoadColor(const tinyxml2::XMLElement *pParent, CStringA csNode, COLORREF &Color);
 	void LoadWindowsAccentColor();
 
 protected:

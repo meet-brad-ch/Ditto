@@ -8,7 +8,6 @@
 #include "Misc.h"
 #include "CopyProperties.h"
 #include ".\mainfrm.h"
-#include "tinyxml\tinyxml.h"
 #include "Path.h"
 #include "DittoCopyBuffer.h"
 #include "HotKeys.h"
