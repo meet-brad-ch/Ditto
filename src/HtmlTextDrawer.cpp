@@ -457,7 +457,9 @@ void HtmlTextDrawer::OutputWord(LPCTSTR Start, int TokenLength)
 	if (m_whiteSpace && (m_styles & s_underline) && m_xPos >= m_spaceWidth)
 	{
 		SetLineRect(rc, m_left + m_xPos - m_spaceWidth, m_left + m_xPos);
-		::DrawText(m_hdc, _T(" "), 1, &rc, m_format);
+		// a writable buffer: with DT_MODIFYSTRING, DrawText may append an ellipsis (up to 4 characters)
+		TCHAR space[6]{ _T(' ') };
+		::DrawText(m_hdc, space, 1, &rc, m_format);
 	} /* if */
 }
 
