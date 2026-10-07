@@ -68,11 +68,13 @@ Branch coverage), on failure too. Run time: about 2 min, or about 3.5 min with `
 1. It installs the `vcpkg.json` dependencies, then rebuilds Release|x64 with a log
    (`build\logs\build.log`). The rebuild is full because an incremental build reports only the
    warnings of the files it recompiles.
-   - **Warnings ratchet:** every project builds at `/W4`. The build's warnings, counted per
-     (code, file), may not exceed `tools\baselines\warnings.tsv`.
-   - **Code analysis ratchet (`-Analyze`):** the same rebuild runs `/analyze` with
-     NativeRecommendedRules. Its findings may not exceed `tools\baselines\analyze.tsv`.
-     Without `-Analyze`, static analysis is NOT VERIFIED.
+   - **No warnings:** every project builds at `/W4 /WX` (`Directory.Build.targets`), with linker
+     and librarian warnings as errors too, so any warning fails the build. The build log is
+     also checked for any compiler or linker warning. Untouched third-party files are silenced
+     per file (see Decisions).
+   - **No code analysis findings (`-Analyze`):** the same rebuild runs `/analyze` with
+     NativeRecommendedRules; under `/WX` a finding fails the build. Without `-Analyze`, static
+     analysis is NOT VERIFIED.
 2. It runs `dumpbin /imports` on every `.exe`/`.dll` in `Release64`. No binary may import
    ws2_32, wsock32, mswsock, wininet, winhttp, urlmon, mapi32, dnsapi, iphlpapi, webio or
    httpapi.
@@ -98,14 +100,13 @@ Branch coverage), on failure too. Run time: about 2 min, or about 3.5 min with `
    code must be documented, and any Doxygen warning fails. The files are listed by name in that
    Doxyfile.
 
-`-SkipBuild` skips stage 1, so the warnings and analysis ratchets are NOT VERIFIED.
+`-SkipBuild` skips stage 1, so the warnings and analysis checks are NOT VERIFIED.
 
-**Baselines** (`tools\baselines\*.tsv`, read by `tools\ratchet.ps1`):
-- They hold today's legacy debt: 592 `/W4` warnings, 308 analysis findings and 179 functions at
-  CC 10 or more.
+**Complexity baseline** (`tools\baselines\complexity.tsv`, read by `tools\ratchet.ps1`):
+- It holds the legacy functions at CC 10 or more.
 - A count above its baseline fails, and so does an entry missing from it.
-- `verify.ps1 -UpdateBaselines` rewrites them only when nothing rose, so a baseline can only
-  shrink. Commit the smaller file after a cleanup.
+- `verify.ps1 -UpdateBaselines` rewrites it only when nothing rose, so it can only shrink.
+  Commit the smaller file after a cleanup.
 
 **Planted faults the gates caught:**
 - a seeded `WSAStartup` line and a copied `curl.exe`;

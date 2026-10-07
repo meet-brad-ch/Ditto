@@ -1,7 +1,7 @@
 # Quality gate for the local-only Ditto fork.
 #   1. installs vcpkg.json dependencies, then rebuilds Release|x64 with a build log
-#      - warnings: the build's warnings may not exceed tools\baselines\warnings.tsv
-#      - analyze (-Analyze): code analysis findings may not exceed tools\baselines\analyze.tsv
+#      - warnings: none (every project builds with /W4 /WX; the log is checked too)
+#      - analyze (-Analyze): no code analysis finding (findings are errors under /WX)
 #   2. scans the imports of every built .exe/.dll for network DLLs
 #   3. checks every built binary for ASLR, DEP and Control Flow Guard
 #   4. greps all sources for network APIs and network DLL names
@@ -13,10 +13,10 @@
 #   8. checks with Doxygen that the contract code is fully documented
 # Prints one timestamped line per check and exits 1 on the first failed stage.
 # Usage (repo root):  powershell -NoProfile -ExecutionPolicy Bypass -File tools\verify.ps1 [-SkipBuild] [-UpdateBaselines]
-#   -SkipBuild        reuse the last build (the warnings gates are then NOT VERIFIED)
-#   -Analyze          run MSVC code analysis (/analyze, NativeRecommendedRules) in the rebuild and
-#                     ratchet its findings against tools\baselines\analyze.tsv (about 7 min)
-#   -UpdateBaselines  rewrite the ratchet baselines after a passing run; they may only shrink
+#   -SkipBuild        reuse the last build (the warnings checks are then NOT VERIFIED)
+#   -Analyze          run MSVC code analysis (/analyze, NativeRecommendedRules) in the rebuild; any
+#                     finding fails the build (about 7 min)
+#   -UpdateBaselines  rewrite the complexity baseline after a passing run; it may only shrink
 param([switch] $SkipBuild, [switch] $Analyze, [switch] $UpdateBaselines)
 
 $ErrorActionPreference = 'Stop'
@@ -106,22 +106,23 @@ if (-not $SkipBuild) {
     Say ("build: OK in {0:N1} min" -f $minutes)
     $report['Build'] = "PASS (Release|x64 rebuild, {0} projects, {1:N1} min)" -f $outputs.Count, $minutes
 
-    $warningArgs = @{ Repo = $repo; Log = $buildLog; Kind = 'build' }
-    if ($UpdateBaselines) { $warningArgs['Update'] = $true }
-    $gate = Invoke-Gate 'warnings.ps1' $warningArgs
-    if ($gate.ExitCode -ne 0) { Fail 'warnings above the baseline' 'Lint' }
-    $report['Lint'] = "PASS (/W4 warnings ratchet: $($gate.Summary))"
-    if ($Analyze) {
-        $warningArgs['Kind'] = 'analyze'
-        $gate = Invoke-Gate 'warnings.ps1' $warningArgs
-        if ($gate.ExitCode -ne 0) { Fail 'code analysis findings above the baseline' 'Static analysis' }
-        $report['Static analysis'] = "PASS (/analyze NativeRecommendedRules ratchet: $($gate.Summary))"
+    # Every project builds with /W4 /WX (Directory.Build.targets): a compiler warning or, under
+    # -Analyze, a code analysis finding already failed the build above. The log is checked as
+    # well, for any compiler or linker warning a project could still let through.
+    $warnings = @([IO.File]::ReadLines($buildLog) | Where-Object { $_ -match ':\s+(?:command line\s+)?warning\s+(?:C|LNK)\d+\s*:' } |
+        ForEach-Object { ($_ -replace '^\s*\d+>', '').Trim() } | Sort-Object -Unique)
+    if ($warnings.Count -gt 0) {
+        $warnings | Select-Object -First 30 | ForEach-Object { Say "  $_" }
+        Fail "$($warnings.Count) warnings in the build log" 'Lint'
     }
+    Say 'warnings: ok   none (/W4 /WX in every project)'
+    $report['Lint'] = 'PASS (zero compiler and linker warnings, /W4 /WX)'
+    if ($Analyze) { $report['Static analysis'] = 'PASS (zero /analyze NativeRecommendedRules findings, as errors under /WX)' }
     else { $report['Static analysis'] = 'NOT VERIFIED (run with -Analyze)' }
 }
 else {
     $report['Build'] = 'NOT VERIFIED (-SkipBuild: last build reused)'
-    $report['Lint'] = 'NOT VERIFIED (-SkipBuild: no fresh build log)'
+    $report['Lint'] = 'NOT VERIFIED (-SkipBuild: no fresh build)'
     $report['Static analysis'] = 'NOT VERIFIED (-SkipBuild)'
 }
 

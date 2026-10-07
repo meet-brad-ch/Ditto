@@ -1,6 +1,7 @@
 # CI for the local-only Ditto fork: builds the whole package and runs every gate.
-# - tools\verify.ps1 -Analyze: Release|x64 rebuild with /analyze, the warnings/analysis/complexity
-#   ratchets, network and hardening scans, every unit test on its own under ASan, coverage, docs;
+# - tools\verify.ps1 -Analyze: Release|x64 rebuild with /analyze and /WX (no warnings, no
+#   findings), the complexity ratchet, network and hardening scans, every unit test on its own,
+#   coverage, docs;
 # - a Debug|x64 build (catches configuration-only breakage);
 # - the Inno Setup installer.
 # Results: a unit-test table in the run summary; the installer, binaries, test XML, coverage and

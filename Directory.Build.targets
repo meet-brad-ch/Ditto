@@ -13,8 +13,10 @@
            ICU_Loader) keep it; the legacy MFC code (118 conformance errors) stays /permissive until
            Phase D fixes it. -->
       <ConformanceMode Condition="'%(ClCompile.ConformanceMode)' != 'true'">false</ConformanceMode>
-      <!-- /W4 everywhere; the legacy warnings are held by the ratchet in tools\baselines\warnings.tsv -->
+      <!-- /W4 /WX everywhere (owner, 2026-10-07): a warning, or a code analysis finding when
+           analysis runs, fails the build. Untouched third-party files are silenced per file. -->
       <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
       <!-- Headers included with angle brackets (Windows SDK, MFC, the STL, vcpkg's gtest and zlib)
            are external: no warnings and no code analysis for them (/external:anglebrackets
            /external:W0 /analyze:external-). Untouched third-party sources in the repo are
@@ -27,6 +29,13 @@
       <!-- /ZI (Edit and Continue) cannot be combined with /guard:cf: use a plain program database -->
       <DebugInformationFormat Condition="'%(ClCompile.DebugInformationFormat)' == 'EditAndContinue'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
+    <!-- linker and librarian warnings are errors too -->
+    <Link>
+      <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
+    </Link>
+    <Lib>
+      <TreatLibWarningAsErrors>true</TreatLibWarningAsErrors>
+    </Lib>
   </ItemDefinitionGroup>
   <Target Name="DittoRequireVcpkg" BeforeTargets="PrepareForBuild">
     <Error Condition="!Exists('$(VcpkgRoot)\scripts\buildsystems\msbuild\vcpkg.targets')"
