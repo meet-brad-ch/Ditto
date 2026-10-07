@@ -5569,23 +5569,6 @@ void CQPasteWnd::OnShowGroupsTop()
 	m_lstHeader.HidePopup(true);
 
 	OnShowGroupsBottom();
-	return;
-	m_GroupTree.m_bHide = false;
-	m_bHideWnd = false;
-
-	CRect crList;
-	m_lstHeader.GetWindowRect(crList);
-
-	CRect cr(crList.left, crList.top, crList.left + crList.Width(), crList.top + 200);
-
-	m_GroupTree.MoveWindow(cr);
-	m_GroupTree.m_selectedFolderID = theApp.m_GroupID;
-	m_GroupTree.FillTree();
-	m_GroupTree.ShowWindow(SW_SHOW);
-
-
-	m_GroupTree.m_bHide = true;
-	m_bHideWnd = true;
 }
 
 void CQPasteWnd::OnShowGroupsBottom()

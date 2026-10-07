@@ -1153,7 +1153,8 @@ sqlite3_stmt* CppSQLite3DB::compile(const TCHAR* szSQL)
 ** string, excluding the "\000" terminator.
 */
 int sqlite3_encode_binary(const unsigned char *in, int n, unsigned char *out){
-  int i, j, e, m;
+  // e: the loop below always picks an offset (its smallest sum is below n); 1 is a valid one
+  int i{}, j{}, e{1}, m{};
   int cnt[256];
   if( n<=0 ){
     out[0] = 'x';

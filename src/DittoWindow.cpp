@@ -654,59 +654,6 @@ long CDittoWindow::DoNcLButtonUp(CWnd *pWnd, UINT /*nHitTest*/, CPoint point)
 	return lRet;
 }
 
-void CDittoWindow::DoNcMouseMove(CWnd *pWnd, UINT /*nHitTest*/, CPoint point)
-{
-	return;
-	CRect crWindow;
-	pWnd->GetWindowRect(crWindow);
-
-	CPoint localPoint(point.x - crWindow.left, point.y - crWindow.top);
-
-	if(m_crCloseBT.PtInRect(localPoint))
-	{
-		m_bMouseOverClose = true;
-		RedrawWindow(pWnd->m_hWnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE);
-	}
-	else if(m_bMouseOverClose)
-	{
-		m_bMouseOverClose = false;
-		RedrawWindow(pWnd->m_hWnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE);
-	}
-
-	if(m_crChevronBT.PtInRect(localPoint))
-	{
-		m_bMouseOverChevron = true;
-		RedrawWindow(pWnd->m_hWnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE);
-	}
-	else if(m_bMouseOverChevron)
-	{
-		m_bMouseOverChevron = false;
-		RedrawWindow(pWnd->m_hWnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE);
-	}
-
-	if(m_crMinimizeBT.PtInRect(localPoint))
-	{
-		m_bMouseOverMinimize = true;
-		RedrawWindow(pWnd->m_hWnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE);
-	}
-	else if(m_bMouseOverMinimize)
-	{
-		m_bMouseOverMinimize = false;
-		RedrawWindow(pWnd->m_hWnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE);
-	}
-
-	if(m_crMaximizeBT.PtInRect(localPoint))
-	{
-		m_bMouseOverMaximize = true;
-		RedrawWindow(pWnd->m_hWnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE);
-	}
-	else if(m_bMouseOverMaximize)
-	{
-		m_bMouseOverMaximize = false;
-		RedrawWindow(pWnd->m_hWnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE);
-	}
-}
-
 bool CDittoWindow::DoPreTranslateMessage(MSG* /*pMsg*/)
 {
 	return true;

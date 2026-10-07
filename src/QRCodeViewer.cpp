@@ -35,7 +35,6 @@ BEGIN_MESSAGE_MAP(QRCodeViewer, CWnd)
 	ON_WM_NCPAINT()
 	ON_WM_NCCALCSIZE()
 	ON_WM_NCLBUTTONDOWN()
-	ON_WM_NCMOUSEMOVE()
 	ON_WM_NCLBUTTONUP()
 	ON_WM_ERASEBKGND()
 	ON_WM_CTLCOLOR()
@@ -244,13 +243,6 @@ void QRCodeViewer::OnNcLButtonUp(UINT nHitTest, CPoint point)
 	KillTimer(TIMER_BUTTON_UP);
 
 	CWnd::OnNcLButtonUp(nHitTest, point);
-}
-
-void QRCodeViewer::OnNcMouseMove(UINT nHitTest, CPoint point) 
-{
-	m_DittoWindow.DoNcMouseMove(this, nHitTest, point);
-
-	CWnd::OnNcMouseMove(nHitTest, point);
 }
 
 HBRUSH QRCodeViewer::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)

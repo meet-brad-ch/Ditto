@@ -535,9 +535,9 @@ void CCopyProperties::OnLbnSelchangeCopyData()
 
 		items.SortDescending();
 
-		for (int i = 0; i < selCount; i++)
+		// the MD5 shown is the one of the first selected format (highest row after the sort)
 		{
-			int row = items[i];
+			int row = items[0];
 			int itemData = (int)m_lCopyData.GetItemData(row);
 
 			CClip *pClip = NULL;
@@ -580,8 +580,6 @@ void CCopyProperties::OnLbnSelchangeCopyData()
 					}
 				}
 			}
-
-			break;
 		}
 	}
 }

@@ -27,7 +27,6 @@ public:
 	UINT DoNcHitTest(CWnd *pWnd, CPoint point);
 	long DoNcLButtonUp(CWnd *pWnd, UINT nHitTest, CPoint point);
 	int DoNcLButtonDown(CWnd *pWnd, UINT nHitTest, CPoint point);
-	void DoNcMouseMove(CWnd *pWnd, UINT nHitTest, CPoint point) ;
 	bool DoPreTranslateMessage(MSG* pMsg);
 	void SetCaptionOn(CWnd *pWnd, int nPos, bool bOnstartup, int captionSize, int captionFontSize);
 	bool SetCaptionColors(COLORREF left, COLORREF right, COLORREF border);

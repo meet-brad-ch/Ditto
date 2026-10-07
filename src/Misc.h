@@ -202,10 +202,10 @@ int WordCount(const CString& text);
 class VersionInfo
 {
 public:
-	int Major;
-	int Minor;
-	int Revision;
-	int Build;
+	int Major{};
+	int Minor{};
+	int Revision{};
+	int Build{};
 };
 
 VersionInfo GetRunningVersion();

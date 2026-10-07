@@ -38,7 +38,6 @@ BEGIN_MESSAGE_MAP(CEditFrameWnd, CFrameWnd)
 	ON_WM_NCHITTEST()
 	ON_WM_NCLBUTTONDOWN()
 	ON_WM_NCLBUTTONUP()
-	ON_WM_NCMOUSEMOVE()
 	ON_WM_NCLBUTTONDBLCLK()
 	ON_WM_WINDOWPOSCHANGING()
 	ON_WM_TIMER()
@@ -199,13 +198,6 @@ void CEditFrameWnd::OnNcLButtonUp(UINT nHitTest, CPoint point)
 	KillTimer(TIMER_BUTTON_UP);
 
 	CFrameWnd::OnNcLButtonUp(nHitTest, point);
-}
-
-void CEditFrameWnd::OnNcMouseMove(UINT nHitTest, CPoint point)
-{
-	m_DittoWindow.DoNcMouseMove(this, nHitTest, point);
-
-	CFrameWnd::OnNcMouseMove(nHitTest, point);
 }
 
 BOOL CEditFrameWnd::PreTranslateMessage(MSG* pMsg)

@@ -1051,8 +1051,6 @@ void CToolTipEx::OnNcLButtonUp(UINT nHitTest, CPoint point)
 
 void CToolTipEx::OnNcMouseMove(UINT nHitTest, CPoint point) 
 {
-	m_DittoWindow.DoNcMouseMove(this, nHitTest, point);
-
 	if ((m_bMaxSetTimer == false) && m_DittoWindow.m_bMinimized)
 	{
 		COleDateTimeSpan sp = COleDateTime::GetCurrentTime() - m_DittoWindow.m_TimeMinimized;
