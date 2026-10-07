@@ -420,29 +420,8 @@ BOOL CTrayNotifyIcon::Create(_In_ CWindow* pNotifyWnd, _In_ UINT uID, _In_ LPCTS
   ATLASSERT(nNotifyMessage >= WM_USER); //Make sure we avoid conflict with other messages
 
   //Load up the menu resource which is to be used as the context menu
-  if (!m_Menu.LoadMenu(uMenuID == 0 ? uID : uMenuID))
-  {
-    ATLASSERT(FALSE);
+  if (!LoadContextMenu(uID, uMenuID))
     return FALSE;
-  }
-#ifdef _AFX
-  CMenu* pSubMenu = m_Menu.GetSubMenu(0);
-  if (pSubMenu == NULL) 
-  {
-    ATLASSERT(FALSE); //Your menu resource has been designed incorrectly
-    return FALSE;
-  }
-  //Make the specified menu item the default (bold font)
-  pSubMenu->SetDefaultItem(m_nDefaultMenuItem, m_bDefaultMenuItemByPos);
-#else
-  CMenuHandle subMenu = m_Menu.GetSubMenu(0);
-  if (!subMenu.IsMenu())
-  {
-    ATLASSERT(FALSE); //Your menu resource has been designed incorrectly
-    return FALSE;
-  }
-  subMenu.SetMenuDefaultItem(m_nDefaultMenuItem, m_bDefaultMenuItemByPos);
-#endif //#ifdef _AFX
 
   //Create the helper window
   if (!CreateHelperWindow())
@@ -457,23 +436,115 @@ BOOL CTrayNotifyIcon::Create(_In_ CWindow* pNotifyWnd, _In_ UINT uID, _In_ LPCTS
   m_NotifyIconData.hIcon = hIcon;
   _tcsncpy_s(m_NotifyIconData.szTip, _countof(m_NotifyIconData.szTip), pszTooltipText, _TRUNCATE);
 
+  ApplyHiddenState(bShow);
+
+  //Turn on Shell v5 style behaviour
+  return AddIconToTray(bShow);
+}
+
+BOOL CTrayNotifyIcon::LoadContextMenu(_In_ UINT uID, _In_ UINT uMenuID)
+{
+  if (!m_Menu.LoadMenu(uMenuID == 0 ? uID : uMenuID))
+  {
+    ATLASSERT(FALSE);
+    return FALSE;
+  }
+#ifdef _AFX
+  CMenu* pSubMenu = m_Menu.GetSubMenu(0);
+  if (pSubMenu == NULL)
+  {
+    ATLASSERT(FALSE); //Your menu resource has been designed incorrectly
+    return FALSE;
+  }
+  //Make the specified menu item the default (bold font)
+  pSubMenu->SetDefaultItem(m_nDefaultMenuItem, m_bDefaultMenuItemByPos);
+#else
+  CMenuHandle subMenu = m_Menu.GetSubMenu(0);
+  if (!subMenu.IsMenu())
+  {
+    ATLASSERT(FALSE); //Your menu resource has been designed incorrectly
+    return FALSE;
+  }
+  //Make the specified menu item the default (bold font)
+  subMenu.SetMenuDefaultItem(m_nDefaultMenuItem, m_bDefaultMenuItemByPos);
+#endif //#ifdef _AFX
+  return TRUE;
+}
+
+void CTrayNotifyIcon::ApplyHiddenState(_In_ BOOL bShow)
+{
   if (!bShow)
   {
     m_NotifyIconData.uFlags |= NIF_STATE;
     m_NotifyIconData.dwState = NIS_HIDDEN;
     m_NotifyIconData.dwStateMask = NIS_HIDDEN;
   }
+}
+
+BOOL CTrayNotifyIcon::AddIconToTray(_In_ BOOL bShow)
+{
   m_bCreated = Shell_NotifyIcon(NIM_ADD, &m_NotifyIconData);
   if (m_bCreated)
   {
     if (!bShow)
       m_bHidden = TRUE;
-    
-    //Turn on Shell v5 style behaviour
+
+    //Turn on Shell v5 tray icon behaviour
     SetVersion(NOTIFYICON_VERSION);
   }
-  
+
   return m_bCreated;
+}
+
+void CTrayNotifyIcon::ApplyBalloonStyle(_In_ BalloonStyle style)
+{
+  switch (style)
+  {
+    case Warning:
+    {
+      m_NotifyIconData.dwInfoFlags = NIIF_WARNING;
+      break;
+    }
+    case Error:
+    {
+      m_NotifyIconData.dwInfoFlags = NIIF_ERROR;
+      break;
+    }
+    case Info:
+    {
+      m_NotifyIconData.dwInfoFlags = NIIF_INFO;
+      break;
+    }
+    case None:
+    {
+      m_NotifyIconData.dwInfoFlags = NIIF_NONE;
+      break;
+    }
+    case User:
+    {
+      m_NotifyIconData.dwInfoFlags = NIIF_USER;
+      break;
+    }
+    default:
+    {
+      ATLASSERT(FALSE);
+      break;
+    }
+  }
+}
+
+void CTrayNotifyIcon::ApplyBalloonFlags(_In_ BOOL bNoSound, _In_ BOOL bLargeIcon, _In_ BOOL bRealtime)
+{
+  if (bNoSound)
+    m_NotifyIconData.dwInfoFlags |= NIIF_NOSOUND;
+  if (bLargeIcon)
+  {
+    m_NotifyIconData.dwInfoFlags |= NIIF_LARGE_ICON;
+  }
+  if (bRealtime)
+  {
+    m_NotifyIconData.uFlags |= NIF_REALTIME;
+  }
 }
 
 BOOL CTrayNotifyIcon::SetVersion(_In_ UINT uVersion)
@@ -576,30 +647,8 @@ BOOL CTrayNotifyIcon::Create(_In_ CWindow* pNotifyWnd, _In_ UINT uID, _In_ LPCTS
   ATLASSERT(nNotifyMessage >= WM_USER); //Make sure we avoid conflict with other messages
 
   //Load up the menu resource which is to be used as the context menu
-  if (!m_Menu.LoadMenu(uMenuID == 0 ? uID : uMenuID))
-  {
-    ATLASSERT(FALSE);
+  if (!LoadContextMenu(uID, uMenuID))
     return FALSE;
-  }
-#ifdef _AFX
-  CMenu* pSubMenu = m_Menu.GetSubMenu(0);
-  if (pSubMenu == NULL) 
-  {
-    ATLASSERT(FALSE); //Your menu resource has been designed incorrectly
-    return FALSE;
-  }
-  //Make the specified menu item the default (bold font)
-  pSubMenu->SetDefaultItem(m_nDefaultMenuItem, m_bDefaultMenuItemByPos);
-#else
-  CMenuHandle subMenu = m_Menu.GetSubMenu(0);
-  if (!subMenu.IsMenu()) 
-  {
-    ATLASSERT(FALSE); //Your menu resource has been designed incorrectly
-    return FALSE;
-  }
-  //Make the specified menu item the default (bold font)
-  subMenu.SetMenuDefaultItem(m_nDefaultMenuItem, m_bDefaultMenuItemByPos);
-#endif //#ifdef _AFX
 
   //Create the helper window
   if (!CreateHelperWindow())
@@ -616,79 +665,27 @@ BOOL CTrayNotifyIcon::Create(_In_ CWindow* pNotifyWnd, _In_ UINT uID, _In_ LPCTS
   _tcsncpy_s(m_NotifyIconData.szInfo, _countof(m_NotifyIconData.szInfo), pszBalloonText, _TRUNCATE);
   _tcsncpy_s(m_NotifyIconData.szInfoTitle, _countof(m_NotifyIconData.szInfoTitle), pszBalloonCaption, _TRUNCATE);
   m_NotifyIconData.uTimeout = nTimeout;
-  switch (style)
+  if (style == User)
   {
-    case Warning:
+    if (hBalloonIcon != NULL)
     {
-      m_NotifyIconData.dwInfoFlags = NIIF_WARNING;
-      break;
+      m_NotifyIconData.hBalloonIcon = hBalloonIcon;
     }
-    case Error:
+    else
     {
-      m_NotifyIconData.dwInfoFlags = NIIF_ERROR;
-      break;
-    }
-    case Info:
-    {
-      m_NotifyIconData.dwInfoFlags = NIIF_INFO;
-      break;
-    }
-    case None:
-    {
-      m_NotifyIconData.dwInfoFlags = NIIF_NONE;
-      break;
-    }
-    case User:
-    {
-      if (hBalloonIcon != NULL)
-      {
-        m_NotifyIconData.hBalloonIcon = hBalloonIcon;
-      }
-      else
-      {
-        ATLASSERT(hIcon != NULL); //You forget to provide a user icon
-      }
-      m_NotifyIconData.dwInfoFlags = NIIF_USER;
-      break;
-    }
-    default:
-    {
-      ATLASSERT(FALSE);
-      break;
+      ATLASSERT(hIcon != NULL); //You forget to provide a user icon
     }
   }
-  if (bNoSound)
-    m_NotifyIconData.dwInfoFlags |= NIIF_NOSOUND;
-  if (bLargeIcon)
-  {
-    m_NotifyIconData.dwInfoFlags |= NIIF_LARGE_ICON;
-  }
-  if (bRealtime)
-  {
-    m_NotifyIconData.uFlags |= NIF_REALTIME;
-  }
-  if (!bShow)
-  {
-    m_NotifyIconData.uFlags |= NIF_STATE;
-    m_NotifyIconData.dwState = NIS_HIDDEN;
-    m_NotifyIconData.dwStateMask = NIS_HIDDEN;
-  }
+  ApplyBalloonStyle(style);
+  ApplyBalloonFlags(bNoSound, bLargeIcon, bRealtime);
+  ApplyHiddenState(bShow);
   if (bQuietTime)
   {
     m_NotifyIconData.dwInfoFlags |= NIIF_RESPECT_QUIET_TIME;
   }
-  
-  m_bCreated = Shell_NotifyIcon(NIM_ADD, &m_NotifyIconData);
-  if (m_bCreated)
-  {
-    if (!bShow)
-      m_bHidden = TRUE;
-  
-    //Turn on Shell v5 tray icon behaviour
-    SetVersion(NOTIFYICON_VERSION);
-  }
 
-  return m_bCreated;
+  //Turn on Shell v5 tray icon behaviour
+  return AddIconToTray(bShow);
 }
 
 #ifdef _AFX
@@ -742,56 +739,21 @@ BOOL CTrayNotifyIcon::SetBalloonDetails(_In_ LPCTSTR pszBalloonText, _In_ LPCTST
   _tcsncpy_s(m_NotifyIconData.szInfo, _countof(m_NotifyIconData.szInfo), pszBalloonText, _TRUNCATE);
   _tcsncpy_s(m_NotifyIconData.szInfoTitle, _countof(m_NotifyIconData.szInfoTitle), pszBalloonCaption, _TRUNCATE);
   m_NotifyIconData.uTimeout = nTimeout;
-  switch (style)
+  if (style == User)
   {
-    case Warning:
+    if (hBalloonIcon != NULL)
     {
-      m_NotifyIconData.dwInfoFlags = NIIF_WARNING;
-      break;
+      m_NotifyIconData.hBalloonIcon = hBalloonIcon;
     }
-    case Error:
+    else
     {
-      m_NotifyIconData.dwInfoFlags = NIIF_ERROR;
-      break;
-    }
-    case Info:
-    {
-      m_NotifyIconData.dwInfoFlags = NIIF_INFO;
-      break;
-    }
-    case None:
-    {
-      m_NotifyIconData.dwInfoFlags = NIIF_NONE;
-      break;
-    }
-    case User:
-    {
-      if (hBalloonIcon != NULL)
-      {
-        m_NotifyIconData.hBalloonIcon = hBalloonIcon;
-      }
-      else
-      {
-        ATLASSERT(hUserIcon != NULL); //You forget to provide a user icon
-        m_NotifyIconData.uFlags |= NIF_ICON;
-        m_NotifyIconData.hIcon = hUserIcon;
-      }
-        
-      m_NotifyIconData.dwInfoFlags = NIIF_USER;
-      break;
-    }
-    default:
-    {
-      ATLASSERT(FALSE);
-      break;
+      ATLASSERT(hUserIcon != NULL); //You forget to provide a user icon
+      m_NotifyIconData.uFlags |= NIF_ICON;
+      m_NotifyIconData.hIcon = hUserIcon;
     }
   }
-  if (bNoSound)
-    m_NotifyIconData.dwInfoFlags |= NIIF_NOSOUND;
-  if (bLargeIcon)
-    m_NotifyIconData.dwInfoFlags |= NIIF_LARGE_ICON;
-  if (bRealtime)
-    m_NotifyIconData.uFlags |= NIF_REALTIME;
+  ApplyBalloonStyle(style);
+  ApplyBalloonFlags(bNoSound, bLargeIcon, bRealtime);
 
   return Shell_NotifyIcon(NIM_MODIFY, &m_NotifyIconData);
 }
@@ -1024,42 +986,62 @@ LRESULT CTrayNotifyIcon::OnTrayNotification(WPARAM wParam, LPARAM lParam)
   //Show the context menu or handle the double click
   if (bShowMenu || bDoubleClick || bSingleClick)
   {
-  #ifdef _AFX
-    CMenu* pSubMenu = m_Menu.GetSubMenu(0);
-    ATLASSUME(pSubMenu != NULL); //Your menu resource has been designed incorrectly
-  #else
-    CMenuHandle subMenu = m_Menu.GetSubMenu(0);
-    ATLASSERT(subMenu.IsMenu());
-  #endif //#ifdef _AFX
-  
     if (bShowMenu)
     {
-      CPoint ptCursor;
-      GetCursorPos(&ptCursor);
-      ::SetForegroundWindow(m_NotifyIconData.hWnd);  
-    #ifdef _AFX
-      ::TrackPopupMenu(pSubMenu->m_hMenu, TPM_LEFTBUTTON, ptCursor.x, ptCursor.y, 0, m_NotifyIconData.hWnd, NULL);
-    #else
-      ::TrackPopupMenu(subMenu, TPM_LEFTBUTTON, ptCursor.x, ptCursor.y, 0, m_NotifyIconData.hWnd, NULL);
-    #endif //#ifdef _AFX
-      ::PostMessage(m_NotifyIconData.hWnd, WM_NULL, 0, 0);
+      ShowTrayContextMenu();
     }
-    else if (bDoubleClick || bSingleClick) //double click received, the default action is to execute first menu item 
+    else if (bDoubleClick || bSingleClick) //double click received, the default action is to execute first menu item
     {
-      ::SetForegroundWindow(m_NotifyIconData.hWnd);
-    #ifdef _AFX
-      UINT nDefaultItem = pSubMenu->GetDefaultItem(GMDI_GOINTOPOPUPS, FALSE);
-    #else
-      UINT nDefaultItem = subMenu.GetMenuDefaultItem(FALSE, GMDI_GOINTOPOPUPS);
-    #endif //#ifdef _AFX
-      if (nDefaultItem != -1)
-        ::SendMessage(m_NotifyIconData.hWnd, WM_COMMAND, nDefaultItem, 0);
+      RunTrayDefaultMenuItem();
     }
   }
 
   return 1; // handled
 }
 
+void CTrayNotifyIcon::ShowTrayContextMenu()
+{
+#ifdef _AFX
+  CMenu* pSubMenu = m_Menu.GetSubMenu(0);
+  ATLASSUME(pSubMenu != NULL); //Your menu resource has been designed incorrectly
+#else
+  CMenuHandle subMenu = m_Menu.GetSubMenu(0);
+  ATLASSERT(subMenu.IsMenu());
+#endif //#ifdef _AFX
+
+  CPoint ptCursor;
+  GetCursorPos(&ptCursor);
+  ::SetForegroundWindow(m_NotifyIconData.hWnd);
+#ifdef _AFX
+  ::TrackPopupMenu(pSubMenu->m_hMenu, TPM_LEFTBUTTON, ptCursor.x, ptCursor.y, 0, m_NotifyIconData.hWnd, NULL);
+#else
+  ::TrackPopupMenu(subMenu, TPM_LEFTBUTTON, ptCursor.x, ptCursor.y, 0, m_NotifyIconData.hWnd, NULL);
+#endif //#ifdef _AFX
+  ::PostMessage(m_NotifyIconData.hWnd, WM_NULL, 0, 0);
+}
+
+void CTrayNotifyIcon::RunTrayDefaultMenuItem()
+{
+#ifdef _AFX
+  CMenu* pSubMenu = m_Menu.GetSubMenu(0);
+  ATLASSUME(pSubMenu != NULL); //Your menu resource has been designed incorrectly
+#else
+  CMenuHandle subMenu = m_Menu.GetSubMenu(0);
+  ATLASSERT(subMenu.IsMenu());
+#endif //#ifdef _AFX
+
+  ::SetForegroundWindow(m_NotifyIconData.hWnd);
+#ifdef _AFX
+  UINT nDefaultItem = pSubMenu->GetDefaultItem(GMDI_GOINTOPOPUPS, FALSE);
+#else
+  UINT nDefaultItem = subMenu.GetMenuDefaultItem(FALSE, GMDI_GOINTOPOPUPS);
+#endif //#ifdef _AFX
+  if (nDefaultItem != -1)
+    ::SendMessage(m_NotifyIconData.hWnd, WM_COMMAND, nDefaultItem, 0);
+}
+
+//One definition per framework (MFC or ATL/WTL): the same steps, with that framework's window and DC types
+#ifdef _AFX
 BOOL CTrayNotifyIcon::GetDynamicDCAndBitmap(_In_ CDC* pDC, _In_ CBitmap* pBitmap)
 {
   //Validate our parameters
@@ -1067,62 +1049,34 @@ BOOL CTrayNotifyIcon::GetDynamicDCAndBitmap(_In_ CDC* pDC, _In_ CBitmap* pBitmap
   ATLASSUME(pBitmap != NULL);
 
   //Get the HWND for the desktop
-#ifdef _AFX
   CWnd* pWndScreen = CWnd::GetDesktopWindow();
   if (pWndScreen == NULL)
     return FALSE;
-#else
-  CWindow WndScreen(::GetDesktopWindow());
-  if (!WndScreen.IsWindow())
-    return FALSE;
-#endif //#ifdef _AFX
 
   //Get the desktop HDC to create a compatible bitmap from
-#ifdef _AFX
   CDC* pDCScreen = pWndScreen->GetDC();
   if (pDCScreen == NULL)
     return FALSE;
-#else
-  CDC DCScreen(WndScreen.GetDC());
-  if (DCScreen.IsNull())
-    return FALSE;
-#endif //#ifdef _AFX
 
   //Get the width and height of a small icon
   int w = GetSystemMetrics(SM_CXSMICON);
   int h = GetSystemMetrics(SM_CYSMICON);
 
-  //Create an off-screen bitmap that the dynamic tray icon 
+  //Create an off-screen bitmap that the dynamic tray icon
   //can be drawn into (Compatible with the desktop DC)
-#ifdef _AFX
   BOOL bSuccess = pBitmap->CreateCompatibleBitmap(pDCScreen, w, h);
-#else
-  BOOL bSuccess = (pBitmap->CreateCompatibleBitmap(DCScreen.operator HDC(), w, h) != NULL);
-#endif //#ifdef _AFX
   if (!bSuccess)
   {
-  #ifdef _AFX
     pWndScreen->ReleaseDC(pDCScreen);
-  #else
-    WndScreen.ReleaseDC(DCScreen);
-  #endif //#ifdef _AFX
     return FALSE;
   }
 
   //Get a HDC to the newly created off-screen bitmap
-#ifdef _AFX
   bSuccess = pDC->CreateCompatibleDC(pDCScreen);
-#else
-  bSuccess = (pDC->CreateCompatibleDC(DCScreen.operator HDC()) != NULL);
-#endif //#ifdef _AFX
   if (!bSuccess)
   {
-  //Release the Screen DC now that we are finished with it
-  #ifdef _AFX
+    //Release the Screen DC now that we are finished with it
     pWndScreen->ReleaseDC(pDCScreen);
-  #else
-    WndScreen.ReleaseDC(DCScreen);
-  #endif //#ifdef _AFX
 
     //Free up the bitmap now that we are finished with it
     pBitmap->DeleteObject();
@@ -1131,21 +1085,65 @@ BOOL CTrayNotifyIcon::GetDynamicDCAndBitmap(_In_ CDC* pDC, _In_ CBitmap* pBitmap
   }
 
   //Select the bitmap into the offscreen DC
-#ifdef _AFX
   pDC->SelectObject(pBitmap);
-#else
-  pDC->SelectBitmap(pBitmap->operator HBITMAP());
-#endif //#ifdef _AFX
 
   //Release the Screen DC now that we are finished with it
-#ifdef _AFX
   pWndScreen->ReleaseDC(pDCScreen);
-#else
-  WndScreen.ReleaseDC(DCScreen);
-#endif //#ifdef _AFX
 
   return TRUE;
 }
+#else
+BOOL CTrayNotifyIcon::GetDynamicDCAndBitmap(_In_ CDC* pDC, _In_ CBitmap* pBitmap)
+{
+  //Validate our parameters
+  ATLASSUME(pDC != NULL);
+  ATLASSUME(pBitmap != NULL);
+
+  //Get the HWND for the desktop
+  CWindow WndScreen(::GetDesktopWindow());
+  if (!WndScreen.IsWindow())
+    return FALSE;
+
+  //Get the desktop HDC to create a compatible bitmap from
+  CDC DCScreen(WndScreen.GetDC());
+  if (DCScreen.IsNull())
+    return FALSE;
+
+  //Get the width and height of a small icon
+  int w = GetSystemMetrics(SM_CXSMICON);
+  int h = GetSystemMetrics(SM_CYSMICON);
+
+  //Create an off-screen bitmap that the dynamic tray icon
+  //can be drawn into (Compatible with the desktop DC)
+  BOOL bSuccess = (pBitmap->CreateCompatibleBitmap(DCScreen.operator HDC(), w, h) != NULL);
+  if (!bSuccess)
+  {
+    WndScreen.ReleaseDC(DCScreen);
+    return FALSE;
+  }
+
+  //Get a HDC to the newly created off-screen bitmap
+  bSuccess = (pDC->CreateCompatibleDC(DCScreen.operator HDC()) != NULL);
+  if (!bSuccess)
+  {
+    //Release the Screen DC now that we are finished with it
+    WndScreen.ReleaseDC(DCScreen);
+
+    //Free up the bitmap now that we are finished with it
+    pBitmap->DeleteObject();
+
+    return FALSE;
+  }
+
+  //Select the bitmap into the offscreen DC
+  pDC->SelectBitmap(pBitmap->operator HBITMAP());
+
+  //Release the Screen DC now that we are finished with it
+  WndScreen.ReleaseDC(DCScreen);
+
+  return TRUE;
+}
+#endif //#ifdef _AFX
 
 BOOL CTrayNotifyIcon::StartAnimation(_In_ HICON* phIcons, _In_ int nNumIcons, _In_ DWORD dwDelay)
 {

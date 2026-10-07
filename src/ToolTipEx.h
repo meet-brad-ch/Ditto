@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <memory>
 
 #include "RichEditCtrlEx.h"
@@ -153,4 +154,107 @@ public:
 	afx_msg void OnFirstViewImage();
 	afx_msg void OnUpdateFirstViewtext(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateFirstViewrtf(CCmdUI* pCmdUI);
+
+private:
+	/** @brief The number of text lines and the longest line, for sizing the window to its text. */
+	struct TextLines
+	{
+		/** @brief The number of lines (counted up to 100). */
+		int count{};
+		/** @brief The longest line. */
+		CString longest{};
+	};
+
+	/** @brief The clicks that hide the window unless it is shown persistently. */
+	static constexpr std::array<UINT, 10> s_hidingClickMessages{
+		WM_LBUTTONDBLCLK, WM_RBUTTONDBLCLK, WM_MBUTTONDOWN, WM_MBUTTONDBLCLK,
+		WM_NCLBUTTONDOWN, WM_NCLBUTTONDBLCLK, WM_NCRBUTTONDOWN, WM_NCRBUTTONDBLCLK,
+		WM_NCMBUTTONDOWN, WM_NCMBUTTONDBLCLK };
+
+	/** @brief The keys that OnMsg leaves to the list (the window stays open). */
+	static constexpr std::array<WPARAM, 7> s_listKeys{
+		VK_CONTROL, VK_SHIFT, VK_UP, VK_DOWN, VK_NEXT, VK_PRIOR, VK_DELETE };
+
+	/**
+	 * @brief The window rectangle from the saved description window size.
+	 * @param point the top left corner.
+	 * @return the rectangle, kept on the screen.
+	 */
+	CRect RectFromSavedSize(CPoint point);
+	/**
+	 * @brief The window rectangle sized to the text or image, at the point and within its monitor.
+	 * @param point the top left corner.
+	 * @return the rectangle.
+	 */
+	CRect RectSizedToContent(CPoint point);
+	/** @brief Shows the image viewer or the rich edit, and records which content is shown. */
+	void ShowContentWindow();
+	/**
+	 * @brief Counts the text lines and finds the longest.
+	 * @return the line count and the longest line.
+	 */
+	TextLines MeasureTextLines();
+
+	/**
+	 * @brief Ctrl+C: copies the rich edit's selection.
+	 * @param pMsg the key down message.
+	 * @return true when the key was Ctrl+C.
+	 */
+	bool HandleCopyKey(MSG* pMsg);
+	/**
+	 * @brief Shows the options menu on a right click in the text or the image.
+	 * @return true when the menu was shown.
+	 */
+	bool HandleContentRButtonDown();
+	/** @brief Gives the focus back to the parent after a left click outside the text and the options button. */
+	void FocusParentAfterLButtonUp();
+	/**
+	 * @brief Lets the description window's actions see the message.
+	 * @param pMsg the message.
+	 */
+	void CheckToolTipActions(MSG* pMsg);
+
+	/** @brief Hides the window on a mouse click outside it (when the option is on and the window is not persistent). */
+	void HideOnMouseClick();
+	/** @brief Hides the window unless it is shown persistently. */
+	void HideUnlessPersistent();
+	/**
+	 * @brief Whether a message is a click that hides the window.
+	 * @param message the message id.
+	 * @return true for the clicks in s_hidingClickMessages.
+	 */
+	static bool IsHidingClick(UINT message);
+	/**
+	 * @brief Whether a key is left to the list.
+	 * @param vk the virtual key.
+	 * @return true for the keys in s_listKeys.
+	 */
+	static bool IsListKey(WPARAM vk);
+	/**
+	 * @brief Handles a key while the window is visible: Tab focuses the text, other keys hide it.
+	 * @param vk the virtual key.
+	 * @return TRUE when the key was handled (Tab), else FALSE.
+	 */
+	BOOL OnMsgKeyDown(WPARAM vk);
+	/**
+	 * @brief Forwards a mouse wheel message to the image viewer or the rich edit.
+	 * @param pMsg the message.
+	 */
+	void ForwardMouseWheel(MSG* pMsg);
+
+	/** @brief TIMER_BUTTON_UP: finishes a caption click once the mouse button is up. */
+	void OnButtonUpTimer();
+	/** @brief TIMER_AUTO_MAX: restores the minimized window when the mouse is still over its caption. */
+	void OnAutoMaxTimer();
+
+	/**
+	 * @brief Checks the menu items of the description options.
+	 * @param cmSubMenu the options menu.
+	 */
+	void CheckOptionMenuItems(CMenu* cmSubMenu);
+	/**
+	 * @brief Checks the shown view (text, RTF, image) and disables the views without content.
+	 * @param cmSubMenu the options menu.
+	 */
+	void CheckViewMenuItems(CMenu* cmSubMenu);
 };

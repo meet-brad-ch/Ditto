@@ -186,6 +186,41 @@ protected:
   void         OnTimer(UINT_PTR nIDEvent);
   void         OnDestroy();
 
+  /**
+   * @brief Loads the context menu resource and makes the default item bold.
+   * @param uID the tray icon id (the menu id when uMenuID is 0).
+   * @param uMenuID the menu resource id; 0 to use uID.
+   * @return FALSE (after an assertion) when the menu or its first submenu cannot be loaded.
+   */
+  BOOL         LoadContextMenu(_In_ UINT uID, _In_ UINT uMenuID);
+  /**
+   * @brief Marks the icon data hidden when the icon is created hidden.
+   * @param bShow whether the icon is shown.
+   */
+  void         ApplyHiddenState(_In_ BOOL bShow);
+  /**
+   * @brief Adds the icon to the tray and turns on the Shell v5 behaviour.
+   * @param bShow whether the icon is shown (else it is recorded as hidden).
+   * @return whether the icon was added.
+   */
+  BOOL         AddIconToTray(_In_ BOOL bShow);
+  /**
+   * @brief Sets the balloon icon flag of a balloon style (an unknown style asserts and keeps the flags).
+   * @param style the balloon style.
+   */
+  void         ApplyBalloonStyle(_In_ BalloonStyle style);
+  /**
+   * @brief Adds the balloon's no sound, large icon and realtime flags.
+   * @param bNoSound whether the balloon plays no sound.
+   * @param bLargeIcon whether the balloon uses a large icon.
+   * @param bRealtime whether the balloon is shown only now (not queued).
+   */
+  void         ApplyBalloonFlags(_In_ BOOL bNoSound, _In_ BOOL bLargeIcon, _In_ BOOL bRealtime);
+  /** @brief Shows the context menu at the cursor (right click on the tray icon). */
+  void         ShowTrayContextMenu();
+  /** @brief Runs the default menu item (click or double click on the tray icon). */
+  void         RunTrayDefaultMenuItem();
+
   static CTrayWnd  m_wndInvisible;
 
 //Member variables

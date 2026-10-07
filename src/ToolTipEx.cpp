@@ -5,6 +5,7 @@
 #include "Options.h"
 #include "ActionEnums.h"
 #include <Richedit.h>
+#include <algorithm>
 
 #ifdef _DEBUG
     #define new DEBUG_NEW
@@ -157,77 +158,11 @@ BOOL CToolTipEx::Show(CPoint point)
 
 	if(CGetSetOptions::GetSizeDescWindowToContent() == FALSE)
 	{
-		rect.left = point.x;
-		rect.top = point.y;
-		CSize size;
-		CGetSetOptions::GetDescWndSize(size);
-		rect.right = rect.left + m_DittoWindow.m_dpi.Scale(size.cx);
-		rect.bottom = rect.top + m_DittoWindow.m_dpi.Scale(size.cy);
-
-		EnsureWindowVisible(&rect);
+		rect = RectFromSavedSize(point);
 	}
 	else
 	{
-		rect = GetBoundsRect();
-
-		//account for the scroll bars
-		rect.right += 20;
-		rect.bottom += 20;		
-
-		if (m_imageViewer.m_pGdiplusBitmap)
-		{
-			int nWidth = m_imageViewer.m_pGdiplusBitmap->GetWidth() + ::GetSystemMetrics(SM_CXVSCROLL);
-			int nHeight = m_imageViewer.m_pGdiplusBitmap->GetHeight() + ::GetSystemMetrics(SM_CYHSCROLL);
-
-			rect.right = rect.left + nWidth;
-			rect.bottom = rect.top + nHeight;
-		}
-		
-		
-		long lNewWidth = (long)rect.Width() + (long)(rect.Width() *1.25);
-		rect.right = rect.left + lNewWidth;
-
-		long lNewHeight = (long)rect.Height() + (long)(rect.Height() *1.25);
-		rect.bottom = rect.top + lNewHeight;
-
-		ClientToScreen(rect);
-
-		CRect cr(point, point);
-		CRect rcScreen = MonitorRectFromRect(cr);
-
-		//ensure that we don't go outside the screen
-		if(point.x < rcScreen.left)
-		{
-			point.x = rcScreen.left + 5;
-		}
-		if(point.y < rcScreen.top)
-		{
-			point.y = rcScreen.top + 5;
-		}
-
-		rcScreen.DeflateRect(0, 0, 5, 5);
-
-		long width = rect.Width();
-		long height = rect.Height();
-
-		if (width < 500)
-		{
-			width = 500;
-		}
-
-		rect.left = point.x;
-		rect.top = point.y;
-		rect.right = rect.left + width;
-		rect.bottom = rect.top + height;
-		
-		if (rect.right > rcScreen.right)
-		{
-			rect.right = rcScreen.right;
-		}
-		if (rect.bottom > rcScreen.bottom)
-		{
-			rect.bottom = rcScreen.bottom;
-		}
+		rect = RectSizedToContent(point);
 	}
 
 	if (m_csText.GetLength())
@@ -254,6 +189,98 @@ BOOL CToolTipEx::Show(CPoint point)
 		m_imageViewer.UpdateBitmapSize(true);
 	}
 
+	ShowContentWindow();
+
+	ShowWindow(SW_SHOWNA);
+	//this->Invalidate();
+	//this->UpdateWindow();
+
+	m_saveWindowLockout = false;
+
+	return TRUE;
+}
+
+CRect CToolTipEx::RectFromSavedSize(CPoint point)
+{
+	CRect rect;
+	rect.left = point.x;
+	rect.top = point.y;
+	CSize size;
+	CGetSetOptions::GetDescWndSize(size);
+	rect.right = rect.left + m_DittoWindow.m_dpi.Scale(size.cx);
+	rect.bottom = rect.top + m_DittoWindow.m_dpi.Scale(size.cy);
+
+	EnsureWindowVisible(&rect);
+	return rect;
+}
+
+CRect CToolTipEx::RectSizedToContent(CPoint point)
+{
+	CRect rect = GetBoundsRect();
+
+	//account for the scroll bars
+	rect.right += 20;
+	rect.bottom += 20;
+
+	if (m_imageViewer.m_pGdiplusBitmap)
+	{
+		int nWidth = m_imageViewer.m_pGdiplusBitmap->GetWidth() + ::GetSystemMetrics(SM_CXVSCROLL);
+		int nHeight = m_imageViewer.m_pGdiplusBitmap->GetHeight() + ::GetSystemMetrics(SM_CYHSCROLL);
+
+		rect.right = rect.left + nWidth;
+		rect.bottom = rect.top + nHeight;
+	}
+
+
+	long lNewWidth = (long)rect.Width() + (long)(rect.Width() *1.25);
+	rect.right = rect.left + lNewWidth;
+
+	long lNewHeight = (long)rect.Height() + (long)(rect.Height() *1.25);
+	rect.bottom = rect.top + lNewHeight;
+
+	ClientToScreen(rect);
+
+	CRect cr(point, point);
+	CRect rcScreen = MonitorRectFromRect(cr);
+
+	//ensure that we don't go outside the screen
+	if(point.x < rcScreen.left)
+	{
+		point.x = rcScreen.left + 5;
+	}
+	if(point.y < rcScreen.top)
+	{
+		point.y = rcScreen.top + 5;
+	}
+
+	rcScreen.DeflateRect(0, 0, 5, 5);
+
+	long width = rect.Width();
+	long height = rect.Height();
+
+	if (width < 500)
+	{
+		width = 500;
+	}
+
+	rect.left = point.x;
+	rect.top = point.y;
+	rect.right = rect.left + width;
+	rect.bottom = rect.top + height;
+
+	if (rect.right > rcScreen.right)
+	{
+		rect.right = rcScreen.right;
+	}
+	if (rect.bottom > rcScreen.bottom)
+	{
+		rect.bottom = rcScreen.bottom;
+	}
+	return rect;
+}
+
+void CToolTipEx::ShowContentWindow()
+{
 	if (m_imageViewer.m_pGdiplusBitmap)
 	{
 		int percent = static_cast<int>((m_imageViewer.m_scale - 1.0) * 100.0);
@@ -283,14 +310,6 @@ BOOL CToolTipEx::Show(CPoint point)
 			m_showingText = true;
 		}
 	}
-
-	ShowWindow(SW_SHOWNA);
-	//this->Invalidate();
-	//this->UpdateWindow();	
-
-	m_saveWindowLockout = false;
-
-	return TRUE;
 }
 
 void CToolTipEx::GetWindowRectEx(LPRECT lpRect)
@@ -367,48 +386,71 @@ BOOL CToolTipEx::PreTranslateMessage(MSG *pMsg)
 	m_DittoWindow.DoPreTranslateMessage(pMsg);
 
 	switch (pMsg->message)
-	{		
+	{
         case WM_KEYDOWN:
-
-            switch(pMsg->wParam)
-            {
-            case 'C':
-                if(GetKeyState(VK_CONTROL) &0x8000)
-                {
-                    m_RichEdit.Copy();
-					theApp.SetCopyReason(CopyReasonEnum::COPY_FROM_TOOLTIP);
-					return TRUE;
-                }
-                break;
-            }
+			if (HandleCopyKey(pMsg))
+				return TRUE;
 			break;
 		case WM_RBUTTONDOWN:
-			{
-				auto f = GetFocus();
-				if (f != NULL &&
-					(m_RichEdit.m_hWnd == f->m_hWnd ||
-					m_imageViewer.m_hWnd == f->m_hWnd))
-				{
-					OnOptions();
-					return TRUE;
-				}
-			}
+			if (HandleContentRButtonDown())
+				return TRUE;
 			break;
 		case WM_LBUTTONUP:
-			auto f = GetFocus();
-			if (f != NULL &&
-				m_RichEdit.m_hWnd != f->m_hWnd &&
-				m_optionsButton.m_hWnd != f->m_hWnd)
-			{
-				auto p = GetParent();
-				if (p != NULL)
-				{
-					p->SetFocus();
-				}
-			}
+			FocusParentAfterLButtonUp();
 			break;
     }
 
+	CheckToolTipActions(pMsg);
+
+    return CWnd::PreTranslateMessage(pMsg);
+}
+
+bool CToolTipEx::HandleCopyKey(MSG *pMsg)
+{
+	switch(pMsg->wParam)
+	{
+	case 'C':
+		if(GetKeyState(VK_CONTROL) &0x8000)
+		{
+			m_RichEdit.Copy();
+			theApp.SetCopyReason(CopyReasonEnum::COPY_FROM_TOOLTIP);
+			return true;
+		}
+		break;
+	}
+	return false;
+}
+
+bool CToolTipEx::HandleContentRButtonDown()
+{
+	auto f = GetFocus();
+	if (f != NULL &&
+		(m_RichEdit.m_hWnd == f->m_hWnd ||
+		m_imageViewer.m_hWnd == f->m_hWnd))
+	{
+		OnOptions();
+		return true;
+	}
+	return false;
+}
+
+void CToolTipEx::FocusParentAfterLButtonUp()
+{
+	auto f = GetFocus();
+	if (f != NULL &&
+		m_RichEdit.m_hWnd != f->m_hWnd &&
+		m_optionsButton.m_hWnd != f->m_hWnd)
+	{
+		auto p = GetParent();
+		if (p != NULL)
+		{
+			p->SetFocus();
+		}
+	}
+}
+
+void CToolTipEx::CheckToolTipActions(MSG *pMsg)
+{
 	if (m_pToolTipActions != NULL)
 	{
 		CAccel a;
@@ -429,8 +471,6 @@ BOOL CToolTipEx::PreTranslateMessage(MSG *pMsg)
 			}
 		}
 	}
-
-    return CWnd::PreTranslateMessage(pMsg);
 }
 
 BOOL CToolTipEx::OnMsg(MSG *pMsg)
@@ -440,110 +480,98 @@ BOOL CToolTipEx::OnMsg(MSG *pMsg)
         return FALSE;
     }
 
-    switch(pMsg->message)
-    {
-        case WM_WINDOWPOSCHANGING:
-        case WM_LBUTTONDOWN:
-            {
-				if (m_showPersistant == false)
-				{
-					if (CGetSetOptions::GetMouseClickHidesDescription())
-					{
-						if (!IsCursorInToolTip())
-						{
-							Hide();
-						}
-					}
-				}
-            }
-			break;
-        case WM_KEYDOWN:
-            {
-                WPARAM vk = pMsg->wParam;
+	const UINT message = pMsg->message;
 
-                if(vk == VK_TAB)
-                {
-                    m_RichEdit.SetFocus();
-                    return TRUE;
-                }
-				else if (vk == VK_CONTROL || vk == VK_SHIFT)
-				{
-					return FALSE;
-				}
-				else if (vk == VK_UP)
-				{
-					return FALSE;
-				}
-				else if (vk == VK_DOWN)
-				{
-					return FALSE;
-				}
-				else if (vk == VK_NEXT)
-				{
-					return FALSE;
-				}
-				else if (vk == VK_PRIOR)
-				{
-					return FALSE;
-				}
-				else if (vk == VK_DELETE)
-				{
-					return FALSE;
-				}
-
-				if (m_pToolTipActions != NULL)
-				{
-					if (m_pToolTipActions->ContainsKey((int)vk))
-					{
-						return FALSE;
-					}
-				}
-
-				if (m_showPersistant == false)
-				{
-					Hide();
-				}
-
-                break;
-            }
-
-        case WM_LBUTTONDBLCLK:
-        case WM_RBUTTONDBLCLK:
-        case WM_MBUTTONDOWN:
-        case WM_MBUTTONDBLCLK:
-        case WM_NCLBUTTONDOWN:
-        case WM_NCLBUTTONDBLCLK:
-        case WM_NCRBUTTONDOWN:
-        case WM_NCRBUTTONDBLCLK:
-        case WM_NCMBUTTONDOWN:
-        case WM_NCMBUTTONDBLCLK:
-            {
-				if (m_showPersistant == false)
-				{
-					Hide();
-				}
-                break;
-            }
-
-		case WM_MOUSEWHEEL:
-		case WM_MOUSEHWHEEL:
-		{
-			if (m_imageViewer.m_pGdiplusBitmap)
-			{
-				m_imageViewer.PostMessageW(pMsg->message, pMsg->wParam, pMsg->lParam);
-				return TRUE;
-			}
-			else
-			{
-				m_RichEdit.PostMessageW(pMsg->message, pMsg->wParam, pMsg->lParam);
-				return TRUE;
-			}
-		}
-		break;
-    }
-
+	if (message == WM_WINDOWPOSCHANGING || message == WM_LBUTTONDOWN)
+	{
+		HideOnMouseClick();
+		return FALSE;
+	}
+	if (message == WM_KEYDOWN)
+	{
+		return OnMsgKeyDown(pMsg->wParam);
+	}
+	if (IsHidingClick(message))
+	{
+		HideUnlessPersistent();
+		return FALSE;
+	}
+	if (message == WM_MOUSEWHEEL || message == WM_MOUSEHWHEEL)
+	{
+		ForwardMouseWheel(pMsg);
+		return TRUE;
+	}
 
     return FALSE;
+}
+
+void CToolTipEx::HideOnMouseClick()
+{
+	if (m_showPersistant == false)
+	{
+		if (CGetSetOptions::GetMouseClickHidesDescription())
+		{
+			if (!IsCursorInToolTip())
+			{
+				Hide();
+			}
+		}
+	}
+}
+
+void CToolTipEx::HideUnlessPersistent()
+{
+	if (m_showPersistant == false)
+	{
+		Hide();
+	}
+}
+
+bool CToolTipEx::IsHidingClick(UINT message)
+{
+	return std::find(s_hidingClickMessages.begin(), s_hidingClickMessages.end(), message) != s_hidingClickMessages.end();
+}
+
+bool CToolTipEx::IsListKey(WPARAM vk)
+{
+	return std::find(s_listKeys.begin(), s_listKeys.end(), vk) != s_listKeys.end();
+}
+
+BOOL CToolTipEx::OnMsgKeyDown(WPARAM vk)
+{
+	if(vk == VK_TAB)
+	{
+		m_RichEdit.SetFocus();
+		return TRUE;
+	}
+	else if (IsListKey(vk))
+	{
+		return FALSE;
+	}
+
+	if (m_pToolTipActions != NULL)
+	{
+		if (m_pToolTipActions->ContainsKey((int)vk))
+		{
+			return FALSE;
+		}
+	}
+
+	HideUnlessPersistent();
+
+	return FALSE;
+}
+
+void CToolTipEx::ForwardMouseWheel(MSG *pMsg)
+{
+	if (m_imageViewer.m_pGdiplusBitmap)
+	{
+		m_imageViewer.PostMessageW(pMsg->message, pMsg->wParam, pMsg->lParam);
+	}
+	else
+	{
+		m_RichEdit.PostMessageW(pMsg->message, pMsg->wParam, pMsg->lParam);
+	}
 }
 
 CRect CToolTipEx::GetBoundsRect()
@@ -558,46 +586,15 @@ CRect CToolTipEx::GetBoundsRect()
     if(nLineWidth == 0)
     {
         // Count the number of lines of text
-		int nStart = 0;
-		INT nNumLines = 0;
-		int longestLength = 0;
-		CString longestString;
-        do
-        {
-			nNumLines++;
-
-            int newStart = m_csText.Find(_T("\n"), nStart);
-			if (newStart < 0)
-			{
-				int length = m_csText.GetLength() - nStart;
-				if (length > longestLength)
-				{
-					longestString = m_csText.Mid(nStart, length);
-					longestLength = length;
-				}
-
-				break;
-			}
-
-			int length = newStart - nStart;
-			if(length > longestLength)
-			{
-				longestString = m_csText.Mid(nStart, length);
-				longestLength = length;
-			}           
-
-            
-			nStart = newStart + 1;
-        }
-        while(nStart >= 0 && nNumLines < 100);
+		const TextLines lines{MeasureTextLines()};
 
 		CFont *pOldFont = (CFont*)dc.SelectObject((CFont*)&m_Font);
-		CSize size = dc.GetTextExtent(longestString);  
+		CSize size = dc.GetTextExtent(lines.longest);
 		dc.SelectObject(pOldFont);
 
 		rect.right = size.cx;
-		rect.bottom = size.cy * nNumLines;
-    }    
+		rect.bottom = size.cy * lines.count;
+    }
 	
     rect.bottom += m_rectMargin.top + m_rectMargin.bottom + GetSystemMetrics(SM_CYVSCROLL);
     rect.right += m_rectMargin.left + m_rectMargin.right + GetSystemMetrics(SM_CXVSCROLL);
@@ -621,6 +618,43 @@ CRect CToolTipEx::GetBoundsRect()
 	}
 
     return rect;
+}
+
+CToolTipEx::TextLines CToolTipEx::MeasureTextLines()
+{
+	TextLines lines{};
+	int nStart = 0;
+	int longestLength = 0;
+    do
+    {
+		lines.count++;
+
+        int newStart = m_csText.Find(_T("\n"), nStart);
+		if (newStart < 0)
+		{
+			int length = m_csText.GetLength() - nStart;
+			if (length > longestLength)
+			{
+				lines.longest = m_csText.Mid(nStart, length);
+				longestLength = length;
+			}
+
+			break;
+		}
+
+		int length = newStart - nStart;
+		if(length > longestLength)
+		{
+			lines.longest = m_csText.Mid(nStart, length);
+			longestLength = length;
+		}
+
+
+		nStart = newStart + 1;
+    }
+    while(nStart >= 0 && lines.count < 100);
+
+	return lines;
 }
 
 CString CToolTipEx::GetFieldFromString(CString ref, int nIndex, TCHAR ch)
@@ -932,54 +966,60 @@ void CToolTipEx::OnTimer(UINT_PTR nIDEvent)
 			KillTimer(SAVE_SIZE);
 			break;
 		case TIMER_BUTTON_UP:
-		{
-			if ((GetKeyState(VK_LBUTTON) & 0x100) == 0)
-			{
-				m_DittoWindow.DoNcLButtonUp(this, 0, CPoint(0, 0));
-				KillTimer(TIMER_BUTTON_UP);
-
-				auto f = GetFocus();
-				if (f != NULL &&
-					m_RichEdit.m_hWnd != f->m_hWnd)
-				{
-					auto p = GetParent();
-					if (p != NULL)
-					{
-						p->SetFocus();
-					}
-				}
-			}
+			OnButtonUpTimer();
 			break;
-		}
 		case TIMER_AUTO_MAX:
-		{
-			if (m_DittoWindow.m_bMinimized)
-			{
-				CPoint cp;
-				GetCursorPos(&cp);
-
-				UINT nHitTest = (UINT)OnNcHitTest(cp);
-
-				ScreenToClient(&cp);
-
-				if (nHitTest == HTCAPTION)
-				{
-					if (m_DittoWindow.m_crCloseBT.PtInRect(cp) == false)
-					{
-						if (m_DittoWindow.m_crMinimizeBT.PtInRect(cp) == false)
-						{
-							m_DittoWindow.MinMaxWindow(this, FORCE_MAX);
-						}
-					}
-				}
-			}
-			KillTimer(TIMER_AUTO_MAX);
-			m_bMaxSetTimer = false;
-		}
-
+			OnAutoMaxTimer();
+			break;
     }
 
     CWnd::OnTimer(nIDEvent);
+}
+
+void CToolTipEx::OnButtonUpTimer()
+{
+	if ((GetKeyState(VK_LBUTTON) & 0x100) == 0)
+	{
+		m_DittoWindow.DoNcLButtonUp(this, 0, CPoint(0, 0));
+		KillTimer(TIMER_BUTTON_UP);
+
+		auto f = GetFocus();
+		if (f != NULL &&
+			m_RichEdit.m_hWnd != f->m_hWnd)
+		{
+			auto p = GetParent();
+			if (p != NULL)
+			{
+				p->SetFocus();
+			}
+		}
+	}
+}
+
+void CToolTipEx::OnAutoMaxTimer()
+{
+	if (m_DittoWindow.m_bMinimized)
+	{
+		CPoint cp;
+		GetCursorPos(&cp);
+
+		UINT nHitTest = (UINT)OnNcHitTest(cp);
+
+		ScreenToClient(&cp);
+
+		if (nHitTest == HTCAPTION)
+		{
+			if (m_DittoWindow.m_crCloseBT.PtInRect(cp) == false)
+			{
+				if (m_DittoWindow.m_crMinimizeBT.PtInRect(cp) == false)
+				{
+					m_DittoWindow.MinMaxWindow(this, FORCE_MAX);
+				}
+			}
+		}
+	}
+	KillTimer(TIMER_AUTO_MAX);
+	m_bMaxSetTimer = false;
 }
 
 
@@ -1079,47 +1119,9 @@ void CToolTipEx::OnOptions()
 
 		theApp.m_Language.UpdateRightClickMenu(cmSubMenu);
 
-		if(CGetSetOptions::GetRememberDescPos())
-			cmSubMenu->CheckMenuItem(ID_FIRST_REMEMBERWINDOWPOSITION, MF_CHECKED);
+		CheckOptionMenuItems(cmSubMenu);
 
-		if(CGetSetOptions::GetSizeDescWindowToContent())
-			cmSubMenu->CheckMenuItem(ID_FIRST_SIZEWINDOWTOCONTENT, MF_CHECKED);
-
-		if(CGetSetOptions::GetScaleImagesToDescWindow())
-			cmSubMenu->CheckMenuItem(ID_FIRST_SCALEIMAGESTOFITWINDOW, MF_CHECKED);
-
-		if (CGetSetOptions::GetMouseClickHidesDescription())
-			cmSubMenu->CheckMenuItem(ID_FIRST_HIDEDESCRIPTIONWINDOWONM, MF_CHECKED);		
-
-		if (m_showPersistant)
-			cmSubMenu->CheckMenuItem(ID_FIRST_ALWAYSONTOP, MF_CHECKED);
-
-		if (m_showingText)
-		{
-			cmSubMenu->CheckMenuItem(ID_FIRST_VIEWTEXT, MF_CHECKED);
-		}
-		if (m_csText.GetLength() <= 0)
-		{
-			cmSubMenu->EnableMenuItem(ID_FIRST_VIEWTEXT, MF_DISABLED);
-		}
-
-		if (m_showingRTF)
-		{
-			cmSubMenu->CheckMenuItem(ID_FIRST_VIEWRTF, MF_CHECKED);
-		}
-		if (m_csRTF.GetLength() <= 0)
-		{
-			cmSubMenu->EnableMenuItem(ID_FIRST_VIEWRTF, MF_DISABLED);
-		}
-
-		if (m_showingImage)
-		{
-			cmSubMenu->CheckMenuItem(ID_FIRST_VIEWASIMAGE, MF_CHECKED);
-		}
-		if (m_imageViewer.m_pGdiplusBitmap == nullptr)
-		{
-			cmSubMenu->EnableMenuItem(ID_FIRST_VIEWASIMAGE, MF_DISABLED);
-		}
+		CheckViewMenuItems(cmSubMenu);
 
 		UpdateMenuShortCut(cmSubMenu, ID_FIRST_WRAPTEXT, ActionEnums::TOGGLE_DESCRIPTION_WORD_WRAP);
 		UpdateMenuShortCut(cmSubMenu, ID_FIRST_ALWAYSONTOP, ActionEnums::TOGGLESHOWPERSISTANT);
@@ -1128,6 +1130,54 @@ void CToolTipEx::OnOptions()
 			cmSubMenu->CheckMenuItem(ID_FIRST_WRAPTEXT, MF_CHECKED);
 		
 		cmSubMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RIGHTBUTTON, pp.x, pp.y, this, NULL);
+	}
+}
+
+void CToolTipEx::CheckOptionMenuItems(CMenu *cmSubMenu)
+{
+	if(CGetSetOptions::GetRememberDescPos())
+		cmSubMenu->CheckMenuItem(ID_FIRST_REMEMBERWINDOWPOSITION, MF_CHECKED);
+
+	if(CGetSetOptions::GetSizeDescWindowToContent())
+		cmSubMenu->CheckMenuItem(ID_FIRST_SIZEWINDOWTOCONTENT, MF_CHECKED);
+
+	if(CGetSetOptions::GetScaleImagesToDescWindow())
+		cmSubMenu->CheckMenuItem(ID_FIRST_SCALEIMAGESTOFITWINDOW, MF_CHECKED);
+
+	if (CGetSetOptions::GetMouseClickHidesDescription())
+		cmSubMenu->CheckMenuItem(ID_FIRST_HIDEDESCRIPTIONWINDOWONM, MF_CHECKED);
+
+	if (m_showPersistant)
+		cmSubMenu->CheckMenuItem(ID_FIRST_ALWAYSONTOP, MF_CHECKED);
+}
+
+void CToolTipEx::CheckViewMenuItems(CMenu *cmSubMenu)
+{
+	if (m_showingText)
+	{
+		cmSubMenu->CheckMenuItem(ID_FIRST_VIEWTEXT, MF_CHECKED);
+	}
+	if (m_csText.GetLength() <= 0)
+	{
+		cmSubMenu->EnableMenuItem(ID_FIRST_VIEWTEXT, MF_DISABLED);
+	}
+
+	if (m_showingRTF)
+	{
+		cmSubMenu->CheckMenuItem(ID_FIRST_VIEWRTF, MF_CHECKED);
+	}
+	if (m_csRTF.GetLength() <= 0)
+	{
+		cmSubMenu->EnableMenuItem(ID_FIRST_VIEWRTF, MF_DISABLED);
+	}
+
+	if (m_showingImage)
+	{
+		cmSubMenu->CheckMenuItem(ID_FIRST_VIEWASIMAGE, MF_CHECKED);
+	}
+	if (m_imageViewer.m_pGdiplusBitmap == nullptr)
+	{
+		cmSubMenu->EnableMenuItem(ID_FIRST_VIEWASIMAGE, MF_DISABLED);
 	}
 }
 

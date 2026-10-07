@@ -11,7 +11,6 @@
 #include "MainTableFunctions.h"
 #include "DittoCopyBuffer.h"
 #include <atlbase.h>
-#include "DrawHTML.h"
 #include "..\Shared\TextConvert.h"
 #include <cmath>
 #include <vector>
@@ -420,220 +419,246 @@ void CQListCtrl::OnCustomdrawList(NMHDR* pNMHDR, LRESULT* pResult)
 	}
 	else if (CDDS_ITEMPREPAINT == pLVCD->nmcd.dwDrawStage)
 	{
-		LVITEM   rItem;
-		int      nItem = static_cast<int>(pLVCD->nmcd.dwItemSpec);
-		CDC* pDC = CDC::FromHandle(pLVCD->nmcd.hdc);
-		COLORREF crBkgnd;
-		BOOL     bListHasFocus;
-		CRect    rcItem;
-
-		bListHasFocus = (GetSafeHwnd() == ::GetFocus());
-
-		// Get the image index and selected/focused state of the
-		// item being drawn.
-		ZeroMemory(&rItem, sizeof(LVITEM));
-		rItem.mask = LVIF_STATE;
-		rItem.iItem = nItem;
-		rItem.stateMask = LVIS_SELECTED | LVIS_FOCUSED;
-		GetItem(&rItem);
-
-		// Get the rect that bounds the text label.
-		GetItemRect(nItem, rcItem, LVIR_SELECTBOUNDS);
-
-		COLORREF OldColor = CLR_INVALID;
-		int nOldBKMode = -1;
-
-		CString csText;
-		LPTSTR lpszText = csText.GetBufferSetLength(CGetSetOptions::m_bDescTextSize);
-		GetItemText(nItem, 0, lpszText, CGetSetOptions::m_bDescTextSize);
-		csText.ReleaseBuffer();
-
-		// extract symbols
-		CString strSymbols;
-		int nSymEnd = csText.Find('|');
-		if (nSymEnd >= 0)
-		{
-			strSymbols = csText.Left(nSymEnd);
-			csText = csText.Mid(nSymEnd + 1);
-		}
-
-		// Draw the background of the list item.  Colors are selected
-		// according to the item's state.
-		if (rItem.state & LVIS_SELECTED)
-		{
-			if (bListHasFocus)
-			{
-				crBkgnd = CGetSetOptions::m_Theme.ListBoxSelectedBG();
-				OldColor = pDC->SetTextColor(CGetSetOptions::m_Theme.ListBoxSelectedText());
-			}
-			else
-			{
-				crBkgnd = CGetSetOptions::m_Theme.ListBoxSelectedNoFocusBG();
-				OldColor = pDC->SetTextColor(CGetSetOptions::m_Theme.ListBoxSelectedNoFocusText());
-			}
-		}
-		else
-		{
-			//Shade alternating Rows
-			if ((nItem % 2) == 0)
-			{
-				crBkgnd = CGetSetOptions::m_Theme.ListBoxOddRowsBG();
-				OldColor = pDC->SetTextColor(CGetSetOptions::m_Theme.ListBoxOddRowsText());
-			}
-			else
-			{
-				crBkgnd = CGetSetOptions::m_Theme.ListBoxEvenRowsBG();
-				OldColor = pDC->SetTextColor(CGetSetOptions::m_Theme.ListBoxEvenRowsText());
-			}
-		}
-
-		pDC->FillSolidRect(rcItem, crBkgnd);
-		nOldBKMode = pDC->SetBkMode(TRANSPARENT);
-
-		CRect rcText = rcItem;
-		rcText.left += m_windowDpi->Scale(ROW_LEFT_BORDER);
-		rcText.top += m_windowDpi->Scale(1);
-		rcText.bottom -= m_windowDpi->Scale(1);
-
-		if (m_showIfClipWasPasted &&
-			strSymbols.GetLength() > 0 &&
-			strSymbols.Find(_T("<pasted>")) >= 0) //clip was pasted from ditto
-		{
-			CRect pastedRect(rcItem);
-			pastedRect.left++;
-			pastedRect.right = pastedRect.left + m_windowDpi->Scale(2);
-
-			pDC->FillSolidRect(pastedRect, CGetSetOptions::m_Theme.ClipPastedColor());
-		}
-
-		// set firstTenNum to the first ten number (1-10) corresponding to
-		//  the current nItem.
-		// -1 means that nItem is not in the FirstTen block.
-		int firstTenNum = GetFirstTenNum(nItem);
-
-		if (m_bShowTextForFirstTenHotKeys && firstTenNum >= 0)
-		{
-			rcText.left += m_windowDpi->Scale(12);
-		}
-		else
-		{
-			rcText.left += m_windowDpi->Scale(3);
-		}
-
-		bool drawInGroupIcon = true;
-		// if we are inside a group, don't display the "in group" flag
-		if (theApp.m_GroupID > 0)
-		{
-			int nFlag = strSymbols.Find(_T("<ingroup>"));
-			if (nFlag >= 0)
-				drawInGroupIcon = false;
-		}
-
-		DrawCopiedColorCode(csText, rcText, pDC);
-
-		DrawBitMap(nItem, rcText, pDC, csText);
-
-		// draw the symbol box
-		if (strSymbols.GetLength() > 0)
-		{
-			if (strSymbols.Find(_T("<group>")) >= 0) //group
-			{
-				m_groupFolder.Draw(pDC, *m_windowDpi, this, rcText.left, rcText.top, false, false);
-				rcText.left += m_groupFolder.ImageWidth() + m_windowDpi->Scale(2);
-			}
-			if (strSymbols.Find(_T("<noautodelete>")) >= 0) //don't auto delete
-			{
-				m_dontDeleteImage.Draw(pDC, *m_windowDpi, this, rcText.left, rcText.top, false, false);
-				rcText.left += m_dontDeleteImage.ImageWidth() + m_windowDpi->Scale(2);
-			}
-			if (strSymbols.Find(_T("<shortcut>")) >= 0) // has shortcut
-			{
-				m_shortCutImage.Draw(pDC, *m_windowDpi, this, rcText.left, rcText.top, false, false);
-				rcText.left += m_shortCutImage.ImageWidth() + m_windowDpi->Scale(2);
-			}
-			if (drawInGroupIcon &&
-				strSymbols.Find(_T("<ingroup>")) >= 0) // in group
-			{
-				m_inFolderImage.Draw(pDC, *m_windowDpi, this, rcText.left, rcText.top, false, false);
-				rcText.left += m_inFolderImage.ImageWidth() + m_windowDpi->Scale(2);
-			}
-			if (strSymbols.Find(_T("<qpastetext>")) >= 0) // has quick paste text
-			{
-			}
-			if (strSymbols.Find(_T("<sticky>")) >= 0) //sticky clip
-			{
-				m_stickyImage.Draw(pDC, *m_windowDpi, this, rcText.left, rcText.top, false, false);
-				rcText.left += m_stickyImage.ImageWidth() + m_windowDpi->Scale(2);
-			}
-		}
-
-		if (DrawRtfText(nItem, rcText, pDC) == FALSE)
-		{
-			auto highlightColor = CGetSetOptions::m_Theme.SearchTextHighlight();
-			//use unprintable characters so it doesn't find copied html to convert
-			if (m_searchText.GetLength() > 0 &&
-				FindNoCaseAndInsert(csText, m_searchText, StrF(_T("\x01\x04 color='#%02x%02x%02x'\x02"), GetRValue(highlightColor), GetGValue(highlightColor), GetBValue(highlightColor)), _T("\x01\x03\x04\x02"), m_linesPerRow) > 0)
-			{
-				DrawHTML(pDC->m_hDC, csText, csText.GetLength(), rcText, DT_VCENTER | DT_EXPANDTABS | DT_NOPREFIX);
-			}
-			else
-			{
-				pDC->DrawText(csText, rcText, DT_VCENTER | DT_EXPANDTABS | DT_NOPREFIX);
-			}
-		}
-
-		// Draw a focus rect around the item if necessary.
-		//if(bListHasFocus && (rItem.state & LVIS_FOCUSED))
-		//	pDC->DrawFocusRect(rcItem);
-
-		if (m_bShowTextForFirstTenHotKeys && firstTenNum >= 0)
-		{
-			CString cs;
-			if (firstTenNum == 10)
-				cs = "0";
-			else
-				cs.Format(_T("%d"), firstTenNum);
-
-			CRect crClient;
-
-			GetWindowRect(crClient);
-			ScreenToClient(crClient);
-
-			CRect crHotKey = rcItem;
-
-			int extraFromClipWasPaste = 0;
-			if (m_showIfClipWasPasted)
-				extraFromClipWasPaste = 3;
-
-			crHotKey.right = crHotKey.left + m_windowDpi->Scale(11);
-			crHotKey.left += m_windowDpi->Scale(1 + extraFromClipWasPaste);
-			crHotKey.top += m_windowDpi->Scale(1 + extraFromClipWasPaste);
-
-			CFont* pOldFont{ pDC->SelectObject(&m_SmallFont) };
-			COLORREF localOldTextColor = pDC->SetTextColor(CGetSetOptions::m_Theme.ListSmallQuickPasteIndexColor());
-
-			CPen pen(PS_SOLID, 0, CGetSetOptions::m_Theme.ListSmallQuickPasteIndexColor());
-			CPen* pOldPen = pDC->SelectObject(&pen);
-
-			pDC->DrawText(cs, crHotKey, DT_BOTTOM);
-
-			pDC->MoveTo(CPoint(rcItem.left + m_windowDpi->Scale(8 + extraFromClipWasPaste), rcItem.top));
-			pDC->LineTo(CPoint(rcItem.left + m_windowDpi->Scale(8 + extraFromClipWasPaste), rcItem.bottom));
-
-			pDC->SelectObject(pOldFont);
-			pDC->SetTextColor(localOldTextColor);
-			pDC->SelectObject(pOldPen);
-		}
-
-		// restore the previous values
-		if (OldColor != CLR_INVALID)
-			pDC->SetTextColor(OldColor);
-
-		if (nOldBKMode > -1)
-			pDC->SetBkMode(nOldBKMode);
+		DrawListItem(pLVCD);
 
 		*pResult = CDRF_SKIPDEFAULT;    // We've painted everything.
 	}
+}
+
+void CQListCtrl::DrawListItem(NMLVCUSTOMDRAW* pLVCD)
+{
+	LVITEM   rItem;
+	int      nItem = static_cast<int>(pLVCD->nmcd.dwItemSpec);
+	CDC* pDC = CDC::FromHandle(pLVCD->nmcd.hdc);
+	BOOL     bListHasFocus;
+	CRect    rcItem;
+
+	bListHasFocus = (GetSafeHwnd() == ::GetFocus());
+
+	// Get the image index and selected/focused state of the
+	// item being drawn.
+	ZeroMemory(&rItem, sizeof(LVITEM));
+	rItem.mask = LVIF_STATE;
+	rItem.iItem = nItem;
+	rItem.stateMask = LVIS_SELECTED | LVIS_FOCUSED;
+	GetItem(&rItem);
+
+	// Get the rect that bounds the text label.
+	GetItemRect(nItem, rcItem, LVIR_SELECTBOUNDS);
+
+	COLORREF OldColor = CLR_INVALID;
+	int nOldBKMode = -1;
+
+	CString csText;
+	CString strSymbols;
+	ReadItemText(nItem, csText, strSymbols);
+
+	// Draw the background of the list item.  Colors are selected
+	// according to the item's state.
+	const RowColors colors{ChooseRowColors(nItem, rItem.state, bListHasFocus)};
+	OldColor = pDC->SetTextColor(colors.text);
+
+	pDC->FillSolidRect(rcItem, colors.background);
+	nOldBKMode = pDC->SetBkMode(TRANSPARENT);
+
+	CRect rcText = rcItem;
+	rcText.left += m_windowDpi->Scale(ROW_LEFT_BORDER);
+	rcText.top += m_windowDpi->Scale(1);
+	rcText.bottom -= m_windowDpi->Scale(1);
+
+	if (IsPastedClip(strSymbols)) //clip was pasted from ditto
+	{
+		DrawPastedMarker(pDC, rcItem);
+	}
+
+	// set firstTenNum to the first ten number (1-10) corresponding to
+	//  the current nItem.
+	// -1 means that nItem is not in the FirstTen block.
+	int firstTenNum = GetFirstTenNum(nItem);
+
+	if (ShowsFirstTenHotKey(firstTenNum))
+	{
+		rcText.left += m_windowDpi->Scale(12);
+	}
+	else
+	{
+		rcText.left += m_windowDpi->Scale(3);
+	}
+
+	// if we are inside a group, don't display the "in group" flag
+	bool drawInGroupIcon = ShouldDrawInGroupIcon(strSymbols);
+
+	DrawCopiedColorCode(csText, rcText, pDC);
+
+	DrawBitMap(nItem, rcText, pDC, csText);
+
+	// draw the symbol box
+	DrawSymbolIcons(pDC, rcText, strSymbols, drawInGroupIcon);
+
+	DrawItemText(nItem, csText, rcText, pDC);
+
+	// Draw a focus rect around the item if necessary.
+	//if(bListHasFocus && (rItem.state & LVIS_FOCUSED))
+	//	pDC->DrawFocusRect(rcItem);
+
+	if (ShowsFirstTenHotKey(firstTenNum))
+	{
+		DrawFirstTenHotKey(pDC, rcItem, firstTenNum);
+	}
+
+	// restore the previous values
+	if (OldColor != CLR_INVALID)
+		pDC->SetTextColor(OldColor);
+
+	if (nOldBKMode > -1)
+		pDC->SetBkMode(nOldBKMode);
+}
+
+void CQListCtrl::ReadItemText(int nItem, CString& csText, CString& strSymbols)
+{
+	LPTSTR lpszText = csText.GetBufferSetLength(CGetSetOptions::m_bDescTextSize);
+	GetItemText(nItem, 0, lpszText, CGetSetOptions::m_bDescTextSize);
+	csText.ReleaseBuffer();
+
+	// extract symbols
+	int nSymEnd = csText.Find('|');
+	if (nSymEnd >= 0)
+	{
+		strSymbols = csText.Left(nSymEnd);
+		csText = csText.Mid(nSymEnd + 1);
+	}
+}
+
+CQListCtrl::RowColors CQListCtrl::ChooseRowColors(int nItem, UINT state, BOOL bListHasFocus)
+{
+	if (state & LVIS_SELECTED)
+	{
+		if (bListHasFocus)
+		{
+			return RowColors{CGetSetOptions::m_Theme.ListBoxSelectedBG(), CGetSetOptions::m_Theme.ListBoxSelectedText()};
+		}
+		return RowColors{CGetSetOptions::m_Theme.ListBoxSelectedNoFocusBG(), CGetSetOptions::m_Theme.ListBoxSelectedNoFocusText()};
+	}
+
+	//Shade alternating Rows
+	if ((nItem % 2) == 0)
+	{
+		return RowColors{CGetSetOptions::m_Theme.ListBoxOddRowsBG(), CGetSetOptions::m_Theme.ListBoxOddRowsText()};
+	}
+	return RowColors{CGetSetOptions::m_Theme.ListBoxEvenRowsBG(), CGetSetOptions::m_Theme.ListBoxEvenRowsText()};
+}
+
+bool CQListCtrl::IsPastedClip(const CString& strSymbols) const
+{
+	return m_showIfClipWasPasted &&
+		strSymbols.GetLength() > 0 &&
+		strSymbols.Find(_T("<pasted>")) >= 0;
+}
+
+void CQListCtrl::DrawPastedMarker(CDC* pDC, const CRect& rcItem)
+{
+	CRect pastedRect(rcItem);
+	pastedRect.left++;
+	pastedRect.right = pastedRect.left + m_windowDpi->Scale(2);
+
+	pDC->FillSolidRect(pastedRect, CGetSetOptions::m_Theme.ClipPastedColor());
+}
+
+bool CQListCtrl::ShowsFirstTenHotKey(int firstTenNum) const
+{
+	return m_bShowTextForFirstTenHotKeys && firstTenNum >= 0;
+}
+
+bool CQListCtrl::ShouldDrawInGroupIcon(const CString& strSymbols)
+{
+	return (theApp.m_GroupID > 0 && strSymbols.Find(_T("<ingroup>")) >= 0) == false;
+}
+
+void CQListCtrl::DrawSymbolIcons(CDC* pDC, CRect& rcText, const CString& strSymbols, bool drawInGroupIcon)
+{
+	if (strSymbols.GetLength() <= 0)
+		return;
+
+	if (strSymbols.Find(_T("<group>")) >= 0) //group
+		DrawSymbolIcon(pDC, rcText, m_groupFolder);
+	if (strSymbols.Find(_T("<noautodelete>")) >= 0) //don't auto delete
+		DrawSymbolIcon(pDC, rcText, m_dontDeleteImage);
+	if (strSymbols.Find(_T("<shortcut>")) >= 0) // has shortcut
+		DrawSymbolIcon(pDC, rcText, m_shortCutImage);
+	if (drawInGroupIcon &&
+		strSymbols.Find(_T("<ingroup>")) >= 0) // in group
+		DrawSymbolIcon(pDC, rcText, m_inFolderImage);
+	// <qpastetext> (has quick paste text) has no icon
+	if (strSymbols.Find(_T("<sticky>")) >= 0) //sticky clip
+		DrawSymbolIcon(pDC, rcText, m_stickyImage);
+}
+
+void CQListCtrl::DrawSymbolIcon(CDC* pDC, CRect& rcText, CGdiImageDrawer& image)
+{
+	image.Draw(pDC, *m_windowDpi, this, rcText.left, rcText.top, false, false);
+	rcText.left += image.ImageWidth() + m_windowDpi->Scale(2);
+}
+
+void CQListCtrl::DrawItemText(int nItem, CString& csText, CRect& rcText, CDC* pDC)
+{
+	if (DrawRtfText(nItem, rcText, pDC) != FALSE)
+		return;
+
+	if (HighlightSearchMatches(csText))
+	{
+		m_htmlTextDrawer.Draw(pDC->m_hDC, csText, csText.GetLength(), rcText, DT_VCENTER | DT_EXPANDTABS | DT_NOPREFIX);
+	}
+	else
+	{
+		pDC->DrawText(csText, rcText, DT_VCENTER | DT_EXPANDTABS | DT_NOPREFIX);
+	}
+}
+
+bool CQListCtrl::HighlightSearchMatches(CString& csText)
+{
+	auto highlightColor = CGetSetOptions::m_Theme.SearchTextHighlight();
+	//use unprintable characters so it doesn't find copied html to convert
+	return m_searchText.GetLength() > 0 &&
+		FindNoCaseAndInsert(csText, m_searchText, StrF(_T("\x01\x04 color='#%02x%02x%02x'\x02"), GetRValue(highlightColor), GetGValue(highlightColor), GetBValue(highlightColor)), _T("\x01\x03\x04\x02"), m_linesPerRow) > 0;
+}
+
+void CQListCtrl::DrawFirstTenHotKey(CDC* pDC, const CRect& rcItem, int firstTenNum)
+{
+	CString cs;
+	if (firstTenNum == 10)
+		cs = "0";
+	else
+		cs.Format(_T("%d"), firstTenNum);
+
+	CRect crClient;
+
+	GetWindowRect(crClient);
+	ScreenToClient(crClient);
+
+	CRect crHotKey = rcItem;
+
+	int extraFromClipWasPaste = 0;
+	if (m_showIfClipWasPasted)
+		extraFromClipWasPaste = 3;
+
+	crHotKey.right = crHotKey.left + m_windowDpi->Scale(11);
+	crHotKey.left += m_windowDpi->Scale(1 + extraFromClipWasPaste);
+	crHotKey.top += m_windowDpi->Scale(1 + extraFromClipWasPaste);
+
+	CFont* pOldFont{ pDC->SelectObject(&m_SmallFont) };
+	COLORREF localOldTextColor = pDC->SetTextColor(CGetSetOptions::m_Theme.ListSmallQuickPasteIndexColor());
+
+	CPen pen(PS_SOLID, 0, CGetSetOptions::m_Theme.ListSmallQuickPasteIndexColor());
+	CPen* pOldPen = pDC->SelectObject(&pen);
+
+	pDC->DrawText(cs, crHotKey, DT_BOTTOM);
+
+	pDC->MoveTo(CPoint(rcItem.left + m_windowDpi->Scale(8 + extraFromClipWasPaste), rcItem.top));
+	pDC->LineTo(CPoint(rcItem.left + m_windowDpi->Scale(8 + extraFromClipWasPaste), rcItem.bottom));
+
+	pDC->SelectObject(pOldFont);
+	pDC->SetTextColor(localOldTextColor);
+	pDC->SelectObject(pOldPen);
 }
 
 
@@ -816,284 +841,340 @@ void CQListCtrl::DrawCopiedColorCode(CString& csText, CRect& rcText, CDC* pDC)
 	CString parseText = cleanedText;
 	parseText.MakeLower();
 
-	// 2. Helper lambda to draw the color box
-	auto DrawColorBox = [&](COLORREF color, int alpha = 255)
-	{
-		CRect pastedRect(rcText);
-		int boxSize = rcText.Height();
-		pastedRect.right = pastedRect.left + boxSize;
-		pastedRect.bottom = pastedRect.top + boxSize;
+	// 2. Find the colour, 3. draw the colour box
+	CopiedColor color{};
+	if (ParseCopiedColor(parseText, color) == false)
+		return;
 
-		if (alpha < 255)
-		{
-			DrawCheckerboard(pDC, pastedRect);
+	DrawColorBox(pDC, rcText, color);
+	csText = originalCleanedText;
+}
 
-			// Use GDI+ for alpha blending
-			Gdiplus::Graphics graphics(pDC->GetSafeHdc());
-			// every caller passes an alpha in 0-255 (two hex digits or a value clamped to 0-1 times 255)
-			Gdiplus::Color gdiplusColor(static_cast<BYTE>(alpha), GetRValue(color), GetGValue(color), GetBValue(color));
-			Gdiplus::SolidBrush brush(gdiplusColor);
-			graphics.FillRectangle(&brush, Gdiplus::Rect(pastedRect.left, pastedRect.top, pastedRect.Width(), pastedRect.Height()));
-		}
-		else
-		{
-			// Opaque color is faster with FillSolidRect and doesn't need a checkerboard.
-			pDC->FillSolidRect(pastedRect, color);
-		}
-
-		rcText.left += boxSize + m_windowDpi->Scale(ROW_LEFT_BORDER);
-		csText = originalCleanedText;
+bool CQListCtrl::ParseCopiedColor(const CString& parseText, CopiedColor& color)
+{
+	// Check for formats with unique signatures first: W3C named colors, hex colors with # or 0x
+	// prefix, the W3C notations rgb(...), hsl(...) and oklch(...); then the non-W3C formats
+	constexpr std::array<ColorParser, 6> parsers{
+		&CQListCtrl::ParseNamedColor,
+		&CQListCtrl::ParsePrefixedHexColor,
+		&CQListCtrl::ParseCssRgbColor,
+		&CQListCtrl::ParseCssHslColor,
+		&CQListCtrl::ParseCssOklchColor,
+		&CQListCtrl::ParsePlainRgbColor,
 	};
+	for (const ColorParser parser : parsers)
+	{
+		if ((this->*parser)(parseText, color))
+			return true;
+	}
+	return false;
+}
 
-	// 3. Check for formats with unique signatures first
-
+bool CQListCtrl::ParseNamedColor(const CString& parseText, CopiedColor& color)
+{
 	// Check for W3C Named Colors
 	InitializeColorNameMap();
 	auto it = g_colorNameMap.find(parseText);
-	if (it != g_colorNameMap.end())
-	{
-		DrawColorBox(it->second);
-		return;
-	}
+	if (it == g_colorNameMap.end())
+		return false;
 
+	color = CopiedColor{it->second, 255};
+	return true;
+}
+
+bool CQListCtrl::ParsePrefixedHexColor(const CString& parseText, CopiedColor& color)
+{
 	// Check for Hex Colors with # or 0x prefix
-	if (parseText.Left(1) == _T('#') || parseText.Left(2) == _T("0x"))
+	if ((parseText.Left(1) == _T('#') || parseText.Left(2) == _T("0x")) == false)
+		return false;
+
+	CString hexString = ExpandShorthandHex(StripHexPrefix(parseText));
+
+	if ((IsHexString(hexString) && (hexString.GetLength() == 6 || hexString.GetLength() == 8)) == false)
+		return false;
+
+	return ScanHexColor(hexString, color);
+}
+
+CString CQListCtrl::StripHexPrefix(const CString& parseText)
+{
+	CString hexString = parseText;
+	if (hexString.Left(1) == _T('#')) hexString.Delete(0, 1);
+	else if (hexString.Left(2) == _T("0x")) hexString.Delete(0, 2);
+	return hexString;
+}
+
+CString CQListCtrl::ExpandShorthandHex(const CString& hexString)
+{
+	int len = hexString.GetLength();
+	if (len != 3 && len != 4)
+		return hexString;
+
+	// Expand shorthand
+	CString expanded;
+	for (int i = 0; i < len; ++i) { expanded += hexString[i]; expanded += hexString[i]; }
+	return expanded;
+}
+
+bool CQListCtrl::ScanHexColor(const CString& hexString, CopiedColor& color)
+{
+	unsigned int r = 0, g = 0, b = 0, a = 255;
+	if (hexString.GetLength() == 8)
 	{
-		CString hexString = parseText;
-		if (hexString.Left(1) == _T('#')) hexString.Delete(0, 1);
-		else if (hexString.Left(2) == _T("0x")) hexString.Delete(0, 2);
+		if (swscanf(hexString, _T("%2x%2x%2x%2x"), &r, &g, &b, &a) != 4)
+			return false;
 
-		int len = hexString.GetLength();
-		if (len == 3 || len == 4) // Expand shorthand
-		{
-			CString expanded;
-			for (int i = 0; i < len; ++i) { expanded += hexString[i]; expanded += hexString[i]; }
-			hexString = expanded;
-		}
-
-		if (IsHexString(hexString) && (hexString.GetLength() == 6 || hexString.GetLength() == 8))
-		{
-			unsigned int r = 0, g = 0, b = 0, a = 255;
-			if (hexString.GetLength() == 8)
-			{
-				if (swscanf(hexString, _T("%2x%2x%2x%2x"), &r, &g, &b, &a) == 4)
-				{
-					DrawColorBox(RGB(r, g, b), a);
-					return;
-				}
-			}
-			else // length is 6
-			{
-				if (swscanf(hexString, _T("%2x%2x%2x"), &r, &g, &b) == 3)
-				{
-					DrawColorBox(RGB(r, g, b)); // default alpha
-					return;
-				}
-			}
-		}
+		color = CopiedColor{RGB(r, g, b), static_cast<int>(a)};
+		return true;
 	}
 
-	// Check for W3C notations: rgb(...), hsl(...), and oklch(...)
-	if (parseText.Right(1) == _T(")"))
+	// length is 6
+	if (swscanf(hexString, _T("%2x%2x%2x"), &r, &g, &b) != 3)
+		return false;
+
+	color = CopiedColor{RGB(r, g, b), 255}; // default alpha
+	return true;
+}
+
+bool CQListCtrl::IsCssFunction(const CString& parseText, const CString& name)
+{
+	return parseText.Right(1) == _T(")") && parseText.Left(name.GetLength()) == name;
+}
+
+std::vector<CString> CQListCtrl::SplitCssArguments(CString content)
+{
+	content.Replace(_T(','), _T(' '));
+	content.Replace(_T('/'), _T(' '));
+
+	std::vector<CString> tokens;
+	int curPos = 0;
+	CString token;
+	while (!(token = content.Tokenize(_T(" "), curPos)).IsEmpty())
 	{
-		if (parseText.Left(3) == _T("rgb"))
+		tokens.push_back(token);
+	}
+	return tokens;
+}
+
+bool CQListCtrl::ParseCssValues(const std::vector<CString>& tokens, CssValues& values)
+{
+	return tokens.size() >= 3 &&
+		ParseCssValue(tokens[0], values.first) &&
+		ParseCssValue(tokens[1], values.second) &&
+		ParseCssValue(tokens[2], values.third);
+}
+
+int CQListCtrl::CssAlpha(const std::vector<CString>& tokens)
+{
+	int alpha = 255;
+	double a_val = 1.0;
+	if (tokens.size() >= 4 && ParseCssValue(tokens[3], a_val))
+	{
+		if (tokens[3].Find('%') != -1)
 		{
-			CString content;
-			int prefixLen = (parseText.Left(4) == _T("rgba")) ? 5 : 4;
-			content = parseText.Mid(prefixLen, parseText.GetLength() - prefixLen - 1);
-			content.Replace(_T(','), _T(' '));
-			content.Replace(_T('/'), _T(' '));
-
-			std::vector<CString> tokens;
-			int curPos = 0;
-			CString token;
-			while (!(token = content.Tokenize(_T(" "), curPos)).IsEmpty())
-			{
-				tokens.push_back(token);
-			}
-
-			if (tokens.size() >= 3)
-			{
-				double r_val, g_val, b_val;
-				if (ParseCssValue(tokens[0], r_val) && ParseCssValue(tokens[1], g_val) && ParseCssValue(tokens[2], b_val))
-				{
-					if (tokens[0].Find('%') != -1)
-					{
-						r_val = std::round(r_val * 2.55);
-						g_val = std::round(g_val * 2.55);
-						b_val = std::round(b_val * 2.55);
-					}
-
-					int alpha = 255;
-					double a_val = 1.0;
-					if (tokens.size() >= 4 && ParseCssValue(tokens[3], a_val))
-					{
-						if (tokens[3].Find('%') != -1)
-						{
-							a_val /= 100.0;
-						}
-						a_val = max(0.0, min(1.0, a_val));
-						alpha = static_cast<int>(std::round(a_val * 255.0));
-					}
-
-					if (r_val >= 0 && r_val <= 255 && g_val >= 0 && g_val <= 255 && b_val >= 0 && b_val <= 255)
-					{
-						DrawColorBox(RGB((int)r_val, (int)g_val, (int)b_val), alpha);
-						return;
-					}
-				}
-			}
+			a_val /= 100.0;
 		}
-		else if (parseText.Left(3) == _T("hsl"))
-		{
-			CString content;
-			int prefixLen = (parseText.Left(4) == _T("hsla")) ? 5 : 4;
-			content = parseText.Mid(prefixLen, parseText.GetLength() - prefixLen - 1);
-			content.Replace(_T(','), _T(' '));
-			content.Replace(_T('/'), _T(' '));
-			content.Replace(_T("deg"), _T(""));
+		a_val = max(0.0, min(1.0, a_val));
+		alpha = static_cast<int>(std::round(a_val * 255.0));
+	}
+	return alpha;
+}
 
-			std::vector<CString> tokens;
-			int curPos = 0;
-			CString token;
-			while (!(token = content.Tokenize(_T(" "), curPos)).IsEmpty())
-			{
-				tokens.push_back(token);
-			}
+bool CQListCtrl::IsByteValue(double value)
+{
+	return value >= 0 && value <= 255;
+}
 
-			if (tokens.size() >= 3)
-			{
-				double h_val, s_val, l_val;
-				if (ParseCssValue(tokens[0], h_val) && ParseCssValue(tokens[1], s_val) && ParseCssValue(tokens[2], l_val))
-				{
-					int alpha = 255;
-					double a_val = 1.0;
-					if (tokens.size() >= 4 && ParseCssValue(tokens[3], a_val))
-					{
-						if (tokens[3].Find('%') != -1)
-						{
-							a_val /= 100.0;
-						}
-						a_val = max(0.0, min(1.0, a_val));
-						alpha = static_cast<int>(std::round(a_val * 255.0));
-					}
+bool CQListCtrl::IsPercentValue(double value)
+{
+	return value >= 0 && value <= 100;
+}
 
-					if (s_val >= 0 && s_val <= 100 && l_val >= 0 && l_val <= 100)
-					{
-						h_val = fmod(h_val, 360.0);
-						if (h_val < 0) h_val += 360.0;
-						DrawColorBox(HslToRgb(h_val, s_val / 100.0, l_val / 100.0), alpha);
-						return;
-					}
-				}
-			}
-		}
-		else if (parseText.Left(5) == _T("oklch"))
-		{
-			CString content;
-			content = parseText.Mid(6, parseText.GetLength() - 7);
-			content.Replace(_T(','), _T(' '));
-			content.Replace(_T('/'), _T(' '));
+bool CQListCtrl::IsRgbByte(int value)
+{
+	return value >= 0 && value <= 255;
+}
 
-			std::vector<CString> tokens;
-			int curPos = 0;
-			CString token;
-			while (!(token = content.Tokenize(_T(" "), curPos)).IsEmpty())
-			{
-				tokens.push_back(token);
-			}
+bool CQListCtrl::ParseCssRgbColor(const CString& parseText, CopiedColor& color)
+{
+	if (IsCssFunction(parseText, _T("rgb")) == false)
+		return false;
 
-			if (tokens.size() >= 3)
-			{
-				double l_val, c_val, h_val;
-				if (ParseCssValue(tokens[0], l_val) && ParseCssValue(tokens[1], c_val) && ParseCssValue(tokens[2], h_val))
-				{
-					bool l_is_percent = tokens[0].Find('%') != -1;
+	int prefixLen = (parseText.Left(4) == _T("rgba")) ? 5 : 4;
+	const std::vector<CString> tokens = SplitCssArguments(parseText.Mid(prefixLen, parseText.GetLength() - prefixLen - 1));
 
-					double l_normalized = l_val;
-					if (l_is_percent)
-					{
-						l_normalized = l_val / 100.0;
-					}
-					
-					int alpha = 255;
-					double a_val = 1.0;
-					if (tokens.size() >= 4 && ParseCssValue(tokens[3], a_val))
-					{
-						if (tokens[3].Find('%') != -1)
-						{
-							a_val /= 100.0;
-						}
-						a_val = max(0.0, min(1.0, a_val));
-						alpha = static_cast<int>(std::round(a_val * 255.0));
-					}
+	CssValues rgb{};
+	if (ParseCssValues(tokens, rgb) == false)
+		return false;
 
-					if (l_normalized >= 0 && l_normalized <= 1.0 && c_val >= 0)
-					{
-						DrawColorBox(OklchToRgb(l_normalized, c_val, h_val), alpha);
-						return;
-					}
-				}
-			}
-		}
+	if (tokens[0].Find('%') != -1)
+	{
+		rgb.first = std::round(rgb.first * 2.55);
+		rgb.second = std::round(rgb.second * 2.55);
+		rgb.third = std::round(rgb.third * 2.55);
 	}
 
+	int alpha = CssAlpha(tokens);
+
+	if ((IsByteValue(rgb.first) && IsByteValue(rgb.second) && IsByteValue(rgb.third)) == false)
+		return false;
+
+	color = CopiedColor{RGB(static_cast<int>(rgb.first), static_cast<int>(rgb.second), static_cast<int>(rgb.third)), alpha};
+	return true;
+}
+
+bool CQListCtrl::ParseCssHslColor(const CString& parseText, CopiedColor& color)
+{
+	if (IsCssFunction(parseText, _T("hsl")) == false)
+		return false;
+
+	int prefixLen = (parseText.Left(4) == _T("hsla")) ? 5 : 4;
+	CString content = parseText.Mid(prefixLen, parseText.GetLength() - prefixLen - 1);
+	// removing "deg" before or after the separators gives the same text: neither touches the other
+	content.Replace(_T("deg"), _T(""));
+	const std::vector<CString> tokens = SplitCssArguments(content);
+
+	CssValues hsl{};
+	if (ParseCssValues(tokens, hsl) == false)
+		return false;
+
+	int alpha = CssAlpha(tokens);
+
+	if ((IsPercentValue(hsl.second) && IsPercentValue(hsl.third)) == false)
+		return false;
+
+	double h_val = fmod(hsl.first, 360.0);
+	if (h_val < 0) h_val += 360.0;
+	color = CopiedColor{HslToRgb(h_val, hsl.second / 100.0, hsl.third / 100.0), alpha};
+	return true;
+}
+
+bool CQListCtrl::ParseCssOklchColor(const CString& parseText, CopiedColor& color)
+{
+	if (IsCssFunction(parseText, _T("oklch")) == false)
+		return false;
+
+	const std::vector<CString> tokens = SplitCssArguments(parseText.Mid(6, parseText.GetLength() - 7));
+
+	CssValues lch{};
+	if (ParseCssValues(tokens, lch) == false)
+		return false;
+
+	bool l_is_percent = tokens[0].Find('%') != -1;
+
+	double l_normalized = l_is_percent ? lch.first / 100.0 : lch.first;
+
+	int alpha = CssAlpha(tokens);
+
+	if ((l_normalized >= 0 && l_normalized <= 1.0 && lch.second >= 0) == false)
+		return false;
+
+	color = CopiedColor{OklchToRgb(l_normalized, lch.second, lch.third), alpha};
+	return true;
+}
+
+bool CQListCtrl::ParsePlainRgbColor(const CString& parseText, CopiedColor& color)
+{
 	// 4. --- Non-W3C Format Parsing ---
-	int r, g, b, chars_consumed = 0;
+	// the parsers share r, g, b and the consumed character count, in this order
+	RgbScan scan{};
+	return ParseParenthesizedRgb(parseText, scan, color) ||
+		ParseCommaSeparatedRgb(parseText, scan, color) ||
+		ParseSpaceSeparatedRgb(parseText, scan, color) ||
+		ParseSixDigitHex(parseText, scan, color);
+}
 
+bool CQListCtrl::ParseParenthesizedRgb(const CString& parseText, RgbScan& scan, CopiedColor& color)
+{
 	// Check for parenthesized RGB: "(255, 128, 0)" or "(255 128 0)"
-	if (parseText.Left(1) == _T("(") && parseText.Right(1) == _T(")"))
-	{
-		CString content = parseText.Mid(1, parseText.GetLength() - 2);
-		content.Trim();
-		content.Replace(_T(','), _T(' '));
+	if ((parseText.Left(1) == _T("(") && parseText.Right(1) == _T(")")) == false)
+		return false;
 
-		if (swscanf(content, _T("%d %d %d %n"), &r, &g, &b, &chars_consumed) == 3)
-		{
-			CString remainingText = content.Mid(chars_consumed);
-			remainingText.Trim();
+	CString content = parseText.Mid(1, parseText.GetLength() - 2);
+	content.Trim();
+	content.Replace(_T(','), _T(' '));
 
-			if (remainingText.IsEmpty())
-			{
-				if (r >= 0 && r <= 255 && g >= 0 && g <= 255 && b >= 0 && b <= 255)
-				{
-					DrawColorBox(RGB(r, g, b));
-					return;
-				}
-			}
-		}
-	}
+	if (swscanf(content, _T("%d %d %d %n"), &scan.r, &scan.g, &scan.b, &scan.charsConsumed) != 3)
+		return false;
 
+	CString remainingText = content.Mid(scan.charsConsumed);
+	remainingText.Trim();
+
+	if (remainingText.IsEmpty() == false)
+		return false;
+
+	return AcceptRgb(scan, color);
+}
+
+bool CQListCtrl::ParseCommaSeparatedRgb(const CString& parseText, RgbScan& scan, CopiedColor& color)
+{
 	// Check for comma-separated RGB: "255, 0, 0"
-	if (swscanf(parseText, _T("%d , %d , %d %n"), &r, &g, &b, &chars_consumed) == 3 && chars_consumed == parseText.GetLength())
+	if (swscanf(parseText, _T("%d , %d , %d %n"), &scan.r, &scan.g, &scan.b, &scan.charsConsumed) == 3 && scan.charsConsumed == parseText.GetLength())
 	{
-		if (r >= 0 && r <= 255 && g >= 0 && g <= 255 && b >= 0 && b <= 255)
-		{
-			DrawColorBox(RGB(r, g, b));
-			return;
-		}
+		return AcceptRgb(scan, color);
 	}
+	return false;
+}
 
+bool CQListCtrl::ParseSpaceSeparatedRgb(const CString& parseText, RgbScan& scan, CopiedColor& color)
+{
 	// Check for space-separated RGB: "255 128 0"
-	if (swscanf(parseText, _T("%d %d %d %n"), &r, &g, &b, &chars_consumed) == 3 && chars_consumed == parseText.GetLength())
+	if (swscanf(parseText, _T("%d %d %d %n"), &scan.r, &scan.g, &scan.b, &scan.charsConsumed) == 3 && scan.charsConsumed == parseText.GetLength())
 	{
-		if (r >= 0 && r <= 255 && g >= 0 && g <= 255 && b >= 0 && b <= 255)
-		{
-			DrawColorBox(RGB(r, g, b));
-			return;
-		}
+		return AcceptRgb(scan, color);
+	}
+	return false;
+}
+
+bool CQListCtrl::ParseSixDigitHex(const CString& parseText, RgbScan& scan, CopiedColor& color)
+{
+	// Check for 6-digit hex: "FF00CC"
+	if ((parseText.GetLength() == 6 && IsHexString(parseText)) == false)
+		return false;
+
+	// Use %n here as well for consistency, though length check is sufficient.
+	if (swscanf(parseText, _T("%2x%2x%2x%n"), &scan.r, &scan.g, &scan.b, &scan.charsConsumed) == 3 && scan.charsConsumed == 6)
+	{
+		color = CopiedColor{RGB(scan.r, scan.g, scan.b), 255};
+		return true;
+	}
+	return false;
+}
+
+bool CQListCtrl::AcceptRgb(const RgbScan& scan, CopiedColor& color)
+{
+	if ((IsRgbByte(scan.r) && IsRgbByte(scan.g) && IsRgbByte(scan.b)) == false)
+		return false;
+
+	color = CopiedColor{RGB(scan.r, scan.g, scan.b), 255};
+	return true;
+}
+
+void CQListCtrl::DrawColorBox(CDC* pDC, CRect& rcText, const CopiedColor& color)
+{
+	CRect pastedRect(rcText);
+	int boxSize = rcText.Height();
+	pastedRect.right = pastedRect.left + boxSize;
+	pastedRect.bottom = pastedRect.top + boxSize;
+
+	if (color.alpha < 255)
+	{
+		DrawCheckerboard(pDC, pastedRect);
+
+		// Use GDI+ for alpha blending
+		Gdiplus::Graphics graphics(pDC->GetSafeHdc());
+		// every parser gives an alpha in 0-255 (two hex digits or a value clamped to 0-1 times 255)
+		Gdiplus::Color gdiplusColor(static_cast<BYTE>(color.alpha), GetRValue(color.color), GetGValue(color.color), GetBValue(color.color));
+		Gdiplus::SolidBrush brush(gdiplusColor);
+		graphics.FillRectangle(&brush, Gdiplus::Rect(pastedRect.left, pastedRect.top, pastedRect.Width(), pastedRect.Height()));
+	}
+	else
+	{
+		// Opaque color is faster with FillSolidRect and doesn't need a checkerboard.
+		pDC->FillSolidRect(pastedRect, color.color);
 	}
 
-	// Check for 6-digit hex: "FF00CC"
-	if (parseText.GetLength() == 6 && IsHexString(parseText))
-	{
-		// Use %n here as well for consistency, though length check is sufficient.
-		if (swscanf(parseText, _T("%2x%2x%2x%n"), &r, &g, &b, &chars_consumed) == 3 && chars_consumed == 6)
-		{
-			DrawColorBox(RGB(r, g, b));
-			return;
-		}
-	}
+	rcText.left += boxSize + m_windowDpi->Scale(ROW_LEFT_BORDER);
 }
 
 
@@ -1323,31 +1404,8 @@ int CQListCtrl::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 BOOL CQListCtrl::PreTranslateMessage(MSG* pMsg)
 {
-	CAccel a;
-	if (m_Accels.OnMsg(pMsg, a))
+	if (RunAccelerator(pMsg))
 	{
-		switch (a.Cmd)
-		{
-		case COPY_BUFFER_HOT_KEY_1_ID:
-			PutSelectedItemOnDittoCopyBuffer(0);
-			break;
-		case COPY_BUFFER_HOT_KEY_2_ID:
-			PutSelectedItemOnDittoCopyBuffer(1);
-			break;
-		case COPY_BUFFER_HOT_KEY_3_ID:
-			PutSelectedItemOnDittoCopyBuffer(2);
-			break;
-		default:
-			if (a.RefId == CHotKey::PASTE_OPEN_CLIP)
-			{
-				GetParent()->SendMessage(NM_SELECT_DB_ID, a.Cmd, 0);
-			}
-			else if (a.RefId == CHotKey::MOVE_TO_GROUP)
-			{
-				GetParent()->SendMessage(NM_MOVE_TO_GROUP, a.Cmd, 0);
-			}
-		}
-
 		return TRUE;
 	}
 
@@ -1365,15 +1423,7 @@ BOOL CQListCtrl::PreTranslateMessage(MSG* pMsg)
 		break; // end case WM_KEYDOWN
 	case WM_MOUSEWHEEL:
 		// Will be handled by default, but ensure scrollbar updates after
-		{
-			BOOL result = CListCtrl::PreTranslateMessage(pMsg);
-			CWnd* pParent = GetParent();
-			if (pParent && pParent->GetSafeHwnd())
-			{
-				pParent->PostMessage(NM_UPDATE_SCROLLBAR, TRUE, 0);
-			}
-			return result;
-		}
+		return PreTranslateMouseWheel(pMsg);
 
 	case WM_VSCROLL:
 		ASSERT(FALSE);
@@ -1381,6 +1431,52 @@ BOOL CQListCtrl::PreTranslateMessage(MSG* pMsg)
 	} // end switch(pMsg->message)
 
 	return CListCtrl::PreTranslateMessage(pMsg);
+}
+
+bool CQListCtrl::RunAccelerator(MSG* pMsg)
+{
+	CAccel a;
+	if (m_Accels.OnMsg(pMsg, a) == false)
+		return false;
+
+	RunAcceleratorCommand(a);
+	return true;
+}
+
+void CQListCtrl::RunAcceleratorCommand(const CAccel& a)
+{
+	switch (a.Cmd)
+	{
+	case COPY_BUFFER_HOT_KEY_1_ID:
+		PutSelectedItemOnDittoCopyBuffer(0);
+		break;
+	case COPY_BUFFER_HOT_KEY_2_ID:
+		PutSelectedItemOnDittoCopyBuffer(1);
+		break;
+	case COPY_BUFFER_HOT_KEY_3_ID:
+		PutSelectedItemOnDittoCopyBuffer(2);
+		break;
+	default:
+		if (a.RefId == CHotKey::PASTE_OPEN_CLIP)
+		{
+			GetParent()->SendMessage(NM_SELECT_DB_ID, a.Cmd, 0);
+		}
+		else if (a.RefId == CHotKey::MOVE_TO_GROUP)
+		{
+			GetParent()->SendMessage(NM_MOVE_TO_GROUP, a.Cmd, 0);
+		}
+	}
+}
+
+BOOL CQListCtrl::PreTranslateMouseWheel(MSG* pMsg)
+{
+	BOOL result = CListCtrl::PreTranslateMessage(pMsg);
+	CWnd* pParent = GetParent();
+	if (pParent && pParent->GetSafeHwnd())
+	{
+		pParent->PostMessage(NM_UPDATE_SCROLLBAR, TRUE, 0);
+	}
+	return result;
 }
 
 BOOL CQListCtrl::HandleKeyDown(WPARAM wParam, LPARAM lParam)
@@ -1402,47 +1498,57 @@ BOOL CQListCtrl::HandleKeyDown(WPARAM wParam, LPARAM lParam)
 	case 'A': // Ctrl-A = Select All
 		if (CONTROL_PRESSED)
 		{
-			int nCount = GetItemCount();
-			for (int i = 0; i < nCount; i++)
-			{
-				SetSelection(i);
-			}
+			SelectAllItems();
 			return TRUE;
 		}
 		break;
 
 	case VK_HOME:
-		if (GetKeyState(VK_SHIFT) & 0x8000)
-		{
-			int nAnchor = GetSelectionMark();
-			if (nAnchor < 0)
-			{
-				nAnchor = GetCaret();
-			}
-
-			if (nAnchor >= 0)
-			{
-				RemoveAllSelection();
-
-				for (int i = 0; i <= nAnchor; i++)
-				{
-					SetSelection(i, TRUE);
-				}
-
-				ListView_SetSelectionMark(m_hWnd, nAnchor);
-				
-				SetCaret(0);
-				EnsureVisible(0, FALSE);
-			}
-		}
-		else
-		{
-			SetListPos(0);
-		}
+		HandleHomeKey();
 		return TRUE;
 	} // end switch(vk)
 
 	return FALSE;
+}
+
+void CQListCtrl::SelectAllItems()
+{
+	int nCount = GetItemCount();
+	for (int i = 0; i < nCount; i++)
+	{
+		SetSelection(i);
+	}
+}
+
+void CQListCtrl::HandleHomeKey()
+{
+	if (GetKeyState(VK_SHIFT) & 0x8000)
+	{
+		int nAnchor = GetSelectionMark();
+		if (nAnchor < 0)
+		{
+			nAnchor = GetCaret();
+		}
+
+		if (nAnchor >= 0)
+		{
+			RemoveAllSelection();
+
+			for (int i = 0; i <= nAnchor; i++)
+			{
+				SetSelection(i, TRUE);
+			}
+
+			ListView_SetSelectionMark(m_hWnd, nAnchor);
+
+			SetCaret(0);
+			EnsureVisible(0, FALSE);
+		}
+	}
+	else
+	{
+		SetListPos(0);
+	}
 }
 
 bool CQListCtrl::PostEventLoadedCheckDescription(int updatedRow)
@@ -1507,15 +1613,38 @@ bool CQListCtrl::ShowFullDescription(bool bFromAuto, bool fromNextPrev)
 
 	log(StrF(_T("Show full description row: %d id: %d"), clipRow, clipId));
 
-	if (VALID_TOOLTIP &&
-		clipId > 0 &&
-		m_pToolTip->GetClipId() == clipId &&
-		::IsWindow(m_toolTipHwnd))
+	if (IsToolTipShowingClip(clipId))
 	{
 		return false;
 	}
 
 	int nItem = GetCaret();
+	CPoint pt{DescriptionPosition(nItem, bFromAuto)};
+
+	CString csDescription;
+	GetToolTipText(nItem, csDescription);
+
+	PrepareToolTipWindow(fromNextPrev, pt);
+
+	if (VALID_TOOLTIP)
+	{
+		if (ShowClipInToolTip(nItem, clipId, clipRow, csDescription, pt) == false)
+			return false;
+	}
+
+	return true;
+}
+
+bool CQListCtrl::IsToolTipShowingClip(int clipId)
+{
+	return VALID_TOOLTIP &&
+		clipId > 0 &&
+		m_pToolTip->GetClipId() == clipId &&
+		::IsWindow(m_toolTipHwnd);
+}
+
+CPoint CQListCtrl::DescriptionPosition(int nItem, bool bFromAuto)
+{
 	CRect rc, crWindow;
 	GetWindowRect(&crWindow);
 	GetItemRect(nItem, rc, LVIR_BOUNDS);
@@ -1536,9 +1665,11 @@ bool CQListCtrl::ShowFullDescription(bool bFromAuto, bool fromNextPrev)
 		pt = CPoint((crWindow.left + (crWindow.right - crWindow.left) / 2), rc.bottom);
 	}
 
-	CString csDescription;
-	GetToolTipText(nItem, csDescription);
+	return pt;
+}
 
+void CQListCtrl::PrepareToolTipWindow(bool fromNextPrev, CPoint& pt)
+{
 	if (m_pToolTip == NULL ||
 		//fromNextPrev == false ||
 		::IsWindow(m_toolTipHwnd) == FALSE)
@@ -1564,96 +1695,119 @@ bool CQListCtrl::ShowFullDescription(bool bFromAuto, bool fromNextPrev)
 		m_pToolTip->SetToolTipText(_T(""));
 		m_pToolTip->SetFolderPath(_T(""));
 	}
+}
 
-	if (VALID_TOOLTIP)
+bool CQListCtrl::ShowClipInToolTip(int nItem, int clipId, int clipRow, const CString& csDescription, CPoint pt)
+{
+	ResetToolTipContent(clipId, clipRow);
+
+	CClipFormat Clip;
+
+	if (LoadToolTipClipData(clipId) == false)
+		return false;
+
+	SetToolTipPlainText(nItem, Clip, csDescription);
+
+	SetToolTipRtf(nItem, Clip);
+
+	SetToolTipImage(nItem, Clip);
+
+	m_pToolTip->Show(pt);
+	return true;
+}
+
+void CQListCtrl::ResetToolTipContent(int clipId, int clipRow)
+{
+	m_pToolTip->SetTooltipActions(m_pToolTipActions);
+	m_pToolTip->SetClipId(clipId);
+	m_pToolTip->SetClipRow(clipRow);
+	m_pToolTip->SetSearchText(m_searchText);
+	LOGFONT lf;
+	m_Font.GetLogFont(&lf);
+	lf.lfHeight = m_windowDpi->UnScale(lf.lfHeight);
+	m_pToolTip->SetLogFont(&lf, FALSE);
+
+	m_pToolTip->SetClipData(_T(""));
+	m_pToolTip->SetToolTipText(_T(""));
+	m_pToolTip->SetRTFText("");
+}
+
+bool CQListCtrl::LoadToolTipClipData(int clipId)
+{
+	try
 	{
-		m_pToolTip->SetTooltipActions(m_pToolTipActions);
-		m_pToolTip->SetClipId(clipId);
-		m_pToolTip->SetClipRow(clipRow);
-		m_pToolTip->SetSearchText(m_searchText);
-		LOGFONT lf;
-		m_Font.GetLogFont(&lf);
-		lf.lfHeight = m_windowDpi->UnScale(lf.lfHeight);
-		m_pToolTip->SetLogFont(&lf, FALSE);
-
-		m_pToolTip->SetClipData(_T(""));
-		m_pToolTip->SetToolTipText(_T(""));
-		m_pToolTip->SetRTFText("");
-		bool bSetPlainText = false;
-
-		CClipFormat Clip;
-
-		try
+		CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID, lDate, lastPasteDate, lDontAutoDelete, QuickPasteText, lShortCut, globalShortCut, stickyClipOrder, stickyClipGroupOrder, lParentID FROM Main WHERE lID = %d"), clipId);
+		if (q.eof() == false)
 		{
-			CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID, lDate, lastPasteDate, lDontAutoDelete, QuickPasteText, lShortCut, globalShortCut, stickyClipOrder, stickyClipGroupOrder, lParentID FROM Main WHERE lID = %d"), clipId);
-			if (q.eof() == false)
+			CString clipData{ClipDataText(q)};
+
+			int parentId = q.getIntField(_T("lParentID"));
+			if (parentId > 0)
 			{
-				CString clipData{ClipDataText(q)};
+				CString folder = FolderPath(parentId);
 
-				int parentId = q.getIntField(_T("lParentID"));
-				if (parentId > 0)
-				{
-					CString folder = FolderPath(parentId);
-
-					m_pToolTip->SetFolderPath(folder);
-				}
-
-				m_pToolTip->SetClipData(clipData);
+				m_pToolTip->SetFolderPath(folder);
 			}
-		}
-		catch (CppSQLite3Exception& e)
-		{
-			CErrorReport::Show(StrF(_T("Loading the description of clip id %d failed: %s"), clipId, e.errorMessage()));
-			return false;
-		}
 
-		Clip.m_cfType = CF_UNICODETEXT;
+			m_pToolTip->SetClipData(clipData);
+		}
+	}
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(StrF(_T("Loading the description of clip id %d failed: %s"), clipId, e.errorMessage()));
+		return false;
+	}
+
+	return true;
+}
+
+void CQListCtrl::SetToolTipPlainText(int nItem, CClipFormat& Clip, const CString& csDescription)
+{
+	bool bSetPlainText = false;
+
+	Clip.m_cfType = CF_UNICODETEXT;
+	if (GetClipData(nItem, Clip) && Clip.m_hgData)
+	{
+		m_pToolTip->SetToolTipText(Clip.GetAsCString());
+		bSetPlainText = true;
+
+		Clip.Free();
+		Clip.Clear();
+	}
+
+	if (bSetPlainText == false)
+	{
+		Clip.m_cfType = CF_TEXT;
 		if (GetClipData(nItem, Clip) && Clip.m_hgData)
 		{
-			m_pToolTip->SetToolTipText(Clip.GetAsCString());
+			CString cs(Clip.GetAsCStringA());
+
+			m_pToolTip->SetToolTipText(cs);
 			bSetPlainText = true;
 
 			Clip.Free();
 			Clip.Clear();
 		}
-
-		if (bSetPlainText == false)
-		{
-			Clip.m_cfType = CF_TEXT;
-			if (GetClipData(nItem, Clip) && Clip.m_hgData)
-			{
-				CString cs(Clip.GetAsCStringA());
-
-				m_pToolTip->SetToolTipText(cs);
-				bSetPlainText = true;
-
-				Clip.Free();
-				Clip.Clear();
-			}
-		}
-
-		if (bSetPlainText == false)
-		{
-			m_pToolTip->SetToolTipText(csDescription);
-		}
-
-		// registered clipboard format ids are 16-bit (0xC000-0xFFFF)
-		Clip.m_cfType = static_cast<CLIPFORMAT>(RegisterClipboardFormat(CF_RTF));
-
-		if (GetClipData(nItem, Clip) && Clip.m_hgData)
-		{
-			m_pToolTip->SetRTFText(Clip.GetAsCStringA());
-
-			Clip.Free();
-			Clip.Clear();
-		}
-
-		SetToolTipImage(nItem, Clip);
-
-		m_pToolTip->Show(pt);
 	}
 
-	return true;
+	if (bSetPlainText == false)
+	{
+		m_pToolTip->SetToolTipText(csDescription);
+	}
+}
+
+void CQListCtrl::SetToolTipRtf(int nItem, CClipFormat& Clip)
+{
+	// registered clipboard format ids are 16-bit (0xC000-0xFFFF)
+	Clip.m_cfType = static_cast<CLIPFORMAT>(RegisterClipboardFormat(CF_RTF));
+
+	if (GetClipData(nItem, Clip) && Clip.m_hgData)
+	{
+		m_pToolTip->SetRTFText(Clip.GetAsCStringA());
+
+		Clip.Free();
+		Clip.Clear();
+	}
 }
 
 CString CQListCtrl::ClipDataText(CppSQLite3Query& q)
@@ -1897,27 +2051,37 @@ void CQListCtrl::OnSelectionChange(NMHDR* pNMHDR, LRESULT* /*pResult*/)
 	if ((pnmv->uNewState == 3) ||
 		(pnmv->uNewState == 1))
 	{
-		// Notify parent to update modern scrollbar when selection changes (keyboard navigation)
-		CWnd* pParent = GetParent();
-		if (pParent && pParent->GetSafeHwnd())
-		{
-			pParent->PostMessage(NM_UPDATE_SCROLLBAR, FALSE, 0);
-		}
-
-		if (VALID_TOOLTIP &&
-			::IsWindowVisible(m_pToolTip->m_hWnd))
-		{
-			this->ShowFullDescription(false, true);
-		}
-		if (CGetSetOptions::m_bAllwaysShowDescription)
-		{
-			KillTimer(TIMER_SHOW_PROPERTIES);
-			SetTimer(TIMER_SHOW_PROPERTIES, 300, NULL);
-		}
-		if (GetSelectedCount() > 0)
-			theApp.SetStatus(NULL, FALSE);
+		NotifySelectionChanged();
 	}
 
+	UpdateAllSelectedState();
+}
+
+void CQListCtrl::NotifySelectionChanged()
+{
+	// Notify parent to update modern scrollbar when selection changes (keyboard navigation)
+	CWnd* pParent = GetParent();
+	if (pParent && pParent->GetSafeHwnd())
+	{
+		pParent->PostMessage(NM_UPDATE_SCROLLBAR, FALSE, 0);
+	}
+
+	if (VALID_TOOLTIP &&
+		::IsWindowVisible(m_pToolTip->m_hWnd))
+	{
+		this->ShowFullDescription(false, true);
+	}
+	if (CGetSetOptions::m_bAllwaysShowDescription)
+	{
+		KillTimer(TIMER_SHOW_PROPERTIES);
+		SetTimer(TIMER_SHOW_PROPERTIES, 300, NULL);
+	}
+	if (GetSelectedCount() > 0)
+		theApp.SetStatus(NULL, FALSE);
+}
+
+void CQListCtrl::UpdateAllSelectedState()
+{
 	if (GetSelectedCount() == static_cast<UINT>(this->GetItemCount()))
 	{
 		if (m_allSelected == false)
