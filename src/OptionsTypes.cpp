@@ -68,7 +68,7 @@ BOOL COptionsTypes::OnApply()
 		}
 		catch (CppSQLite3Exception& e)
 		{
-			CErrorReport::Show(StrF(_T("Saving the supported clipboard types failed: %s"), e.errorMessage()));
+			CErrorReport::Show(CStringUtil::Format(_T("Saving the supported clipboard types failed: %s"), e.errorMessage()));
 			return FALSE;
 		}
 
@@ -90,12 +90,12 @@ BOOL COptionsTypes::OnInitDialog()
 		{
 			m_List.AddString(_T("CF_TEXT"));
 			// Registered formats are in 0xC000-0xFFFF, so they fit a CLIPFORMAT
-			m_List.AddString(GetFormatName(static_cast<CLIPFORMAT>(RegisterClipboardFormat(CF_RTF))));
+			m_List.AddString(CClipboardFormats::GetFormatName(static_cast<CLIPFORMAT>(RegisterClipboardFormat(CF_RTF))));
 			m_List.AddString(_T("CF_UNICODETEXT"));
 			m_List.AddString(_T("CF_HDROP"));
 			m_List.AddString(_T("CF_DIB"));
-			m_List.AddString(GetFormatName(GetFormatID(_T("HTML Format"))));
-			m_List.AddString(GetFormatName(GetFormatID(_T("PNG"))));
+			m_List.AddString(CClipboardFormats::GetFormatName(CClipboardFormats::GetFormatID(_T("HTML Format"))));
+			m_List.AddString(CClipboardFormats::GetFormatName(CClipboardFormats::GetFormatID(_T("PNG"))));
 		}
 
 		while(q.eof() == false)
@@ -107,7 +107,7 @@ BOOL COptionsTypes::OnInitDialog()
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Loading the supported clipboard types failed: %s"), e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Loading the supported clipboard types failed: %s"), e.errorMessage()));
 		return FALSE;
 	}
 

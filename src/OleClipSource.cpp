@@ -203,8 +203,8 @@ bool COleClipSource::PutGuidOntoClipboardOrReport(CClip& clip)
 	}
 	catch (const std::runtime_error& e)
 	{
-		// NewGuidString() throws it when CoCreateGuid fails; the paste stops
-		CErrorReport::Show(StrF(_T("Pasting a new GUID failed: %s"), CString(e.what()).GetString()));
+		// CStringUtil::NewGuidString() throws it when CoCreateGuid fails; the paste stops
+		CErrorReport::Show(CStringUtil::Format(_T("Pasting a new GUID failed: %s"), CString(e.what()).GetString()));
 		return false;
 	}
 	return true;
@@ -287,13 +287,13 @@ void COleClipSource::TransformText(CClip &clip, const std::function<std::wstring
 	if (unicodeText != NULL)
 	{
 		unicodeText->Free();
-		unicodeText->Data(NewGlobalP(const_cast<wchar_t*>(result.c_str()), (result.size() + 1) * sizeof(wchar_t)));
+		unicodeText->Data(CGlobalMemory::NewGlobalP(const_cast<wchar_t*>(result.c_str()), (result.size() + 1) * sizeof(wchar_t)));
 	}
 	if (ansiText != NULL)
 	{
 		const CStringA ansi = CTextConvert::UnicodeToAnsi(CString(result.c_str(), static_cast<int>(result.size())));
 		ansiText->Free();
-		ansiText->Data(NewGlobalP(const_cast<char*>(ansi.GetString()), ansi.GetLength() + 1));
+		ansiText->Data(CGlobalMemory::NewGlobalP(const_cast<char*>(ansi.GetString()), ansi.GetLength() + 1));
 	}
 }
 
@@ -307,7 +307,7 @@ void COleClipSource::TransformRtf(CClip &clip, const std::function<std::string(s
 	const CStringA source = rtf->GetAsCStringA();
 	const std::string result = transform(std::string_view(source.GetString(), source.GetLength()));
 	rtf->Free();
-	rtf->Data(NewGlobalP(const_cast<char*>(result.c_str()), result.size() + 1));
+	rtf->Data(CGlobalMemory::NewGlobalP(const_cast<char*>(result.c_str()), result.size() + 1));
 }
 
 void COleClipSource::DoUpperLowerCase(CClip &clip, bool upper)
@@ -433,7 +433,7 @@ bool COleClipSource::SaveFileDataRecord(HGLOBAL record, std::vector<std::wstring
 		}
 
 		const CString newFilePath = folder + UniqueFileName(originalPath, usedNames);
-		CLogger::Log(StrF(_T("Saving file contents from Ditto, original file: %s, size: %Iu, md5: %S, to: %s"), originalPath.GetString(), file.data.size(), md5.c_str(), newFilePath.GetString()));
+		CLogger::Log(CStringUtil::Format(_T("Saving file contents from Ditto, original file: %s, size: %Iu, md5: %S, to: %s"), originalPath.GetString(), file.data.size(), md5.c_str(), newFilePath.GetString()));
 
 		// the constructor throws CFileException when the file cannot be created; the paste stops
 		CFile target(newFilePath, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary);
@@ -456,7 +456,7 @@ CString COleClipSource::UniqueFileName(const CString& originalPath, std::set<CSt
 		CPath numbered(originalPath);
 		const CString extension = numbered.GetExtension();
 		numbered.RemoveExtension();
-		candidate = StrF(_T("%s (%d)%s%s"), numbered.GetName().GetString(), n, extension.IsEmpty() ? _T("") : _T("."), extension.GetString());
+		candidate = CStringUtil::Format(_T("%s (%d)%s%s"), numbered.GetName().GetString(), n, extension.IsEmpty() ? _T("") : _T("."), extension.GetString());
 	}
 	usedNames.insert(CString(candidate).MakeLower());
 	return candidate;
@@ -516,7 +516,7 @@ INT_PTR COleClipSource::PutFormatOnClipboard(CClipFormats *pFormats)
 	{
 		pCF = &pFormats->ElementAt(i);
 
-		CLogger::Log(StrF(_T("Setting clipboard type: %s to the clipboard"), GetFormatName(pCF->m_cfType).GetString()));
+		CLogger::Log(CStringUtil::Format(_T("Setting clipboard type: %s to the clipboard"), CClipboardFormats::GetFormatName(pCF->m_cfType).GetString()));
 
 		CacheGlobalData(pCF->m_cfType, pCF->m_hgData);
 		pCF->m_hgData = 0; // OLE owns it now
@@ -549,26 +549,24 @@ std::optional<HGLOBAL> COleClipSource::RenderClipsOrReport(CLIPFORMAT format)
 	}
 	catch (const DittoCore::ClipboardFormatError& error)
 	{
-		CErrorReport::Show(StrF(_T("Ditto could not provide %s for the paste: the clip's data is malformed (%s)."),
-			GetFormatName(format).GetString(), CString(error.what()).GetString()));
+		CErrorReport::Show(CStringUtil::Format(_T("Ditto could not provide %s for the paste: the clip's data is malformed (%s)."),
+			CClipboardFormats::GetFormatName(format).GetString(), CString(error.what()).GetString()));
 	}
 	catch (CppSQLite3Exception& error)
 	{
-		CErrorReport::Show(StrF(_T("Ditto could not provide %s for the paste: database error %d (%s)."),
-			GetFormatName(format).GetString(), error.errorCode(), error.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Ditto could not provide %s for the paste: database error %d (%s)."),
+			CClipboardFormats::GetFormatName(format).GetString(), error.errorCode(), error.errorMessage()));
 	}
 	return std::nullopt;
 }
 
 BOOL COleClipSource::OnRenderGlobalData(LPFORMATETC lpFormatEtc, HGLOBAL* phGlobal)
 {
-	static bool bInHere = false;
-
-	if(bInHere)
+	if(m_inRenderGlobalData)
 	{
 		return FALSE;
 	}
-	bInHere = true;
+	m_inRenderGlobalData = true;
 
 	HGLOBAL hData = NULL;
 
@@ -578,19 +576,19 @@ BOOL COleClipSource::OnRenderGlobalData(LPFORMATETC lpFormatEtc, HGLOBAL* phGlob
 	{
 		if(pFind->m_hgData)
 		{
-			hData = NewGlobalH(pFind->m_hgData, GlobalSize(pFind->m_hgData));
+			hData = CGlobalMemory::NewGlobalH(pFind->m_hgData, GlobalSize(pFind->m_hgData));
 		}
 	}
 	else if (!RenderAndCache(lpFormatEtc->cfFormat, hData))
 	{
 		// refused (lockout), or FALSE tells the target the render failed
-		bInHere = false;
+		m_inRenderGlobalData = false;
 		return FALSE;
 	}
 
 	BOOL bRet = HandOverRenderedData(hData, phGlobal);
 
-	bInHere = false;
+	m_inRenderGlobalData = false;
 
 	return bRet;
 }
@@ -626,7 +624,7 @@ bool COleClipSource::RenderAndCache(CLIPFORMAT cfFormat, HGLOBAL& hData)
 	HGLOBAL hCopy = NULL;
 	if(hData)
 	{
-		hCopy = NewGlobalH(hData, GlobalSize(hData));
+		hCopy = CGlobalMemory::NewGlobalH(hData, GlobalSize(hData));
 	}
 
 	CClipFormat format(cfFormat, hCopy);
@@ -652,7 +650,7 @@ BOOL COleClipSource::HandOverRenderedData(HGLOBAL hData, HGLOBAL* phGlobal)
 			SIZE_T len = min(::GlobalSize(*phGlobal), ::GlobalSize(hData));
 			if(len)
 			{
-				CopyToGlobalHH(*phGlobal, hData, len);
+				CGlobalMemory::CopyToGlobalHH(*phGlobal, hData, len);
 			}
 			::GlobalFree(hData);
 		}
@@ -760,10 +758,10 @@ void COleClipSource::PutGuidOntoClipboard(CClip& clip)
 
 	clip.m_Formats.RemoveAll();
 
-	CString guid = NewGuidString();
+	CString guid = CStringUtil::NewGuidString();
 
 	long len = guid.GetLength();
-	HGLOBAL hGlobal = NewGlobalP(guid.GetBuffer(), ((len + 1) * sizeof(wchar_t)));
+	HGLOBAL hGlobal = CGlobalMemory::NewGlobalP(guid.GetBuffer(), ((len + 1) * sizeof(wchar_t)));
 
 	CClipFormat cf(CF_UNICODETEXT, hGlobal);
 	clip.m_Formats.Add(cf);
@@ -790,7 +788,7 @@ void COleClipSource::PasteAsImage(CClip& clip)
 
 	if (path.IsEmpty() || !PathFileExists(path))
 	{
-		CLogger::Log(StrF(_T("PasteAsImage - path not found: %s"), path.GetString()));
+		CLogger::Log(CStringUtil::Format(_T("PasteAsImage - path not found: %s"), path.GetString()));
 		return;
 	}
 
@@ -798,7 +796,7 @@ void COleClipSource::PasteAsImage(CClip& clip)
 	HRESULT hr = image.Load(path);
 	if (FAILED(hr))
 	{
-		CLogger::Log(StrF(_T("PasteAsImage - failed to load image: %s"), path.GetString()));
+		CLogger::Log(CStringUtil::Format(_T("PasteAsImage - failed to load image: %s"), path.GetString()));
 		return;
 	}
 

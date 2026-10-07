@@ -224,7 +224,8 @@ protected:
   static CTrayWnd  m_wndInvisible;
 
 //Member variables
-  NOTIFYICONDATA       m_NotifyIconData;
+  /** @brief The Shell_NotifyIcon data of this tray icon (zero initialised; the constructor sets cbSize). */
+  NOTIFYICONDATA       m_NotifyIconData{};
   BOOL                 m_bCreated;
   BOOL                 m_bHidden;
 #ifdef _AFX

@@ -10,31 +10,17 @@
 /////////////////////////////////////////////////////////////////////////////
 // CRichEditCtrlEx window
 
-BOOL PASCAL AfxInitRichEditEx();
-
-class _AFX_RICHEDITEX_STATE
-{
-public:
-    _AFX_RICHEDITEX_STATE()
-	{
-		m_hInstRichEdit20 = NULL;
-	}
-    virtual ~_AFX_RICHEDITEX_STATE()
-	{
-		if(m_hInstRichEdit20 != NULL)
-		{
-			::FreeLibrary(m_hInstRichEdit20);
-		}
-    }
-
-    HINSTANCE m_hInstRichEdit20;
-};
-
 class CRichEditCtrlEx : public CRichEditCtrl
 {
 // Construction
 public:
 	CRichEditCtrlEx();
+
+	/**
+	 * @brief Initialises MFC's rich edit support, then loads msftedit.dll (riched20.dll in ANSI builds) once for the process.
+	 * @return TRUE when MFC's rich edit support is initialised and the DLL is loaded.
+	 */
+	static BOOL InitRichEditEx();
 
 // Attributes
 public:
@@ -98,6 +84,28 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 private:
+		/** @brief The rich edit DLL, loaded for the whole process: loads it on construction, frees it on destruction. */
+		class CRichEditLibrary
+		{
+		public:
+			/** @brief Loads msftedit.dll (riched20.dll in ANSI builds). */
+			CRichEditLibrary();
+			/** @brief Frees the DLL if it was loaded. */
+			~CRichEditLibrary();
+			CRichEditLibrary(const CRichEditLibrary&) = delete;
+			CRichEditLibrary& operator=(const CRichEditLibrary&) = delete;
+
+			/**
+			 * @brief Tells whether the DLL was loaded.
+			 * @return true when LoadLibrary succeeded.
+			 */
+			bool IsLoaded() const;
+
+		private:
+			/** @brief The loaded DLL; NULL when loading failed. */
+			HINSTANCE m_hInstRichEdit20{};
+		};
+
 		void SetCharStyle(int MASK, int STYLE, int nStart, int nEnd);
 		static DWORD CALLBACK CBStreamIn(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb);
 		static DWORD CALLBACK CBStreamOut(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb);

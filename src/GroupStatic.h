@@ -47,6 +47,8 @@ protected:
 	CBrush   m_brush;
 	CString  m_strBuff;        // Holds the static controls contents before & after the control is displayed
 	bool m_toggleCursorToHand;
+	/** @brief The last parent background colour OnChildNotify read successfully (CLR_INVALID until then); used when the read fails. */
+	COLORREF m_clrPrevValid{CLR_INVALID};
 
 
 	// Generated message map functions

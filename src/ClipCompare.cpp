@@ -25,12 +25,12 @@ void CClipCompare::Compare(int leftId, int rightId)
 		}
 		else
 		{
-			CLogger::Log(StrF(_T("CClipCompare::Compare, Failed to load RIGHT clip formats Id: %d"), rightId));
+			CLogger::Log(CStringUtil::Format(_T("CClipCompare::Compare, Failed to load RIGHT clip formats Id: %d"), rightId));
 		}
 	}
 	else
 	{
-		CLogger::Log(StrF(_T("CClipCompare::Compare, Failed to load LEFT clip formats Id: %d"), leftId));
+		CLogger::Log(CStringUtil::Format(_T("CClipCompare::Compare, Failed to load LEFT clip formats Id: %d"), leftId));
 	}
 }
 
@@ -40,7 +40,7 @@ CClipCompare::CompareFormats CClipCompare::GetCompareFormats(CClip& leftClip, CC
 
 	if (CGetSetOptions::GetPreferUtf8ForCompare() == FALSE)
 	{
-		CLogger::Log(StrF(_T("CClipCompare::Compare, option is set to not use utf8")));
+		CLogger::Log(CStringUtil::Format(_T("CClipCompare::Compare, option is set to not use utf8")));
 		formats.saveUtf8 = false;
 	}
 
@@ -68,7 +68,7 @@ void CClipCompare::CompareClips(int leftId, CClip& leftClip, int rightId, CClip&
 	}
 	else
 	{
-		CLogger::Log(StrF(_T("CClipCompare::Compare, did not find valid text for both passed in clips")));
+		CLogger::Log(CStringUtil::Format(_T("CClipCompare::Compare, did not find valid text for both passed in clips")));
 	}
 }
 
@@ -89,7 +89,7 @@ void CClipCompare::LaunchCompare(int leftId, CClip& leftClip, int rightId, CClip
 		sei.lpParameters = csParam;
 		sei.nShow = SW_NORMAL;
 
-		CLogger::Log(StrF(_T("Comparing two clips, left Id %d, right Id %d, Path: %s %s"), leftId, rightId, path.GetString(), csParam.GetString()));
+		CLogger::Log(CStringUtil::Format(_T("Comparing two clips, left Id %d, right Id %d, Path: %s %s"), leftId, rightId, path.GetString(), csParam.GetString()));
 
 		if (!ShellExecuteEx(&sei))
 		{
@@ -97,7 +97,7 @@ void CClipCompare::LaunchCompare(int leftId, CClip& leftClip, int rightId, CClip
 	}
 	else
 	{
-		CLogger::Log(StrF(_T("CClipCompare::Compare, No Valid compare apps, not doing compare")));
+		CLogger::Log(CStringUtil::Format(_T("CClipCompare::Compare, No Valid compare apps, not doing compare")));
 
 		MessageBox(NULL, _T("No compare application found. Install WinMerge or set \"Diff application path\" in Advanced options."), _T("Ditto"), MB_OK | MB_ICONINFORMATION | MB_TOPMOST);
 	}
@@ -121,7 +121,7 @@ CString CClipCompare::GetComparePath(CString &params)
 			path = CGetSetOptions::ResolvePath(app.path);
 		}
 
-		if (FileExists(path))
+		if (CFileSystem::FileExists(path))
 		{
 			if (app.params != nullptr)
 			{
@@ -154,12 +154,12 @@ CString CClipCompare::SaveToFile(int id, CClip *pClip, bool saveW, bool saveA, b
 	CString cs;
 	cs.Format(_T("%sditto_compare_%d.txt"), pathCompare.GetString(), id);
 
-	if(FileExists(cs))
+	if(CFileSystem::FileExists(cs))
 	{
 		for(int i = 0; i < 1000; i++)
 		{			
 			cs.Format(_T("%sditto_compare_%d.txt"), pathCompare.GetString(), id);
-			if(FileExists(cs))
+			if(CFileSystem::FileExists(cs))
 			{
 				path = cs;
 				break;

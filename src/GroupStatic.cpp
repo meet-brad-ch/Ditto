@@ -55,7 +55,6 @@ BOOL CGroupStatic::OnChildNotify(UINT message, WPARAM wParam, LPARAM lParam, LRE
    else
    {
    // Determine the current background color based on my parent window
-      static COLORREF clrPrevValid = CLR_INVALID;
       HWND hParent = ::GetParent(m_hWnd);
       HDC  hParentDc = ::GetDC(hParent);
 
@@ -66,9 +65,9 @@ BOOL CGroupStatic::OnChildNotify(UINT message, WPARAM wParam, LPARAM lParam, LRE
       // If found (not off of the screen or under another window)
       // set my current color to it
       if(clrParentBkground == -1)
-      {  clrParentBkground = clrPrevValid;  }
+      {  clrParentBkground = m_clrPrevValid;  }
       else
-      {  clrPrevValid = clrParentBkground;  }
+      {  m_clrPrevValid = clrParentBkground;  }
 
       // If either the current, or previous color found was not valid
       // allow to perform default processing

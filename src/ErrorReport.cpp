@@ -11,7 +11,7 @@
 
 void CErrorReport::Show(const CString& text)
 {
-	CLogger::Log(StrF(_T("Error reported to the user: %s"), text.GetString()));
+	CLogger::Log(CStringUtil::Format(_T("Error reported to the user: %s"), text.GetString()));
 
 	// Only a running main window shows a posted error. During start-up (a failed start destroys
 	// the window before it reads its messages), without a database, or while closing, a message
@@ -25,7 +25,7 @@ void CErrorReport::Show(const CString& text)
 			message.release();  // CMainFrame::OnOwnedErrorMsg owns it now
 			return;
 		}
-		CLogger::Log(StrF(_T("Could not post the error to the main window, GetLastError %d; showing a message box"), ::GetLastError()));
+		CLogger::Log(CStringUtil::Format(_T("Could not post the error to the main window, GetLastError %d; showing a message box"), ::GetLastError()));
 	}
 
 	::MessageBox(NULL, text, _T("Ditto"), MB_OK | MB_ICONERROR | MB_SETFOREGROUND);

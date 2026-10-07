@@ -12,38 +12,138 @@
 #include "DittoPopupWindow.h"
 #include "sqlite/CppSQLite3.h"
 
-BOOL CreateBackup(CString csPath);
-CString GetDBName();
-CString GetDefaultDBName();
-BOOL OpenDatabase(CString csDB);
-BOOL IsDatabaseOpen();
+/**
+ * @brief Names, creates, opens and maintains the clip database file.
+ */
+class CDatabaseManager
+{
+public:
+	/**
+	 * @brief The configured database path.
+	 * @return CGetSetOptions::GetDBPath().
+	 */
+	static CString GetDBName();
+	/**
+	 * @brief A database file name in the default location that does not exist yet (Ditto.db,
+	 * Ditto_1.db, ...), for creating a new database.
+	 * @return the full path of the free file name.
+	 */
+	static CString GetDefaultDBName();
+	/**
+	 * @brief Opens a database as the application's database (theApp.m_db), with the ICU extension
+	 * and the configured busy timeout; also sets theApp.m_databaseOnNetworkShare.
+	 * @param dbPath the database path.
+	 * @return TRUE if it is open; FALSE (after showing the error) if opening failed.
+	 */
+	static BOOL OpenDatabase(CString dbPath);
+	/**
+	 * @brief Tells whether the application's database is open.
+	 * @return theApp.m_db.IsDatabaseOpen().
+	 */
+	static BOOL IsDatabaseOpen();
+	/**
+	 * @brief Creates a new, empty database with Ditto's current schema.
+	 * @param csFile the path of the new database file.
+	 * @return TRUE on success; FALSE (after showing the error) if a statement failed.
+	 */
+	static BOOL CreateDB(CString csFile);
+	/**
+	 * @brief Former DAO compaction; does nothing now.
+	 * @return TRUE.
+	 */
+	static BOOL CompactDatabase();
+	/**
+	 * @brief Former DAO repair; does nothing now.
+	 * @return TRUE.
+	 */
+	static BOOL RepairDatabase();
+	/**
+	 * @brief Creates the directory part of a file path when it does not exist (one level only).
+	 * @param csPath the file path.
+	 * @return TRUE if the directory exists or was created, else FALSE.
+	 */
+	static BOOL EnsureDirectory(CString csPath);
+	/**
+	 * @brief Renumbers the sticky clip order of a level and, recursively, of every group in it.
+	 * @param parentID the group whose clips are renumbered; -1 for the top level.
+	 * @param db the open database.
+	 */
+	static void ReOrderStickyClips(int parentID, CppSQLite3DB& db);
+};
 
-BOOL CheckDBExists(CString csDBPath);
-BOOL ValidDB(CString csPath, BOOL bUpgrade=TRUE);
-BOOL CreateDB(CString csPath);
+/**
+ * @brief Deletes the clips the retention options no longer keep (max entries, expiry, unused clips).
+ */
+class CClipRetentionPolicy
+{
+public:
+	/**
+	 * @brief Deletes the clips over the max entries and the expired clips (as configured), then
+	 * empties the MainDeletes table in steps.
+	 * @param checkIdleTime true to delete MainDeletes rows only while the computer is idle long enough.
+	 * @return TRUE on success; FALSE (after showing the error) if a statement failed.
+	 */
+	static BOOL RemoveOldEntries(bool checkIdleTime);
+	/**
+	 * @brief Deletes every plain clip (no shortcut, not kept, not in a group, not sticky) and empties MainDeletes.
+	 * @param fromAppWindow passed on to CClipIDs::DeleteIDs.
+	 * @return TRUE.
+	 */
+	static BOOL DeleteNonUsedClips(bool fromAppWindow);
 
-BOOL CompactDatabase();
-BOOL RepairDatabase();
-BOOL RemoveOldEntries(bool checkIdleTime);
-BOOL DeleteNonUsedClips(bool fromAppWindow);
+private:
+	/**
+	 * @brief RemoveOldEntries' max-entries step: deletes the plain clips (no shortcut, not kept, not in
+	 * a group, not sticky) beyond the newest GetMaxEntries clips.
+	 * @param db the open database.
+	 */
+	static void RemoveClipsOverMaxEntries(CppSQLite3DB& db);
+	/**
+	 * @brief RemoveOldEntries' expiry step: deletes the plain clips (no shortcut, not kept, not in a
+	 * group, not sticky) last pasted more than GetExpiredEntries days ago.
+	 * @param db the open database.
+	 */
+	static void RemoveExpiredClips(CppSQLite3DB& db);
+};
 
-BOOL EnsureDirectory(CString csPath);
-
-BOOL BackupDB(CString dbPath, CString backupPath);
-BOOL RestoreDB(CString backupPath);
-
-void ReOrderStickyClips(int parentID, CppSQLite3DB &db);
+/**
+ * @brief Backs up (gzip) and restores the clip database, and makes numbered file copies.
+ */
+class CDatabaseBackupService
+{
+public:
+	/**
+	 * @brief Copies a file to the first free name path.001 ... path.050.
+	 * @param csPath the file to copy.
+	 * @return TRUE when a copy was made; FALSE after 50 tries.
+	 */
+	static BOOL CreateBackup(CString csPath);
+	/**
+	 * @brief Writes a gzip-compressed copy of the database, showing the progress in a popup.
+	 * @param dbPath the database path.
+	 * @param backupPath the backup file path.
+	 * @return TRUE on success; FALSE (after showing the error) on failure.
+	 */
+	static BOOL BackupDB(CString dbPath, CString backupPath);
+	/**
+	 * @brief Unpacks a backup next to the current database, checks it, makes it the configured
+	 * database, opens it and refreshes the view.
+	 * @param backupPath the backup file path.
+	 * @return TRUE on success; FALSE (after showing the error) on failure.
+	 */
+	static BOOL RestoreDB(CString backupPath);
+};
 
 namespace nsPath { class CPath; }
 
 /**
- * @brief Finds, creates or replaces the clip database at startup (CheckDBExists forwards to it).
+ * @brief Finds, creates or replaces the clip database at startup.
  */
 class DatabaseLocator
 {
 public:
 	/**
-	 * @brief Makes sure a usable database exists and opens it (see CheckDBExists).
+	 * @brief Makes sure a usable database exists and opens it.
 	 * @param csDBPath the configured database path; empty for the default location.
 	 * @return TRUE if a database was found or created and opened; FALSE if it is on a network
 	 * share or another drive than C: and missing, or could not be created or opened.
@@ -73,7 +173,7 @@ private:
 };
 
 /**
- * @brief Checks the clip database schema and upgrades older versions (ValidDB forwards to it).
+ * @brief Checks the clip database schema and upgrades older versions.
  */
 class DatabaseSchemaUpgrader
 {
@@ -150,6 +250,12 @@ private:
 	 * @throws CppSQLite3Exception when a column cannot be added.
 	 */
 	static void AddStickyOrderColumns(CppSQLite3DB& db);
+	/**
+	 * @brief ValidDB's sticky-order step: when the Main_NoGroup index is missing, sets the unset sticky
+	 * orders and creates the sticky-order indexes; a failed step is ignored, as the index may exist already.
+	 * @param db the open database.
+	 */
+	static void UpgradeStickyOrderIndexes(CppSQLite3DB& db);
 	/**
 	 * @brief Adds the MoveToGroupShortCut/GlobalMoveToGroupShortCut columns when one is missing.
 	 * @param db the open database.

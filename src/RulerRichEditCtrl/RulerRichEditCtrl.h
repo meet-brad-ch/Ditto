@@ -48,6 +48,29 @@ public:
 	virtual ~CRulerRichEditCtrl();
 	virtual BOOL Create( DWORD dwStyle, const RECT &rect, CWnd* pParentWnd, UINT nID, BOOL autohscroll = FALSE );
 
+// Registered messages for ruler/toolbar/CRulerRichEditCtrl communication. Each is registered on the
+// first call; the getters return a reference because ON_REGISTERED_MESSAGE takes the id's address.
+	/**
+	 * @brief The registered message that asks the control for its horizontal scroll position.
+	 * @return The message id.
+	 */
+	static const UINT& GetScrollPosMessage();
+	/**
+	 * @brief The registered message the toolbar sends when the user picks a font name (WPARAM: the LPCTSTR name).
+	 * @return The message id.
+	 */
+	static const UINT& SetCurrentFontNameMessage();
+	/**
+	 * @brief The registered message the toolbar sends when the user picks a font size (LPARAM: the size).
+	 * @return The message id.
+	 */
+	static const UINT& SetCurrentFontSizeMessage();
+	/**
+	 * @brief The registered message the toolbar sends when the user picks a font colour (LPARAM: the COLORREF).
+	 * @return The message id.
+	 */
+	static const UINT& SetCurrentFontColorMessage();
+
 // Attributes
 	void	SetMode( int mode );
 	int		GetMode() const;

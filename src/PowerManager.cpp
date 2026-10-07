@@ -5,11 +5,10 @@
 
 #pragma comment(lib, "powrprof.lib")
 
-static HWND s_notifyHwnd;
-static ULONG CALLBACK PowerChanged(PVOID Context, ULONG Type, PVOID Setting);
-
-ULONG CALLBACK PowerChanged(PVOID /*Context*/, ULONG Type, PVOID /*Setting*/)
+ULONG CALLBACK CPowerManager::PowerChanged(PVOID Context, ULONG Type, PVOID /*Setting*/)
 {
+	const CPowerManager* manager{static_cast<const CPowerManager*>(Context)};
+
 	//a
 	//b
 	//c
@@ -22,7 +21,7 @@ ULONG CALLBACK PowerChanged(PVOID /*Context*/, ULONG Type, PVOID /*Setting*/)
 		//had reports of the main window not showing clips after resuming (report was from a vmware vm), catch the resuming callback from windows
 		//and close and reopen the database
 		CLogger::Log(_T("windows is RESUMING, sending message to main window to close and reopen the database/qpastewnd"));
-		::PostMessage(s_notifyHwnd, CDittoMessage::ReopenDatabase, 0, 0);
+		::PostMessage(manager->m_notifyHwnd, CDittoMessage::ReopenDatabase, 0, 0);
 	}
 
 	return 0;
@@ -44,16 +43,16 @@ CPowerManager::~CPowerManager(void)
 
 void CPowerManager::Start(HWND hWnd)
 {
-	s_notifyHwnd = hWnd;
+	m_notifyHwnd = hWnd;
 
 	if (m_registrationHandle == 0)
 	{
-		static DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS callback{ PowerChanged, nullptr };
+		m_subscribeParameters = DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS{ PowerChanged, this };
 
-		const DWORD result{ PowerRegisterSuspendResumeNotification(DEVICE_NOTIFY_CALLBACK, &callback, &m_registrationHandle) };
+		const DWORD result{ PowerRegisterSuspendResumeNotification(DEVICE_NOTIFY_CALLBACK, &m_subscribeParameters, &m_registrationHandle) };
 		if (result != ERROR_SUCCESS)
 		{
-			CErrorReport::Show(StrF(_T("Ditto could not register for resume notifications (PowerRegisterSuspendResumeNotification failed, error %u). The database is not reopened after sleep."), result));
+			CErrorReport::Show(CStringUtil::Format(_T("Ditto could not register for resume notifications (PowerRegisterSuspendResumeNotification failed, error %u). The database is not reopened after sleep."), result));
 		}
 	}
 }
@@ -65,7 +64,7 @@ void CPowerManager::Close()
 		const DWORD result{ PowerUnregisterSuspendResumeNotification(m_registrationHandle) };
 		if (result != ERROR_SUCCESS)
 		{
-			CErrorReport::Show(StrF(_T("Ditto could not unregister from resume notifications (PowerUnregisterSuspendResumeNotification failed, error %u)."), result));
+			CErrorReport::Show(CStringUtil::Format(_T("Ditto could not unregister from resume notifications (PowerUnregisterSuspendResumeNotification failed, error %u)."), result));
 			return;
 		}
 

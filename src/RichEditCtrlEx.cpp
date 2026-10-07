@@ -10,28 +10,39 @@
 /////////////////////////////////////////////////////////////////////////////
 // CAutoRichEditCtrl
 
-_AFX_RICHEDITEX_STATE _afxRichEditStateEx ;
+CRichEditCtrlEx::CRichEditLibrary::CRichEditLibrary()
+{
+#ifdef _UNICODE
+    m_hInstRichEdit20 = LoadLibraryW(_T("MSFTEDIT.DLL"));
+#else
+	m_hInstRichEdit20 = LoadLibraryA(_T("RICHED20.DLL"));
+#endif
+}
 
-BOOL PASCAL AfxInitRichEditEx()
+CRichEditCtrlEx::CRichEditLibrary::~CRichEditLibrary()
+{
+	if(m_hInstRichEdit20 != NULL)
+	{
+		::FreeLibrary(m_hInstRichEdit20);
+	}
+}
+
+bool CRichEditCtrlEx::CRichEditLibrary::IsLoaded() const
+{
+	return m_hInstRichEdit20 != NULL;
+}
+
+BOOL CRichEditCtrlEx::InitRichEditEx()
 {
     if( ! ::AfxInitRichEdit() )
     {
         return FALSE ;
     }
 
-    _AFX_RICHEDITEX_STATE* l_pState = &_afxRichEditStateEx ;
+    // loaded on the first call that gets here, freed when the process exits
+    static const CRichEditLibrary library{};
 
-    if( l_pState->m_hInstRichEdit20 == NULL )
-    {
-#ifdef _UNICODE 
-        l_pState->m_hInstRichEdit20 = LoadLibraryW(_T("MSFTEDIT.DLL"));
-#else
-		l_pState->m_hInstRichEdit20 = LoadLibraryA(_T("RICHED20.DLL"));
-#endif
-
-    }
-
-    return l_pState->m_hInstRichEdit20 != NULL ;
+    return library.IsLoaded() ? TRUE : FALSE;
 }
 
 

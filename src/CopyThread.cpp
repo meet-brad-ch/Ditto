@@ -58,7 +58,7 @@ void CCopyThread::OnClipboardChange(CString activeWindow)
 	int groupId = theApp.GetActiveGroupId();
 	if(groupId > -1)
 	{
-		CLogger::Log(StrF(_T("LoadFromClipboard - loading clips into groupId: %d"), groupId));
+		CLogger::Log(CStringUtil::Format(_T("LoadFromClipboard - loading clips into groupId: %d"), groupId));
 	}
 	
 	auto pClip = std::make_unique<CClip>();
@@ -85,7 +85,7 @@ void CCopyThread::OnClipboardChange(CString activeWindow)
 	catch(const DittoCore::ClipboardFormatError& error)
 	{
 		// clipboard data comes from other processes: this copy is rejected, Ditto keeps running
-		CErrorReport::Show(StrF(_T("A copy from %s was not saved: its clipboard data is malformed (%s)."),
+		CErrorReport::Show(CStringUtil::Format(_T("A copy from %s was not saved: its clipboard data is malformed (%s)."),
 			activeWindow.GetString(), CString(error.what()).GetString()));
 		return;
 	}
@@ -118,7 +118,7 @@ int CCopyThread::LoadClipWithRetry(CClip& clip, CClipTypes* pSupportedTypes, con
 		DWORD delay = CGetSetOptions::GetNoFormatsRetryDelay();
 		if(delay > 0)
 		{
-			CLogger::Log(StrF(_T("LoadFromClipboard didn't find any clips to save, sleeping %dms, then trying again"), delay));
+			CLogger::Log(CStringUtil::Format(_T("LoadFromClipboard didn't find any clips to save, sleeping %dms, then trying again"), delay));
 			Sleep(delay);
 
 			CLogger::Log(_T("LoadFromClipboard #2 - Before"));
@@ -145,7 +145,7 @@ void CCopyThread::HandOverClip(std::unique_ptr<CClip>& pClip)
 		}
 		else
 		{
-			CLogger::Log(StrF(_T("Could not post the copied clip to the main window, GetLastError %d"), ::GetLastError()));
+			CLogger::Log(CStringUtil::Format(_T("Could not post the copied clip to the main window, GetLastError %d"), ::GetLastError()));
 		}
 	}
 	else

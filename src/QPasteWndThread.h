@@ -58,7 +58,11 @@ protected:
     void OnSetListCount(void *param);
     void OnLoadItems(void *param);
     void OnLoadExtraData(void *param);
-	//void ReduceMapItems(CF_DibTypeMap mapItem, CCriticalSection &critSection, CString mapName);
+	/** @brief Trims a format cache (CF_DibTypeMap) of more than 50 entries to the 30 most recently used ones.
+	@param mapItem the cache, keyed by row.
+	@param critSection the paste window's lock, held while the cache is trimmed.
+	@param mapName the cache name for the log ("image", "rtf"). */
+	static void ReduceMapItems(std::map<int, CClipFormatQListCtrl> &mapItem, CCriticalSection &critSection, CString mapName);
     void OnLoadAccelerators(void *param);
     void OnUnloadAccelerators(void *param);
 

@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include ".\exports.h"
+#include "DittoUtil.h"
 #include "PasteAnyAsText.h"
 #include ".\pasteimageashtmlimage.h"
 #include "ReadOnlyFlag.h"
@@ -76,8 +77,7 @@ bool PasteAnyAsText(const CDittoInfo &DittoInfo, IClip *pClip)
 
 bool ConvertPathToHtmlImageTag(const CDittoInfo &DittoInfo, IClip *pClip)
 {
-	CPasteImageAsHtmlImage convert;
-	return convert.ConvertPathToHtmlImageTag(DittoInfo, pClip);
+	return CDittoUtilApp::Instance().PasteImageAsHtml().ConvertPathToHtmlImageTag(DittoInfo, pClip);
 }
 
 bool ClearReadOnlyFlag(const CDittoInfo &DittoInfo, IClip *pClip)

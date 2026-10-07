@@ -2,8 +2,6 @@
 #include <assert.h>
 #include "focusdll.h"
 
-BYTE GetKeyEventType(LPARAM lParam);
-
 #pragma data_seg (".shared")
 HHOOK hHook=NULL;       //
 HWND hFocusWnd=NULL;    // window that last gained the focus
@@ -16,13 +14,31 @@ HWND g_hKeyboardNotifyWnd = NULL;
 #pragma data_seg ()
 #pragma comment(linker, "/SECTION:.shared,RWS")
 
-HINSTANCE hDllInst;
+/** @brief focus.dll's own module (its handle is per process, so it is not in the shared segment). */
+class CFocusDllModule
+{
+public:
+	/**
+	 * @brief The module handle of focus.dll (the module that contains this code), for SetWindowsHookEx.
+	 * @return The handle DllMain receives as hInstance; NULL if Windows cannot resolve it (SetWindowsHookEx then fails).
+	 */
+	static HINSTANCE Handle()
+	{
+		HMODULE module{};
+		if (!::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+			reinterpret_cast<LPCWSTR>(&CFocusDllModule::Handle), &module))
+		{
+			return NULL;
+		}
+		return module;
+	}
+};
 
-/** @brief The kinds of keyboard event that GetKeyEventType reads from a key message's lParam. */
+/** @brief The kinds of keyboard event that FromLParam reads from a key message's lParam. */
 class KeyEventType
 {
 public:
-	/** @brief The event kinds, mutually exclusive (GetKeyEventType returns exactly one; used only in this file). */
+	/** @brief The event kinds, mutually exclusive (FromLParam returns exactly one; used only in this file). */
 	enum : BYTE
 	{
 		/** @brief Key-down event. */
@@ -32,14 +48,34 @@ public:
 		/** @brief Key-repeat event: the key is held down for long enough. */
 		KeyRepeat = 3,
 	};
+
+	/**
+	 * @brief Reads the kind of keyboard event from a key message's lParam (bits 31 and 30, see WM_KEYDOWN).
+	 * @param lParam The key message's lParam.
+	 * @return KeyUp, KeyRepeat or KeyDown.
+	 */
+	static BYTE FromLParam(LPARAM lParam)
+	{
+		// Reference: WM_KEYDOWN on MSDN
+		if (lParam & 0x80000000) // check bit 31 for up/down
+		{
+			return KeyUp;
+		}
+		else
+		{
+			if (lParam & 0x40000000) // check bit 30 for previous up/down
+				return KeyRepeat; // It was pressed down before this key-down event, so it's a key-repeat for sure
+			else
+				return KeyDown;
+		}
+	}
 };
 
-BOOL WINAPI DllMain(HINSTANCE hInstance,DWORD dwReason,LPVOID /*lpReserved*/)
+BOOL WINAPI DllMain(HINSTANCE /*hInstance*/,DWORD dwReason,LPVOID /*lpReserved*/)
 {
     switch(dwReason)
     {
         case DLL_PROCESS_ATTACH:
-            hDllInst = hInstance;
             break;
         case DLL_THREAD_ATTACH:
         case DLL_PROCESS_DETACH:
@@ -70,7 +106,7 @@ LRESULT CALLBACK KeyboardProc(INT nCode, WPARAM wParam, LPARAM lParam)
 	if (nCode != HC_ACTION)
 		return ::CallNextHookEx(g_hKeyboardHook, nCode, wParam, lParam);
 
-	const BYTE KEYEVENT = GetKeyEventType(lParam);	
+	const BYTE KEYEVENT = KeyEventType::FromLParam(lParam);
 
 	if(g_CaptureKeys && KEYEVENT == KeyEventType::KeyDown)
 	{
@@ -87,22 +123,6 @@ LRESULT CALLBACK KeyboardProc(INT nCode, WPARAM wParam, LPARAM lParam)
 	return ::CallNextHookEx(g_hKeyboardHook, nCode, wParam, lParam);
 }
 
-BYTE GetKeyEventType(LPARAM lParam)
-{
-	// Reference: WM_KEYDOWN on MSDN
-	if (lParam & 0x80000000) // check bit 31 for up/down
-	{
-		return KeyEventType::KeyUp;
-	}
-	else
-	{
-		if (lParam & 0x40000000) // check bit 30 for previous up/down
-			return KeyEventType::KeyRepeat; // It was pressed down before this key-down event, so it's a key-repeat for sure
-		else
-			return KeyEventType::KeyDown;
-	}
-}
-
 
 __declspec(dllexport) DWORD WINAPI MonitorFocusChanges(HWND hWnd, UINT message)
 {    
@@ -111,7 +131,7 @@ __declspec(dllexport) DWORD WINAPI MonitorFocusChanges(HWND hWnd, UINT message)
 		UnhookWindowsHookEx(hHook);
 	}
 
-    hHook = SetWindowsHookEx(WH_CBT,HookProc,hDllInst,0);
+    hHook = SetWindowsHookEx(WH_CBT,HookProc,CFocusDllModule::Handle(),0);
 
     hNotifyWnd = hWnd;
     uMessage = message;
@@ -137,7 +157,7 @@ __declspec(dllexport) DWORD WINAPI MonitorKeyboardChanges(HWND hWnd,UINT message
 		UnhookWindowsHookEx(g_hKeyboardHook);
 	}
 
-	g_hKeyboardHook = ::SetWindowsHookEx(WH_KEYBOARD, KeyboardProc, hDllInst, 0);
+	g_hKeyboardHook = ::SetWindowsHookEx(WH_KEYBOARD, KeyboardProc, CFocusDllModule::Handle(), 0);
 
 	g_uKeyboardMessage = message;
 	g_hKeyboardNotifyWnd = hWnd;

@@ -111,7 +111,7 @@ void CQuickPasteKeyboard::InitListCtrlCols()
 	m_list.InsertColumn(1, theApp.m_Language.GetString("QPCommand", "Command"), LVCFMT_LEFT, 350);
 }
 
-int CALLBACK MyCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+int CALLBACK CQuickPasteKeyboard::MyCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
 	CListCtrl* pListCtrl = (CListCtrl*)lParamSort;
 

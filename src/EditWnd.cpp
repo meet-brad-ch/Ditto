@@ -270,7 +270,7 @@ bool CEditWnd::AddItem(int id)
 			}
 			catch (CppSQLite3Exception& e)
 			{
-				CErrorReport::Show(StrF(_T("Opening clip id %d for editing failed: %s"), id, e.errorMessage()));
+				CErrorReport::Show(CStringUtil::Format(_T("Opening clip id %d for editing failed: %s"), id, e.errorMessage()));
 				return false;
 			}
 		}

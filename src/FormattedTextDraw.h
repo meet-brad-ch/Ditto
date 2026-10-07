@@ -28,13 +28,7 @@ typedef COOKIE* PCOOKIE;
 // textserv.h and comment the following lines out. They are right at the top
 // EXTERN_C const IID IID_ITextServices;
 // EXTERN_C const IID IID_ITextHost;
-
-const IID IID_ITextServicesEx = { // 8d33f740-cf58-11ce-a89d-00aa006cadc5
-    0x8d33f740,
-    0xcf58,
-    0x11ce,
-    {0xa8, 0x9d, 0x00, 0xaa, 0x00, 0x6c, 0xad, 0xc5}
- };
+// (IID_ITextServicesEx, this project's copy of IID_ITextServices, is CFormattedTextDraw::IID_ITextServicesEx)
 
 //const IID IID_ITextHosts = { // c5bdd8d0-d26e-11ce-a89e-00aa006cadc5
 //    0xc5bdd8d0,
@@ -71,6 +65,9 @@ class CFormattedTextDraw :
 public:
 	/** @brief Twips (the rich edit font height unit) per inch. */
 	static constexpr int LyPerInch = 1440;
+
+	/** @brief The ITextServices interface id (8d33f740-cf58-11ce-a89d-00aa006cadc5), queried from the text services object. */
+	static constexpr IID IID_ITextServicesEx{0x8d33f740, 0xcf58, 0x11ce, {0xa8, 0x9d, 0x00, 0xaa, 0x00, 0x6c, 0xad, 0xc5}};
 
 	CFormattedTextDraw()
 	{
@@ -181,6 +178,24 @@ public:
 	HRESULT InitDefaultCharFormat();
 	HRESULT InitDefaultParaFormat();
 	HRESULT CreateTextServicesObject();
+
+	/**
+	 * @brief Creates a windowless rich edit text services object from msftedit.dll.
+	 * @param pTextHost The text host the text services call back.
+	 * @param ppUnk Receives the text services object's IUnknown.
+	 * @return S_OK on success; E_FAIL when msftedit.dll or CreateTextServices is missing; else the CreateTextServices result.
+	 */
+	static HRESULT CreateRichEdit(ITextHost *pTextHost, IUnknown **ppUnk);
+
+	/**
+	 * @brief The EM_STREAMIN callback: copies the next chunk of the RTF bytes the COOKIE points at.
+	 * @param dwCookie The COOKIE (RTF bytes and read offset) as EDITSTREAM::dwCookie.
+	 * @param pbBuff The buffer to fill.
+	 * @param cb The buffer size in bytes.
+	 * @param pcb Receives the number of bytes copied.
+	 * @return 0 (no error).
+	 */
+	static DWORD CALLBACK EditStreamInCallback(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb);
 
 // Variables
 	RECT			m_rcClient;			// Client Rect

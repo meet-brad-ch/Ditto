@@ -156,8 +156,8 @@ BOOL CToolTipEx::Show(CPoint point)
 
 	if (m_csText.GetLength())
 	{
-		int wordCount = WordCount(m_csText);
-		m_clipData = StrF(_T("%s | Length: %d | Words: %d"), m_originalClipData.GetString(), m_csText.GetLength(), wordCount);
+		int wordCount = CStringUtil::WordCount(m_csText);
+		m_clipData = CStringUtil::Format(_T("%s | Length: %d | Words: %d"), m_originalClipData.GetString(), m_csText.GetLength(), wordCount);
 	}
 
 	m_clipDataStatic.SetWindowText(m_clipData);
@@ -199,7 +199,7 @@ CRect CToolTipEx::RectFromSavedSize(CPoint point)
 	rect.right = rect.left + m_DittoWindow.m_dpi.Scale(size.cx);
 	rect.bottom = rect.top + m_DittoWindow.m_dpi.Scale(size.cy);
 
-	EnsureWindowVisible(&rect);
+	CMonitorGeometry::EnsureWindowVisible(&rect);
 	return rect;
 }
 
@@ -230,7 +230,7 @@ CRect CToolTipEx::RectSizedToContent(CPoint point)
 	ClientToScreen(rect);
 
 	CRect cr(point, point);
-	CRect rcScreen = MonitorRectFromRect(cr);
+	CRect rcScreen = CMonitorGeometry::MonitorRectFromRect(cr);
 
 	//ensure that we don't go outside the screen
 	if(point.x < rcScreen.left)
@@ -273,7 +273,7 @@ void CToolTipEx::ShowContentWindow()
 	if (m_imageViewer.m_pGdiplusBitmap)
 	{
 		int percent = static_cast<int>((m_imageViewer.m_scale - 1.0) * 100.0);
-		m_clipData = m_originalClipData + _T(" | ") + StrF(_T("%d x %d, %d%%"), m_imageViewer.m_pGdiplusBitmap->GetWidth(), m_imageViewer.m_pGdiplusBitmap->GetHeight(), percent);
+		m_clipData = m_originalClipData + _T(" | ") + CStringUtil::Format(_T("%d x %d, %d%%"), m_imageViewer.m_pGdiplusBitmap->GetWidth(), m_imageViewer.m_pGdiplusBitmap->GetHeight(), percent);
 
 		//OutputDebugString(_T("Showing image editor\r\n"));
 
@@ -603,7 +603,7 @@ CRect CToolTipEx::GetBoundsRect()
 	ULONGLONG diff = GetTickCount64() - d;
 	if (diff > 10)
 	{
-		CLogger::Log(StrF(_T("Size To Content: %llu\n"), diff));
+		CLogger::Log(CStringUtil::Format(_T("Size To Content: %llu\n"), diff));
 	}
 
     return rect;
@@ -1355,7 +1355,7 @@ LRESULT CToolTipEx::OnDpiChanged(WPARAM wParam, LPARAM lParam)
 		prcNewWindow->bottom - prcNewWindow->top,
 		SWP_NOZORDER | SWP_NOACTIVATE);
 
-	log(StrF(_T("CQPasteWnd::OnDpiChanged dpi: %d width: %d, height: %d"), dpi, (prcNewWindow->right - prcNewWindow->left), (prcNewWindow->bottom - prcNewWindow->top)));
+	CLogger::Write(CStringUtil::Format(_T("CQPasteWnd::OnDpiChanged dpi: %d width: %d, height: %d"), dpi, (prcNewWindow->right - prcNewWindow->left), (prcNewWindow->bottom - prcNewWindow->top)));
 
 	m_optionsButton.Reset();
 	m_optionsButton.LoadStdImageDPI(m_DittoWindow.m_dpi.GetDPI(), IDB_COG_16_16, IDB_COG_20_20, IDB_COG_24_24, cog_28, IDB_COG_32_32, _T("PNG"));
@@ -1416,7 +1416,7 @@ LRESULT CToolTipEx::OnRefreshFooter(WPARAM /*wParam*/, LPARAM /*lParam*/)
 	if (m_imageViewer.m_pGdiplusBitmap)
 	{
 		int percent = static_cast<int>(((m_imageViewer.m_scale) * 100.0) + .5);
-		m_clipData = m_originalClipData + _T(" | ") + StrF(_T("%d x %d, %d%%"), m_imageViewer.m_pGdiplusBitmap->GetWidth(), m_imageViewer.m_pGdiplusBitmap->GetHeight(), percent);
+		m_clipData = m_originalClipData + _T(" | ") + CStringUtil::Format(_T("%d x %d, %d%%"), m_imageViewer.m_pGdiplusBitmap->GetWidth(), m_imageViewer.m_pGdiplusBitmap->GetHeight(), percent);
 	}
 
 	m_clipDataStatic.SetWindowText(m_clipData);

@@ -26,7 +26,7 @@ CImageFormatAggregator::~CImageFormatAggregator(void)
 
 bool CImageFormatAggregator::AddClip(LPVOID lpData, int nDataSize, int /*nPos*/, int /*nCount*/, UINT cfType)
 {
-	HGLOBAL hGlobal = ::NewGlobalP(lpData, nDataSize);
+	HGLOBAL hGlobal = CGlobalMemory::NewGlobalP(lpData, nDataSize);
 
 	// Clipboard format ids are 16-bit values, so they fit a CLIPFORMAT
 	CClipFormat data(static_cast<CLIPFORMAT>(cfType), hGlobal);

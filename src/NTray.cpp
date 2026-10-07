@@ -227,10 +227,7 @@ to maintain a single distribution point for the source code.
 
 ///////////////////////////////// Implementation //////////////////////////////
 
-const UINT wm_TaskbarCreated = RegisterWindowMessage(_T("TaskbarCreated"));
-
-CTrayNotifyIcon::CTrayNotifyIcon() : m_NotifyIconData{},
-                                     m_bCreated(FALSE),
+CTrayNotifyIcon::CTrayNotifyIcon() : m_bCreated(FALSE),
                                      m_bHidden(FALSE),
                                      m_pNotificationWnd(NULL),
                                      m_bDefaultMenuItemByPos(TRUE),
@@ -1187,7 +1184,7 @@ BOOL CTrayNotifyIcon::ProcessWindowMessage(_In_ HWND /*hWnd*/, _In_ UINT nMsg, _
   lResult = 0;
   BOOL bHandled = FALSE;
 
-  if (nMsg == wm_TaskbarCreated)
+  if (nMsg == CTrayWnd::TaskbarCreatedMessage())
   {
     lResult = OnTaskbarCreated(wParam, lParam);
     bHandled = TRUE;

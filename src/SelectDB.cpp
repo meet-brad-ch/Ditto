@@ -85,7 +85,7 @@ void CSelectDB::OnSelect()
 
 	CString	csPath(CFileDialogPath::From(FileName));
 
-	if(ValidDB(csPath) == FALSE)
+	if(DatabaseSchemaUpgrader::ValidDB(csPath) == FALSE)
 	{
 		MessageBox(_T("Invalid Database"), _T("Ditto"), MB_OK);
 		m_ePath.SetFocus();
@@ -99,9 +99,9 @@ void CSelectDB::OnUseDefault()
 	CGetSetOptions::SetDBPath("");
 	CString csPath = CGetSetOptions::GetDBPath();
 
-	if(ValidDB(csPath) == FALSE)
+	if(DatabaseSchemaUpgrader::ValidDB(csPath) == FALSE)
 		DeleteFile(csPath);
-	
-	if(CheckDBExists(CGetSetOptions::GetDBPath()))
+
+	if(DatabaseLocator::CheckDBExists(CGetSetOptions::GetDBPath()))
 		EndDialog(IDOK);
 }

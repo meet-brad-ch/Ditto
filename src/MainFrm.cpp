@@ -73,12 +73,6 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_WM_SETFOCUS()
 END_MESSAGE_MAP()
 
-	static UINT indicators[] = 
-{
-	ID_SEPARATOR,  // status line indicator
-	ID_INDICATOR_CAPS, ID_INDICATOR_NUM, ID_INDICATOR_SCRL, 
-};
-
 /////////////////////////////////////////////////////////////////////////////
 // CMainFrame construction/destruction
 
@@ -108,12 +102,12 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_PowerManager.Start(m_hWnd);
 
     ////Center the main window so message boxes are in the center
-    CRect rcScreen = DefaultMonitorRect();
+    CRect rcScreen = CMonitorGeometry::DefaultMonitorRect();
     CPoint cpCenter = rcScreen.CenterPoint();
     MoveWindow(cpCenter.x, cpCenter.x,  1,  1);
 
-	m_startupScreenWidth = GetScreenWidth();
-	m_startupScreenHeight = GetScreenHeight();
+	m_startupScreenWidth = CMonitorGeometry::GetScreenWidth();
+	m_startupScreenHeight = CMonitorGeometry::GetScreenHeight();
 
     //Then set the main window to transparent so it's never shown
     //if it is shown then only the task tray icon
@@ -161,7 +155,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	//found on some computers GetTickCount gettickcount returns a smaller value than other, can't explain
 	//check here to see if we need to make an adjustment
-	IdleSeconds();
+	CIdleTime::IdleSeconds();
 
     m_ulCopyGap = CGetSetOptions::GetCopyGap();
 
@@ -348,7 +342,7 @@ bool CMainFrame::DoFirstTenHotKey(WPARAM wParam)
 	{
 		if (IsHotKey(positions[pos], wParam))
 		{
-			CLogger::Log(StrF(_T("Pos %d hot key"), pos + 1));
+			CLogger::Log(CStringUtil::Format(_T("Pos %d hot key"), pos + 1));
 			DoFirstTenPositionsPaste(pos);
 			return true;
 		}
@@ -382,21 +376,21 @@ bool CMainFrame::DoCopyBufferHotKey(const CopyBufferHotKeys& hotKeys, int buffer
 {
 	if (IsHotKey(hotKeys.copy, wParam))
 	{
-		CLogger::Log(StrF(_T("Copy buffer %d hot key"), buffer + 1));
+		CLogger::Log(CStringUtil::Format(_T("Copy buffer %d hot key"), buffer + 1));
 		theApp.m_CopyBuffer.StartCopy(buffer);
 		return true;
 	}
 
 	if (IsHotKey(hotKeys.paste, wParam))
 	{
-		CLogger::Log(StrF(_T("Paste buffer %d hot key"), buffer + 1));
+		CLogger::Log(CStringUtil::Format(_T("Paste buffer %d hot key"), buffer + 1));
 		theApp.m_CopyBuffer.PastCopyBuffer(buffer);
 		return true;
 	}
 
 	if (IsHotKey(hotKeys.cut, wParam))
 	{
-		CLogger::Log(StrF(_T("Cut buffer %d hot key"), buffer + 1));
+		CLogger::Log(CStringUtil::Format(_T("Cut buffer %d hot key"), buffer + 1));
 		theApp.m_CopyBuffer.StartCopy(buffer, true);
 		return true;
 	}
@@ -406,18 +400,18 @@ bool CMainFrame::DoCopyBufferHotKey(const CopyBufferHotKeys& hotKeys, int buffer
 
 void CMainFrame::DoCopyAndSaveClipboard()
 {
-	CLogger::Log(StrF(_T("START of copy and save clipboard, sending copy")));
+	CLogger::Log(CStringUtil::Format(_T("START of copy and save clipboard, sending copy")));
 
 	theApp.m_activeWnd.SendCopy(CopyReasonEnum::COPY_TO_UNKOWN);
 
 	int delay = CGetSetOptions::GetCopyAndSveDelay();
-	CLogger::Log(StrF(_T("Copy and save clipboard, sending copy, delaying %dms before saving clipboard"), delay));
+	CLogger::Log(CStringUtil::Format(_T("Copy and save clipboard, sending copy, delaying %dms before saving clipboard"), delay));
 	Sleep(delay);
 
-	CLogger::Log(StrF(_T("Copy and save clipboard, saving clipboard")));
+	CLogger::Log(CStringUtil::Format(_T("Copy and save clipboard, saving clipboard")));
 	OnFirstSavecurrentclipboard();
 
-	CLogger::Log(StrF(_T("END of copy and save clipboard")));
+	CLogger::Log(CStringUtil::Format(_T("END of copy and save clipboard")));
 }
 
 void CMainFrame::DoGlobalClipHotKey(WPARAM wParam)
@@ -430,12 +424,12 @@ void CMainFrame::DoGlobalClipHotKey(WPARAM wParam)
 		{
 			if(g_HotKeys[i]->m_hkType == CHotKey::PASTE_OPEN_CLIP)
 			{
-				CLogger::Log(StrF(_T("Pasting clip from global shortcut, clipId: %d"), g_HotKeys[i]->m_clipId));
+				CLogger::Log(CStringUtil::Format(_T("Pasting clip from global shortcut, clipId: %d"), g_HotKeys[i]->m_clipId));
 				PasteOrShowGroup(g_HotKeys[i]->m_clipId, -1, FALSE, TRUE, false);
 			}
 			else if(g_HotKeys[i]->m_hkType == CHotKey::MOVE_TO_GROUP)
 			{
-				CLogger::Log(StrF(_T("Global hot key to save clip to group Id: %d, Sending copy to save selection to this group"), g_HotKeys[i]->m_clipId));
+				CLogger::Log(CStringUtil::Format(_T("Global hot key to save clip to group Id: %d, Sending copy to save selection to this group"), g_HotKeys[i]->m_clipId));
 
 				KillTimer(GroupDoubleClickTimer);
 				m_doubleClickGroupId = -1;
@@ -458,11 +452,11 @@ void CMainFrame::ShowQPasteWithActiveWindowCheck()
 	if (CGetSetOptions::GetOpenToGroupByActiveExe() &&
 		theApp.m_activeWnd.ActiveWnd() != NULL)
 	{
-		CString exeName = GetProcessName(theApp.m_activeWnd.ActiveWnd());
+		CString exeName = CWindowInspector::GetProcessName(theApp.m_activeWnd.ActiveWnd());
 		if (exeName != _T(""))
 		{
 			theApp.TryEnterOldGroupState();
-			CString query = StrF(_T("SELECT lID FROM Main WHERE bIsGroup = 1 AND mText = '%s' COLLATE NOCASE"), exeName.GetString());
+			CString query = CStringUtil::Format(_T("SELECT lID FROM Main WHERE bIsGroup = 1 AND mText = '%s' COLLATE NOCASE"), exeName.GetString());
 			CppSQLite3Query q = theApp.m_db.execQueryEx(query);
 			if (q.eof() == false)
 			{
@@ -470,7 +464,7 @@ void CMainFrame::ShowQPasteWithActiveWindowCheck()
 				//this will revert back to the old group on hide of ditto
 				theApp.EnterGroupID(groupId, TRUE, TRUE);
 
-				CLogger::Log(StrF(_T("Opening Ditto to Group based on found group name, name: %s, GroupId: %d"), exeName.GetString(), groupId));
+				CLogger::Log(CStringUtil::Format(_T("Opening Ditto to Group based on found group name, name: %s, GroupId: %d"), exeName.GetString(), groupId));
 			}
 			else
 			{
@@ -500,13 +494,13 @@ void CMainFrame::DoTextOnlyPaste()
 	}
 	catch (const DittoCore::ClipboardFormatError& error)
 	{
-		CErrorReport::Show(StrF(_T("Text only paste stopped: the clipboard data is malformed (%s)."), CString(error.what()).GetString()));
+		CErrorReport::Show(CStringUtil::Format(_T("Text only paste stopped: the clipboard data is malformed (%s)."), CString(error.what()).GetString()));
 		return;
 	}
 
 	DWORD pasteDelay = CGetSetOptions::GetTextOnlyPasteDelay();
 
-	CLogger::Log(StrF(_T("Text Only paste, delaying %d ms before sending paste"), pasteDelay));
+	CLogger::Log(CStringUtil::Format(_T("Text Only paste, delaying %d ms before sending paste"), pasteDelay));
 
 	Sleep(pasteDelay);
 
@@ -564,9 +558,9 @@ void CMainFrame::DoFirstTenPositionsPaste(int nPos)
 			}
 		}
 
-		CString query = StrF(_T("SELECT lID, bIsGroup FROM Main WHERE %s ORDER BY %s LIMIT 1 OFFSET %d"), strFilter.GetString(), csSort.GetString(), nPos);
+		CString query = CStringUtil::Format(_T("SELECT lID, bIsGroup FROM Main WHERE %s ORDER BY %s LIMIT 1 OFFSET %d"), strFilter.GetString(), csSort.GetString(), nPos);
 
-		CLogger::Log(StrF(_T("Doing Last Ten Paste, Index: %d Query: %s"), nPos, query.GetString()));
+		CLogger::Log(CStringUtil::Format(_T("Doing Last Ten Paste, Index: %d Query: %s"), nPos, query.GetString()));
 
 		CppSQLite3Query q = theApp.m_db.execQueryEx(query);
 
@@ -577,7 +571,7 @@ void CMainFrame::DoFirstTenPositionsPaste(int nPos)
     }
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Pasting the clip at position %d failed: %s"), nPos, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Pasting the clip at position %d failed: %s"), nPos, e.errorMessage()));
 		return;
 	}
 }
@@ -616,7 +610,7 @@ void CMainFrame::PasteOrShowGroup(int dbId, BOOL updateClipTime, BOOL activeTarg
 			if(m_doubleClickGroupId == dbId &&
 				diff < maxDiff)
 			{
-				CLogger::Log(StrF(_T("Second Press of group hot key, group Id: %d, Sending copy to save selection to this group"), dbId));
+				CLogger::Log(CStringUtil::Format(_T("Second Press of group hot key, group Id: %d, Sending copy to save selection to this group"), dbId));
 				
 				KillTimer(GroupDoubleClickTimer);
 				m_doubleClickGroupId = -1;
@@ -634,7 +628,7 @@ void CMainFrame::PasteOrShowGroup(int dbId, BOOL updateClipTime, BOOL activeTarg
 
 				SetTimer(GroupDoubleClickTimer, doubleClickTime, 0);
 
-				CLogger::Log(StrF(_T("First Press of group hot key, group Id: %d, timeout: %d"), dbId, doubleClickTime));
+				CLogger::Log(CStringUtil::Format(_T("First Press of group hot key, group Id: %d, timeout: %d"), dbId, doubleClickTime));
 			}
 		}
 		else
@@ -644,7 +638,7 @@ void CMainFrame::PasteOrShowGroup(int dbId, BOOL updateClipTime, BOOL activeTarg
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Pasting clip or group id %d failed: %s"), dbId, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Pasting clip or group id %d failed: %s"), dbId, e.errorMessage()));
 		return;
 	}
 }
@@ -706,7 +700,7 @@ void CMainFrame::DoDittoCopyBufferPaste(int nCopyBuffer)
     }
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Pasting Ditto copy buffer %d failed: %s"), nCopyBuffer, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Pasting Ditto copy buffer %d failed: %s"), nCopyBuffer, e.errorMessage()));
 		return;
 	}
 }
@@ -773,12 +767,12 @@ void CMainFrame::OnKeyStateModifiersTimer()
 
             if(m_bMovedSelectionMoveKeyState || m_keyModifiersTimerCount > CGetSetOptions::GetKeyStateWaitTimerCount())
             {
-                CLogger::Log(StrF(_T("Timer KEY_STATE_MODIFIERS timeout count hit(%d), count (%d), time (%d), Move Selection from Modifer (%d) sending paste"), CGetSetOptions::GetKeyStateWaitTimerCount(), m_keyModifiersTimerCount, waitTime, m_bMovedSelectionMoveKeyState));
+                CLogger::Log(CStringUtil::Format(_T("Timer KEY_STATE_MODIFIERS timeout count hit(%d), count (%d), time (%d), Move Selection from Modifer (%d) sending paste"), CGetSetOptions::GetKeyStateWaitTimerCount(), m_keyModifiersTimerCount, waitTime, m_bMovedSelectionMoveKeyState));
                 m_quickPaste.OnKeyStateUp();
             }
             else
             {
-                CLogger::Log(StrF(_T("Timer KEY_STATE_MODIFIERS count NOT hit(%d), count (%d) time (%d)"), CGetSetOptions::GetKeyStateWaitTimerCount(), m_keyModifiersTimerCount, waitTime));
+                CLogger::Log(CStringUtil::Format(_T("Timer KEY_STATE_MODIFIERS count NOT hit(%d), count (%d) time (%d)"), CGetSetOptions::GetKeyStateWaitTimerCount(), m_keyModifiersTimerCount, waitTime));
                 m_quickPaste.SetKeyModiferState(false);
             }
 
@@ -810,7 +804,7 @@ void CMainFrame::OnGroupDoubleClickTimer()
 {
 	KillTimer(GroupDoubleClickTimer);
 
-	CLogger::Log(StrF(_T("Processing single click of groupId %d in timer, opening ditto to this group"), m_doubleClickGroupId));
+	CLogger::Log(CStringUtil::Format(_T("Processing single click of groupId %d in timer, opening ditto to this group"), m_doubleClickGroupId));
 
 	ULONGLONG maxDiff = static_cast<ULONGLONG>(CGetSetOptions::GetGroupDoubleClickTimeMS() * 1.5);
 	ULONGLONG diff = GetTickCount64() - m_doubleClickGroupStartTime;
@@ -829,7 +823,7 @@ void CMainFrame::OnGroupDoubleClickTimer()
 	}
 	else
 	{
-		CLogger::Log(StrF(_T("Something happened and we didn't process the group timer in time, Id: %d, Diff ms: %d, maxDiff: %d"), m_doubleClickGroupId, diff, maxDiff));
+		CLogger::Log(CStringUtil::Format(_T("Something happened and we didn't process the group timer in time, Id: %d, Diff ms: %d, maxDiff: %d"), m_doubleClickGroupId, diff, maxDiff));
 	}
 
 	m_doubleClickGroupId = -1;
@@ -1033,35 +1027,6 @@ LRESULT CMainFrame::OnOwnedErrorMsg(WPARAM wParam, LPARAM /*lParam*/)
 	return TRUE;
 }
 
-CString WndName(HWND hParent)
-{
-    TCHAR cWindowText[200];
-
-    ::GetWindowText(hParent, cWindowText, 100);
-
-    int nCount = 0;
-
-    while(_tcslen(cWindowText) <= 0)
-    {
-        hParent = ::GetParent(hParent);
-        if(hParent == NULL)
-        {
-            break;
-        }
-
-        ::GetWindowText(hParent, cWindowText, 100);
-
-        nCount++;
-        if(nCount > 100)
-        {
-            CLogger::Log(_T("GetTargetName reached maximum search depth of 100"));
-            break;
-        }
-    }
-
-    return cWindowText;
-}
-
 void CMainFrame::ShowEditWnd(CClipIDs& Ids)
 {
 	CWaitCursor wait;
@@ -1098,7 +1063,7 @@ void CMainFrame::ShowEditWnd(CClipIDs& Ids)
 			CGetSetOptions::GetEditWndSize(sz);
 			CGetSetOptions::GetEditWndPoint(pt);
 			CRect cr(pt, sz);
-			EnsureWindowVisible(&cr);
+			CMonitorGeometry::EnsureWindowVisible(&cr);
 			m_pEditFrameWnd->MoveWindow(cr);
 		}
 
@@ -1116,7 +1081,7 @@ LRESULT CMainFrame::OnEditWndClose(WPARAM /*wParam*/, LPARAM /*lParam*/)
 
 void CMainFrame::ShowErrorMessage(CString csTitle, CString csMessage)
 {
-    CLogger::Log(StrF(_T("ShowErrorMessage %s - %s"), csTitle.GetString(), csMessage.GetString()));
+    CLogger::Log(CStringUtil::Format(_T("ShowErrorMessage %s - %s"), csTitle.GetString(), csMessage.GetString()));
 	m_trayIcon.SetBalloonDetails(csMessage, csTitle, CTrayNotifyIcon::BalloonStyle::Error, CGetSetOptions::GetBalloonTimeout());
 }
 
@@ -1335,7 +1300,7 @@ void CMainFrame::OnFirstSavecurrentclipboard()
 	}
 	catch(const DittoCore::ClipboardFormatError& error)
 	{
-		CErrorReport::Show(StrF(_T("The clipboard was not saved: its data is malformed (%s)."), CString(error.what()).GetString()));
+		CErrorReport::Show(CStringUtil::Format(_T("The clipboard was not saved: its data is malformed (%s)."), CString(error.what()).GetString()));
 		return;
 	}
 
@@ -1357,22 +1322,22 @@ LRESULT CMainFrame::OnReAddTaskBarIcon(WPARAM /*wParam*/, LPARAM /*lParam*/)
 
 LRESULT CMainFrame::OnReOpenDatabase(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
-	CLogger::Log(StrF(_T("OnReOpenDatabase, Start closing and reopening database Delay: %d"), CGetSetOptions::GetWindowsResumeDelayReOpenDbMS()));
+	CLogger::Log(CStringUtil::Format(_T("OnReOpenDatabase, Start closing and reopening database Delay: %d"), CGetSetOptions::GetWindowsResumeDelayReOpenDbMS()));
 
 	try 
 	{
 		Sleep(CGetSetOptions::GetWindowsResumeDelayReOpenDbMS());
 		m_quickPaste.CloseQPasteWnd();
 		theApp.m_db.close();
-		OpenDatabase(CGetSetOptions::GetDBPath());
+		CDatabaseManager::OpenDatabase(CGetSetOptions::GetDBPath());
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Reopening the clip database after resume failed: %s"), e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Reopening the clip database after resume failed: %s"), e.errorMessage()));
 		return FALSE;
 	}
 
-	CLogger::Log(StrF(_T("OnReOpenDatabase, End closing and reopening database Delay: %d"), CGetSetOptions::GetWindowsResumeDelayReOpenDbMS()));
+	CLogger::Log(CStringUtil::Format(_T("OnReOpenDatabase, End closing and reopening database Delay: %d"), CGetSetOptions::GetWindowsResumeDelayReOpenDbMS()));
 
 	return TRUE;
 }
@@ -1404,16 +1369,16 @@ LRESULT CMainFrame::OnShowDittoGroup(WPARAM wParam, LPARAM /*lParam*/)
 
 void CMainFrame::OnFirstFixupstickycliporder()
 {
-	ReOrderStickyClips(-1, theApp.m_db);
+	CDatabaseManager::ReOrderStickyClips(-1, theApp.m_db);
 }
 
 LRESULT CMainFrame::OnResolutionChange(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
-	if (m_startupScreenWidth != GetScreenWidth() ||
-		m_startupScreenHeight != GetScreenHeight())
+	if (m_startupScreenWidth != CMonitorGeometry::GetScreenWidth() ||
+		m_startupScreenHeight != CMonitorGeometry::GetScreenHeight())
 	{
-		m_startupScreenWidth = GetScreenWidth();
-		m_startupScreenHeight = GetScreenHeight();
+		m_startupScreenWidth = CMonitorGeometry::GetScreenWidth();
+		m_startupScreenHeight = CMonitorGeometry::GetScreenHeight();
 
 		SetTimer(ScreenResolutionChangedTimer, 1000, NULL);
 	}
@@ -1428,7 +1393,7 @@ void CMainFrame::OnWinIniChange(LPCTSTR lpszSection)
 	if (lpszSection != NULL &&
 		wcscmp(lpszSection, L"ImmersiveColorSet") == 0)
 	{
-		CLogger::Log(StrF(_T("OnWinIniChange %s, setting timer to 1000ms to change theme"), lpszSection));
+		CLogger::Log(CStringUtil::Format(_T("OnWinIniChange %s, setting timer to 1000ms to change theme"), lpszSection));
 		KillTimer(SetWindowsThemeTimer);
 		SetTimer(SetWindowsThemeTimer, 1000, NULL);
 	}
@@ -1463,12 +1428,12 @@ void CMainFrame::OnUpdateFirstShowstartupmessage(CCmdUI *pCmdUI)
 
 void CMainFrame::OnFirstBackupdatabase()
 {
-	BackupDbPrompt(m_hWnd);
+	CDatabaseBackupPrompt::BackupDbPrompt(m_hWnd);
 }
 
 void CMainFrame::OnFirstRestoredatabase()
 {
-	RestoreDbPrompt(m_hWnd);
+	CDatabaseBackupPrompt::RestoreDbPrompt(m_hWnd);
 }
 
 LRESULT CMainFrame::OnBackupDb(WPARAM /*wParam*/, LPARAM /*lParam*/)
@@ -1491,7 +1456,7 @@ void CMainFrame::OnFirstDeleteallnonusedclips()
 		return;
 	}
 
-	DeleteNonUsedClips(false);
+	CClipRetentionPolicy::DeleteNonUsedClips(false);
 
 	theApp.RefreshView();
 }

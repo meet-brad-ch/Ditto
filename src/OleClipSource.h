@@ -86,6 +86,9 @@ protected:
 	void AddPngFormat(CClip& clip, CImage& image);
 
 private:
+	/** @brief Re-entrancy guard of OnRenderGlobalData: true while it renders (a nested call returns FALSE). */
+	bool m_inRenderGlobalData{false};
+
 	// DoImmediateRender's multi-clip text paste: adds the clips' text, unicode text and, unless the
 	// paste is limited to text, HDROP, RTF and HTML, each joined with the multi-paste separator
 	void AggregateTextFormats(CClip& clip);

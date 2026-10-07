@@ -20,160 +20,217 @@
 #include <gdiplus.h>
 #include <numbers>
 
-// Static map to hold W3C color names and their RGB values
-static std::map<CString, COLORREF> g_colorNameMap;
-static CMutex g_colorNameMapMutex;
-
-// Initializes the color map on first use
-void InitializeColorNameMap()
+/**
+ * @brief CSS color helpers of the copied-color drawing: W3C color names, CSS numbers, OKLCH.
+ */
+class CCssColorParser
 {
-	CSingleLock lock(&g_colorNameMapMutex, TRUE);
-	if (g_colorNameMap.empty())
+public:
+	/**
+	 * @brief Looks up a W3C color name.
+	 * @param name the lower-case color name.
+	 * @param color receives the color when the name is known.
+	 * @return true when the name is a W3C color name.
+	 */
+	static bool FindColorName(const CString& name, COLORREF& color);
+
+	/**
+	 * @brief Parses a CSS numeric value, which can be a percentage or a number.
+	 * @param token the value text; surrounding spaces and a trailing '%' are ignored.
+	 * @param value receives the number (a percentage is not divided by 100).
+	 * @return true when a number was read.
+	 */
+	static bool ParseCssValue(const CString& token, double& value);
+
+	/**
+	 * @brief Converts a color from OKLCH color space to sRGB, clamping out-of-gamut colors.
+	 * @param l the lightness, 0-1.
+	 * @param c the chroma, 0-0.4 (theoretically unbounded, but practically small).
+	 * @param h the hue in degrees, 0-360.
+	 * @return the sRGB color.
+	 */
+	static COLORREF OklchToRgb(double l, double c, double h);
+
+private:
+	/**
+	 * @brief The W3C color names and their RGB values, built once on first use (thread-safe).
+	 * @return the read-only map.
+	 */
+	static const std::map<CString, COLORREF>& ColorNameMap();
+
+	/**
+	 * @brief Builds the W3C color name map.
+	 * @return the map of the lower-case names to their colors.
+	 */
+	static std::map<CString, COLORREF> BuildColorNameMap();
+};
+
+const std::map<CString, COLORREF>& CCssColorParser::ColorNameMap()
+{
+	static const std::map<CString, COLORREF> colorNameMap{ BuildColorNameMap() };
+	return colorNameMap;
+}
+
+bool CCssColorParser::FindColorName(const CString& name, COLORREF& color)
+{
+	const std::map<CString, COLORREF>& colorNameMap{ ColorNameMap() };
+	auto it = colorNameMap.find(name);
+	if (it == colorNameMap.end())
+		return false;
+
+	color = it->second;
+	return true;
+}
+
+std::map<CString, COLORREF> CCssColorParser::BuildColorNameMap()
+{
+	std::map<CString, COLORREF> names{};
 	{
         // Populate the map with W3C named colors
         // A comprehensive list of 148 colors
-        g_colorNameMap[_T("black")] = RGB(0, 0, 0);
-        g_colorNameMap[_T("silver")] = RGB(192, 192, 192);
-        g_colorNameMap[_T("gray")] = RGB(128, 128, 128);
-        g_colorNameMap[_T("white")] = RGB(255, 255, 255);
-        g_colorNameMap[_T("maroon")] = RGB(128, 0, 0);
-        g_colorNameMap[_T("red")] = RGB(255, 0, 0);
-        g_colorNameMap[_T("purple")] = RGB(128, 0, 128);
-        g_colorNameMap[_T("fuchsia")] = RGB(255, 0, 255);
-        g_colorNameMap[_T("green")] = RGB(0, 128, 0);
-        g_colorNameMap[_T("lime")] = RGB(0, 255, 0);
-        g_colorNameMap[_T("olive")] = RGB(128, 128, 0);
-        g_colorNameMap[_T("yellow")] = RGB(255, 255, 0);
-        g_colorNameMap[_T("navy")] = RGB(0, 0, 128);
-        g_colorNameMap[_T("blue")] = RGB(0, 0, 255);
-        g_colorNameMap[_T("teal")] = RGB(0, 128, 128);
-        g_colorNameMap[_T("aqua")] = RGB(0, 255, 255);
-        g_colorNameMap[_T("aliceblue")] = RGB(240, 248, 255);
-        g_colorNameMap[_T("antiquewhite")] = RGB(250, 235, 215);
-        g_colorNameMap[_T("aquamarine")] = RGB(127, 255, 212);
-        g_colorNameMap[_T("azure")] = RGB(240, 255, 255);
-        g_colorNameMap[_T("beige")] = RGB(245, 245, 220);
-        g_colorNameMap[_T("bisque")] = RGB(255, 228, 196);
-        g_colorNameMap[_T("blanchedalmond")] = RGB(255, 235, 205);
-        g_colorNameMap[_T("blueviolet")] = RGB(138, 43, 226);
-        g_colorNameMap[_T("brown")] = RGB(165, 42, 42);
-        g_colorNameMap[_T("burlywood")] = RGB(222, 184, 135);
-        g_colorNameMap[_T("cadetblue")] = RGB(95, 158, 160);
-        g_colorNameMap[_T("chartreuse")] = RGB(127, 255, 0);
-        g_colorNameMap[_T("chocolate")] = RGB(210, 105, 30);
-        g_colorNameMap[_T("coral")] = RGB(255, 127, 80);
-        g_colorNameMap[_T("cornflowerblue")] = RGB(100, 149, 237);
-        g_colorNameMap[_T("cornsilk")] = RGB(255, 248, 220);
-        g_colorNameMap[_T("crimson")] = RGB(220, 20, 60);
-        g_colorNameMap[_T("cyan")] = RGB(0, 255, 255);
-        g_colorNameMap[_T("darkblue")] = RGB(0, 0, 139);
-        g_colorNameMap[_T("darkcyan")] = RGB(0, 139, 139);
-        g_colorNameMap[_T("darkgoldenrod")] = RGB(184, 134, 11);
-        g_colorNameMap[_T("darkgray")] = RGB(169, 169, 169);
-        g_colorNameMap[_T("darkgreen")] = RGB(0, 100, 0);
-        g_colorNameMap[_T("darkkhaki")] = RGB(189, 183, 107);
-        g_colorNameMap[_T("darkmagenta")] = RGB(139, 0, 139);
-        g_colorNameMap[_T("darkolivegreen")] = RGB(85, 107, 47);
-        g_colorNameMap[_T("darkorange")] = RGB(255, 140, 0);
-        g_colorNameMap[_T("darkorchid")] = RGB(153, 50, 204);
-        g_colorNameMap[_T("darkred")] = RGB(139, 0, 0);
-        g_colorNameMap[_T("darksalmon")] = RGB(233, 150, 122);
-        g_colorNameMap[_T("darkseagreen")] = RGB(143, 188, 143);
-        g_colorNameMap[_T("darkslateblue")] = RGB(72, 61, 139);
-        g_colorNameMap[_T("darkslategray")] = RGB(47, 79, 79);
-        g_colorNameMap[_T("darkturquoise")] = RGB(0, 206, 209);
-        g_colorNameMap[_T("darkviolet")] = RGB(148, 0, 211);
-        g_colorNameMap[_T("deeppink")] = RGB(255, 20, 147);
-        g_colorNameMap[_T("deepskyblue")] = RGB(0, 191, 255);
-        g_colorNameMap[_T("dimgray")] = RGB(105, 105, 105);
-        g_colorNameMap[_T("dodgerblue")] = RGB(30, 144, 255);
-        g_colorNameMap[_T("firebrick")] = RGB(178, 34, 34);
-        g_colorNameMap[_T("floralwhite")] = RGB(255, 250, 240);
-        g_colorNameMap[_T("forestgreen")] = RGB(34, 139, 34);
-        g_colorNameMap[_T("gainsboro")] = RGB(220, 220, 220);
-        g_colorNameMap[_T("ghostwhite")] = RGB(248, 248, 255);
-        g_colorNameMap[_T("gold")] = RGB(255, 215, 0);
-        g_colorNameMap[_T("goldenrod")] = RGB(218, 165, 32);
-        g_colorNameMap[_T("greenyellow")] = RGB(173, 255, 47);
-        g_colorNameMap[_T("honeydew")] = RGB(240, 255, 240);
-        g_colorNameMap[_T("hotpink")] = RGB(255, 105, 180);
-        g_colorNameMap[_T("indianred")] = RGB(205, 92, 92);
-        g_colorNameMap[_T("indigo")] = RGB(75, 0, 130);
-        g_colorNameMap[_T("ivory")] = RGB(255, 255, 240);
-        g_colorNameMap[_T("khaki")] = RGB(240, 230, 140);
-        g_colorNameMap[_T("lavender")] = RGB(230, 230, 250);
-        g_colorNameMap[_T("lavenderblush")] = RGB(255, 240, 245);
-        g_colorNameMap[_T("lawngreen")] = RGB(124, 252, 0);
-        g_colorNameMap[_T("lemonchiffon")] = RGB(255, 250, 205);
-        g_colorNameMap[_T("lightblue")] = RGB(173, 216, 230);
-        g_colorNameMap[_T("lightcoral")] = RGB(240, 128, 128);
-        g_colorNameMap[_T("lightcyan")] = RGB(224, 255, 255);
-        g_colorNameMap[_T("lightgoldenrodyellow")] = RGB(250, 250, 210);
-        g_colorNameMap[_T("lightgray")] = RGB(211, 211, 211);
-        g_colorNameMap[_T("lightgreen")] = RGB(144, 238, 144);
-        g_colorNameMap[_T("lightpink")] = RGB(255, 182, 193);
-        g_colorNameMap[_T("lightsalmon")] = RGB(255, 160, 122);
-        g_colorNameMap[_T("lightseagreen")] = RGB(32, 178, 170);
-        g_colorNameMap[_T("lightskyblue")] = RGB(135, 206, 250);
-        g_colorNameMap[_T("lightslategray")] = RGB(119, 136, 153);
-        g_colorNameMap[_T("lightsteelblue")] = RGB(176, 196, 222);
-        g_colorNameMap[_T("lightyellow")] = RGB(255, 255, 224);
-        g_colorNameMap[_T("limegreen")] = RGB(50, 205, 50);
-        g_colorNameMap[_T("linen")] = RGB(250, 240, 230);
-        g_colorNameMap[_T("magenta")] = RGB(255, 0, 255);
-        g_colorNameMap[_T("mediumaquamarine")] = RGB(102, 205, 170);
-        g_colorNameMap[_T("mediumblue")] = RGB(0, 0, 205);
-        g_colorNameMap[_T("mediumorchid")] = RGB(186, 85, 211);
-        g_colorNameMap[_T("mediumpurple")] = RGB(147, 112, 219);
-        g_colorNameMap[_T("mediumseagreen")] = RGB(60, 179, 113);
-        g_colorNameMap[_T("mediumslateblue")] = RGB(123, 104, 238);
-        g_colorNameMap[_T("mediumspringgreen")] = RGB(0, 250, 154);
-        g_colorNameMap[_T("mediumturquoise")] = RGB(72, 209, 204);
-        g_colorNameMap[_T("mediumvioletred")] = RGB(199, 21, 133);
-        g_colorNameMap[_T("midnightblue")] = RGB(25, 25, 112);
-        g_colorNameMap[_T("mintcream")] = RGB(245, 255, 250);
-        g_colorNameMap[_T("mistyrose")] = RGB(255, 228, 225);
-        g_colorNameMap[_T("moccasin")] = RGB(255, 228, 181);
-        g_colorNameMap[_T("navajowhite")] = RGB(255, 222, 173);
-        g_colorNameMap[_T("oldlace")] = RGB(253, 245, 230);
-        g_colorNameMap[_T("olivedrab")] = RGB(107, 142, 35);
-        g_colorNameMap[_T("orange")] = RGB(255, 165, 0);
-        g_colorNameMap[_T("orangered")] = RGB(255, 69, 0);
-        g_colorNameMap[_T("orchid")] = RGB(218, 112, 214);
-        g_colorNameMap[_T("palegoldenrod")] = RGB(238, 232, 170);
-        g_colorNameMap[_T("palegreen")] = RGB(152, 251, 152);
-        g_colorNameMap[_T("paleturquoise")] = RGB(175, 238, 238);
-        g_colorNameMap[_T("palevioletred")] = RGB(219, 112, 147);
-        g_colorNameMap[_T("papayawhip")] = RGB(255, 239, 213);
-        g_colorNameMap[_T("peachpuff")] = RGB(255, 218, 185);
-        g_colorNameMap[_T("peru")] = RGB(205, 133, 63);
-        g_colorNameMap[_T("pink")] = RGB(255, 192, 203);
-        g_colorNameMap[_T("plum")] = RGB(221, 160, 221);
-        g_colorNameMap[_T("powderblue")] = RGB(176, 224, 230);
-        g_colorNameMap[_T("rebeccapurple")] = RGB(102, 51, 153);
-        g_colorNameMap[_T("rosybrown")] = RGB(188, 143, 143);
-        g_colorNameMap[_T("royalblue")] = RGB(65, 105, 225);
-        g_colorNameMap[_T("saddlebrown")] = RGB(139, 69, 19);
-        g_colorNameMap[_T("salmon")] = RGB(250, 128, 114);
-        g_colorNameMap[_T("sandybrown")] = RGB(244, 164, 96);
-        g_colorNameMap[_T("seagreen")] = RGB(46, 139, 87);
-        g_colorNameMap[_T("seashell")] = RGB(255, 245, 238);
-        g_colorNameMap[_T("sienna")] = RGB(160, 82, 45);
-        g_colorNameMap[_T("skyblue")] = RGB(135, 206, 235);
-        g_colorNameMap[_T("slateblue")] = RGB(106, 90, 205);
-        g_colorNameMap[_T("slategray")] = RGB(112, 128, 144);
-        g_colorNameMap[_T("snow")] = RGB(255, 250, 250);
-        g_colorNameMap[_T("springgreen")] = RGB(0, 255, 127);
-        g_colorNameMap[_T("steelblue")] = RGB(70, 130, 180);
-        g_colorNameMap[_T("tan")] = RGB(210, 180, 140);
-        g_colorNameMap[_T("thistle")] = RGB(216, 191, 216);
-        g_colorNameMap[_T("tomato")] = RGB(255, 99, 71);
-        g_colorNameMap[_T("turquoise")] = RGB(64, 224, 208);
-        g_colorNameMap[_T("violet")] = RGB(238, 130, 238);
-        g_colorNameMap[_T("wheat")] = RGB(245, 222, 179);
-        g_colorNameMap[_T("whitesmoke")] = RGB(245, 245, 245);
-        g_colorNameMap[_T("yellowgreen")] = RGB(154, 205, 50);
+        names[_T("black")] = RGB(0, 0, 0);
+        names[_T("silver")] = RGB(192, 192, 192);
+        names[_T("gray")] = RGB(128, 128, 128);
+        names[_T("white")] = RGB(255, 255, 255);
+        names[_T("maroon")] = RGB(128, 0, 0);
+        names[_T("red")] = RGB(255, 0, 0);
+        names[_T("purple")] = RGB(128, 0, 128);
+        names[_T("fuchsia")] = RGB(255, 0, 255);
+        names[_T("green")] = RGB(0, 128, 0);
+        names[_T("lime")] = RGB(0, 255, 0);
+        names[_T("olive")] = RGB(128, 128, 0);
+        names[_T("yellow")] = RGB(255, 255, 0);
+        names[_T("navy")] = RGB(0, 0, 128);
+        names[_T("blue")] = RGB(0, 0, 255);
+        names[_T("teal")] = RGB(0, 128, 128);
+        names[_T("aqua")] = RGB(0, 255, 255);
+        names[_T("aliceblue")] = RGB(240, 248, 255);
+        names[_T("antiquewhite")] = RGB(250, 235, 215);
+        names[_T("aquamarine")] = RGB(127, 255, 212);
+        names[_T("azure")] = RGB(240, 255, 255);
+        names[_T("beige")] = RGB(245, 245, 220);
+        names[_T("bisque")] = RGB(255, 228, 196);
+        names[_T("blanchedalmond")] = RGB(255, 235, 205);
+        names[_T("blueviolet")] = RGB(138, 43, 226);
+        names[_T("brown")] = RGB(165, 42, 42);
+        names[_T("burlywood")] = RGB(222, 184, 135);
+        names[_T("cadetblue")] = RGB(95, 158, 160);
+        names[_T("chartreuse")] = RGB(127, 255, 0);
+        names[_T("chocolate")] = RGB(210, 105, 30);
+        names[_T("coral")] = RGB(255, 127, 80);
+        names[_T("cornflowerblue")] = RGB(100, 149, 237);
+        names[_T("cornsilk")] = RGB(255, 248, 220);
+        names[_T("crimson")] = RGB(220, 20, 60);
+        names[_T("cyan")] = RGB(0, 255, 255);
+        names[_T("darkblue")] = RGB(0, 0, 139);
+        names[_T("darkcyan")] = RGB(0, 139, 139);
+        names[_T("darkgoldenrod")] = RGB(184, 134, 11);
+        names[_T("darkgray")] = RGB(169, 169, 169);
+        names[_T("darkgreen")] = RGB(0, 100, 0);
+        names[_T("darkkhaki")] = RGB(189, 183, 107);
+        names[_T("darkmagenta")] = RGB(139, 0, 139);
+        names[_T("darkolivegreen")] = RGB(85, 107, 47);
+        names[_T("darkorange")] = RGB(255, 140, 0);
+        names[_T("darkorchid")] = RGB(153, 50, 204);
+        names[_T("darkred")] = RGB(139, 0, 0);
+        names[_T("darksalmon")] = RGB(233, 150, 122);
+        names[_T("darkseagreen")] = RGB(143, 188, 143);
+        names[_T("darkslateblue")] = RGB(72, 61, 139);
+        names[_T("darkslategray")] = RGB(47, 79, 79);
+        names[_T("darkturquoise")] = RGB(0, 206, 209);
+        names[_T("darkviolet")] = RGB(148, 0, 211);
+        names[_T("deeppink")] = RGB(255, 20, 147);
+        names[_T("deepskyblue")] = RGB(0, 191, 255);
+        names[_T("dimgray")] = RGB(105, 105, 105);
+        names[_T("dodgerblue")] = RGB(30, 144, 255);
+        names[_T("firebrick")] = RGB(178, 34, 34);
+        names[_T("floralwhite")] = RGB(255, 250, 240);
+        names[_T("forestgreen")] = RGB(34, 139, 34);
+        names[_T("gainsboro")] = RGB(220, 220, 220);
+        names[_T("ghostwhite")] = RGB(248, 248, 255);
+        names[_T("gold")] = RGB(255, 215, 0);
+        names[_T("goldenrod")] = RGB(218, 165, 32);
+        names[_T("greenyellow")] = RGB(173, 255, 47);
+        names[_T("honeydew")] = RGB(240, 255, 240);
+        names[_T("hotpink")] = RGB(255, 105, 180);
+        names[_T("indianred")] = RGB(205, 92, 92);
+        names[_T("indigo")] = RGB(75, 0, 130);
+        names[_T("ivory")] = RGB(255, 255, 240);
+        names[_T("khaki")] = RGB(240, 230, 140);
+        names[_T("lavender")] = RGB(230, 230, 250);
+        names[_T("lavenderblush")] = RGB(255, 240, 245);
+        names[_T("lawngreen")] = RGB(124, 252, 0);
+        names[_T("lemonchiffon")] = RGB(255, 250, 205);
+        names[_T("lightblue")] = RGB(173, 216, 230);
+        names[_T("lightcoral")] = RGB(240, 128, 128);
+        names[_T("lightcyan")] = RGB(224, 255, 255);
+        names[_T("lightgoldenrodyellow")] = RGB(250, 250, 210);
+        names[_T("lightgray")] = RGB(211, 211, 211);
+        names[_T("lightgreen")] = RGB(144, 238, 144);
+        names[_T("lightpink")] = RGB(255, 182, 193);
+        names[_T("lightsalmon")] = RGB(255, 160, 122);
+        names[_T("lightseagreen")] = RGB(32, 178, 170);
+        names[_T("lightskyblue")] = RGB(135, 206, 250);
+        names[_T("lightslategray")] = RGB(119, 136, 153);
+        names[_T("lightsteelblue")] = RGB(176, 196, 222);
+        names[_T("lightyellow")] = RGB(255, 255, 224);
+        names[_T("limegreen")] = RGB(50, 205, 50);
+        names[_T("linen")] = RGB(250, 240, 230);
+        names[_T("magenta")] = RGB(255, 0, 255);
+        names[_T("mediumaquamarine")] = RGB(102, 205, 170);
+        names[_T("mediumblue")] = RGB(0, 0, 205);
+        names[_T("mediumorchid")] = RGB(186, 85, 211);
+        names[_T("mediumpurple")] = RGB(147, 112, 219);
+        names[_T("mediumseagreen")] = RGB(60, 179, 113);
+        names[_T("mediumslateblue")] = RGB(123, 104, 238);
+        names[_T("mediumspringgreen")] = RGB(0, 250, 154);
+        names[_T("mediumturquoise")] = RGB(72, 209, 204);
+        names[_T("mediumvioletred")] = RGB(199, 21, 133);
+        names[_T("midnightblue")] = RGB(25, 25, 112);
+        names[_T("mintcream")] = RGB(245, 255, 250);
+        names[_T("mistyrose")] = RGB(255, 228, 225);
+        names[_T("moccasin")] = RGB(255, 228, 181);
+        names[_T("navajowhite")] = RGB(255, 222, 173);
+        names[_T("oldlace")] = RGB(253, 245, 230);
+        names[_T("olivedrab")] = RGB(107, 142, 35);
+        names[_T("orange")] = RGB(255, 165, 0);
+        names[_T("orangered")] = RGB(255, 69, 0);
+        names[_T("orchid")] = RGB(218, 112, 214);
+        names[_T("palegoldenrod")] = RGB(238, 232, 170);
+        names[_T("palegreen")] = RGB(152, 251, 152);
+        names[_T("paleturquoise")] = RGB(175, 238, 238);
+        names[_T("palevioletred")] = RGB(219, 112, 147);
+        names[_T("papayawhip")] = RGB(255, 239, 213);
+        names[_T("peachpuff")] = RGB(255, 218, 185);
+        names[_T("peru")] = RGB(205, 133, 63);
+        names[_T("pink")] = RGB(255, 192, 203);
+        names[_T("plum")] = RGB(221, 160, 221);
+        names[_T("powderblue")] = RGB(176, 224, 230);
+        names[_T("rebeccapurple")] = RGB(102, 51, 153);
+        names[_T("rosybrown")] = RGB(188, 143, 143);
+        names[_T("royalblue")] = RGB(65, 105, 225);
+        names[_T("saddlebrown")] = RGB(139, 69, 19);
+        names[_T("salmon")] = RGB(250, 128, 114);
+        names[_T("sandybrown")] = RGB(244, 164, 96);
+        names[_T("seagreen")] = RGB(46, 139, 87);
+        names[_T("seashell")] = RGB(255, 245, 238);
+        names[_T("sienna")] = RGB(160, 82, 45);
+        names[_T("skyblue")] = RGB(135, 206, 235);
+        names[_T("slateblue")] = RGB(106, 90, 205);
+        names[_T("slategray")] = RGB(112, 128, 144);
+        names[_T("snow")] = RGB(255, 250, 250);
+        names[_T("springgreen")] = RGB(0, 255, 127);
+        names[_T("steelblue")] = RGB(70, 130, 180);
+        names[_T("tan")] = RGB(210, 180, 140);
+        names[_T("thistle")] = RGB(216, 191, 216);
+        names[_T("tomato")] = RGB(255, 99, 71);
+        names[_T("turquoise")] = RGB(64, 224, 208);
+        names[_T("violet")] = RGB(238, 130, 238);
+        names[_T("wheat")] = RGB(245, 222, 179);
+        names[_T("whitesmoke")] = RGB(245, 245, 245);
+        names[_T("yellowgreen")] = RGB(154, 205, 50);
 	}
+	return names;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -599,7 +656,7 @@ bool CQListCtrl::HighlightSearchMatches(CString& csText)
 	auto highlightColor = CGetSetOptions::m_Theme.SearchTextHighlight();
 	//use unprintable characters so it doesn't find copied html to convert
 	return m_searchText.GetLength() > 0 &&
-		FindNoCaseAndInsert(csText, m_searchText, StrF(_T("\x01\x04 color='#%02x%02x%02x'\x02"), GetRValue(highlightColor), GetGValue(highlightColor), GetBValue(highlightColor)), _T("\x01\x03\x04\x02"), m_linesPerRow) > 0;
+		CMarkerInserter::Insert(csText, m_searchText, CStringUtil::Format(_T("\x01\x04 color='#%02x%02x%02x'\x02"), GetRValue(highlightColor), GetGValue(highlightColor), GetBValue(highlightColor)), _T("\x01\x03\x04\x02"), m_linesPerRow) > 0;
 }
 
 void CQListCtrl::DrawFirstTenHotKey(CDC* pDC, const CRect& rcItem, int firstTenNum)
@@ -705,7 +762,7 @@ COLORREF CQListCtrl::HslToRgb(double h, double s, double l)
 
 
 // Helper function to parse a CSS numeric value which can be a percentage or a number
-static bool ParseCssValue(const CString& token, double& value)
+bool CCssColorParser::ParseCssValue(const CString& token, double& value)
 {
 	CString localToken = token;
 	localToken.Trim();
@@ -727,7 +784,7 @@ static bool ParseCssValue(const CString& token, double& value)
 
 // Converts a color from OKLCH color space to sRGB.
 // l: 0-1, c: 0-0.4 (theoretically unbounded, but practically small), h: 0-360
-static COLORREF OklchToRgb(double l, double c, double h)
+COLORREF CCssColorParser::OklchToRgb(double l, double c, double h)
 {
 	// 1. Convert OKLCH to OKLAB
 	double h_rad = h * std::numbers::pi / 180.0;
@@ -853,12 +910,11 @@ bool CQListCtrl::ParseCopiedColor(const CString& parseText, CopiedColor& color)
 bool CQListCtrl::ParseNamedColor(const CString& parseText, CopiedColor& color)
 {
 	// Check for W3C Named Colors
-	InitializeColorNameMap();
-	auto it = g_colorNameMap.find(parseText);
-	if (it == g_colorNameMap.end())
+	COLORREF namedColor{};
+	if (CCssColorParser::FindColorName(parseText, namedColor) == false)
 		return false;
 
-	color = CopiedColor{it->second, 255};
+	color = CopiedColor{namedColor, 255};
 	return true;
 }
 
@@ -939,16 +995,16 @@ std::vector<CString> CQListCtrl::SplitCssArguments(CString content)
 bool CQListCtrl::ParseCssValues(const std::vector<CString>& tokens, CssValues& values)
 {
 	return tokens.size() >= 3 &&
-		ParseCssValue(tokens[0], values.first) &&
-		ParseCssValue(tokens[1], values.second) &&
-		ParseCssValue(tokens[2], values.third);
+		CCssColorParser::ParseCssValue(tokens[0], values.first) &&
+		CCssColorParser::ParseCssValue(tokens[1], values.second) &&
+		CCssColorParser::ParseCssValue(tokens[2], values.third);
 }
 
 int CQListCtrl::CssAlpha(const std::vector<CString>& tokens)
 {
 	int alpha = 255;
 	double a_val = 1.0;
-	if (tokens.size() >= 4 && ParseCssValue(tokens[3], a_val))
+	if (tokens.size() >= 4 && CCssColorParser::ParseCssValue(tokens[3], a_val))
 	{
 		if (tokens[3].Find('%') != -1)
 		{
@@ -1049,7 +1105,7 @@ bool CQListCtrl::ParseCssOklchColor(const CString& parseText, CopiedColor& color
 	if ((l_normalized >= 0 && l_normalized <= 1.0 && lch.second >= 0) == false)
 		return false;
 
-	color = CopiedColor{OklchToRgb(l_normalized, lch.second, lch.third), alpha};
+	color = CopiedColor{CCssColorParser::OklchToRgb(l_normalized, lch.second, lch.third), alpha};
 	return true;
 }
 
@@ -1234,7 +1290,7 @@ BOOL CQListCtrl::DrawBitMap(int nItem, CRect& crRect, CDC* pDC, const CString& c
 			// the thumbnail is made once per clip; freeing the image keeps the next paint from
 			// drawing it again, so the error is shown once
 			format->Free();
-			CErrorReport::Show(StrF(_T("Ditto cannot draw the clip's image: the image data is malformed (%s)."), CString(error.what()).GetString()));
+			CErrorReport::Show(CStringUtil::Format(_T("Ditto cannot draw the clip's image: the image data is malformed (%s)."), CString(error.what()).GetString()));
 		}
 	}
 	else if (csDescription.Find(_T("CF_DIB")) == 0)
@@ -1542,7 +1598,7 @@ bool CQListCtrl::PostEventLoadedCheckDescription(int updatedRow)
 
 		if (toolTipClipRow >= 0)
 		{
-			log(StrF(_T("PostEventLoadedCheckDescription refreshRow: %d tt_row: %d tt_id: %d"), updatedRow, toolTipClipRow, toolTipClipId));
+			CLogger::Write(CStringUtil::Format(_T("PostEventLoadedCheckDescription refreshRow: %d tt_row: %d tt_id: %d"), updatedRow, toolTipClipRow, toolTipClipId));
 		}
 
 		//We tried to show the clip but we didn't have the id yet, it was loaded in a thread, now it's being updated
@@ -1577,7 +1633,7 @@ void CQListCtrl::SetToolTipImage(int nItem, CClipFormat& Clip)
 	catch (const DittoCore::ClipboardFormatError& error)
 	{
 		// the description is still shown, without the image
-		CErrorReport::Show(StrF(_T("Ditto cannot show the clip's image: the image data is malformed (%s)."), CString(error.what()).GetString()));
+		CErrorReport::Show(CStringUtil::Format(_T("Ditto cannot show the clip's image: the image data is malformed (%s)."), CString(error.what()).GetString()));
 	}
 }
 
@@ -1591,7 +1647,7 @@ bool CQListCtrl::ShowFullDescription(bool bFromAuto, bool fromNextPrev)
 	int clipRow = this->GetCaret();
 	int clipId = this->GetItemData(clipRow);
 
-	log(StrF(_T("Show full description row: %d id: %d"), clipRow, clipId));
+	CLogger::Write(CStringUtil::Format(_T("Show full description row: %d id: %d"), clipRow, clipId));
 
 	if (IsToolTipShowingClip(clipId))
 	{
@@ -1724,7 +1780,7 @@ bool CQListCtrl::LoadToolTipClipData(int clipId)
 			int parentId = q.getIntField(_T("lParentID"));
 			if (parentId > 0)
 			{
-				CString folder = FolderPath(parentId);
+				CString folder = CClipDatabase::FolderPath(parentId);
 
 				m_pToolTip->SetFolderPath(folder);
 			}
@@ -1734,7 +1790,7 @@ bool CQListCtrl::LoadToolTipClipData(int clipId)
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Loading the description of clip id %d failed: %s"), clipId, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Loading the description of clip id %d failed: %s"), clipId, e.errorMessage()));
 		return false;
 	}
 
@@ -2066,7 +2122,7 @@ void CQListCtrl::UpdateAllSelectedState()
 	{
 		if (m_allSelected == false)
 		{
-			CLogger::Log(StrF(_T("List box Select All")));
+			CLogger::Log(CStringUtil::Format(_T("List box Select All")));
 
 			GetParent()->SendMessage(NmAllSelected, 0, 0);
 			m_allSelected = true;
@@ -2074,7 +2130,7 @@ void CQListCtrl::UpdateAllSelectedState()
 	}
 	else if (m_allSelected == true)
 	{
-		CLogger::Log(StrF(_T("List box REMOVED Select All")));
+		CLogger::Log(CStringUtil::Format(_T("List box REMOVED Select All")));
 		m_allSelected = false;
 	}
 }

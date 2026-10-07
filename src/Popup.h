@@ -4,11 +4,15 @@
 	- technique learned from codeproject "ToolTipZen" by "Zarembo Maxim"
 \*------------------------------------------------------------------*/
 
-void InitToolInfo( TOOLINFO& ti ); // initializes toolinfo with uid 0
-
 class CPopup
 {
 public:
+	/**
+	 * @brief Initialises a TOOLINFO for a tracking, absolute positioned tool with uid 0 (the only uid CPopup uses).
+	 * @param ti The tool info to initialise.
+	 */
+	static void InitToolInfo( TOOLINFO& ti );
+
 	bool m_bOwnTT;
 
 	HWND m_hTTWnd; // handle to the ToolTip control

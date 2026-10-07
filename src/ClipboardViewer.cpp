@@ -59,7 +59,7 @@ void CClipboardViewer::Connect()
 
 	if(!::AddClipboardFormatListener(m_hWnd))
 	{
-		CErrorReport::Show(StrF(_T("Ditto could not listen for clipboard changes (AddClipboardFormatListener failed, error %u). Copies are not saved."), ::GetLastError()));
+		CErrorReport::Show(CStringUtil::Format(_T("Ditto could not listen for clipboard changes (AddClipboardFormatListener failed, error %u). Copies are not saved."), ::GetLastError()));
 		return;
 	}
 
@@ -83,7 +83,7 @@ void CClipboardViewer::Disconnect(bool bSendPing)
 
 	if(m_bIsConnected && !::RemoveClipboardFormatListener(m_hWnd))
 	{
-		CErrorReport::Show(StrF(_T("Ditto could not stop listening for clipboard changes (RemoveClipboardFormatListener failed, error %u)."), ::GetLastError()));
+		CErrorReport::Show(CStringUtil::Format(_T("Ditto could not stop listening for clipboard changes (RemoveClipboardFormatListener failed, error %u)."), ::GetLastError()));
 	}
 
 	m_bConnect = false;
@@ -99,8 +99,8 @@ void CClipboardViewer::SendPing()
 		if(OpenClipboard())
 		{
 			m_bPinging = true;
-			SetClipboardData(theApp.m_PingFormat, NewGlobalP("Ditto Ping", sizeof("Ditto Ping")));
-			SetClipboardData(theApp.m_cfIgnoreClipboard , NewGlobalP("Ignore", sizeof("Ignore")));
+			SetClipboardData(theApp.m_PingFormat, CGlobalMemory::NewGlobalP("Ditto Ping", sizeof("Ditto Ping")));
+			SetClipboardData(theApp.m_cfIgnoreClipboard , CGlobalMemory::NewGlobalP("Ignore", sizeof("Ignore")));
 
 			SetTimer(TimerPing, 2000, NULL);
 			CloseClipboard();
@@ -153,9 +153,9 @@ void CClipboardViewer::OnDestroy()
 
 LRESULT CClipboardViewer::OnClipboardChange(WPARAM /*wParam*/, LPARAM /*lPara*/)
 {
-	CLogger::Log(StrF(_T("OnClipboardChange - Start")));
+	CLogger::Log(CStringUtil::Format(_T("OnClipboardChange - Start")));
 	ProcessClipboardChange();
-	CLogger::Log(StrF(_T("OnClipboardChange - End")));
+	CLogger::Log(CStringUtil::Format(_T("OnClipboardChange - End")));
 
 	return TRUE;
 }
@@ -200,7 +200,7 @@ void CClipboardViewer::ProcessClipboardChange()
 			{
 				if(ValidActiveWnd())
 				{          
-					CLogger::Log(StrF(_T("OnDrawClipboard:: *** SetTimer *** %llu"), GetTickCount64()));
+					CLogger::Log(CStringUtil::Format(_T("OnDrawClipboard:: *** SetTimer *** %llu"), GetTickCount64()));
 
 					KillTimer(TimerDrawClipboard);
 					SetTimer(TimerDrawClipboard, CGetSetOptions::m_lProcessDrawClipboardDelay, NULL);		
@@ -220,27 +220,27 @@ bool CClipboardViewer::ValidActiveWnd()
 
 	CString includeApps = CGetSetOptions::GetCopyAppInclude().MakeLower();
 
-	CLogger::Log(StrF(_T("INCLUDE app names: %s, Active App: %s"), includeApps.GetString(), m_activeWindow.GetString()));
+	CLogger::Log(CStringUtil::Format(_T("INCLUDE app names: %s, Active App: %s"), includeApps.GetString(), m_activeWindow.GetString()));
 
 	CString line;
 	if(FindAppMatch(includeApps, line) == false)
 	{
-		CLogger::Log(StrF(_T("Didn't find a match to INCLUDE match %s, NOT SAVING COPY"), includeApps.GetString()));
+		CLogger::Log(CStringUtil::Format(_T("Didn't find a match to INCLUDE match %s, NOT SAVING COPY"), includeApps.GetString()));
 		return false;
 	}
 
-	CLogger::Log(StrF(_T("Inlclude app names Found Match %s - %s"), line.GetString(), m_activeWindow.GetString()));
+	CLogger::Log(CStringUtil::Format(_T("Inlclude app names Found Match %s - %s"), line.GetString(), m_activeWindow.GetString()));
 
 	CString excludeApps = CGetSetOptions::GetCopyAppExclude().MakeLower();
 
 	if(excludeApps != "")
 	{
-		CLogger::Log(StrF(_T("EXCLUDE app names %s, Active App: %s"), excludeApps.GetString(), m_activeWindow.GetString()));
+		CLogger::Log(CStringUtil::Format(_T("EXCLUDE app names %s, Active App: %s"), excludeApps.GetString(), m_activeWindow.GetString()));
 
 		CString line2;
 		if(FindAppMatch(excludeApps, line2))
 		{
-			CLogger::Log(StrF(_T("Exclude app names Found Match %s - %s - NOT SAVING COPY"), line2.GetString(), m_activeWindow.GetString()));
+			CLogger::Log(CStringUtil::Format(_T("Exclude app names Found Match %s - %s - NOT SAVING COPY"), line2.GetString(), m_activeWindow.GetString()));
 
 			return false;
 		}
@@ -279,7 +279,7 @@ void CClipboardViewer::UpdateActiveWindowName()
 
 		if (PID != 0)
 		{
-			m_activeWindow = GetProcessName(NULL, PID);
+			m_activeWindow = CWindowInspector::GetProcessName(NULL, PID);
 		}
 	}
 
@@ -287,7 +287,7 @@ void CClipboardViewer::UpdateActiveWindowName()
 	if (m_activeWindow == _T(""))
 	{
 		HWND active = ::GetForegroundWindow();
-		m_activeWindow = GetProcessName(active, 0);
+		m_activeWindow = CWindowInspector::GetProcessName(active, 0);
 	}
 
 	m_activeWindow = m_activeWindow.MakeLower();
@@ -323,7 +323,7 @@ void CClipboardViewer::OnDrawClipboardTimer(UINT_PTR nIDEvent)
 	{
 		if (GetIgnoreClipboardChange() == false)
 		{
-			CLogger::Log(StrF(_T("OnDrawClipboard::OnTimer %llu"), dwNow));
+			CLogger::Log(CStringUtil::Format(_T("OnDrawClipboard::OnTimer %llu"), dwNow));
 
 			m_pHandler->OnClipboardChange(m_activeWindow);
 
@@ -332,7 +332,7 @@ void CClipboardViewer::OnDrawClipboardTimer(UINT_PTR nIDEvent)
 	}
 	else
 	{
-		CLogger::Log(StrF(_T("Clip copy to fast difference from last copy = %llu"), (dwNow - m_dwLastCopy)));
+		CLogger::Log(CStringUtil::Format(_T("Clip copy to fast difference from last copy = %llu"), (dwNow - m_dwLastCopy)));
 	}
 
 	m_activeWindow = _T("");

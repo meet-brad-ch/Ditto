@@ -17,7 +17,7 @@
 
 using namespace nsPath;
 
-UINT WritePrivateProfileInt(LPCTSTR lpAppName, LPCTSTR lpKeyName, INT nValue, LPCTSTR lpFileName)
+UINT CGetSetOptions::WritePrivateProfileInt(LPCTSTR lpAppName, LPCTSTR lpKeyName, INT nValue, LPCTSTR lpFileName)
 {
 	// Locals
 	TCHAR	szBuff[25];
@@ -177,14 +177,14 @@ void CGetSetOptions::LocateIniFile(const CString& exeDir)
 {
 	CString windowsAppFile = exeDir + _T("WindowsApp");
 	CString chocolateyAppFile = exeDir + _T("chocolatey");
-	if (FileExists(windowsAppFile))
+	if (CFileSystem::FileExists(windowsAppFile))
 	{
 		m_windowsApp = true;
 		m_bFromIni = true;
 		//always use the ini file in the app data folder for windows store
 		m_csIniFileName = GetIniFileName(false);
 	}
-	else if (FileExists(chocolateyAppFile))
+	else if (CFileSystem::FileExists(chocolateyAppFile))
 	{
 		m_chocolateyApp = true;
 		m_bFromIni = true;
@@ -201,15 +201,15 @@ void CGetSetOptions::LocatePortableOrAppDataIniFile()
 {
 	m_csIniFileName = GetIniFileName(true);
 
-	CString portable = GetFilePath(m_csIniFileName);
+	CString portable = CFileSystem::GetFilePath(m_csIniFileName);
 	portable += _T("portable");
-	if (FileExists(portable))
+	if (CFileSystem::FileExists(portable))
 	{
 		m_portable = true;
 	}
 
 	//first check if ini file is in app directory
-	if (m_portable || FileExists(m_csIniFileName))
+	if (m_portable || CFileSystem::FileExists(m_csIniFileName))
 	{
 		m_bFromIni = true;
 	}
@@ -217,7 +217,7 @@ void CGetSetOptions::LocatePortableOrAppDataIniFile()
 	{
 		//next check if it's in app data
 		m_csIniFileName = GetIniFileName(false);
-		if (FileExists(m_csIniFileName))
+		if (CFileSystem::FileExists(m_csIniFileName))
 		{
 			m_bFromIni = true;
 		}
@@ -227,15 +227,15 @@ void CGetSetOptions::LocatePortableOrAppDataIniFile()
 void CGetSetOptions::LoadSettings()
 {
 	CString exeDir = CGetSetOptions::GetExeFileName();
-	exeDir = GetFilePath(exeDir);
+	exeDir = CFileSystem::GetFilePath(exeDir);
 	CFolderPath::AddTrailingSlash(exeDir);
 
 	LocateIniFile(exeDir);
 
 	if(m_bFromIni)
 	{
-		CString csPath = GetFilePath(m_csIniFileName);
-		if(FileExists(csPath) == FALSE)
+		CString csPath = CFileSystem::GetFilePath(m_csIniFileName);
+		if(CFileSystem::FileExists(csPath) == FALSE)
 			CreateDirectory(csPath, NULL);
 
 		//create the ini file as unicode, this way we can save unicode string to the ini file
@@ -421,7 +421,7 @@ CString CGetSetOptions::GetIniFileName(bool bLocalIniFile)
 	
 	if(bLocalIniFile)
 	{
-		csPath = GetFilePath(GetExeFileName());
+		csPath = CFileSystem::GetFilePath(GetExeFileName());
 	}
 	else
 	{
@@ -532,7 +532,7 @@ CString CGetSetOptions::GetTempFilePath()
 long CGetSetOptions::GetResolutionProfileLong(CString csName, long lDefaultValue, CString csNewPath)
 {
 	CString resName;
-	resName.Format(_T("(%dx%d)_%s"), GetScreenWidth(), GetScreenHeight(), csName.GetString());
+	resName.Format(_T("(%dx%d)_%s"), CMonitorGeometry::GetScreenWidth(), CMonitorGeometry::GetScreenHeight(), csName.GetString());
 
 	long value = GetProfileLong(resName, INT_MIN, csNewPath);
 
@@ -547,7 +547,7 @@ long CGetSetOptions::GetResolutionProfileLong(CString csName, long lDefaultValue
 BOOL CGetSetOptions::SetResolutionProfileLong(CString csName, long lValue)
 {
 	CString resName;
-	resName.Format(_T("(%dx%d)_%s"), GetScreenWidth(), GetScreenHeight(), csName.GetString());
+	resName.Format(_T("(%dx%d)_%s"), CMonitorGeometry::GetScreenWidth(), CMonitorGeometry::GetScreenHeight(), csName.GetString());
 
 	return SetProfileLong(resName, lValue);
 }
@@ -1403,7 +1403,7 @@ BOOL CGetSetOptions::GetFont(LOGFONT &font)
 		{
 			// A damaged font setting: report it and remove it, so the default font below is used
 			// and the report does not come back on every start
-			CErrorReport::Show(StrF(_T("The display font setting in %s is damaged (%s). Ditto removed it and uses its default font; choose a font again in Options."),
+			CErrorReport::Show(CStringUtil::Format(_T("The display font setting in %s is damaged (%s). Ditto removed it and uses its default font; choose a font again in Options."),
 				m_csIniFileName.GetString(), CString(e.what()).GetString()));
 			if (!WritePrivateProfileString(_T("DisplayFont6"), NULL, NULL, m_csIniFileName))
 			{
@@ -1678,7 +1678,7 @@ void CGetSetOptions::SetUpdateDescWhenSavingClip(BOOL bSet)
 CString CGetSetOptions::GetPath(long lPathID)
 {
 	CString csDir = CGetSetOptions::GetExeFileName();
-	csDir = GetFilePath(csDir);
+	csDir = CFileSystem::GetFilePath(csDir);
 	CFolderPath::AddTrailingSlash(csDir);
 
 	//U3_APP_DATA_PATH    -	<U3_DEVICE_PATH>\System\Apps\{app_unique_id}\Data
@@ -1725,18 +1725,18 @@ void CGetSetOptions::SetDittoRestoreClipboardDelay(long lDelay)
 
 void CGetSetOptions::GetCopyBufferItem(int nPos, CCopyBufferItem &Item)
 {
-	Item.m_lCopyHotKey = GetProfileLong(StrF(_T("CopyBufferCopyHotKey_%d"), nPos), 0);
-	Item.m_lPasteHotKey = GetProfileLong(StrF(_T("CopyBufferPasteHotKey_%d"), nPos), 0);
-	Item.m_lCutHotKey = GetProfileLong(StrF(_T("CopyBufferCutHotKey_%d"), nPos), 0);
-	Item.m_bPlaySoundOnCopy = GetProfileLong(StrF(_T("CopyBufferPlaySound_%d"), nPos), 0);
+	Item.m_lCopyHotKey = GetProfileLong(CStringUtil::Format(_T("CopyBufferCopyHotKey_%d"), nPos), 0);
+	Item.m_lPasteHotKey = GetProfileLong(CStringUtil::Format(_T("CopyBufferPasteHotKey_%d"), nPos), 0);
+	Item.m_lCutHotKey = GetProfileLong(CStringUtil::Format(_T("CopyBufferCutHotKey_%d"), nPos), 0);
+	Item.m_bPlaySoundOnCopy = GetProfileLong(CStringUtil::Format(_T("CopyBufferPlaySound_%d"), nPos), 0);
 }
 
 void CGetSetOptions::SetCopyBufferItem(int nPos, CCopyBufferItem &Item)
 {
-	SetProfileLong(StrF(_T("CopyBufferCopyHotKey_%d"), nPos), Item.m_lCopyHotKey);
-	SetProfileLong(StrF(_T("CopyBufferPasteHotKey_%d"), nPos), Item.m_lPasteHotKey);
-	SetProfileLong(StrF(_T("CopyBufferCutHotKey_%d"), nPos), Item.m_lCutHotKey);
-	SetProfileLong(StrF(_T("CopyBufferPlaySound_%d"), nPos), Item.m_bPlaySoundOnCopy);
+	SetProfileLong(CStringUtil::Format(_T("CopyBufferCopyHotKey_%d"), nPos), Item.m_lCopyHotKey);
+	SetProfileLong(CStringUtil::Format(_T("CopyBufferPasteHotKey_%d"), nPos), Item.m_lPasteHotKey);
+	SetProfileLong(CStringUtil::Format(_T("CopyBufferCutHotKey_%d"), nPos), Item.m_lCutHotKey);
+	SetProfileLong(CStringUtil::Format(_T("CopyBufferPlaySound_%d"), nPos), Item.m_bPlaySoundOnCopy);
 }
 
 CString CGetSetOptions::GetMultiPasteSeparator(bool bConvertToLineFeeds)
@@ -1761,7 +1761,7 @@ BOOL CGetSetOptions::GetSetCurrentDirectory()
 {
 	if(m_portable)
 	{
-		CString csExePath = GetFilePath(GetExeFileName());
+		CString csExePath = CFileSystem::GetFilePath(GetExeFileName());
 		CFolderPath::AddTrailingSlash(csExePath);
 		::SetCurrentDirectory(csExePath);
 	}

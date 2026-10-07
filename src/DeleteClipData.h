@@ -197,6 +197,101 @@ private:
 	/** @brief The sort orders of the list columns, by column index. */
 	static const std::array<ColumnSort, 7> s_columnSorts;
 
+	/** @brief The direction of the next column sort: true for descending; every column click toggles it. */
+	bool m_sortDescending{true};
+
+	/**
+	 * @brief Orders by clip id, highest first.
+	 * @param a1 The first item.
+	 * @param a2 The second item.
+	 * @return True when a1 goes before a2.
+	 */
+	static bool SortByIDDesc(const CDeleteData& a1, const CDeleteData& a2);
+	/**
+	 * @brief Orders by clip id, lowest first.
+	 * @param a1 The first item.
+	 * @param a2 The second item.
+	 * @return True when a1 goes before a2.
+	 */
+	static bool SortByIDAsc(const CDeleteData& a1, const CDeleteData& a2);
+	/**
+	 * @brief Orders by title, descending.
+	 * @param a1 The first item.
+	 * @param a2 The second item.
+	 * @return True when a1 goes before a2.
+	 */
+	static bool SortByTitleDesc(const CDeleteData& a1, const CDeleteData& a2);
+	/**
+	 * @brief Orders by title, ascending.
+	 * @param a1 The first item.
+	 * @param a2 The second item.
+	 * @return True when a1 goes before a2.
+	 */
+	static bool SortByTitleAsc(const CDeleteData& a1, const CDeleteData& a2);
+	/**
+	 * @brief Orders by quick paste text, descending (used for both directions).
+	 * @param a1 The first item.
+	 * @param a2 The second item.
+	 * @return True when a1 goes before a2.
+	 */
+	static bool SortByQuickPaste(const CDeleteData& a1, const CDeleteData& a2);
+	/**
+	 * @brief Orders by created date, newest first.
+	 * @param a1 The first item.
+	 * @param a2 The second item.
+	 * @return True when a1 goes before a2.
+	 */
+	static bool SortByCreatedDateDesc(const CDeleteData& a1, const CDeleteData& a2);
+	/**
+	 * @brief Orders by last used date, newest first.
+	 * @param a1 The first item.
+	 * @param a2 The second item.
+	 * @return True when a1 goes before a2.
+	 */
+	static bool SortByLastUsedDateDesc(const CDeleteData& a1, const CDeleteData& a2);
+	/**
+	 * @brief Orders by clipboard format name, descending.
+	 * @param a1 The first item.
+	 * @param a2 The second item.
+	 * @return True when a1 goes before a2.
+	 */
+	static bool SortByFormatDesc(const CDeleteData& a1, const CDeleteData& a2);
+	/**
+	 * @brief Orders by data size, largest first.
+	 * @param a1 The first item.
+	 * @param a2 The second item.
+	 * @return True when a1 goes before a2.
+	 */
+	static bool SortByDataSizeDesc(const CDeleteData& a1, const CDeleteData& a2);
+	/**
+	 * @brief Orders by created date, oldest first.
+	 * @param a1 The first item.
+	 * @param a2 The second item.
+	 * @return True when a1 goes before a2.
+	 */
+	static bool SortByCreatedDateAsc(const CDeleteData& a1, const CDeleteData& a2);
+	/**
+	 * @brief Orders by last used date, oldest first.
+	 * @param a1 The first item.
+	 * @param a2 The second item.
+	 * @return True when a1 goes before a2.
+	 */
+	static bool SortByLastUsedDateAsc(const CDeleteData& a1, const CDeleteData& a2);
+	/**
+	 * @brief Orders by clipboard format name, ascending.
+	 * @param a1 The first item.
+	 * @param a2 The second item.
+	 * @return True when a1 goes before a2.
+	 */
+	static bool SortByFormatAsc(const CDeleteData& a1, const CDeleteData& a2);
+	/**
+	 * @brief Orders by data size, smallest first.
+	 * @param a1 The first item.
+	 * @param a2 The second item.
+	 * @return True when a1 goes before a2.
+	 */
+	static bool SortByDataSizeAsc(const CDeleteData& a1, const CDeleteData& a2);
+
 	/**
 	 * @brief SetDescriptionWindowText's details line: dates, auto delete, quick paste, shortcut, sticky.
 	 * @param selectedClip The loaded clip.

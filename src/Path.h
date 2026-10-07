@@ -54,30 +54,18 @@
 
 
 
-/// The nsPath namespace contains the CPath class and global helper functions.
+/// The nsPath namespace contains the CPath class and its helper classes (CPathUtil, PathRootParser).
 namespace nsPath
 {
 
 // ---------------- DECLARATIONS --------------------------------------------
 
-    // ----- CString Helpers ---------
-void  Trim(CString & s);                    
-TCHAR GetFirstChar(CString const & s);      ///< returns the first char of the string, or 0 if the string length is 0.
-TCHAR GetLastChar(CString const & s);       ///< returns the last char of the string, or 0 if the string length is 0.
-
-
-TCHAR GetDriveLetter(TCHAR ch);
-TCHAR GetDriveLetter(LPCTSTR s);
-
-CString QuoteSpaces(CString const & str);
-
-
 // ==================================================================
 //  ERootType
 // ------------------------------------------------------------------
 /// 
-/// Recognized root types for a path. 
-/// see nsPath::GetRootType "GetRootType" for more.
+/// Recognized root types for a path.
+/// see nsPath::PathRootParser::GetRootType "GetRootType" for more.
 /// 
 /// \c len refers to the rootLen parameter optionally returned by \c GetRootType.
 /// 
@@ -95,21 +83,17 @@ enum ERootType
    rtServer         = 9,    ///< server with share following (for GetRootType(_,_,greedy=false)
 };
 
-ERootType GetRootType(LPCTSTR path, int * pLen, bool greedy = true);
-
-
 // ==================================================================
 //  nsPath::PathRootParser
 // ------------------------------------------------------------------
 /**
  * @brief Finds the root of a path (drive, long path, server/share, protocol) and its length.
- * nsPath::GetRootType forwards to it.
  */
 class PathRootParser
 {
 public:
     /**
-     * @brief Returns the type of the path root, and its length (see nsPath::GetRootType).
+     * @brief Returns the type of the path root, and its length.
      * @param path the path to analyze; may be NULL.
      * @param pLen if not NULL, receives the length of the root part (in characters).
      * @param greedy true: "\\server\share" is one rtServerShare root; false: it is an rtServer root.
@@ -118,6 +102,15 @@ public:
     static ERootType GetRootType(LPCTSTR path, int * pLen, bool greedy = true);
 
 private:
+    /**
+     * @brief GetRootType's return step: stores the root length and passes the type on.
+     * @param type the root type.
+     * @param len the root length in characters.
+     * @param pLen if not NULL, receives \c len.
+     * @return \c type.
+     */
+    static ERootType GRT_Return(ERootType type, int len, int * pLen);
+
     /** @brief The characters that end a server, share or protocol name. */
     static constexpr const TCHAR * m_nameEndChars{ _T("\\/:*/\"<>|") };
 
@@ -282,7 +275,14 @@ public:
     //@}
 
     //@{ \name Path concatenation
-    CPath & operator &=(LPCTSTR rhs);   
+    CPath & operator &=(LPCTSTR rhs);
+    /**
+     * @brief Concatenation: a copy of \c lhs with \c rhs appended (see operator &=).
+     * @param lhs the path.
+     * @param rhs the path segment to append.
+     * @return the concatenated path.
+     */
+    friend CPath operator & (CPath const & lhs, LPCTSTR rhs) { CPath ret = lhs; ret &= rhs; return ret; }
     CPath & Append(LPCTSTR appendix);
     CPath & AddBackslash();
     CPath & RemoveBackslash();
@@ -396,61 +396,140 @@ public:
 
 };
 
-// creation functions:
-CPath SplitArgs(CString const & path_args, CString * args = NULL, DWORD cleanup = epc_Default);
-CPath SplitIconLocation(CString const & path_icon, int * pIcon = NULL, DWORD cleanup = epc_Default);
-CPath BuildRoot(int driveNumber);
-CPath GetModuleFileName(HMODULE module = NULL);
-CPath GetCurrentDirectory();
-CPath FromRegistry(HKEY baseKey, LPCTSTR subkey, LPCTSTR name);
 
-
-CString ReplaceInvalid(CString const & str, TCHAR replaceChar = '_');
-
-
-// concatenation 
-
-inline CPath operator & (CPath const & lhs, LPCTSTR rhs) { CPath ret = lhs; ret &= rhs; return ret; }
-
-
-
-
-
-
-
-// ---------------- INLIME IMPLEMENTATIONS ----------------------------------
-
-// ==============================================
-// GetFirstChar
-// ----------------------------------------------
-/// \return [TCHAR]: the first char of the string, or 0 if the string length is 0.
-/// \note The implementation takes care that the string is not copied when there are no spaces.
-inline TCHAR GetFirstChar(CString const & s)
+// ==================================================================
+//  nsPath::CPathUtil
+// ------------------------------------------------------------------
+/**
+ * @brief The nsPath helpers that are not members of a path object: CString helpers, drive
+ * letters, quoting, invalid characters, and the creation functions that return a CPath.
+ */
+class CPathUtil
 {
-    if (s.GetLength() == 0)
-        return 0;
-    else
-        return s[0];
-}
+public:
+    /** @brief The path separator. */
+    static constexpr TCHAR Backslash{ _T('\\') };
 
-// ==============================================
-// GetLastChar
-// ----------------------------------------------
-/// \return [TCHAR]: the last character in the string, or 0 if the string length is 0.
-/// \par Note
-/// \b MBCS: if the string ends with a Multibyte character, this 
-/// function returns the lead byte of the multibyte sequence.
-inline TCHAR GetLastChar(CString const & s)
-{
-    LPCTSTR pstr = s;
-    LPCTSTR pLastChar = _tcsdec(pstr, pstr + s.GetLength());
-    if (pLastChar == NULL)
-        return 0;
-    else 
-        return *pLastChar;
-}
+    /** @brief The characters that are not allowed in a Windows file name (control characters and \\/:*?"<>|). */
+    static constexpr const TCHAR * InvalidChars_Windows{
+        _T("\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F")
+        _T("\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F")
+        _T("\\/:*?\"<>|") };
 
+    // ----- CString Helpers ---------
+    /**
+     * @brief Trims whitespaces from left and right side (the string is not copied when there are none).
+     * @param s the string to modify in place.
+     */
+    static void Trim(CString & s);
 
+    /**
+     * @brief The first char of a string.
+     * @param s the string.
+     * @return the first char of the string, or 0 if the string length is 0.
+     */
+    static TCHAR GetFirstChar(CString const & s)
+    {
+        if (s.GetLength() == 0)
+            return 0;
+        else
+            return s[0];
+    }
+
+    /**
+     * @brief The last char of a string (MBCS: the lead byte of a final multibyte character).
+     * @param s the string.
+     * @return the last character in the string, or 0 if the string length is 0.
+     */
+    static TCHAR GetLastChar(CString const & s)
+    {
+        LPCTSTR pstr = s;
+        LPCTSTR pLastChar = _tcsdec(pstr, pstr + s.GetLength());
+        if (pLastChar == NULL)
+            return 0;
+        else
+            return *pLastChar;
+    }
+
+    /**
+     * @brief Checks if a letter is a drive letter, and casts it to uppercase.
+     * @param ch the letter.
+     * @return the uppercase drive letter (A..Z) for A..Z or a..z, otherwise 0.
+     */
+    static TCHAR GetDriveLetter(TCHAR ch);
+
+    /**
+     * @brief The drive letter of a path.
+     * @param s the path string.
+     * @return the uppercase drive letter if the path starts with an X: drive specification, otherwise 0.
+     */
+    static TCHAR GetDriveLetter(LPCTSTR s);
+
+    /**
+     * @brief Quotes the string if it contains spaces (see MSDN PathQuoteSpaces); an already quoted
+     * string gets an additional pair of quotes.
+     * @param str the path string.
+     * @return the path string, with quotes added if required.
+     */
+    static CString QuoteSpaces(CString const & str);
+
+    /**
+     * @brief Replaces all invalid file name characters (and a final dot) with a replacement char;
+     * "", "." and ".." are returned unchanged.
+     * @param str the string.
+     * @param replaceChar the replacement char.
+     * @return the string with the invalid characters replaced.
+     */
+    static CString ReplaceInvalid(CString const & str, TCHAR replaceChar = '_');
+
+    // ----- creation functions ---------
+    /**
+     * @brief Separates a path string from command line arguments.
+     * @param path_args the path string with additional command line arguments.
+     * @param args if not NULL, receives the arguments separated from the path.
+     * @param cleanup the cleanup to apply to the path (see CPath::Clean).
+     * @return a new path without the arguments.
+     */
+    static CPath SplitArgs(CString const & path_args, CString * args = NULL, DWORD cleanup = epc_Default);
+
+    /**
+     * @brief Splits a path string containing an icon location into path and icon index.
+     * @param path_icon the string containing an icon location.
+     * @param pIcon if not NULL, receives the icon index.
+     * @param cleanup additional cleanup to apply to the returned path.
+     * @return the path contained in \c path_icon (without the icon location).
+     */
+    static CPath SplitIconLocation(CString const & path_icon, int * pIcon = NULL, DWORD cleanup = epc_Default);
+
+    /**
+     * @brief Creates a root path from a drive index.
+     * @param driveNumber the number of the drive, 0 == 'A', etc.
+     * @return a path consisting only of a drive root.
+     */
+    static CPath BuildRoot(int driveNumber);
+
+    /**
+     * @brief The path of a module (limited to MAX_PATH characters).
+     * @param module the DLL module handle, or NULL for the exe.
+     * @return the module path; empty on error (see GetLastError).
+     */
+    static CPath GetModuleFileName(HMODULE module = NULL);
+
+    /**
+     * @brief The current directory (Win32 GetCurrentDirectory).
+     * @return the current directory; empty on error (see GetLastError).
+     */
+    static CPath GetCurrentDirectory();
+
+    /**
+     * @brief Reads a path string from the registry; a REG_EXPAND_SZ value has its environment strings expanded.
+     * @param baseKey the base key of the registry path.
+     * @param subkey the registry path.
+     * @param name the name of the value.
+     * @return the path; empty on error (GetLastError gives the error, ERROR_INVALID_DATA for a non-string value; 0 on success).
+     */
+    static CPath FromRegistry(HKEY baseKey, LPCTSTR subkey, LPCTSTR name);
+};
 
 
 

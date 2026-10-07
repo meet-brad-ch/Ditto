@@ -53,8 +53,8 @@ BOOL CAbout::OnInitDialog()
 
 	m_List.AddString(_T("Ditto"));
 
-	auto runningVersion = GetRunningVersion();
-	CString cs = GetVersionString(runningVersion);
+	auto runningVersion = CAppVersion::GetRunningVersion();
+	CString cs = CAppVersion::GetVersionString(runningVersion);
 
 	CString csText;
 	csText = "    Version " + cs;

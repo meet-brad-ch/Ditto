@@ -44,5 +44,5 @@ HGLOBAL CHTMLFormatAggregator::GetHGlobal()
 {
 	const std::string block = DittoCore::CfHtml::Build(m_html, m_version, m_sourceUrl);
 	// with the terminating null that std::string keeps after its characters
-	return NewGlobalP(const_cast<char*>(block.c_str()), block.size() + 1);
+	return CGlobalMemory::NewGlobalP(const_cast<char*>(block.c_str()), block.size() + 1);
 }

@@ -7,7 +7,7 @@
 
 // Helper function to get client rect with possible
 // modification by adding scrollbar width/height.
-static void GetClientRectSB(CWnd* pWnd, CRect& rect)
+void CScrollHelper::GetClientRectSB(CWnd* pWnd, CRect& rect)
 {
     ASSERT( pWnd != NULL );
 

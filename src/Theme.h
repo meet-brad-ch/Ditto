@@ -119,6 +119,14 @@ private:
 	 * @return false (and sets m_csLastError) for a malformed value.
 	 */
 	bool ParseHslValue(const CStringA& csNode, const CString& csColor, COLORREF &Color);
+	/**
+	 * @brief Converts an HSL colour to RGB.
+	 * @param h the hue in degrees, 0-360.
+	 * @param s the saturation, 0-1.
+	 * @param l the lightness, 0-1.
+	 * @return the RGB colour.
+	 */
+	static COLORREF HslToRgb(float h, float s, float l);
 
 protected:
 	COLORREF m_CaptionLeft;

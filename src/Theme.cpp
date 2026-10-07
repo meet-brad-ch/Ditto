@@ -88,7 +88,7 @@ bool CTheme::Load(CString csTheme, bool bHeaderOnly, bool bCheckLastWriteTime)
 	csPath += csTheme;
 	csPath += ".xml";
 
-	__int64 LastWrite = GetLastWriteTime(csPath);
+	__int64 LastWrite = CFileSystem::GetLastWriteTime(csPath);
 
 	if(bCheckLastWriteTime)
 	{	
@@ -104,14 +104,14 @@ bool CTheme::Load(CString csTheme, bool bHeaderOnly, bool bCheckLastWriteTime)
 	m_LastWriteTime = LastWrite;
 	m_lastTheme = csTheme;
 
-	CLogger::Log(StrF(_T("Loading Theme %s"), csPath.GetString()));
+	CLogger::Log(CStringUtil::Format(_T("Loading Theme %s"), csPath.GetString()));
 
 	return LoadThemeFile(csPath, bHeaderOnly, followWindows10Theme);
 }
 
 CString CTheme::GetWindowsThemeName()
 {
-	if (DarkAppWindows10Setting())
+	if (CSystemTheme::DarkAppWindows10Setting())
 	{
 		CLogger::Log(_T("Loading theme based on windows setting of dark mode for apps"));
 		return _T("DarkerDitto");
@@ -226,7 +226,7 @@ void CTheme::LoadThemeValues(const tinyxml2::XMLElement *ItemHeader)
 
 void CTheme::LoadWindowsAccentColor()
 {
-	DWORD accent = Windows10AccentColor();
+	DWORD accent = CSystemTheme::Windows10AccentColor();
 	if (accent != -1)
 	{
 		//windows seems to be bgr, convert to rgb
@@ -238,7 +238,7 @@ void CTheme::LoadWindowsAccentColor()
 		m_searchTextBoxFocusBorder = m_clipPastedColor;
 		m_searchTextHighlight = m_clipPastedColor;
 
-		//if (Windows10ColorTitleBar())
+		//if (CSystemTheme::Windows10ColorTitleBar())
 		//{
 		//	m_CaptionRight = m_clipPastedColor;
 		//	m_CaptionLeft = m_clipPastedColor;
@@ -247,7 +247,7 @@ void CTheme::LoadWindowsAccentColor()
 	}
 }
 
-COLORREF HslToRgb(float h, float s, float l)
+COLORREF CTheme::HslToRgb(float h, float s, float l)
 {
 	if (s == 0.0f)
 	{

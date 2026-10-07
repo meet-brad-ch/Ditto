@@ -180,7 +180,7 @@ BOOL CAdvGeneral::OnInitDialog()
 	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Default copy string"), defaultCopyString, _T(""), SettingDefaultCopyString));
 	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Default cut string"), defaultCutString, _T(""), SettingDefaultCutString));
 	
-	static TCHAR BASED_CODE szDiffFilter[] = _T("Diff Applications(*.exe)|*.exe||");
+	static const TCHAR BASED_CODE szDiffFilter[] = _T("Diff Applications(*.exe)|*.exe||");
 	CMFCPropertyGridFileProperty* pDiffProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("Diff application path"), TRUE, CGetSetOptions::GetDiffApp(), _T("exe"), 0, szDiffFilter, (LPCTSTR)0, SettingDiffApp);
 	pGroupTest->AddSubItem(pDiffProp);
 
@@ -214,7 +214,7 @@ BOOL CAdvGeneral::OnInitDialog()
 	CString ignoreAnnoyingCFDIB = CGetSetOptions::GetIgnoreAnnoyingCFDIB();
 	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Ignore CF_DIB when a clip is detected as text content"), ignoreAnnoyingCFDIB, _T("Case insensitive. Recommended option is \"excel.exe; onenote.exe; powerpnt.exe\" "), SettingIgnoreAnnoyingCfDib));
 
-	static TCHAR BASED_CODE szImageEditorFilter[] = _T("Applications(*.exe)|*.exe||");
+	static const TCHAR BASED_CODE szImageEditorFilter[] = _T("Applications(*.exe)|*.exe||");
 	CMFCPropertyGridFileProperty* pImageEditorProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("Image editor path (empty for system mapping)"), TRUE, CGetSetOptions::GetImageEditorPath(), _T("exe"), 0, szImageEditorFilter, (LPCTSTR)0, SettingImageEditorPath);
 	pGroupTest->AddSubItem(pImageEditorProp);
 
@@ -231,11 +231,11 @@ BOOL CAdvGeneral::OnInitDialog()
 
 	AddTrueFalse(pGroupTest, _T("Open to group same as active exe"), CGetSetOptions::GetOpenToGroupByActiveExe(), SettingOpenToGroupAsActiveExe);
 
-	static TCHAR BASED_CODE szFilter[] = _T("Sounds(*.wav)|*.wav||");
+	static const TCHAR BASED_CODE szFilter[] = _T("Sounds(*.wav)|*.wav||");
 	CMFCPropertyGridFileProperty* pFileProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("On copy play the sound"), TRUE, CGetSetOptions::GetPlaySoundOnCopy(), _T("wav"), 0, szFilter, (LPCTSTR)0, SettingCopyPlaySound);
 	pGroupTest->AddSubItem(pFileProp);
 
-	static TCHAR BASED_CODE szTextEditorFilter[] = _T("Applications(*.exe)|*.exe||");
+	static const TCHAR BASED_CODE szTextEditorFilter[] = _T("Applications(*.exe)|*.exe||");
 	CMFCPropertyGridFileProperty* pTextEditorProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("Text editor path (empty for system mapping)"), TRUE, CGetSetOptions::GetTextEditorPath(), _T("exe"), 0, szTextEditorFilter, (LPCTSTR)0, SettingTextEditorPath);
 	pGroupTest->AddSubItem(pTextEditorProp);
 
@@ -249,7 +249,7 @@ BOOL CAdvGeneral::OnInitDialog()
 
 	AddTrueFalse(pGroupTest, _T("Regex case insensitive search"), CGetSetOptions::GetRegexCaseInsensitive(), SettingRegexCaseInsensitive);
 
-	static TCHAR BASED_CODE szRTFEditorFilter[] = _T("Applications(*.exe)|*.exe||");
+	static const TCHAR BASED_CODE szRTFEditorFilter[] = _T("Applications(*.exe)|*.exe||");
 	CMFCPropertyGridFileProperty* pRTFEditorProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("RTF editor path"), TRUE, CGetSetOptions::GetRTFEditorPath(), _T("exe"), 0, szRTFEditorFilter, (LPCTSTR)0, SettingRtfEditorPath);
 	pGroupTest->AddSubItem(pRTFEditorProp);
 
@@ -496,12 +496,12 @@ void CAdvGeneral::OnBnClickedBtCompactAndRepair()
 					if (toDeleteCount <= 0)
 						break;
 
-					RemoveOldEntries(false);
+					CClipRetentionPolicy::RemoveOldEntries(false);
 				}
 			}
 			catch (CppSQLite3Exception& e)
 			{
-				CErrorReport::Show(StrF(_T("Compact and repair failed while removing deleted clips, the database was not compacted: %s"), e.errorMessage()));
+				CErrorReport::Show(CStringUtil::Format(_T("Compact and repair failed while removing deleted clips, the database was not compacted: %s"), e.errorMessage()));
 				return;
 			}
 
@@ -510,7 +510,7 @@ void CAdvGeneral::OnBnClickedBtCompactAndRepair()
 		}
 		catch (CppSQLite3Exception& e)
 		{
-			CErrorReport::Show(StrF(_T("Compacting and repairing the clip database failed: %s"), e.errorMessage()));
+			CErrorReport::Show(CStringUtil::Format(_T("Compacting and repairing the clip database failed: %s"), e.errorMessage()));
 			return;
 		}
 	}

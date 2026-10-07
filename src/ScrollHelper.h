@@ -46,6 +46,11 @@ public:
 	BOOL   Update(CPoint changes);
 
 private:
+    /** @brief Gets a window's client rect, grown by the scroll bar width/height where the window rect has room for a scroll bar.
+     *  @param pWnd The window.
+     *  @param rect Receives the client rect. */
+    static void GetClientRectSB(CWnd* pWnd, CRect& rect);
+
     int    Get32BitScrollPos(int bar, CScrollBar* pScrollBar);
     void   UpdateScrollInfo();
     void   UpdateScrollBar(int bar, int windowSize, int displaySize,

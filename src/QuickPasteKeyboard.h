@@ -70,6 +70,12 @@ protected:
 	@param key the key (virtual key in the low byte).
 	@return true for a mouse key. */
 	static bool IsMouseKey(int key);
+	/** @brief The list sort callback (CListCtrl::SortItems): orders the rows by their command text, ignoring case.
+	@param lParam1 the item data of the first row.
+	@param lParam2 the item data of the second row.
+	@param lParamSort the list control (CListCtrl*).
+	@return negative, zero or positive as for CString::CompareNoCase. */
+	static int CALLBACK MyCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 	/** @brief Shows the first press of a shortcut in the mouse or keyboard controls.
 	@param a the first press key. */
 	void LoadFirstPress(int a);

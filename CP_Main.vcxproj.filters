@@ -202,6 +202,42 @@
     <ClCompile Include="src\Misc.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\AppVersion.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ClipboardFormats.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ClipDatabase.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DatabaseBackupPrompt.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FileSystem.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GlobalMemory.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Logger.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MonitorGeometry.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\StringUtil.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SystemTheme.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TempFileCleaner.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowInspector.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="src\MoveToGroupDlg.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -611,6 +647,42 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\Misc.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AppVersion.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ClipboardFormats.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ClipDatabase.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DatabaseBackupPrompt.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FileSystem.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GlobalMemory.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Logger.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MonitorGeometry.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\StringUtil.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SystemTheme.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\TempFileCleaner.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowInspector.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\MoveToGroupDlg.h">

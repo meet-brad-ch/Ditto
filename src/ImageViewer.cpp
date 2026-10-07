@@ -145,7 +145,7 @@ void CImageViewer::OnPaint()
 
 		graphics.DrawImage(m_pGdiplusBitmap.get(), dest, s.cx, s.cy, nW, nH, Gdiplus::UnitPixel, &attrs);
 
-		//OutputDebugString(StrF(_T("OnPaint, Width: %d, New Width: %d\r\n"), rect.Width(), (int)nW));
+		//OutputDebugString(CStringUtil::Format(_T("OnPaint, Width: %d, New Width: %d\r\n"), rect.Width(), (int)nW));
 	}
 	
 	memDC.SelectObject(pOldBrush);
@@ -460,7 +460,7 @@ LRESULT CImageViewer::OnGestureNotify(WPARAM /*wParam*/, LPARAM /*lParam*/)
 		sizeof(GESTURECONFIG) // sizeof(GESTURECONFIG)
 	))
 	{
-		CLogger::Log(StrF(_T("CImageViewer::OnGestureNotify SetGestureConfig failed, GetLastError %u"), ::GetLastError()));
+		CLogger::Log(CStringUtil::Format(_T("CImageViewer::OnGestureNotify SetGestureConfig failed, GetLastError %u"), ::GetLastError()));
 	}
 
 	return TRUE;

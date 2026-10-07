@@ -70,7 +70,7 @@ void CAddType::AddCurrentClipboardTypes()
 
 	while (oleData.GetNextFormat(&test))
 	{
-		m_lbCandidateTypes.AddString(GetFormatName(test.cfFormat));
+		m_lbCandidateTypes.AddString(CClipboardFormats::GetFormatName(test.cfFormat));
 	}
 
 	oleData.Release();
@@ -79,14 +79,14 @@ void CAddType::AddCurrentClipboardTypes()
 void CAddType::AddCommonTypes()
 {
 	m_lbCandidateTypes.ResetContent();
-	for (auto systemClipFormat : GetSystemClipFormats()) {
-		m_lbCandidateTypes.AddString(GetFormatName(systemClipFormat));
+	for (auto systemClipFormat : CClipboardFormats::GetSystemClipFormats()) {
+		m_lbCandidateTypes.AddString(CClipboardFormats::GetFormatName(systemClipFormat));
 	}
 	// Registered formats are in 0xC000-0xFFFF, so they fit a CLIPFORMAT
-	m_lbCandidateTypes.AddString(GetFormatName(static_cast<CLIPFORMAT>(RegisterClipboardFormat(CF_RTF))));
-	m_lbCandidateTypes.AddString(GetFormatName(static_cast<CLIPFORMAT>(RegisterClipboardFormat(CF_RTFNOOBJS))));
-	m_lbCandidateTypes.AddString(GetFormatName(static_cast<CLIPFORMAT>(RegisterClipboardFormat(CF_RETEXTOBJ))));
-	m_lbCandidateTypes.AddString(GetFormatName(static_cast<CLIPFORMAT>(RegisterClipboardFormat(_T("HTML Format")))));
+	m_lbCandidateTypes.AddString(CClipboardFormats::GetFormatName(static_cast<CLIPFORMAT>(RegisterClipboardFormat(CF_RTF))));
+	m_lbCandidateTypes.AddString(CClipboardFormats::GetFormatName(static_cast<CLIPFORMAT>(RegisterClipboardFormat(CF_RTFNOOBJS))));
+	m_lbCandidateTypes.AddString(CClipboardFormats::GetFormatName(static_cast<CLIPFORMAT>(RegisterClipboardFormat(CF_RETEXTOBJ))));
+	m_lbCandidateTypes.AddString(CClipboardFormats::GetFormatName(static_cast<CLIPFORMAT>(RegisterClipboardFormat(_T("HTML Format")))));
 }
 
 void CAddType::OnBnClickedRadioPrimaryTypes()

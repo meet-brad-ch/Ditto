@@ -9,7 +9,7 @@
 /////////////////////////////////////////////////////////////////////////////
 // CallBack functions
 
-DWORD CALLBACK EditStreamInCallback(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
+DWORD CALLBACK CFormattedTextDraw::EditStreamInCallback(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
 {
 	PCOOKIE pCookie = (PCOOKIE) dwCookie;
 
@@ -427,7 +427,7 @@ HRESULT CFormattedTextDraw::InitDefaultParaFormat()
 }
 
 //https://connect.microsoft.com/VisualStudio/feedback/details/551071/the-6-0a-sdk-is-missing-riched20-lib-for-x64
-HRESULT CreateRichEdit(ITextHost *pTextHost, IUnknown **ppUnk)
+HRESULT CFormattedTextDraw::CreateRichEdit(ITextHost *pTextHost, IUnknown **ppUnk)
 {
 	HRESULT hr = E_FAIL;
 	PCreateTextServices TextServicesProc = NULL;

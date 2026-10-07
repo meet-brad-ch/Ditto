@@ -4,6 +4,7 @@
 #include "Path.h"
 
 class CClip;
+namespace ATL { class CImage; }
 
 class CClipEditThread : public CEventThread
 {
@@ -22,6 +23,13 @@ private:
 	void OnTimeOut(void* param) override;
 	bool ReadFile(CString filePath, bool& unicode, CString& unicodeText, CStringA& utf8Text);
 	bool ReadImageFile(CString path, std::vector<BYTE>& cf_dibBytes, std::vector<BYTE>& pngBytes);
+	/**
+	 * @brief Saves an image into an in-memory stream and returns the bytes.
+	 * @param image the loaded image.
+	 * @param guidFileType the GDI+ image format to save as (e.g. Gdiplus::ImageFormatPNG).
+	 * @return the encoded bytes; empty if a stream step failed.
+	 */
+	static std::vector<BYTE> CImageToPNGBytes(const ATL::CImage& image, REFGUID guidFileType);
 	BOOL GetTextFromRTF(CStringA rtf, CString& unicodeText);
 	void RefreshWatch();
 	bool SaveToClip(CString filePath, int id);

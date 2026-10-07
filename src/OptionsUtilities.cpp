@@ -44,7 +44,7 @@ END_MESSAGE_MAP()
 
 void COptionsUtilities::OnCompactDB() 
 {
-	CompactDatabase();
+	CDatabaseManager::CompactDatabase();
 }
 
 BOOL COptionsUtilities::OnApply() 
@@ -73,7 +73,7 @@ BOOL COptionsUtilities::OnInitDialog()
 
 void COptionsUtilities::OnRepair() 
 {
-	RepairDatabase();
+	CDatabaseManager::RepairDatabase();
 }
 
 void COptionsUtilities::OnGetPath() 

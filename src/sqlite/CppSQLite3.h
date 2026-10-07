@@ -34,14 +34,38 @@
 #include <cstring>
 #include <array>
 
-int sqlite3_encode_binary(const unsigned char *in, int n, unsigned char *out);
-int sqlite3_decode_binary(const unsigned char *in, unsigned char *out);
+/**
+ * @brief SQLite's encode.c: turns binary data into a string without '\\'' and '\\0' and back.
+ */
+class CppSQLite3Binary
+{
+public:
+    /**
+     * @brief Encodes a binary buffer so that it contains no '\\'' or '\\0' (see the notes in CppSQLite3.cpp).
+     * @param in the binary data.
+     * @param n the size of \c in in bytes.
+     * @param out the output buffer, at least 2 + (257*n)/254 bytes; receives a null-terminated string.
+     * @return the number of characters in the encoded string, without the terminator.
+     */
+    static int encode(const unsigned char *in, int n, unsigned char *out);
+
+    /**
+     * @brief Decodes a string made by encode back into binary data; \c in and \c out may be the same buffer.
+     * @param in the encoded, null-terminated string.
+     * @param out the output buffer.
+     * @return the number of bytes written, or -1 if the input is not a well-formed encoding.
+     */
+    static int decode(const unsigned char *in, unsigned char *out);
+};
 
 class CppSQLite3Exception
 {
 public:
     /** @brief The error code of errors CppSQLite3 itself finds (not SQLite's). */
     static constexpr int CppSqliteError = 1000;
+
+    /** @brief The bDeleteMsg value for a message string that cannot be deleted. */
+    static constexpr bool DONT_DELETE_MSG{ false };
 
     CppSQLite3Exception(const int nErrCode,
                     const TCHAR* szErrMess,
@@ -265,6 +289,16 @@ private:
 
     // Builds the exception from the connection's last error, closes the connection, throws
     [[noreturn]] void throwAndClose(int nErrCode);
+
+    /**
+     * @brief The SQL function regexp(pattern, text) that open() registers: 1 if the case-insensitive
+     * std::regex pattern is found in the text, 0 otherwise or for invalid arguments; an invalid pattern
+     * sets no result (it is logged with OutputDebugString).
+     * @param context the SQLite function context.
+     * @param argc the number of arguments.
+     * @param values the arguments: pattern, text.
+     */
+    static void sqlite_regexp(sqlite3_context* context, int argc, sqlite3_value** values);
 
     sqlite3* mpDB;
     int mnBusyTimeoutMs;

@@ -6,7 +6,7 @@
 //feature x
 //test
 
-void InitToolInfo( TOOLINFO& ti )
+void CPopup::InitToolInfo( TOOLINFO& ti )
 {
 	//main branch change
 	// INITIALIZE MEMBERS OF THE TOOLINFO STRUCTURE

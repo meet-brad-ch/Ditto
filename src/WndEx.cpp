@@ -280,9 +280,9 @@ void CWndEx::OnSize(UINT nType, int cx, int cy)
 	//m_DittoWindow.DoSetRegion(this);
 }
 
-void CWndEx::OnInitMenuPopup(CMenu *pPopupMenu, UINT nIndex, BOOL bSysMenu)
+void CWndEx::OnInitMenuPopup(CMenu *pPopupMenu, UINT /*nIndex*/, BOOL /*bSysMenu*/)
 {
-	OnInitMenuPopupEx(pPopupMenu, nIndex, bSysMenu, this);
+	CMenuPopupUpdater::Update(pPopupMenu, this);
 } 
 
 void CWndEx::SetToolTipText(CString text)

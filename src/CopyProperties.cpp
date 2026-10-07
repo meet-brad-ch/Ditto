@@ -99,7 +99,7 @@ BOOL CCopyProperties::OnInitDialog()
 	catch (CppSQLite3Exception& e)
 	{
 		// close the dialog: OK would save the partly loaded properties
-		CErrorReport::Show(StrF(_T("Loading the properties of clip id %ld failed: %s"), m_lCopyID, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Loading the properties of clip id %ld failed: %s"), m_lCopyID, e.errorMessage()));
 		EndDialog(IDCANCEL);
 		return TRUE;
 	}
@@ -227,7 +227,7 @@ void CCopyProperties::LoadFormatList(CClip &Clip)
 			TCHAR size[MAX_SIZE_BUFFER];
 			StrFormatByteSize(GlobalSize(pCF->m_hgData), size, MAX_SIZE_BUFFER);
 
-			cs.Format(_T("%s, %s"), GetFormatName(pCF->m_cfType).GetString(), size);
+			cs.Format(_T("%s, %s"), CClipboardFormats::GetFormatName(pCF->m_cfType).GetString(), size);
 			int nIndex = m_lCopyData.AddString(cs);
 
 			if(m_lCopyID == -1 && pCF->m_dataId == -1)
@@ -335,7 +335,7 @@ void CCopyProperties::OnOK()
 	catch (CppSQLite3Exception& e)
 	{
 		// the dialog stays open, so the caller does not take the properties as saved
-		CErrorReport::Show(StrF(_T("Saving the properties of clip id %ld failed: %s"), m_lCopyID, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Saving the properties of clip id %ld failed: %s"), m_lCopyID, e.errorMessage()));
 		return;
 	}
 
@@ -381,7 +381,7 @@ bool CCopyProperties::SaveToStoredClip()
 		{
 			if(m_bDeletedData)
 			{
-				DeleteFormats(m_lCopyID, m_DeletedData);
+				CClipDatabase::DeleteFormats(m_lCopyID, m_DeletedData);
 			}
 		}
 	}

@@ -95,11 +95,11 @@ BOOL COptionsStats::OnInitDialog()
 	catch (CppSQLite3Exception& e)
 	{
 		// OnInitDialog has no failure value: TRUE only sets the default focus
-		CErrorReport::Show(StrF(_T("Counting the saved clips for the statistics failed: %s"), e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Counting the saved clips for the statistics failed: %s"), e.errorMessage()));
 		return TRUE;
 	}
 	
-	__int64 size = FileSize(GetDBName());			
+	__int64 size = CFileSystem::FileSize(CDatabaseManager::GetDBName());			
 
 	const int MAX_FILE_SIZE_BUFFER = 255;
 	TCHAR szFileSize[MAX_FILE_SIZE_BUFFER];
@@ -131,14 +131,14 @@ void COptionsStats::OnRemoveAll()
 {
 	if(MessageBox(theApp.m_Language.GetString("Remove_All", "This will remove all Copy Entries!\n\nContinue?"), _T("Warning"), MB_OKCANCEL) == IDOK)
 	{
-		if( DeleteAllIDs() )
+		if( CClipDatabase::DeleteAllIDs() )
 		{
 			m_eSavedCopies.Empty();
 			m_eSavedCopyData.Empty();
 
 			struct _stat buf;
 			int nResult;
-			nResult = _tstat(GetDBName(), &buf);
+			nResult = _tstat(CDatabaseManager::GetDBName(), &buf);
 			if(nResult == 0)
 				m_eDatabaseSize.Format(_T("%d KB"), (buf.st_size/1024));
 

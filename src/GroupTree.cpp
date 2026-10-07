@@ -192,7 +192,7 @@ void CGroupTree::FillTree()
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Loading the group tree failed: %s"), e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Loading the group tree failed: %s"), e.errorMessage()));
 		return;
 	}
 }
@@ -427,7 +427,7 @@ void CGroupTree::UpdateMenuShortCut(CCmdUI *pCmdUI, DWORD action)
 	}
 }
 
-void CGroupTree::OnInitMenuPopup(CMenu *pPopupMenu, UINT nIndex,BOOL bSysMenu)
+void CGroupTree::OnInitMenuPopup(CMenu *pPopupMenu, UINT /*nIndex*/, BOOL /*bSysMenu*/)
 {
-	OnInitMenuPopupEx(pPopupMenu, nIndex, bSysMenu, this);
+	CMenuPopupUpdater::Update(pPopupMenu, this);
 }

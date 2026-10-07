@@ -8,8 +8,6 @@
 
 // CTrayWnd
 
-UINT WM_TASKBARCREATED = RegisterWindowMessage(_T("TaskbarCreated"));
-
 IMPLEMENT_DYNAMIC(CTrayWnd, CWnd)
 
 CTrayWnd::CTrayWnd()
@@ -20,9 +18,15 @@ CTrayWnd::~CTrayWnd()
 {
 }
 
+const UINT& CTrayWnd::TaskbarCreatedMessage()
+{
+	static const UINT message{::RegisterWindowMessage(_T("TaskbarCreated"))};
+	return message;
+}
+
 
 BEGIN_MESSAGE_MAP(CTrayWnd, CWnd)
-	ON_REGISTERED_MESSAGE(WM_TASKBARCREATED, OnTaskBarCreated)
+	ON_REGISTERED_MESSAGE(TaskbarCreatedMessage(), OnTaskBarCreated)
 END_MESSAGE_MAP()
 
 LRESULT CTrayWnd::OnTaskBarCreated(WPARAM /*wParam*/, LPARAM /*lParam*/)

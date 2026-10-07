@@ -100,7 +100,7 @@ void CMoveToGroupDlg::OnButtonNewGroup()
 		
 	CString csName = Name.m_csName;
 	
-	long lID = NewGroupID(m_Tree.GetSelectedTree(), csName);
+	long lID = CClipDatabase::NewGroupID(m_Tree.GetSelectedTree(), csName);
 	if(lID >= 0)
 	{
 		m_Tree.AddNode(csName, lID);

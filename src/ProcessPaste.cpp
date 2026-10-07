@@ -79,11 +79,11 @@ BOOL CProcessPaste::DoPaste()
 		// 2) we are pasting multiple, but CGetSetOptions::m_bSaveMultiPaste is false
 		if (GetClipIDs().GetSize() == 1 || !CGetSetOptions::m_bSaveMultiPaste)
 		{
-			m_pOle->CacheGlobalData(theApp.m_cfIgnoreClipboard, NewGlobalP("Ignore", sizeof("Ignore")));
+			m_pOle->CacheGlobalData(theApp.m_cfIgnoreClipboard, CGlobalMemory::NewGlobalP("Ignore", sizeof("Ignore")));
 		}
 		else
 		{
-			m_pOle->CacheGlobalData(theApp.m_cfDelaySavingData, NewGlobalP("Delay", sizeof("Delay")));
+			m_pOle->CacheGlobalData(theApp.m_cfDelaySavingData, CGlobalMemory::NewGlobalP("Delay", sizeof("Delay")));
 		}
 
 		m_pOle->SetClipboard(); // m_pOle is now managed by the OLE clipboard
@@ -192,14 +192,14 @@ UINT CProcessPaste::MarkAsPastedThread(LPVOID pParam)
 	catch (CppSQLite3Exception& e)
 	{
 		// the remaining updates and the UI refresh are skipped; the event below is still set so the list query does not wait
-		CErrorReport::Show(StrF(_T("Updating the order and paste time of pasted clip id %d failed: %s"), clipId, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Updating the order and paste time of pasted clip id %d failed: %s"), clipId, e.errorMessage()));
 	}
 
 	CLogger::Log(_T("End of MarkAsPastedThread"));
 
 	ULONGLONG endTick = GetTickCount64();
 	if((endTick-startTick) > 350)
-		CLogger::Log(StrF(_T("Paste Timing MarkAsPastedThread: %llu, ClipId: %d"), endTick-startTick, clipId));
+		CLogger::Log(CStringUtil::Format(_T("Paste Timing MarkAsPastedThread: %llu, ClipId: %d"), endTick-startTick, clipId));
 
 	UpdateTimeEvent.SetEvent();
 	return bRet;
@@ -252,7 +252,7 @@ void CProcessPaste::MoveToTopOrder(int id, bool pastedFromGroup)
 			double latestDate{q.getFloatField(_T("clipGroupOrder"))};
 			latestDate += 1;
 
-			CLogger::Log(StrF(_T("Setting clipId: %d, GroupOrder: %f"), id, latestDate));
+			CLogger::Log(CStringUtil::Format(_T("Setting clipId: %d, GroupOrder: %f"), id, latestDate));
 
 			theApp.m_db.execDMLEx(_T("UPDATE Main SET clipGroupOrder = %f where lID = %d;"), latestDate, id);
 		}
@@ -266,7 +266,7 @@ void CProcessPaste::MoveToTopOrder(int id, bool pastedFromGroup)
 			double latestDate{q.getFloatField(_T("clipOrder"))};
 			latestDate += 1;
 
-			CLogger::Log(StrF(_T("Setting clipId: %d, order: %f"), id, latestDate));
+			CLogger::Log(CStringUtil::Format(_T("Setting clipId: %d, order: %f"), id, latestDate));
 
 			theApp.m_db.execDMLEx(_T("UPDATE Main SET clipOrder = %f where lID = %d;"), latestDate, id);
 		}

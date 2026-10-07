@@ -96,7 +96,7 @@ CSendKeys::CSendKeys()
 // **If you add to this list, you must be sure to keep it sorted alphabetically
 // by Name because a binary search routine is used to scan it.**
 //
-CSendKeys::key_desc_t CSendKeys::KeyNames[CSendKeys::MaxSendKeysRecs] = 
+const CSendKeys::key_desc_t CSendKeys::KeyNames[CSendKeys::MaxSendKeysRecs] =
 {
   {_T("ADD"), VK_ADD}, 
   {_T("APPS"), VK_APPS},

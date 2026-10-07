@@ -95,72 +95,31 @@ public:
 
 #include "DatabaseUtilities.h"
 
+#include "Logger.h"
+#include "StringUtil.h"
+#include "GlobalMemory.h"
+#include "ClipboardFormats.h"
+#include "FileSystem.h"
+#include "TempFileCleaner.h"
+#include "MonitorGeometry.h"
+#include "WindowInspector.h"
+#include "SystemTheme.h"
+#include "AppVersion.h"
+#include "ClipDatabase.h"
+#include "DatabaseBackupPrompt.h"
 
-void AppendToFile(const TCHAR* fn, const TCHAR *msg);
-void log(const TCHAR* msg, CString csFile = _T(""), long lLine = -1);
-
-/** @brief Writes log lines tagged with the source file and line of the caller. */
-class CLogger
+/** @brief How long the user has been idle (no keyboard or mouse input). */
+class CIdleTime
 {
 public:
 	/**
-	 * @brief Logs a message with the caller's file and line (see log()).
-	 * @param msg The message.
-	 * @param location The caller's position; leave it to the default.
+	 * @brief The time since the last input (GetLastInputInfo). When the tick count was found below
+	 * the last input time on the first call, CGetSetOptions::GetFunnyTickCountAdjustment() is added
+	 * to the tick count (logged once).
+	 * @return The idle time in seconds.
 	 */
-	static void Log(const TCHAR* msg, const std::source_location location = std::source_location::current())
-	{
-		::log(msg, CString(location.file_name()), static_cast<long>(location.line()));
-	}
+	static double IdleSeconds();
 };
-
-CString GetErrorString(int err);
-
-double IdleSeconds();
-
-
-// Utility Functions
-CString StrF(const TCHAR * pszFormat, ...);
-// called after determining that the preceding character is a backslash
-BYTE GetEscapeChar( BYTE ch );
-CString RemoveEscapes( const TCHAR* str );
-
-// returns true if the given window is owned by this process
-bool IsAppWnd( HWND hWnd );
-
-// Global Memory Helper Functions
-BOOL IsValid(HGLOBAL hGlobal);
-void CopyToGlobalHP(HGLOBAL hDest, const void* pBuf, SIZE_T ulBufLen);
-void CopyToGlobalHH(HGLOBAL hDest, HGLOBAL hSource, SIZE_T ulBufLen);
-HGLOBAL NewGlobalP(const void* pBuf, SIZE_T nLen);
-HGLOBAL NewGlobalH(HGLOBAL hSource, SIZE_T nLen);
-HGLOBAL NewGlobal(SIZE_T nLen);
-int CompareGlobalHP(HGLOBAL hLeft, LPVOID pBuf, SIZE_T ulBufLen);
-int CompareGlobalHH(HGLOBAL hLeft, HGLOBAL hRight, SIZE_T ulBufLen);
-
-BOOL EncryptString(CString &csString, UCHAR*& pOutput, int &nLenOutput);
-BOOL DecryptString(UCHAR *pData, int nLenIn, UCHAR*& pOutput, int &nLenOutput);
-
-int GetScreenWidth();
-int GetScreenHeight();
-
-std::vector<CLIPFORMAT> GetSystemClipFormats();
-CLIPFORMAT GetFormatID(LPCTSTR cbName);
-CString GetFormatName(CLIPFORMAT cbType);
-BOOL PreTranslateGuiDll(MSG *pMsg);
-
-CString GetFilePath(CString csFullPath);
-CString GetFileName(CString csFileName);
-
-BOOL EnsureWindowVisible(CRect *pcrRect);
-
-CRect DefaultMonitorRect();
-CRect MonitorRectFromRect(CRect rect);
-
-CRect CenterRect(CRect startingRect);
-CRect CenterRectFromRect(CRect startingRect, CRect outerRect);
-
-__int64 GetLastWriteTime(const CString &csFile);
 
 
 /**
@@ -206,26 +165,6 @@ public:
 #if !defined(_BITSET_)
 #	include <bitset>
 #endif // !defined(_BITSET_)
-
-long NewGroupID(int parentID = 0, CString text = "");
-BOOL DeleteAllIDs();
-BOOL DeleteFormats(int parentID, ARRAY& formatIDs);
-
-__inline BOOL FileExists(LPCTSTR pszFile)
-{ 
-	return (GetFileAttributes(pszFile) != 0xffffffff); 
-}
-
-bool IsRunningLimited();
-
-void DeleteDittoTempFiles(BOOL checkFileLastAccess);
-void DeleteFolderFiles(CString csDir, BOOL checkFileLastAccess, CTimeSpan lastAccessOffset);
-
-__int64 FileSize(const TCHAR *fileName);
-
-int FindNoCaseAndInsert(CString& mainStr, CString& findStr, CString preInsert, CString postInsert, int linesPerRow);
-
-void OnInitMenuPopupEx(CMenu *pPopupMenu, UINT nIndex, BOOL bSysMenu, CWnd *pWnd);
 
 /**
  * @brief Marks the case-insensitive matches of a search text in a list row's text (search highlighting).
@@ -314,34 +253,5 @@ private:
 	 */
 	static void AdjustForMenuChanges(CCmdUI& state, CMenu *pPopupMenu);
 };
-
-
-CString GetProcessName(HWND hWnd, DWORD processId = 0);
-
-CString NewGuidString();
-
-CString FolderPath(int folderId);
-
-
-BOOL DarkAppWindows10Setting();
-DWORD Windows10AccentColor();
-BOOL Windows10ColorTitleBar();
-
-BOOL BackupDbPrompt(HWND hwnd);
-BOOL RestoreDbPrompt(HWND hwnd);
-
-int WordCount(const CString& text);
-
-class VersionInfo
-{
-public:
-	int Major{};
-	int Minor{};
-	int Revision{};
-	int Build{};
-};
-
-VersionInfo GetRunningVersion();
-CString GetVersionString(VersionInfo version);
 
 #endif // !defined(AFX_CP_GUI_GLOBALS__FBCDED09_A6F2_47EB_873F_50A746EBC86B__INCLUDED_)

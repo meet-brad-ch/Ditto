@@ -186,7 +186,7 @@ void CEventThread::WaitForThreadToExit(int waitTime)
 
 void CEventThread::Stop(int waitTime) 
 {
-	CLogger::Log(StrF(_T("Start of CEventThread::Stop(int waitTime) %d - Name: %s"), waitTime, m_threadName.GetString()));
+	CLogger::Log(CStringUtil::Format(_T("Start of CEventThread::Stop(int waitTime) %d - Name: %s"), waitTime, m_threadName.GetString()));
 
 	if(m_threadRunning)
 	{
@@ -201,12 +201,12 @@ void CEventThread::Stop(int waitTime)
 			// ends now shows in the log by name.
 			while (WAIT_TIMEOUT == WaitForSingleObject(m_thread, waitTime))
 			{
-				CLogger::Log(StrF(_T("CEventThread::Stop - %s has not ended after another %d ms, still waiting"), m_threadName.GetString(), waitTime));
+				CLogger::Log(CStringUtil::Format(_T("CEventThread::Stop - %s has not ended after another %d ms, still waiting"), m_threadName.GetString(), waitTime));
 			}
 		}
 	}
 
-	CLogger::Log(StrF(_T("End of CEventThread::Stop(int waitTime) %d - Name: %s"), waitTime, m_threadName.GetString()));
+	CLogger::Log(CStringUtil::Format(_T("End of CEventThread::Stop(int waitTime) %d - Name: %s"), waitTime, m_threadName.GetString()));
 };
 
 void CEventThread::GetHandleVector(std::vector<HANDLE> &handles)
@@ -241,7 +241,7 @@ void CEventThread::CheckForRebuildHandleVector(std::vector<HANDLE>& handles)
 
 void CEventThread::RunThread()
 {
-	CLogger::Log(StrF(_T("Start of CEventThread::RunThread() Name: %s"), m_threadName.GetString()));
+	CLogger::Log(CStringUtil::Format(_T("Start of CEventThread::RunThread() Name: %s"), m_threadName.GetString()));
 
 	m_threadRunning = true;
 	m_threadWasStarted = true;
@@ -268,7 +268,7 @@ void CEventThread::RunThread()
 
 			LocalFree(messageBuffer);
 
-			CLogger::Log(StrF(_T("CEventThread::RunThread() Error, error: %s - Name %s"), message.GetString(), m_threadName.GetString()));
+			CLogger::Log(CStringUtil::Format(_T("CEventThread::RunThread() Error, error: %s - Name %s"), message.GetString(), m_threadName.GetString()));
 
 			Sleep(1000);
 		}
@@ -281,7 +281,7 @@ void CEventThread::RunThread()
 			const int handleIndex = event - WAIT_OBJECT_0;
 			if (handleIndex < 0 || static_cast<size_t>(handleIndex) >= handles.size())
 			{
-				CLogger::Log(StrF(_T("CEventThread::RunThread() Error, Invalid handle index, index: %d, size: %d - Name %s"), handleIndex, handles.size(), m_threadName.GetString()));
+				CLogger::Log(CStringUtil::Format(_T("CEventThread::RunThread() Error, Invalid handle index, index: %d, size: %d - Name %s"), handleIndex, handles.size(), m_threadName.GetString()));
 				continue;
 			}
 
@@ -297,9 +297,9 @@ void CEventThread::RunThread()
 			}
 			else
 			{
-				CLogger::Log(StrF(_T("Start of CEventThread::RunThread() - OnEvent %d - Name %s"), eventId, m_threadName.GetString()));
+				CLogger::Log(CStringUtil::Format(_T("Start of CEventThread::RunThread() - OnEvent %d - Name %s"), eventId, m_threadName.GetString()));
 				OnEvent(eventId, m_param);
-				CLogger::Log(StrF(_T("End of CEventThread::RunThread() - OnEvent %d - Name: %s"), eventId, m_threadName.GetString()));
+				CLogger::Log(CStringUtil::Format(_T("End of CEventThread::RunThread() - OnEvent %d - Name: %s"), eventId, m_threadName.GetString()));
 			}
 		}
 	}
@@ -308,7 +308,7 @@ void CEventThread::RunThread()
 
 	SetEvent(m_hEvt);
 
-	CLogger::Log(StrF(_T("End of CEventThread::RunThread() Name: %s"), m_threadName.GetString()));
+	CLogger::Log(CStringUtil::Format(_T("End of CEventThread::RunThread() Name: %s"), m_threadName.GetString()));
 
 	m_threadRunning = false;
 }

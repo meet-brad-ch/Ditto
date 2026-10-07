@@ -10,11 +10,11 @@ CUAC_Thread::CUAC_Thread(int processId)
 {
 	m_processId = processId;
 
-	AddEvent(UAC_PASTE, StrF(_T("Global\\UAC_PASTE_%d"), m_processId));
-	AddEvent(UAC_COPY, StrF(_T("Global\\UAC_COPY_%d"), m_processId));
-	AddEvent(UAC_CUT, StrF(_T("Global\\UAC_CUT_%d"), m_processId));
+	AddEvent(UAC_PASTE, CStringUtil::Format(_T("Global\\UAC_PASTE_%d"), m_processId));
+	AddEvent(UAC_COPY, CStringUtil::Format(_T("Global\\UAC_COPY_%d"), m_processId));
+	AddEvent(UAC_CUT, CStringUtil::Format(_T("Global\\UAC_CUT_%d"), m_processId));
 
-	AddEvent(UAC_EXIT, StrF(_T("Global\\UAC_EXIT_%d"), m_processId));
+	AddEvent(UAC_EXIT, CStringUtil::Format(_T("Global\\UAC_EXIT_%d"), m_processId));
 
 	m_waitTimeout = 30000;
 }
@@ -48,7 +48,7 @@ void CUAC_Thread::OnTimeOut(void * /*param*/)
 
 	if(close)
 	{
-		CLogger::Log(StrF(_T("Found parent process id (%d) is not running, Exit Code %d closing uac aware app"), m_processId, exitCode));
+		CLogger::Log(CStringUtil::Format(_T("Found parent process id (%d) is not running, Exit Code %d closing uac aware app"), m_processId, exitCode));
 		this->CancelThread();
 	}
 
@@ -61,7 +61,7 @@ void CUAC_Thread::OnTimeOut(void * /*param*/)
 void CUAC_Thread::OnEvent(int eventId, void * /*param*/)
 {
 	ULONGLONG startTick = GetTickCount64();
-	CLogger::Log(StrF(_T("Start of OnEvent, eventId: %s"), EnumName((eUacThreadEvents)eventId).GetString()));
+	CLogger::Log(CStringUtil::Format(_T("Start of OnEvent, eventId: %s"), EnumName((eUacThreadEvents)eventId).GetString()));
 
 	switch((eUacThreadEvents)eventId)
 	{
@@ -80,7 +80,7 @@ void CUAC_Thread::OnEvent(int eventId, void * /*param*/)
 	}
 
 	ULONGLONG length = GetTickCount64() - startTick;
-	CLogger::Log(StrF(_T("End of OnEvent, eventId: %s, Time: %llu(ms)"), EnumName((eUacThreadEvents)eventId).GetString(), length));
+	CLogger::Log(CStringUtil::Format(_T("End of OnEvent, eventId: %s, Time: %llu(ms)"), EnumName((eUacThreadEvents)eventId).GetString(), length));
 }
 
 CString CUAC_Thread::EnumName(eUacThreadEvents e)
@@ -137,7 +137,7 @@ bool CUAC_Thread::StartProcess()
 	DWORD dwError = GetLastError();
 	if(mutex == NULL)
 	{
-		CLogger::Log(StrF(_T("CreateMutex %s failed, error: %d"), mutexName.GetString(), dwError));
+		CLogger::Log(CStringUtil::Format(_T("CreateMutex %s failed, error: %d"), mutexName.GetString(), dwError));
 	}
 
 	if(dwError == ERROR_ALREADY_EXISTS)

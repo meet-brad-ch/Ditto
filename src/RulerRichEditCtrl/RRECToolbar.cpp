@@ -24,13 +24,10 @@
 
 #include "stdafx.h"
 #include "RRECToolbar.h"
+#include "RulerRichEditCtrl.h"
 #include "..\..\resource.h"
 
 #include <tchar.h>
-
-extern UINT urm_SETCURRENTFONTNAME;
-extern UINT urm_SETCURRENTFONTSIZE;
-extern UINT urm_SETCURRENTFONTCOLOR;
 
 /////////////////////////////////////////////////////////////////////////////
 // CRRECToolbar
@@ -260,7 +257,7 @@ void CRRECToolbar::OnSelchangeFont()
 	if( index != CB_ERR )
 	{
 		m_fontCombo.GetLBText( index, font );
-		GetParent()->SendMessage( urm_SETCURRENTFONTNAME, ( WPARAM ) ( LPCTSTR ) font, 0 );
+		GetParent()->SendMessage( CRulerRichEditCtrl::SetCurrentFontNameMessage(), ( WPARAM ) ( LPCTSTR ) font, 0 );
 
 	}	
 }
@@ -289,7 +286,7 @@ void CRRECToolbar::OnSelchangeSize()
 		m_size.GetLBText( index, sz );
 		size = _ttoi( ( LPCTSTR ) sz );
 
-		GetParent()->SendMessage( urm_SETCURRENTFONTSIZE, 0, ( LPARAM ) size );
+		GetParent()->SendMessage( CRulerRichEditCtrl::SetCurrentFontSizeMessage(), 0, ( LPARAM ) size );
 
 	}
 	
@@ -311,7 +308,7 @@ LRESULT CRRECToolbar::OnColorButton( WPARAM w, LPARAM /*l*/)
 
    ============================================================*/
 {
-	GetParent()->SendMessage( urm_SETCURRENTFONTCOLOR, 0, ( LPARAM ) w );
+	GetParent()->SendMessage( CRulerRichEditCtrl::SetCurrentFontColorMessage(), 0, ( LPARAM ) w );
 	
 	return 0;
 }

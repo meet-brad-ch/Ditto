@@ -60,11 +60,29 @@
 /////////////////////////////////////////////////////////////////////////////
 // Registered messages for ruler/CRulerRichEditCtrl communication
 
-UINT urm_RULERACTION = ::RegisterWindowMessage( _T( "_RULERRICHEDITCTRL_RULER_TRACK_" ) );
-UINT urm_GETSCROLLPOS = ::RegisterWindowMessage( _T( "_RULERRICHEDITCTRL_GET_SCROLL_POS_" ) );
-UINT urm_SETCURRENTFONTNAME = ::RegisterWindowMessage( _T( "_RULERRICHEDITCTRL_SET_CURRENT_FONT_NAME" ) );
-UINT urm_SETCURRENTFONTSIZE = ::RegisterWindowMessage( _T( "_RULERRICHEDITCTRL_SET_CURRENT_FONT_SIZE" ) );
-UINT urm_SETCURRENTFONTCOLOR = ::RegisterWindowMessage( _T( "_RULERRICHEDITCTRL_SET_CURRENT_FONT_COLOR" ) );
+const UINT& CRulerRichEditCtrl::GetScrollPosMessage()
+{
+	static const UINT message{ ::RegisterWindowMessage( _T( "_RULERRICHEDITCTRL_GET_SCROLL_POS_" ) ) };
+	return message;
+}
+
+const UINT& CRulerRichEditCtrl::SetCurrentFontNameMessage()
+{
+	static const UINT message{ ::RegisterWindowMessage( _T( "_RULERRICHEDITCTRL_SET_CURRENT_FONT_NAME" ) ) };
+	return message;
+}
+
+const UINT& CRulerRichEditCtrl::SetCurrentFontSizeMessage()
+{
+	static const UINT message{ ::RegisterWindowMessage( _T( "_RULERRICHEDITCTRL_SET_CURRENT_FONT_SIZE" ) ) };
+	return message;
+}
+
+const UINT& CRulerRichEditCtrl::SetCurrentFontColorMessage()
+{
+	static const UINT message{ ::RegisterWindowMessage( _T( "_RULERRICHEDITCTRL_SET_CURRENT_FONT_COLOR" ) ) };
+	return message;
+}
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -321,10 +339,10 @@ BEGIN_MESSAGE_MAP(CRulerRichEditCtrl, CWnd)
 	ON_BN_CLICKED(BUTTON_BULLET, OnButtonBullet)
 	ON_BN_CLICKED(ID_BUTTONWRAP, OnButtonWrap)
 	ON_WM_SETFOCUS()
-	ON_REGISTERED_MESSAGE(urm_GETSCROLLPOS, OnGetScrollPos)
-	ON_REGISTERED_MESSAGE(urm_SETCURRENTFONTNAME, OnSetCurrentFontName)
-	ON_REGISTERED_MESSAGE(urm_SETCURRENTFONTSIZE, OnSetCurrentFontSize)
-	ON_REGISTERED_MESSAGE(urm_SETCURRENTFONTCOLOR, OnSetCurrentFontColor)
+	ON_REGISTERED_MESSAGE(GetScrollPosMessage(), OnGetScrollPos)
+	ON_REGISTERED_MESSAGE(SetCurrentFontNameMessage(), OnSetCurrentFontName)
+	ON_REGISTERED_MESSAGE(SetCurrentFontSizeMessage(), OnSetCurrentFontSize)
+	ON_REGISTERED_MESSAGE(SetCurrentFontColorMessage(), OnSetCurrentFontColor)
 	//}}AFX_MSG_MAP
 	ON_WM_KEYDOWN()
 END_MESSAGE_MAP()
@@ -462,7 +480,7 @@ LRESULT CRulerRichEditCtrl::OnGetScrollPos(WPARAM, LPARAM)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnGetScrollPos
 	Description :	The function handles the registered message 
-					"urm_GETSCROLLPOS", that is sent from the 
+					"GetScrollPosMessage()", that is sent from the
 					ruler to get the current scroll position 
 					of the embedded RTF-control.
 	Access :		Protected
@@ -1242,7 +1260,7 @@ LRESULT CRulerRichEditCtrl::OnSetCurrentFontName( WPARAM font, LPARAM )
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnSetCurrentFontName
 	Description :	Handler for the registered message 
-					"urm_SETCURRENTFONTNAME", called when the 
+					"SetCurrentFontNameMessage()", called when the
 					font name is changed from the toolbar.
 	Access :		Protected
 
@@ -1266,7 +1284,7 @@ LRESULT CRulerRichEditCtrl::OnSetCurrentFontSize(WPARAM, LPARAM size)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnSetCurrentFontSize
 	Description :	Handler for the registered message 
-					"urm_SETCURRENTFONTSIZE", called when the 
+					"SetCurrentFontSizeMessage()", called when the
 					font size is changed from the toolbar.
 	Access :		Protected
 
@@ -1289,7 +1307,7 @@ LRESULT CRulerRichEditCtrl::OnSetCurrentFontColor(WPARAM, LPARAM color)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnSetCurrentFontColor
 	Description :	Handler for the registered message 
-					"urm_SETCURRENTFONTCOLOR", called when the 
+					"SetCurrentFontColorMessage()", called when the
 					font color is changed from the toolbar.
 	Access :		Protected
 

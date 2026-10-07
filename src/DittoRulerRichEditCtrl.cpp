@@ -86,14 +86,14 @@ long CDittoRulerRichEditCtrl::GetTypeFlags(long lID)
 	try
 	{
 		CLIPFORMAT cfType = CF_TEXT;
-		CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), lID, GetFormatName(cfType).GetString());
+		CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), lID, CClipboardFormats::GetFormatName(cfType).GetString());
 		if(q.eof() == false)
 		{
 			lRet |= stCF_TEXT;
 		}
 
 		cfType = CF_UNICODETEXT;
-		q = theApp.m_db.execQueryEx(_T("SELECT lID FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), lID, GetFormatName(cfType).GetString());
+		q = theApp.m_db.execQueryEx(_T("SELECT lID FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), lID, CClipboardFormats::GetFormatName(cfType).GetString());
 		if(q.eof() == false)
 		{
 			lRet |= stCF_UNICODETEXT;
@@ -101,7 +101,7 @@ long CDittoRulerRichEditCtrl::GetTypeFlags(long lID)
 
 		// Registered formats are in 0xC000-0xFFFF, so they fit a CLIPFORMAT
 		cfType = static_cast<CLIPFORMAT>(RegisterClipboardFormat(_T("Rich Text Format")));
-		q = theApp.m_db.execQueryEx(_T("SELECT lID FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), lID, GetFormatName(cfType).GetString());
+		q = theApp.m_db.execQueryEx(_T("SELECT lID FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), lID, CClipboardFormats::GetFormatName(cfType).GetString());
 		if(q.eof() == false)
 		{
 			lRet |= stRTF;
@@ -109,7 +109,7 @@ long CDittoRulerRichEditCtrl::GetTypeFlags(long lID)
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Reading the formats of clip id %ld failed: %s"), lID, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Reading the formats of clip id %ld failed: %s"), lID, e.errorMessage()));
 		return stNONE;
 	}
 
@@ -174,7 +174,7 @@ int CDittoRulerRichEditCtrl::SaveToDB(BOOL bUpdateDesc)
 	catch (CppSQLite3Exception& e)
 	{
 		// the edit stays marked as modified, so it is not lost
-		CErrorReport::Show(StrF(_T("Saving the edited clip id %ld failed: %s"), m_lID, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Saving the edited clip id %ld failed: %s"), m_lID, e.errorMessage()));
 		return FALSE;
 	}
 
@@ -260,7 +260,7 @@ bool CDittoRulerRichEditCtrl::LoadRTFData(CClip &Clip)
 	// Registered formats are in 0xC000-0xFFFF, so they fit a CLIPFORMAT
 	format.m_cfType = static_cast<CLIPFORMAT>(RegisterClipboardFormat(_T("Rich Text Format")));
 	int nLength = csRTF.GetLength() + 1;
-	format.m_hgData = NewGlobalP(csRTF.GetBuffer(nLength), nLength);
+	format.m_hgData = CGlobalMemory::NewGlobalP(csRTF.GetBuffer(nLength), nLength);
 	Clip.m_Formats.Add(format);
 	format.m_hgData = NULL; //Clip.m_formats owns data now
 
@@ -279,7 +279,7 @@ bool CDittoRulerRichEditCtrl::LoadTextData(CClip &Clip)
 			if(csText.IsEmpty() == FALSE)
 				break;
 
-			CLogger::Log(StrF(_T("Get Text still empty pass = %d"), i));
+			CLogger::Log(CStringUtil::Format(_T("Get Text still empty pass = %d"), i));
 		}
 		if(csText.IsEmpty())
 		{
@@ -297,7 +297,7 @@ bool CDittoRulerRichEditCtrl::LoadTextData(CClip &Clip)
 #endif
 
 	int nLength = csText.GetLength() * sizeof(TCHAR) + sizeof(TCHAR);
-	format.m_hgData = NewGlobalP(csText.GetBuffer(nLength), nLength);
+	format.m_hgData = CGlobalMemory::NewGlobalP(csText.GetBuffer(nLength), nLength);
 
 	Clip.SetDescFromText(format.m_hgData, true);
 	m_csDescription = Clip.m_Desc;

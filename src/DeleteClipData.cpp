@@ -128,7 +128,7 @@ BOOL CDeleteClipData::OnInitDialog()
 
 void CDeleteClipData::SetDbSize()
 {
-	__int64 size = FileSize(GetDBName());
+	__int64 size = CFileSystem::FileSize(CDatabaseManager::GetDBName());
 
 	const int MAX_FILE_SIZE_BUFFER = 255;
 	TCHAR szFileSize[MAX_FILE_SIZE_BUFFER];
@@ -539,7 +539,7 @@ void CDeleteClipData::CopyColumnText(LVITEM& item)
 	{
 		case 0:
 		{
-			CopyDisplayText(item, StrF(_T("%d"), m_data[item.iItem].m_lID));
+			CopyDisplayText(item, CStringUtil::Format(_T("%d"), m_data[item.iItem].m_lID));
 		}
 		break;
 		case 1:
@@ -655,7 +655,7 @@ void CDeleteClipData::ApplyDelete()
 		catch (CppSQLite3Exception& e)
 		{
 			// the operation stops here; the lines below only re-enable the dialog
-			CErrorReport::Show(StrF(_T("Deleting the selected clip items failed: %s"), e.errorMessage()));
+			CErrorReport::Show(CStringUtil::Format(_T("Deleting the selected clip items failed: %s"), e.errorMessage()));
 		}
 
 		m_applyingDelete = false;
@@ -699,7 +699,7 @@ void CDeleteClipData::DeleteRows(const std::vector<int>& rowsToDelete, CProgress
 		}
 		catch (CppSQLite3Exception& e)
 		{
-			CErrorReport::Show(StrF(_T("Deleting clip data id %ld (clip id %ld) failed, the remaining items were not deleted: %s"), data.m_DatalID, data.m_lID, e.errorMessage()));
+			CErrorReport::Show(CStringUtil::Format(_T("Deleting clip data id %ld (clip id %ld) failed, the remaining items were not deleted: %s"), data.m_DatalID, data.m_lID, e.errorMessage()));
 			// stop deleting; the refresh below still shows the items deleted so far
 			break;
 		}
@@ -760,69 +760,69 @@ void CDeleteClipData::OnBnClickedCheckDataFormat()
 	::SetFocus(::GetDlgItem(m_hWnd, IDC_COMBO_DATA_FORMAT));
 }
 
-static bool SortByIDDesc(const CDeleteData& a1, const CDeleteData& a2)
+bool CDeleteClipData::SortByIDDesc(const CDeleteData& a1, const CDeleteData& a2)
 {
 	return a1.m_lID > a2.m_lID;
 }
-static bool SortByIDAsc(const CDeleteData& a1, const CDeleteData& a2)
+bool CDeleteClipData::SortByIDAsc(const CDeleteData& a1, const CDeleteData& a2)
 {
 	return a1.m_lID < a2.m_lID;
 }
 
 
-static bool SortByTitleDesc(const CDeleteData& a1, const CDeleteData& a2)
+bool CDeleteClipData::SortByTitleDesc(const CDeleteData& a1, const CDeleteData& a2)
 {
 	return a1.m_Desc > a2.m_Desc;
 }
-static bool SortByTitleAsc(const CDeleteData& a1, const CDeleteData& a2)
+bool CDeleteClipData::SortByTitleAsc(const CDeleteData& a1, const CDeleteData& a2)
 {
 	return a1.m_Desc < a2.m_Desc;
 }
 
 
-static bool SortByQuickPaste(const CDeleteData& a1, const CDeleteData& a2)
+bool CDeleteClipData::SortByQuickPaste(const CDeleteData& a1, const CDeleteData& a2)
 {
 	return a1.m_quickPasteText > a2.m_quickPasteText;
 }
 
-static bool SortByCreatedDateDesc(const CDeleteData& a1, const CDeleteData& a2)
+bool CDeleteClipData::SortByCreatedDateDesc(const CDeleteData& a1, const CDeleteData& a2)
 {
 	return a1.m_createdDateTime > a2.m_createdDateTime;
 }
 
-static bool SortByLastUsedDateDesc(const CDeleteData& a1, const CDeleteData& a2)
+bool CDeleteClipData::SortByLastUsedDateDesc(const CDeleteData& a1, const CDeleteData& a2)
 {
 	return a1.m_lastUsedDateTime > a2.m_lastUsedDateTime;
 }
 
-static bool SortByFormatDesc(const CDeleteData& a1, const CDeleteData& a2)
+bool CDeleteClipData::SortByFormatDesc(const CDeleteData& a1, const CDeleteData& a2)
 {
 	return a1.m_clipboardFormat > a2.m_clipboardFormat;
 }
 
-static bool SortByDataSizeDesc(const CDeleteData& a1, const CDeleteData& a2)
+bool CDeleteClipData::SortByDataSizeDesc(const CDeleteData& a1, const CDeleteData& a2)
 {
 	return a1.m_dataSize > a2.m_dataSize;
 }
 
 
 
-static bool SortByCreatedDateAsc(const CDeleteData& a1, const CDeleteData& a2)
+bool CDeleteClipData::SortByCreatedDateAsc(const CDeleteData& a1, const CDeleteData& a2)
 {
 	return a1.m_createdDateTime < a2.m_createdDateTime;
 }
 
-static bool SortByLastUsedDateAsc(const CDeleteData& a1, const CDeleteData& a2)
+bool CDeleteClipData::SortByLastUsedDateAsc(const CDeleteData& a1, const CDeleteData& a2)
 {
 	return a1.m_lastUsedDateTime < a2.m_lastUsedDateTime;
 }
 
-static bool SortByFormatAsc(const CDeleteData& a1, const CDeleteData& a2)
+bool CDeleteClipData::SortByFormatAsc(const CDeleteData& a1, const CDeleteData& a2)
 {
 	return a1.m_clipboardFormat < a2.m_clipboardFormat;
 }
 
-static bool SortByDataSizeAsc(const CDeleteData& a1, const CDeleteData& a2)
+bool CDeleteClipData::SortByDataSizeAsc(const CDeleteData& a1, const CDeleteData& a2)
 {
 	return a1.m_dataSize < a2.m_dataSize;
 }
@@ -838,7 +838,6 @@ const std::array<CDeleteClipData::ColumnSort, 7> CDeleteClipData::s_columnSorts{
 	{ SortByDataSizeDesc, SortByDataSizeAsc },
 } };
 
-bool desc = true;
 void CDeleteClipData::OnLvnColumnclickList2(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	HD_NOTIFY *phdn = (HD_NOTIFY *)pNMHDR;
@@ -846,10 +845,10 @@ void CDeleteClipData::OnLvnColumnclickList2(NMHDR *pNMHDR, LRESULT *pResult)
 	if (phdn->iItem >= 0 && static_cast<size_t>(phdn->iItem) < s_columnSorts.size())
 	{
 		const ColumnSort& sort{ s_columnSorts[static_cast<size_t>(phdn->iItem)] };
-		std::sort(m_data.begin(), m_data.end(), desc ? sort.descending : sort.ascending);
+		std::sort(m_data.begin(), m_data.end(), m_sortDescending ? sort.descending : sort.ascending);
 	}
 
-	desc = !desc;
+	m_sortDescending = !m_sortDescending;
 
 	m_clipList.SetItemCountEx((int)m_data.size(), 0);
 
@@ -965,7 +964,7 @@ void CDeleteClipData::SetDescriptionWindowText(INT_PTR row)
 	int parentId = selectedClip.m_parentId;
 	if (parentId > 0)
 	{
-		CString folder = FolderPath(parentId);
+		CString folder = CClipDatabase::FolderPath(parentId);
 
 		m_pDescriptionWindow->SetFolderPath(folder);
 	}
@@ -1037,7 +1036,7 @@ void CDeleteClipData::SetDescriptionWindowContent(CClip& selectedClip)
 
 	if (format == nullptr)
 	{
-		IClipFormat* rtfFormat = selectedClip.Clips()->FindFormatEx(GetFormatID(CF_RTF));
+		IClipFormat* rtfFormat = selectedClip.Clips()->FindFormatEx(CClipboardFormats::GetFormatID(CF_RTF));
 		if (rtfFormat != nullptr)
 		{
 			m_pDescriptionWindow->SetRTFText(rtfFormat->GetAsCStringA());
@@ -1046,7 +1045,7 @@ void CDeleteClipData::SetDescriptionWindowContent(CClip& selectedClip)
 
 	if (format == nullptr)
 	{
-		IClipFormat* htmlFormat = selectedClip.Clips()->FindFormatEx(GetFormatID(_T("HTML Format")));
+		IClipFormat* htmlFormat = selectedClip.Clips()->FindFormatEx(CClipboardFormats::GetFormatID(_T("HTML Format")));
 		if (htmlFormat != nullptr)
 		{
 			// show the HTML source as plain text; this fork has no HTML renderer
@@ -1098,7 +1097,7 @@ void CDeleteClipData::SetDescriptionWindowImage(CClip& selectedClip)
 	}
 	catch (const DittoCore::ClipboardFormatError& error)
 	{
-		CErrorReport::Show(StrF(_T("Ditto cannot show the clip's image: the image data is malformed (%s)."), CString(error.what()).GetString()));
+		CErrorReport::Show(CStringUtil::Format(_T("Ditto cannot show the clip's image: the image data is malformed (%s)."), CString(error.what()).GetString()));
 	}
 }
 
@@ -1249,12 +1248,12 @@ void CDeleteClipData::OnBnClickedBtCompactAndRepair()
 					if (toDeleteCount <= 0)
 						break;
 
-					RemoveOldEntries(false);
+					CClipRetentionPolicy::RemoveOldEntries(false);
 				}
 			}
 			catch (CppSQLite3Exception& e)
 			{
-				CErrorReport::Show(StrF(_T("Compact and repair failed while removing deleted clips, the database was not compacted: %s"), e.errorMessage()));
+				CErrorReport::Show(CStringUtil::Format(_T("Compact and repair failed while removing deleted clips, the database was not compacted: %s"), e.errorMessage()));
 				return;
 			}
 
@@ -1264,7 +1263,7 @@ void CDeleteClipData::OnBnClickedBtCompactAndRepair()
 		}
 		catch (CppSQLite3Exception& e)
 		{
-			CErrorReport::Show(StrF(_T("Compacting and repairing the clip database failed: %s"), e.errorMessage()));
+			CErrorReport::Show(CStringUtil::Format(_T("Compacting and repairing the clip database failed: %s"), e.errorMessage()));
 			return;
 		}
 	}

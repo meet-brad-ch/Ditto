@@ -71,11 +71,11 @@ HGLOBAL COleDataObjectEx::GetGlobalData(CLIPFORMAT cfFormat, LPFORMATETC lpForma
     HGLOBAL hGlobal = COleDataObject::GetGlobalData(cfFormat, lpFormatEtc);
 	if(hGlobal)
 	{
-		if(!::IsValid(hGlobal))
+		if(!CGlobalMemory::IsValid(hGlobal))
 		{
-			CLogger::Log( StrF(
+			CLogger::Log( CStringUtil::Format(
 				_T("COleDataObjectEx::GetGlobalData(\"%s\"): ERROR: Invalid (NULL) data returned."),
-				GetFormatName(cfFormat).GetString() ) );
+				CClipboardFormats::GetFormatName(cfFormat).GetString() ) );
 			::GlobalFree( hGlobal );
 			hGlobal = NULL;
 		}
@@ -103,11 +103,11 @@ HGLOBAL COleDataObjectEx::GetGlobalData(CLIPFORMAT cfFormat, LPFORMATETC lpForma
 	
 	ReleaseStgMedium(&stg);
 	
-	if(hGlobal && !::IsValid(hGlobal))
+	if(hGlobal && !CGlobalMemory::IsValid(hGlobal))
 	{
-		CLogger::Log( StrF(
+		CLogger::Log( CStringUtil::Format(
 			_T("COleDataObjectEx::GetGlobalData(\"%s\"): ERROR: Invalid (NULL) data returned."),
-			GetFormatName(cfFormat).GetString()));
+			CClipboardFormats::GetFormatName(cfFormat).GetString()));
 		::GlobalFree(hGlobal);
 		hGlobal = NULL;
 	}
@@ -380,7 +380,7 @@ void CClip::EmptyFormats()
 bool CClip::AddFormat(CLIPFORMAT cfType, void* pData, SIZE_T nLen, bool setDesc)
 {
 	ASSERT(pData && nLen);
-	HGLOBAL hGlobal = ::NewGlobalP(pData, nLen);
+	HGLOBAL hGlobal = CGlobalMemory::NewGlobalP(pData, nLen);
 	ASSERT(hGlobal);
 
 	// update the Clip statistics
@@ -539,13 +539,13 @@ bool CClip::TryDescriptionFormat(COleDataObjectEx& oleData, CClipFormat& cfDesc,
 		{
 			break;
 		}
-		CLogger::Log(StrF(_T("Tried to set description from %s, data is NULL, try: %d"), typeName, i + 1));
+		CLogger::Log(CStringUtil::Format(_T("Tried to set description from %s, data is NULL, try: %d"), typeName, i + 1));
 		Sleep(10);
 	}
 
 	const bool bIsDescSet{ SetDescFromText(cfDesc.m_hgData, unicode) };
 
-	CLogger::Log(StrF(_T("Tried to set description from %s text, Set: %d, Desc: [%s]"), typeName, bIsDescSet, m_Desc.Left(30).GetString()));
+	CLogger::Log(CStringUtil::Format(_T("Tried to set description from %s text, Set: %d, Desc: [%s]"), typeName, bIsDescSet, m_Desc.Left(30).GetString()));
 
 	return bIsDescSet;
 }
@@ -554,7 +554,7 @@ bool CClip::LoadClipboardFormats(COleDataObjectEx& oleData, CClipTypes& types, C
 {
 	INT_PTR numTypes = types.GetSize();
 
-	CLogger::Log(StrF(_T("Begin enumerating over supported types, Count: %d"), numTypes));
+	CLogger::Log(CStringUtil::Format(_T("Begin enumerating over supported types, Count: %d"), numTypes));
 
 	for(int i = 0; i < numTypes; i++)
 	{
@@ -566,7 +566,7 @@ bool CClip::LoadClipboardFormats(COleDataObjectEx& oleData, CClipTypes& types, C
 		}
 	}
 
-	CLogger::Log(StrF(_T("End enumerating over supported types, Count: %d"), numTypes));
+	CLogger::Log(CStringUtil::Format(_T("End enumerating over supported types, Count: %d"), numTypes));
 
 	return true;
 }
@@ -575,12 +575,12 @@ bool CClip::LoadClipboardFormat(COleDataObjectEx& oleData, CClipFormat& cf, CCli
 {
 	if (IsIgnoredDib(oleData, cf.m_cfType, activeApp))
 	{
-		CLogger::Log(StrF(_T("Ignore CF_DIB from %s"), activeApp.GetString()));
+		CLogger::Log(CStringUtil::Format(_T("Ignore CF_DIB from %s"), activeApp.GetString()));
 		return true;
 	}
 
 	BOOL bSuccess = false;
-	CLogger::Log(StrF(_T("Begin try and load type %s"), GetFormatName(cf.m_cfType).GetString()));
+	CLogger::Log(CStringUtil::Format(_T("Begin try and load type %s"), CClipboardFormats::GetFormatName(cf.m_cfType).GetString()));
 
 	if (!FetchFormatData(oleData, cf, cfDesc))
 	{
@@ -592,7 +592,7 @@ bool CClip::LoadClipboardFormat(COleDataObjectEx& oleData, CClipFormat& cf, CCli
 		return false;
 	}
 
-	CLogger::Log(StrF(_T("End of load - type %s, Success: %d"), GetFormatName(cf.m_cfType).GetString(), bSuccess));
+	CLogger::Log(CStringUtil::Format(_T("End of load - type %s, Success: %d"), CClipboardFormats::GetFormatName(cf.m_cfType).GetString(), bSuccess));
 
 	return true;
 }
@@ -616,7 +616,7 @@ bool CClip::FetchFormatData(COleDataObjectEx& oleData, CClipFormat& cf, CClipFor
 
 	if(!oleData.IsDataAvailable(cf.m_cfType))
 	{
-		CLogger::Log(StrF(_T("End of load - Data is not available for type %s"), GetFormatName(cf.m_cfType).GetString()));
+		CLogger::Log(CStringUtil::Format(_T("End of load - Data is not available for type %s"), CClipboardFormats::GetFormatName(cf.m_cfType).GetString()));
 		return false;
 	}
 
@@ -626,7 +626,7 @@ bool CClip::FetchFormatData(COleDataObjectEx& oleData, CClipFormat& cf, CClipFor
 		if (cf.m_hgData != NULL)
 			break;
 
-		CLogger::Log(StrF(_T("Tried to get data for type: %s, data is NULL, try: %d"), GetFormatName(cf.m_cfType).GetString(), tries + 1));
+		CLogger::Log(CStringUtil::Format(_T("Tried to get data for type: %s, data is NULL, try: %d"), CClipboardFormats::GetFormatName(cf.m_cfType).GetString(), tries + 1));
 		Sleep(5);
 	}
 
@@ -652,7 +652,7 @@ bool CClip::StoreFetchedFormat(CClipFormat& cf, BOOL& bSuccess)
 			return false;
 		}
 
-		ASSERT(::IsValid(cf.m_hgData));
+		ASSERT(CGlobalMemory::IsValid(cf.m_hgData));
 
 		m_Formats.Add(cf);
 		bSuccess = true;
@@ -661,7 +661,7 @@ bool CClip::StoreFetchedFormat(CClipFormat& cf, BOOL& bSuccess)
 	{
 		ASSERT(FALSE); // a valid GlobalMem with 0 size is strange
 		cf.Free();
-		CLogger::Log(StrF(_T("Data length is 0 for type %s"), GetFormatName(cf.m_cfType).GetString()));
+		CLogger::Log(CStringUtil::Format(_T("Data length is 0 for type %s"), CClipboardFormats::GetFormatName(cf.m_cfType).GetString()));
 	}
 	cf.m_hgData = 0; // m_Formats owns it now
 
@@ -676,7 +676,7 @@ int CClip::FinishLoadFromClipboard(COleDataObjectEx& oleData, CClipFormat& cfDes
 	{
 		SetDescFromType();
 
-		CLogger::Log(StrF(_T("Setting description from type, Desc: [%s]"), m_Desc.Left(30).GetString()));
+		CLogger::Log(CStringUtil::Format(_T("Setting description from type, Desc: [%s]"), m_Desc.Left(30).GetString()));
 	}
 	
 	// if the description was in a type that is not supported,
@@ -772,7 +772,7 @@ bool CClip::SetDescFromType()
 	}
 	else
 	{
-		m_Desc = GetFormatName(m_Formats[0].m_cfType);
+		m_Desc = CClipboardFormats::GetFormatName(m_Formats[0].m_cfType);
 	}
 
 	return m_Desc.GetLength() > 0;
@@ -799,7 +799,7 @@ bool CClip::AddToDB(bool bCheckForDuplicates)
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Saving the copied clip failed: %s"), e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Saving the copied clip failed: %s"), e.errorMessage()));
 		return false;
 	}
 
@@ -862,7 +862,7 @@ bool CClip::MoveDuplicateToTop()
 
 	m_id = nID;
 
-	CLogger::Log(StrF(_T("Found duplicate clip in db, Id: %d, ParentId: %d crc: %d, NewOrder: %f, GroupOrder %f"),
+	CLogger::Log(CStringUtil::Format(_T("Found duplicate clip in db, Id: %d, ParentId: %d crc: %d, NewOrder: %f, GroupOrder %f"),
 							nID, m_parentId, m_CRC, m_clipOrder, m_clipGroupOrder));
 
 	return true;
@@ -957,7 +957,7 @@ bool CClip::AddRowsInTransaction(int removeStickySettingClipId)
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Saving the clip failed: %s"), e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Saving the clip failed: %s"), e.errorMessage()));
 		return false;
 	}
 }
@@ -971,14 +971,14 @@ bool CClip::AddToMainTable()
 		record.lastPasteDate = CTime::GetCurrentTime().GetTime();
 		m_id = Repository().InsertClip(record);
 
-		CLogger::Log(StrF(_T("Added clip to main table, Id: %d, ParentId: %d Desc: %s, Order: %f, GroupOrder: %f"), m_id, m_parentId, m_Desc.GetString(), m_clipOrder, m_clipGroupOrder));
+		CLogger::Log(CStringUtil::Format(_T("Added clip to main table, Id: %d, ParentId: %d Desc: %s, Order: %f, GroupOrder: %f"), m_id, m_parentId, m_Desc.GetString(), m_clipOrder, m_clipGroupOrder));
 
 		m_LastAddedCRC = m_CRC;
 		m_lastAddedID = m_id;
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Adding the clip to the database failed: %s"), e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Adding the clip to the database failed: %s"), e.errorMessage()));
 		return false;
 	}
 	
@@ -995,7 +995,7 @@ bool CClip::ModifyMainTable()
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Saving the changes to clip %d failed: %s"), m_id, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Saving the changes to clip %d failed: %s"), m_id, e.errorMessage()));
 		return false;
 	}
 
@@ -1012,7 +1012,7 @@ bool CClip::ModifyDescription()
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Saving the description of clip %d failed: %s"), m_id, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Saving the description of clip %d failed: %s"), m_id, e.errorMessage()));
 		return false;
 	}
 
@@ -1031,7 +1031,7 @@ bool CClip::AddToDataTable()
 			const CClipFormat& format = m_Formats.ElementAt(i);
 			const DittoCore::GlobalBytes block(format.m_hgData);
 			FormatRecord record{};
-			record.name = GetFormatName(format.m_cfType);
+			record.name = CClipboardFormats::GetFormatName(format.m_cfType);
 			record.data.assign(block.Bytes().begin(), block.Bytes().end());
 			records.push_back(std::move(record));
 		}
@@ -1041,12 +1041,12 @@ bool CClip::AddToDataTable()
 		{
 			CClipFormat& format = m_Formats.ElementAt(m_Formats.GetSize() - 1 - static_cast<INT_PTR>(r));
 			format.m_dataId = ids[r];
-			CLogger::Log(StrF(_T("Added ClipData to DB, Id: %d, ParentId: %d Type: %s, size: %d"), ids[r], m_id, records[r].name.GetString(), static_cast<int>(records[r].data.size())));
+			CLogger::Log(CStringUtil::Format(_T("Added ClipData to DB, Id: %d, ParentId: %d Type: %s, size: %d"), ids[r], m_id, records[r].name.GetString(), static_cast<int>(records[r].data.size())));
 		}
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Saving the formats of clip %d failed: %s"), m_id, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Saving the formats of clip %d failed: %s"), m_id, e.errorMessage()));
 		return false;
 	}
 		
@@ -1094,7 +1094,7 @@ void CClip::Move(int parentId, bool up)
 	catch (CppSQLite3Exception& e)
 	{
 		// the order stays unchanged, so the caller's save writes the clip's old position
-		CErrorReport::Show(StrF(_T("Moving clip %d %s failed: %s"), m_id, up ? _T("up") : _T("down"), e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Moving clip %d %s failed: %s"), m_id, up ? _T("up") : _T("down"), e.errorMessage()));
 		return;
 	}
 }
@@ -1172,7 +1172,7 @@ int CClip::GetExistingTopStickyClipId(int parentId)
 	catch (CppSQLite3Exception& e)
 	{
 		// -1 is also the "no top sticky clip" answer: the caller cannot tell the failure apart
-		CErrorReport::Show(StrF(_T("Finding the top sticky clip failed: %s"), e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Finding the top sticky clip failed: %s"), e.errorMessage()));
 		return -1;
 	}
 }
@@ -1187,7 +1187,7 @@ std::optional<double> CClip::EdgeOrder(CClipRepository::OrderColumn column, bool
 	{
 		// kept from upstream for now (callers have no error path): a failed query is reported
 		// and treated as an empty list
-		CErrorReport::Show(StrF(_T("Reading the clip order failed: %s"), e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Reading the clip order failed: %s"), e.errorMessage()));
 		return std::nullopt;
 	}
 }
@@ -1250,7 +1250,7 @@ double CClip::GetNewTopSticky(int parentId, int clipId)
 {
 	const std::optional<double> highest = EdgeOrder(parentId < 0 ? CClipRepository::OrderColumn::StickyClip : CClipRepository::OrderColumn::StickyClipGroup, true, parentId, true);
 	const double newOrder = DittoCore::ClipOrder::TopSticky(highest);
-	CLogger::Log(StrF(_T("GetNewTopSticky, Id: %d, parentId: %d, NewMax: %f"), clipId, parentId, newOrder));
+	CLogger::Log(CStringUtil::Format(_T("GetNewTopSticky, Id: %d, parentId: %d, NewMax: %f"), clipId, parentId, newOrder));
 	return newOrder;
 }
 
@@ -1258,7 +1258,7 @@ double CClip::GetNewLastSticky(int parentId, int clipId)
 {
 	const std::optional<double> lowest = EdgeOrder(parentId < 0 ? CClipRepository::OrderColumn::StickyClip : CClipRepository::OrderColumn::StickyClipGroup, true, parentId, false);
 	const double newOrder = DittoCore::ClipOrder::LastSticky(lowest);
-	CLogger::Log(StrF(_T("GetNewLastSticky, Id: %d, parentId: %d, NewMin: %f"), clipId, parentId, newOrder));
+	CLogger::Log(CStringUtil::Format(_T("GetNewLastSticky, Id: %d, parentId: %d, NewMin: %f"), clipId, parentId, newOrder));
 	return newOrder;
 }
 
@@ -1292,7 +1292,7 @@ double CClip::GetNewOrder(int parentId, int clipId)
 {
 	const std::optional<double> highest = EdgeOrder(parentId < 0 ? CClipRepository::OrderColumn::Clip : CClipRepository::OrderColumn::ClipGroup, false, parentId, true);
 	const double newOrder = DittoCore::ClipOrder::Newest(highest);
-	CLogger::Log(StrF(_T("GetNewOrder, Id: %d, parentId: %d, NewMax: %f"), clipId, parentId, newOrder));
+	CLogger::Log(CStringUtil::Format(_T("GetNewOrder, Id: %d, parentId: %d, NewMax: %f"), clipId, parentId, newOrder));
 	return newOrder;
 }
 
@@ -1300,7 +1300,7 @@ double CClip::GetNewLastOrder(int parentId, int clipId)
 {
 	const std::optional<double> lowest = EdgeOrder(parentId < 0 ? CClipRepository::OrderColumn::Clip : CClipRepository::OrderColumn::ClipGroup, false, parentId, false);
 	const double newOrder = DittoCore::ClipOrder::Oldest(lowest);
-	CLogger::Log(StrF(_T("GetLastOrder, Id: %d, parentId: %d, NewMin: %f"), clipId, parentId, newOrder));
+	CLogger::Log(CStringUtil::Format(_T("GetLastOrder, Id: %d, parentId: %d, NewMin: %f"), clipId, parentId, newOrder));
 	return newOrder;
 }
 
@@ -1317,7 +1317,7 @@ BOOL CClip::LoadMainTable(int id)
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Loading clip %d failed: %s"), id, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Loading clip %d failed: %s"), id, e.errorMessage()));
 		return FALSE;
 	}
 
@@ -1331,15 +1331,15 @@ HGLOBAL CClip::LoadFormat(int id, UINT cfType)
 {
 	try
 	{
-		const std::optional<std::vector<std::byte>> data = Repository().LoadFormat(id, GetFormatName(static_cast<CLIPFORMAT>(cfType)));
+		const std::optional<std::vector<std::byte>> data = Repository().LoadFormat(id, CClipboardFormats::GetFormatName(static_cast<CLIPFORMAT>(cfType)));
 		if (data)
 		{
-			return NewGlobalP(const_cast<std::byte*>(data->data()), data->size());
+			return CGlobalMemory::NewGlobalP(const_cast<std::byte*>(data->data()), data->size());
 		}
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Loading the %s format of clip %d failed: %s"), GetFormatName(static_cast<CLIPFORMAT>(cfType)).GetString(), id, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Loading the %s format of clip %d failed: %s"), CClipboardFormats::GetFormatName(static_cast<CLIPFORMAT>(cfType)).GetString(), id, e.errorMessage()));
 		return NULL;
 	}
 
@@ -1375,8 +1375,8 @@ bool CClip::LoadFormats(int id, bool bOnlyLoad_CF_TEXT, bool includeRichTextForT
 			CClipFormat cf;
 			cf.m_dataId = record.dataId;
 			cf.m_parentId = record.parentId;
-			cf.m_cfType = GetFormatID(record.name);
-			cf.m_hgData = NewGlobalP(const_cast<std::byte*>(record.data.data()), record.data.size());
+			cf.m_cfType = CClipboardFormats::GetFormatID(record.name);
+			cf.m_hgData = CGlobalMemory::NewGlobalP(const_cast<std::byte*>(record.data.data()), record.data.size());
 			m_Formats.Add(cf);
 			// m_Formats owns the data now
 			cf.m_hgData = NULL;
@@ -1384,13 +1384,13 @@ bool CClip::LoadFormats(int id, bool bOnlyLoad_CF_TEXT, bool includeRichTextForT
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Loading the formats of clip %d failed: %s"), id, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Loading the formats of clip %d failed: %s"), id, e.errorMessage()));
 		return false;
 	}
 
 	ULONGLONG endTick = GetTickCount64();
 	if((endTick-startTick) > 150)
-		CLogger::Log(StrF(_T("Paste Timing LoadFormats: %llu, ClipId: %d"), endTick-startTick, id));
+		CLogger::Log(CStringUtil::Format(_T("Paste Timing LoadFormats: %llu, ClipId: %d"), endTick-startTick, id));
 
 	return m_Formats.GetSize() > 0;
 }
@@ -1402,13 +1402,13 @@ void CClip::LoadTypes(int id, CClipTypes& types)
 	{
 		for (const CString& name : Repository().LoadFormatNames(id))
 		{
-			types.Add(GetFormatID(name));
+			types.Add(CClipboardFormats::GetFormatID(name));
 		}
 	}
 	catch (CppSQLite3Exception& e)
 	{
 		// the names are read in one query before any is added, so types stays empty
-		CErrorReport::Show(StrF(_T("Loading the format list of clip %d failed: %s"), id, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Loading the format list of clip %d failed: %s"), id, e.errorMessage()));
 		return;
 	}
 }
@@ -1589,7 +1589,7 @@ bool CClip::SaveFormatsInTransaction(const ARRAY& deletedData, BOOL updateDescri
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Saving the formats of clip %d failed: %s"), m_id, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Saving the formats of clip %d failed: %s"), m_id, e.errorMessage()));
 		return false;
 	}
 
@@ -1633,7 +1633,7 @@ bool CClip::WriteImageToFileOrReport(const CString& path, const CString& operati
 	}
 	catch (const DittoCore::ClipboardFormatError& error)
 	{
-		CErrorReport::Show(StrF(_T("Ditto cannot %s the clip's image: the image data is malformed (%s)."), operation.GetString(), CString(error.what()).GetString()));
+		CErrorReport::Show(CStringUtil::Format(_T("Ditto cannot %s the clip's image: the image data is malformed (%s)."), operation.GetString(), CString(error.what()).GetString()));
 		return false;
 	}
 }
@@ -1646,7 +1646,7 @@ bool CClip::ReadFileContents(const CString& path, ULONGLONG maxSize, CopiedFile&
 	{
 		TCHAR szError[200]{};
 		ex.GetErrorMessage(szError, _countof(szError));
-		errorMessage += StrF(_T("Error opening file: %s, Error: %s\r\n"), path.GetString(), szError);
+		errorMessage += CStringUtil::Format(_T("Error opening file: %s, Error: %s\r\n"), path.GetString(), szError);
 		return false;
 	}
 
@@ -1657,7 +1657,7 @@ bool CClip::ReadFileContents(const CString& path, ULONGLONG maxSize, CopiedFile&
 		TCHAR szMaxFileSize[64]{};
 		StrFormatByteSize((LONGLONG)fileSize, szFileSize, _countof(szFileSize));
 		StrFormatByteSize((LONGLONG)maxSize, szMaxFileSize, _countof(szMaxFileSize));
-		errorMessage += StrF(_T("File is to large: %s, Size: %s, Max Size: %s\r\n"), path.GetString(), szFileSize, szMaxFileSize);
+		errorMessage += CStringUtil::Format(_T("File is to large: %s, Size: %s, Max Size: %s\r\n"), path.GetString(), szFileSize, szMaxFileSize);
 		return false;
 	}
 
@@ -1666,7 +1666,7 @@ bool CClip::ReadFileContents(const CString& path, ULONGLONG maxSize, CopiedFile&
 	const UINT read = source.Read(file.contents.data(), static_cast<UINT>(fileSize));
 	if (read != fileSize)
 	{
-		errorMessage += StrF(_T("Error reading file: %s, read %u of %I64u bytes\r\n"), path.GetString(), read, fileSize);
+		errorMessage += CStringUtil::Format(_T("Error reading file: %s, read %u of %I64u bytes\r\n"), path.GetString(), read, fileSize);
 		return false;
 	}
 
@@ -1674,7 +1674,7 @@ bool CClip::ReadFileContents(const CString& path, ULONGLONG maxSize, CopiedFile&
 	const CStringA utf8Path = CTextConvert::UnicodeToUTF8(path);
 	file.path.assign(utf8Path.GetString(), utf8Path.GetLength());
 
-	CLogger::Log(StrF(_T("Saving file contents to Ditto Database, file: %s, size: %I64u, md5: %S"), path.GetString(), fileSize, file.md5.c_str()));
+	CLogger::Log(CStringUtil::Format(_T("Saving file contents to Ditto Database, file: %s, size: %I64u, md5: %S"), path.GetString(), fileSize, file.md5.c_str()));
 	return true;
 }
 
@@ -1713,7 +1713,7 @@ bool CClip::AddFileDataToData(CString &errorMessage)
 	catch (const DittoCore::ClipboardFormatError& error)
 	{
 		// this function reports through errorMessage; the caller shows it
-		errorMessage += StrF(_T("The clip's file list is malformed (%s)\r\n"), CString(error.what()).GetString());
+		errorMessage += CStringUtil::Format(_T("The clip's file list is malformed (%s)\r\n"), CString(error.what()).GetString());
 		return false;
 	}
 
@@ -1810,7 +1810,7 @@ void CClip::SaveFileDataToDatabase(CString& errorMessage)
 
 std::unique_ptr<Gdiplus::Bitmap> CClip::CreateGdiplusBitmap()
 {
-	CClipFormat *png = this->m_Formats.FindFormat(GetFormatID(_T("PNG")));
+	CClipFormat *png = this->m_Formats.FindFormat(CClipboardFormats::GetFormatID(_T("PNG")));
 	if (png != NULL)
 		return png->LoadGdiplusBitmap();
 
@@ -1852,7 +1852,7 @@ bool CClip::SaveFromEditWnd(BOOL bUpdateDesc)
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Saving the edited clip %d failed: %s"), m_id, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Saving the edited clip %d failed: %s"), m_id, e.errorMessage()));
 		return false;
 	}
 
@@ -1894,7 +1894,7 @@ int CClipList::AddToDB(bool bLatestOrder)
 	INT_PTR remaining{static_cast<INT_PTR>(m_clips.size())};
 	for(const std::unique_ptr<CClip>& clip : m_clips)
 	{
-		CLogger::Log(StrF(_T("AddToDB - while(pos), Start Remaining %d"), remaining));
+		CLogger::Log(CStringUtil::Format(_T("AddToDB - while(pos), Start Remaining %d"), remaining));
 		remaining--;
 
 		CClip* pClip{clip.get()};
@@ -1912,10 +1912,10 @@ int CClipList::AddToDB(bool bLatestOrder)
 			savedCount++;
 		}
 
-		CLogger::Log(StrF(_T("AddToDB - while(pos), End Remaining %d, save count: %d"), remaining, savedCount));
+		CLogger::Log(CStringUtil::Format(_T("AddToDB - while(pos), End Remaining %d, save count: %d"), remaining, savedCount));
 	}
 
-	CLogger::Log(StrF(_T("AddToDB - Start, count: %d"), savedCount));
+	CLogger::Log(CStringUtil::Format(_T("AddToDB - Start, count: %d"), savedCount));
 	
 	return savedCount;
 }

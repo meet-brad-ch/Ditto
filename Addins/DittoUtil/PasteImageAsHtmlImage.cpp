@@ -10,9 +10,6 @@
 #include <string>
 #include <vector>
 
-CString g_csDIBImagePath = _T("");
-int g_nDIBImageName = 1;
-
 CPasteImageAsHtmlImage::CPasteImageAsHtmlImage(void)
 {
 }
@@ -27,7 +24,7 @@ bool CPasteImageAsHtmlImage::ConvertPathToHtmlImageTag(const CDittoInfo &DittoIn
 	IClipFormats *pFormats = pClip->Clips();
 	if(pFormats)
 	{
-		if(g_csDIBImagePath.IsEmpty())
+		if(m_dibImagePath.IsEmpty())
 		{
 			CreateLocalPath(true);
 		}
@@ -121,8 +118,8 @@ bool CPasteImageAsHtmlImage::IsImageFile(const CString& csFile)
 bool CPasteImageAsHtmlImage::DibImageTag(HWND owner, IClipFormat* pCF_DIB, CString& csIMG)
 {
 	CString csFile;
-	csFile.Format(_T("%s\\%d.bmp"), g_csDIBImagePath.GetString(), g_nDIBImageName);
-	g_nDIBImageName++;
+	csFile.Format(_T("%s\\%d.bmp"), m_dibImagePath.GetString(), m_nextDibImageName);
+	m_nextDibImageName++;
 
 	CString errorMessage;
 	try
@@ -167,13 +164,13 @@ bool CPasteImageAsHtmlImage::WriteDibToFile(const CString& csPath, std::span<con
 bool CPasteImageAsHtmlImage::CleanupPastedImages()
 {
 	bool bRet = false;
-	if(g_csDIBImagePath.IsEmpty())
+	if(m_dibImagePath.IsEmpty())
 	{
 		CreateLocalPath(false);
 	}
 
 	CFileFind find;
-	BOOL bCont = find.FindFile(g_csDIBImagePath + _T("\\*"));
+	BOOL bCont = find.FindFile(m_dibImagePath + _T("\\*"));
 
 	while(bCont)
 	{
@@ -182,17 +179,17 @@ bool CPasteImageAsHtmlImage::CleanupPastedImages()
 	}
 	find.Close();
 
-	bRet = RemoveDirectory(g_csDIBImagePath) == TRUE;
+	bRet = RemoveDirectory(m_dibImagePath) == TRUE;
 
 	return false;;
 }
 
 void CPasteImageAsHtmlImage::CreateLocalPath(bool bCreateDir)
 {
-	g_csDIBImagePath = _wgetenv(_T("TMP"));;
-	g_csDIBImagePath += _T("\\ditto");
+	m_dibImagePath = _wgetenv(_T("TMP"));;
+	m_dibImagePath += _T("\\ditto");
 	if(bCreateDir)
 	{
-		CreateDirectory(g_csDIBImagePath, NULL);
+		CreateDirectory(m_dibImagePath, NULL);
 	}
 }

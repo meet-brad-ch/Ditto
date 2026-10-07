@@ -150,26 +150,37 @@ public:
     CString * m_string;
     LPTSTR    m_buffer;
 
-    static LPTSTR NullBuffer;
+    /// CStdString incompatibility:
+    /// http://www.codeproject.com/string/stdstring.asp
+    /// If the contained string is empty, CStdString.GetBuffer returns a pointer to a constant
+    /// empty string, which may cause an access violation when I write the terminating zero
+    /// (which is in my understanding implicitely allowed the way I read the MSDN docs)
+    /// Solution: we return a pointer to another buffer
+    /** @brief The writable empty buffer handed out for an empty string (one per lock, so it is
+     * writable and not shared between threads). */
+    TCHAR m_nullBuffer[1]{};
 
 public:
     CStringLock(CString & s) : m_string(&s)
     {
         m_buffer = m_string->GetBuffer(0);
-        // fixes an incompatibility with CStdString, see "NullBuffer" in .cpp 
+        // fixes an incompatibility with CStdString, see m_nullBuffer
         if (!s.GetLength())
-            m_buffer = NullBuffer; 
+            m_buffer = m_nullBuffer;
     }
 
     CStringLock(CString & s, int minChars) : m_string(&s)
     {
         m_buffer = m_string->GetBuffer(minChars);
 
-        // fixes an incompatibility with CStdString, see "NullBuffer" in .cpp 
+        // fixes an incompatibility with CStdString, see m_nullBuffer
         if (!s.GetLength() && !minChars)
-            m_buffer = NullBuffer; 
+            m_buffer = m_nullBuffer;
 
     }
+
+    CStringLock(CStringLock const &) = delete;
+    CStringLock & operator=(CStringLock const &) = delete;
 
     operator LPTSTR() { return m_buffer; }
 
@@ -187,16 +198,6 @@ public:
 
 };
 
-
-
-/// CStdString incompatibility:
-/// http://www.codeproject.com/string/stdstring.asp
-/// If the contained string is empty, CStdString.GetBuffer returns a pointer to a constant
-/// empty string, which may cause an access violation when I write the terminating zero
-/// (which is in my understanding implicitely allowed the way I read the MSDN docs)
-/// Solution: we return a pointer to another buffer
-TCHAR NullBufferData[1] = { 0 };
-LPTSTR CStringLock::NullBuffer = NullBufferData;
 
 
 // Helper class for Close-On-Return HKEY
@@ -234,8 +235,31 @@ public:
 
 }; // CAutoHKEY
 
+/**
+ * @brief Environment variable helpers for CPath::EnvUnexpandRoot.
+ */
+class CEnvironmentRoot
+{
+public:
+    /**
+     * @brief Reads an environment variable into a CString.
+     * @param envVar the name of the environment variable.
+     * @return its value; empty if it does not exist.
+     */
+    static CString GetEnvVar(LPCTSTR envVar);
+
+    /**
+     * @brief Replaces a path root with an environment variable: if the beginning of \c s matches
+     * the value of %envVar%, it is replaced with %envVar% (e.g. "C:\Windows" with "%windir%").
+     * @param s the string to modify.
+     * @param envVar the name of the environment variable.
+     * @return true if s was modified, false otherwise.
+     */
+    static bool EnvUnsubstRoot(CString & s, LPCTSTR envVar);
+};
+
 /// Reads an environment variable into a CString
-CString GetEnvVar(LPCTSTR envVar)
+CString CEnvironmentRoot::GetEnvVar(LPCTSTR envVar)
 {
     SetLastError(0);
 
@@ -257,7 +281,7 @@ CString GetEnvVar(LPCTSTR envVar)
 /// \param s [CString &, in/out]: the string to modify
 /// \param envVar [LPCTSTR]: name of the environment variable
 /// \returns true if s was modified, false otherwise.
-bool EnvUnsubstRoot(CString & s, LPCTSTR envVar)
+bool CEnvironmentRoot::EnvUnsubstRoot(CString & s, LPCTSTR envVar)
 {
     // get environment value string
     CString envValue = GetEnvVar(envVar);
@@ -282,15 +306,13 @@ bool EnvUnsubstRoot(CString & s, LPCTSTR envVar)
 
 using namespace nsDetail;
 
-const TCHAR Backslash = '\\';
-
 
 // ==============================================
 //  Trim
 // ----------------------------------------------
-/// Trims whitespaces from left and right side. 
+/// Trims whitespaces from left and right side.
 /// \param s [CString]: String to modify in-place.
-void Trim(CString & string)
+void CPathUtil::Trim(CString & string)
 {
     if (_istspace(GetFirstChar(string)))
         string.TrimLeft();
@@ -308,7 +330,7 @@ void Trim(CString & string)
 /// 
 /// \returns [TCHAR]: if \c is a valid drive letter (A..Z, or a..z), returns the drive letter
 ///     cast to uppercase (A..Z). >Otherwise, returns 0
-TCHAR GetDriveLetter(TCHAR ch)
+TCHAR CPathUtil::GetDriveLetter(TCHAR ch)
 {
     if ( (ch >= 'A' && ch <= 'Z'))
         return ch;
@@ -329,7 +351,7 @@ TCHAR GetDriveLetter(TCHAR ch)
 /// \returns [TCHAR]: the drive letter, converted to uppercase, if the path starts with an 
 ///                     X: drive specification. Otherwise, returns 0
 // 
-TCHAR GetDriveLetter(LPCTSTR s)
+TCHAR CPathUtil::GetDriveLetter(LPCTSTR s)
 {
     if (s == NULL || *s == 0 || s[1] != ':')
         return 0;
@@ -349,7 +371,7 @@ TCHAR GetDriveLetter(LPCTSTR s)
 /// \param str [CString const &]: path string to add quotes to
 /// \returns [CString]: path string with quotes added if required
 // 
-CString QuoteSpaces(CString const & str)
+CString CPathUtil::QuoteSpaces(CString const & str)
 {
     // preserve refcounting if no changes will be made
     if (str.Find(' ')>=0)  // if the string contains any spaces...
@@ -367,7 +389,7 @@ CString QuoteSpaces(CString const & str)
 
 
 /// helper function for GetRootType
-inline ERootType GRT_Return(ERootType type, int len, int * pLen)
+ERootType PathRootParser::GRT_Return(ERootType type, int len, int * pLen)
 {
    if (pLen)
       *pLen = len;
@@ -377,24 +399,19 @@ inline ERootType GRT_Return(ERootType type, int len, int * pLen)
 // ==================================================================
 //  GetRootType
 // ------------------------------------------------------------------
-/// 
+///
 /// returns the type of the path root, and it's length.
 /// For supported root types, see \ref nsPath::ERootType "ERootType" enumeration
-/// 
+///
 /// \param path [LPCTSTR]: The path to analyze
 /// \param pLen [int *, out]: if not NULL, receives the length of the root part (in characters)
 /// \param greedy [bool=true]: Affects len and type of the following root types:
 ///     - \c "\\server\share" : with greedy=true, it is treated as one \c rtServerShare root,
 ///       otherwise, it is treated as \c rtServer root
-///     
-/// \returns [ERootType]: type of the root element 
-///         
-/// 
-ERootType GetRootType(LPCTSTR path, int * pLen, bool greedy)
-{
-   return PathRootParser::GetRootType(path, pLen, greedy);
-}
-
+///
+/// \returns [ERootType]: type of the root element
+///
+///
 ERootType PathRootParser::GetRootType(LPCTSTR path, int * pLen, bool greedy)
 {
    if (!path || !*path)
@@ -514,7 +531,7 @@ PathRootParser::RootMatch PathRootParser::MatchProtocol(LPCTSTR path)
 // 
 CPath &  CPath::Trim()
 {
-    nsPath::Trim(m_path);
+    CPathUtil::Trim(m_path);
     return *this;
 }
 
@@ -526,7 +543,7 @@ CPath &  CPath::Trim()
 // 
 CPath & CPath::Unquote()
 {
-    if (GetFirstChar(m_path) == '"' && GetLastChar(m_path) == '"')
+    if (CPathUtil::GetFirstChar(m_path) == '"' && CPathUtil::GetLastChar(m_path) == '"')
         m_path = m_path.Mid(1, m_path.GetLength()-2);
     return *this;
 }
@@ -580,7 +597,7 @@ CPath & CPath::ShrinkXXLPath()
     {
         LPCTSTR path = m_path;
 
-        if (nsPath::GetDriveLetter(path[4]) != 0 && path[5] == ':')
+        if (CPathUtil::GetDriveLetter(path[4]) != 0 && path[5] == ':')
             m_path = m_path.Mid(4);
 
         else if (m_path.GetLength() >= 8)  // at least 8 chars for [\\?\UNC\]
@@ -730,7 +747,7 @@ CString CPath::GetStr(DWORD packing) const
 //    _ASSERTE(!(packing & eppAutoXXL));   // TODO
 
     if (packing & eppAutoQuote)
-        str = QuoteSpaces(str);
+        str = CPathUtil::QuoteSpaces(str);
 
     if (packing & eppBackslashToSlash)
         str.Replace('\\', '/');  // TODO: suport server-share and protocol correctly
@@ -845,7 +862,7 @@ CPath & CPath::operator &=(LPCTSTR rhs)
 // 
 CPath & CPath::AddBackslash()
 {
-    if (GetLastChar(m_path) != Backslash)
+    if (CPathUtil::GetLastChar(m_path) != CPathUtil::Backslash)
     {
         CStringLock buffer(m_path, m_path.GetLength()+1);
         PathAddBackslash(buffer);
@@ -862,7 +879,7 @@ CPath & CPath::AddBackslash()
 // 
 CPath & CPath::RemoveBackslash()
 {
-    if (GetLastChar(m_path) == Backslash)
+    if (CPathUtil::GetLastChar(m_path) == CPathUtil::Backslash)
     {
         CStringLock buffer(m_path, m_path.GetLength()+1);
         PathRemoveBackslash(buffer);
@@ -932,11 +949,11 @@ CString CPath::ShellGetRoot() const
 /// 
 /// returns the type of the root, and it's length.
 /// For supported tpyes, see \ref nsPath::ERootType "ERootType".
-/// see also \ref nsPath::GetRootType
-/// 
+/// see also \ref nsPath::PathRootParser::GetRootType
+///
 ERootType CPath::GetRootType(int * len, bool greedy) const
 {
-   return nsPath::GetRootType(m_path, len, greedy);
+   return PathRootParser::GetRootType(m_path, len, greedy);
 }
 
 // ==================================================================
@@ -947,12 +964,12 @@ ERootType CPath::GetRootType(int * len, bool greedy) const
 /// \return [CString]: the root, as a string.
 /// 
 /// For details which root types are supported, and how the length is calculated, see
-/// \ref nsPath::ERootType "ERootType" and \ref nsPath::GetRootType
-/// 
+/// \ref nsPath::ERootType "ERootType" and \ref nsPath::PathRootParser::GetRootType
+///
 CString CPath::GetRoot(ERootType * rt, bool greedy) const
 {
    int len = 0;
-   ERootType rt_ = nsPath::GetRootType(m_path, &len, greedy);
+   ERootType rt_ = PathRootParser::GetRootType(m_path, &len, greedy);
    if (rt)
       *rt = rt_;
    return m_path.Left(len);
@@ -979,14 +996,14 @@ CString CPath::SplitRoot(ERootType * rt)
       return head;
 
    int rootLen = 0;
-   ERootType rt_ = nsPath::GetRootType(m_path, &rootLen, false);
+   ERootType rt_ = PathRootParser::GetRootType(m_path, &rootLen, false);
    if (rt)
        *rt = rt_;
 
     if (rt_ == rtNoRoot) // not a typical root element
     {
         int start = 0;
-        if (GetFirstChar(m_path) == '\\') // skip leading backslash (double backslas handled before)
+        if (CPathUtil::GetFirstChar(m_path) == '\\') // skip leading backslash (double backslas handled before)
             ++start;
 
         int ipos = m_path.Find('\\', start);
@@ -1059,7 +1076,7 @@ CPath CPath::GetPath(bool includeRoot ) const
 CString CPath::GetName() const
 {
     // fix treating final path segments as file name
-    if (GetLastChar(m_path) == '\\')
+    if (CPathUtil::GetLastChar(m_path) == '\\')
         return CString();
 
     LPCTSTR path = m_path;
@@ -1218,7 +1235,7 @@ CPath & CPath::RemoveFileSpec()
 /// \param cleanup [DWORD, = epc_Default]: the "cleanup" treatment to apply to the path, see \c CPath::Clean
 /// \returns [CPath]: a new path without the arguments
 // 
-CPath SplitArgs(CString const & path_args, CString * args, DWORD cleanup)
+CPath CPathUtil::SplitArgs(CString const & path_args, CString * args, DWORD cleanup)
 {
    CString pathWithArgs = path_args;
 
@@ -1255,7 +1272,7 @@ CPath SplitArgs(CString const & path_args, CString * args, DWORD cleanup)
 /// \param cleanup [DWORD, epc_Default]: additional cleanup to apply to the returned path
 /// \returns [CPath]: the path contained in \c path_icon (without the icon location)
 // 
-CPath SplitIconLocation(CString const & path_icon, int * pIcon, DWORD cleanup)
+CPath CPathUtil::SplitIconLocation(CString const & path_icon, int * pIcon, DWORD cleanup)
 {
     CString strpath = path_icon;
     int icon = PathParseIconLocation( CStringLock(strpath) );
@@ -1274,7 +1291,7 @@ CPath SplitIconLocation(CString const & path_icon, int * pIcon, DWORD cleanup)
 /// \param driveNumber [int]: Number of the drive, 0 == 'A', etc.
 /// \returns [CPath]: a path consisitng only of a drive root
 // 
-CPath BuildRoot(int driveNumber)
+CPath CPathUtil::BuildRoot(int driveNumber)
 {
     CString strDriveRoot;
     ::PathBuildRoot(CStringLock(strDriveRoot, 3), driveNumber);
@@ -1295,7 +1312,7 @@ CPath BuildRoot(int driveNumber)
 ///         If an error occurs, the function returrns an empty string. 
 ///         Call \c GetLastError() for more information.
 /// 
-CPath GetModuleFileName(HMODULE module)
+CPath CPathUtil::GetModuleFileName(HMODULE module)
 {
     CString path;
     DWORD ok = ::GetModuleFileName(module, CStringLock(path, MAX_PATH), MAX_PATH+1);
@@ -1315,7 +1332,7 @@ CPath GetModuleFileName(HMODULE module)
 /// If an error occurs the function returns an empty string. More information is available
 /// through \c GetLastError.
 /// 
-CPath GetCurrentDirectory()
+CPath CPathUtil::GetCurrentDirectory()
 {
     CString path;
     CStringLock buffer(path, MAX_PATH);
@@ -1756,7 +1773,7 @@ bool CPath::GetAttributes(WIN32_FILE_ATTRIBUTE_DATA & fad)
 /// 
 bool CPath::EnvUnexpandRoot(LPCTSTR envVar)
 {
-    return nsDetail::EnvUnsubstRoot(m_path, envVar);
+    return nsDetail::CEnvironmentRoot::EnvUnsubstRoot(m_path, envVar);
 }
 
 // ==================================================================
@@ -1807,8 +1824,8 @@ bool CPath::EnvUnexpandDefaultRoots()
 ///   If the function succeeds, GetLastError() returns zero.
 /// 
 /// See also nsPath::ToRegistry
-///             
-CPath FromRegistry(HKEY baseKey, LPCTSTR subkey, LPCTSTR name)
+///
+CPath CPathUtil::FromRegistry(HKEY baseKey, LPCTSTR subkey, LPCTSTR name)
 {
    SetLastError(0);
 
@@ -1934,24 +1951,17 @@ bool CPath::IsDotty() const
 }
 
 
-const LPCTSTR InvalidChars_Windows =
-	_T("\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F")
-	_T("\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F")
-	_T("\\/:*?\"<>|");
-
-
-
 // ==================================================================
 //  IsValid
 // ------------------------------------------------------------------
-/// 
+///
 /// returns true if the path satisfies Windows naming conventions
 ///
 bool CPath::IsValid() const
 {
     if (!m_path.GetLength()) return false;
-    if (m_path.FindOneOf(InvalidChars_Windows) >= 0) return false;
-    if (GetLastChar(m_path) == '.') // may not end in '.', except "." and ".."
+    if (m_path.FindOneOf(CPathUtil::InvalidChars_Windows) >= 0) return false;
+    if (CPathUtil::GetLastChar(m_path) == '.') // may not end in '.', except "." and ".."
     {
         if (m_path.GetLength() > 2 || m_path[0] != '.')
             return false;
@@ -1969,7 +1979,7 @@ bool CPath::IsValid() const
 /// replaces all invalid file name characters  inc \c s with \c replaceChar
 /// This is helpful when generating names based on user input
 /// 
-CString ReplaceInvalid(CString const & str, TCHAR replaceChar)
+CString CPathUtil::ReplaceInvalid(CString const & str, TCHAR replaceChar)
 {
     if (!str.GetLength() || CPath(str).IsDotty())
         return str;

@@ -44,7 +44,7 @@ bool CICU_String::Load()
 	}
 	else
 	{
-		CLogger::Log(StrF(_T("Error loading icu.dll, LastError: %d"), ::GetLastError()));
+		CLogger::Log(CStringUtil::Format(_T("Error loading icu.dll, LastError: %d"), ::GetLastError()));
 	}
 
 	return loaded;

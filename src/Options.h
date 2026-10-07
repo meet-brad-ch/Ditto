@@ -694,6 +694,16 @@ public:
 	static BOOL GetEnforceClipboardIgnoreFormats();
 
 private:
+	/**
+	 * @brief Writes an integer to an ini file (WritePrivateProfileString with the decimal text).
+	 * @param lpAppName The section.
+	 * @param lpKeyName The key.
+	 * @param nValue The value.
+	 * @param lpFileName The ini file.
+	 * @return The WritePrivateProfileString result (nonzero on success).
+	 */
+	static UINT WritePrivateProfileInt(LPCTSTR lpAppName, LPCTSTR lpKeyName, INT nValue, LPCTSTR lpFileName);
+
 	/** @brief The folder a GetPath folder starts from. */
 	enum class PathRoot
 	{

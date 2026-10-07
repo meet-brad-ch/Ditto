@@ -51,12 +51,12 @@ void CMainFrmThread::OnEvent(int eventId, void * /*param*/)
 //not sure if this does what i think it does but looking into issues with slow access on large dbs
 void CMainFrmThread::OnReadDbFile()
 {
-	double idle = IdleSeconds();
+	double idle = CIdleTime::IdleSeconds();
 
 	if (idle < CGetSetOptions::ReadRandomFileIdleMin())
 	{
 		CString dbFile = CGetSetOptions::GetDBPath();
-		__int64 dbSize = FileSize(dbFile);
+		__int64 dbSize = CFileSystem::FileSize(dbFile);
 
 		srand((UINT)time(NULL));
 
@@ -76,12 +76,12 @@ void CMainFrmThread::OnReadDbFile()
 
 void CMainFrmThread::OnDeleteEntries()
 {
-    RemoveOldEntries(true);
+    CClipRetentionPolicy::RemoveOldEntries(true);
 }
 
 void CMainFrmThread::OnRemoveTempFiles()
 {
-	DeleteDittoTempFiles(TRUE);
+	CTempFileCleaner::DeleteDittoTempFiles(TRUE);
 }
 
 void CMainFrmThread::OnSaveClips()
@@ -107,17 +107,17 @@ void CMainFrmThread::OnSaveClips()
 
 	int count = localClips.AddToDB(true);
 
-	CLogger::Log(StrF(_T("SaveCopyclips After AddToDb, Count: %d"), count));
+	CLogger::Log(CStringUtil::Format(_T("SaveCopyclips After AddToDb, Count: %d"), count));
 
 	if(count > 0)
 	{
 		int Id = localClips.Last().m_id;
 
-		CLogger::Log(StrF(_T("SaveCopyclips After AddToDb, Id: %d Before OnCopyCopyCompleted"), Id));
+		CLogger::Log(CStringUtil::Format(_T("SaveCopyclips After AddToDb, Id: %d Before OnCopyCopyCompleted"), Id));
 
 		theApp.OnCopyCompleted(Id, count, copyReason);
 
-		CLogger::Log(StrF(_T("SaveCopyclips After AddToDb, Id: %d After OnCopyCopyCompleted"), Id));
+		CLogger::Log(CStringUtil::Format(_T("SaveCopyclips After AddToDb, Id: %d After OnCopyCopyCompleted"), Id));
 
 		const CClip& lastClip{localClips.Last()};
 		if (lastClip.m_copyReason == CopyReasonEnum::COPY_TO_GROUP &&

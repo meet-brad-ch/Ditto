@@ -24,7 +24,7 @@ HGLOBAL CCF_HDropAggregator::GetHGlobalAsString()
 	lines.AddLines(m_paths);
 	const std::wstring& text = lines.Result();
 	// with its terminating null
-	return NewGlobalP(const_cast<wchar_t*>(text.c_str()), (text.size() + 1) * sizeof(wchar_t));
+	return CGlobalMemory::NewGlobalP(const_cast<wchar_t*>(text.c_str()), (text.size() + 1) * sizeof(wchar_t));
 }
 
 HGLOBAL CCF_HDropAggregator::NewDropBlock(const std::vector<std::wstring>& paths)
@@ -34,5 +34,5 @@ HGLOBAL CCF_HDropAggregator::NewDropBlock(const std::vector<std::wstring>& paths
 		return NULL;
 	}
 	std::vector<std::byte> block = DittoCore::FileDropList::Build(paths);
-	return NewGlobalP(block.data(), block.size());
+	return CGlobalMemory::NewGlobalP(block.data(), block.size());
 }

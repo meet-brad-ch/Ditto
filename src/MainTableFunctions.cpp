@@ -60,7 +60,7 @@ void CMainTableFunctions::LoadAcceleratorKeys(CAccels& accels, CppSQLite3DB &db)
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Loading the clip shortcut keys from the clip database failed: %s"), e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Loading the clip shortcut keys from the clip database failed: %s"), e.errorMessage()));
 		return;
 	}
 }

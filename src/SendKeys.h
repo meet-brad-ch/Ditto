@@ -50,7 +50,8 @@ private:
   static const WORD VKKEYSCANALTON;
   static const WORD INVALIDKEY;
 
-  static key_desc_t KeyNames[MaxSendKeysRecs]; 
+  /** @brief The key names {KEY} understands with their virtual keys, sorted by name (binary searched). */
+  static const key_desc_t KeyNames[MaxSendKeysRecs];
   static const BYTE ExtendedVKeys[MaxExtendedVKeys];
 
   static bool BitSet(BYTE BitTable, UINT BitMask);

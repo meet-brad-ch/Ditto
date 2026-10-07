@@ -67,7 +67,7 @@ BOOL QRCodeViewer::CreateEx(CWnd *pParentWnd, CString desc, int rowHeight, LOGFO
 		}
 		else
 		{
-			CErrorReport::Show(StrF(_T("Ditto could not create the QR code description (CStatic::Create failed, error %u)."), ::GetLastError()));
+			CErrorReport::Show(CStringUtil::Format(_T("Ditto could not create the QR code description (CStatic::Create failed, error %u)."), ::GetLastError()));
 		}
 
 		m_DittoWindow.DoCreate(this);
@@ -94,9 +94,9 @@ BOOL QRCodeViewer::CreateEx(CWnd *pParentWnd, CString desc, int rowHeight, LOGFO
 		}
 		rect.bottom = rect.top + m_DittoWindow.m_borderSize + m_DittoWindow.m_borderSize + rowHeight + 5 + m_qrCodeDrawer.ImageHeight() + (CGetSetOptions::GetQRCodeBorderPixels() * 2);
 		
-		CRect center = CenterRect(rect);
+		CRect center = CMonitorGeometry::CenterRect(rect);
 
-		EnsureWindowVisible(&center);
+		CMonitorGeometry::EnsureWindowVisible(&center);
 
 		::MoveWindow(m_hWnd, center.left, center.top, center.Width(), center.Height(), TRUE);
 
@@ -148,7 +148,7 @@ void QRCodeViewer::OnPaint()
 		
 	CRect imageRect(0, 0, width, height);
 
-	CRect centerRect = CenterRectFromRect(imageRect, thisRect);
+	CRect centerRect = CMonitorGeometry::CenterRectFromRect(imageRect, thisRect);
 
 	m_qrCodeDrawer.Draw(&dc, m_DittoWindow.m_dpi, this, centerRect.left, centerRect.top, false, false, width, height);
 }
@@ -289,7 +289,7 @@ LRESULT QRCodeViewer::OnDpiChanged(WPARAM wParam, LPARAM lParam)
 		prcNewWindow->bottom - prcNewWindow->top,
 		SWP_NOZORDER | SWP_NOACTIVATE);
 
-	log(StrF(_T("QRCodeViewer::OnDpiChanged dpi: %d width: %d, height: %d"), dpi, (prcNewWindow->right - prcNewWindow->left), (prcNewWindow->bottom - prcNewWindow->top)));
+	CLogger::Write(CStringUtil::Format(_T("QRCodeViewer::OnDpiChanged dpi: %d width: %d, height: %d"), dpi, (prcNewWindow->right - prcNewWindow->left), (prcNewWindow->bottom - prcNewWindow->top)));
 
 	MoveControls();
 

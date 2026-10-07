@@ -276,7 +276,7 @@ bool COptionsGeneral::ApplyDatabasePath()
 
 	if(resolvedPath.IsEmpty() == FALSE)
 	{
-		if(FileExists(resolvedPath) == FALSE)
+		if(CFileSystem::FileExists(resolvedPath) == FALSE)
 		{
 			if (!PromptCreateDatabase(resolvedPath, bOpenNewDatabase))
 			{
@@ -285,7 +285,7 @@ bool COptionsGeneral::ApplyDatabasePath()
 		}
 		else
 		{
-			if(ValidDB(resolvedPath) == FALSE)
+			if(DatabaseSchemaUpgrader::ValidDB(resolvedPath) == FALSE)
 			{
 				MessageBox(_T("Invalid Database"), _T("Ditto"), MB_OK);
 				m_ePath.SetFocus();
@@ -314,7 +314,7 @@ bool COptionsGeneral::PromptCreateDatabase(const CString& resolvedPath, bool& bO
 	if(MessageBox(cs, _T("Ditto"), MB_OKCANCEL) == IDOK)
 	{
 		// -- create a new one
-		if(CreateDB(resolvedPath))
+		if(CDatabaseManager::CreateDB(resolvedPath))
 		{
 			bOpenNewDatabase = true;
 		}
@@ -333,7 +333,7 @@ bool COptionsGeneral::OpenNewDatabase(const CString& toSavePath, const CString& 
 {
 	CGetSetOptions::SetDBPath(toSavePath);
 
-	if(OpenDatabase(resolvedPath) == FALSE)
+	if(CDatabaseManager::OpenDatabase(resolvedPath) == FALSE)
 	{
 		MessageBox(_T("Error Opening new database"), _T("Ditto"), MB_OK);
 		m_ePath.SetFocus();
@@ -417,9 +417,9 @@ void COptionsGeneral::OnGetPath()
 		return;
 
 	CString csPath(CFileDialogPath::From(FileName));
-	if(FileExists(csPath))
+	if(CFileSystem::FileExists(csPath))
 	{
-		if(ValidDB(csPath) == FALSE)
+		if(DatabaseSchemaUpgrader::ValidDB(csPath) == FALSE)
 		{
 			MessageBox(_T("Invalid Database"), _T("Ditto"), MB_OK);
 			m_ePath.SetFocus();

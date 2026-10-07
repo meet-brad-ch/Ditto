@@ -34,9 +34,9 @@ ExternalWindowTracker::~ExternalWindowTracker(void)
 
 bool ExternalWindowTracker::TrackActiveWnd(bool force)
 {
-	if(force == false && IdleSeconds() < (CGetSetOptions::GetMinIdleTimeBeforeTrackFocus() / 1000.0))
+	if(force == false && CIdleTime::IdleSeconds() < (CGetSetOptions::GetMinIdleTimeBeforeTrackFocus() / 1000.0))
 	{
-		CLogger::Log(StrF(_T("Not Idle for long enough, IdleTime: %f, MinIdle %f"), IdleSeconds(), (CGetSetOptions::GetMinIdleTimeBeforeTrackFocus() / 1000.0)));
+		CLogger::Log(CStringUtil::Format(_T("Not Idle for long enough, IdleTime: %f, MinIdle %f"), CIdleTime::IdleSeconds(), (CGetSetOptions::GetMinIdleTimeBeforeTrackFocus() / 1000.0)));
 		return false;
 	}
 
@@ -79,7 +79,7 @@ bool ExternalWindowTracker::TrackActiveWnd(bool force)
 	if(theApp.QPasteWnd())
 		theApp.QPasteWnd()->UpdateStatus(true);
 
-	CLogger::Log(StrF(_T("TargetActiveWindow Active: %s (%d), Focus: %s (%d), FromHook %d, IdleTime: %f"), WndName(m_activeWnd).GetString(), m_activeWnd, WndName(m_focusWnd).GetString(), m_focusWnd,fromHook, IdleSeconds()));
+	CLogger::Log(CStringUtil::Format(_T("TargetActiveWindow Active: %s (%d), Focus: %s (%d), FromHook %d, IdleTime: %f"), WndName(m_activeWnd).GetString(), m_activeWnd, WndName(m_focusWnd).GetString(), m_focusWnd,fromHook, CIdleTime::IdleSeconds()));
 
 	return true;
 }
@@ -134,14 +134,14 @@ bool ExternalWindowTracker::HasNotifyTrayWnd(HWND newActive, HWND newFocus)
 
 bool ExternalWindowTracker::HasAppWnd(HWND newFocus, HWND newActive)
 {
-	return IsAppWnd(newFocus) || IsAppWnd(newActive);
+	return CWindowInspector::IsAppWnd(newFocus) || CWindowInspector::IsAppWnd(newActive);
 }
 
 void ExternalWindowTracker::SetDittoHasFocus(BOOL fromHook)
 {
 	if(m_dittoHasFocus == false)
 	{
-		CLogger::Log(StrF(_T("Ditto has focus - Active: %s (%d), Focus: %s (%d), FromHook %d"), WndName(m_activeWnd).GetString(), m_activeWnd, WndName(m_focusWnd).GetString(), m_focusWnd, fromHook));
+		CLogger::Log(CStringUtil::Format(_T("Ditto has focus - Active: %s (%d), Focus: %s (%d), FromHook %d"), WndName(m_activeWnd).GetString(), m_activeWnd, WndName(m_focusWnd).GetString(), m_focusWnd, fromHook));
 	}
 
 	m_dittoHasFocus = true;
@@ -162,7 +162,7 @@ bool ExternalWindowTracker::WaitForActiveWnd(HWND activeWnd, int timeout)
 	{
 		if(::GetForegroundWindow() == activeWnd)
 		{
-			CLogger::Log(StrF(_T("found focus wait %llu"), GetTickCount64()-start));
+			CLogger::Log(CStringUtil::Format(_T("found focus wait %llu"), GetTickCount64()-start));
 			return true;
 		}
 
@@ -176,8 +176,8 @@ bool ExternalWindowTracker::WaitForActiveWnd(HWND activeWnd, int timeout)
 
 void ExternalWindowTracker::ActivateFocus(const HWND activeHwnd, const HWND focushWnd)
 {
-	CString csApp = GetProcessName(m_activeWnd);
-	CLogger::Log(StrF(_T("SetFocus - AppName: %s, Active: %d, Focus: %d"), csApp.GetString(), m_activeWnd, m_focusWnd));
+	CString csApp = CWindowInspector::GetProcessName(m_activeWnd);
+	CLogger::Log(CStringUtil::Format(_T("SetFocus - AppName: %s, Active: %d, Focus: %d"), csApp.GetString(), m_activeWnd, m_focusWnd));
 
 	if (focushWnd != NULL) 
 	{
@@ -225,7 +225,7 @@ bool ExternalWindowTracker::NotifyTrayhWnd(HWND hWnd)
 
 bool ExternalWindowTracker::ActivateTarget()
 {
-	CLogger::Log(StrF(_T("Activate Target - Active: %d, Focus: %d"), m_activeWnd, m_focusWnd));
+	CLogger::Log(CStringUtil::Format(_T("Activate Target - Active: %d, Focus: %d"), m_activeWnd, m_focusWnd));
 
 	if (IsIconic(m_activeWnd))
 	{
@@ -262,7 +262,7 @@ bool ExternalWindowTracker::ActivateTarget()
 
 	//check to see if this app should set focus
 	//this is off by default
-	CString csApp = GetProcessName(m_activeWnd);
+	CString csApp = CWindowInspector::GetProcessName(m_activeWnd);
 	if(CGetSetOptions::GetSetFocusToApp(csApp))
 	{
 		ActivateFocus(m_activeWnd, m_focusWnd);
@@ -291,13 +291,13 @@ void ExternalWindowTracker::SendPaste(bool activateTarget)
 		activeWnd = ::GetForegroundWindow();
 	}
 
-	CString csPasteToApp = GetProcessName(activeWnd);
+	CString csPasteToApp = CWindowInspector::GetProcessName(activeWnd);
 	CString csPasteString = CGetSetOptions::GetPasteString(csPasteToApp);
 	DWORD delay = CGetSetOptions::SendKeysDelay();
 	DWORD sendKeysDelay = CGetSetOptions::RealSendKeysDelay();
 
 	m_dittoHasFocus = false;
-	CLogger::Log(StrF(_T("Sending paste to app %s key stroke: %s, SeDelay: %d"), csPasteToApp.GetString(), csPasteString.GetString(), delay));
+	CLogger::Log(CStringUtil::Format(_T("Sending paste to app %s key stroke: %s, SeDelay: %d"), csPasteToApp.GetString(), csPasteString.GetString(), delay));
 
 	bool pasteAsAdmin = false;
 
@@ -331,7 +331,7 @@ void ExternalWindowTracker::ActivateTargetForPaste(HWND activeWnd)
 
 	ULONGLONG endTick = GetTickCount64();
 	if((endTick-startTick) > 150)
-		CLogger::Log(StrF(_T("Paste Timing Send Paste around activate Target: %llu"), endTick-startTick));
+		CLogger::Log(CStringUtil::Format(_T("Paste Timing Send Paste around activate Target: %llu"), endTick-startTick));
 }
 
 bool ExternalWindowTracker::PassPasteToUacApp(bool pasteAsAdmin)
@@ -341,7 +341,7 @@ bool ExternalWindowTracker::PassPasteToUacApp(bool pasteAsAdmin)
 		pasteAsAdmin &&
 		theApp.UACThreadRunning() == false)
 	{
-		CLogger::Log(StrF(_T("Passing paste off to uac aware app")));
+		CLogger::Log(CStringUtil::Format(_T("Passing paste off to uac aware app")));
 		if (theApp.UACPaste() == false)
 		{
 			pasteAsAdmin = false;
@@ -358,7 +358,7 @@ void ExternalWindowTracker::SendCopy(CopyReasonEnum::CopyReason copyReason)
 
 	HWND activeWnd = GetForegroundWindow();
 
-	CString csToApp = GetProcessName(activeWnd);
+	CString csToApp = CWindowInspector::GetProcessName(activeWnd);
 	CString csString = CGetSetOptions::GetCopyString(csToApp);
 	DWORD delay = CGetSetOptions::SendKeysDelay();
 	DWORD SendKeysDelay = CGetSetOptions::RealSendKeysDelay();
@@ -367,7 +367,7 @@ void ExternalWindowTracker::SendCopy(CopyReasonEnum::CopyReason copyReason)
 
 	theApp.PumpMessageEx();
 
-	CLogger::Log(StrF(_T("Sending copy to app %s key stroke: %s, Delay: %d"), csToApp.GetString(), csString.GetString(), delay));
+	CLogger::Log(CStringUtil::Format(_T("Sending copy to app %s key stroke: %s, Delay: %d"), csToApp.GetString(), csString.GetString(), delay));
 
 	bool pasteAsAdmin = false;
 
@@ -381,7 +381,7 @@ void ExternalWindowTracker::SendCopy(CopyReasonEnum::CopyReason copyReason)
 		pasteAsAdmin &&
 		theApp.UACThreadRunning() == false)
 	{
-		CLogger::Log(StrF(_T("Passing copy off to uac aware app")));
+		CLogger::Log(CStringUtil::Format(_T("Passing copy off to uac aware app")));
 		if (theApp.UACCopy() == false)
 		{
 			pasteAsAdmin = false;
@@ -408,7 +408,7 @@ void ExternalWindowTracker::SendCut()
 	CSendKeys send;
 	send.AllKeysUp();
 
-	CString csToApp = GetProcessName(m_activeWnd);
+	CString csToApp = CWindowInspector::GetProcessName(m_activeWnd);
 	CString csString = CGetSetOptions::GetCutString(csToApp);
 	DWORD delay = CGetSetOptions::SendKeysDelay();
 	DWORD sendKeysDelay = CGetSetOptions::RealSendKeysDelay();
@@ -417,7 +417,7 @@ void ExternalWindowTracker::SendCut()
 
 	theApp.PumpMessageEx();
 	  
-	CLogger::Log(StrF(_T("Sending cut to app %s key stroke: %s, Delay: %d"), csToApp.GetString(), csString.GetString(), delay));
+	CLogger::Log(CStringUtil::Format(_T("Sending cut to app %s key stroke: %s, Delay: %d"), csToApp.GetString(), csString.GetString(), delay));
 
 
 	bool pasteAsAdmin = false;
@@ -432,7 +432,7 @@ void ExternalWindowTracker::SendCut()
 		pasteAsAdmin &&
 		theApp.UACThreadRunning() == false)
 	{
-		CLogger::Log(StrF(_T("Passing copy off to uac aware app")));
+		CLogger::Log(CStringUtil::Format(_T("Passing copy off to uac aware app")));
 		if (theApp.UACCut() == false)
 		{
 			pasteAsAdmin = false;
@@ -486,7 +486,7 @@ CString ExternalWindowTracker::WndName(HWND hWnd)
 
 bool ExternalWindowTracker::ReleaseFocus()
 {
-	if( IsAppWnd(::GetForegroundWindow()) )
+	if( CWindowInspector::IsAppWnd(::GetForegroundWindow()) )
 	{
 		return ActivateTarget();
 	}

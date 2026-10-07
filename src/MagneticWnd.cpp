@@ -1,8 +1,6 @@
 #include "stdafx.h"
 #include ".\magneticwnd.h"
 
-bool bDoChange = true;
-
 CMagneticWnd::CMagneticWnd()
 {
 	m_bMovedAttachedWnd = false;

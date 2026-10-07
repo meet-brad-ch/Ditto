@@ -46,7 +46,7 @@ bool CClip_ImportExport::ExportToSqliteDB(CppSQLite3DB& db)
 		pCF = &m_Formats.ElementAt(i);
 
 		stmt.bindInt64(1, lId);
-		stmt.bind(2, GetFormatName(pCF->m_cfType).GetString());
+		stmt.bind(2, CClipboardFormats::GetFormatName(pCF->m_cfType).GetString());
 
 		const DittoCore::GlobalBytes block(pCF->m_hgData);
 		const std::vector<std::byte> compressed = DittoCore::DtoCodec::Compress(block.Bytes());
@@ -145,7 +145,7 @@ bool CClip_ImportExport::PlaceCF_TEXT_AND_CF_UNICODETEXT_OnClipboard(CStringA& c
 		if (csCF_TEXT.IsEmpty() == FALSE)
 		{
 			long lLen = csCF_TEXT.GetLength();
-			HGLOBAL hGlobal = NewGlobalP(csCF_TEXT.GetBuffer(lLen), lLen + 1);
+			HGLOBAL hGlobal = CGlobalMemory::NewGlobalP(csCF_TEXT.GetBuffer(lLen), lLen + 1);
 			csCF_TEXT.ReleaseBuffer();
 			SetClipboardData(CF_TEXT, hGlobal);
 
@@ -155,7 +155,7 @@ bool CClip_ImportExport::PlaceCF_TEXT_AND_CF_UNICODETEXT_OnClipboard(CStringA& c
 		{
 			long lLen = csCF_UNICODETEXT.GetLength() * sizeof(wchar_t);
 			// with a whole wide terminator; upstream added 1 byte, half of one
-			HGLOBAL hGlobal = NewGlobalP(csCF_UNICODETEXT.GetBuffer(lLen), lLen + sizeof(wchar_t));
+			HGLOBAL hGlobal = CGlobalMemory::NewGlobalP(csCF_UNICODETEXT.GetBuffer(lLen), lLen + sizeof(wchar_t));
 			csCF_UNICODETEXT.ReleaseBuffer();
 			SetClipboardData(CF_UNICODETEXT, hGlobal);
 
@@ -188,7 +188,7 @@ bool CClip_ImportExport::PlaceFormatsOnclipboard()
 			LPVOID Data = (LPVOID)GlobalLock(pCF->m_hgData);
 			if (Data)
 			{
-				HGLOBAL hGlobal = NewGlobalP(Data, GlobalSize(pCF->m_hgData));
+				HGLOBAL hGlobal = CGlobalMemory::NewGlobalP(Data, GlobalSize(pCF->m_hgData));
 				if (hGlobal)
 				{
 					SetClipboardData(pCF->m_cfType, hGlobal);
@@ -230,7 +230,7 @@ bool CClip_ImportExport::ImportFromSqliteV1(CppSQLite3DB& db, CppSQLite3Query& q
 	CppSQLite3Query qData = db.execQuery(csSQL);
 	while (qData.eof() == false)
 	{
-		cf.m_cfType = GetFormatID(qData.getStringField(_T("strClipBoardFormat")));
+		cf.m_cfType = CClipboardFormats::GetFormatID(qData.getStringField(_T("strClipBoardFormat")));
 		const long long originalSize = qData.getInt64Field(_T("lOriginalSize"));
 
 		int nDataLen = 0;
@@ -242,7 +242,7 @@ bool CClip_ImportExport::ImportFromSqliteV1(CppSQLite3DB& db, CppSQLite3Query& q
 		// the size comes from the file: DtoCodec checks it before allocating
 		const std::vector<std::byte> data = DittoCore::DtoCodec::Uncompress(
 			std::span(reinterpret_cast<const std::byte*>(cData), static_cast<std::size_t>(nDataLen)), originalSize);
-		cf.m_hgData = NewGlobalP(const_cast<std::byte*>(data.data()), data.size());
+		cf.m_hgData = CGlobalMemory::NewGlobalP(const_cast<std::byte*>(data.data()), data.size());
 		if (cf.m_hgData == NULL)
 		{
 			throw DittoCore::ClipboardFormatError("no memory for an imported format of " + std::to_string(data.size()) + " bytes");

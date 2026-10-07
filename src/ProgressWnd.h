@@ -44,6 +44,13 @@ public:
     
 // Implementation
 protected:
+    /** @brief The profile section of the persisted window position. */
+    static constexpr LPCTSTR s_settingsSection = _T("Settings");
+    /** @brief The profile entry of the persisted window x position. */
+    static constexpr LPCTSTR s_settingsEntryX = _T("X");
+    /** @brief The profile entry of the persisted window y position. */
+    static constexpr LPCTSTR s_settingsEntryY = _T("Y");
+
     void GetPreviousSettings();
     void SaveCurrentSettings();
 

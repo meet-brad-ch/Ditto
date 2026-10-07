@@ -1,10 +1,6 @@
 #include "stdafx.h"
 #include "ProgressWnd.h"
 
-LPCTSTR szSection = _T("Settings");
-LPCTSTR szEntryX  = _T("X");
-LPCTSTR szEntryY  = _T("Y");
-
 /////////////////////////////////////////////////////////////////////////////
 // CProgressWnd
 
@@ -412,8 +408,8 @@ void CProgressWnd::CancelOnMessage(const MSG& msg, BOOL bCancelOnESCkey)
 // Retores the previous window size from the registry
 void CProgressWnd::GetPreviousSettings()
 {
-    int x = AfxGetApp()->GetProfileInt(szSection, szEntryX, -1);
-    int y = AfxGetApp()->GetProfileInt(szSection, szEntryY, -1);
+    int x = AfxGetApp()->GetProfileInt(s_settingsSection, s_settingsEntryX, -1);
+    int y = AfxGetApp()->GetProfileInt(s_settingsSection, s_settingsEntryY, -1);
 
     if (x >= 0 && x < GetSystemMetrics(SM_CXSCREEN) &&
         y >= 0 && y < GetSystemMetrics(SM_CYSCREEN))
@@ -433,8 +429,8 @@ void CProgressWnd::SaveCurrentSettings()
     CRect rect;
     GetWindowRect(rect);
 
-    AfxGetApp()->WriteProfileInt(szSection, szEntryX, rect.left);
-    AfxGetApp()->WriteProfileInt(szSection, szEntryY, rect.top);
+    AfxGetApp()->WriteProfileInt(s_settingsSection, s_settingsEntryX, rect.left);
+    AfxGetApp()->WriteProfileInt(s_settingsSection, s_settingsEntryY, rect.top);
 }
 
 void CProgressWnd::HideCancel()

@@ -27,5 +27,5 @@ HGLOBAL CCF_UnicodeTextAggregator::GetHGlobal()
 {
 	const std::wstring& text = m_join.Result();
 	// with its terminating null
-	return NewGlobalP(const_cast<wchar_t*>(text.c_str()), (text.size() + 1) * sizeof(wchar_t));
+	return CGlobalMemory::NewGlobalP(const_cast<wchar_t*>(text.c_str()), (text.size() + 1) * sizeof(wchar_t));
 }

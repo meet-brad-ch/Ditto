@@ -55,7 +55,7 @@ void CClipboardSaveRestore::SaveFormat(UINT nFormat, CClipFormat& cf)
 			if(size > 0)
 			{
 				//Copy the data locally
-				cf.m_hgData = NewGlobalP(pvData, size);
+				cf.m_hgData = CGlobalMemory::NewGlobalP(pvData, size);
 				// Clipboard format ids are 16-bit values, so they fit a CLIPFORMAT
 				cf.m_cfType = static_cast<CLIPFORMAT>(nFormat);
 
@@ -78,7 +78,7 @@ bool CClipboardSaveRestore::Restore()
 	{
 		::EmptyClipboard();
 
-		SetClipboardData(theApp.m_cfIgnoreClipboard, NewGlobalP("Ignore", sizeof("Ignore")));
+		SetClipboardData(theApp.m_cfIgnoreClipboard, CGlobalMemory::NewGlobalP("Ignore", sizeof("Ignore")));
 
 		INT_PTR size = m_Clipboard.GetSize();
 		for(int nPos = 0; nPos < size; nPos++)
@@ -126,13 +126,13 @@ bool CClipboardSaveRestore::RestoreTextOnly()
 	{
 		::EmptyClipboard();
 
-		SetClipboardData(theApp.m_cfIgnoreClipboard, NewGlobalP("Ignore", sizeof("Ignore")));
+		SetClipboardData(theApp.m_cfIgnoreClipboard, CGlobalMemory::NewGlobalP("Ignore", sizeof("Ignore")));
 
 		SetTextFormatCopies();
 
 		if(convertHDrop)
 		{
-			HGLOBAL newData = NewGlobalP(hDropString.GetBuffer(), ((hDropString.GetLength() + 1) * sizeof(TCHAR)));
+			HGLOBAL newData = CGlobalMemory::NewGlobalP(hDropString.GetBuffer(), ((hDropString.GetLength() + 1) * sizeof(TCHAR)));
 			::SetClipboardData(CF_UNICODETEXT, newData);
 		}
 
@@ -208,7 +208,7 @@ void CClipboardSaveRestore::SetTextFormatCopies()
 			//restore all clips later in Restore()
 			LPVOID localData = ::GlobalLock(pCF->m_hgData);
 
-			HGLOBAL newData = NewGlobalP(localData, ::GlobalSize(pCF->m_hgData));
+			HGLOBAL newData = CGlobalMemory::NewGlobalP(localData, ::GlobalSize(pCF->m_hgData));
 			::SetClipboardData(pCF->m_cfType, newData);
 
 			::GlobalUnlock(pCF->m_hgData);

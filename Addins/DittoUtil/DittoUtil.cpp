@@ -51,6 +51,16 @@ CDittoUtilApp::CDittoUtilApp()
 
 CDittoUtilApp theApp;
 
+CDittoUtilApp& CDittoUtilApp::Instance()
+{
+	return theApp;
+}
+
+CPasteImageAsHtmlImage& CDittoUtilApp::PasteImageAsHtml()
+{
+	return m_pasteImageAsHtml;
+}
+
 
 // CDittoUtilApp initialization
 
@@ -63,7 +73,7 @@ BOOL CDittoUtilApp::InitInstance()
 
 int CDittoUtilApp::ExitInstance()
 {
-	CPasteImageAsHtmlImage::CleanupPastedImages();
+	m_pasteImageAsHtml.CleanupPastedImages();
 
 	return CWinApp::ExitInstance();
 }

@@ -32,7 +32,7 @@ int CNoDbFrameWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;
 
 	////Center the main window so message boxes are in the center
-	CRect rcScreen = DefaultMonitorRect();
+	CRect rcScreen = CMonitorGeometry::DefaultMonitorRect();
 	CPoint cpCenter = rcScreen.CenterPoint();
 	MoveWindow(cpCenter.x, cpCenter.x, 1, 1);
 
@@ -101,14 +101,14 @@ void CNoDbFrameWnd::OnTimer(UINT_PTR nIDEvent)
 void CNoDbFrameWnd::ShowNoDbMessage()
 {
 	CString msg = theApp.m_Language.GetString(_T("StartupNoDbMsg"), _T("Ditto was unable to open its database, waiting until it can be opened. Update the path in Options if needed. Path: "));
-	msg += StrF(_T(" %s"), CGetSetOptions::GetDBPath().GetString());
+	msg += CStringUtil::Format(_T(" %s"), CGetSetOptions::GetDBPath().GetString());
 	m_trayIcon.SetBalloonDetails(msg, _T("Ditto"), CTrayNotifyIcon::BalloonStyle::Info, CGetSetOptions::GetBalloonTimeout());
 }
 
 void CNoDbFrameWnd::TryOpenDatabase()
 {
-	if (IsDatabaseOpen() ||
-		CheckDBExists(CGetSetOptions::GetDBPath()))
+	if (CDatabaseManager::IsDatabaseOpen() ||
+		DatabaseLocator::CheckDBExists(CGetSetOptions::GetDBPath()))
 	{
 		// the registry owns the keys: Remove destroys them
 		g_HotKeys.Remove(m_pDittoHotKey);

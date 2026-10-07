@@ -35,5 +35,5 @@ HGLOBAL CCF_TextAggregator::GetHGlobal()
 {
 	const std::string& text = m_join.Result();
 	// with its terminating null
-	return NewGlobalP(const_cast<char*>(text.c_str()), text.size() + 1);
+	return CGlobalMemory::NewGlobalP(const_cast<char*>(text.c_str()), text.size() + 1);
 }

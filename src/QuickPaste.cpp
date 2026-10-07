@@ -42,7 +42,7 @@ BOOL CQuickPaste::CloseQPasteWnd()
 
 void CQuickPaste::ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboard, BOOL bReFillList)
 {		
-	CLogger::Log(StrF(_T("Start of ShowQPasteWnd, AtPrevPos: %d, FromKeyboard: %d, RefillList: %d"), bAtPrevPos, bFromKeyboard, bReFillList));
+	CLogger::Log(CStringUtil::Format(_T("Start of ShowQPasteWnd, AtPrevPos: %d, FromKeyboard: %d, RefillList: %d"), bAtPrevPos, bFromKeyboard, bReFillList));
 
 	if(IsReopenDatabaseRequested(bFromKeyboard))
 	{
@@ -114,7 +114,7 @@ void CQuickPaste::ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboa
 	
 	m_pwndPaste->SetForegroundWindow();
 
-	CLogger::Log(StrF(_T("END of ShowQPasteWnd, AtPrevPos: %d, FromKeyboard: %d, RefillList: %d, Position, %d %d %d %d"), bAtPrevPos, bFromKeyboard, bReFillList, crRect.left, crRect.top, crRect.right, crRect.bottom));
+	CLogger::Log(CStringUtil::Format(_T("END of ShowQPasteWnd, AtPrevPos: %d, FromKeyboard: %d, RefillList: %d, Position, %d %d %d %d"), bAtPrevPos, bFromKeyboard, bReFillList, crRect.left, crRect.top, crRect.right, crRect.bottom));
 
 	m_forceResizeOnNextShow = false;
 }
@@ -137,7 +137,7 @@ void CQuickPaste::CloseWndAndReopenDatabase()
 	m_pwndPaste.reset();
 
 	theApp.m_db.close();
-	OpenDatabase(CGetSetOptions::GetDBPath());
+	CDatabaseManager::OpenDatabase(CGetSetOptions::GetDBPath());
 }
 
 bool CQuickPaste::ShowPersistentWnd()
@@ -200,7 +200,7 @@ CPoint CQuickPaste::CaretOrCenterPoint(const CSize &csSize, CPoint &point)
 
 			CRect crPoint(point, CSize(1, 1));
 
-			CRect crMonitor = MonitorRectFromRect(crPoint);
+			CRect crMonitor = CMonitorGeometry::MonitorRectFromRect(crPoint);
 
 			ptCaret = crMonitor.CenterPoint();
 			ptCaret.x -= csSize.cx/2;
@@ -248,7 +248,7 @@ bool CQuickPaste::FixInitialRect(CRect &crRect, const CPoint &ptCaret)
 
 	if(CGetSetOptions::m_bEnsureEntireWindowCanBeSeen)
 	{
-		if(EnsureWindowVisible(&crRect))
+		if(CMonitorGeometry::EnsureWindowVisible(&crRect))
 		{
 			forceMoveWindow = true;
 		}
@@ -261,7 +261,7 @@ bool CQuickPaste::FixInitialRect(CRect &crRect, const CPoint &ptCaret)
 		crRect = CRect(ptCaret, CSize(300, 300));
 		forceMoveWindow = true;
 
-		CLogger::Log(StrF(_T("Invalid initial size %d %d %d %d, Centered Window %d %d %d %d"), orig.left, orig.top, orig.right, orig.bottom, crRect.left, crRect.top, crRect.right, crRect.bottom));
+		CLogger::Log(CStringUtil::Format(_T("Invalid initial size %d %d %d %d, Centered Window %d %d %d %d"), orig.left, orig.top, orig.right, orig.bottom, crRect.left, crRect.top, crRect.right, crRect.bottom));
 	}
 
 	return forceMoveWindow;
@@ -305,7 +305,7 @@ void CQuickPaste::MoveQPasteWnd(CRect &crRect, bool adjustRect)
 
 		if (CGetSetOptions::m_bEnsureEntireWindowCanBeSeen)
 		{
-			EnsureWindowVisible(&crRect);
+			CMonitorGeometry::EnsureWindowVisible(&crRect);
 		}
 	}
 
@@ -380,7 +380,7 @@ void CQuickPaste::OnScreenResolutionChange()
 		m_pwndPaste->IsIconic() == FALSE &&
 		IsWindowVisibleEx())
 	{
-		CLogger::Log(StrF(_T("Window Position changed, moving window to position as of this screen resolution %dx%d"), GetScreenWidth(), GetScreenHeight()));
+		CLogger::Log(CStringUtil::Format(_T("Window Position changed, moving window to position as of this screen resolution %dx%d"), CMonitorGeometry::GetScreenWidth(), CMonitorGeometry::GetScreenHeight()));
 		CPoint point;
 		CSize csSize;
 

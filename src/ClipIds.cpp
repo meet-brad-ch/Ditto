@@ -148,7 +148,7 @@ bool CClipIDs::AggregateData(IClipAggregator &Aggregator, UINT cfType, BOOL bRev
 		if (textOnly &&
 			(cfType == CF_UNICODETEXT || cfType == CF_TEXT))
 		{
-			sqlCF_HDROP.Format(_T("OR Data.strClipBoardFormat = '%s'"), GetFormatName(CF_HDROP).GetString());
+			sqlCF_HDROP.Format(_T("OR Data.strClipBoardFormat = '%s'"), CClipboardFormats::GetFormatName(CF_HDROP).GetString());
 		}
 
 		csSQL.Format(_T("SELECT * FROM Data ")
@@ -157,7 +157,7 @@ bool CClipIDs::AggregateData(IClipAggregator &Aggregator, UINT cfType, BOOL bRev
 			_T(" %s) ")
 			_T("AND Main.lID = %d"),
 			// Clipboard format ids are 16-bit values, so they fit a CLIPFORMAT
-			GetFormatName(static_cast<CLIPFORMAT>(cfType)).GetString(),
+			CClipboardFormats::GetFormatName(static_cast<CLIPFORMAT>(cfType)).GetString(),
 			sqlCF_HDROP.GetString(),
 			ElementAt(nIndex));
 
@@ -172,7 +172,7 @@ bool CClipIDs::AggregateData(IClipAggregator &Aggregator, UINT cfType, BOOL bRev
 				continue;
 			}
 
-			if(Aggregator.AddClip(pData, nDataLen, (int)i, (int)numIDs, GetFormatID(q.getStringField(_T("strClipBoardFormat")))))
+			if(Aggregator.AddClip(pData, nDataLen, (int)i, (int)numIDs, CClipboardFormats::GetFormatID(q.getStringField(_T("strClipBoardFormat")))))
 			{
 				bRet = true;
 			}
@@ -189,7 +189,7 @@ BOOL CClipIDs::MoveTo(long lParentID, double /*dFirst*/, double /*dIncrement*/)
 	{
 		int count = (int)GetSize();
 
-		CLogger::Log(StrF(_T("MoveTo, Start, Size: %d, ParentId: %d"), count, lParentID));
+		CLogger::Log(CStringUtil::Format(_T("MoveTo, Start, Size: %d, ParentId: %d"), count, lParentID));
 
 		for(int i = count-1; i >= 0; i--)
 		{
@@ -197,7 +197,7 @@ BOOL CClipIDs::MoveTo(long lParentID, double /*dFirst*/, double /*dIncrement*/)
 
 			if(lParentID > 0)
 			{
-				sql = StrF(_T("UPDATE Main SET lParentID = %d, clipGroupOrder = %f WHERE lID = %d AND lID <> %d;"), 
+				sql = CStringUtil::Format(_T("UPDATE Main SET lParentID = %d, clipGroupOrder = %f WHERE lID = %d AND lID <> %d;"), 
 							lParentID,
 							CClip::GetNewOrder(lParentID, ElementAt(i)),
 							ElementAt(i),
@@ -205,7 +205,7 @@ BOOL CClipIDs::MoveTo(long lParentID, double /*dFirst*/, double /*dIncrement*/)
 			}
 			else
 			{
-				sql = StrF(_T("UPDATE Main SET lParentID = %d WHERE lID = %d AND lID <> %d;"), 
+				sql = CStringUtil::Format(_T("UPDATE Main SET lParentID = %d WHERE lID = %d AND lID <> %d;"), 
 							lParentID,
 							ElementAt(i),
 							lParentID);
@@ -213,12 +213,12 @@ BOOL CClipIDs::MoveTo(long lParentID, double /*dFirst*/, double /*dIncrement*/)
 
 			int ret = theApp.m_db.execDMLEx(sql);
 
-			CLogger::Log(StrF(_T("MoveTo, Sql Ret: %d, SQL: %s"), ret, sql.GetString()));
+			CLogger::Log(CStringUtil::Format(_T("MoveTo, Sql Ret: %d, SQL: %s"), ret, sql.GetString()));
 		}
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Moving the clips to group %d failed: %s"), lParentID, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Moving the clips to group %d failed: %s"), lParentID, e.errorMessage()));
 		return FALSE;
 	}
 
@@ -243,7 +243,7 @@ BOOL CClipIDs::LoadElementsOf(int groupId)
 	{
 		// a half-read group is not handed on
 		SetSize(0);
-		CErrorReport::Show(StrF(_T("Loading the clips of group %d failed: %s"), groupId, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Loading the clips of group %d failed: %s"), groupId, e.errorMessage()));
 		return FALSE;
 	}
 
@@ -298,7 +298,7 @@ BOOL CClipIDs::CopyTo(int parentId)
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Copying the clips to group %d failed: %s"), parentId, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Copying the clips to group %d failed: %s"), parentId, e.errorMessage()));
 		return FALSE;
 	}
 
@@ -309,13 +309,13 @@ BOOL CClipIDs::DeleteIDs(bool fromClipWindow, CppSQLite3DB& db)
 {
 	CPopup status(0, 0, ::GetForegroundWindow());
 	bool bAllowShow;
-	bAllowShow = IsAppWnd(::GetForegroundWindow());
+	bAllowShow = CWindowInspector::IsAppWnd(::GetForegroundWindow());
 	
 	BOOL bRet = TRUE;
 	INT_PTR count = GetSize();
 	int batchCount = 25;
 
-	CLogger::Log(StrF(_T("Begin delete clips, Count: %d from Window: %d"), count, fromClipWindow));
+	CLogger::Log(CStringUtil::Format(_T("Begin delete clips, Count: %d from Window: %d"), count, fromClipWindow));
 	
 	if(count <= 0)
 		return FALSE;
@@ -336,13 +336,13 @@ BOOL CClipIDs::DeleteIDs(bool fromClipWindow, CppSQLite3DB& db)
 			if(clipId <= 0)
 				continue;
 
-			CLogger::Log(StrF(_T("Delete clip Id: %d"), clipId));
+			CLogger::Log(CStringUtil::Format(_T("Delete clip Id: %d"), clipId));
 
 			AddExistingClipToDelete(db, clipId, sqlIn);
 
 			if(IsDeleteBatchEnd(index, batchCount))
 			{
-				ShowDeleteStatus(status, bAllowShow, StrF(_T("Deleting %d - %d of %d..."), startIndex+1, index, count));
+				ShowDeleteStatus(status, bAllowShow, CStringUtil::Format(_T("Deleting %d - %d of %d..."), startIndex+1, index, count));
 				startIndex = index;
 
 				db.execDMLEx(sql + sqlIn + _T(")"));
@@ -361,7 +361,7 @@ BOOL CClipIDs::DeleteIDs(bool fromClipWindow, CppSQLite3DB& db)
 
 		if(sqlIn.GetLength() > 0)
 		{
-			ShowDeleteStatus(status, bAllowShow, StrF(_T("Deleting %d - %d of %d..."), startIndex+1, index, count));
+			ShowDeleteStatus(status, bAllowShow, CStringUtil::Format(_T("Deleting %d - %d of %d..."), startIndex+1, index, count));
 
 			db.execDMLEx(sql + sqlIn + _T(")"));
 			bRet = TRUE;
@@ -369,11 +369,11 @@ BOOL CClipIDs::DeleteIDs(bool fromClipWindow, CppSQLite3DB& db)
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Deleting the selected clips failed: %s"), e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Deleting the selected clips failed: %s"), e.errorMessage()));
 		return FALSE;
 	}
 	
-	CLogger::Log(StrF(_T("End delete clips, Count: %d"), count));
+	CLogger::Log(CStringUtil::Format(_T("End delete clips, Count: %d"), count));
 
 	return bRet;
 }
@@ -416,7 +416,7 @@ void CClipIDs::AddExistingClipToDelete(CppSQLite3DB& db, int clipId, CString& sq
 		{
 			sqlIn += ", ";
 		}
-		sqlIn += StrF(_T("%d"), clipId);
+		sqlIn += CStringUtil::Format(_T("%d"), clipId);
 	}
 }
 
@@ -449,7 +449,7 @@ BOOL CClipIDs::CreateExportSqliteDB(CppSQLite3DB &db)
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Creating the export database failed: %s"), e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Creating the export database failed: %s"), e.errorMessage()));
 		return FALSE;
 	}
 
@@ -464,9 +464,9 @@ BOOL CClipIDs::Export(CString csFilePath)
 
 	BOOL bRet = FALSE;
 
-	if(FileExists(csFilePath) && DeleteFile(csFilePath) == FALSE)
+	if(CFileSystem::FileExists(csFilePath) && DeleteFile(csFilePath) == FALSE)
 	{
-		CLogger::Log(StrF(_T("Export::Error deleting the file %s"), csFilePath.GetString()));
+		CLogger::Log(CStringUtil::Format(_T("Export::Error deleting the file %s"), csFilePath.GetString()));
 		return FALSE;
 	}
 
@@ -484,12 +484,12 @@ BOOL CClipIDs::Export(CString csFilePath)
 	}
 	catch (const DittoCore::ClipboardFormatError& error)
 	{
-		CErrorReport::Show(StrF(_T("Export stopped: a clip could not be exported (%s)."), CString(error.what()).GetString()));
+		CErrorReport::Show(CStringUtil::Format(_T("Export stopped: a clip could not be exported (%s)."), CString(error.what()).GetString()));
 		return FALSE;
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(StrF(_T("Exporting the clips to %s failed: %s"), csFilePath.GetString(), e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Exporting the clips to %s failed: %s"), csFilePath.GetString(), e.errorMessage()));
 		return FALSE;
 	}
 

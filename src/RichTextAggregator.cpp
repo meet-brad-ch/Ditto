@@ -21,5 +21,5 @@ HGLOBAL CRichTextAggregator::GetHGlobal()
 {
 	const std::string rtf = m_join.Result();
 	// with its terminating null
-	return NewGlobalP(const_cast<char*>(rtf.c_str()), rtf.size() + 1);
+	return CGlobalMemory::NewGlobalP(const_cast<char*>(rtf.c_str()), rtf.size() + 1);
 }
