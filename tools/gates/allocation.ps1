@@ -4,7 +4,7 @@
 #  - legacy code: the count per file is held in tools\baselines\allocation.tsv by tools\ratchet.ps1,
 #    so it may only shrink (Phase L1 takes it to zero).
 # Not allocations: deleted functions ('= delete'), comments, the text of string and character
-# literals, MFC's '#define new DEBUG_NEW'. Allowed: a line that hands ownership to a framework
+# literals, #include lines ('#include <new>'), MFC's '#define new DEBUG_NEW'. Allowed: a line that hands ownership to a framework
 # owner and says so in a comment, '// ownership: <who owns it>' (a self-deleting MFC window, a COM
 # object released by its last Release()).
 # Untouched third-party code (tools\thirdparty.txt) is skipped.
@@ -54,6 +54,7 @@ foreach ($rel in $files) {
     foreach ($line in Get-CodeLines (Join-Path $Repo $rel)) {
         $n++
         if ($line.Code -match '^\s*#\s*define\s+new\s+DEBUG_NEW\b') { continue }
+        if ($line.Code -match '^\s*#\s*include\b') { continue }   # e.g. #include <new>: a header, not an allocation
         if ($line.Text -match '//\s*ownership:') { continue }
         if ($line.Code -cnotmatch $allocPattern) { continue }
         if ($isContract) {
