@@ -47,6 +47,20 @@ public:
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	afx_msg LRESULT OnGesture(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnGestureNotify(WPARAM wParam, LPARAM lParam);
+
+private:
+	/** @brief Interprets one gesture.
+	 *  @param gi Gesture information from GetGestureInfo.
+	 *  @return TRUE for a known gesture (zoom, pan, rotate, two-finger tap, press and tap). */
+	BOOL HandleGesture(const GESTUREINFO& gi);
+
+	/** @brief Zoom gesture: tracks the zoom center and factor (debug output only).
+	 *  @param gi Gesture information from GetGestureInfo. */
+	void HandleZoomGesture(const GESTUREINFO& gi);
+
+	/** @brief Pan gesture: scrolls the image by the finger movement.
+	 *  @param gi Gesture information from GetGestureInfo. */
+	void HandlePanGesture(const GESTUREINFO& gi);
 };
 
 

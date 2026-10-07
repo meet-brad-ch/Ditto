@@ -45,6 +45,49 @@ bool ExternalWindowTracker::TrackActiveWnd(bool force)
 	HWND newFocus = NULL;
 	HWND newActive = ::GetForegroundWindow();
 
+	newFocus = GetFocusOfActiveWnd(newActive);
+
+	FillMissingWnd(newFocus, newActive);
+
+	if(HasInvalidWnd(newFocus, newActive))
+	{
+		Log(_T("TargetActiveWindow values invalid"));
+		return false;
+	}
+
+	if(HasNotifyTrayWnd(newActive, newFocus))
+	{
+		Log(_T("TargetActiveWindow shell tray icon has active"));
+		return false;
+	}
+
+	if(HasAppWnd(newFocus, newActive))
+	{
+		SetDittoHasFocus(fromHook);
+		return false;
+	}
+
+	if (IsDesktopWnd(newActive))
+	{
+		m_desktopHasFocus = true;
+	}
+
+	m_focusWnd = newFocus;
+	m_activeWnd = newActive;
+	m_dittoHasFocus = false;
+
+	if(theApp.QPasteWnd())
+		theApp.QPasteWnd()->UpdateStatus(true);
+
+	Log(StrF(_T("TargetActiveWindow Active: %s (%d), Focus: %s (%d), FromHook %d, IdleTime: %f"), WndName(m_activeWnd).GetString(), m_activeWnd, WndName(m_focusWnd).GetString(), m_focusWnd,fromHook, IdleSeconds()));
+
+	return true;
+}
+
+HWND ExternalWindowTracker::GetFocusOfActiveWnd(HWND newActive)
+{
+	HWND newFocus = NULL;
+
 	if(CGetSetOptions::GetUseGuiThreadInfoForFocus())
 	{
 		GUITHREADINFO guiThreadInfo;
@@ -64,6 +107,11 @@ bool ExternalWindowTracker::TrackActiveWnd(bool force)
 		}
 	}
 
+	return newFocus;
+}
+
+void ExternalWindowTracker::FillMissingWnd(HWND& newFocus, HWND& newActive)
+{
 	if(newFocus == 0 && newActive != 0)
 	{
 		newFocus = newActive;
@@ -72,48 +120,39 @@ bool ExternalWindowTracker::TrackActiveWnd(bool force)
 	{
 		newActive = newFocus;
 	}
+}
 
-	if(newFocus == 0 || !IsWindow(newFocus) || newActive == 0 || !IsWindow(newActive))
+bool ExternalWindowTracker::HasInvalidWnd(HWND newFocus, HWND newActive)
+{
+	return newFocus == 0 || !IsWindow(newFocus) || newActive == 0 || !IsWindow(newActive);
+}
+
+bool ExternalWindowTracker::HasNotifyTrayWnd(HWND newActive, HWND newFocus)
+{
+	return NotifyTrayhWnd(newActive) || NotifyTrayhWnd(newFocus);
+}
+
+bool ExternalWindowTracker::HasAppWnd(HWND newFocus, HWND newActive)
+{
+	return IsAppWnd(newFocus) || IsAppWnd(newActive);
+}
+
+void ExternalWindowTracker::SetDittoHasFocus(BOOL fromHook)
+{
+	if(m_dittoHasFocus == false)
 	{
-		Log(_T("TargetActiveWindow values invalid"));
-		return false;
+		Log(StrF(_T("Ditto has focus - Active: %s (%d), Focus: %s (%d), FromHook %d"), WndName(m_activeWnd).GetString(), m_activeWnd, WndName(m_focusWnd).GetString(), m_focusWnd, fromHook));
 	}
 
-	if(NotifyTrayhWnd(newActive) || NotifyTrayhWnd(newFocus))
-	{
-		Log(_T("TargetActiveWindow shell tray icon has active"));
-		return false;
-	}
+	m_dittoHasFocus = true;
+}
 
-	if(IsAppWnd(newFocus) || IsAppWnd(newActive))
-	{
-		if(m_dittoHasFocus == false)
-		{
-			Log(StrF(_T("Ditto has focus - Active: %s (%d), Focus: %s (%d), FromHook %d"), WndName(m_activeWnd).GetString(), m_activeWnd, WndName(m_focusWnd).GetString(), m_focusWnd, fromHook));
-		}
-
-		m_dittoHasFocus = true;
-		return false;
-	}
-
-	TCHAR cName[MAX_PATH];
+bool ExternalWindowTracker::IsDesktopWnd(HWND newActive)
+{
+	TCHAR cName[MAX_PATH]{};
 	GetClassName(newActive, cName, _countof(cName));
 	CString className(cName);
-	if (className == _T("Progman"))
-	{
-		m_desktopHasFocus = true;
-	}
-
-	m_focusWnd = newFocus;
-	m_activeWnd = newActive;
-	m_dittoHasFocus = false;
-
-	if(theApp.QPasteWnd())
-		theApp.QPasteWnd()->UpdateStatus(true);
-
-	Log(StrF(_T("TargetActiveWindow Active: %s (%d), Focus: %s (%d), FromHook %d, IdleTime: %f"), WndName(m_activeWnd).GetString(), m_activeWnd, WndName(m_focusWnd).GetString(), m_focusWnd,fromHook, IdleSeconds()));
-
-	return true;
+	return className == _T("Progman");
 }
 
 bool ExternalWindowTracker::WaitForActiveWnd(HWND activeWnd, int timeout)
@@ -245,15 +284,7 @@ void ExternalWindowTracker::SendPaste(bool activateTarget)
 
 	if(activateTarget)
 	{
-		ULONGLONG startTick = GetTickCount64();
-
-		ActivateTarget();
-		theApp.PumpMessageEx();
-		WaitForActiveWnd(activeWnd, max(25, CGetSetOptions::WaitForActiveWndTimeout()));
-
-		ULONGLONG endTick = GetTickCount64();
-		if((endTick-startTick) > 150)
-			Log(StrF(_T("Paste Timing Send Paste around activate Target: %llu"), endTick-startTick));
+		ActivateTargetForPaste(activeWnd);
 	}
 	else
 	{
@@ -275,18 +306,8 @@ void ExternalWindowTracker::SendPaste(bool activateTarget)
 		pasteAsAdmin = CUAC_Helper::PasteAsAdmin(activeWnd);
 	}
 
-	//can't run an elevated app when running windows app
-	if(CGetSetOptions::GetIsWindowsApp() == FALSE &&
-		pasteAsAdmin &&
-		theApp.UACThreadRunning() == false)
-	{
-		Log(StrF(_T("Passing paste off to uac aware app")));
-		if (theApp.UACPaste() == false)
-		{
-			pasteAsAdmin = false;
-		}
-	}
-	
+	pasteAsAdmin = PassPasteToUacApp(pasteAsAdmin);
+
 	if (pasteAsAdmin == false)
 	{
 		if(activateTarget)
@@ -298,6 +319,36 @@ void ExternalWindowTracker::SendPaste(bool activateTarget)
 	}
 
 	Log(_T("Post sending paste"));
+}
+
+void ExternalWindowTracker::ActivateTargetForPaste(HWND activeWnd)
+{
+	ULONGLONG startTick = GetTickCount64();
+
+	ActivateTarget();
+	theApp.PumpMessageEx();
+	WaitForActiveWnd(activeWnd, max(25, CGetSetOptions::WaitForActiveWndTimeout()));
+
+	ULONGLONG endTick = GetTickCount64();
+	if((endTick-startTick) > 150)
+		Log(StrF(_T("Paste Timing Send Paste around activate Target: %llu"), endTick-startTick));
+}
+
+bool ExternalWindowTracker::PassPasteToUacApp(bool pasteAsAdmin)
+{
+	//can't run an elevated app when running windows app
+	if(CGetSetOptions::GetIsWindowsApp() == FALSE &&
+		pasteAsAdmin &&
+		theApp.UACThreadRunning() == false)
+	{
+		Log(StrF(_T("Passing paste off to uac aware app")));
+		if (theApp.UACPaste() == false)
+		{
+			pasteAsAdmin = false;
+		}
+	}
+
+	return pasteAsAdmin;
 }
 
 void ExternalWindowTracker::SendCopy(CopyReasonEnum::CopyReason copyReason)
@@ -453,33 +504,53 @@ CPoint ExternalWindowTracker::FocusCaret()
 	//first try getting the caret position using IAccessible object
 	if (m_AccessibleObjectFromWindow)
 	{
-		{
-			IAccessible* pIAccessible = NULL;
-			HRESULT hr = m_AccessibleObjectFromWindow(m_activeWnd, static_cast<DWORD>(OBJID_CARET),__uuidof(IAccessible), (void**)&pIAccessible);
-			if (hr == S_OK)
-			{
-				long left = 0, top = 0, width = 0, height = 0;
-				VARIANT varCaret;
-				varCaret.vt = VT_I4;
-				varCaret.lVal = CHILDID_SELF;
-				hr = pIAccessible->accLocation(&left, &top, &width, &height, varCaret);
-				pIAccessible->Release();
-				if (hr == S_OK && left != 0 && top != 0)
-				{
-					// calculate offset of caret by Accessible 
-					pt.SetPoint(left + width, top + 20);
-				}
-			}
-		}
+		CaretFromAccessible(pt);
 	}
-	if (pt.x != -1 && pt.y != -1)
+	if (IsCaretFound(pt))
 		return pt;
 
 	//next try GetGUIThreadInfo
+	DWORD OtherThreadID = GetWindowThreadProcessId(m_activeWnd, NULL);
+	CaretFromGuiThreadInfo(OtherThreadID, pt);
+	if(IsCaretFound(pt))
+		return pt;
+
+	//last try attatching to there thread
+	CaretFromAttachedThread(OtherThreadID, pt);
+
+	return pt;
+}
+
+bool ExternalWindowTracker::IsCaretFound(const CPoint& pt)
+{
+	return pt.x != -1 && pt.y != -1;
+}
+
+void ExternalWindowTracker::CaretFromAccessible(CPoint& pt)
+{
+	IAccessible* pIAccessible = NULL;
+	HRESULT hr = m_AccessibleObjectFromWindow(m_activeWnd, static_cast<DWORD>(OBJID_CARET),__uuidof(IAccessible), (void**)&pIAccessible);
+	if (hr == S_OK)
+	{
+		long left = 0, top = 0, width = 0, height = 0;
+		VARIANT varCaret;
+		varCaret.vt = VT_I4;
+		varCaret.lVal = CHILDID_SELF;
+		hr = pIAccessible->accLocation(&left, &top, &width, &height, varCaret);
+		pIAccessible->Release();
+		if (hr == S_OK && left != 0 && top != 0)
+		{
+			// calculate offset of caret by Accessible
+			pt.SetPoint(left + width, top + 20);
+		}
+	}
+}
+
+void ExternalWindowTracker::CaretFromGuiThreadInfo(DWORD threadId, CPoint& pt)
+{
 	GUITHREADINFO guiThreadInfo;
 	guiThreadInfo.cbSize = sizeof(GUITHREADINFO);
-	DWORD OtherThreadID = GetWindowThreadProcessId(m_activeWnd, NULL);
-	if(GetGUIThreadInfo(OtherThreadID, &guiThreadInfo))
+	if(GetGUIThreadInfo(threadId, &guiThreadInfo))
 	{
 		CRect rc(guiThreadInfo.rcCaret);
 		if(rc.IsRectEmpty() == FALSE)
@@ -488,12 +559,12 @@ CPoint ExternalWindowTracker::FocusCaret()
 			::ClientToScreen(m_focusWnd, &pt);
 		}
 	}
-	if(pt.x != -1 && pt.y != -1)
-		return pt;
+}
 
-	//last try attatching to there thread
+void ExternalWindowTracker::CaretFromAttachedThread(DWORD threadId, CPoint& pt)
+{
 	DWORD currentThreadId = GetCurrentThreadId();
-	if(AttachThreadInput(OtherThreadID, currentThreadId, TRUE))
+	if(AttachThreadInput(threadId, currentThreadId, TRUE))
 	{
 		BOOL ok = GetCaretPos(&pt);
 		if(ok && (pt.x != 0 && pt.y != 0))
@@ -516,8 +587,6 @@ CPoint ExternalWindowTracker::FocusCaret()
 			pt.y = -1;
 		}
 
-		AttachThreadInput(OtherThreadID, currentThreadId, FALSE);
+		AttachThreadInput(threadId, currentThreadId, FALSE);
 	}
-
-	return pt;
 }

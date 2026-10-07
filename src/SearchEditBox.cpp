@@ -34,60 +34,80 @@ END_MESSAGE_MAP()
 
 BOOL CSearchEditBox::PreTranslateMessage(MSG* pMsg) 
 {
-	switch(pMsg->message) 
+	if(pMsg->message == WM_KEYDOWN &&
+		HandleKeyDown(pMsg))
 	{
-		case WM_KEYDOWN:
-		{
-			if(pMsg->wParam == VK_RETURN)
-			{
-				CWnd *pWnd = GetParent();
-				if(pWnd)
-				{
-					if(CGetSetOptions::m_bFindAsYouType)
-					{
-						pWnd->SendMessage(NM_SEARCH_ENTER_PRESSED, 0, 0);
-					}
-					else
-					{
-						//Send a message to the parent to refill the lb from the search
-						pWnd->PostMessage(CB_SEARCH, 0, 0);
-					}
-				}
+		return TRUE;
+	}
 
-				return TRUE;
-			}	
-			else if (pMsg->wParam == VK_DOWN ||
-						pMsg->wParam == VK_UP ||
-						pMsg->wParam == VK_F3)
-			{
-				if(CGetSetOptions::m_bFindAsYouType)
-				{
-					CWnd *pWnd = GetParent();
-					if(pWnd)
-					{
-						pWnd->SendMessage(CB_UPDOWN, pMsg->wParam, pMsg->lParam);
-						return TRUE;
-					}
-				}
-			}
-			else if(pMsg->wParam == 'C' && CONTROL_PRESSED ||
-					pMsg->wParam == 'X' && CONTROL_PRESSED ||
-					pMsg->wParam == VK_DELETE)
-			{
-				LONG lEditSel = GetSel();
-				if(LOWORD(lEditSel) == HIWORD(lEditSel))
-				{
-					CWnd *pWnd = GetParent();
-					if(pWnd)
-					{
-						pWnd->SendMessage(CB_UPDOWN, pMsg->wParam, pMsg->lParam);
-						return TRUE;
-					}
-				}
-			}
-			break;
+	return CEdit::PreTranslateMessage(pMsg);
+}
+
+bool CSearchEditBox::HandleKeyDown(const MSG* pMsg)
+{
+	if(pMsg->wParam == VK_RETURN)
+	{
+		HandleReturnKey();
+		return true;
+	}
+	else if (IsListNavigationKey(pMsg->wParam))
+	{
+		if(CGetSetOptions::m_bFindAsYouType)
+		{
+			return SendKeyToParent(pMsg);
 		}
 	}
-	
-	return CEdit::PreTranslateMessage(pMsg);
+	else if(IsCutCopyDeleteKey(pMsg->wParam))
+	{
+		LONG lEditSel = GetSel();
+		if(LOWORD(lEditSel) == HIWORD(lEditSel))
+		{
+			return SendKeyToParent(pMsg);
+		}
+	}
+
+	return false;
+}
+
+void CSearchEditBox::HandleReturnKey()
+{
+	CWnd *pWnd = GetParent();
+	if(pWnd)
+	{
+		if(CGetSetOptions::m_bFindAsYouType)
+		{
+			pWnd->SendMessage(NM_SEARCH_ENTER_PRESSED, 0, 0);
+		}
+		else
+		{
+			//Send a message to the parent to refill the lb from the search
+			pWnd->PostMessage(CB_SEARCH, 0, 0);
+		}
+	}
+}
+
+bool CSearchEditBox::IsListNavigationKey(WPARAM key)
+{
+	return key == VK_DOWN ||
+		key == VK_UP ||
+		key == VK_F3;
+}
+
+bool CSearchEditBox::IsCutCopyDeleteKey(WPARAM key)
+{
+	return key == 'C' && CONTROL_PRESSED ||
+		key == 'X' && CONTROL_PRESSED ||
+		key == VK_DELETE;
+}
+
+bool CSearchEditBox::SendKeyToParent(const MSG* pMsg)
+{
+	CWnd *pWnd = GetParent();
+	if(pWnd)
+	{
+		pWnd->SendMessage(CB_UPDOWN, pMsg->wParam, pMsg->lParam);
+		return true;
+	}
+
+	return false;
 }

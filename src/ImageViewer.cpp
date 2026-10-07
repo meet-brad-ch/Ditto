@@ -277,8 +277,6 @@ BOOL CImageViewer::OnEraseBkgnd(CDC* /*pDC*/)
 
 LRESULT CImageViewer::OnGesture(WPARAM /*wParam*/, LPARAM lParam)
 {
-	CPoint ptZoomCenter;
-	double k;
 	GESTUREINFO gi;
 
 	ZeroMemory(&gi, sizeof(GESTUREINFO));
@@ -290,122 +288,7 @@ LRESULT CImageViewer::OnGesture(WPARAM /*wParam*/, LPARAM lParam)
 
 	if (bResult) {
 		// now interpret the gesture
-		switch (gi.dwID) {
-		case GID_ZOOM:
-			//OutputDebugString(_T("zoom\r\n"));
-			// Code for zooming goes here     
-			bHandled = TRUE;
-
-			switch (gi.dwFlags)
-			{
-			case GF_BEGIN:
-				m_dwArguments = LODWORD(gi.ullArguments);
-				m_ptFirst.x = gi.ptsLocation.x;
-				m_ptFirst.y = gi.ptsLocation.y;
-				::ScreenToClient(m_hWnd, &m_ptFirst);
-				OutputDebugString(_T("zoom start\r\n"));
-				break;
-
-			case GF_END:
-				OutputDebugString(_T("zoom end\r\n"));
-				break;
-
-			default:
-				// We read here the second point of the gesture. This is middle point between 
-				// fingers in this new position.
-				m_ptSecond.x = gi.ptsLocation.x;
-				m_ptSecond.y = gi.ptsLocation.y;
-				::ScreenToClient(m_hWnd, &m_ptSecond);
-
-				// We have to calculate zoom center point 
-				ptZoomCenter.x = (m_ptFirst.x + m_ptSecond.x) / 2;
-				ptZoomCenter.y = (m_ptFirst.y + m_ptSecond.y) / 2;
-
-				// The zoom factor is the ratio between the new and the old distance. 
-				// The new distance between two fingers is stored in gi.ullArguments 
-				// (lower DWORD) and the old distance is stored in _dwArguments.
-				k = (double)(LODWORD(gi.ullArguments)) / (double)(m_dwArguments);
-
-				// Now we process zooming in/out of the object
-				//ProcessZoom(k, ptZoomCenter.x, ptZoomCenter.y);
-
-				//m_scrollHelper.Update(ptZoomCenter);
-
-				CString cs;
-				cs.Format(_T("ZOOM k: %f, x: %d, y: %d\r\n"), k, ptZoomCenter.x, ptZoomCenter.y);
-				OutputDebugString(cs);
-
-				//InvalidateRect(hWnd, NULL, TRUE);
-
-				// Now we have to store new information as a starting information 
-				// for the next step in this gesture.
-				m_ptFirst = m_ptSecond;
-				//m_dwArguments = LODWORD(gi.ullArguments);
-				break;
-			}
-			break;
-		case GID_PAN:
-			//OutputDebugString(_T("pan\r\n"));
-			// Code for panning goes here
-			bHandled = TRUE;
-			switch (gi.dwFlags)
-			{
-			case GF_BEGIN:
-				m_ptFirst.x = gi.ptsLocation.x;
-				m_ptFirst.y = gi.ptsLocation.y;
-				::ScreenToClient(m_hWnd, &m_ptFirst);
-				break;
-
-			default:
-				// We read the second point of this gesture. It is a middle point
-				// between fingers in this new position
-				m_ptSecond.x = gi.ptsLocation.x;
-				m_ptSecond.y = gi.ptsLocation.y;
-				::ScreenToClient(m_hWnd, &m_ptSecond);
-
-				int xDiff = m_ptSecond.x - m_ptFirst.x;
-
-				int yDiff = m_ptSecond.y - m_ptFirst.y;
-
-				m_scrollHelper.Update(CPoint(-xDiff, -yDiff));
-
-				//CString cs;
-				//cs.Format(_T("x: %d, y: %d\r\n"), xDiff, yDiff);
-				//OutputDebugString(cs);
-
-				// We apply move operation of the object
-				//ProcessMove(_ptSecond.x - _ptFirst.x, _ptSecond.y - _ptFirst.y);
-
-				//InvalidateRect(hWnd, NULL, TRUE);
-
-				// We have to copy second point into first one to prepare
-				// for the next step of this gesture.
-				m_ptFirst = m_ptSecond;
-				break;
-			}
-
-			break;
-			break;
-		case GID_ROTATE:
-			OutputDebugString(_T("rotate\r\n"));
-			// Code for rotation goes here
-			bHandled = TRUE;
-			break;
-		case GID_TWOFINGERTAP:
-			OutputDebugString(_T("two finger\r\n"));
-			// Code for two-finger tap goes here
-			bHandled = TRUE;
-			break;
-		case GID_PRESSANDTAP:
-			OutputDebugString(_T("press and tap\r\n"));
-			// Code for roll over goes here
-			bHandled = TRUE;
-			break;
-		default:
-			OutputDebugString(_T("default\r\n"));
-			// A gesture was not recognized
-			break;
-		}
+		bHandled = HandleGesture(gi);
 	}
 	else {
 		DWORD dwErr = GetLastError();
@@ -416,6 +299,140 @@ LRESULT CImageViewer::OnGesture(WPARAM /*wParam*/, LPARAM lParam)
 	}
 
 	return FALSE;
+}
+
+BOOL CImageViewer::HandleGesture(const GESTUREINFO& gi)
+{
+	BOOL bHandled = FALSE;
+
+	switch (gi.dwID) {
+	case GID_ZOOM:
+		//OutputDebugString(_T("zoom\r\n"));
+		// Code for zooming goes here
+		bHandled = TRUE;
+		HandleZoomGesture(gi);
+		break;
+	case GID_PAN:
+		//OutputDebugString(_T("pan\r\n"));
+		// Code for panning goes here
+		bHandled = TRUE;
+		HandlePanGesture(gi);
+		break;
+	case GID_ROTATE:
+		OutputDebugString(_T("rotate\r\n"));
+		// Code for rotation goes here
+		bHandled = TRUE;
+		break;
+	case GID_TWOFINGERTAP:
+		OutputDebugString(_T("two finger\r\n"));
+		// Code for two-finger tap goes here
+		bHandled = TRUE;
+		break;
+	case GID_PRESSANDTAP:
+		OutputDebugString(_T("press and tap\r\n"));
+		// Code for roll over goes here
+		bHandled = TRUE;
+		break;
+	default:
+		OutputDebugString(_T("default\r\n"));
+		// A gesture was not recognized
+		break;
+	}
+
+	return bHandled;
+}
+
+void CImageViewer::HandleZoomGesture(const GESTUREINFO& gi)
+{
+	CPoint ptZoomCenter;
+	double k{};
+
+	switch (gi.dwFlags)
+	{
+	case GF_BEGIN:
+		m_dwArguments = LODWORD(gi.ullArguments);
+		m_ptFirst.x = gi.ptsLocation.x;
+		m_ptFirst.y = gi.ptsLocation.y;
+		::ScreenToClient(m_hWnd, &m_ptFirst);
+		OutputDebugString(_T("zoom start\r\n"));
+		break;
+
+	case GF_END:
+		OutputDebugString(_T("zoom end\r\n"));
+		break;
+
+	default:
+		// We read here the second point of the gesture. This is middle point between
+		// fingers in this new position.
+		m_ptSecond.x = gi.ptsLocation.x;
+		m_ptSecond.y = gi.ptsLocation.y;
+		::ScreenToClient(m_hWnd, &m_ptSecond);
+
+		// We have to calculate zoom center point
+		ptZoomCenter.x = (m_ptFirst.x + m_ptSecond.x) / 2;
+		ptZoomCenter.y = (m_ptFirst.y + m_ptSecond.y) / 2;
+
+		// The zoom factor is the ratio between the new and the old distance.
+		// The new distance between two fingers is stored in gi.ullArguments
+		// (lower DWORD) and the old distance is stored in _dwArguments.
+		k = (double)(LODWORD(gi.ullArguments)) / (double)(m_dwArguments);
+
+		// Now we process zooming in/out of the object
+		//ProcessZoom(k, ptZoomCenter.x, ptZoomCenter.y);
+
+		//m_scrollHelper.Update(ptZoomCenter);
+
+		CString cs;
+		cs.Format(_T("ZOOM k: %f, x: %d, y: %d\r\n"), k, ptZoomCenter.x, ptZoomCenter.y);
+		OutputDebugString(cs);
+
+		//InvalidateRect(hWnd, NULL, TRUE);
+
+		// Now we have to store new information as a starting information
+		// for the next step in this gesture.
+		m_ptFirst = m_ptSecond;
+		//m_dwArguments = LODWORD(gi.ullArguments);
+		break;
+	}
+}
+
+void CImageViewer::HandlePanGesture(const GESTUREINFO& gi)
+{
+	switch (gi.dwFlags)
+	{
+	case GF_BEGIN:
+		m_ptFirst.x = gi.ptsLocation.x;
+		m_ptFirst.y = gi.ptsLocation.y;
+		::ScreenToClient(m_hWnd, &m_ptFirst);
+		break;
+
+	default:
+		// We read the second point of this gesture. It is a middle point
+		// between fingers in this new position
+		m_ptSecond.x = gi.ptsLocation.x;
+		m_ptSecond.y = gi.ptsLocation.y;
+		::ScreenToClient(m_hWnd, &m_ptSecond);
+
+		int xDiff = m_ptSecond.x - m_ptFirst.x;
+
+		int yDiff = m_ptSecond.y - m_ptFirst.y;
+
+		m_scrollHelper.Update(CPoint(-xDiff, -yDiff));
+
+		//CString cs;
+		//cs.Format(_T("x: %d, y: %d\r\n"), xDiff, yDiff);
+		//OutputDebugString(cs);
+
+		// We apply move operation of the object
+		//ProcessMove(_ptSecond.x - _ptFirst.x, _ptSecond.y - _ptFirst.y);
+
+		//InvalidateRect(hWnd, NULL, TRUE);
+
+		// We have to copy second point into first one to prepare
+		// for the next step of this gesture.
+		m_ptFirst = m_ptSecond;
+		break;
+	}
 }
 
 LRESULT CImageViewer::OnGestureNotify(WPARAM /*wParam*/, LPARAM /*lParam*/)

@@ -57,69 +57,88 @@ BOOL CEditWithButton::PreTranslateMessage(MSG* pMsg)
 	// TODO: Add your specialized code here and/or call the base class
 	// Intercept Ctrl + Z (Undo), Ctrl + X (Cut), Ctrl + C (Copy), Ctrl + V (Paste) and Ctrl + A (Select All)
 	// before CEdit base class gets a hold of them.
-	if (pMsg->message == WM_KEYDOWN && 
+	if (pMsg->message == WM_KEYDOWN &&
 		CONTROL_PRESSED)
 	{
-		switch (pMsg->wParam)
+		if (HandleControlKey(pMsg->wParam))
 		{
-		case 'Z':
-			Undo();
-			return TRUE;
-		case 'X':
-			Cut();
-			return TRUE;
-		case 'C':
-			Copy();
-			return TRUE;
-		case 'V':
-			Paste();
-			return TRUE;
-		case 'A':
-			SetSel(0, -1);
 			return TRUE;
 		}
 	}
 
-	switch(pMsg->message) 
+	if (pMsg->message == WM_KEYDOWN &&
+		HandleKeyDown(pMsg))
 	{
-	case WM_KEYDOWN:
-		{
-			if(pMsg->wParam == VK_RETURN)
-			{
-				CWnd *pWnd = GetParent();
-				if(pWnd)
-				{
-					if(CGetSetOptions::m_bFindAsYouType)
-					{
-						pWnd->SendMessage(NM_SEARCH_ENTER_PRESSED, 0, 0);
-					}
-					else
-					{
-						//Send a message to the parent to refill the lb from the search
-						pWnd->PostMessage(CB_SEARCH, 0, 0);
-					}
-				}
-
-				return TRUE;
-			}	
-			else if (pMsg->wParam == VK_DOWN ||
-					pMsg->wParam == VK_UP ||
-					pMsg->wParam == VK_F3 ||
-					pMsg->wParam == VK_PRIOR ||
-					pMsg->wParam == VK_NEXT)
-			{
-				CWnd *pWnd = GetParent();
-				if(pWnd)
-				{
-					pWnd->SendMessage(CB_UPDOWN, pMsg->wParam, pMsg->lParam);
-					return TRUE;
-				}
-			}
-			break;
-		}
+		return TRUE;
 	}
 
 	return CEdit::PreTranslateMessage(pMsg);
+}
+
+bool CEditWithButton::HandleControlKey(WPARAM key)
+{
+	switch (key)
+	{
+	case 'Z':
+		Undo();
+		return true;
+	case 'X':
+		Cut();
+		return true;
+	case 'C':
+		Copy();
+		return true;
+	case 'V':
+		Paste();
+		return true;
+	case 'A':
+		SetSel(0, -1);
+		return true;
+	}
+
+	return false;
+}
+
+bool CEditWithButton::IsListNavigationKey(WPARAM key)
+{
+	return key == VK_DOWN ||
+		key == VK_UP ||
+		key == VK_F3 ||
+		key == VK_PRIOR ||
+		key == VK_NEXT;
+}
+
+bool CEditWithButton::HandleKeyDown(const MSG* pMsg)
+{
+	if(pMsg->wParam == VK_RETURN)
+	{
+		CWnd *pWnd = GetParent();
+		if(pWnd)
+		{
+			if(CGetSetOptions::m_bFindAsYouType)
+			{
+				pWnd->SendMessage(NM_SEARCH_ENTER_PRESSED, 0, 0);
+			}
+			else
+			{
+				//Send a message to the parent to refill the lb from the search
+				pWnd->PostMessage(CB_SEARCH, 0, 0);
+			}
+		}
+
+		return true;
+	}
+	else if (IsListNavigationKey(pMsg->wParam))
+	{
+		CWnd *pWnd = GetParent();
+		if(pWnd)
+		{
+			pWnd->SendMessage(CB_UPDOWN, pMsg->wParam, pMsg->lParam);
+			return true;
+		}
+	}
+
+	return false;
 }
 
 BOOL CEditWithButton::SetBitmaps(UINT iEmptyEdit, UINT iFilledEdit)

@@ -51,6 +51,35 @@ private:
     void   UpdateScrollBar(int bar, int windowSize, int displaySize,
                            LONG& pageSize, LONG& scrollPos, LONG& deltaPos);
 
+    /** @brief Tells if one direction can scroll back to its origin.
+     *  @param displaySize Display size in that direction.
+     *  @param pageSize Page size in that direction.
+     *  @param scrollPos Scroll position in that direction.
+     *  @return true if all three are greater than 0. */
+    static bool CanScrollToOrigin(LONG displaySize, LONG pageSize, LONG scrollPos);
+
+    /** @brief Limits a scroll delta so the new position stays between 0 and displaySize - pageSize.
+     *  @param deltaPos Requested change of the scroll position.
+     *  @param scrollPos Current scroll position.
+     *  @param displaySize Display size in that direction.
+     *  @param pageSize Page size in that direction.
+     *  @return The limited delta. */
+    static int ClampScrollDelta(int deltaPos, LONG scrollPos, LONG displaySize, LONG pageSize);
+
+    /** @brief Scroll delta for a horizontal scroll bar code.
+     *  @param nSBCode Scroll bar code of WM_HSCROLL.
+     *  @param pScrollBar Scroll bar control, or NULL for the window scroll bar.
+     *  @param deltaPos Receives the delta when the code is handled.
+     *  @return false for codes that are not processed. */
+    bool GetHScrollDelta(UINT nSBCode, CScrollBar* pScrollBar, int& deltaPos);
+
+    /** @brief Scroll delta for a vertical scroll bar code.
+     *  @param nSBCode Scroll bar code of WM_VSCROLL.
+     *  @param pScrollBar Scroll bar control, or NULL for the window scroll bar.
+     *  @param deltaPos Receives the delta when the code is handled.
+     *  @return false for codes that are not processed. */
+    bool GetVScrollDelta(UINT nSBCode, CScrollBar* pScrollBar, int& deltaPos);
+
     CWnd*  m_attachWnd;
     CSize  m_pageSize;
     CSize  m_displaySize;

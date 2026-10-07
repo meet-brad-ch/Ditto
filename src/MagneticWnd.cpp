@@ -76,58 +76,75 @@ void CMagneticWnd::OnWindowPosChanging(WINDOWPOS* lpwndpos)
 	{
 		CMagneticWnd *pOtherWnd = *Iter;
 
-		if(pOtherWnd != NULL && 
-			this->IsWindowVisible() && 
-			pOtherWnd->IsWindowVisible() &&
-			lpwndpos->x != 0 && lpwndpos->y != 0 && lpwndpos->cx != 0 && lpwndpos->cy != 0)
+		if(CanSnapTo(pOtherWnd, lpwndpos))
 		{
 			if(m_bMovedAttachedWnd && (IsWindowAttached(pOtherWnd)))
 				continue;
 
-			CRect rectParent;
-			pOtherWnd->GetWindowRect(rectParent);
-			bool bAttached = false;
-
-			// Snap left edge
-			if(abs(lpwndpos->x - rectParent.right) <= 15)
-			{
-				lpwndpos->x = rectParent.right;
-				bAttached = true;
-			}
-
-			// Snap right edge
-			if (abs(lpwndpos->x + lpwndpos->cx - rectParent.left) <= 15)
-			{
-				lpwndpos->x = rectParent.left - lpwndpos->cx;
-				bAttached = true;
-			}
-
-			// Snap to the bottom
-			if (abs(lpwndpos->y + lpwndpos->cy - rectParent.top) <= 15)
-			{
-				lpwndpos->y = rectParent.top - lpwndpos->cy;
-				bAttached = true;
-			} 
-
-			// Snap the top
-			if (abs(lpwndpos->y - rectParent.bottom) <= 15)
-			{
-				lpwndpos->y = rectParent.bottom;
-				bAttached = true;
-			}
-
-			pOtherWnd->SetWindowAttached(this, bAttached);
-			SetWindowAttached(pOtherWnd, bAttached);
-
-			if(m_bMovedAttachedWnd)
-			{
-				m_crLastMove.left = lpwndpos->x;
-				m_crLastMove.top = lpwndpos->y;
-				m_crLastMove.right = lpwndpos->x + lpwndpos->cx;
-				m_crLastMove.bottom = lpwndpos->y + lpwndpos->cy;
-			}
+			SnapToWindow(pOtherWnd, lpwndpos);
 		}
 	}
+}
+
+bool CMagneticWnd::CanSnapTo(CMagneticWnd *pOtherWnd, const WINDOWPOS* lpwndpos)
+{
+	return pOtherWnd != NULL &&
+		this->IsWindowVisible() &&
+		pOtherWnd->IsWindowVisible() &&
+		lpwndpos->x != 0 && lpwndpos->y != 0 && lpwndpos->cx != 0 && lpwndpos->cy != 0;
+}
+
+void CMagneticWnd::SnapToWindow(CMagneticWnd *pOtherWnd, WINDOWPOS* lpwndpos)
+{
+	CRect rectParent;
+	pOtherWnd->GetWindowRect(rectParent);
+	bool bAttached = SnapEdges(lpwndpos, rectParent);
+
+	pOtherWnd->SetWindowAttached(this, bAttached);
+	SetWindowAttached(pOtherWnd, bAttached);
+
+	if(m_bMovedAttachedWnd)
+	{
+		m_crLastMove.left = lpwndpos->x;
+		m_crLastMove.top = lpwndpos->y;
+		m_crLastMove.right = lpwndpos->x + lpwndpos->cx;
+		m_crLastMove.bottom = lpwndpos->y + lpwndpos->cy;
+	}
+}
+
+bool CMagneticWnd::SnapEdges(WINDOWPOS* lpwndpos, const CRect& rectParent)
+{
+	bool bAttached = false;
+
+	// Snap left edge
+	if(abs(lpwndpos->x - rectParent.right) <= 15)
+	{
+		lpwndpos->x = rectParent.right;
+		bAttached = true;
+	}
+
+	// Snap right edge
+	if (abs(lpwndpos->x + lpwndpos->cx - rectParent.left) <= 15)
+	{
+		lpwndpos->x = rectParent.left - lpwndpos->cx;
+		bAttached = true;
+	}
+
+	// Snap to the bottom
+	if (abs(lpwndpos->y + lpwndpos->cy - rectParent.top) <= 15)
+	{
+		lpwndpos->y = rectParent.top - lpwndpos->cy;
+		bAttached = true;
+	}
+
+	// Snap the top
+	if (abs(lpwndpos->y - rectParent.bottom) <= 15)
+	{
+		lpwndpos->y = rectParent.bottom;
+		bAttached = true;
+	}
+
+	return bAttached;
 }
 
 void CMagneticWnd::SetWindowAttached(CMagneticWnd *pOtherWnd, bool bAttach)

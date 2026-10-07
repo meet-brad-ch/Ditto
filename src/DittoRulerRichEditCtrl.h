@@ -30,4 +30,21 @@ protected:
 private:
 	// The eSaveTypes flags of the saved clip types: stRTF for rtf, stCF_TEXT | stCF_UNICODETEXT for text
 	static int SaveTypesOf(CClipTypes& types);
+
+	/** @brief Reads one clip format from the database.
+	 *  @param lID Clip id.
+	 *  @param Clip Format to read; m_cfType selects the format.
+	 *  @return true if the format was read and has data. */
+	static bool HasClipData(long lID, CClipFormat& Clip);
+
+	/** @brief Adds the rtf and/or text of the editor to the clip, as the save types ask.
+	 *  @param Clip Clip to add the formats to.
+	 *  @param saveTypes eSaveTypes flags (see SaveTypesOf). */
+	void LoadFormatsToSave(CClip& Clip, int saveTypes);
+
+	/** @brief Shows the properties dialog for a new clip and adds the clip to the database on OK.
+	 *  @param Clip The new clip.
+	 *  @param bUpdateDesc Set to TRUE when the clip was added.
+	 *  @return true if the clip was added (the edit is then no longer modified). */
+	bool AddNewClip(CClip& Clip, BOOL& bUpdateDesc);
 };

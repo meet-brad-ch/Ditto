@@ -31,54 +31,38 @@ BOOL CGdiImageDrawer::LoadRaw(unsigned char* bitmapData, int imageSize)
 
 BOOL CGdiImageDrawer::LoadStdImageDPI(int dpi, UINT id96, UINT id120, UINT id144, UINT id168, UINT id192, LPCTSTR pType, UINT id225, UINT id250, UINT id275, UINT id300, UINT id325, UINT id350)
 {
-	BOOL ret = FALSE;
+	// first entry that matches wins; the large sizes are optional (id 0 = not given)
+	const std::array<DpiImageChoice, 11> choices{ {
+		{ 336, id350, true },
+		{ 312, id325, true },
+		{ 288, id300, true },
+		{ 264, id275, true },
+		{ 240, id250, true },
+		{ 216, id225, true },
+		{ 192, id192, false },
+		{ 168, id168, false },
+		{ 144, id144, false },
+		{ 120, id120, false },
+		{ INT_MIN, id96, false }
+	} };
 
-	if (dpi >= 336 && id350 != 0)
-	{
-		ret = LoadStdImage(id350, pType);
-	}
-	else if (dpi >= 312 && id325 != 0)
-	{
-		ret = LoadStdImage(id325, pType);
-	}
-	else if (dpi >= 288 && id300 != 0)
-	{
-		ret = LoadStdImage(id300, pType);
-	}
-	else if (dpi >= 264 && id275 != 0)
-	{
-		ret = LoadStdImage(id275, pType);
-	}
-	else if (dpi >= 240 && id250 != 0)
-	{
-		ret = LoadStdImage(id250, pType);
-	}
-	else if (dpi >= 216 && id225 != 0)
-	{
-		ret = LoadStdImage(id225, pType);
-	}
-	else if (dpi >= 192)
-	{
-		ret = LoadStdImage(id192, pType);
-	}
-	else if (dpi >= 168)
-	{
-		ret = LoadStdImage(id168, pType);
-	}
-	else if (dpi >= 144)
-	{
-		ret = LoadStdImage(id144, pType);
-	}
-	else if (dpi >= 120)
-	{
-		ret = LoadStdImage(id120, pType);
-	}
-	else
-	{
-		ret = LoadStdImage(id96, pType);
-	}
+	BOOL ret = LoadStdImage(PickDpiImageId(dpi, choices), pType);
 
 	return ret;
+}
+
+UINT CGdiImageDrawer::PickDpiImageId(int dpi, std::span<const DpiImageChoice> choices)
+{
+	UINT id = 0;
+	for (const DpiImageChoice& choice : choices)
+	{
+		if (dpi >= choice.minDpi && (!choice.optional || choice.id != 0))
+		{
+			id = choice.id;
+			break;
+		}
+	}
+	return id;
 }
 
 void CGdiImageDrawer::Draw(CDC* pScreenDC, CDPI &dpi, CWnd *pWnd, CRect rc, bool mouseHover, bool mouseDown)

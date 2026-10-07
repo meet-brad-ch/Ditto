@@ -106,115 +106,131 @@ BOOL CRRECToolbar::Create( CWnd* parent, CRect& rc, int resourceId)
 
 	ASSERT(pData->wVersion == 1);
 
-	TBBUTTON tb, tbSep;
-	memset(&tb, 0, sizeof(tb));
-	memset(&tbSep, 0, sizeof(tbSep));
-
 	result = CToolBarCtrl::Create(WS_VISIBLE|WS_CHILD, rc, parent, resourceId);
 
 	if(result)
 	{
-		m_dpi.Invalidate();
-		m_dpi.SetHwnd(m_hWnd);
-
-		m_font.DeleteObject();
-		m_font.CreateFont(-m_dpi.Scale(12), 0, 0, 0, 400, 0, 0, 0, DEFAULT_CHARSET, 3, 2, 1, 34, _T("Segoe UI"));
-
-		SetButtonStructSize(sizeof(tb));
-
-		CSize sz(pData->wWidth, pData->wHeight);
-		SetBitmapSize(sz);
-		sz.cx += 4;
-		sz.cy += 4;
-		SetButtonSize(sz);
-
-		// Loop through adding buttons.
-		tb.fsState = TBSTATE_ENABLED;
-		tb.fsStyle = TBSTYLE_BUTTON;
-		tb.iString = -1;
-		tb.iBitmap = 0;
-
-		tbSep.iString = -1;
-		tbSep.fsStyle = TBSTYLE_SEP;
-
-		for(WORD w = 0; w < pData->wItemCount; w++)
-		{
-			if (pData->items()[w] == 0)
-			{
-				AddButtons(1, &tbSep);
-			}
-			else
-			{
-				tb.idCommand = pData->items()[w];
-				AddButtons(1, &tb);
-				tb.iBitmap++;
-			}
-		}
-
-		HBITMAP	hBitmap = (HBITMAP)::LoadImage( hInstance, MAKEINTRESOURCE(resourceId), IMAGE_BITMAP, 0,0, LR_LOADMAP3DCOLORS );
-		if( !hBitmap )
+		if( !InitButtons( hInstance, hGlobal, pData, resourceId ) )
 			return FALSE;
 
-		BITMAP bm;
-		memset(&bm, 0, sizeof (bm));
-		::GetObject(hBitmap, sizeof (bm), &bm);
-		AddBitmap(bm.bmWidth / pData->wWidth, CBitmap::FromHandle (hBitmap));
-
-		UnlockResource(hGlobal);
-		FreeResource(hGlobal);
-
-		CRect rect;
-
-		TBBUTTONINFO tbi;
-		tbi.cbSize = sizeof( TBBUTTONINFO );
-		// DPI-scaled button widths are a few hundred pixels, well inside the WORD range
-		tbi.cx = static_cast<WORD>(m_dpi.Scale(100));
-		tbi.dwMask = TBIF_SIZE | 0x80000000;  // By index
-
-		SetButtonInfo(2, &tbi);
-		GetItemRect(2, &rect);
-
-		// The font name combo
-		if(m_fontCombo.Create(WS_CHILD | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN | CBS_SORT | CBS_HASSTRINGS, rect, this, 31))
-		{
-			m_fontCombo.SetFont(&m_font);
-			m_fontCombo.FillCombo();
-			
-			tbi.cx = static_cast<WORD>(m_dpi.Scale(48));
-			SetButtonInfo(4, &tbi);
-			GetItemRect(4, &rect);
-
-			//The font size combo
-			if( m_size.Create( WS_CHILD | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | CBS_HASSTRINGS, rect, this, 32))
-			{
-				m_size.SetFont(&m_font);
-				m_size.FillCombo();
-
-				CString color = _T("Color");
-				CString defaultText = _T("Automatic");
-				CString customText = _T("More Colours...");
-
-				tbi.cx = static_cast<WORD>(m_dpi.Scale(64));
-				SetButtonInfo(6, &tbi);
-				GetItemRect(6, &rect);
-
-				// The color picker
-				if(m_color.Create(color, WS_VISIBLE | WS_CHILD, rect, this, BUTTON_COLOR))
-				{
-					m_color.SetDefaultText(defaultText);
-					m_color.SetCustomText(customText);
-					m_color.SetSelectionMode(CP_MODE_TEXT);
-					m_color.SetBkColour(RGB(255, 255, 255 ));
-					m_color.SetFont(&m_font);
-
-					result = TRUE;
-				}
-			}
-		}
+		if( CreateEmbeddedControls() )
+			result = TRUE;
 	}
 
 	return result;
 
+}
+
+bool CRRECToolbar::InitButtons( HINSTANCE hInstance, HGLOBAL hGlobal, CToolBarData* pData, int resourceId )
+{
+	TBBUTTON tb, tbSep;
+	memset(&tb, 0, sizeof(tb));
+	memset(&tbSep, 0, sizeof(tbSep));
+
+	m_dpi.Invalidate();
+	m_dpi.SetHwnd(m_hWnd);
+
+	m_font.DeleteObject();
+	m_font.CreateFont(-m_dpi.Scale(12), 0, 0, 0, 400, 0, 0, 0, DEFAULT_CHARSET, 3, 2, 1, 34, _T("Segoe UI"));
+
+	SetButtonStructSize(sizeof(tb));
+
+	CSize sz(pData->wWidth, pData->wHeight);
+	SetBitmapSize(sz);
+	sz.cx += 4;
+	sz.cy += 4;
+	SetButtonSize(sz);
+
+	// Loop through adding buttons.
+	tb.fsState = TBSTATE_ENABLED;
+	tb.fsStyle = TBSTYLE_BUTTON;
+	tb.iString = -1;
+	tb.iBitmap = 0;
+
+	tbSep.iString = -1;
+	tbSep.fsStyle = TBSTYLE_SEP;
+
+	for(WORD w = 0; w < pData->wItemCount; w++)
+	{
+		if (pData->items()[w] == 0)
+		{
+			AddButtons(1, &tbSep);
+		}
+		else
+		{
+			tb.idCommand = pData->items()[w];
+			AddButtons(1, &tb);
+			tb.iBitmap++;
+		}
+	}
+
+	HBITMAP	hBitmap = (HBITMAP)::LoadImage( hInstance, MAKEINTRESOURCE(resourceId), IMAGE_BITMAP, 0,0, LR_LOADMAP3DCOLORS );
+	if( !hBitmap )
+		return false;
+
+	BITMAP bm;
+	memset(&bm, 0, sizeof (bm));
+	::GetObject(hBitmap, sizeof (bm), &bm);
+	AddBitmap(bm.bmWidth / pData->wWidth, CBitmap::FromHandle (hBitmap));
+
+	UnlockResource(hGlobal);
+	FreeResource(hGlobal);
+
+	return true;
+}
+
+bool CRRECToolbar::CreateEmbeddedControls()
+{
+	CRect rect;
+
+	TBBUTTONINFO tbi{};
+	tbi.cbSize = sizeof( TBBUTTONINFO );
+	// DPI-scaled button widths are a few hundred pixels, well inside the WORD range
+	tbi.cx = static_cast<WORD>(m_dpi.Scale(100));
+	tbi.dwMask = TBIF_SIZE | 0x80000000;  // By index
+
+	SetButtonInfo(2, &tbi);
+	GetItemRect(2, &rect);
+
+	// The font name combo
+	if(m_fontCombo.Create(WS_CHILD | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN | CBS_SORT | CBS_HASSTRINGS, rect, this, 31))
+	{
+		m_fontCombo.SetFont(&m_font);
+		m_fontCombo.FillCombo();
+		
+		tbi.cx = static_cast<WORD>(m_dpi.Scale(48));
+		SetButtonInfo(4, &tbi);
+		GetItemRect(4, &rect);
+
+		//The font size combo
+		if( m_size.Create( WS_CHILD | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | CBS_HASSTRINGS, rect, this, 32))
+		{
+			m_size.SetFont(&m_font);
+			m_size.FillCombo();
+
+			CString color = _T("Color");
+			CString defaultText = _T("Automatic");
+			CString customText = _T("More Colours...");
+
+			tbi.cx = static_cast<WORD>(m_dpi.Scale(64));
+			SetButtonInfo(6, &tbi);
+			GetItemRect(6, &rect);
+
+			// The color picker
+			if(m_color.Create(color, WS_VISIBLE | WS_CHILD, rect, this, BUTTON_COLOR))
+			{
+				m_color.SetDefaultText(defaultText);
+				m_color.SetCustomText(customText);
+				m_color.SetSelectionMode(CP_MODE_TEXT);
+				m_color.SetBkColour(RGB(255, 255, 255 ));
+				m_color.SetFont(&m_font);
+
+				return true;
+			}
+		}
+	}
+
+	return false;
 }
 
 BEGIN_MESSAGE_MAP(CRRECToolbar, CToolBarCtrl)

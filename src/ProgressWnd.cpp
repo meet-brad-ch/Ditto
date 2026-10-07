@@ -394,25 +394,30 @@ void CProgressWnd::PeekAndPump(BOOL bCancelOnESCkey /*= TRUE*/)
         SetFocus();
 
     MSG msg;
-    while (!m_bCancelled && ::PeekMessage(&msg, NULL,0,0,PM_NOREMOVE)) 
+    while (!m_bCancelled && ::PeekMessage(&msg, NULL,0,0,PM_NOREMOVE))
     {
-        if (bCancelOnESCkey && (msg.message == WM_CHAR) && (msg.wParam == VK_ESCAPE))
-            OnCancel();
+        CancelOnMessage(msg, bCancelOnESCkey);
 
-        // Cancel button disabled if modal, so we fake it.
-        if (m_bModal && (msg.message == WM_LBUTTONUP))
-        {
-            CRect rect;
-            m_CancelButton.GetWindowRect(rect);
-            if (rect.PtInRect(msg.pt))
-                OnCancel();
-        }
-  
-        if (!AfxGetApp()->PumpMessage()) 
+        if (!AfxGetApp()->PumpMessage())
         {
             ::PostQuitMessage(0);
             return;
-        } 
+        }
+    }
+}
+
+void CProgressWnd::CancelOnMessage(const MSG& msg, BOOL bCancelOnESCkey)
+{
+    if (bCancelOnESCkey && (msg.message == WM_CHAR) && (msg.wParam == VK_ESCAPE))
+        OnCancel();
+
+    // Cancel button disabled if modal, so we fake it.
+    if (m_bModal && (msg.message == WM_LBUTTONUP))
+    {
+        CRect rect;
+        m_CancelButton.GetWindowRect(rect);
+        if (rect.PtInRect(msg.pt))
+            OnCancel();
     }
 }
 

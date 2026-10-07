@@ -165,7 +165,35 @@ protected:
 	void ActivateTab(int nTab, bool bNotify, bool bOnSize = false);
 	void ResizeTabWindow(int nOldTab, int nNewTab, bool bNotify, bool bOnSize);
 	void SwitchTabs(bool bNext = true);
-	
+
+	/** @brief Tells if a tab index is in range.
+	 *  @param nTab Tab index.
+	 *  @return true if 0 <= nTab < GetTabCount(). */
+	bool IsValidTab(int nTab);
+
+	/** @brief Tells if a window pointer is set and its window exists.
+	 *  @param pWnd Window pointer (may be NULL).
+	 *  @return true if pWnd is set and ::IsWindow says its handle is a window. */
+	static bool IsLiveWindow(CWnd* pWnd);
+
+	/** @brief Hides the window of the previous tab.
+	 *  @param nOldTab Valid index of the previous tab.
+	 *  @return The item data of the previous tab. */
+	long HideTabWindow(int nOldTab);
+
+	/** @brief Moves, shows and (if set) focuses the window of the new tab.
+	 *  @param nNewTab Valid index of the new tab.
+	 *  @param bOnSize true when called from OnSize (then the focus is not set).
+	 *  @return The item data of the new tab. */
+	long ShowTabWindow(int nNewTab, bool bOnSize);
+
+	/** @brief Sends SN_SETACTIVETAB to the parent window.
+	 *  @param nOldTab Index of the previous tab.
+	 *  @param nNewTab Index of the new tab.
+	 *  @param lOldItemData Item data of the previous tab, -1 if none.
+	 *  @param lNewItemData Item data of the new tab, -1 if none. */
+	void NotifyTabChange(int nOldTab, int nNewTab, long lOldItemData, long lNewItemData);
+
 	// Generated message map functions
 protected:
 	//{{AFX_MSG(CTabCtrlEx)

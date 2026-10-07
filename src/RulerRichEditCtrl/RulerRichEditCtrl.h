@@ -1,6 +1,9 @@
 #if !defined(AFX_RULERRICHEDITCTRL_H__4CD13283_82E4_484A_83B4_DBAD5B64F17C__INCLUDED_)
 #define AFX_RULERRICHEDITCTRL_H__4CD13283_82E4_484A_83B4_DBAD5B64F17C__INCLUDED_
 
+#include <array>
+#include <span>
+
 #include "RulerRichEdit.h"
 #include "RRECToolbar.h"
 #include "../DPI.h"
@@ -158,6 +161,57 @@ protected:
 
 public:
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
+
+private:
+	/** @brief One Ctrl + key shortcut of PreTranslateMessage. */
+	struct ControlShortcut
+	{
+		/** @brief Virtual key code (an upper case letter). */
+		WPARAM key{};
+		/** @brief Member function that runs the shortcut. */
+		void (CRulerRichEditCtrl::*handler)() = nullptr;
+	};
+
+	/** @brief Runs the shortcut of a key when Ctrl is pressed.
+	 *  @param key Virtual key code of the WM_KEYDOWN message.
+	 *  @param shortcuts The shortcut table.
+	 *  @return true if the key has a shortcut, Ctrl is pressed and the shortcut ran. */
+	bool RunControlShortcut(WPARAM key, std::span<const ControlShortcut> shortcuts);
+
+	/** @brief Cuts the selection of the embedded RTF control. */
+	void RtfCut();
+	/** @brief Copies the selection of the embedded RTF control. */
+	void RtfCopy();
+	/** @brief Pastes into the embedded RTF control. */
+	void RtfPaste();
+	/** @brief Undoes the last change of the embedded RTF control. */
+	void RtfUndo();
+	/** @brief Redoes the last undone change of the embedded RTF control. */
+	void RtfRedo();
+
+	/** @brief Toolbar button state: enabled, and checked if asked.
+	 *  @param checked true to show the button as checked.
+	 *  @return TBSTATE_ENABLED, with TBSTATE_CHECKED if checked. */
+	static UINT ToolbarButtonState( bool checked );
+
+	/** @brief Shows the font name, size and colour of the selection in the toolbar.
+	 *  @param cf Character format of the selection. */
+	void UpdateToolbarFont( const CharFormat& cf );
+
+	/** @brief Fills a LOGFONT from the character format of the selection.
+	 *  @param cf Character format of the selection.
+	 *  @param lf LOGFONT to fill. */
+	void CharFormatToLogFont( const CharFormat& cf, LOGFONT& lf ) const;
+
+	/** @brief Copies the bold, italic and underline effects into a LOGFONT.
+	 *  @param cf Character format of the selection.
+	 *  @param lf LOGFONT to fill. */
+	static void CharEffectsToLogFont( const CharFormat& cf, LOGFONT& lf );
+
+	/** @brief Sets a character format from the choice in the font dialog.
+	 *  @param dlg Font dialog closed with OK.
+	 *  @param cf Character format to set. */
+	static void FontDialogToCharFormat( CFontDialog& dlg, CharFormat& cf );
 };
 
 #endif // !defined(AFX_RULERRICHEDITCTRL_H__4CD13283_82E4_484A_83B4_DBAD5B64F17C__INCLUDED_)

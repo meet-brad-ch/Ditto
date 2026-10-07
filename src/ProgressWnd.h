@@ -47,6 +47,11 @@ protected:
     void GetPreviousSettings();
     void SaveCurrentSettings();
 
+    /** @brief Cancels on ESC (if asked) or on a left click on the cancel button of a modal window.
+     *  @param msg The message waiting in the queue.
+     *  @param bCancelOnESCkey TRUE to cancel on the ESC key. */
+    void CancelOnMessage(const MSG& msg, BOOL bCancelOnESCkey);
+
 protected:
     BOOL m_bCancelled;
     BOOL m_bModal;

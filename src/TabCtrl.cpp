@@ -471,71 +471,100 @@ void CTabCtrlEx::ResizeTabWindow(int nOldTab, int nNewTab, bool bNotify, bool bO
 	long lOldItemData = -1;
 	long lNewItemData = -1;
 
-	if ((nOldTab >= 0) && nOldTab < GetTabCount())
+	if (IsValidTab(nOldTab))
 	{
-		lOldItemData = m_Tabs[nOldTab].lItemData;
-		CWnd* pPrevWnd = m_Tabs[nOldTab].pWnd;
-		// Hide the previous tab
-		if (pPrevWnd && IsWindow(pPrevWnd->m_hWnd))
-			pPrevWnd->ShowWindow(SW_HIDE);
+		lOldItemData = HideTabWindow(nOldTab);
 	}
 
-	if ((nNewTab >= 0) && nNewTab < GetTabCount())
+	if (IsValidTab(nNewTab))
 	{
-		CRect rcWnd;
-		//GetClientRect(rcWnd);
-		GetWindowRect(rcWnd);
-
-		lNewItemData = m_Tabs[nNewTab].lItemData;
-
-		CWnd *pParentWnd = GetParent();
-		if (pParentWnd && IsWindow(pParentWnd->m_hWnd))
-			pParentWnd->ScreenToClient(rcWnd);
-		
-		int nPad = 0;
-		CWnd* pNextWnd = m_Tabs[nNewTab].pWnd;;
-		// Show the new tab and bring it to the top, set the focus to the new tab
-		if (pNextWnd && IsWindow(pNextWnd->m_hWnd))
-		{
-			// Resize the tab window
-			if (m_nStyle & SCS_TOP)
-			{
-				pNextWnd->SetWindowPos(&wndTop, rcWnd.left+nPad, rcWnd.top+m_nTabHeight+nPad,
-					rcWnd.Width()-2*nPad, rcWnd.Height()-m_nTabHeight-2*nPad, SWP_SHOWWINDOW);
-			}
-			else
-			{
-				pNextWnd->SetWindowPos(&wndTop, rcWnd.left+nPad, rcWnd.top+nPad,
-					rcWnd.Width()-2*nPad, rcWnd.Height()-m_nTabHeight-2*nPad, SWP_SHOWWINDOW);
-			}
-
-			if(m_bSetFocusToNewlySelectedTab)
-			{
-				// Set the focus
-				if (bOnSize == FALSE)
-					pNextWnd->SetFocus();
-			}
-		}
+		lNewItemData = ShowTabWindow(nNewTab, bOnSize);
 	}
 
 	if (bNotify)
 	{
-		// Send a notification message to the parent window
-		CWnd *pParentWnd = GetParent();
-		if (pParentWnd && IsWindow(pParentWnd->m_hWnd))
+		NotifyTabChange(nOldTab, nNewTab, lOldItemData, lNewItemData);
+	}
+}
+
+bool CTabCtrlEx::IsValidTab(int nTab)
+{
+	return (nTab >= 0) && nTab < GetTabCount();
+}
+
+bool CTabCtrlEx::IsLiveWindow(CWnd* pWnd)
+{
+	return pWnd && ::IsWindow(pWnd->m_hWnd);
+}
+
+long CTabCtrlEx::HideTabWindow(int nOldTab)
+{
+	long lOldItemData = m_Tabs[nOldTab].lItemData;
+	CWnd* pPrevWnd = m_Tabs[nOldTab].pWnd;
+	// Hide the previous tab
+	if (IsLiveWindow(pPrevWnd))
+		pPrevWnd->ShowWindow(SW_HIDE);
+
+	return lOldItemData;
+}
+
+long CTabCtrlEx::ShowTabWindow(int nNewTab, bool bOnSize)
+{
+	CRect rcWnd;
+	//GetClientRect(rcWnd);
+	GetWindowRect(rcWnd);
+
+	long lNewItemData = m_Tabs[nNewTab].lItemData;
+
+	CWnd *pParentWnd = GetParent();
+	if (IsLiveWindow(pParentWnd))
+		pParentWnd->ScreenToClient(rcWnd);
+
+	int nPad = 0;
+	CWnd* pNextWnd = m_Tabs[nNewTab].pWnd;;
+	// Show the new tab and bring it to the top, set the focus to the new tab
+	if (IsLiveWindow(pNextWnd))
+	{
+		// Resize the tab window
+		if (m_nStyle & SCS_TOP)
 		{
-			NMTABCHANGE nmTab;
-			ZeroMemory(&nmTab, sizeof(nmTab));
-			nmTab.hdr.code = SN_SETACTIVETAB;
-			nmTab.hdr.hwndFrom = GetSafeHwnd();
-			nmTab.hdr.idFrom = GetDlgCtrlID();
-			nmTab.lOldTab = nOldTab;
-			nmTab.lNewTab = nNewTab;
-			nmTab.lOldItemData = lOldItemData;
-			nmTab.lNewItemData = lNewItemData;
-			
-			pParentWnd->SendMessage(WM_NOTIFY, (WPARAM) nmTab.hdr.idFrom, (LPARAM) &nmTab);
+			pNextWnd->SetWindowPos(&wndTop, rcWnd.left+nPad, rcWnd.top+m_nTabHeight+nPad,
+				rcWnd.Width()-2*nPad, rcWnd.Height()-m_nTabHeight-2*nPad, SWP_SHOWWINDOW);
 		}
+		else
+		{
+			pNextWnd->SetWindowPos(&wndTop, rcWnd.left+nPad, rcWnd.top+nPad,
+				rcWnd.Width()-2*nPad, rcWnd.Height()-m_nTabHeight-2*nPad, SWP_SHOWWINDOW);
+		}
+
+		if(m_bSetFocusToNewlySelectedTab)
+		{
+			// Set the focus
+			if (bOnSize == FALSE)
+				pNextWnd->SetFocus();
+		}
+	}
+
+	return lNewItemData;
+}
+
+void CTabCtrlEx::NotifyTabChange(int nOldTab, int nNewTab, long lOldItemData, long lNewItemData)
+{
+	// Send a notification message to the parent window
+	CWnd *pParentWnd = GetParent();
+	if (IsLiveWindow(pParentWnd))
+	{
+		NMTABCHANGE nmTab;
+		ZeroMemory(&nmTab, sizeof(nmTab));
+		nmTab.hdr.code = SN_SETACTIVETAB;
+		nmTab.hdr.hwndFrom = GetSafeHwnd();
+		nmTab.hdr.idFrom = GetDlgCtrlID();
+		nmTab.lOldTab = nOldTab;
+		nmTab.lNewTab = nNewTab;
+		nmTab.lOldItemData = lOldItemData;
+		nmTab.lNewItemData = lNewItemData;
+
+		pParentWnd->SendMessage(WM_NOTIFY, (WPARAM) nmTab.hdr.idFrom, (LPARAM) &nmTab);
 	}
 }
 

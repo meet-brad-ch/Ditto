@@ -112,7 +112,7 @@ void CScrollHelper::ScrollToOrigin(bool scrollLeft, bool scrollTop)
 
     if ( scrollLeft )
     {
-        if ( m_displaySize.cx > 0 && m_pageSize.cx > 0 && m_scrollPos.cx > 0 )
+        if ( CanScrollToOrigin(m_displaySize.cx, m_pageSize.cx, m_scrollPos.cx) )
         {
             int deltaPos = -m_scrollPos.cx;
             m_scrollPos.cx += deltaPos;
@@ -123,7 +123,7 @@ void CScrollHelper::ScrollToOrigin(bool scrollLeft, bool scrollTop)
 
     if ( scrollTop )
     {
-        if ( m_displaySize.cy > 0 && m_pageSize.cy > 0 && m_scrollPos.cy > 0 )
+        if ( CanScrollToOrigin(m_displaySize.cy, m_pageSize.cy, m_scrollPos.cy) )
         {
             int deltaPos = -m_scrollPos.cy;
             m_scrollPos.cy += deltaPos;
@@ -133,15 +133,36 @@ void CScrollHelper::ScrollToOrigin(bool scrollLeft, bool scrollTop)
     }
 }
 
-void CScrollHelper::OnHScroll(UINT nSBCode, UINT /*nPos*/, CScrollBar* pScrollBar)
+bool CScrollHelper::CanScrollToOrigin(LONG displaySize, LONG pageSize, LONG scrollPos)
 {
-    if ( m_attachWnd == NULL )
-        return;
+    return displaySize > 0 && pageSize > 0 && scrollPos > 0;
+}
 
+int CScrollHelper::ClampScrollDelta(int deltaPos, LONG scrollPos, LONG displaySize, LONG pageSize)
+{
+    // Compute the new scroll position.
+    int newScrollPos = scrollPos + deltaPos;
+
+    // If the new scroll position is negative, we adjust
+    // deltaPos in order to scroll the window back to origin.
+    if ( newScrollPos < 0 )
+        deltaPos = -scrollPos;
+
+    // If the new scroll position is greater than the max scroll position,
+    // we adjust deltaPos in order to scroll the window precisely to the
+    // maximum position.
+    int maxScrollPos = displaySize - pageSize;
+    if ( newScrollPos > maxScrollPos )
+        deltaPos = maxScrollPos - scrollPos;
+
+    return deltaPos;
+}
+
+bool CScrollHelper::GetHScrollDelta(UINT nSBCode, CScrollBar* pScrollBar, int& deltaPos)
+{
     const int lineOffset = 60;
 
     // Compute the desired change or delta in scroll position.
-    int deltaPos = 0;
     switch( nSBCode )
     {
     case SB_LINELEFT:
@@ -176,43 +197,17 @@ void CScrollHelper::OnHScroll(UINT nSBCode, UINT /*nPos*/, CScrollBar* pScrollBa
 
     default:
         // We don't process other scrollbar messages.
-        return;
+        return false;
     }
 
-    // Compute the new scroll position.
-    int newScrollPos = m_scrollPos.cx + deltaPos;
-
-    // If the new scroll position is negative, we adjust
-    // deltaPos in order to scroll the window back to origin.
-    if ( newScrollPos < 0 )
-        deltaPos = -m_scrollPos.cx;
-
-    // If the new scroll position is greater than the max scroll position,
-    // we adjust deltaPos in order to scroll the window precisely to the
-    // maximum position.
-    int maxScrollPos = m_displaySize.cx - m_pageSize.cx;
-    if ( newScrollPos > maxScrollPos )
-        deltaPos = maxScrollPos - m_scrollPos.cx;
-
-    // Scroll the window if needed.
-    if ( deltaPos != 0 )
-    {
-        m_scrollPos.cx += deltaPos;
-        m_attachWnd->SetScrollPos(SB_HORZ, m_scrollPos.cx, TRUE);
-        m_attachWnd->ScrollWindow(-deltaPos, 0);
-		m_attachWnd->Invalidate();
-    }
+    return true;
 }
 
-void CScrollHelper::OnVScroll(UINT nSBCode, UINT /*nPos*/, CScrollBar* pScrollBar)
+bool CScrollHelper::GetVScrollDelta(UINT nSBCode, CScrollBar* pScrollBar, int& deltaPos)
 {
-    if ( m_attachWnd == NULL )
-        return;
-
     const int lineOffset = 60;
 
     // Compute the desired change or delta in scroll position.
-    int deltaPos = 0;
     switch( nSBCode )
     {
     case SB_LINEUP:
@@ -247,23 +242,45 @@ void CScrollHelper::OnVScroll(UINT nSBCode, UINT /*nPos*/, CScrollBar* pScrollBa
 
     default:
         // We don't process other scrollbar messages.
-        return;
+        return false;
     }
 
-    // Compute the new scroll position.
-    int newScrollPos = m_scrollPos.cy + deltaPos;
+    return true;
+}
 
-    // If the new scroll position is negative, we adjust
-    // deltaPos in order to scroll the window back to origin.
-    if ( newScrollPos < 0 )
-        deltaPos = -m_scrollPos.cy;
+void CScrollHelper::OnHScroll(UINT nSBCode, UINT /*nPos*/, CScrollBar* pScrollBar)
+{
+    if ( m_attachWnd == NULL )
+        return;
 
-    // If the new scroll position is greater than the max scroll position,
-    // we adjust deltaPos in order to scroll the window precisely to the
-    // maximum position.
-    int maxScrollPos = m_displaySize.cy - m_pageSize.cy;
-    if ( newScrollPos > maxScrollPos )
-        deltaPos = maxScrollPos - m_scrollPos.cy;
+    // Compute the desired change or delta in scroll position.
+    int deltaPos = 0;
+    if ( !GetHScrollDelta(nSBCode, pScrollBar, deltaPos) )
+        return;
+
+    deltaPos = ClampScrollDelta(deltaPos, m_scrollPos.cx, m_displaySize.cx, m_pageSize.cx);
+
+    // Scroll the window if needed.
+    if ( deltaPos != 0 )
+    {
+        m_scrollPos.cx += deltaPos;
+        m_attachWnd->SetScrollPos(SB_HORZ, m_scrollPos.cx, TRUE);
+        m_attachWnd->ScrollWindow(-deltaPos, 0);
+		m_attachWnd->Invalidate();
+    }
+}
+
+void CScrollHelper::OnVScroll(UINT nSBCode, UINT /*nPos*/, CScrollBar* pScrollBar)
+{
+    if ( m_attachWnd == NULL )
+        return;
+
+    // Compute the desired change or delta in scroll position.
+    int deltaPos = 0;
+    if ( !GetVScrollDelta(nSBCode, pScrollBar, deltaPos) )
+        return;
+
+    deltaPos = ClampScrollDelta(deltaPos, m_scrollPos.cy, m_displaySize.cy, m_pageSize.cy);
 
     // Scroll the window if needed.
     if ( deltaPos != 0 )

@@ -66,6 +66,18 @@ protected:
 
 private:
 
+	/** @brief Sets the font, sizes, buttons and bitmap of the created toolbar from the toolbar resource.
+	 *  @param hInstance Module that holds the resource.
+	 *  @param hGlobal Loaded toolbar resource; released at the end.
+	 *  @param pData Locked toolbar resource data.
+	 *  @param resourceId Id of the toolbar and bitmap resource.
+	 *  @return false if the bitmap cannot be loaded. */
+	bool InitButtons( HINSTANCE hInstance, HGLOBAL hGlobal, CToolBarData* pData, int resourceId );
+
+	/** @brief Creates the font name combo, the font size combo and the colour picker on the toolbar.
+	 *  @return true if all three controls were created. */
+	bool CreateEmbeddedControls();
+
 	CFontComboBox	m_fontCombo;
 	CSizeComboBox	m_size;
 	CColourPicker	m_color;

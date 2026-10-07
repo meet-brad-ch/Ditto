@@ -991,24 +991,34 @@ void CRulerRichEditCtrl::UpdateToolbarButtons()
 		m_rtf.GetParaFormat( para );
 
 		// Style
-		m_toolbar.SetState( BUTTON_BOLD, TBSTATE_ENABLED | ( ( cf.dwEffects & CFE_BOLD )  ? TBSTATE_CHECKED : 0 ) );
-		m_toolbar.SetState( BUTTON_ITALIC, TBSTATE_ENABLED | ( ( cf.dwEffects & CFE_ITALIC )  ? TBSTATE_CHECKED : 0 ) );
-		m_toolbar.SetState( BUTTON_UNDERLINE, TBSTATE_ENABLED | ( ( cf.dwEffects & CFM_UNDERLINE )  ? TBSTATE_CHECKED : 0 ) );
-		m_toolbar.SetState( BUTTON_LEFTALIGN, TBSTATE_ENABLED | ( para.wAlignment == PFA_LEFT ? TBSTATE_CHECKED : 0 ) );
-		m_toolbar.SetState( BUTTON_CENTERALIGN, TBSTATE_ENABLED | ( para.wAlignment == PFA_CENTER ? TBSTATE_CHECKED : 0 ) );
-		m_toolbar.SetState( BUTTON_RIGHTALIGN, TBSTATE_ENABLED | ( para.wAlignment == PFA_RIGHT ? TBSTATE_CHECKED : 0 ) );
-		m_toolbar.SetState( BUTTON_BULLET, TBSTATE_ENABLED | ( para.wNumbering ? TBSTATE_CHECKED : 0 ) );
-		m_toolbar.SetState( ID_BUTTONWRAP, TBSTATE_ENABLED | ( m_bInWrapMode ? TBSTATE_CHECKED : 0 ));
+		m_toolbar.SetState( BUTTON_BOLD, ToolbarButtonState( ( cf.dwEffects & CFE_BOLD ) != 0 ) );
+		m_toolbar.SetState( BUTTON_ITALIC, ToolbarButtonState( ( cf.dwEffects & CFE_ITALIC ) != 0 ) );
+		m_toolbar.SetState( BUTTON_UNDERLINE, ToolbarButtonState( ( cf.dwEffects & CFM_UNDERLINE ) != 0 ) );
+		m_toolbar.SetState( BUTTON_LEFTALIGN, ToolbarButtonState( para.wAlignment == PFA_LEFT ) );
+		m_toolbar.SetState( BUTTON_CENTERALIGN, ToolbarButtonState( para.wAlignment == PFA_CENTER ) );
+		m_toolbar.SetState( BUTTON_RIGHTALIGN, ToolbarButtonState( para.wAlignment == PFA_RIGHT ) );
+		m_toolbar.SetState( BUTTON_BULLET, ToolbarButtonState( para.wNumbering != 0 ) );
+		m_toolbar.SetState( ID_BUTTONWRAP, ToolbarButtonState( m_bInWrapMode != FALSE ) );
 
-		if( cf.dwMask & CFM_FACE )
-			m_toolbar.SetFontName( CString( cf.szFaceName ) );
-
-		if( cf.dwMask & CFM_SIZE )
-			m_toolbar.SetFontSize( cf.yHeight / 20 );
-
-		if( cf.dwMask & CFM_COLOR )
-			m_toolbar.SetFontColor( cf.crTextColor );
+		UpdateToolbarFont( cf );
 	}
+}
+
+UINT CRulerRichEditCtrl::ToolbarButtonState( bool checked )
+{
+	return TBSTATE_ENABLED | ( checked ? TBSTATE_CHECKED : 0 );
+}
+
+void CRulerRichEditCtrl::UpdateToolbarFont( const CharFormat& cf )
+{
+	if( cf.dwMask & CFM_FACE )
+		m_toolbar.SetFontName( CString( cf.szFaceName ) );
+
+	if( cf.dwMask & CFM_SIZE )
+		m_toolbar.SetFontSize( cf.yHeight / 20 );
+
+	if( cf.dwMask & CFM_COLOR )
+		m_toolbar.SetFontColor( cf.crTextColor );
 }
 
 void CRulerRichEditCtrl::SetEffect( int mask, int effect )
@@ -1087,9 +1097,26 @@ void CRulerRichEditCtrl::DoFont()
 	ZeroMemory( &lf, sizeof( LOGFONT ) );
 	CharFormat	cf;
 	m_rtf.SendMessage( EM_GETCHARFORMAT, SCF_SELECTION, ( LPARAM ) &cf );
-	int height;
 
 	// Creating a LOGFONT from the current font settings
+	CharFormatToLogFont( cf, lf );
+
+	// Show font dialog
+	CFontDialog	dlg(&lf);
+	if(dlg.DoModal() == IDOK)
+	{
+		// Apply new font
+		FontDialogToCharFormat( dlg, cf );
+
+		m_rtf.SendMessage(EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM) &cf);
+
+		m_rtf.SetFocus();
+	}
+}
+
+void CRulerRichEditCtrl::CharFormatToLogFont( const CharFormat& cf, LOGFONT& lf ) const
+{
+	int height{};
 
 	// Font
 	if( cf.dwMask & CFM_FACE )
@@ -1105,6 +1132,11 @@ void CRulerRichEditCtrl::DoFont()
 	}
 
 	// Effects
+	CharEffectsToLogFont( cf, lf );
+}
+
+void CRulerRichEditCtrl::CharEffectsToLogFont( const CharFormat& cf, LOGFONT& lf )
+{
 	if( cf.dwMask & CFM_BOLD )
 	{
 		if( cf.dwEffects & CFE_BOLD )
@@ -1120,39 +1152,32 @@ void CRulerRichEditCtrl::DoFont()
 	if( cf.dwMask & CFM_UNDERLINE )
 		if( cf.dwEffects & CFE_UNDERLINE )
 			lf.lfUnderline = TRUE;
+}
 
-	// Show font dialog
-	CFontDialog	dlg(&lf);
-	if(dlg.DoModal() == IDOK)
+void CRulerRichEditCtrl::FontDialogToCharFormat( CFontDialog& dlg, CharFormat& cf )
+{
+	cf.yHeight = dlg.GetSize() * 2;
+	lstrcpy(cf.szFaceName, dlg.GetFaceName());
+
+	cf.dwMask = CFM_FACE | CFM_SIZE;
+	cf.dwEffects = 0;
+
+	if( dlg.IsBold() )
 	{
-		// Apply new font
-		cf.yHeight = dlg.GetSize() * 2;
-		lstrcpy(cf.szFaceName, dlg.GetFaceName());
+		cf.dwMask |= CFM_BOLD;
+		cf.dwEffects |= CFE_BOLD;
+	}
 
-		cf.dwMask = CFM_FACE | CFM_SIZE;
-		cf.dwEffects = 0;
+	if( dlg.IsItalic() )
+	{
+		cf.dwMask |= CFM_ITALIC;
+		cf.dwEffects |= CFE_ITALIC;
+	}
 
-		if( dlg.IsBold() )
-		{
-			cf.dwMask |= CFM_BOLD;
-			cf.dwEffects |= CFE_BOLD;
-		}
-
-		if( dlg.IsItalic() )
-		{
-			cf.dwMask |= CFM_ITALIC;
-			cf.dwEffects |= CFE_ITALIC;
-		}
-
-		if( dlg.IsUnderline() )
-		{
-			cf.dwMask |= CFM_UNDERLINE;
-			cf.dwEffects |= CFE_UNDERLINE;
-		}
-
-		m_rtf.SendMessage(EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM) &cf);
-
-		m_rtf.SetFocus();
+	if( dlg.IsUnderline() )
+	{
+		cf.dwMask |= CFM_UNDERLINE;
+		cf.dwEffects |= CFE_UNDERLINE;
 	}
 }
 
@@ -1699,75 +1724,67 @@ BOOL CRulerRichEditCtrl::PreTranslateMessage(MSG* pMsg)
 {
 	if(pMsg->message == WM_KEYDOWN)
 	{
-		switch(pMsg->wParam)
+		// Ctrl + key shortcuts; the key is checked before the Ctrl state
+		const std::array<ControlShortcut, 9> shortcuts{ {
+			{ 'X', &CRulerRichEditCtrl::RtfCut },
+			{ 'C', &CRulerRichEditCtrl::RtfCopy },
+			{ 'V', &CRulerRichEditCtrl::RtfPaste },
+			{ 'I', &CRulerRichEditCtrl::DoItalic },
+			{ 'B', &CRulerRichEditCtrl::DoBold },
+			{ 'U', &CRulerRichEditCtrl::DoUnderline },
+			{ 'Z', &CRulerRichEditCtrl::RtfUndo },
+			{ 'Y', &CRulerRichEditCtrl::RtfRedo },
+			{ 'W', &CRulerRichEditCtrl::DoWrap }
+		} };
+
+		if(RunControlShortcut(pMsg->wParam, shortcuts))
 		{
-		case 'X':
-			if(CONTROL_PRESSED)
-			{
-				m_rtf.Cut();
-				return TRUE;
-			}
-			break;
-
-		case 'C':
-			if(CONTROL_PRESSED)
-			{
-				m_rtf.Copy();
-				return TRUE;
-			}
-			break;
-
-		case 'V':
-			if(CONTROL_PRESSED)
-			{
-				m_rtf.Paste();
-				return TRUE;
-			}
-			break;
-		case 'I':
-			if(CONTROL_PRESSED)
-			{
-				DoItalic();
-				return TRUE;
-			}
-			break;
-		case 'B':
-			if(CONTROL_PRESSED)
-			{
-				DoBold();
-				return TRUE;
-			}
-			break;
-		case 'U':
-			if(CONTROL_PRESSED)
-			{
-				DoUnderline();
-				return TRUE;
-			}
-			break;
-		case 'Z':
-			if(CONTROL_PRESSED)
-			{
-				m_rtf.Undo();
-				return TRUE;
-			}
-			break;
-		case 'Y':
-			if(CONTROL_PRESSED)
-			{
-				m_rtf.Redo();
-				return TRUE;
-			}
-			break;
-		case 'W':
-			if(CONTROL_PRESSED)
-			{
-				DoWrap();
-				return TRUE;
-			}
-			break;
+			return TRUE;
 		}
 	}
 
 	return CWnd::PreTranslateMessage(pMsg);
+}
+
+bool CRulerRichEditCtrl::RunControlShortcut(WPARAM key, std::span<const ControlShortcut> shortcuts)
+{
+	for(const ControlShortcut& shortcut : shortcuts)
+	{
+		if(shortcut.key == key)
+		{
+			if(CONTROL_PRESSED)
+			{
+				(this->*shortcut.handler)();
+				return true;
+			}
+			return false;
+		}
+	}
+
+	return false;
+}
+
+void CRulerRichEditCtrl::RtfCut()
+{
+	m_rtf.Cut();
+}
+
+void CRulerRichEditCtrl::RtfCopy()
+{
+	m_rtf.Copy();
+}
+
+void CRulerRichEditCtrl::RtfPaste()
+{
+	m_rtf.Paste();
+}
+
+void CRulerRichEditCtrl::RtfUndo()
+{
+	m_rtf.Undo();
+}
+
+void CRulerRichEditCtrl::RtfRedo()
+{
+	m_rtf.Redo();
 }

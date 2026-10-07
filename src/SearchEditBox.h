@@ -40,6 +40,30 @@ protected:
 	//}}AFX_MSG
 
 	DECLARE_MESSAGE_MAP()
+
+private:
+	/** @brief Handles the return, list navigation, cut, copy and delete keys.
+	 *  @param pMsg The WM_KEYDOWN message.
+	 *  @return true if the key was handled. */
+	bool HandleKeyDown(const MSG* pMsg);
+
+	/** @brief Return key: asks the parent to search. */
+	void HandleReturnKey();
+
+	/** @brief Tells if the key moves the selection in the clip list.
+	 *  @param key Virtual key code.
+	 *  @return true for down, up and F3. */
+	static bool IsListNavigationKey(WPARAM key);
+
+	/** @brief Tells if the key is Ctrl + C, Ctrl + X or delete.
+	 *  @param key Virtual key code.
+	 *  @return true for those keys. */
+	static bool IsCutCopyDeleteKey(WPARAM key);
+
+	/** @brief Sends the key to the parent window as CB_UPDOWN.
+	 *  @param pMsg The key message.
+	 *  @return true if there is a parent and the message was sent. */
+	bool SendKeyToParent(const MSG* pMsg);
 };
 
 /////////////////////////////////////////////////////////////////////////////

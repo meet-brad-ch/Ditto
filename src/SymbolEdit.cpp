@@ -80,110 +80,146 @@ BOOL CSymbolEdit::PreTranslateMessage(MSG* pMsg)
 	if (pMsg->message == WM_KEYDOWN &&
 		CONTROL_PRESSED)
 	{
-		switch (pMsg->wParam)
+		if (HandleControlKey(pMsg))
 		{
-		case 'Z':
-			Undo();
-			return TRUE;
-		case 'X':
-			Cut();
-			return TRUE;
-		case 'C':
-			{
-				int startChar;
-				int endChar;
-				this->GetSel(startChar, endChar);
-				if (startChar == endChar)
-				{
-					CWnd *pWnd = GetParent();
-					if (pWnd)
-					{
-						pWnd->SendMessage(NM_COPY_CLIP, pMsg->wParam, pMsg->lParam);
-					}
-				}
-				else
-				{
-					Copy();
-				}
-			}
-			return TRUE;
-		case 'V':
-			Paste();
-			return TRUE;
-		case 'A':
-			SetSel(0, -1);
 			return TRUE;
 		}
 	}
 
-	switch (pMsg->message)
+	if (pMsg->message == WM_KEYDOWN &&
+		HandleKeyDown(pMsg))
 	{
-	case WM_KEYDOWN:
-	{
-		if (pMsg->wParam == VK_RETURN)
-		{
-			CWnd *pWnd = GetParent();
-			if (pWnd)
-			{
-				if (CGetSetOptions::m_bFindAsYouType)
-				{
-					pWnd->SendMessage(NM_SEARCH_ENTER_PRESSED, 0, 0);
-				}
-				else
-				{
-					//Send a message to the parent to refill the lb from the search
-					pWnd->PostMessage(CB_SEARCH, 0, 0);
-				}
-
-				AddToSearchHistory();
-			}
-
-			return TRUE;
-		}
-		else if (pMsg->wParam == VK_DOWN &&
-			((GetKeyState(VK_CONTROL) & 0x8000) || ((GetKeyState(VK_CONTROL) & 0x8000) && (GetKeyState(VK_SHIFT) & 0x8000))))
-		{
-			if (ShowSearchHistoryMenu())
-			{
-				return TRUE;
-			}
-		}
-		else if (pMsg->wParam == VK_DOWN ||
-			pMsg->wParam == VK_UP ||
-			pMsg->wParam == VK_PRIOR ||
-			pMsg->wParam == VK_NEXT)
-		{
-			CWnd *pWnd = GetParent();
-			if (pWnd)
-			{
-				pWnd->SendMessage(CB_UPDOWN, pMsg->wParam, pMsg->lParam);
-				return TRUE;
-			}
-		}
-		else if (pMsg->wParam == VK_DELETE)
-		{
-			int startChar;
-			int endChar;
-			this->GetSel(startChar, endChar);
-			CString cs;
-			this->GetWindowText(cs);
-			//if selection is at the end then forward this on to the parent to delete the selected clip
-			if(startChar == cs.GetLength() &&
-				endChar == cs.GetLength())
-			{ 
-				CWnd *pWnd = GetParent();
-				if (pWnd)
-				{
-					pWnd->SendMessage(NM_DELETE, pMsg->wParam, pMsg->lParam);
-					return TRUE;
-				}
-			}
-		}
-		break;
-	}
+		return TRUE;
 	}
 
 	return CEdit::PreTranslateMessage(pMsg);
+}
+
+bool CSymbolEdit::HandleControlKey(MSG* pMsg)
+{
+	switch (pMsg->wParam)
+	{
+	case 'Z':
+		Undo();
+		return true;
+	case 'X':
+		Cut();
+		return true;
+	case 'C':
+		CopySelectionOrClip(pMsg);
+		return true;
+	case 'V':
+		Paste();
+		return true;
+	case 'A':
+		SetSel(0, -1);
+		return true;
+	}
+
+	return false;
+}
+
+void CSymbolEdit::CopySelectionOrClip(const MSG* pMsg)
+{
+	int startChar{};
+	int endChar{};
+	this->GetSel(startChar, endChar);
+	if (startChar == endChar)
+	{
+		SendKeyToParent(NM_COPY_CLIP, pMsg);
+	}
+	else
+	{
+		Copy();
+	}
+}
+
+bool CSymbolEdit::SendKeyToParent(UINT message, const MSG* pMsg)
+{
+	CWnd *pWnd = GetParent();
+	if (pWnd)
+	{
+		pWnd->SendMessage(message, pMsg->wParam, pMsg->lParam);
+		return true;
+	}
+
+	return false;
+}
+
+bool CSymbolEdit::IsHistoryMenuKeyState()
+{
+	return ((GetKeyState(VK_CONTROL) & 0x8000) || ((GetKeyState(VK_CONTROL) & 0x8000) && (GetKeyState(VK_SHIFT) & 0x8000)));
+}
+
+bool CSymbolEdit::IsListNavigationKey(WPARAM key)
+{
+	return key == VK_DOWN ||
+		key == VK_UP ||
+		key == VK_PRIOR ||
+		key == VK_NEXT;
+}
+
+bool CSymbolEdit::HandleKeyDown(MSG* pMsg)
+{
+	if (pMsg->wParam == VK_RETURN)
+	{
+		HandleReturnKey();
+		return true;
+	}
+	else if (pMsg->wParam == VK_DOWN &&
+		IsHistoryMenuKeyState())
+	{
+		if (ShowSearchHistoryMenu())
+		{
+			return true;
+		}
+	}
+	else if (IsListNavigationKey(pMsg->wParam))
+	{
+		return SendKeyToParent(CB_UPDOWN, pMsg);
+	}
+	else if (pMsg->wParam == VK_DELETE)
+	{
+		return HandleDeleteKey(pMsg);
+	}
+
+	return false;
+}
+
+void CSymbolEdit::HandleReturnKey()
+{
+	CWnd *pWnd = GetParent();
+	if (pWnd)
+	{
+		if (CGetSetOptions::m_bFindAsYouType)
+		{
+			pWnd->SendMessage(NM_SEARCH_ENTER_PRESSED, 0, 0);
+		}
+		else
+		{
+			//Send a message to the parent to refill the lb from the search
+			pWnd->PostMessage(CB_SEARCH, 0, 0);
+		}
+
+		AddToSearchHistory();
+	}
+}
+
+bool CSymbolEdit::HandleDeleteKey(const MSG* pMsg)
+{
+	int startChar{};
+	int endChar{};
+	this->GetSel(startChar, endChar);
+	CString cs;
+	this->GetWindowText(cs);
+	//if selection is at the end then forward this on to the parent to delete the selected clip
+	if(startChar == cs.GetLength() &&
+		endChar == cs.GetLength())
+	{
+		return SendKeyToParent(NM_DELETE, pMsg);
+	}
+
+	return false;
 }
 
 CString CSymbolEdit::SavePastSearches()
@@ -466,23 +502,7 @@ void CSymbolEdit::OnPaint()
 
 	if (m_hSymbolIcon)
 	{
-		// Drawing the icon
-		int width = GetSystemMetrics(SM_CXSMICON);
-		int height = GetSystemMetrics(SM_CYSMICON);
-
-		::DrawIconEx(
-			dc.m_hDC,
-			rect.right - width - 1,
-			1,
-			m_hSymbolIcon.get(),
-			width,
-			height,
-			0,
-			NULL,
-			DI_NORMAL);
-
-		rect.left += LOWORD(margins) + 1;
-		rect.right -= (width + 7);
+		DrawSymbolIcon(dc, rect, margins);
 	}
 	else
 	{
@@ -492,50 +512,14 @@ void CSymbolEdit::OnPaint()
 
 	CString text;
 	GetWindowText(text);
-	CFont* oldFont = NULL;
 
 	//rect.top += 1;
 
-
-	if(this == GetFocus() || text.GetLength() > 0)
-	{
-		dc.FillSolidRect(rect, CGetSetOptions::m_Theme.SearchTextBoxFocusBG());
-
-		//CBrush borderBrush(CGetSetOptions::m_Theme.SearchTextBoxFocusBorder());
-		//dc.FrameRect(rect, &borderBrush);
-
-		//rect.DeflateRect(1, 1, 1, 1);
-		//textRect.DeflateRect(0, 1, 1, 1);
-
-		oldFont = dc.SelectObject(GetFont());		
-
-		COLORREF oldColor = dc.GetTextColor();
-		dc.SetTextColor(CGetSetOptions::m_Theme.SearchTextBoxFocusText());
-			
-		dc.DrawText(text, textRect, DT_SINGLELINE | DT_INTERNAL | DT_EDITCONTROL | DT_NOPREFIX);
-
-		dc.SelectObject(oldFont);
-		dc.SetTextColor(oldColor);
-	}
-	else
-	{
-		dc.FillSolidRect(rect, CGetSetOptions::m_Theme.MainWindowBG());
-	}
-
+	DrawTextArea(dc, rect, textRect, text);
 
 	if (text.GetLength() == 0 && m_strPromptText.GetLength() > 0)
 	{
-		//if we aren't showing the close icon, then use the full space
-		textRect.right += m_windowDpi->Scale(16);
-		//textRect.right -= LOWORD(margins);
-
-		oldFont = dc.SelectObject(&m_fontPrompt);
-		COLORREF color = dc.GetTextColor();
-		dc.SetTextColor(m_colorPromptText);
-
-		dc.DrawText(m_strPromptText, textRect, DT_LEFT | DT_SINGLELINE | DT_EDITCONTROL | DT_VCENTER | DT_NOPREFIX);
-		dc.SetTextColor(color);
-		dc.SelectObject(oldFont);
+		DrawPromptText(dc, textRect);
 	}
 
 	int right = rect.right;
@@ -577,6 +561,71 @@ void CSymbolEdit::OnPaint()
 
 	//OutputDebugString(_T("OnPaint \r\n"));
 
+}
+
+void CSymbolEdit::DrawSymbolIcon(CDC& dc, CRect& rect, DWORD margins)
+{
+	// Drawing the icon
+	int width = GetSystemMetrics(SM_CXSMICON);
+	int height = GetSystemMetrics(SM_CYSMICON);
+
+	::DrawIconEx(
+		dc.m_hDC,
+		rect.right - width - 1,
+		1,
+		m_hSymbolIcon.get(),
+		width,
+		height,
+		0,
+		NULL,
+		DI_NORMAL);
+
+	rect.left += LOWORD(margins) + 1;
+	rect.right -= (width + 7);
+}
+
+void CSymbolEdit::DrawTextArea(CDC& dc, const CRect& rect, const CRect& textRect, const CString& text)
+{
+	if(this == GetFocus() || text.GetLength() > 0)
+	{
+		dc.FillSolidRect(rect, CGetSetOptions::m_Theme.SearchTextBoxFocusBG());
+
+		//CBrush borderBrush(CGetSetOptions::m_Theme.SearchTextBoxFocusBorder());
+		//dc.FrameRect(rect, &borderBrush);
+
+		//rect.DeflateRect(1, 1, 1, 1);
+		//textRect.DeflateRect(0, 1, 1, 1);
+
+		CFont* oldFont = dc.SelectObject(GetFont());
+
+		COLORREF oldColor = dc.GetTextColor();
+		dc.SetTextColor(CGetSetOptions::m_Theme.SearchTextBoxFocusText());
+
+		CRect drawRect(textRect);
+		dc.DrawText(text, drawRect, DT_SINGLELINE | DT_INTERNAL | DT_EDITCONTROL | DT_NOPREFIX);
+
+		dc.SelectObject(oldFont);
+		dc.SetTextColor(oldColor);
+	}
+	else
+	{
+		dc.FillSolidRect(rect, CGetSetOptions::m_Theme.MainWindowBG());
+	}
+}
+
+void CSymbolEdit::DrawPromptText(CDC& dc, CRect textRect)
+{
+	//if we aren't showing the close icon, then use the full space
+	textRect.right += m_windowDpi->Scale(16);
+	//textRect.right -= LOWORD(margins);
+
+	CFont* oldFont = dc.SelectObject(&m_fontPrompt);
+	COLORREF color = dc.GetTextColor();
+	dc.SetTextColor(m_colorPromptText);
+
+	dc.DrawText(m_strPromptText, textRect, DT_LEFT | DT_SINGLELINE | DT_EDITCONTROL | DT_VCENTER | DT_NOPREFIX);
+	dc.SetTextColor(color);
+	dc.SelectObject(oldFont);
 }
 
 void CSymbolEdit::OnSize(UINT nType, int cx, int cy)

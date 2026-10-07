@@ -437,40 +437,9 @@ BOOL CEditWnd::PreTranslateMessage(MSG* pMsg)
 
 	if(pMsg->message == WM_KEYDOWN)
 	{
-		if(pMsg->wParam == VK_ESCAPE)
+		if(HandleKeyDown(pMsg->wParam))
 		{
-			if(GetKeyState(VK_SHIFT) & 0x8000)
-			{
-				OnSaveCloseClipboard();
-			}
-			else
-			{
-				OnClose();
-			}
 			return TRUE;
-		}
-		else if(pMsg->wParam == 'S')
-		{
-			if(CONTROL_PRESSED)
-			{
-				if(GetKeyState(VK_SHIFT) & 0x8000)
-				{
-					OnSaveAll();
-					return TRUE;
-				}
-				else
-				{
-					OnSave();
-					return TRUE;
-				}
-			}
-		}
-		else if(pMsg->wParam == 'N')
-		{
-			if(CONTROL_PRESSED)
-			{
-				OnNew();
-			}
 		}
 	}
 	else if(pMsg->message == WM_SYSKEYDOWN) // ALT key is held down
@@ -484,4 +453,45 @@ BOOL CEditWnd::PreTranslateMessage(MSG* pMsg)
 	}
 
 	return CWnd::PreTranslateMessage(pMsg);
+}
+
+bool CEditWnd::HandleKeyDown(WPARAM key)
+{
+	if(key == VK_ESCAPE)
+	{
+		if(GetKeyState(VK_SHIFT) & 0x8000)
+		{
+			OnSaveCloseClipboard();
+		}
+		else
+		{
+			OnClose();
+		}
+		return true;
+	}
+	else if(key == 'S')
+	{
+		if(CONTROL_PRESSED)
+		{
+			if(GetKeyState(VK_SHIFT) & 0x8000)
+			{
+				OnSaveAll();
+				return true;
+			}
+			else
+			{
+				OnSave();
+				return true;
+			}
+		}
+	}
+	else if(key == 'N')
+	{
+		if(CONTROL_PRESSED)
+		{
+			OnNew();
+		}
+	}
+
+	return false;
 }

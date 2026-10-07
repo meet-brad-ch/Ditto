@@ -1,6 +1,8 @@
 #pragma once
 
+#include <array>
 #include <memory>
+#include <span>
 
 #include "CGdiPlusBitmap.h"
 #include "DPI.h"
@@ -21,6 +23,24 @@ public:
 	UINT ImageHeight() { return m_pStdImage->m_pBitmap->GetHeight(); }
 
 	void Reset();
+
+private:
+	/** @brief One candidate image of LoadStdImageDPI: used when the DPI is at least minDpi. */
+	struct DpiImageChoice
+	{
+		/** @brief Lowest DPI that uses this image. */
+		int minDpi{};
+		/** @brief Resource id of the image. */
+		UINT id{};
+		/** @brief true if the image is optional: an id of 0 skips this entry. */
+		bool optional{};
+	};
+
+	/** @brief Picks the resource id of the first matching DPI choice.
+	 *  @param dpi Current DPI.
+	 *  @param choices Candidates, largest DPI first; the last one must always match.
+	 *  @return The chosen resource id (0 if no entry matches). */
+	static UINT PickDpiImageId(int dpi, std::span<const DpiImageChoice> choices);
 
 protected:
 	/** @brief The loaded image (owned); empty until a Load call or after Reset. */

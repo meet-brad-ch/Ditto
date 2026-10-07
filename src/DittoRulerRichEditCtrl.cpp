@@ -31,7 +31,7 @@ bool CDittoRulerRichEditCtrl::LoadItem(long lID, CString csDesc)
 
 	// Registered formats are in 0xC000-0xFFFF, so they fit a CLIPFORMAT
 	Clip.m_cfType = static_cast<CLIPFORMAT>(RegisterClipboardFormat(CF_RTF));
-	if(theApp.GetClipData(lID, Clip) && Clip.m_hgData)
+	if(HasClipData(lID, Clip))
 	{
 		CString cs(Clip.GetAsCStringA());
 		SetRTF(cs);
@@ -44,7 +44,7 @@ bool CDittoRulerRichEditCtrl::LoadItem(long lID, CString csDesc)
 	if(bSetText == false)
 	{
 		Clip.m_cfType = CF_UNICODETEXT;
-		if(theApp.GetClipData(lID, Clip) && Clip.m_hgData)
+		if(HasClipData(lID, Clip))
 		{
 			SetText(Clip.GetAsCString());
 			bSetText = true;		
@@ -57,7 +57,7 @@ bool CDittoRulerRichEditCtrl::LoadItem(long lID, CString csDesc)
 	if(bSetText == false)
 	{
 		Clip.m_cfType = CF_TEXT;
-		if(theApp.GetClipData(lID, Clip) && Clip.m_hgData)
+		if(HasClipData(lID, Clip))
 		{
 			CString csText(Clip.GetAsCStringA());
 			SetText(csText);
@@ -72,6 +72,11 @@ bool CDittoRulerRichEditCtrl::LoadItem(long lID, CString csDesc)
 	m_rtf.SetModify(FALSE);
 
 	return bSetText;
+}
+
+bool CDittoRulerRichEditCtrl::HasClipData(long lID, CClipFormat& Clip)
+{
+	return theApp.GetClipData(lID, Clip) && Clip.m_hgData;
 }
 
 long CDittoRulerRichEditCtrl::GetTypeFlags(long lID)
@@ -143,15 +148,7 @@ int CDittoRulerRichEditCtrl::SaveToDB(BOOL bUpdateDesc)
 
 		CClip Clip;
 		Clip.m_id = m_lID;
-		if(saveTypes & stRTF)
-		{
-			LoadRTFData(Clip);
-		}
-
-		if(saveTypes & stCF_TEXT || saveTypes & stCF_UNICODETEXT)
-		{
-			LoadTextData(Clip);
-		}
+		LoadFormatsToSave(Clip, saveTypes);
 
 		if(Clip.m_Formats.GetSize() <= 0)
 		{
@@ -166,19 +163,7 @@ int CDittoRulerRichEditCtrl::SaveToDB(BOOL bUpdateDesc)
 		}
 		else
 		{
-			bSetModifyToFalse = false;
-			Clip.MakeLatestOrder();
-			CCopyProperties Prop(-1, this, &Clip);
-			Prop.SetHandleKillFocus(true);
-			Prop.SetToTopMost(false);
-			if(Prop.DoModal() == IDOK)
-			{
-				Clip.AddToDB();
-				m_csDescription = Clip.m_Desc;
-				m_lID = Clip.m_id;
-				bUpdateDesc = TRUE;
-				bSetModifyToFalse = true;
-			}
+			bSetModifyToFalse = AddNewClip(Clip, bUpdateDesc);
 		}
 
 		nRet = SAVED_CLIP_TO_DB;
@@ -197,6 +182,38 @@ int CDittoRulerRichEditCtrl::SaveToDB(BOOL bUpdateDesc)
 		m_rtf.SetModify(FALSE);
 
 	return nRet;
+}
+
+void CDittoRulerRichEditCtrl::LoadFormatsToSave(CClip& Clip, int saveTypes)
+{
+	if(saveTypes & stRTF)
+	{
+		LoadRTFData(Clip);
+	}
+
+	if(saveTypes & stCF_TEXT || saveTypes & stCF_UNICODETEXT)
+	{
+		LoadTextData(Clip);
+	}
+}
+
+bool CDittoRulerRichEditCtrl::AddNewClip(CClip& Clip, BOOL& bUpdateDesc)
+{
+	bool bSetModifyToFalse = false;
+	Clip.MakeLatestOrder();
+	CCopyProperties Prop(-1, this, &Clip);
+	Prop.SetHandleKillFocus(true);
+	Prop.SetToTopMost(false);
+	if(Prop.DoModal() == IDOK)
+	{
+		Clip.AddToDB();
+		m_csDescription = Clip.m_Desc;
+		m_lID = Clip.m_id;
+		bUpdateDesc = TRUE;
+		bSetModifyToFalse = true;
+	}
+
+	return bSetModifyToFalse;
 }
 
 int CDittoRulerRichEditCtrl::SaveTypesOf(CClipTypes& types)

@@ -70,6 +70,75 @@ protected:
 	void ScrollToPosition(int thumbPos);
 
 private:
+	/** @brief Native scroll bar type that matches the orientation.
+	 *  @return SB_VERT for a vertical bar, SB_HORZ for a horizontal bar. */
+	int GetScrollBarType() const;
+
+	/** @brief Tells if the list control exists and has a window.
+	 *  @return true if m_pListCtrl and its window handle are set. */
+	bool HasListWindow() const;
+
+	/** @brief Scales a pixel value for the DPI, if a DPI object is set.
+	 *  @param value Value at 96 DPI.
+	 *  @return The scaled value, or value when no DPI object is set. */
+	int ScaleForDpi(int value) const;
+
+	/** @brief Tells if the scroll info has a range and a page.
+	 *  @param si Scroll info of the list control.
+	 *  @return true if nMax > 0 and nPage > 0. */
+	static bool HasScrollRange(const SCROLLINFO& si);
+
+	/** @brief Track length along the orientation.
+	 *  @param clientRect Client rectangle of the scroll bar.
+	 *  @return Height for a vertical bar, width for a horizontal bar. */
+	int GetTrackSize(const CRect& clientRect) const;
+
+	/** @brief Thumb length, proportional to the page, not below the minimum thumb size.
+	 *  @param si Scroll info of the list control.
+	 *  @param totalRange nMax - nMin + 1.
+	 *  @param trackSize Track length in pixels.
+	 *  @return Thumb length in pixels. */
+	int CalcThumbSize(const SCROLLINFO& si, int totalRange, int trackSize) const;
+
+	/** @brief Thumb start position on the track for the current scroll position.
+	 *  @param si Scroll info of the list control.
+	 *  @param totalRange nMax - nMin + 1.
+	 *  @param trackSize Track length in pixels.
+	 *  @param thumbSize Thumb length in pixels.
+	 *  @return Thumb position, clamped to the track. */
+	static int CalcThumbPos(const SCROLLINFO& si, int totalRange, int trackSize, int thumbSize);
+
+	/** @brief Builds the thumb rectangle for the orientation.
+	 *  @param clientRect Client rectangle of the scroll bar.
+	 *  @param thumbPos Thumb start position.
+	 *  @param thumbSize Thumb length.
+	 *  @return The thumb rectangle. */
+	CRect MakeThumbRect(const CRect& clientRect, int thumbPos, int thumbSize) const;
+
+	/** @brief Scroll bar rectangle in parent client coordinates.
+	 *  @param listRectInParent List control rectangle in parent client coordinates.
+	 *  @param parentClientRect Parent client rectangle.
+	 *  @return The rectangle to move the scroll bar to. */
+	CRect CalcScrollRect(const CRect& listRectInParent, const CRect& parentClientRect) const;
+
+	/** @brief Converts a dragged thumb position into a list scroll position.
+	 *  @param thumbPos Requested thumb position (clamped to the track).
+	 *  @param trackSize Track length in pixels.
+	 *  @param thumbSize Thumb length in pixels.
+	 *  @param scrollableRange totalRange - nPage.
+	 *  @return The new scroll position. */
+	static int CalcScrollPosFromThumb(int thumbPos, int trackSize, int thumbSize, int scrollableRange);
+
+	/** @brief Scrolls the list vertically to a row position.
+	 *  @param si Scroll info of the list control (changed by the fallback path).
+	 *  @param newPos New top row position. */
+	void ScrollVerticalTo(SCROLLINFO& si, int newPos);
+
+	/** @brief Scrolls the list horizontally to a pixel position.
+	 *  @param newPos New horizontal scroll position. */
+	void ScrollHorizontalTo(int newPos);
+
+
 	CListCtrl* m_pListCtrl;
 	CWnd* m_pParentWnd;
 	CDPI* m_pDPI;

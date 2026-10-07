@@ -39,6 +39,21 @@ protected:
 
 	void ResizeWindow();
 
+	/** @brief Handles Ctrl + Z, X, C, V and A before the edit control gets them.
+	 *  @param key Virtual key code of the WM_KEYDOWN message.
+	 *  @return true if the key was handled. */
+	bool HandleControlKey(WPARAM key);
+
+	/** @brief Tells if the key moves the selection in the clip list.
+	 *  @param key Virtual key code.
+	 *  @return true for down, up, F3, page up and page down. */
+	static bool IsListNavigationKey(WPARAM key);
+
+	/** @brief Handles the return key and the list navigation keys.
+	 *  @param pMsg The WM_KEYDOWN message.
+	 *  @return true if the key was handled. */
+	bool HandleKeyDown(const MSG* pMsg);
+
 
 	DECLARE_MESSAGE_MAP()
 public:

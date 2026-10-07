@@ -54,6 +54,13 @@ public:
 	afx_msg void OnSaveCloseClipboard();
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
+
+private:
+	/** @brief Handles escape (close, Shift: save and close to the clipboard), Ctrl + S (save,
+	 *  Shift: save all) and Ctrl + N (new).
+	 *  @param key Virtual key code of the WM_KEYDOWN message.
+	 *  @return true if the key was handled and must not be passed on (Ctrl + N is passed on). */
+	bool HandleKeyDown(WPARAM key);
 };
 
 

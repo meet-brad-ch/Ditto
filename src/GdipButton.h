@@ -29,7 +29,9 @@
 // GdipButton.h : header file
 //
 
+#include <array>
 #include <memory>
+#include <span>
 
 #include "CGdiPlusBitmap.h"
 /////////////////////////////////////////////////////////////////////////////
@@ -117,6 +119,49 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
+
+	/** @brief One candidate image of LoadStdImageDPI: used when the DPI is at least minDpi. */
+	struct DpiImageChoice
+	{
+		/** @brief Lowest DPI that uses this image. */
+		int minDpi{};
+		/** @brief Resource id of the image. */
+		UINT id{};
+		/** @brief true if the image is optional: an id of 0 skips this entry. */
+		bool optional{};
+	};
+
+	/** @brief Picks the resource id of the first matching DPI choice.
+	 *  @param dpi Current DPI.
+	 *  @param choices Candidates, largest DPI first; the last one must always match.
+	 *  @return The chosen resource id (0 if no entry matches). */
+	static UINT PickDpiImageId(int dpi, std::span<const DpiImageChoice> choices);
+
+	/** @brief Copies the parent's background behind the button into m_dcBk.
+	 *  @param rect Client rectangle of the button. */
+	void CreateBackgroundDC(const CRect& rect);
+
+	/** @brief Creates target as a DC with a bitmap copy of what pDC shows.
+	 *  @param target DC to create.
+	 *  @param pDC Memory DC to copy from.
+	 *  @param rect Client rectangle of the button. */
+	static void CaptureToDC(CDC& target, CDC* pDC, const CRect& rect);
+
+	/** @brief Creates the standard, pressed, hot and grayscale DCs of the standard image.
+	 *  @param pDC Memory DC to draw in.
+	 *  @param graphics GDI+ graphics on pDC.
+	 *  @param rect Client rectangle of the button. */
+	void CreateStdImageDCs(CDC* pDC, Gdiplus::Graphics& graphics, const CRect& rect);
+
+	/** @brief Creates the alternate, pressed and hot DCs of the alternate image.
+	 *  @param pDC Memory DC to draw in.
+	 *  @param graphics GDI+ graphics on pDC.
+	 *  @param rect Client rectangle of the button. */
+	void CreateAltImageDCs(CDC* pDC, Gdiplus::Graphics& graphics, const CRect& rect);
+
+	/** @brief Points m_pCurBtn at the bitmap for the pressed, hot or normal state.
+	 *  @param bIsPressed TRUE if the button is pressed. */
+	void SelectCurBtn(BOOL bIsPressed);
 
 	CDC		m_dcBk;			// button background
 	

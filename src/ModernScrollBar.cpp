@@ -77,54 +77,60 @@ void CModernScrollBar::SetColors(COLORREF trackColor, COLORREF thumbColor, COLOR
 		Invalidate();
 }
 
-void CModernScrollBar::UpdateScrollBar()
+int CModernScrollBar::GetScrollBarType() const
 {
-	if (!m_pListCtrl || !m_pListCtrl->m_hWnd)
-		return;
+	return (m_orientation == ScrollBarOrientation::Vertical) ? SB_VERT : SB_HORZ;
+}
 
-	// Get scroll info for the appropriate orientation
-	int scrollBarType = (m_orientation == ScrollBarOrientation::Vertical) ? SB_VERT : SB_HORZ;
-	
-	SCROLLINFO si = { sizeof(SCROLLINFO) };
-	si.fMask = SIF_ALL;
-	m_pListCtrl->GetScrollInfo(scrollBarType, &si);
+bool CModernScrollBar::HasListWindow() const
+{
+	return m_pListCtrl && m_pListCtrl->m_hWnd;
+}
 
-	// Check if scrollbar is needed
-	bool needsScrollBar = (si.nMax > 0 && si.nPage > 0 && (int)si.nPage <= si.nMax);
-	
-	if (!needsScrollBar)
-	{
-		if (IsWindowVisible())
-			ShowWindow(SW_HIDE);
-		return;
-	}
-
-	// Get the list control position relative to parent
-	CRect listRectInParent;
-	m_pListCtrl->GetWindowRect(&listRectInParent);
-	m_pParentWnd->ScreenToClient(&listRectInParent);
-
-	// Get parent client rect to ensure we stay within visible area
-	CRect parentClientRect;
-	m_pParentWnd->GetClientRect(&parentClientRect);
-
-	// Calculate scrollbar size based on DPI and hover state
-	int scrollSize = (m_isMouseOver || m_isDragging) ? m_scrollBarHoverWidth : m_scrollBarWidth;
+int CModernScrollBar::ScaleForDpi(int value) const
+{
 	if (m_pDPI)
-	{
-		scrollSize = m_pDPI->Scale(scrollSize);
-	}
+		return m_pDPI->Scale(value);
+	return value;
+}
+
+bool CModernScrollBar::HasScrollRange(const SCROLLINFO& si)
+{
+	return si.nMax > 0 && si.nPage > 0;
+}
+
+int CModernScrollBar::GetTrackSize(const CRect& clientRect) const
+{
+	return (m_orientation == ScrollBarOrientation::Vertical) ? clientRect.Height() : clientRect.Width();
+}
+
+int CModernScrollBar::CalcThumbSize(const SCROLLINFO& si, int totalRange, int trackSize) const
+{
+	// Calculate thumb size proportionally
+	int thumbSize = (int)((double)si.nPage / totalRange * trackSize);
+
+	// Apply minimum thumb size
+	int minSize = ScaleForDpi(m_minThumbSize);
+
+	if (thumbSize < minSize)
+		thumbSize = minSize;
+
+	return thumbSize;
+}
+
+CRect CModernScrollBar::CalcScrollRect(const CRect& listRectInParent, const CRect& parentClientRect) const
+{
+	// Calculate scrollbar size based on DPI and hover state
+	int scrollSize = ScaleForDpi((m_isMouseOver || m_isDragging) ? m_scrollBarHoverWidth : m_scrollBarWidth);
 
 	// The list control is clipped by a region to hide the native scrollbar.
 	// searchRowStart is 33 (the height reserved for search bar and options button).
-	int searchRowStart = 33;
-	if (m_pDPI)
-		searchRowStart = m_pDPI->Scale(33);
-	
+	int searchRowStart = ScaleForDpi(33);
+
 	int visibleBottom = parentClientRect.bottom - searchRowStart;
 
 	CRect scrollRect;
-	
+
 	if (m_orientation == ScrollBarOrientation::Vertical)
 	{
 		// Position the scrollbar on the right side
@@ -141,15 +147,47 @@ void CModernScrollBar::UpdateScrollBar()
 	{
 		// Position the scrollbar on the bottom
 		// Leave space for the vertical scrollbar on the right
-		int vertScrollWidth = m_scrollBarHoverWidth;  // Use hover width to ensure no overlap
-		if (m_pDPI)
-			vertScrollWidth = m_pDPI->Scale(vertScrollWidth);
-		
+		int vertScrollWidth = ScaleForDpi(m_scrollBarHoverWidth);  // Use hover width to ensure no overlap
+
 		scrollRect.left = listRectInParent.left;
 		scrollRect.top = visibleBottom - scrollSize;
 		scrollRect.right = parentClientRect.right - vertScrollWidth;  // Stop before vertical scrollbar
 		scrollRect.bottom = visibleBottom;
 	}
+
+	return scrollRect;
+}
+
+void CModernScrollBar::UpdateScrollBar()
+{
+	if (!HasListWindow())
+		return;
+
+	// Get scroll info for the appropriate orientation
+	SCROLLINFO si = { sizeof(SCROLLINFO) };
+	si.fMask = SIF_ALL;
+	m_pListCtrl->GetScrollInfo(GetScrollBarType(), &si);
+
+	// Check if scrollbar is needed
+	bool needsScrollBar = (HasScrollRange(si) && (int)si.nPage <= si.nMax);
+
+	if (!needsScrollBar)
+	{
+		if (IsWindowVisible())
+			ShowWindow(SW_HIDE);
+		return;
+	}
+
+	// Get the list control position relative to parent
+	CRect listRectInParent;
+	m_pListCtrl->GetWindowRect(&listRectInParent);
+	m_pParentWnd->ScreenToClient(&listRectInParent);
+
+	// Get parent client rect to ensure we stay within visible area
+	CRect parentClientRect;
+	m_pParentWnd->GetClientRect(&parentClientRect);
+
+	CRect scrollRect = CalcScrollRect(listRectInParent, parentClientRect);
 
 	// Only move if position changed
 	CRect currentRect;
@@ -177,40 +215,36 @@ void CModernScrollBar::UpdateScrollBar()
 CRect CModernScrollBar::GetThumbRect()
 {
 	CRect thumbRect(0, 0, 0, 0);
-	
-	if (!m_pListCtrl || !m_pListCtrl->m_hWnd)
+
+	if (!HasListWindow())
 		return thumbRect;
 
 	CRect clientRect;
 	GetClientRect(&clientRect);
 
 	// Get scroll info for appropriate orientation
-	int scrollBarType = (m_orientation == ScrollBarOrientation::Vertical) ? SB_VERT : SB_HORZ;
-	
 	SCROLLINFO si = { sizeof(SCROLLINFO) };
 	si.fMask = SIF_ALL;
-	m_pListCtrl->GetScrollInfo(scrollBarType, &si);
+	m_pListCtrl->GetScrollInfo(GetScrollBarType(), &si);
 
-	if (si.nMax <= 0 || si.nPage <= 0)
+	if (!HasScrollRange(si))
 		return thumbRect;
 
-	int trackSize = (m_orientation == ScrollBarOrientation::Vertical) ? clientRect.Height() : clientRect.Width();
+	int trackSize = GetTrackSize(clientRect);
 	int totalRange = si.nMax - si.nMin + 1;
-	
-	// Calculate thumb size proportionally
-	int thumbSize = (int)((double)si.nPage / totalRange * trackSize);
-	
-	// Apply minimum thumb size
-	int minSize = m_minThumbSize;
-	if (m_pDPI)
-		minSize = m_pDPI->Scale(m_minThumbSize);
-	
-	if (thumbSize < minSize)
-		thumbSize = minSize;
-	
+
+	int thumbSize = CalcThumbSize(si, totalRange, trackSize);
+
 	if (thumbSize > trackSize)
 		thumbSize = trackSize;
 
+	int thumbPos = CalcThumbPos(si, totalRange, trackSize, thumbSize);
+
+	return MakeThumbRect(clientRect, thumbPos, thumbSize);
+}
+
+int CModernScrollBar::CalcThumbPos(const SCROLLINFO& si, int totalRange, int trackSize, int thumbSize)
+{
 	// Calculate thumb position
 	int scrollableRange = totalRange - si.nPage;
 	double scrollRatio = 0;
@@ -223,6 +257,13 @@ CRect CModernScrollBar::GetThumbRect()
 	if (thumbPos < 0) thumbPos = 0;
 	if (thumbPos + thumbSize > trackSize)
 		thumbPos = trackSize - thumbSize;
+
+	return thumbPos;
+}
+
+CRect CModernScrollBar::MakeThumbRect(const CRect& clientRect, int thumbPos, int thumbSize) const
+{
+	CRect thumbRect(0, 0, 0, 0);
 
 	if (m_orientation == ScrollBarOrientation::Vertical)
 	{
@@ -466,26 +507,33 @@ void CModernScrollBar::ScrollToPosition(int thumbPos)
 	CRect clientRect;
 	GetClientRect(&clientRect);
 
-	int scrollBarType = (m_orientation == ScrollBarOrientation::Vertical) ? SB_VERT : SB_HORZ;
-	
 	SCROLLINFO si = { sizeof(SCROLLINFO) };
 	si.fMask = SIF_ALL;
-	m_pListCtrl->GetScrollInfo(scrollBarType, &si);
+	m_pListCtrl->GetScrollInfo(GetScrollBarType(), &si);
 
-	if (si.nMax <= 0 || si.nPage <= 0)
+	if (!HasScrollRange(si))
 		return;
 
-	int trackSize = (m_orientation == ScrollBarOrientation::Vertical) ? clientRect.Height() : clientRect.Width();
+	int trackSize = GetTrackSize(clientRect);
 	int totalRange = si.nMax - si.nMin + 1;
-	
-	// Calculate thumb size
-	int thumbSize = (int)((double)si.nPage / totalRange * trackSize);
-	int minSize = m_minThumbSize;
-	if (m_pDPI)
-		minSize = m_pDPI->Scale(m_minThumbSize);
-	if (thumbSize < minSize)
-		thumbSize = minSize;
 
+	// Calculate thumb size
+	int thumbSize = CalcThumbSize(si, totalRange, trackSize);
+
+	// Calculate new scroll position
+	int scrollableRange = totalRange - si.nPage;
+	int newPos = CalcScrollPosFromThumb(thumbPos, trackSize, thumbSize, scrollableRange);
+
+	if (m_orientation == ScrollBarOrientation::Vertical)
+		ScrollVerticalTo(si, newPos);
+	else
+		ScrollHorizontalTo(newPos);
+
+	Invalidate();
+}
+
+int CModernScrollBar::CalcScrollPosFromThumb(int thumbPos, int trackSize, int thumbSize, int scrollableRange)
+{
 	// Clamp thumb position
 	if (thumbPos < 0) thumbPos = 0;
 	if (thumbPos > trackSize - thumbSize)
@@ -493,51 +541,51 @@ void CModernScrollBar::ScrollToPosition(int thumbPos)
 
 	// Calculate new scroll position
 	int scrollableTrack = trackSize - thumbSize;
-	int scrollableRange = totalRange - si.nPage;
-	
+
 	int newPos = 0;
 	if (scrollableTrack > 0)
 		newPos = (int)((double)thumbPos / scrollableTrack * scrollableRange);
 
-	if (m_orientation == ScrollBarOrientation::Vertical)
+	return newPos;
+}
+
+void CModernScrollBar::ScrollVerticalTo(SCROLLINFO& si, int newPos)
+{
+	// Use Scroll method for smoother scrolling with virtual lists
+	CQListCtrl* pQListCtrl = (CQListCtrl*)m_pListCtrl;
+	int rowHeight = pQListCtrl->GetRowHeight();
+	int currentTop = m_pListCtrl->GetTopIndex();
+
+	if (rowHeight > 0)
 	{
-		// Use Scroll method for smoother scrolling with virtual lists
-		CQListCtrl* pQListCtrl = (CQListCtrl*)m_pListCtrl;
-		int rowHeight = pQListCtrl->GetRowHeight();
-		int currentTop = m_pListCtrl->GetTopIndex();
-		
-		if (rowHeight > 0)
+		int deltaRows = newPos - currentTop;
+		int deltaPixels = deltaRows * rowHeight;
+
+		if (deltaPixels != 0)
 		{
-			int deltaRows = newPos - currentTop;
-			int deltaPixels = deltaRows * rowHeight;
-			
-			if (deltaPixels != 0)
-			{
-				m_pListCtrl->Scroll(CSize(0, deltaPixels));
-			}
-		}
-		else
-		{
-			// Fallback if row height is not available
-			si.fMask = SIF_POS;
-			si.nPos = newPos;
-			m_pListCtrl->SetScrollInfo(SB_VERT, &si);
-			m_pListCtrl->SendMessage(WM_VSCROLL, MAKEWPARAM(SB_THUMBPOSITION, newPos), 0);
+			m_pListCtrl->Scroll(CSize(0, deltaPixels));
 		}
 	}
 	else
 	{
-		// Horizontal scrolling - use Scroll method for more reliable scrolling
-		int currentScrollPos = m_pListCtrl->GetScrollPos(SB_HORZ);
-		int deltaPixels = newPos - currentScrollPos;
-		
-		if (deltaPixels != 0)
-		{
-			m_pListCtrl->Scroll(CSize(deltaPixels, 0));
-		}
+		// Fallback if row height is not available
+		si.fMask = SIF_POS;
+		si.nPos = newPos;
+		m_pListCtrl->SetScrollInfo(SB_VERT, &si);
+		m_pListCtrl->SendMessage(WM_VSCROLL, MAKEWPARAM(SB_THUMBPOSITION, newPos), 0);
 	}
-	
-	Invalidate();
+}
+
+void CModernScrollBar::ScrollHorizontalTo(int newPos)
+{
+	// Horizontal scrolling - use Scroll method for more reliable scrolling
+	int currentScrollPos = m_pListCtrl->GetScrollPos(SB_HORZ);
+	int deltaPixels = newPos - currentScrollPos;
+
+	if (deltaPixels != 0)
+	{
+		m_pListCtrl->Scroll(CSize(deltaPixels, 0));
+	}
 }
 
 void CModernScrollBar::Show(bool /*animate*/)

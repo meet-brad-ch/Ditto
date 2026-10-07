@@ -60,6 +60,61 @@ class CSymbolEdit : public CEdit
 
 	void DestroyIcon();
 
+	/** @brief Handles Ctrl + Z, X, C, V and A before the edit control gets them.
+	 *  @param pMsg The WM_KEYDOWN message.
+	 *  @return true if the key was handled. */
+	bool HandleControlKey(MSG* pMsg);
+
+	/** @brief Ctrl + C: copies the selection, or asks the parent to copy the clip when nothing is selected.
+	 *  @param pMsg The WM_KEYDOWN message. */
+	void CopySelectionOrClip(const MSG* pMsg);
+
+	/** @brief Sends a message with the key's wParam and lParam to the parent window.
+	 *  @param message Message to send.
+	 *  @param pMsg The key message.
+	 *  @return true if there is a parent and the message was sent. */
+	bool SendKeyToParent(UINT message, const MSG* pMsg);
+
+	/** @brief Tells if the key state opens the search history menu with the down key.
+	 *  @return true if Ctrl (or Ctrl + Shift) is down. */
+	static bool IsHistoryMenuKeyState();
+
+	/** @brief Tells if the key moves the selection in the clip list.
+	 *  @param key Virtual key code.
+	 *  @return true for down, up, page up and page down. */
+	static bool IsListNavigationKey(WPARAM key);
+
+	/** @brief Handles return, down, list navigation and delete keys.
+	 *  @param pMsg The WM_KEYDOWN message.
+	 *  @return true if the key was handled. */
+	bool HandleKeyDown(MSG* pMsg);
+
+	/** @brief Return key: starts the search in the parent and adds the text to the search history. */
+	void HandleReturnKey();
+
+	/** @brief Delete key: with the caret at the end of the text, asks the parent to delete the selected clip.
+	 *  @param pMsg The WM_KEYDOWN message.
+	 *  @return true if the message was sent to the parent. */
+	bool HandleDeleteKey(const MSG* pMsg);
+
+	/** @brief Draws the symbol icon and makes room for it.
+	 *  @param dc Paint DC.
+	 *  @param rect Client rectangle; made smaller by the icon.
+	 *  @param margins Edit control margins (GetMargins). */
+	void DrawSymbolIcon(CDC& dc, CRect& rect, DWORD margins);
+
+	/** @brief Fills the text area and draws the text when focused or not empty.
+	 *  @param dc Paint DC.
+	 *  @param rect Area to fill.
+	 *  @param textRect Area of the text.
+	 *  @param text Window text. */
+	void DrawTextArea(CDC& dc, const CRect& rect, const CRect& textRect, const CString& text);
+
+	/** @brief Draws the prompt text in an empty edit control.
+	 *  @param dc Paint DC.
+	 *  @param textRect Area of the text (widened for the prompt). */
+	void DrawPromptText(CDC& dc, CRect textRect);
+
 public:
 	CSymbolEdit();
 	virtual ~CSymbolEdit();
