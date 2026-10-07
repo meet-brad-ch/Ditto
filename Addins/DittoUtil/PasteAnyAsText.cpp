@@ -1,6 +1,12 @@
 #include "StdAfx.h"
 #include ".\pasteanyastext.h"
 #include "SelectPasteFormat.h"
+#include "ClipboardFormatError.h"
+#include "GlobalBytes.h"
+
+#include <algorithm>
+#include <cstring>
+#include <string>
 
 PasteAnyAsText::PasteAnyAsText(void)
 {
@@ -8,6 +14,18 @@ PasteAnyAsText::PasteAnyAsText(void)
 
 PasteAnyAsText::~PasteAnyAsText(void)
 {
+}
+
+template <typename Char>
+HGLOBAL PasteAnyAsText::TextBlock(std::span<const std::byte> bytes)
+{
+	std::basic_string<Char> text(bytes.size() / sizeof(Char), Char{});
+	std::memcpy(text.data(), bytes.data(), text.size() * sizeof(Char));
+	const std::size_t last = text.find_last_not_of(Char{});
+	text.erase(last == std::basic_string<Char>::npos ? 0 : last + 1);
+	// upstream turned every null into a space, the terminator too, so the text had none
+	std::replace(text.begin(), text.end(), Char{}, static_cast<Char>(' '));
+	return DittoAddinHelpers::NewGlobalP(const_cast<Char*>(text.c_str()), static_cast<UINT>((text.size() + 1) * sizeof(Char)));
 }
 
 bool PasteAnyAsText::SelectClipToPasteAsText(const CDittoInfo &DittoInfo, IClip *pClip)
@@ -22,76 +40,38 @@ bool PasteAnyAsText::SelectClipToPasteAsText(const CDittoInfo &DittoInfo, IClip 
 
 	if(dlg.DoModal() == IDOK)
 	{
-		//Find the format that was selected, remove all then readd the data as type CF_TEXT
+		//Find the format that was selected, remove all then readd the data as text
 		CLIPFORMAT format = dlg.SelectedFormat();
 		if(format > 0)
 		{
 			IClipFormat *pText = pFormats->FindFormatEx(format);
 			if(pText != NULL)
 			{
-				//We own the data, when we call DeleteAll tell it to not free the data
-				pText->AutoDeleteData(false);
-				HGLOBAL data = pText->Data();
-
-				if(dlg.PasteAsUnicode() == false)
+				const bool unicode = dlg.PasteAsUnicode();
+				HGLOBAL text = NULL;
+				try
 				{
-					char * stringData = (char *)GlobalLock(data);
-					if(stringData == NULL)
-					{
-						pText->AutoDeleteData(true);  // the format keeps owning its data
-						::MessageBox(DittoInfo.m_hWndDitto, _T("Paste as text stopped: the clip's data could not be locked."), _T("Ditto"), MB_OK | MB_ICONERROR);
-						return false;
-					}
-					int size = (int)GlobalSize(data);
-					for(int i = 0; i < size; i++)
-					{
-						if(stringData[i] == 0)
-						{
-							stringData[i] = ' ';
-						}
-					}
-					GlobalUnlock(data);
-
-					//Remove all over formats and add the selected date back as CF_TEXT
-					pFormats->DeleteAll();
-
-					pFormats->AddNew(CF_TEXT, data);
-
-					IClipFormat *pText = pFormats->FindFormatEx(CF_TEXT);
-					if(pText != NULL)
-					{
-						pText->AutoDeleteData(true);
-					}
+					const DittoCore::GlobalBytes block(pText->Data());
+					text = unicode ? TextBlock<wchar_t>(block.Bytes()) : TextBlock<char>(block.Bytes());
 				}
-				else
+				catch (const DittoCore::ClipboardFormatError& error)
 				{
-					wchar_t * stringData = (wchar_t *)GlobalLock(data);
-					if(stringData == NULL)
-					{
-						pText->AutoDeleteData(true);  // the format keeps owning its data
-						::MessageBox(DittoInfo.m_hWndDitto, _T("Paste as text stopped: the clip's data could not be locked."), _T("Ditto"), MB_OK | MB_ICONERROR);
-						return false;
-					}
-					int size = (int)GlobalSize(data);
-					for(int i = 0; i < (int)(size/(sizeof(wchar_t))); i++)
-					{
-						if(stringData[i] == 0)
-						{
-							stringData[i] = ' ';
-						}
-					}
-					GlobalUnlock(data);
+					// add-in boundary: no exception may cross into Ditto
+					CString message;
+					message.Format(_T("Paste as text stopped: the clip's data could not be read (%s)."), CString(error.what()).GetString());
+					::MessageBox(DittoInfo.m_hWndDitto, message, _T("Ditto"), MB_OK | MB_ICONERROR);
+					return false;
+				}
 
-					//Remove all over formats and add the selected date back as CF_TEXT
-					pFormats->DeleteAll();
+				//Remove all other formats (they free their data) and add the text
+				pFormats->DeleteAll();
+				const CLIPFORMAT textFormat = unicode ? CF_UNICODETEXT : CF_TEXT;
+				pFormats->AddNew(textFormat, text);
 
-					pFormats->AddNew(CF_UNICODETEXT, data);
-
-					IClipFormat *pText = pFormats->FindFormatEx(CF_UNICODETEXT);
-					if(pText != NULL)
-					{
-						pText->AutoDeleteData(true);
-					}
+				IClipFormat *pAdded = pFormats->FindFormatEx(textFormat);
+				if(pAdded != NULL)
+				{
+					pAdded->AutoDeleteData(true);
 				}
 
 				ret = true;

@@ -13,13 +13,13 @@ DWORD CALLBACK EditStreamInCallback(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, 
 {
 	PCOOKIE pCookie = (PCOOKIE) dwCookie;
 
-	if(pCookie->dwSize - pCookie->dwCount < (DWORD) cb)
-		*pcb = pCookie->dwSize - pCookie->dwCount;
-	else
-		*pcb = cb;
+	const std::size_t left = pCookie->text->size() - pCookie->offset;
+	*pcb = static_cast<LONG>((std::min)(left, static_cast<std::size_t>(cb)));
 
-	CopyMemory(pbBuff, pCookie->bstrText, *pcb);
-	pCookie->dwCount += *pcb;
+	// from the read position; upstream copied from the start every time, so RTF longer than one
+	// chunk repeated its beginning
+	CopyMemory(pbBuff, pCookie->text->data() + pCookie->offset, *pcb);
+	pCookie->offset += *pcb;
 
 	return 0;	//	callback succeeded - no errors
 }
@@ -48,17 +48,20 @@ HRESULT CFormattedTextDraw::put_RTFText(BSTR newVal)
 	if (!m_spTextServices) 
 		return S_FALSE;
 
-	m_editCookie.bstrText = (BSTR) malloc(len + 1);
-	WideCharToMultiByte(CP_ACP, 0, m_RTFText, len, (char *) m_editCookie.bstrText, len, NULL, NULL);
-	m_editCookie.dwSize = lstrlenA((LPSTR) m_editCookie.bstrText);
-	m_editCookie.dwCount = 0;
+	// sized by the conversion itself: upstream allocated len + 1 bytes with an unchecked malloc,
+	// left them unterminated for lstrlenA, and cut multi-byte code-page text short
+	const int size = WideCharToMultiByte(CP_ACP, 0, m_RTFText, len, NULL, 0, NULL, NULL);
+	std::string rtfBytes(static_cast<std::size_t>(size), '\0');
+	WideCharToMultiByte(CP_ACP, 0, m_RTFText, len, rtfBytes.data(), size, NULL, NULL);
+	m_editCookie.text = &rtfBytes;
+	m_editCookie.offset = 0;
 
 	editStream.dwCookie = (DWORD_PTR) &m_editCookie;
 	editStream.dwError = 0;
 	editStream.pfnCallback = EditStreamInCallback;
 	hr = m_spTextServices->TxSendMessage(EM_STREAMIN, (WPARAM)(SF_RTF | SF_UNICODE), (LPARAM)&editStream, &lResult);
 
-	free(m_editCookie.bstrText);
+	m_editCookie.text = NULL;   // rtfBytes ends here
 
 	return S_OK;
 }

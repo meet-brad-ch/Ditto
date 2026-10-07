@@ -310,6 +310,19 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   The ARM64 script still added firewall rules for TCP 23443 and launched URLs, and the portable
   one packaged files that no longer exist (`DittoU.exe`, `sqlite3.dll`, `zlib1.dll`). The
   installer gate now checks every `.iss` file.
+- 2026-10-06: Fixed the remaining Phase C findings (C12):
+  - **RTF preview drawing** (`CFormattedTextDraw`): the RTF was converted into an unchecked
+    `malloc` buffer of the character count, left unterminated for `lstrlenA`, and the stream
+    callback copied from the start every time, so RTF longer than one chunk repeated its
+    beginning. It now streams a `std::string` sized by the conversion, from the read position.
+  - **Format names:** a failed `GetClipboardFormatName` returned an uninitialized buffer as the
+    name; it now logs and returns "ERROR" like the other unknown case.
+  - **Image join:** the window DC taken for joining images was never released, and the image
+    blocks were freed only after a successful join.
+  - **Paste any as text** (add-in): every null was turned into a space, the terminator too, so
+    the text had none. Trailing nulls are now dropped and one terminator added; the old block
+    is freed with the other formats.
+  - **Dead code:** `CClip::WriteTextToHtmlFile` (always returned false, never called).
 - 2026-10-06: The database connection is a locked `CDittoDb` (Phase C11, first part).
   - **Shared connection:** the clip window, the copy thread and the paste and import paths share
     one SQLite connection. An insert and its `lastRowId()` were two calls, so an insert by

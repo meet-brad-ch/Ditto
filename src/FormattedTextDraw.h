@@ -13,17 +13,21 @@
 #include <richedit.h>
 #include <textserv.h>
 
+#include <cstddef>
+#include <string>
+
 #ifndef LY_PER_INCH
 #define LY_PER_INCH   1440
 #define HOST_BORDER 0
 #endif
 
-typedef struct tagCOOKIE
+// The RTF bytes EM_STREAMIN reads, and how many it has read
+struct COOKIE
 {
-	BSTR	bstrText;
-	DWORD	dwSize;
-	DWORD	dwCount;
-} COOKIE, *PCOOKIE;
+	const std::string* text{};
+	std::size_t offset{};
+};
+typedef COOKIE* PCOOKIE;
 
 // These definitions might give you problems.  If they do, open your
 // textserv.h and comment the following lines out. They are right at the top

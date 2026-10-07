@@ -1540,37 +1540,6 @@ BOOL CClip::WriteTextToFile(CString path, BOOL unicode, BOOL asci, BOOL rtf, BOO
 	return ret;
 }
 
-BOOL CClip::WriteTextToHtmlFile(CString path)
-{
-	BOOL ret = false;
-
-	CFile f;
-	if (f.Open(path, CFile::modeWrite | CFile::modeCreate))
-	{
-		IClipFormat *pFormat = this->Clips()->FindFormatEx(theApp.m_HTML_Format);
-		if (pFormat != NULL)
-		{
-			CStringA html = pFormat->GetAsCStringA();
-
-			int pos = html.Find("<html");
-			if (pos >= 0)
-			{
-				html = html.Mid(pos);
-			}
-			else
-			{
-				html = html;
-			}
-
-			f.Write(html.GetBuffer(), html.GetLength());			
-		}
-
-		f.Close();
-	}
-
-	return ret;
-}
-
 BOOL CClip::SaveFormats(CString *unicode, CStringA *asci, CStringA *rtf, BOOL updateDescription, std::vector<BYTE> *cf_dibBytes, std::vector<BYTE>* pngBytes)
 {
 	ARRAY deletedData;

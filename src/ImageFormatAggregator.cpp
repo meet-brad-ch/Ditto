@@ -1,8 +1,10 @@
 #include "stdafx.h"
 #include ".\ImageFormatAggregator.h"
 #include "Misc.h"
-#include "..\Shared\Tokenizer.h"
 #include "BitmapHelper.h"
+
+#include <memory>
+#include <type_traits>
 
 CImageFormatAggregator::CImageFormatAggregator(BOOL horizontally)
 {
@@ -11,6 +13,15 @@ CImageFormatAggregator::CImageFormatAggregator(BOOL horizontally)
 
 CImageFormatAggregator::~CImageFormatAggregator(void)
 {
+	// the images are freed here, on every path; upstream freed them only after a successful
+	// GetHGlobal, so a failed or abandoned aggregation leaked them
+	int count = (int)m_images.GetCount();
+	for (int i = 0; i < count; i++)
+	{
+		CClipFormat clip = m_images[i];
+		clip.AutoDeleteData(true);
+		clip.Free();
+	}
 }
 
 bool CImageFormatAggregator::AddClip(LPVOID lpData, int nDataSize, int nPos, int nCount, UINT cfType)
@@ -28,19 +39,16 @@ bool CImageFormatAggregator::AddClip(LPVOID lpData, int nDataSize, int nPos, int
 
 HGLOBAL CImageFormatAggregator::GetHGlobal()
 {
+	// the window DC is released on every path; upstream never released it
+	const HWND window = GetActiveWindow();
+	const auto releaseDc = [window](HDC dc) { ::ReleaseDC(window, dc); };
+	const std::unique_ptr<std::remove_pointer_t<HDC>, decltype(releaseDc)> dc(::GetDC(window), releaseDc);
+
 	CBitmap bitmap;
-	if (CBitmapHelper::GetCBitmap(m_images, CDC::FromHandle(GetDC(GetActiveWindow())), &bitmap, m_horizontally) == FALSE)
+	if (CBitmapHelper::GetCBitmap(m_images, CDC::FromHandle(dc.get()), &bitmap, m_horizontally) == FALSE)
 	{
 		bitmap.DeleteObject();
 		return NULL;
-	}
-
-	int count = (int)m_images.GetCount();
-	for (int i = 0; i < count; i++)
-	{
-		CClipFormat clip = m_images[i];
-		clip.AutoDeleteData(true);
-		clip.Free();
 	}
 
 	HPALETTE hPal = NULL;
