@@ -193,7 +193,6 @@ BOOL OpenDatabase(CString dbPath)
 		theApp.m_db.loadExtension("ICU_Loader.dll", "sqlite3_icu_init");
 
 		theApp.m_db.setBusyTimeout(CGetSetOptions::GetDbTimeout());
-		theApp.m_db.SetRegexCaseInsensitive(CGetSetOptions::GetRegexCaseInsensitive());
 
 		return TRUE;
 	}

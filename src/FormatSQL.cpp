@@ -136,7 +136,10 @@ bool CFormatSQL::AddToSQL(CString cs, eSpecialTypes &eNOTValue, eSpecialTypes &e
 
 	if (CGetSetOptions::GetRegExTextSearch())
 	{
-		csThisSQL.Format(_T("%s REGEXP \'%s\'"), m_csVariable.GetString(), cs.GetString());
+		// SQLite's ICU regexp() matches the whole text: (?s:.*) on both sides finds the pattern
+		// anywhere, and (?i) makes the match case-insensitive when the option is set
+		const CString caseFlag = CGetSetOptions::GetRegexCaseInsensitive() ? _T("(?i)") : _T("");
+		csThisSQL.Format(_T("%s REGEXP \'%s(?s:.*)(?:%s)(?s:.*)\'"), m_csVariable.GetString(), caseFlag.GetString(), cs.GetString());
 	}
 	else if (CGetSetOptions::GetSimpleTextSearch())
 	{

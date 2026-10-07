@@ -376,7 +376,7 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   - **Changed for Ditto, fixed like our code:** `tinyxml.cpp/.h` (Unicode paths), `Path`,
     `memdc.h`, `EditWithButton`, `DrawHTML`, `GdipButton`, `SymbolEdit`, `SendKeys`,
     `CppSQLite3`, `NTray`, `AlphaBlend`, `FormattedTextDraw`, `RulerRichEditCtrl`, `RRECToolbar`,
-    `RulerRichEdit` and `ICU_Loader\icu.cpp`.
+    `RulerRichEdit` and `ICU_Loader\icu.cpp` (replaced in Phase T by SQLite's untouched `icu.c`).
   - **Headers outside the repo** (Windows SDK, MFC, the STL, vcpkg's gtest and zlib) are
     included with angle brackets and treated as external: no warnings, no analysis.
   - **Silencing analysis per file:** besides `EnablePREfast=false`, the ruleset options are

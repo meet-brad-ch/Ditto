@@ -185,8 +185,6 @@ public:
     // Throws CppSQLite3Exception with SQLite's message when the extension cannot be loaded.
     void loadExtension(const char* szFile, const char* szEntryPoint);
 
-    void SetRegexCaseInsensitive(bool insensitive);
-
     bool close();
 
 	bool tableExists(const TCHAR* szTable);

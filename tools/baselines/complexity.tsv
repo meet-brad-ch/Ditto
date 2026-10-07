@@ -2,8 +2,6 @@ addins\dittoutil\pasteimageashtmlimage.cpp	CPasteImageAsHtmlImage::ConvertPathTo
 addins\dittoutil\readonlyflag.cpp	CReadOnlyFlag::ResetReadOnlyFlag	12
 addins\dittoutil\textconvert.cpp	CTextConvert::ConvertFromUTF8	13
 addins\dittoutil\textconvert.cpp	CTextConvert::ConvertToUTF8	13
-icu_loader\icu.cpp	icuCaseFunc16	11
-icu_loader\icu.cpp	icuLikeCompare	20
 shared\dittodefines.h	DittoAddinHelpers::GetFormatID	21
 shared\dittodefines.h	DittoAddinHelpers::GetFormatName	23
 src\accels.cpp	CAccels::OnMsg	15

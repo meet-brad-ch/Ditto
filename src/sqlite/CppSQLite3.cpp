@@ -857,30 +857,6 @@ void CppSQLite3DB::throwAndClose(int nErrCode)
 	throw error;
 }
 
-void CppSQLite3DB::SetRegexCaseInsensitive(bool insensitive)
-{
-	auto h = ::LoadLibrary(_T("ICU_Loader.dll"));
-	if (h != NULL)
-	{
-		void(__cdecl * SetRegexFlags)(int flags);
-
-		SetRegexFlags = (void(__cdecl*)(int flags))GetProcAddress(h, "sqlite3_icu_regex_flags");
-		if (SetRegexFlags != NULL)
-		{
-			if (insensitive)
-			{
-				SetRegexFlags(2); // 2 is the enum URegexpFlag::UREGEX_CASE_INSENSITIVE
-			}
-			else
-			{
-				SetRegexFlags(0);
-			}
-		}
-
-		FreeLibrary(h);
-	}
-}
-
 bool CppSQLite3DB::close()
 {
 	bool bRet = true;
