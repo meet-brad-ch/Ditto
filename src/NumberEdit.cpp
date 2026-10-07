@@ -5,12 +5,6 @@
 #include "CP_Main.h"
 #include "NumberEdit.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 /////////////////////////////////////////////////////////////////////////////
 // CNumberEdit
 
@@ -70,7 +64,7 @@ long CNumberEdit::GetNumber()
 	CString csText;
 	GetWindowText(csText);
 	
-	return ATOL(csText);
+	return _ttol(csText);
 }
 
 double CNumberEdit::GetNumberD()

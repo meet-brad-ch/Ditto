@@ -38,13 +38,13 @@ bool CICU_String::Load()
 		u_strToLower = (int(__cdecl*)(wchar_t* dest, int destCapacity, const wchar_t* src, int srcLength, const char* locale, int* pErrorCode))GetProcAddress(m_dllHandle, "u_strToLower");
 		u_strToUpper = (int(__cdecl*)(wchar_t* dest, int destCapacity, const wchar_t* src, int srcLength, const char* locale, int* pErrorCode))GetProcAddress(m_dllHandle, "u_strToUpper");
 
-		Log(_T("Loaded icu.dll, this will be used for upper/lower case calls"));
+		CLogger::Log(_T("Loaded icu.dll, this will be used for upper/lower case calls"));
 
 		loaded = true;
 	}
 	else
 	{
-		Log(StrF(_T("Error loading icu.dll, LastError: %d"), ::GetLastError()));
+		CLogger::Log(StrF(_T("Error loading icu.dll, LastError: %d"), ::GetLastError()));
 	}
 
 	return loaded;

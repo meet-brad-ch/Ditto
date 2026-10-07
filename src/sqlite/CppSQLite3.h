@@ -34,16 +34,14 @@
 #include <cstring>
 #include <array>
 
-#define CPPSQLITE_ERROR 1000
-
-#define SQLITE3_ERRMSG(mpDB) const TCHAR* szError = (const TCHAR*)sqlite3_errmsg16(mpDB)
-
 int sqlite3_encode_binary(const unsigned char *in, int n, unsigned char *out);
 int sqlite3_decode_binary(const unsigned char *in, unsigned char *out);
 
 class CppSQLite3Exception
 {
 public:
+    /** @brief The error code of errors CppSQLite3 itself finds (not SQLite's). */
+    static constexpr int CppSqliteError = 1000;
 
     CppSQLite3Exception(const int nErrCode,
                     const TCHAR* szErrMess,
@@ -101,7 +99,7 @@ private:
         { SQLITE_RANGE,      _T("SQLITE_RANGE") },
         { SQLITE_ROW,        _T("SQLITE_ROW") },
         { SQLITE_DONE,       _T("SQLITE_DONE") },
-        { CPPSQLITE_ERROR,   _T("CPPSQLITE_ERROR") },
+        { CppSqliteError,    _T("CPPSQLITE_ERROR") },
     }};
 
     int mnErrCode;

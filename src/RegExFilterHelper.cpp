@@ -66,7 +66,7 @@ bool CRegExFilterData::MatchesRegEx(std::wstring &copiedText)
 		catch (regex_error e) 
 		{
 			CString w(e.what());
-			Log(StrF(_T("MatchesRegEx exception: %s, Code Is: %d"), w.GetString(), e.code()));
+			CLogger::Log(StrF(_T("MatchesRegEx exception: %s, Code Is: %d"), w.GetString(), e.code()));
 		}
 	}
 
@@ -85,7 +85,7 @@ CRegExFilterHelper::~CRegExFilterHelper()
 
 void CRegExFilterHelper::Add(int pos, CRegExFilterData &data)
 {
-	if (pos >= 0 && pos < MAX_REGEX_FILTERS)
+	if (pos >= 0 && pos < CRegExFilterHelper::MaxRegexFilters)
 	{
 		ATL::CCritSecLock csLock(m_critSection.m_sect);
 		m_filters[pos] = data;
@@ -94,7 +94,7 @@ void CRegExFilterHelper::Add(int pos, CRegExFilterData &data)
 
 void CRegExFilterHelper::SetRegEx(int pos, std::wstring regEx)
 {
-	if (pos >= 0 && pos < MAX_REGEX_FILTERS)
+	if (pos >= 0 && pos < CRegExFilterHelper::MaxRegexFilters)
 	{
 		ATL::CCritSecLock csLock(m_critSection.m_sect);
 		m_filters[pos].m_regEx = regEx;
@@ -103,7 +103,7 @@ void CRegExFilterHelper::SetRegEx(int pos, std::wstring regEx)
 
 void CRegExFilterHelper::SetProcessFilter(int pos, CString processName)
 {
-	if (pos >= 0 && pos < MAX_REGEX_FILTERS)
+	if (pos >= 0 && pos < CRegExFilterHelper::MaxRegexFilters)
 	{
 		ATL::CCritSecLock csLock(m_critSection.m_sect);
 		m_filters[pos].m_processFilters = processName;
@@ -115,13 +115,13 @@ bool CRegExFilterHelper::TextMatchFilters(CString &activeApp, std::wstring &copi
 {
 	ATL::CCritSecLock csLock(m_critSection.m_sect);
 
-	for (int i = 0; i < MAX_REGEX_FILTERS; i++)
+	for (int i = 0; i < CRegExFilterHelper::MaxRegexFilters; i++)
 	{
 		if (m_filters[i].MatchesProcessFilters(activeApp))
 		{
 			if (m_filters[i].MatchesRegEx(copiedText))
 			{
-				Log(StrF(_T("regex matches copied text NOT SAVING CLIP, regex: %s, text: %s, active app: %s"), m_filters[i].m_regEx.c_str(), copiedText.c_str(), activeApp.GetString()));
+				CLogger::Log(StrF(_T("regex matches copied text NOT SAVING CLIP, regex: %s, text: %s, active app: %s"), m_filters[i].m_regEx.c_str(), copiedText.c_str(), activeApp.GetString()));
 				return true;
 			}
 		}

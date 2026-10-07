@@ -16,7 +16,7 @@ IMPLEMENT_DYNAMIC(CEditWithButton, CEdit)
 
 CEditWithButton::CEditWithButton()
 {
-	m_iButtonClickedMessageId = NM_CANCEL_SEARCH;
+	m_iButtonClickedMessageId = CQListCtrl::NmCancelSearch;
 	m_bButtonExistsAlways = FALSE;
 
 	m_rcEditArea.SetRect(0, 0, 0, 0);
@@ -58,7 +58,7 @@ BOOL CEditWithButton::PreTranslateMessage(MSG* pMsg)
 	// Intercept Ctrl + Z (Undo), Ctrl + X (Cut), Ctrl + C (Copy), Ctrl + V (Paste) and Ctrl + A (Select All)
 	// before CEdit base class gets a hold of them.
 	if (pMsg->message == WM_KEYDOWN &&
-		CONTROL_PRESSED)
+		CKeyboard::IsControlPressed())
 	{
 		if (HandleControlKey(pMsg->wParam))
 		{
@@ -117,12 +117,12 @@ bool CEditWithButton::HandleKeyDown(const MSG* pMsg)
 		{
 			if(CGetSetOptions::m_bFindAsYouType)
 			{
-				pWnd->SendMessage(NM_SEARCH_ENTER_PRESSED, 0, 0);
+				pWnd->SendMessage(CQListCtrl::NmSearchEnterPressed, 0, 0);
 			}
 			else
 			{
 				//Send a message to the parent to refill the lb from the search
-				pWnd->PostMessage(CB_SEARCH, 0, 0);
+				pWnd->PostMessage(CQListCtrl::CbSearch, 0, 0);
 			}
 		}
 
@@ -133,7 +133,7 @@ bool CEditWithButton::HandleKeyDown(const MSG* pMsg)
 		CWnd *pWnd = GetParent();
 		if(pWnd)
 		{
-			pWnd->SendMessage(CB_UPDOWN, pMsg->wParam, pMsg->lParam);
+			pWnd->SendMessage(CQListCtrl::CbUpDown, pMsg->wParam, pMsg->lParam);
 			return true;
 		}
 	}

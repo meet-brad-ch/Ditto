@@ -29,7 +29,7 @@ LRESULT CTrayWnd::OnTaskBarCreated(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	if(theApp.m_pMainFrame != NULL)
 	{
-		theApp.m_pMainFrame->PostMessage(WM_READD_TASKBAR_ICON, 0, 0);
+		theApp.m_pMainFrame->PostMessage(CDittoMessage::ReaddTaskbarIcon, 0, 0);
 	}
 	
 	return TRUE;

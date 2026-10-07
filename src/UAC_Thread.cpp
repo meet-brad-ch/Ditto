@@ -48,7 +48,7 @@ void CUAC_Thread::OnTimeOut(void * /*param*/)
 
 	if(close)
 	{
-		Log(StrF(_T("Found parent process id (%d) is not running, Exit Code %d closing uac aware app"), m_processId, exitCode));
+		CLogger::Log(StrF(_T("Found parent process id (%d) is not running, Exit Code %d closing uac aware app"), m_processId, exitCode));
 		this->CancelThread();
 	}
 
@@ -61,7 +61,7 @@ void CUAC_Thread::OnTimeOut(void * /*param*/)
 void CUAC_Thread::OnEvent(int eventId, void * /*param*/)
 {
 	ULONGLONG startTick = GetTickCount64();
-	Log(StrF(_T("Start of OnEvent, eventId: %s"), EnumName((eUacThreadEvents)eventId).GetString()));
+	CLogger::Log(StrF(_T("Start of OnEvent, eventId: %s"), EnumName((eUacThreadEvents)eventId).GetString()));
 
 	switch((eUacThreadEvents)eventId)
 	{
@@ -80,7 +80,7 @@ void CUAC_Thread::OnEvent(int eventId, void * /*param*/)
 	}
 
 	ULONGLONG length = GetTickCount64() - startTick;
-	Log(StrF(_T("End of OnEvent, eventId: %s, Time: %llu(ms)"), EnumName((eUacThreadEvents)eventId).GetString(), length));
+	CLogger::Log(StrF(_T("End of OnEvent, eventId: %s, Time: %llu(ms)"), EnumName((eUacThreadEvents)eventId).GetString(), length));
 }
 
 CString CUAC_Thread::EnumName(eUacThreadEvents e)
@@ -137,12 +137,12 @@ bool CUAC_Thread::StartProcess()
 	DWORD dwError = GetLastError();
 	if(mutex == NULL)
 	{
-		Log(StrF(_T("CreateMutex %s failed, error: %d"), mutexName.GetString(), dwError));
+		CLogger::Log(StrF(_T("CreateMutex %s failed, error: %d"), mutexName.GetString(), dwError));
 	}
 
 	if(dwError == ERROR_ALREADY_EXISTS)
 	{
-		Log(_T("Paste uac admin exe is already running just signalling paste"));
+		CLogger::Log(_T("Paste uac admin exe is already running just signalling paste"));
 	}
 	else
 	{
@@ -160,12 +160,12 @@ bool CUAC_Thread::StartProcess()
 
 			if (!ShellExecuteEx(&sei))
 			{
-				Log(_T("Failed to startup paste as admin app, we are not pasting using admin app"));
+				CLogger::Log(_T("Failed to startup paste as admin app, we are not pasting using admin app"));
 				ret = false;
 			}
 			else
 			{
-				Log(_T("Startup up ditto paste as admin app, this will send ctrl-v to the admin app"));
+				CLogger::Log(_T("Startup up ditto paste as admin app, this will send ctrl-v to the admin app"));
 			}
 		}
 	}

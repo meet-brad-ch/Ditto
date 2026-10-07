@@ -376,7 +376,7 @@ HRESULT CFormattedTextDraw::CharFormatFromHFONT(CHARFORMAT2W* pCF, HFONT hFont)
 	hWnd = GetDesktopWindow();
 	hDC = GetDC(hWnd);
 	yPixPerInch = GetDeviceCaps(hDC, LOGPIXELSY);
-	pCF->yHeight = -lf.lfHeight * LY_PER_INCH / yPixPerInch;
+	pCF->yHeight = -lf.lfHeight * LyPerInch / yPixPerInch;
 	ReleaseDC(hWnd, hDC);
 
 	pCF->yOffset = 0;

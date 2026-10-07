@@ -7,12 +7,6 @@
 #include "GroupName.h"
 #include "ProcessPaste.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 /////////////////////////////////////////////////////////////////////////////
 // CMoveToGroupDlg dialog
 
@@ -42,7 +36,7 @@ BEGIN_MESSAGE_MAP(CMoveToGroupDlg, CDialog)
 	ON_WM_SIZE()
 	ON_BN_CLICKED(IDC_BUTTON_NEW_GROUP, OnButtonNewGroup)
 	//}}AFX_MSG_MAP
-	ON_MESSAGE(NM_GROUP_TREE_MESSAGE, OnTreeSelect)
+	ON_MESSAGE(CQListCtrl::NmGroupTreeMessage, OnTreeSelect)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////

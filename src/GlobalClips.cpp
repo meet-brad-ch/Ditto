@@ -42,8 +42,8 @@ BOOL GlobalClips::OnInitDialog()
 	theApp.m_Language.UpdateGlobalHotKeys(this);
 
 	m_Resize.SetParent(m_hWnd);
-	m_Resize.AddControl(IDC_LIST2, DR_SizeHeight | DR_SizeWidth);
-	m_Resize.AddControl(IDCANCEL, DR_MoveTop | DR_MoveLeft);
+	m_Resize.AddControl(IDC_LIST2, CDialogResizer::SizeHeight | CDialogResizer::SizeWidth);
+	m_Resize.AddControl(IDCANCEL, CDialogResizer::MoveTop | CDialogResizer::MoveLeft);
 
 	InitListCtrlCols();
 
@@ -188,5 +188,5 @@ void GlobalClips::OnSize(UINT nType, int cx, int cy)
 void GlobalClips::OnNcDestroy()
 {
 	CDialogEx::OnNcDestroy();
-	::PostMessage(m_hWndParent, WM_GLOBAL_CLIPS_CLOSED, 0, 0);
+	::PostMessage(m_hWndParent, CDittoMessage::GlobalClipsClosed, 0, 0);
 }

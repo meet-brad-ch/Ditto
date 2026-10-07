@@ -751,9 +751,6 @@
     <ClInclude Include="src\UAC_Thread.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\UnicodeMacros.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\WildCardMatch.h">
       <Filter>src</Filter>
     </ClInclude>

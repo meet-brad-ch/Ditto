@@ -9,12 +9,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 /////////////////////////////////////////////////////////////////////////////
 // COptionsStats dialog
 
@@ -144,7 +138,7 @@ void COptionsStats::OnRemoveAll()
 
 			struct _stat buf;
 			int nResult;
-			nResult = STAT(GetDBName(), &buf);
+			nResult = _tstat(GetDBName(), &buf);
 			if(nResult == 0)
 				m_eDatabaseSize.Format(_T("%d KB"), (buf.st_size/1024));
 

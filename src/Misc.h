@@ -1,30 +1,69 @@
 
 #if !defined(AFX_CP_GUI_GLOBALS__FBCDED09_A6F2_47EB_873F_50A746EBC86B__INCLUDED_)
-#define AFX_CP_GUI_H__FBCDED09_A6F2_47EB_873F_50A746EBC86B__INCLUDED_
+#define AFX_CP_GUI_GLOBALS__FBCDED09_A6F2_47EB_873F_50A746EBC86B__INCLUDED_
 
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
 
 #include "..\Shared/ArrayEx.h"
+#include <source_location>
 #include <vector>
 
-#define VK_MOUSE_CLICK 0x01
-#define VK_MOUSE_DOUBLE_CLICK 0x02
-#define VK_MOUSE_RIGHT_CLICK 0x03
-#define VK_MOUSE_MIDDLE_CLICK 0x04
+/**
+ * @brief The mouse "keys" of Ditto's shortcuts: key codes below the real virtual keys for the
+ * mouse actions in the quick paste list. They are stored in the settings as shortcut keys.
+ */
+class CMouseKey
+{
+public:
+	/** @brief The mouse key codes. */
+	enum : int
+	{
+		Click = 0x01,       ///< a left click
+		DoubleClick = 0x02, ///< a left double click
+		RightClick = 0x03,  ///< a right click
+		MiddleClick = 0x04  ///< a middle click
+	};
+};
 
-#define UPDATE_AFTER_PASTE_SELECT_CLIP 0x1
-#define UPDATE_CLIP_DESCRIPTION 0x2
+/** @brief The flags of CCP_MainApp::RefreshClipInUI: what to do after a clip was reloaded. */
+class CClipRefreshFlags
+{
+public:
+	/** @brief The flag bits, combined with |. */
+	enum : int
+	{
+		AfterPasteSelectClip = 0x1, ///< the clip was pasted: select it
+		ClipDescription = 0x2       ///< the clip's description changed
+	};
+};
 
+/** @brief Keyboard state queries. */
+class CKeyboard
+{
+public:
+	/**
+	 * @brief Whether a control key is down. Foreign keyboards send right alt (ALT_GR) as left
+	 * control + right alt; that is not a control press.
+	 * http://compgroups.net/comp.os.programmer.win32/alt-gr-key-and-left-ctrl/2840252
+	 * @return true when control is down and it is not ALT_GR.
+	 */
+	static bool IsControlPressed()
+	{
+		return ((::GetKeyState(VK_CONTROL) & 0x8000) && (((GetKeyState(VK_RMENU) < 0) && (GetKeyState(VK_LCONTROL) < 0)) == FALSE));
+	}
+};
 
-//Handle foreign keyboards pressing ALT_GR (right alt), this simulates a control press
-//http://compgroups.net/comp.os.programmer.win32/alt-gr-key-and-left-ctrl/2840252
-#define CONTROL_PRESSED ((::GetKeyState(VK_CONTROL) & 0x8000) && (((GetKeyState(VK_RMENU) < 0) && (GetKeyState(VK_LCONTROL) < 0)) == FALSE))
-
-#define ONE_MINUTE				60000
-#define ONE_HOUR				3600000
-#define ONE_DAY					86400000
+/** @brief Durations in milliseconds (timer periods and waits). */
+class CMilliseconds
+{
+public:
+	/** @brief One minute in milliseconds. */
+	static constexpr int OneMinute = 60000;
+	/** @brief One hour in milliseconds. */
+	static constexpr int OneHour = 3600000;
+};
 
 class CopyReasonEnum
 {
@@ -38,28 +77,43 @@ public:
 	};
 };
 
-#define INVALID_STICKY	-(2147483647)
-
-#define	FIX_PATH(strPath) \
-{ \
-	if (strPath[strlen(strPath)-1] != '\\' && strPath[strlen(strPath)-1] != '/') \
-	strcat(strPath, "\\"); \
-}
-
-#define	FIX_CSTRING_PATH(csPath) \
-{ \
-	if(csPath.IsEmpty() == FALSE && csPath.GetAt(csPath.GetLength()-1) != '\\' && csPath.GetAt(csPath.GetLength()-1) != '/') \
-	csPath += "\\"; \
-}
+/** @brief Folder path text helpers. */
+class CFolderPath
+{
+public:
+	/**
+	 * @brief Appends a backslash to a folder path that does not end with a backslash or a slash;
+	 * an empty path stays empty.
+	 * @param csPath The folder path; changed in place.
+	 */
+	static void AddTrailingSlash(CString& csPath)
+	{
+		if(csPath.IsEmpty() == FALSE && csPath.GetAt(csPath.GetLength()-1) != '\\' && csPath.GetAt(csPath.GetLength()-1) != '/')
+			csPath += "\\";
+	}
+};
 
 #include "DatabaseUtilities.h"
 
 
-#define FUNC		__FUNCTION__
-#define FUNCSIG		__FUNCSIG__
 void AppendToFile(const TCHAR* fn, const TCHAR *msg);
-#define Log(msg) log(msg, __FILE__, __LINE__)
 void log(const TCHAR* msg, CString csFile = _T(""), long lLine = -1);
+
+/** @brief Writes log lines tagged with the source file and line of the caller. */
+class CLogger
+{
+public:
+	/**
+	 * @brief Logs a message with the caller's file and line (see log()).
+	 * @param msg The message.
+	 * @param location The caller's position; leave it to the default.
+	 */
+	static void Log(const TCHAR* msg, const std::source_location location = std::source_location::current())
+	{
+		::log(msg, CString(location.file_name()), static_cast<long>(location.line()));
+	}
+};
+
 CString GetErrorString(int err);
 
 double IdleSeconds();
@@ -109,37 +163,44 @@ CRect CenterRectFromRect(CRect startingRect, CRect outerRect);
 __int64 GetLastWriteTime(const CString &csFile);
 
 
-//Message to the main window to show icon or not
-#define WM_SHOW_TRAY_ICON		WM_USER + 200
-#define WM_SETCONNECT			WM_USER + 201
-#define WM_CV_IS_CONNECTED		WM_USER + 202
-#define WM_CLOSE_APP			WM_USER + 204
-#define WM_REFRESH_VIEW			WM_USER + 205
-#define WM_CLIPBOARD_COPIED		WM_USER + 206	// wParam: CClip* owned by the receiver (CMainFrame::OnClipboardCopied)
-#define WM_SHOW_OWNED_ERROR_MSG	WM_USER + 207	// wParam: CString* owned by the receiver (CErrorReport)
-#define WM_FOCUS_CHANGED		WM_USER + 209
-#define WM_CV_GETCONNECT		WM_USER + 211
-#define WM_EDIT_WND_CLOSING		WM_USER	+ 212
-#define WM_SET_CONNECTED		WM_USER	+ 213
-//defined in tray icon #define WM_CUSTOMIZE_TRAY_MENU	WM_USER + 215
-//defined in tray icon #define WM_TRAY_MENU_MOUSE_MOVE	WM_USER + 216
-#define WM_RELOAD_CLIP_IN_UI	WM_USER	+ 217
-#define WM_GLOBAL_CLIPS_CLOSED	WM_USER	+ 218
-#define WM_OPTIONS_CLOSED	WM_USER	+ 219
-#define WM_SHOW_OPTIONS	WM_USER	+ 220
-#define WM_DELETE_CLIPS_CLOSED	WM_USER	+ 221
-#define WM_OPEN_CLOSE_WINDOW WM_USER + 222
-#define WM_SAVE_CLIPBOARD WM_USER + 223
-#define WM_READD_TASKBAR_ICON WM_USER + 224
-#define WM_REOPEN_DATABASE WM_USER + 225
-#define WM_SHOW_MSG_WINDOW WM_USER + 226	// wParam: CString* owned by the receiver (CMainFrame::OnShowMsgWindow)
-#define WM_SHOW_DITTO_GROUP WM_USER + 227
-#define WM_PLAIN_TEXT_PASTE WM_USER + 228
-#define WM_RESTORE_DB	WM_USER + 230
-#define WM_BACKUP_DB	WM_USER + 231
-#define WM_REFRESH_FOOTER WM_USER + 232
-#define WM_PASTE_CLIP WM_USER + 233
-#define WM_EDIT_CLIP WM_USER + 234
+/**
+ * @brief Ditto's own window messages (WM_USER + n). Some are sent from a second Ditto process to
+ * the running one (command line switches): the values never change. WM_USER + 202, 204, 209 and
+ * 211 had names without a sender or a handler and are left out; WM_USER + 215 and 216 are the
+ * tray icon's messages.
+ */
+class CDittoMessage
+{
+public:
+	/** @brief The message ids. */
+	enum : UINT
+	{
+		ShowTrayIcon = WM_USER + 200,      ///< to the main window: show the tray icon or not
+		SetConnect = WM_USER + 201,        ///< to the clipboard viewer: connect to the clipboard chain or not
+		RefreshView = WM_USER + 205,       ///< to the quick paste window: reload the list
+		ClipboardCopied = WM_USER + 206,   ///< wParam: CClip* owned by the receiver (CMainFrame::OnClipboardCopied)
+		ShowOwnedErrorMsg = WM_USER + 207, ///< wParam: CString* owned by the receiver (CErrorReport)
+		EditWndClosing = WM_USER + 212,    ///< the edit window is closing
+		SetConnected = WM_USER + 213,      ///< to the main window: connect or disconnect from the clipboard
+		ReloadClipInUi = WM_USER + 217,    ///< to the quick paste window: reload one clip (CClipRefreshFlags)
+		GlobalClipsClosed = WM_USER + 218, ///< the global clips window closed
+		OptionsClosed = WM_USER + 219,     ///< the options sheet closed
+		ShowOptions = WM_USER + 220,       ///< to the main window: show the options
+		DeleteClipsClosed = WM_USER + 221, ///< the delete clips window closed
+		OpenCloseWindow = WM_USER + 222,   ///< to the main window: open or close the quick paste window
+		SaveClipboard = WM_USER + 223,     ///< to the main window: save the clipboard
+		ReaddTaskbarIcon = WM_USER + 224,  ///< to the main window: add the tray icon again
+		ReopenDatabase = WM_USER + 225,    ///< to the main window: open the database again
+		ShowMsgWindow = WM_USER + 226,     ///< wParam: CString* owned by the receiver (CMainFrame::OnShowMsgWindow)
+		ShowDittoGroup = WM_USER + 227,    ///< to the main window: show a group
+		PlainTextPaste = WM_USER + 228,    ///< to the main window: paste the clipboard as plain text
+		RestoreDb = WM_USER + 230,         ///< to the main window: restore the database
+		BackupDb = WM_USER + 231,          ///< to the main window: back up the database
+		RefreshFooter = WM_USER + 232,     ///< to the tool tip: refresh its footer
+		PasteClip = WM_USER + 233,         ///< to the main window: paste a clip by id
+		EditClip = WM_USER + 234           ///< to the main window: edit a clip by id
+	};
+};
 
 
 #if !defined(_BITSET_)

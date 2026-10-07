@@ -103,6 +103,11 @@ public:
 	afx_msg void OnClickedExpireEntries();
 
 private:
+	/** @brief The theme list's entry for the built-in theme. */
+	static constexpr const TCHAR* s_defaultTheme{_T("(Ditto)")};
+	/** @brief FillLanguages' index of the English entry while it is not found yet. */
+	static constexpr int s_noMatch{-2};
+
 	/** @brief OnApply's language step: stores the selected language file and loads it (reports a load error). */
 	void ApplyLanguage();
 

@@ -8,10 +8,6 @@
 
 #include <memory>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#endif
-
 
 // CFocusHighlightApp
 

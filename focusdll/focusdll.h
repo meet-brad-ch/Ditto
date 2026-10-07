@@ -3,22 +3,19 @@ extern "C" {
 #endif
 
 
-#ifdef FOCUS_EXPORTS
-#define DLLEXPORT __declspec(dllexport)
-#else
-#define DLLEXPORT __declspec(dllimport)
-#endif
+// The DLL's exports. Only the DLL itself (built with FOCUS_EXPORTS in every configuration)
+// includes this header, so the functions are declared dllexport.
 
-DLLEXPORT DWORD WINAPI MonitorFocusChanges(HWND hWnd,UINT message);
-DLLEXPORT DWORD WINAPI StopMonitoringFocusChanges();
+__declspec(dllexport) DWORD WINAPI MonitorFocusChanges(HWND hWnd,UINT message);
+__declspec(dllexport) DWORD WINAPI StopMonitoringFocusChanges();
 
-DLLEXPORT DWORD WINAPI MonitorKeyboardChanges(HWND hWnd,UINT message);
-DLLEXPORT DWORD WINAPI StopMonitoringKeyboardChanges();
+__declspec(dllexport) DWORD WINAPI MonitorKeyboardChanges(HWND hWnd,UINT message);
+__declspec(dllexport) DWORD WINAPI StopMonitoringKeyboardChanges();
 
-DLLEXPORT HWND  WINAPI GetCurrentFocus();
+__declspec(dllexport) HWND  WINAPI GetCurrentFocus();
 
-DLLEXPORT void  WINAPI SetCaptureKeys(bool bCapture);
-DLLEXPORT bool  WINAPI GetCaptureKeys();
+__declspec(dllexport) void  WINAPI SetCaptureKeys(bool bCapture);
+__declspec(dllexport) bool  WINAPI GetCaptureKeys();
 
 
 #ifdef __cplusplus

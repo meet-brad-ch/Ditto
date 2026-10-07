@@ -5,12 +5,6 @@
 #include "stdafx.h"
 #include "DialogResizer.h"
 
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
-
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
@@ -78,7 +72,7 @@ void CDialogResizer::MoveControls(CSize csNewSize)
 		
 		//
 		//	Adjust the window horizontally
-		if( data.m_nFlags & DR_MoveLeft )
+		if( data.m_nFlags & MoveLeft )
 		{
 			rc.left += nDeltaX;
 			rc.right += nDeltaX;
@@ -86,7 +80,7 @@ void CDialogResizer::MoveControls(CSize csNewSize)
 
 		//
 		//	Adjust the window vertically
-		if( data.m_nFlags & DR_MoveTop )
+		if( data.m_nFlags & MoveTop )
 		{
 			rc.top += nDeltaY;
 			rc.bottom += nDeltaY;
@@ -94,13 +88,13 @@ void CDialogResizer::MoveControls(CSize csNewSize)
 
 		//
 		//	Size the window horizontally
-		if( data.m_nFlags & DR_SizeWidth )
+		if( data.m_nFlags & SizeWidth )
 		{
 			rc.right += nDeltaX;
 		}
 
 		//	Size the window vertically
-		if( data.m_nFlags & DR_SizeHeight )
+		if( data.m_nFlags & SizeHeight )
 		{
 			rc.bottom += nDeltaY;
 		}

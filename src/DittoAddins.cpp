@@ -14,7 +14,7 @@ CDittoAddins::~CDittoAddins(void)
 
 bool CDittoAddins::UnloadAll()
 {
-	Log(StrF(_T("Ditto Addin - Unloading all addins Count: %d"), m_Addins.size()));
+	CLogger::Log(StrF(_T("Ditto Addin - Unloading all addins Count: %d"), m_Addins.size()));
 
 	m_Addins.clear();
 
@@ -26,7 +26,7 @@ bool CDittoAddins::LoadAll()
 	CDittoInfo DittoInfo;
 	LoadDittoInfo(DittoInfo);
 
-	CString csDir = CGetSetOptions::GetPath(PATH_ADDINS);
+	CString csDir = CGetSetOptions::GetPath(CGetSetOptions::PathAddins);
 
 	CFileFind find;
 	BOOL bCont = find.FindFile(csDir + _T("*.dll"));
@@ -35,18 +35,18 @@ bool CDittoAddins::LoadAll()
 	{
 		bCont = find.FindNextFile();
 
-		Log(StrF(_T("Ditto Addin - Trying to load addin file %s"), find.GetFilePath().GetString()));
+		CLogger::Log(StrF(_T("Ditto Addin - Trying to load addin file %s"), find.GetFilePath().GetString()));
 
 		auto pAddin{std::make_unique<CDittoAddin>()};
 		if(pAddin->DoLoad(find.GetFilePath(), DittoInfo))
 		{
-			Log(StrF(_T("Ditto Addin - Success, loaded addin: %s"), find.GetFilePath().GetString()));
+			CLogger::Log(StrF(_T("Ditto Addin - Success, loaded addin: %s"), find.GetFilePath().GetString()));
 			m_Addins.push_back(std::move(pAddin));
 		}
 		else
 		{
 			// the failed addin is deleted at the end of this iteration
-			Log(StrF(_T("Ditto Addin - Failed loading Adding Error: %s"), pAddin->LastError().GetString()));
+			CLogger::Log(StrF(_T("Ditto Addin - Failed loading Adding Error: %s"), pAddin->LastError().GetString()));
 		}
 	}
 

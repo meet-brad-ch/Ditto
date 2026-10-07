@@ -421,7 +421,7 @@ bool COleClipSource::SaveFileDataRecord(HGLOBAL record, std::vector<std::wstring
 {
 	const DittoCore::GlobalBytes block(record);
 	const std::vector<DittoCore::FileDataEntry> files = DittoCore::FileDataRecord::Parse(block.Bytes());
-	const CString folder = CGetSetOptions::GetPath(PATH_DRAG_FILES);
+	const CString folder = CGetSetOptions::GetPath(CGetSetOptions::PathDragFiles);
 	std::set<CString> usedNames;
 	for (const DittoCore::FileDataEntry& file : files)
 	{
@@ -433,7 +433,7 @@ bool COleClipSource::SaveFileDataRecord(HGLOBAL record, std::vector<std::wstring
 		}
 
 		const CString newFilePath = folder + UniqueFileName(originalPath, usedNames);
-		Log(StrF(_T("Saving file contents from Ditto, original file: %s, size: %Iu, md5: %S, to: %s"), originalPath.GetString(), file.data.size(), md5.c_str(), newFilePath.GetString()));
+		CLogger::Log(StrF(_T("Saving file contents from Ditto, original file: %s, size: %Iu, md5: %S, to: %s"), originalPath.GetString(), file.data.size(), md5.c_str(), newFilePath.GetString()));
 
 		// the constructor throws CFileException when the file cannot be created; the paste stops
 		CFile target(newFilePath, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary);
@@ -506,7 +506,7 @@ void COleClipSource::Typoglycemia(CClip &clip)
 
 INT_PTR COleClipSource::PutFormatOnClipboard(CClipFormats *pFormats)
 {
-	Log(_T("Start of put format on clipboard"));
+	CLogger::Log(_T("Start of put format on clipboard"));
 
 	CClipFormat* pCF;
 	INT_PTR	count = pFormats->GetSize();
@@ -516,7 +516,7 @@ INT_PTR COleClipSource::PutFormatOnClipboard(CClipFormats *pFormats)
 	{
 		pCF = &pFormats->ElementAt(i);
 
-		Log(StrF(_T("Setting clipboard type: %s to the clipboard"), GetFormatName(pCF->m_cfType).GetString()));
+		CLogger::Log(StrF(_T("Setting clipboard type: %s to the clipboard"), GetFormatName(pCF->m_cfType).GetString()));
 
 		CacheGlobalData(pCF->m_cfType, pCF->m_hgData);
 		pCF->m_hgData = 0; // OLE owns it now
@@ -526,7 +526,7 @@ INT_PTR COleClipSource::PutFormatOnClipboard(CClipFormats *pFormats)
 
 	m_bLoadedFormats = true;
 
-	Log(_T("End of put format on clipboard"));
+	CLogger::Log(_T("End of put format on clipboard"));
 
 	return count;
 }
@@ -664,7 +664,7 @@ BOOL COleClipSource::HandOverRenderedData(HGLOBAL hData, HGLOBAL* phGlobal)
 HGLOBAL COleClipSource::ConvertToFileDrop()
 {
 	DragFiles drag{};
-	drag.folder = CGetSetOptions::GetPath(PATH_DRAG_FILES);
+	drag.folder = CGetSetOptions::GetPath(CGetSetOptions::PathDragFiles);
 	CreateDirectory(drag.folder, NULL);
 
 	drag.nextId = CGetSetOptions::GetDragId();
@@ -756,7 +756,7 @@ void COleClipSource::Slugify(CClip &clip)
 
 void COleClipSource::PutGuidOntoClipboard(CClip& clip)
 {
-	Log(_T("Start of put Guid on clipboard"));
+	CLogger::Log(_T("Start of put Guid on clipboard"));
 
 	clip.m_Formats.RemoveAll();
 
@@ -771,17 +771,17 @@ void COleClipSource::PutGuidOntoClipboard(CClip& clip)
 	//clip.m_Formats now owns the global data
 	cf.m_autoDeleteData = false;
 
-	Log(_T("End of put Guid on clipboard"));
+	CLogger::Log(_T("End of put Guid on clipboard"));
 }
 
 void COleClipSource::PasteAsImage(CClip& clip)
 {
-	Log(_T("Start of PasteAsImage"));
+	CLogger::Log(_T("Start of PasteAsImage"));
 
 	IClipFormat* pUnicodeText = clip.m_Formats.FindFormatEx(CF_UNICODETEXT);
 	if (pUnicodeText == NULL)
 	{
-		Log(_T("PasteAsImage - no unicode text found"));
+		CLogger::Log(_T("PasteAsImage - no unicode text found"));
 		return;
 	}
 
@@ -790,7 +790,7 @@ void COleClipSource::PasteAsImage(CClip& clip)
 
 	if (path.IsEmpty() || !PathFileExists(path))
 	{
-		Log(StrF(_T("PasteAsImage - path not found: %s"), path.GetString()));
+		CLogger::Log(StrF(_T("PasteAsImage - path not found: %s"), path.GetString()));
 		return;
 	}
 
@@ -798,7 +798,7 @@ void COleClipSource::PasteAsImage(CClip& clip)
 	HRESULT hr = image.Load(path);
 	if (FAILED(hr))
 	{
-		Log(StrF(_T("PasteAsImage - failed to load image: %s"), path.GetString()));
+		CLogger::Log(StrF(_T("PasteAsImage - failed to load image: %s"), path.GetString()));
 		return;
 	}
 
@@ -807,7 +807,7 @@ void COleClipSource::PasteAsImage(CClip& clip)
 	HANDLE hDib = CBitmapHelper::hBitmapToDIB(hBitmap, BI_RGB, hPal);
 	if (hDib == NULL)
 	{
-		Log(_T("PasteAsImage - failed to convert to DIB"));
+		CLogger::Log(_T("PasteAsImage - failed to convert to DIB"));
 		return;
 	}
 
@@ -842,5 +842,5 @@ void COleClipSource::PasteAsImage(CClip& clip)
 		pStream->Release();
 	}
 
-	Log(_T("End of PasteAsImage"));
+	CLogger::Log(_T("End of PasteAsImage"));
 }

@@ -18,27 +18,7 @@
 #include <cwchar>   // For swscanf
 #include <algorithm> // For std::round
 #include <gdiplus.h>
-
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
-#define ROW_BOTTOM_BORDER		4
-#define ROW_LEFT_BORDER			3
-#define COLOR_SHADOW			RGB(245, 245, 245)
-#define DUMMY_COL_WIDTH			2
-
-#define TIMER_SHOW_PROPERTIES	1
-#define TIMER_HIDE_SCROL	2
-#define TIMER_SHOW_SCROLL	3
-
-#define VALID_TOOLTIP (m_pToolTip && ::IsWindow(m_pToolTip->m_hWnd))
-
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
+#include <numbers>
 
 // Static map to hold W3C color names and their RGB values
 static std::map<CString, COLORREF> g_colorNameMap;
@@ -398,7 +378,7 @@ void CQListCtrl::MeasureItem(LPMEASUREITEMSTRUCT lpMeasureItemStruct)
 	GetTextMetrics(hDC, &tm);
 	if (m_windowDpi != NULL)
 	{
-		lpMeasureItemStruct->itemHeight = ((tm.tmHeight + tm.tmExternalLeading) * m_linesPerRow) + m_windowDpi->Scale(ROW_BOTTOM_BORDER);
+		lpMeasureItemStruct->itemHeight = ((tm.tmHeight + tm.tmExternalLeading) * m_linesPerRow) + m_windowDpi->Scale(s_rowBottomBorder);
 		m_rowHeight = lpMeasureItemStruct->itemHeight;
 	}
 	SelectObject(hDC, hFontOld);
@@ -462,7 +442,7 @@ void CQListCtrl::DrawListItem(NMLVCUSTOMDRAW* pLVCD)
 	nOldBKMode = pDC->SetBkMode(TRANSPARENT);
 
 	CRect rcText = rcItem;
-	rcText.left += m_windowDpi->Scale(ROW_LEFT_BORDER);
+	rcText.left += m_windowDpi->Scale(s_rowLeftBorder);
 	rcText.top += m_windowDpi->Scale(1);
 	rcText.bottom -= m_windowDpi->Scale(1);
 
@@ -750,7 +730,7 @@ static bool ParseCssValue(const CString& token, double& value)
 static COLORREF OklchToRgb(double l, double c, double h)
 {
 	// 1. Convert OKLCH to OKLAB
-	double h_rad = h * M_PI / 180.0;
+	double h_rad = h * std::numbers::pi / 180.0;
 	double a = c * cos(h_rad);
 	double b = c * sin(h_rad);
 
@@ -1174,7 +1154,7 @@ void CQListCtrl::DrawColorBox(CDC* pDC, CRect& rcText, const CopiedColor& color)
 		pDC->FillSolidRect(pastedRect, color.color);
 	}
 
-	rcText.left += boxSize + m_windowDpi->Scale(ROW_LEFT_BORDER);
+	rcText.left += boxSize + m_windowDpi->Scale(s_rowLeftBorder);
 }
 
 
@@ -1409,7 +1389,7 @@ BOOL CQListCtrl::PreTranslateMessage(MSG* pMsg)
 		return TRUE;
 	}
 
-	if (VALID_TOOLTIP)
+	if (IsToolTipValid())
 	{
 		if (m_pToolTip->OnMsg(pMsg))
 			return TRUE;
@@ -1447,23 +1427,23 @@ void CQListCtrl::RunAcceleratorCommand(const CAccel& a)
 {
 	switch (a.Cmd)
 	{
-	case COPY_BUFFER_HOT_KEY_1_ID:
+	case s_copyBufferHotKey1Cmd:
 		PutSelectedItemOnDittoCopyBuffer(0);
 		break;
-	case COPY_BUFFER_HOT_KEY_2_ID:
+	case s_copyBufferHotKey2Cmd:
 		PutSelectedItemOnDittoCopyBuffer(1);
 		break;
-	case COPY_BUFFER_HOT_KEY_3_ID:
+	case s_copyBufferHotKey3Cmd:
 		PutSelectedItemOnDittoCopyBuffer(2);
 		break;
 	default:
 		if (a.RefId == CHotKey::PASTE_OPEN_CLIP)
 		{
-			GetParent()->SendMessage(NM_SELECT_DB_ID, a.Cmd, 0);
+			GetParent()->SendMessage(NmSelectDbId, a.Cmd, 0);
 		}
 		else if (a.RefId == CHotKey::MOVE_TO_GROUP)
 		{
-			GetParent()->SendMessage(NM_MOVE_TO_GROUP, a.Cmd, 0);
+			GetParent()->SendMessage(NmMoveToGroup, a.Cmd, 0);
 		}
 	}
 }
@@ -1474,14 +1454,14 @@ BOOL CQListCtrl::PreTranslateMouseWheel(MSG* pMsg)
 	CWnd* pParent = GetParent();
 	if (pParent && pParent->GetSafeHwnd())
 	{
-		pParent->PostMessage(NM_UPDATE_SCROLLBAR, TRUE, 0);
+		pParent->PostMessage(NmUpdateScrollBar, TRUE, 0);
 	}
 	return result;
 }
 
 BOOL CQListCtrl::HandleKeyDown(WPARAM wParam, LPARAM lParam)
 {
-	if (VALID_TOOLTIP)
+	if (IsToolTipValid())
 	{
 		MSG Msg;
 		Msg.lParam = lParam;
@@ -1496,7 +1476,7 @@ BOOL CQListCtrl::HandleKeyDown(WPARAM wParam, LPARAM lParam)
 	switch (vk)
 	{
 	case 'A': // Ctrl-A = Select All
-		if (CONTROL_PRESSED)
+		if (CKeyboard::IsControlPressed())
 		{
 			SelectAllItems();
 			return TRUE;
@@ -1555,7 +1535,7 @@ bool CQListCtrl::PostEventLoadedCheckDescription(int updatedRow)
 {
 	bool loadedClip = false;
 
-	if (VALID_TOOLTIP)
+	if (IsToolTipValid())
 	{
 		int toolTipClipId = m_pToolTip->GetClipId();
 		int toolTipClipRow = m_pToolTip->GetClipRow();
@@ -1626,7 +1606,7 @@ bool CQListCtrl::ShowFullDescription(bool bFromAuto, bool fromNextPrev)
 
 	PrepareToolTipWindow(fromNextPrev, pt);
 
-	if (VALID_TOOLTIP)
+	if (IsToolTipValid())
 	{
 		if (ShowClipInToolTip(nItem, clipId, clipRow, csDescription, pt) == false)
 			return false;
@@ -1637,7 +1617,7 @@ bool CQListCtrl::ShowFullDescription(bool bFromAuto, bool fromNextPrev)
 
 bool CQListCtrl::IsToolTipShowingClip(int clipId)
 {
-	return VALID_TOOLTIP &&
+	return IsToolTipValid() &&
 		clipId > 0 &&
 		m_pToolTip->GetClipId() == clipId &&
 		::IsWindow(m_toolTipHwnd);
@@ -1681,7 +1661,7 @@ void CQListCtrl::PrepareToolTipWindow(bool fromNextPrev, CPoint& pt)
 
 		CreateToolTip();
 	}
-	else if (VALID_TOOLTIP)
+	else if (IsToolTipValid())
 	{
 		if (fromNextPrev)
 		{
@@ -1847,7 +1827,7 @@ CString CQListCtrl::ClipDataText(CppSQLite3Query& q)
 	if (theApp.m_GroupID > 0)
 	{
 		int sticky{q.getIntField(_T("stickyClipGroupOrder"))};
-		if (sticky != INVALID_STICKY)
+		if (sticky != CClip::InvalidSticky)
 		{
 			clipData += _T(" | ");
 			clipData += _T(" - Sticky In Group");
@@ -1856,7 +1836,7 @@ CString CQListCtrl::ClipDataText(CppSQLite3Query& q)
 	else
 	{
 		int sticky{q.getIntField(_T("stickyClipOrder"))};
-		if (sticky != INVALID_STICKY)
+		if (sticky != CClip::InvalidSticky)
 		{
 			clipData += _T(" | ");
 			clipData += _T(" - Sticky");
@@ -1873,7 +1853,7 @@ void CQListCtrl::GetToolTipText(int nItem, CString& csText)
 	{
 		CQListToolTipText info;
 		memset(&info, 0, sizeof(info));
-		info.hdr.code = NM_GETTOOLTIPTEXT;
+		info.hdr.code = NmGetToolTipText;
 		info.hdr.hwndFrom = GetSafeHwnd();
 		info.hdr.idFrom = GetDlgCtrlID();
 		info.lItem = nItem;
@@ -1934,7 +1914,7 @@ CClipFormatQListCtrl* CQListCtrl::GetItem_CF_DIB_ClipFormat(int nItem)
 
 		info.item.iItem = nItem;
 		info.item.lParam = NULL;
-		info.item.mask = LVIF_CF_DIB;
+		info.item.mask = s_lvifCfDib;
 
 		pParent->SendMessage(WM_NOTIFY, (WPARAM)info.hdr.idFrom, (LPARAM)&info);
 
@@ -1962,7 +1942,7 @@ CClipFormatQListCtrl* CQListCtrl::GetItem_CF_RTF_ClipFormat(int nItem)
 
 		info.item.iItem = nItem;
 		info.item.lParam = NULL;
-		info.item.mask = LVIF_CF_RICHTEXT;
+		info.item.mask = s_lvifCfRichText;
 
 		pParent->SendMessage(WM_NOTIFY, (WPARAM)info.hdr.idFrom, (LPARAM)&info);
 
@@ -2001,7 +1981,7 @@ void CQListCtrl::LoadDittoCopyBufferHotkeys()
 	CGetSetOptions::GetCopyBufferItem(0, Item);
 	if (Item.m_lCopyHotKey > 0)
 	{
-		a.Cmd = static_cast<DWORD>(COPY_BUFFER_HOT_KEY_1_ID);
+		a.Cmd = s_copyBufferHotKey1Cmd;
 		a.Key = Item.m_lCopyHotKey;
 		m_Accels.AddAccel(a);
 	}
@@ -2009,7 +1989,7 @@ void CQListCtrl::LoadDittoCopyBufferHotkeys()
 	CGetSetOptions::GetCopyBufferItem(1, Item);
 	if (Item.m_lCopyHotKey > 0)
 	{
-		a.Cmd = static_cast<DWORD>(COPY_BUFFER_HOT_KEY_2_ID);
+		a.Cmd = s_copyBufferHotKey2Cmd;
 		a.Key = Item.m_lCopyHotKey;
 		m_Accels.AddAccel(a);
 	}
@@ -2017,7 +1997,7 @@ void CQListCtrl::LoadDittoCopyBufferHotkeys()
 	CGetSetOptions::GetCopyBufferItem(2, Item);
 	if (Item.m_lCopyHotKey > 0)
 	{
-		a.Cmd = static_cast<DWORD>(COPY_BUFFER_HOT_KEY_3_ID);
+		a.Cmd = s_copyBufferHotKey3Cmd;
 		a.Key = Item.m_lCopyHotKey;
 		m_Accels.AddAccel(a);
 	}
@@ -2033,7 +2013,7 @@ void CQListCtrl::OnKillFocus(CWnd* pNewWnd)
 
 HWND CQListCtrl::GetToolTipHWnd()
 {
-	if (VALID_TOOLTIP)
+	if (IsToolTipValid())
 		return m_pToolTip->GetSafeHwnd();
 
 	return NULL;
@@ -2063,18 +2043,18 @@ void CQListCtrl::NotifySelectionChanged()
 	CWnd* pParent = GetParent();
 	if (pParent && pParent->GetSafeHwnd())
 	{
-		pParent->PostMessage(NM_UPDATE_SCROLLBAR, FALSE, 0);
+		pParent->PostMessage(NmUpdateScrollBar, FALSE, 0);
 	}
 
-	if (VALID_TOOLTIP &&
+	if (IsToolTipValid() &&
 		::IsWindowVisible(m_pToolTip->m_hWnd))
 	{
 		this->ShowFullDescription(false, true);
 	}
 	if (CGetSetOptions::m_bAllwaysShowDescription)
 	{
-		KillTimer(TIMER_SHOW_PROPERTIES);
-		SetTimer(TIMER_SHOW_PROPERTIES, 300, NULL);
+		KillTimer(TimerShowProperties);
+		SetTimer(TimerShowProperties, 300, NULL);
 	}
 	if (GetSelectedCount() > 0)
 		theApp.SetStatus(NULL, FALSE);
@@ -2086,15 +2066,15 @@ void CQListCtrl::UpdateAllSelectedState()
 	{
 		if (m_allSelected == false)
 		{
-			Log(StrF(_T("List box Select All")));
+			CLogger::Log(StrF(_T("List box Select All")));
 
-			GetParent()->SendMessage(NM_ALL_SELECTED, 0, 0);
+			GetParent()->SendMessage(NmAllSelected, 0, 0);
 			m_allSelected = true;
 		}
 	}
 	else if (m_allSelected == true)
 	{
-		Log(StrF(_T("List box REMOVED Select All")));
+		CLogger::Log(StrF(_T("List box REMOVED Select All")));
 		m_allSelected = false;
 	}
 }
@@ -2107,17 +2087,17 @@ void CQListCtrl::OnTimer(UINT_PTR nIDEvent)
 
 	switch (nIDEvent)
 	{
-	case TIMER_SHOW_PROPERTIES:
+	case TimerShowProperties:
 	{
 		if (theApp.m_bShowingQuickPaste)
 			ShowFullDescription(true);
-		KillTimer(TIMER_SHOW_PROPERTIES);
+		KillTimer(TimerShowProperties);
 
 		callBase = false;
 	}
 	break;
 
-	case TIMER_HIDE_SCROL:
+	case TimerHideScroll:
 	{
 		CPoint cursorPos;
 		GetCursorPos(&cursorPos);
@@ -2138,7 +2118,7 @@ void CQListCtrl::OnTimer(UINT_PTR nIDEvent)
 	}
 	break;
 
-	case TIMER_SHOW_SCROLL:
+	case TimerShowScroll:
 	{
 		CPoint cursorPos;
 		GetCursorPos(&cursorPos);
@@ -2154,13 +2134,13 @@ void CQListCtrl::OnTimer(UINT_PTR nIDEvent)
 		if (MouseInScrollBarArea(crWindow, cursorPos))
 		{
 			m_timerToHideScrollAreaSet = true;
-			GetParent()->SendMessage(NM_SHOW_HIDE_SCROLLBARS, 1, 0);
+			GetParent()->SendMessage(NmShowHideScrollBars, 1, 0);
 
 			//Start looking to hide the scroll bars
-			SetTimer(TIMER_HIDE_SCROL, 1000, NULL);
+			SetTimer(TimerHideScroll, 1000, NULL);
 		}
 
-		KillTimer(TIMER_SHOW_SCROLL);
+		KillTimer(TimerShowScroll);
 
 		callBase = false;
 	}
@@ -2193,7 +2173,7 @@ void CQListCtrl::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 	CWnd* pParent = GetParent();
 	if (pParent && pParent->GetSafeHwnd())
 	{
-		pParent->PostMessage(NM_UPDATE_SCROLLBAR, TRUE, 0);
+		pParent->PostMessage(NmUpdateScrollBar, TRUE, 0);
 	}
 }
 
@@ -2210,7 +2190,7 @@ BOOL CQListCtrl::OnChildNotify(UINT message, WPARAM wParam, LPARAM lParam, LRESU
 		case LVN_ODCACHEHINT:
 			pcachehint = (NMLVCACHEHINT*)phdr;
 
-			GetParent()->SendMessage(NM_FILL_REST_OF_LIST, pcachehint->iFrom, pcachehint->iTo);
+			GetParent()->SendMessage(NmFillRestOfList, pcachehint->iFrom, pcachehint->iTo);
 			return FALSE;
 		}
 	}
@@ -2246,14 +2226,14 @@ void CQListCtrl::OnMouseMove(UINT nFlags, CPoint point)
 				// For modern scrollbar, notify parent
 				if (CGetSetOptions::m_useModernScrollBar)
 				{
-					GetParent()->PostMessage(NM_UPDATE_SCROLLBAR, TRUE, 0);
+					GetParent()->PostMessage(NmUpdateScrollBar, TRUE, 0);
 				}
 				else
 				{
 					// For native scrollbar, show immediately and start hide timer
 					m_timerToHideScrollAreaSet = true;
-					GetParent()->SendMessage(NM_SHOW_HIDE_SCROLLBARS, 1, 0);
-					SetTimer(TIMER_HIDE_SCROL, 1000, NULL);
+					GetParent()->SendMessage(NmShowHideScrollBars, 1, 0);
+					SetTimer(TimerHideScroll, 1000, NULL);
 				}
 			}
 		}
@@ -2264,7 +2244,7 @@ void CQListCtrl::OnMouseMove(UINT nFlags, CPoint point)
 			{
 				StopHideScrollBarTimer();
 			}
-			KillTimer(TIMER_SHOW_SCROLL);
+			KillTimer(TimerShowScroll);
 		}
 	}
 
@@ -2298,10 +2278,10 @@ bool CQListCtrl::MouseInScrollBarArea(CRect crWindow, CPoint point)
 
 void CQListCtrl::StopHideScrollBarTimer()
 {
-	GetParent()->SendMessage(NM_SHOW_HIDE_SCROLLBARS, 0, 0);
+	GetParent()->SendMessage(NmShowHideScrollBars, 0, 0);
 
 	m_timerToHideScrollAreaSet = false;
-	KillTimer(TIMER_HIDE_SCROL);
+	KillTimer(TimerHideScroll);
 }
 
 void CQListCtrl::SetSearchText(CString text)
@@ -2311,7 +2291,7 @@ void CQListCtrl::SetSearchText(CString text)
 
 void CQListCtrl::HidePopup(bool checkShowPersistant)
 {
-	if (VALID_TOOLTIP)
+	if (IsToolTipValid())
 	{
 		if (checkShowPersistant == false ||
 			m_pToolTip->GetShowPersistant() == false)
@@ -2323,7 +2303,7 @@ void CQListCtrl::HidePopup(bool checkShowPersistant)
 
 BOOL CQListCtrl::IsToolTipWindowVisible()
 {
-	if (VALID_TOOLTIP)
+	if (IsToolTipValid())
 	{
 		return ::IsWindowVisible(m_toolTipHwnd);
 	}
@@ -2333,7 +2313,7 @@ BOOL CQListCtrl::IsToolTipWindowVisible()
 
 void CQListCtrl::ToggleToolTipShowPersistant()
 {
-	if (VALID_TOOLTIP)
+	if (IsToolTipValid())
 	{
 		m_pToolTip->ToggleShowPersistant();
 	}
@@ -2342,7 +2322,7 @@ void CQListCtrl::ToggleToolTipShowPersistant()
 bool CQListCtrl::ToggleToolTipWordWrap()
 {
 	bool didWordWrap = false;
-	if (VALID_TOOLTIP)
+	if (IsToolTipValid())
 	{
 		didWordWrap = m_pToolTip->ToggleWordWrap();
 	}
@@ -2353,7 +2333,7 @@ bool CQListCtrl::ToggleToolTipWordWrap()
 
 BOOL CQListCtrl::IsToolTipWindowFocus()
 {
-	if (VALID_TOOLTIP)
+	if (IsToolTipValid())
 	{
 		return ::GetFocus() == m_toolTipHwnd ||
 			::GetParent(::GetFocus()) == m_toolTipHwnd;
@@ -2364,7 +2344,7 @@ BOOL CQListCtrl::IsToolTipWindowFocus()
 
 bool CQListCtrl::IsToolTipShowPersistant()
 {
-	if (VALID_TOOLTIP)
+	if (IsToolTipValid())
 	{
 		return m_pToolTip->GetShowPersistant();
 	}
@@ -2374,7 +2354,7 @@ bool CQListCtrl::IsToolTipShowPersistant()
 
 void CQListCtrl::DoToolTipSearch()
 {
-	if (VALID_TOOLTIP)
+	if (IsToolTipValid())
 	{
 		return m_pToolTip->DoSearch();
 	}
@@ -2382,7 +2362,7 @@ void CQListCtrl::DoToolTipSearch()
 
 void CQListCtrl::HideToolTip()
 {
-	if (VALID_TOOLTIP)
+	if (IsToolTipValid())
 	{
 		m_pToolTip->Hide();
 	}
@@ -2413,6 +2393,11 @@ void CQListCtrl::SetDpiInfo(CDPI* dpi)
 	m_stickyImage.LoadStdImageDPI(m_windowDpi->GetDPI(), IDB_STICKY_16_16, IDB_STICKY_20_20, IDB_STICKY_24_24, IDB_STICKY_24_24, IDB_STICKY_32_32, _T("PNG"));
 
 	CreateSmallFont();
+}
+
+bool CQListCtrl::IsToolTipValid() const
+{
+	return m_pToolTip && ::IsWindow(m_pToolTip->m_hWnd);
 }
 
 void CQListCtrl::CreateToolTip()
@@ -2473,7 +2458,7 @@ void CQListCtrl::OnMouseHWheel(UINT /*nFlags*/, short zDelta, CPoint /*pt*/)
 	CWnd* pParent = GetParent();
 	if (pParent && pParent->GetSafeHwnd())
 	{
-		pParent->PostMessage(NM_UPDATE_SCROLLBAR, TRUE, 0);
+		pParent->PostMessage(NmUpdateScrollBar, TRUE, 0);
 	}
 
 	//CListCtrl::OnMouseHWheel(nFlags, zDelta, pt);

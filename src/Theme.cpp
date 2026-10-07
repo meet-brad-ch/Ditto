@@ -84,7 +84,7 @@ bool CTheme::Load(CString csTheme, bool bHeaderOnly, bool bCheckLastWriteTime)
 		return LoadDefaultTheme(followWindows10Theme);
 	}
 
-	CString csPath = CGetSetOptions::GetPath(PATH_THEMES);
+	CString csPath = CGetSetOptions::GetPath(CGetSetOptions::PathThemes);
 	csPath += csTheme;
 	csPath += ".xml";
 
@@ -104,7 +104,7 @@ bool CTheme::Load(CString csTheme, bool bHeaderOnly, bool bCheckLastWriteTime)
 	m_LastWriteTime = LastWrite;
 	m_lastTheme = csTheme;
 
-	Log(StrF(_T("Loading Theme %s"), csPath.GetString()));
+	CLogger::Log(StrF(_T("Loading Theme %s"), csPath.GetString()));
 
 	return LoadThemeFile(csPath, bHeaderOnly, followWindows10Theme);
 }
@@ -113,7 +113,7 @@ CString CTheme::GetWindowsThemeName()
 {
 	if (DarkAppWindows10Setting())
 	{
-		Log(_T("Loading theme based on windows setting of dark mode for apps"));
+		CLogger::Log(_T("Loading theme based on windows setting of dark mode for apps"));
 		return _T("DarkerDitto");
 	}
 	return _T("");
@@ -136,7 +136,7 @@ bool CTheme::LoadDefaultTheme(bool followWindows10Theme)
 	m_LastWriteTime = 0;
 	m_lastTheme = _T("");
 
-	Log(_T("Loading default ditto values for themes"));
+	CLogger::Log(_T("Loading default ditto values for themes"));
 
 	return false;
 }
@@ -149,7 +149,7 @@ bool CTheme::LoadThemeFile(const CString& csPath, bool bHeaderOnly, bool followW
 	{
 		m_csLastError.Format(_T("Error loading Theme %s - reason = %hs"), csPath.GetString(), doc.ErrorStr());
 		ASSERT(!m_csLastError);
-		Log(m_csLastError);
+		CLogger::Log(m_csLastError);
 		return false;
 	}
 
@@ -158,12 +158,12 @@ bool CTheme::LoadThemeFile(const CString& csPath, bool bHeaderOnly, bool followW
 	{
 		m_csLastError.Format(_T("Error finding the section Ditto_Theme_File"));
 		ASSERT(!m_csLastError);
-		Log(m_csLastError);
+		CLogger::Log(m_csLastError);
 		return false;
 	}
 
 	CString csVersion = ItemHeader->Attribute("Version");
-	m_lFileVersion = ATOI(csVersion);
+	m_lFileVersion = _ttoi(csVersion);
 	m_csAuthor = ItemHeader->Attribute("Author");
 	m_csNotes = ItemHeader->Attribute("Notes");
 
@@ -299,7 +299,7 @@ bool CTheme::LoadElement(const tinyxml2::XMLElement *pParent, CStringA csNode, C
 	if(pColorNode == NULL)
 	{
 		m_csLastError.Format(_T("Theme Load, error loading Node = %hs"), csNode.GetString());
-		Log(m_csLastError);
+		CLogger::Log(m_csLastError);
 		return false;
 	}
 
@@ -307,7 +307,7 @@ bool CTheme::LoadElement(const tinyxml2::XMLElement *pParent, CStringA csNode, C
 	if(pColor == NULL)
 	{
 		m_csLastError.Format(_T("Theme Load, error getting node text for = %hs"), csNode.GetString());
-		Log(m_csLastError);
+		CLogger::Log(m_csLastError);
 		return false;
 	}
 	
@@ -337,7 +337,7 @@ bool CTheme::LoadElement(const tinyxml2::XMLElement *pParent, CStringA csNode, C
 	}
 	else
 	{
-		intValue = ATOI(csColor);
+		intValue = _ttoi(csColor);
 		Color = (COLORREF)intValue;
 	}
 
@@ -367,16 +367,16 @@ bool CTheme::ParseRgbValue(const CStringA& csNode, const CString& csColor, COLOR
 
 	if (!csR.IsEmpty() && csG.IsEmpty() && csB.IsEmpty())
 	{
-		Color = ATOI(csR);
+		Color = _ttoi(csR);
 	}
 	else if (!csR.IsEmpty() && !csG.IsEmpty() && !csB.IsEmpty())
 	{
-		Color = RGB(ATOI(csR), ATOI(csG), ATOI(csB));
+		Color = RGB(_ttoi(csR), _ttoi(csG), _ttoi(csB));
 	}
 	else
 	{
 		m_csLastError.Format(_T("Theme Load, malformed/incomplete RGB value for Node = %hs, Value = %s"), csNode.GetString(), csColor.GetString());
-		Log(m_csLastError);
+		CLogger::Log(m_csLastError);
 		return false;
 	}
 	return true;
@@ -412,7 +412,7 @@ bool CTheme::ParseHslValue(const CStringA& csNode, const CString& csColor, COLOR
 	else
 	{
 		m_csLastError.Format(_T("Theme Load, malformed/incomplete HSL value for Node = %hs, Value = %s"), csNode.GetString(), csColor.GetString());
-		Log(m_csLastError);
+		CLogger::Log(m_csLastError);
 		return false;
 	}
 	return true;

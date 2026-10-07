@@ -6,20 +6,8 @@
 #include "WndEx.h"
 #include ".\wndex.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 /////////////////////////////////////////////////////////////////////////////
 // CWndEx
-
-#define CLOSE_WIDTH			12
-#define CLOSE_HEIGHT		11
-#define CLOSE_BORDER		2
-#define TIMER_AUTO_MAX		5
-#define TIMER_BUTTON_UP		6
 
 CWndEx::CWndEx()
 {	
@@ -164,7 +152,7 @@ void CWndEx::OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp)
 	m_DittoWindow.DoNcCalcSize(bCalcValidRects, lpncsp);
 }
 
-HITTEST_RET CWndEx::OnNcHitTest(CPoint point) 
+LRESULT CWndEx::OnNcHitTest(CPoint point) 
 {
 	UINT Ret = m_DittoWindow.DoNcHitTest(this, point);
 	if(Ret == -1)
@@ -179,7 +167,7 @@ void CWndEx::OnNcLButtonDown(UINT nHitTest, CPoint point)
 	
 	if (buttonPressed != 0)
 	{
-		SetTimer(TIMER_BUTTON_UP, 100, NULL);
+		SetTimer(TimerButtonUp, 100, NULL);
 	}
 
 	CWnd::OnNcLButtonDown(nHitTest, point);
@@ -190,15 +178,15 @@ void CWndEx::OnNcLButtonUp(UINT nHitTest, CPoint point)
 	long lRet = m_DittoWindow.DoNcLButtonUp(this, nHitTest, point);
 	if(lRet > 0)
 	{
-		if(lRet == BUTTON_CHEVRON)
+		if(lRet == CDittoWindow::ButtonChevron)
 		{
-			MinMaxWindow(SWAP_MIN_MAX);
+			MinMaxWindow(CDittoWindow::SwapMinMax);
 			OnNcPaint();
 		}
 		return;
 	}
 
-	KillTimer(TIMER_BUTTON_UP);
+	KillTimer(TimerButtonUp);
 	
 	CWnd::OnNcLButtonUp(nHitTest, point);
 }
@@ -212,7 +200,7 @@ void CWndEx::OnNcMouseMove(UINT nHitTest, CPoint point)
 		COleDateTimeSpan sp = COleDateTime::GetCurrentTime() - m_DittoWindow.m_TimeMinimized;
 		if(sp.GetTotalSeconds() >= m_lDelayMaxSeconds)
 		{
-			SetTimer(TIMER_AUTO_MAX, CGetSetOptions::GetTimeBeforeExpandWindow(), NULL);
+			SetTimer(TimerAutoMax, CGetSetOptions::GetTimeBeforeExpandWindow(), NULL);
 			m_bMaxSetTimer = true;
 		}
 	}
@@ -235,7 +223,7 @@ BOOL CWndEx::OnEraseBkgnd(CDC* pDC)
 
 void CWndEx::OnTimer(UINT_PTR nIDEvent)
 {
-	if(nIDEvent == TIMER_AUTO_MAX)
+	if(nIDEvent == TimerAutoMax)
 	{
 		if(m_DittoWindow.m_bMinimized)
 		{
@@ -252,20 +240,20 @@ void CWndEx::OnTimer(UINT_PTR nIDEvent)
 				{
 					if(m_DittoWindow.m_crMinimizeBT.PtInRect(cp) == false)
 					{
-						MinMaxWindow(FORCE_MAX);
+						MinMaxWindow(CDittoWindow::ForceMax);
 					}
 				}
 			}
 		}
-		KillTimer(TIMER_AUTO_MAX);
+		KillTimer(TimerAutoMax);
 		m_bMaxSetTimer = false;
 	}
-	else if (nIDEvent == TIMER_BUTTON_UP)
+	else if (nIDEvent == TimerButtonUp)
 	{
 		if ((GetKeyState(VK_LBUTTON) & 0x100) == 0)
 		{
 			m_DittoWindow.DoNcLButtonUp(this, 0, CPoint(0, 0));
-			KillTimer(TIMER_BUTTON_UP);
+			KillTimer(TimerButtonUp);
 		}
 	}
 	
@@ -278,7 +266,7 @@ void CWndEx::OnWindowPosChanging(WINDOWPOS* lpwndpos)
 	
 	if(m_bMaxSetTimer)
 	{
-		KillTimer(TIMER_AUTO_MAX);
+		KillTimer(TimerAutoMax);
 		m_bMaxSetTimer = false;
 	}
 

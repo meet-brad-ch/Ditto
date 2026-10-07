@@ -14,22 +14,6 @@
 
 class CHotKey;
 
-#define CLOSE_WINDOW_TIMER				1	
-#define HIDE_ICON_TIMER					2
-#define REMOVE_OLD_ENTRIES_TIMER		3
-#define REMOVE_OLD_TEMP_FILES			6
-#define END_DITTO_BUFFER_CLIPBOARD_TIMER	7
-#define KEY_STATE_MODIFIERS				8
-#define ACTIVE_WINDOW_TIMER				9
-#define TEXT_ONLY_PASTE					11
-#define READ_RANDOM_DB_FILE				12
-#define GROUP_DOUBLE_CLICK				13
-#define CLOSE_POPUP_MSG_WND				14
-#define SCREEN_RESOLUTION_CHANGED		15
-#define DELAYED_SHOW_DITTO_TIMER		16
-#define SET_WINDOWS_THEME_TIMER			17
-#define CLOSE_NO_DB_WINDOW_TIMER        18
-
 class CMainFrame: public CFrameWnd
 {
 public:
@@ -116,7 +100,7 @@ protected:
     afx_msg LRESULT OnShowTrayIcon(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnClipboardCopied(WPARAM wParam, LPARAM lParam);
 	/**
-	 * @brief WM_SHOW_OWNED_ERROR_MSG handler: shows an error balloon posted by CErrorReport.
+	 * @brief CDittoMessage::ShowOwnedErrorMsg handler: shows an error balloon posted by CErrorReport.
 	 * @param wParam A CString* allocated by the sender; this handler takes ownership and frees it.
 	 * @param lParam Unused.
 	 * @return TRUE.
@@ -159,15 +143,51 @@ DECLARE_MESSAGE_MAP()public:
     afx_msg LRESULT OnEditClip(WPARAM wParam, LPARAM lParam);
     afx_msg void OnSetFocus(CWnd* pOldWnd);
 
+	/** @brief The window message the tray icon sends to the main frame. */
+	enum : UINT
+	{
+		/** @brief A tray icon notification (lParam: the mouse message). */
+		WmTrayNotify = WM_USER + 100,
+	};
+
 private:
 	// PasteOrShowGroup's clip branch: ends a pending group double press and pastes the clip;
 	// an argument of -1 keeps the option's current value
 	void PasteSingleClip(int dbId, BOOL updateClipTime, BOOL activeTarget, BOOL sendPaste, bool pastedFromGroup);
 
+	/** @brief The timer ids of the main frame (SetTimer / KillTimer / OnTimer). */
+	enum : UINT_PTR
+	{
+		/** @brief Closing the window on a timer (disabled; the id stays reserved). */
+		CloseWindowTimer = 1,
+		/** @brief Hides the tray icon. */
+		HideIconTimer = 2,
+		/** @brief Deletes old entries. */
+		RemoveOldEntriesTimer = 3,
+		/** @brief Removes old temporary files. */
+		RemoveOldTempFilesTimer = 6,
+		/** @brief Waits for the modifier keys to be released. */
+		KeyStateModifiersTimer = 8,
+		/** @brief Tracks the active window. */
+		ActiveWindowTimer = 9,
+		/** @brief Reads the database file. */
+		ReadRandomDbFileTimer = 12,
+		/** @brief Ends the wait for a group hot key's second press. */
+		GroupDoubleClickTimer = 13,
+		/** @brief The screen resolution changed. */
+		ScreenResolutionChangedTimer = 15,
+		/** @brief Shows the paste window after a delay. */
+		DelayedShowDittoTimer = 16,
+		/** @brief Reloads the Windows theme. */
+		SetWindowsThemeTimer = 17,
+		/** @brief Closes the no-database window. */
+		CloseNoDbWindowTimer = 18,
+	};
+
 	/** @brief One entry of OnTimer's dispatch table. */
 	struct TimerHandler
 	{
-		/** @brief The timer id (a *_TIMER define). */
+		/** @brief The timer id (one of the *Timer ids). */
 		UINT_PTR timerId{};
 		/** @brief The member function that handles the timer. */
 		void (CMainFrame::*handle)() = nullptr;
@@ -184,7 +204,7 @@ private:
 		CHotKey* cut{};
 	};
 
-	/** @brief OnTimer's dispatch table: the handler of each timer id (CLOSE_WINDOW_TIMER has none). */
+	/** @brief OnTimer's dispatch table: the handler of each timer id (CloseWindowTimer has none). */
 	static const std::array<TimerHandler, 11> s_timerHandlers;
 
 	/**
@@ -237,26 +257,26 @@ private:
 	 */
 	void DoGlobalClipHotKey(WPARAM wParam);
 
-	/** @brief HIDE_ICON_TIMER: hides the tray icon unless the option shows it. */
+	/** @brief HideIconTimer: hides the tray icon unless the option shows it. */
 	void OnHideIconTimer();
-	/** @brief REMOVE_OLD_ENTRIES_TIMER: starts deleting old entries on the worker thread. */
+	/** @brief RemoveOldEntriesTimer: starts deleting old entries on the worker thread. */
 	void OnRemoveOldEntriesTimer();
-	/** @brief REMOVE_OLD_TEMP_FILES: starts removing old temporary files on the worker thread. */
+	/** @brief RemoveOldTempFilesTimer: starts removing old temporary files on the worker thread. */
 	void OnRemoveOldTempFilesTimer();
-	/** @brief KEY_STATE_MODIFIERS: pastes or resets once the modifier keys are released. */
+	/** @brief KeyStateModifiersTimer: pastes or resets once the modifier keys are released. */
 	void OnKeyStateModifiersTimer();
-	/** @brief ACTIVE_WINDOW_TIMER: tracks the active window while the paste window shows. */
+	/** @brief ActiveWindowTimer: tracks the active window while the paste window shows. */
 	void OnActiveWindowTimer();
-	/** @brief READ_RANDOM_DB_FILE: starts reading the database file on the worker thread. */
+	/** @brief ReadRandomDbFileTimer: starts reading the database file on the worker thread. */
 	void OnReadRandomDbFileTimer();
-	/** @brief GROUP_DOUBLE_CLICK: handles a single press of a group hot key (opens Ditto on the group). */
+	/** @brief GroupDoubleClickTimer: handles a single press of a group hot key (opens Ditto on the group). */
 	void OnGroupDoubleClickTimer();
-	/** @brief SCREEN_RESOLUTION_CHANGED: lets the paste window follow the new resolution. */
+	/** @brief ScreenResolutionChangedTimer: lets the paste window follow the new resolution. */
 	void OnScreenResolutionChangedTimer();
-	/** @brief DELAYED_SHOW_DITTO_TIMER: shows the paste window. */
+	/** @brief DelayedShowDittoTimer: shows the paste window. */
 	void OnDelayedShowDittoTimer();
-	/** @brief SET_WINDOWS_THEME_TIMER: reloads the Windows theme and reopens a visible paste window. */
+	/** @brief SetWindowsThemeTimer: reloads the Windows theme and reopens a visible paste window. */
 	void OnSetWindowsThemeTimer();
-	/** @brief CLOSE_NO_DB_WINDOW_TIMER: closes the no-database window. */
+	/** @brief CloseNoDbWindowTimer: closes the no-database window. */
 	void OnCloseNoDbWindowTimer();
 };

@@ -69,28 +69,28 @@ BOOL CQuickPasteKeyboard::OnInitDialog()
 	LoadItems();
 
 	int pos = m_mouseType1.AddString(_T("Click"));
-	m_mouseType1.SetItemData(pos, VK_MOUSE_CLICK);
+	m_mouseType1.SetItemData(pos, CMouseKey::Click);
 
 	pos = m_mouseType1.AddString(_T("Double Click"));
-	m_mouseType1.SetItemData(pos, VK_MOUSE_DOUBLE_CLICK);
+	m_mouseType1.SetItemData(pos, CMouseKey::DoubleClick);
 
 	pos = m_mouseType1.AddString(_T("Right Click"));
-	m_mouseType1.SetItemData(pos, VK_MOUSE_RIGHT_CLICK);
+	m_mouseType1.SetItemData(pos, CMouseKey::RightClick);
 
 	pos = m_mouseType1.AddString(_T("Middle Click"));
-	m_mouseType1.SetItemData(pos, VK_MOUSE_MIDDLE_CLICK);
+	m_mouseType1.SetItemData(pos, CMouseKey::MiddleClick);
 
 	pos = m_mouseType2.AddString(_T("Click"));
-	m_mouseType2.SetItemData(pos, VK_MOUSE_CLICK);
+	m_mouseType2.SetItemData(pos, CMouseKey::Click);
 
 	pos = m_mouseType2.AddString(_T("Double Click"));
-	m_mouseType2.SetItemData(pos, VK_MOUSE_DOUBLE_CLICK);
+	m_mouseType2.SetItemData(pos, CMouseKey::DoubleClick);
 
 	pos = m_mouseType2.AddString(_T("Right Click"));
-	m_mouseType2.SetItemData(pos, VK_MOUSE_RIGHT_CLICK);
+	m_mouseType2.SetItemData(pos, CMouseKey::RightClick);
 
 	pos = m_mouseType2.AddString(_T("Middle Click"));
-	m_mouseType2.SetItemData(pos, VK_MOUSE_MIDDLE_CLICK);
+	m_mouseType2.SetItemData(pos, CMouseKey::MiddleClick);
 
 	m_mouseType1.SetCurSel(0);
 	m_mouseType2.SetCurSel(0);
@@ -315,14 +315,14 @@ void CQuickPasteKeyboard::ReadFirstPress(KeyboardAB &ab)
 	if (this->IsDlgButtonChecked(IDC_RADIO_KEYBOARD_1) == BST_CHECKED)
 	{
 		//remove the extended key flag, don't think this is needed now days
-		ab.A = ACCEL_MAKEKEY(LOBYTE(m_hotKey1.GetHotKey()), (HIBYTE(m_hotKey1.GetHotKey()) & ~HOTKEYF_EXT));
+		ab.A = CAccels::MakeKey(LOBYTE(m_hotKey1.GetHotKey()), (HIBYTE(m_hotKey1.GetHotKey()) & ~HOTKEYF_EXT));
 	}
 	else if (this->IsDlgButtonChecked(IDC_RADIO_MOUSE_1) == BST_CHECKED)
 	{
 		WORD vk = (WORD)m_mouseType1.GetItemData(m_mouseType1.GetCurSel());
 		WORD mod = CheckedModifiers(IDC_CHECK_SHIFT_1, IDC_CHECK_CONTROL_1, IDC_CHECK_ALT_1);
 
-		ab.A = ACCEL_MAKEKEY(vk, mod);
+		ab.A = CAccels::MakeKey(vk, mod);
 	}
 }
 
@@ -333,14 +333,14 @@ void CQuickPasteKeyboard::ReadSecondPress(KeyboardAB &ab)
 		if (this->IsDlgButtonChecked(IDC_RADIO_KEYBOARD_2) == BST_CHECKED)
 		{
 			//remove the extended key flag, don't think this is needed now days
-			ab.B = ACCEL_MAKEKEY(LOBYTE(m_hotKey2.GetHotKey()), (HIBYTE(m_hotKey2.GetHotKey()) & ~HOTKEYF_EXT));
+			ab.B = CAccels::MakeKey(LOBYTE(m_hotKey2.GetHotKey()), (HIBYTE(m_hotKey2.GetHotKey()) & ~HOTKEYF_EXT));
 		}
 		else if (this->IsDlgButtonChecked(IDC_RADIO_MOUSE_2) == BST_CHECKED)
 		{
 			WORD vk = (WORD)m_mouseType2.GetItemData(m_mouseType2.GetCurSel());
 			WORD mod = CheckedModifiers(IDC_CHECK_SHIFT_2, IDC_CHECK_CONTROL_2, IDC_CHECK_ALT_2);
 
-			ab.B = ACCEL_MAKEKEY(vk, mod);
+			ab.B = CAccels::MakeKey(vk, mod);
 		}
 	}
 	else
@@ -618,7 +618,7 @@ int CQuickPasteKeyboard::WithExtendedKeyFlag(int key)
 	{
 		if (LOBYTE((DWORD)key) == extendedKey)
 		{
-			return ACCEL_MAKEKEY(LOBYTE(key), (HIBYTE(key) | HOTKEYF_EXT));
+			return CAccels::MakeKey(LOBYTE(key), (HIBYTE(key) | HOTKEYF_EXT));
 		}
 	}
 
@@ -629,10 +629,10 @@ bool CQuickPasteKeyboard::IsMouseKey(int key)
 {
 	switch (LOBYTE((DWORD)key))
 	{
-	case VK_MOUSE_CLICK:
-	case VK_MOUSE_DOUBLE_CLICK:
-	case VK_MOUSE_RIGHT_CLICK:
-	case VK_MOUSE_MIDDLE_CLICK:
+	case CMouseKey::Click:
+	case CMouseKey::DoubleClick:
+	case CMouseKey::RightClick:
+	case CMouseKey::MiddleClick:
 		return true;
 	}
 

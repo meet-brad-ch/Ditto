@@ -20,12 +20,6 @@
 #include <memory>
 #include <stdexcept>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 class DittoCommandLineInfo : public CCommandLineInfo
 {
 public:
@@ -129,7 +123,7 @@ private:
 
 		for (const ExactSwitch& exactSwitch : exactSwitches)
 		{
-			if (STRICMP(pszParam, exactSwitch.name) == 0)
+			if (_tcsicmp(pszParam, exactSwitch.name) == 0)
 			{
 				*exactSwitch.flag = TRUE;
 				return true;
@@ -152,7 +146,7 @@ private:
 		if (sep > -1)
 		{
 			CString id = pidCommand.Right(pidCommand.GetLength() - sep - 1);
-			number = ATOI(id);
+			number = _ttoi(id);
 			return true;
 		}
 
@@ -170,7 +164,7 @@ BEGIN_MESSAGE_MAP(CCP_MainApp, CWinApp)
 END_MESSAGE_MAP()
 
 CCP_MainApp::CCP_MainApp() :
-	m_db([](const CString& text) { Log(text); })
+	m_db([](const CString& text) { CLogger::Log(text); })
 {
 	m_copyReason = CopyReasonEnum::COPY_TO_UNKOWN;
 	m_copyReasonStartTime = 0;
@@ -302,7 +296,7 @@ BOOL CCP_MainApp::InitInstanceBody()
 
 	if(cmdInfo.m_uacPID > 0)
 	{
-		Log(StrF(_T("Startup up ditto as admin to paste to admin windows, parent process id: %d"), cmdInfo.m_uacPID));
+		CLogger::Log(StrF(_T("Startup up ditto as admin to paste to admin windows, parent process id: %d"), cmdInfo.m_uacPID));
 
 		CString mutex;
 		mutex.Format(_T("DittoAdminPaste_%d"), cmdInfo.m_uacPID);
@@ -323,7 +317,7 @@ BOOL CCP_MainApp::InitInstanceBody()
 	auto runningVersion = GetRunningVersion();
 	CString cs = GetVersionString(runningVersion);
 	cs.Insert(0, _T("InitInstance  -  Running Version - "));
-	Log(cs);
+	CLogger::Log(cs);
 
 	if (!CreateSingleInstanceMutex())
 	{
@@ -335,7 +329,7 @@ BOOL CCP_MainApp::InitInstanceBody()
 	{
 		CString csLanguageError;
 		csLanguageError.Format(_T("Error loading language file - %s - \n\n%s"), csFile.GetString(), m_Language.m_csLastError.GetString());
-		Log(csLanguageError);
+		CLogger::Log(csLanguageError);
 
 		m_Language.LoadLanguageFile(_T("English.xml"));
 	}
@@ -365,7 +359,7 @@ bool CCP_MainApp::HandleCommandLine(const DittoCommandLineInfo& cmdInfo)
 {
 	if (cmdInfo.m_restartFromRestartManager)
 	{
-		Log(StrF(_T("Ditto was restarted from restart manager")));
+		CLogger::Log(StrF(_T("Ditto was restarted from restart manager")));
 	}
 	else if(cmdInfo.m_strFileName.IsEmpty() == FALSE)
 	{
@@ -395,7 +389,7 @@ bool CCP_MainApp::HandleConnectSwitch(const DittoCommandLineInfo& cmdInfo)
 	HWND hWnd = (HWND)(LONG_PTR)CGetSetOptions::GetMainHWND();
 	if(hWnd)
 	{
-		ret = ::SendMessage(hWnd, WM_SET_CONNECTED, cmdInfo.m_bConnect, cmdInfo.m_bDisconnect);
+		ret = ::SendMessage(hWnd, CDittoMessage::SetConnected, cmdInfo.m_bConnect, cmdInfo.m_bDisconnect);
 	}
 
 	//passed off to the running instance of ditto, exit this instance
@@ -420,11 +414,11 @@ bool CCP_MainApp::ForwardToRunningInstance(const DittoCommandLineInfo& cmdInfo)
 {
 	// in this order: the first requested one is sent
 	const std::array<RunningInstanceRequest, 5> requests{ {
-		{ cmdInfo.m_bOpenWindow || cmdInfo.m_bCloseWindow, WM_OPEN_CLOSE_WINDOW, static_cast<WPARAM>(cmdInfo.m_bOpenWindow), static_cast<LPARAM>(cmdInfo.m_bCloseWindow) },
+		{ cmdInfo.m_bOpenWindow || cmdInfo.m_bCloseWindow, CDittoMessage::OpenCloseWindow, static_cast<WPARAM>(cmdInfo.m_bOpenWindow), static_cast<LPARAM>(cmdInfo.m_bCloseWindow) },
 		{ cmdInfo.m_exit != FALSE, WM_CLOSE, 0, 0 },
-		{ cmdInfo.m_plainTextPaste != FALSE, WM_PLAIN_TEXT_PASTE, 0, 0 },
-		{ cmdInfo.m_pasteClip != FALSE, WM_PASTE_CLIP, static_cast<WPARAM>(cmdInfo.m_clipID), 0 },
-		{ cmdInfo.m_editClip != FALSE, WM_EDIT_CLIP, static_cast<WPARAM>(cmdInfo.m_clipID), 0 },
+		{ cmdInfo.m_plainTextPaste != FALSE, CDittoMessage::PlainTextPaste, 0, 0 },
+		{ cmdInfo.m_pasteClip != FALSE, CDittoMessage::PasteClip, static_cast<WPARAM>(cmdInfo.m_clipID), 0 },
+		{ cmdInfo.m_editClip != FALSE, CDittoMessage::EditClip, static_cast<WPARAM>(cmdInfo.m_clipID), 0 },
 	} };
 
 	for (const RunningInstanceRequest& request : requests)
@@ -464,15 +458,15 @@ bool CCP_MainApp::CreateSingleInstanceMutex()
 	if(m_hMutex == NULL ||
 		dwError == ERROR_ALREADY_EXISTS)
 	{
-		Log(StrF(_T("Ditto is already running, closing, mutex: %s"), csMutex.GetString()));
+		CLogger::Log(StrF(_T("Ditto is already running, closing, mutex: %s"), csMutex.GetString()));
 		HWND hWnd = (HWND)(LONG_PTR)CGetSetOptions::GetMainHWND();
 		if(hWnd)
-			::SendMessage(hWnd, WM_SHOW_TRAY_ICON, TRUE, TRUE);
+			::SendMessage(hWnd, CDittoMessage::ShowTrayIcon, TRUE, TRUE);
 
 		return false;
 	}
 
-	Log(StrF(_T("Starting up ditto with mutex: %s"), csMutex.GetString()));
+	CLogger::Log(StrF(_T("Starting up ditto with mutex: %s"), csMutex.GetString()));
 
 	return true;
 }
@@ -638,7 +632,7 @@ bool CCP_MainApp::StartCopyThread()
 		return false;
 	}
 	// initialize to:
-	// - m_MainhWnd = send WM_CLIPBOARD_COPIED messages to m_MainhWnd
+	// - m_MainhWnd = send CDittoMessage::ClipboardCopied messages to m_MainhWnd
 	// - true = use Asynchronous communication (PostMessage)
 	// - true = enable copying on clipboard changes
 	// - pTypes = the supported types to use
@@ -647,13 +641,13 @@ bool CCP_MainApp::StartCopyThread()
 	if(m_connectOnStartup == FALSE || CGetSetOptions::GetConnectedToClipboard() == FALSE)
 	{
 		m_CopyThread.m_connectOnStartup = false;
-		Log(StrF(_T("Starting Ditto up disconnected from the clipboard, commandLine: %d, saved value: %d"), m_connectOnStartup, CGetSetOptions::GetConnectedToClipboard()));
+		CLogger::Log(StrF(_T("Starting Ditto up disconnected from the clipboard, commandLine: %d, saved value: %d"), m_connectOnStartup, CGetSetOptions::GetConnectedToClipboard()));
 		SetConnectCV(false);
 	}
 	else if(m_connectOnStartup == TRUE)
 	{
 		SetConnectCV(true);
-		Log(_T("Starting Ditto up connected from the clipboard, passed in true from command line to start connected"));
+		CLogger::Log(_T("Starting Ditto up connected from the clipboard, passed in true from command line to start connected"));
 	}
 
 	if (!m_CopyThread.CreateThread(CREATE_SUSPENDED))
@@ -757,11 +751,11 @@ void CCP_MainApp::RefreshView(CopyReasonEnum::CopyReason copyReason)
 	{
 		if(m_bAsynchronousRefreshView)
 		{
-			pWnd->PostMessage(WM_REFRESH_VIEW, copyReason, 0);
+			pWnd->PostMessage(CDittoMessage::RefreshView, copyReason, 0);
 		}
 		else
 		{
-			pWnd->SendMessage(WM_REFRESH_VIEW, copyReason, 0);
+			pWnd->SendMessage(CDittoMessage::RefreshView, copyReason, 0);
 		}
 	}
 }
@@ -773,11 +767,11 @@ void CCP_MainApp::RefreshClipInUI(int clipId, int updateFlags)
 	{
 		if(m_bAsynchronousRefreshView)
 		{
-			pWnd->PostMessage(WM_RELOAD_CLIP_IN_UI, clipId, updateFlags);		
+			pWnd->PostMessage(CDittoMessage::ReloadClipInUi, clipId, updateFlags);		
 		}
 		else
 		{
-			pWnd->SendMessage(WM_RELOAD_CLIP_IN_UI, clipId, updateFlags);
+			pWnd->SendMessage(CDittoMessage::ReloadClipInUi, clipId, updateFlags);
 		}
 	}
 }
@@ -912,7 +906,7 @@ void CCP_MainApp::FinishEnterGroup(BOOL bResult, ULONGLONG startTick)
 
 	ULONGLONG endTick = GetTickCount64();
 	if((endTick-startTick) > 150)
-		Log(StrF(_T("Paste Timing EnterParentId: %llu"), endTick-startTick));
+		CLogger::Log(StrF(_T("Paste Timing EnterParentId: %llu"), endTick-startTick));
 }
 
 BOOL CCP_MainApp::EnterStoredGroup(long lID)
@@ -989,7 +983,7 @@ void CCP_MainApp::ShowPersistent(bool bVal)
 
 int CCP_MainApp::ExitInstance() 
 {
-	Log(_T("ExitInstance"));
+	CLogger::Log(_T("ExitInstance"));
 
 	DeleteDittoTempFiles(FALSE);
 
@@ -1049,7 +1043,7 @@ void CCP_MainApp::OnDeleteID(long lID)
 {
 	if(QPasteWnd())
 	{
-		QPasteWnd()->PostMessage(NM_ITEM_DELETED, lID, 0);
+		QPasteWnd()->PostMessage(CQListCtrl::NmItemDeleted, lID, 0);
 	}
 }
 
@@ -1064,7 +1058,7 @@ bool CCP_MainApp::ImportClips(HWND hWnd)
 	memset(&szDir, 0, sizeof(szDir));
 
 	CString csInitialDir = CGetSetOptions::GetLastImportDir();
-	STRCPY(szDir, csInitialDir);
+	_tcscpy(szDir, csInitialDir);
 
 	FileName.lStructSize = sizeof(FileName);
 	FileName.lpstrTitle = _T("Import Clips");
@@ -1131,7 +1125,7 @@ bool CCP_MainApp::ImportClips(HWND hWnd)
 
 void CCP_MainApp::ShowCommandLineError(CString csTitle, CString csMessage)
 {
-	Log(StrF(_T("ShowCommandLineError %s - %s"), csTitle.GetString(), csMessage.GetString()));
+	CLogger::Log(StrF(_T("ShowCommandLineError %s - %s"), csTitle.GetString(), csMessage.GetString()));
 
 	// handed off before Create: MFC's CWnd::CreateEx calls PostNcDestroy on every failure path,
 	// so a failed Create has already deleted the window object
@@ -1213,7 +1207,7 @@ bool CCP_MainApp::EditItem(int id, bool forceTextEdit, int& lastFileCheckId)
 	CClip clip;
 	if (id >= 0 && clip.LoadFormats(id) == false)
 	{
-		Log(StrF(_T("Failed to load formats for clipId: %d"), id));
+		CLogger::Log(StrF(_T("Failed to load formats for clipId: %d"), id));
 		return false;
 	}
 
@@ -1294,7 +1288,7 @@ bool CCP_MainApp::EditInInternalEditor(const ClipEditTarget& target, int id)
 {
 	if((target.unicodeFile || target.asciFile || target.rtfFile) && target.exePath == _T(""))
 	{
-		Log(StrF(_T("Clip id %d is a text or rtf file without a specific editor set, using internal editor"), id));
+		CLogger::Log(StrF(_T("Clip id %d is a text or rtf file without a specific editor set, using internal editor"), id));
 
 		CClipIDs editIds;
 		editIds.Add(id);
@@ -1307,11 +1301,11 @@ bool CCP_MainApp::EditInInternalEditor(const ClipEditTarget& target, int id)
 
 CString CCP_MainApp::MakeEditFilePath(int id, const CString& extension, int& lastFileCheckId)
 {
-	CString startingFilePath = StrF(_T("%sEditClip_%d.%s"), CGetSetOptions::GetPath(PATH_EDIT_CLIPS).GetString(), id, extension.GetString());
+	CString startingFilePath = StrF(_T("%sEditClip_%d.%s"), CGetSetOptions::GetPath(CGetSetOptions::PathEditClips).GetString(), id, extension.GetString());
 
 	if (id == -1)
 	{
-		startingFilePath = StrF(_T("%sNewClip_1.%s"), CGetSetOptions::GetPath(PATH_EDIT_CLIPS).GetString(), extension.GetString());
+		startingFilePath = StrF(_T("%sNewClip_1.%s"), CGetSetOptions::GetPath(CGetSetOptions::PathEditClips).GetString(), extension.GetString());
 	}
 
 	CString savePath = startingFilePath;
@@ -1324,7 +1318,7 @@ CString CCP_MainApp::MakeEditFilePath(int id, const CString& extension, int& las
 
 		for (int y = lastFileCheckId; y < 1000000; y++)
 		{
-			CString testFilePath = StrF(_T("%sNewClip_%d.%s"), CGetSetOptions::GetPath(PATH_EDIT_CLIPS).GetString(), y, extension.GetString());
+			CString testFilePath = StrF(_T("%sNewClip_%d.%s"), CGetSetOptions::GetPath(CGetSetOptions::PathEditClips).GetString(), y, extension.GetString());
 
 			if (FileExists(testFilePath) == FALSE)
 			{
@@ -1349,20 +1343,20 @@ bool CCP_MainApp::LaunchClipEditor(const CString& exePath, const CString& savePa
 		sei.lpFile = exePath;
 		sei.lpParameters = savePath;
 
-		Log(StrF(_T("Launching editor path: %s, file: %s"), exePath.GetString(), savePath.GetString()));
+		CLogger::Log(StrF(_T("Launching editor path: %s, file: %s"), exePath.GetString(), savePath.GetString()));
 	}
 	else
 	{
 		sei.lpFile = savePath;
 
-		Log(StrF(_T("Launching editor without specific exe path, file: %s"), savePath.GetString()));
+		CLogger::Log(StrF(_T("Launching editor without specific exe path, file: %s"), savePath.GetString()));
 	}
 
 	sei.nShow = SW_NORMAL;
 
 	if (ShellExecuteEx(&sei) == FALSE)
 	{
-		Log(StrF(_T("ShellExecuteEx failed, not editing clipid: %d"), id));
+		CLogger::Log(StrF(_T("ShellExecuteEx failed, not editing clipid: %d"), id));
 		return false;
 	}
 

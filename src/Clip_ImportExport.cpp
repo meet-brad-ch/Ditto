@@ -19,8 +19,6 @@
 #include <string>
 #include <vector>
 
-#define CURRENT_EXPORT_VERSION 1
-
 CClip_ImportExport::CClip_ImportExport(void) :
 	m_importCount(0)
 {
@@ -36,7 +34,7 @@ bool CClip_ImportExport::ExportToSqliteDB(CppSQLite3DB& db)
 {
 	//Add to Main Table
 	m_Desc.Replace(_T("'"), _T("''"));
-	db.execDMLEx(_T("insert into Main values(NULL, %d, '%s');"), CURRENT_EXPORT_VERSION, m_Desc.GetString());
+	db.execDMLEx(_T("insert into Main values(NULL, %d, '%s');"), s_currentExportVersion, m_Desc.GetString());
 	const sqlite_int64 lId{ db.lastRowId() };
 
 	//Add to Data table
@@ -168,7 +166,7 @@ bool CClip_ImportExport::PlaceCF_TEXT_AND_CF_UNICODETEXT_OnClipboard(CStringA& c
 	}
 	else
 	{
-		Log(_T("Error opening clipboard"));
+		CLogger::Log(_T("Error opening clipboard"));
 	}
 
 	return bRet;
@@ -206,7 +204,7 @@ bool CClip_ImportExport::PlaceFormatsOnclipboard()
 	}
 	else
 	{
-		Log(_T("PlaceFormatsOnclipboard::Error opening clipboard"));
+		CLogger::Log(_T("PlaceFormatsOnclipboard::Error opening clipboard"));
 	}
 
 	return bRet;

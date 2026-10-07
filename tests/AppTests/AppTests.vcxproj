@@ -36,7 +36,8 @@
       <!-- no /MP: src\stdafx.h has an #import, which /MP does not allow -->
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>$(SolutionDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN64;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <!-- the configuration macros src\stdafx.h relies on (they are set here, not in the header) -->
+      <PreprocessorDefinitions>WIN64;_WINDOWS;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;VC_EXTRALEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>

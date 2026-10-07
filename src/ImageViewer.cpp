@@ -109,7 +109,7 @@ void CImageViewer::UpdateBitmapSize(bool setScale)
 		m_scrollHelper.AttachWnd(this);		
 		m_scrollHelper.SetDisplaySize(m_pGdiplusBitmap->GetWidth(), m_pGdiplusBitmap->GetHeight(), m_scale);		
 
-		this->GetParent()->PostMessage(WM_REFRESH_FOOTER, 0, 0);
+		this->GetParent()->PostMessage(CDittoMessage::RefreshFooter, 0, 0);
 	}
 }
 
@@ -460,7 +460,7 @@ LRESULT CImageViewer::OnGestureNotify(WPARAM /*wParam*/, LPARAM /*lParam*/)
 		sizeof(GESTURECONFIG) // sizeof(GESTURECONFIG)
 	))
 	{
-		Log(StrF(_T("CImageViewer::OnGestureNotify SetGestureConfig failed, GetLastError %u"), ::GetLastError()));
+		CLogger::Log(StrF(_T("CImageViewer::OnGestureNotify SetGestureConfig failed, GetLastError %u"), ::GetLastError()));
 	}
 
 	return TRUE;

@@ -166,6 +166,19 @@ protected:
 
 	CStringArray m_searches;
 
+	/** @brief The command ids of the search history menu. */
+	enum : UINT
+	{
+		/** @brief The command id of the first past search; the next ones follow it. */
+		IdRangeStart = 3000,
+		/** @brief The command id of "Clear List". */
+		IdClearList = 3010,
+	};
+	/** @brief The most past searches the history keeps and shows. */
+	static constexpr int s_listMaxCount{10};
+	/** @brief The most characters of a search the history keeps. */
+	static constexpr int s_maxSavedSearchLength{50};
+
 	void RecalcLayout();
 	virtual void PreSubclassWindow();
 

@@ -28,12 +28,6 @@
 
 #include <tchar.h>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 extern UINT urm_SETCURRENTFONTNAME;
 extern UINT urm_SETCURRENTFONTSIZE;
 extern UINT urm_SETCURRENTFONTCOLOR;

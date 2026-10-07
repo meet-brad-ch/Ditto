@@ -8,12 +8,6 @@
 #include "..\Shared\TextConvert.h"
 #include "..\Shared\TextConvert.h"
 
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
-
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
@@ -293,7 +287,7 @@ bool CMultiLanguage::LoadLanguageFile(CString csFile)
 {
 	m_csLastError = "";
 	
-	CString csPath = CGetSetOptions::GetPath(PATH_LANGUAGE);
+	CString csPath = CGetSetOptions::GetPath(CGetSetOptions::PathLanguage);
 	csPath += csFile;
 	csPath += ".xml";
 
@@ -310,7 +304,7 @@ bool CMultiLanguage::LoadLanguageFile(CString csFile)
 	if(CXmlFile::Load(doc, csPath) != tinyxml2::XML_SUCCESS)
 	{
 		m_csLastError.Format(_T("Error loading file %s - reason = %s, Line: %d"), csFile.GetString(), CTextConvert::AnsiToUnicode(doc.ErrorStr()).GetString(), doc.ErrorLineNum());
-		Log(m_csLastError);
+		CLogger::Log(m_csLastError);
 		return false;
 	}
 
@@ -319,12 +313,12 @@ bool CMultiLanguage::LoadLanguageFile(CString csFile)
 	{
 		m_csLastError.Format(_T("Error finding the section Ditto_Language_File"));
 		ASSERT(!m_csLastError);
-		Log(m_csLastError);
+		CLogger::Log(m_csLastError);
 		return false;
 	}
 
 	CString csVersion = ItemHeader->Attribute("Version");
-	m_lFileVersion = ATOI(csVersion);
+	m_lFileVersion = _ttoi(csVersion);
 	m_csAuthor = ItemHeader->Attribute("Author");
 	m_csNotes = ItemHeader->Attribute("Notes");
 	m_csLangCode = ItemHeader->Attribute("LanguageCode");
@@ -362,7 +356,7 @@ bool CMultiLanguage::LoadSection(const tinyxml2::XMLElement &doc, LANGUAGE_ARRAY
 	{
 		m_csLastError.Format(_T("Error finding the section %s"), csSection.GetString());
 		//ASSERT(!m_csLastError);
-		Log(m_csLastError);
+		CLogger::Log(m_csLastError);
 		return false;
 	}
 
@@ -383,7 +377,7 @@ bool CMultiLanguage::LoadSection(const tinyxml2::XMLElement &doc, LANGUAGE_ARRAY
 			CLangItem item{};
 			item.m_csEnglishLang = ItemElement->Attribute("English_Text");
 			csID = ItemElement->Attribute("ID");
-			item.m_nID = ATOI(csID);
+			item.m_nID = _ttoi(csID);
 			if(item.m_nID == 0)
 			{
 				item.m_csID = csID;
@@ -413,7 +407,7 @@ bool CMultiLanguage::LoadStringTableSection(const tinyxml2::XMLElement &doc, LAN
 		CString cs;
 		cs.Format(_T("Error finding the section %s"), csSection.GetString());
 		ASSERT(!cs);
-		Log(cs);
+		CLogger::Log(cs);
 		return false;
 	}
 

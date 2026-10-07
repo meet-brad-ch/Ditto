@@ -32,5 +32,22 @@ public:
 	void TryOpenDatabase();
 	LRESULT OnOptionsClosed(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnHotKey(UINT nHotKeyId, UINT nKey1, UINT nKey2);
+
+private:
+	/** @brief The window message the tray icon sends to the frame. */
+	enum : UINT
+	{
+		/** @brief A tray icon notification (lParam: the mouse message). */
+		WmTrayNotify = WM_USER + 100,
+	};
+
+	/** @brief The timer ids of the frame (SetTimer / OnTimer). */
+	enum : UINT
+	{
+		/** @brief Retries opening the database. */
+		TimerOpenDb = 1,
+		/** @brief Shows the "no database" message. */
+		TimerErrorMsg = 2,
+	};
 };
 

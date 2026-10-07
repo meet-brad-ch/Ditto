@@ -7,12 +7,6 @@
 #include "ActionEnums.h"
 #include "ErrorReport.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 /////////////////////////////////////////////////////////////////////////////
 // CGroupTree
 
@@ -78,8 +72,8 @@ int CGroupTree::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	SetImageList(&iml, TVSIL_NORMAL);
 	iml.Detach();
 
-	m_actions.AddAccel(ActionEnums::NEWGROUP, ACCEL_MAKEKEY(VK_F7, HOTKEYF_CONTROL));
-	m_actions.AddAccel(ActionEnums::CLIP_PROPERTIES, ACCEL_MAKEKEY(VK_RETURN, HOTKEYF_ALT));
+	m_actions.AddAccel(ActionEnums::NEWGROUP, CAccels::MakeKey(VK_F7, HOTKEYF_CONTROL));
+	m_actions.AddAccel(ActionEnums::CLIP_PROPERTIES, CAccels::MakeKey(VK_RETURN, HOTKEYF_ALT));
 	m_actions.AddAccel(ActionEnums::DELETE_SELECTED, VK_DELETE);
 
 	
@@ -136,7 +130,7 @@ bool CGroupTree::DoActionNewGroup()
 	if (hItem)
 	{
 		int id = (int) GetItemData(hItem);
-		::PostMessage(m_NotificationWnd, NM_NEW_GROUP, id, 0);	
+		::PostMessage(m_NotificationWnd, CQListCtrl::NmNewGroup, id, 0);	
 		return true;
 	}
 
@@ -151,7 +145,7 @@ bool CGroupTree::DoActionDeleteSelected()
 		int id = (int) GetItemData(hItem);
 		if (id >= 0)
 		{
-			::PostMessage(m_NotificationWnd, NM_DELETE_ID, id, 0);
+			::PostMessage(m_NotificationWnd, CQListCtrl::NmDeleteId, id, 0);
 			return true;
 		}
 	}
@@ -167,7 +161,7 @@ bool CGroupTree::DoActionClipProperties()
 		int id = (int) GetItemData(hItem);
 		if (id >= 0)
 		{
-			::PostMessage(m_NotificationWnd, NM_SHOW_PROPERTIES, id, 0);
+			::PostMessage(m_NotificationWnd, CQListCtrl::NmShowProperties, id, 0);
 			return true;
 		}
 	}
@@ -239,7 +233,7 @@ void CGroupTree::OnSelchanged(NMHDR* /*pNMHDR*/, LRESULT* /*pResult*/)
 	
 //	if(m_bHide == true)
 //	{	
-//		::SendMessage(m_NotificationWnd, NM_GROUP_TREE_MESSAGE, GetItemData(pNMTreeView->itemNew.hItem), 0);
+//		::SendMessage(m_NotificationWnd, CQListCtrl::NmGroupTreeMessage, GetItemData(pNMTreeView->itemNew.hItem), 0);
 //	}
 	
 	//*pResult = 0;
@@ -311,7 +305,7 @@ void CGroupTree::SendToParent(int parentId)
 	if(m_bSendAllready == false)
 	{
 		m_bSendAllready = true;
-		::PostMessage(m_NotificationWnd, NM_GROUP_TREE_MESSAGE, parentId, 0);
+		::PostMessage(m_NotificationWnd, CQListCtrl::NmGroupTreeMessage, parentId, 0);
 	}
 }
 

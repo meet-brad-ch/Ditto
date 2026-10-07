@@ -9,12 +9,6 @@
 
 #include <memory>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 /////////////////////////////////////////////////////////////////////////////
 // CCopyThread
 
@@ -53,7 +47,7 @@ int CCopyThread::ExitInstance()
 // Called within Copy Thread:
 void CCopyThread::OnClipboardChange(CString activeWindow)
 {
-	Log(_T("OnClipboardChange - Start"));
+	CLogger::Log(_T("OnClipboardChange - Start"));
 
 	SyncConfig(); // synchronize with the main thread's copy configuration
 	
@@ -64,7 +58,7 @@ void CCopyThread::OnClipboardChange(CString activeWindow)
 	int groupId = theApp.GetActiveGroupId();
 	if(groupId > -1)
 	{
-		Log(StrF(_T("LoadFromClipboard - loading clips into groupId: %d"), groupId));
+		CLogger::Log(StrF(_T("LoadFromClipboard - loading clips into groupId: %d"), groupId));
 	}
 	
 	auto pClip = std::make_unique<CClip>();
@@ -110,30 +104,30 @@ void CCopyThread::OnClipboardChange(CString activeWindow)
 
 	HandOverClip(pClip);
 
-	Log(_T("OnClipboardChange - End"));
+	CLogger::Log(_T("OnClipboardChange - End"));
 }
 
 int CCopyThread::LoadClipWithRetry(CClip& clip, CClipTypes* pSupportedTypes, const CString& activeWindow)
 {
-	Log(_T("LoadFromClipboard - Before"));
+	CLogger::Log(_T("LoadFromClipboard - Before"));
 	int bResult = clip.LoadFromClipboard(pSupportedTypes, CGetSetOptions::m_regexHelper, true, activeWindow);
-	Log(_T("LoadFromClipboard - After"));
+	CLogger::Log(_T("LoadFromClipboard - After"));
 
 	if(bResult == FALSE)
 	{
 		DWORD delay = CGetSetOptions::GetNoFormatsRetryDelay();
 		if(delay > 0)
 		{
-			Log(StrF(_T("LoadFromClipboard didn't find any clips to save, sleeping %dms, then trying again"), delay));
+			CLogger::Log(StrF(_T("LoadFromClipboard didn't find any clips to save, sleeping %dms, then trying again"), delay));
 			Sleep(delay);
 
-			Log(_T("LoadFromClipboard #2 - Before"));
+			CLogger::Log(_T("LoadFromClipboard #2 - Before"));
 			bResult = clip.LoadFromClipboard(pSupportedTypes, CGetSetOptions::m_regexHelper, true, activeWindow);
-			Log(_T("LoadFromClipboard #2 - After"));
+			CLogger::Log(_T("LoadFromClipboard #2 - After"));
 		}
 		else
 		{
-			Log(_T("LoadFromClipboard didn't find any clips to save, retry setting is not set, not retrying"));
+			CLogger::Log(_T("LoadFromClipboard didn't find any clips to save, retry setting is not set, not retrying"));
 		}
 	}
 
@@ -142,21 +136,21 @@ int CCopyThread::LoadClipWithRetry(CClip& clip, CClipTypes* pSupportedTypes, con
 
 void CCopyThread::HandOverClip(std::unique_ptr<CClip>& pClip)
 {
-	// the WM_CLIPBOARD_COPIED handler takes ownership of the clip
+	// the CDittoMessage::ClipboardCopied handler takes ownership of the clip
 	if(m_LocalConfig.m_bAsyncCopy)
 	{
-		if(::PostMessage(m_LocalConfig.m_hClipHandler, WM_CLIPBOARD_COPIED, reinterpret_cast<WPARAM>(pClip.get()), 0))
+		if(::PostMessage(m_LocalConfig.m_hClipHandler, CDittoMessage::ClipboardCopied, reinterpret_cast<WPARAM>(pClip.get()), 0))
 		{
 			pClip.release(); // ownership: CMainFrame::OnClipboardCopied retakes it in a std::unique_ptr
 		}
 		else
 		{
-			Log(StrF(_T("Could not post the copied clip to the main window, GetLastError %d"), ::GetLastError()));
+			CLogger::Log(StrF(_T("Could not post the copied clip to the main window, GetLastError %d"), ::GetLastError()));
 		}
 	}
 	else
 	{
-		::SendMessage(m_LocalConfig.m_hClipHandler, WM_CLIPBOARD_COPIED, reinterpret_cast<WPARAM>(pClip.release()), 0); // ownership: CMainFrame::OnClipboardCopied retakes it in a std::unique_ptr
+		::SendMessage(m_LocalConfig.m_hClipHandler, CDittoMessage::ClipboardCopied, reinterpret_cast<WPARAM>(pClip.release()), 0); // ownership: CMainFrame::OnClipboardCopied retakes it in a std::unique_ptr
 	}
 }
 
@@ -192,7 +186,7 @@ void CCopyThread::SetConnectCV(bool bConnect)
 {
 	if(m_pClipboardViewer && m_pClipboardViewer->m_hWnd != NULL)
 	{
-		::SendMessage( m_pClipboardViewer->m_hWnd, WM_SETCONNECT, bConnect, 0 );
+		::SendMessage( m_pClipboardViewer->m_hWnd, CDittoMessage::SetConnect, bConnect, 0 );
 	}
 }
 

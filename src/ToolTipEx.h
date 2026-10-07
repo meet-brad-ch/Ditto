@@ -120,7 +120,7 @@ protected:
 protected:
 	//{{AFX_MSG(CToolTipEx)	
 	afx_msg void OnSize(UINT nType, int cx, int cy);
-	afx_msg HITTEST_RET OnNcHitTest(CPoint point);
+	afx_msg LRESULT OnNcHitTest(CPoint point);
 	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 	afx_msg void OnNcMouseMove(UINT nHitTest, CPoint point);
 	afx_msg void OnNcLButtonUp(UINT nHitTest, CPoint point); 
@@ -242,9 +242,22 @@ private:
 	 */
 	void ForwardMouseWheel(MSG* pMsg);
 
-	/** @brief TIMER_BUTTON_UP: finishes a caption click once the mouse button is up. */
+	/** @brief The timer ids of the window (SetTimer / OnTimer). */
+	enum : UINT
+	{
+		/** @brief Hides the window after its delay. */
+		TimerHideWindow = 1,
+		/** @brief Saves the window size once resizing settled. */
+		TimerSaveSize = 2,
+		/** @brief Finishes a caption click once the mouse button is up. */
+		TimerButtonUp = 3,
+		/** @brief Restores the minimized window when the mouse is still over its caption. */
+		TimerAutoMax = 4,
+	};
+
+	/** @brief TimerButtonUp: finishes a caption click once the mouse button is up. */
 	void OnButtonUpTimer();
-	/** @brief TIMER_AUTO_MAX: restores the minimized window when the mouse is still over its caption. */
+	/** @brief TimerAutoMax: restores the minimized window when the mouse is still over its caption. */
 	void OnAutoMaxTimer();
 
 	/**

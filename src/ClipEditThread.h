@@ -26,6 +26,15 @@ private:
 	void RefreshWatch();
 	bool SaveToClip(CString filePath, int id);
 
+	/** @brief The event ids of the thread (CEventThread::AddEvent / OnEvent). */
+	enum : int
+	{
+		/** @brief The watched folder changed. */
+		EventFileChanged = 1,
+	};
+	/** @brief The wait timeout while no edited file waits to be saved (CEventThread::m_waitTimeout). */
+	static constexpr int s_maxTimeout{86400};
+
 	/** @brief The content read back from an edited clip file. */
 	struct EditedClipData
 	{

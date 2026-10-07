@@ -23,7 +23,7 @@ UINT WritePrivateProfileInt(LPCTSTR lpAppName, LPCTSTR lpKeyName, INT nValue, LP
 	TCHAR	szBuff[25];
 
 	// Format
-	SPRINTF(szBuff, _T("%d"), nValue);
+	wsprintf(szBuff, _T("%d"), nValue);
 
 	// Write
 	return WritePrivateProfileString(lpAppName, lpKeyName, szBuff, lpFileName);
@@ -228,7 +228,7 @@ void CGetSetOptions::LoadSettings()
 {
 	CString exeDir = CGetSetOptions::GetExeFileName();
 	exeDir = GetFilePath(exeDir);
-	FIX_CSTRING_PATH(exeDir);
+	CFolderPath::AddTrailingSlash(exeDir);
 
 	LocateIniFile(exeDir);
 
@@ -304,7 +304,7 @@ void CGetSetOptions::LoadSettings()
 	m_bDoNotHideOnDeactivate = GetDoNotHideOnDeactivate();
 	m_enforceClipboardIgnoreFormats = GetEnforceClipboardIgnoreFormats();
 
-	for (int i = 0; i < MAX_REGEX_FILTERS; i++)
+	for (int i = 0; i < CRegExFilterHelper::MaxRegexFilters; i++)
 	{
 		CRegExFilterData data;
 		data.m_regEx = GetRegexFilter(i);
@@ -459,7 +459,7 @@ CString CGetSetOptions::GetAppDataPath()
 
 			csPath = string;
 		}
-		FIX_CSTRING_PATH(csPath);
+		CFolderPath::AddTrailingSlash(csPath);
 		csPath += "Ditto_WindowsApp\\";
 	}
 	else if (GetIsChocolateyApp())
@@ -483,7 +483,7 @@ CString CGetSetOptions::GetAppDataPath()
 
 			csPath = string;
 		}
-		FIX_CSTRING_PATH(csPath);
+		CFolderPath::AddTrailingSlash(csPath);
 		csPath += "Ditto_ChocolateyApp\\";
 	}
 	else
@@ -507,7 +507,7 @@ CString CGetSetOptions::GetAppDataPath()
 
 			csPath = string;
 		}
-		FIX_CSTRING_PATH(csPath);
+		CFolderPath::AddTrailingSlash(csPath);
 		csPath += "Ditto\\";
 	}
 
@@ -566,7 +566,7 @@ long CGetSetOptions::GetProfileLong(CString csName, long lDefaultValue, CString 
 		return GetPrivateProfileInt(csApp, csName, lDefaultValue, m_csIniFileName);
 	}
 
-	CString csPath(_T(REG_PATH));
+	CString csPath(CGetSetOptions::RegPath);
 	if(csNewPath.IsEmpty() == FALSE)
 	{
 		csPath += "\\" + csNewPath;
@@ -654,7 +654,7 @@ CString CGetSetOptions::GetRegistryProfileString(const CString& csName, const CS
 	CString returnString;
 	DWORD dwBufLen = 0;
 
-	CString csPath(_T(REG_PATH));
+	CString csPath(CGetSetOptions::RegPath);
 	if(csNewPath.IsEmpty() == FALSE)
 	{
 		csPath += "\\" + csNewPath;
@@ -703,7 +703,7 @@ BOOL CGetSetOptions::SetProfileLong(CString csName, long lValue)
 
 	HKEY hkKey;
 	DWORD dWord;
-	long lResult = RegCreateKeyEx(HKEY_CURRENT_USER, _T(REG_PATH), NULL, 
+	long lResult = RegCreateKeyEx(HKEY_CURRENT_USER, CGetSetOptions::RegPath, NULL, 
 		NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, 
 		NULL, &hkKey, &dWord);
 
@@ -727,7 +727,7 @@ BOOL CGetSetOptions::SetProfileString(CString csName, CString csValue)
 
 	HKEY hkKey;
 	DWORD dWord;
-	long lResult = RegCreateKeyEx(HKEY_CURRENT_USER, _T(REG_PATH), NULL, 
+	long lResult = RegCreateKeyEx(HKEY_CURRENT_USER, CGetSetOptions::RegPath, NULL, 
 		NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, 
 		NULL, &hkKey, &dWord);
 
@@ -752,7 +752,7 @@ BOOL CGetSetOptions::SetProfileData(CString csName, LPVOID lpData, DWORD dwLengt
 
 	HKEY hkKey;
 	DWORD dWord;
-	long lResult = RegCreateKeyEx(HKEY_CURRENT_USER, _T(REG_PATH), NULL, 
+	long lResult = RegCreateKeyEx(HKEY_CURRENT_USER, CGetSetOptions::RegPath, NULL, 
 		NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, 
 		NULL, &hkKey, &dWord);
 
@@ -827,7 +827,7 @@ std::vector<BYTE> CGetSetOptions::GetProfileData(CString csName)
 
 	// closes the key on every return
 	ATL::CRegKey key{};
-	if(key.Open(HKEY_CURRENT_USER, _T(REG_PATH), KEY_READ) != ERROR_SUCCESS)
+	if(key.Open(HKEY_CURRENT_USER, CGetSetOptions::RegPath, KEY_READ) != ERROR_SUCCESS)
 		return {};
 
 	DWORD dwLength{};
@@ -870,8 +870,8 @@ BOOL CGetSetOptions::GetEnableTransparency()
 
 BOOL CGetSetOptions::SetTransparencyPercent(long lPercent)
 {
-	if(lPercent > OPACITY_MAX)
-		lPercent = OPACITY_MAX;
+	if(lPercent > CAlphaBlend::OpacityMax)
+		lPercent = CAlphaBlend::OpacityMax;
 	if(lPercent < 0)
 		lPercent = 0;
 
@@ -882,7 +882,7 @@ long CGetSetOptions::GetTransparencyPercent()
 {
 	long lValue = GetProfileLong("TransparencyPercent", 14);
 
-	if(lValue > OPACITY_MAX) lValue = OPACITY_MAX;
+	if(lValue > CAlphaBlend::OpacityMax) lValue = CAlphaBlend::OpacityMax;
 	if(lValue < 0) lValue = 0;
 
 	return lValue;
@@ -959,7 +959,7 @@ BOOL CGetSetOptions::SetQuickPastePosition(long lPosition)
 
 long CGetSetOptions::GetQuickPastePosition()
 {
-	return GetProfileLong("ShowQuickPastePosition", POS_AT_CARET);
+	return GetProfileLong("ShowQuickPastePosition", CGetSetOptions::PosAtCaret);
 }
 
 BOOL CGetSetOptions::SetQuickPasteSize(CSize size)
@@ -1307,7 +1307,7 @@ void CGetSetOptions::SetCaptionPos(long lPos)
 }
 long CGetSetOptions::GetCaptionPos()			
 {	
-	return GetProfileLong("CaptionPos", CAPTION_RIGHT);	
+	return GetProfileLong("CaptionPos", CGetSetOptions::CaptionOnRight);	
 }
 
 void CGetSetOptions::SetAutoHide(BOOL bAutoHide)
@@ -1356,7 +1356,7 @@ void CGetSetOptions::SetDoubleClickingOnCaptionDoes(long lOption)
 }
 long CGetSetOptions::GetDoubleClickingOnCaptionDoes()				
 {	
-	return GetProfileLong("DoubleClickingOnCaptionDoes", TOGGLES_ALLWAYS_ON_TOP); 
+	return GetProfileLong("DoubleClickingOnCaptionDoes", CGetSetOptions::TogglesAlwaysOnTop); 
 }
 
 void CGetSetOptions::SetPrompForNewGroupName(BOOL bOption)	
@@ -1440,7 +1440,7 @@ BOOL CGetSetOptions::GetFont(LOGFONT &font)
 	font.lfHeight = -13;
 	font.lfWeight = 400;
 	font.lfCharSet = 1;
-	STRCPY(font.lfFaceName, _T("Segoe UI"));
+	_tcscpy(font.lfFaceName, _T("Segoe UI"));
 	return TRUE;
 }
 
@@ -1679,7 +1679,7 @@ CString CGetSetOptions::GetPath(long lPathID)
 {
 	CString csDir = CGetSetOptions::GetExeFileName();
 	csDir = GetFilePath(csDir);
-	FIX_CSTRING_PATH(csDir);
+	CFolderPath::AddTrailingSlash(csDir);
 
 	//U3_APP_DATA_PATH    -	<U3_DEVICE_PATH>\System\Apps\{app_unique_id}\Data
 	//U3_HOST_EXEC_PATH	  - %APPDATA%\U3\{device_serial_number}\{app_unique_id}\Exec
@@ -1762,7 +1762,7 @@ BOOL CGetSetOptions::GetSetCurrentDirectory()
 	if(m_portable)
 	{
 		CString csExePath = GetFilePath(GetExeFileName());
-		FIX_CSTRING_PATH(csExePath);
+		CFolderPath::AddTrailingSlash(csExePath);
 		::SetCurrentDirectory(csExePath);
 	}
 

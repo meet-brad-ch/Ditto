@@ -3,19 +3,6 @@
 #include <afxtempl.h>
 #include "DPI.h"
 
-#define SHEET_CLASSNAME		_T("_TabCtrlClass_")
-#define SHEET_CLASSTYLE		(CS_DBLCLKS)
-
-// Sheet styles
-#define SCS_SHEET			0x0000
-#define SCS_TAB				0x0001
-#define SCS_TOP				0x0002
-#define SCS_BOTTOM			0x0004
-#define SCS_BOLD			0x0008
-#define SCS_BORDER			0x0010
-
-#define SN_SETACTIVETAB		WM_APP + 1122
-
 typedef struct tagNMTABCHANGE{
     NMHDR hdr;
     long lOldTab;
@@ -29,6 +16,31 @@ typedef struct tagNMTABCHANGE{
 
 class CTabCtrlEx : public CWnd
 {
+public:
+	/** @brief The sheet styles: the low word of Create's dwStyle. */
+	enum : int
+	{
+		/** @brief No sheet style. */
+		ScsSheet = 0x0000,
+		/** @brief Tab style. */
+		ScsTab = 0x0001,
+		/** @brief The tabs are at the top. */
+		ScsTop = 0x0002,
+		/** @brief The tabs are at the bottom. */
+		ScsBottom = 0x0004,
+		/** @brief The selected tab's text is bold. */
+		ScsBold = 0x0008,
+		/** @brief The sheet has a border (set from WS_BORDER). */
+		ScsBorder = 0x0010,
+	};
+
+	/** @brief The WM_NOTIFY code sent to the parent when the active tab changes (NMTABCHANGE). */
+	enum : UINT
+	{
+		/** @brief The active tab changed. */
+		SnSetActiveTab = WM_APP + 1122,
+	};
+
 // Construction
 public:
 	CTabCtrlEx();
@@ -116,7 +128,30 @@ protected:
 
 	typedef enum {ArrowLeft, ArrowRight} ButtonStyle;
 	typedef enum {BtnDown, BtnUp/*, BtnHover*/} ButtonState;
-		
+
+	/** @brief Win32 values of the control: its timer id and the key it switches tabs with. */
+	enum : UINT
+	{
+		/** @brief The timer that scrolls the tabs while a spinner button is held down. */
+		IdScrollTimer = 0x1010,
+		/** @brief The virtual key code of the tilde key (VK_OEM_3), which switches the tabs. */
+		VkTilde = 0xC0,
+	};
+	/** @brief The space on each side of a tab title, in pixels. */
+	static constexpr int s_textPad{7};
+	/** @brief The window class name registered for the sheet control. */
+	static constexpr const TCHAR* s_className{_T("_TabCtrlClass_")};
+	/** @brief The window class style of the sheet control. */
+	static constexpr UINT s_classStyle{CS_DBLCLKS};
+	/** @brief The space left of the spinner buttons, in pixels. */
+	static constexpr int s_spinPad{3};
+	/** @brief How far one spinner step shifts the tabs, in pixels. */
+	static constexpr int s_shiftUnits{10};
+	/** @brief The light edge colour of a spinner button. */
+	static constexpr COLORREF s_colorWhite{RGB(255, 255, 255)};
+	/** @brief The dark edge colour of a spinner button. */
+	static constexpr COLORREF s_colorDarkGray{RGB(64, 64, 64)};
+
 
 protected:
 	short m_nStyle;
@@ -187,7 +222,7 @@ protected:
 	 *  @return The item data of the new tab. */
 	long ShowTabWindow(int nNewTab, bool bOnSize);
 
-	/** @brief Sends SN_SETACTIVETAB to the parent window.
+	/** @brief Sends SnSetActiveTab to the parent window.
 	 *  @param nOldTab Index of the previous tab.
 	 *  @param nNewTab Index of the new tab.
 	 *  @param lOldItemData Item data of the previous tab, -1 if none.

@@ -6,12 +6,6 @@
 #include "CP_Main.h"
 #include "OptionsUtilities.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 /////////////////////////////////////////////////////////////////////////////
 // COptionsUtilities property page
 

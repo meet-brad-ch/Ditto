@@ -34,7 +34,7 @@ CDittoWindow::CDittoWindow(void)
 	m_useCustomWindowTitle = false;
 	m_buttonDownOnCaption = false;
 	m_crFullSizeWindow.SetRectEmpty();	
-	m_captionPosition = CAPTION_RIGHT;
+	m_captionPosition = CGetSetOptions::CaptionOnRight;
 	
 }
 
@@ -68,22 +68,22 @@ void CDittoWindow::DoCreate(CWnd *pWnd)
 void CDittoWindow::DoNcCalcSize(BOOL /*bCalcValidRects*/,NCCALCSIZE_PARAMS FAR* lpncsp)
 {
 	//Decrease the client area	
-	if (m_captionPosition == CAPTION_LEFT)
+	if (m_captionPosition == CGetSetOptions::CaptionOnLeft)
 		lpncsp->rgrc[0].left += m_captionBorderWidth;
 	else
 		lpncsp->rgrc[0].left += m_borderSize;
 
-	if (m_captionPosition == CAPTION_TOP)
+	if (m_captionPosition == CGetSetOptions::CaptionOnTop)
 		lpncsp->rgrc[0].top += m_captionBorderWidth;
 	else
 		lpncsp->rgrc[0].top += m_borderSize;
 
-	if (m_captionPosition == CAPTION_RIGHT)
+	if (m_captionPosition == CGetSetOptions::CaptionOnRight)
 		lpncsp->rgrc[0].right -= m_captionBorderWidth;
 	else
 		lpncsp->rgrc[0].right -= m_borderSize;
 
-	if (m_captionPosition == CAPTION_BOTTOM)
+	if (m_captionPosition == CGetSetOptions::CaptionOnBottom)
 		lpncsp->rgrc[0].bottom -= m_captionBorderWidth;
 	else
 		lpncsp->rgrc[0].bottom -= m_borderSize;
@@ -167,7 +167,7 @@ UINT CDittoWindow::HitTestBottomCorners(const CRect& crWindow, const CPoint& poi
 
 UINT CDittoWindow::HitTestTopBottomEdges(const CRect& crWindow, const CPoint& point) const
 {
-	if((((m_captionPosition == CAPTION_TOP) || (m_captionPosition == CAPTION_BOTTOM)) &&
+	if((((m_captionPosition == CGetSetOptions::CaptionOnTop) || (m_captionPosition == CGetSetOptions::CaptionOnBottom)) &&
 		(m_bMinimized)) == false)
 	{
 		if (point.y < crWindow.top + m_borderSize * 2)
@@ -180,7 +180,7 @@ UINT CDittoWindow::HitTestTopBottomEdges(const CRect& crWindow, const CPoint& po
 
 UINT CDittoWindow::HitTestLeftRightEdges(const CRect& crWindow, const CPoint& point) const
 {
-	if((((m_captionPosition == CAPTION_LEFT) || (m_captionPosition == CAPTION_RIGHT)) &&
+	if((((m_captionPosition == CGetSetOptions::CaptionOnLeft) || (m_captionPosition == CGetSetOptions::CaptionOnRight)) &&
 		(m_bMinimized)) == false)
 	{
 		if (point.x > crWindow.right - m_borderSize * 2)
@@ -195,13 +195,13 @@ bool CDittoWindow::IsInCaption(const CRect& crWindow, const CPoint& point) const
 {
 	switch (m_captionPosition)
 	{
-	case CAPTION_RIGHT:
+	case CGetSetOptions::CaptionOnRight:
 		return point.x > crWindow.right - m_captionBorderWidth;
-	case CAPTION_BOTTOM:
+	case CGetSetOptions::CaptionOnBottom:
 		return point.y > crWindow.bottom - m_captionBorderWidth;
-	case CAPTION_LEFT:
+	case CGetSetOptions::CaptionOnLeft:
 		return point.x < crWindow.left + m_captionBorderWidth;
-	case CAPTION_TOP:
+	case CGetSetOptions::CaptionOnTop:
 		return point.y < crWindow.top + m_captionBorderWidth;
 	}
 	return false;
@@ -251,19 +251,19 @@ void CDittoWindow::DoNcPaint(CWnd *pWnd)
 	const ButtonSlots slots{AssignButtonSlots()};
 
 	CaptionLayout layout{};
-	if(m_captionPosition == CAPTION_RIGHT)
+	if(m_captionPosition == CGetSetOptions::CaptionOnRight)
 	{
 		layout = LayoutRightCaption(rcBorder, border, widthHeight, slots);
 	}
-	if (m_captionPosition == CAPTION_LEFT)
+	if (m_captionPosition == CGetSetOptions::CaptionOnLeft)
 	{
 		layout = LayoutLeftCaption(rcBorder, border, widthHeight, slots);
 	}
-	if (m_captionPosition == CAPTION_TOP)
+	if (m_captionPosition == CGetSetOptions::CaptionOnTop)
 	{
 		layout = LayoutTopCaption(rcBorder, widthHeight, slots);
 	}
-	if (m_captionPosition == CAPTION_BOTTOM)
+	if (m_captionPosition == CGetSetOptions::CaptionOnBottom)
 	{
 		layout = LayoutBottomCaption(rcBorder, border, widthHeight, slots);
 	}
@@ -539,7 +539,7 @@ int CDittoWindow::DoNcLButtonDown(CWnd *pWnd, UINT nHitTest, CPoint point)
 	CPoint clPoint(point);
 	pWnd->ScreenToClient(&clPoint);
 
-	if (m_captionPosition == CAPTION_LEFT)
+	if (m_captionPosition == CGetSetOptions::CaptionOnLeft)
 	{
 		clPoint.x += m_captionBorderWidth;
 	}
@@ -548,7 +548,7 @@ int CDittoWindow::DoNcLButtonDown(CWnd *pWnd, UINT nHitTest, CPoint point)
 		clPoint.x += m_borderSize;
 	}
 
-	if (m_captionPosition == CAPTION_TOP)
+	if (m_captionPosition == CGetSetOptions::CaptionOnTop)
 	{
 		clPoint.y += m_captionBorderWidth;
 	}
@@ -565,29 +565,29 @@ int CDittoWindow::DoNcLButtonDown(CWnd *pWnd, UINT nHitTest, CPoint point)
 		//pWnd->UpdateWindow();
 		//DoNcPaint(pWnd);
 		RedrawWindow(pWnd->m_hWnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE);
-		buttonPressed = BUTTON_CLOSE;
+		buttonPressed = ButtonClose;
 	}
 	else if(m_crChevronBT.PtInRect(clPoint))
 	{
 		m_bMouseDownOnChevron = true;
 		RedrawWindow(pWnd->m_hWnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE);
-		buttonPressed = BUTTON_CHEVRON;
+		buttonPressed = ButtonChevron;
 	}
 	else if(m_crMinimizeBT.PtInRect(clPoint))
 	{
 		m_bMouseDownOnMinimize = true;
 		RedrawWindow(pWnd->m_hWnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE);
-		buttonPressed = BUTTON_MINIMIZE;
+		buttonPressed = ButtonMinimize;
 	}
 	else if(m_crMaximizeBT.PtInRect(clPoint))
 	{
 		m_bMouseDownOnMaximize = true;
 		RedrawWindow(pWnd->m_hWnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE);
-		buttonPressed = BUTTON_MAXIMIZE;
+		buttonPressed = ButtonMaximize;
 	}
 	else if(m_bMinimized)
 	{
-		//MinMaxWindow(FORCE_MAX);
+		//MinMaxWindow(ForceMax);
 	}
 
 	return buttonPressed;
@@ -636,7 +636,7 @@ long CDittoWindow::ReleaseCloseButton(CWnd *pWnd, const CPoint &localPoint)
 		{
 			pWnd->SendMessage(WM_CLOSE, 0, 0);
 		}
-		return BUTTON_CLOSE;
+		return ButtonClose;
 	}
 	return 0;
 }
@@ -650,7 +650,7 @@ long CDittoWindow::ReleaseChevronButton(CWnd *pWnd, const CPoint &localPoint)
 
 	if(m_crChevronBT.PtInRect(localPoint))
 	{
-		return BUTTON_CHEVRON;
+		return ButtonChevron;
 	}
 	return 0;
 }
@@ -665,7 +665,7 @@ long CDittoWindow::ReleaseMinimizeButton(CWnd *pWnd, const CPoint &localPoint)
 	if(m_crMinimizeBT.PtInRect(localPoint))
 	{
 		pWnd->ShowWindow(SW_MINIMIZE);
-		return BUTTON_MINIMIZE;
+		return ButtonMinimize;
 	}
 	return 0;
 }
@@ -684,7 +684,7 @@ long CDittoWindow::ReleaseMaximizeButton(CWnd *pWnd, const CPoint &localPoint)
 		else
 			pWnd->ShowWindow(SW_SHOWMAXIMIZED);
 
-		return BUTTON_MAXIMIZE;
+		return ButtonMaximize;
 	}
 	return 0;
 }
@@ -755,10 +755,10 @@ void CDittoWindow::SetCaptionTextColor(COLORREF color)
 
 void CDittoWindow::MinMaxWindow(CWnd *pWnd, long lOption)
 {
-	if ((m_bMinimized) && (lOption == FORCE_MIN))
+	if ((m_bMinimized) && (lOption == ForceMin))
 		return;
 
-	if ((m_bMinimized == false) && (lOption == FORCE_MAX))
+	if ((m_bMinimized == false) && (lOption == ForceMax))
 		return;
 
 	// the caption position decides where the window shrinks to; any other position does nothing
@@ -777,10 +777,10 @@ void CDittoWindow::MinMaxWindow(CWnd *pWnd, long lOption)
 
 bool CDittoWindow::IsKnownCaptionPosition() const
 {
-	return m_captionPosition == CAPTION_RIGHT ||
-		m_captionPosition == CAPTION_LEFT ||
-		m_captionPosition == CAPTION_TOP ||
-		m_captionPosition == CAPTION_BOTTOM;
+	return m_captionPosition == CGetSetOptions::CaptionOnRight ||
+		m_captionPosition == CGetSetOptions::CaptionOnLeft ||
+		m_captionPosition == CGetSetOptions::CaptionOnTop ||
+		m_captionPosition == CGetSetOptions::CaptionOnBottom;
 }
 
 void CDittoWindow::MinimizeToCaption(CWnd *pWnd)
@@ -809,20 +809,20 @@ CDittoWindow::WindowPlacement CDittoWindow::MinimizedPlacement() const
 {
 	switch (m_captionPosition)
 	{
-	case CAPTION_RIGHT:
+	case CGetSetOptions::CaptionOnRight:
 		return WindowPlacement{m_crFullSizeWindow.right - m_captionBorderWidth,
 			m_crFullSizeWindow.top, m_captionBorderWidth,
 			m_crFullSizeWindow.Height()};
-	case CAPTION_LEFT:
+	case CGetSetOptions::CaptionOnLeft:
 		return WindowPlacement{m_crFullSizeWindow.left,
 			m_crFullSizeWindow.top, m_captionBorderWidth,
 			m_crFullSizeWindow.Height()};
-	case CAPTION_TOP:
+	case CGetSetOptions::CaptionOnTop:
 		return WindowPlacement{m_crFullSizeWindow.left,
 			m_crFullSizeWindow.top,
 			m_crFullSizeWindow.Width(),
 			m_captionBorderWidth};
-	default: // CAPTION_BOTTOM (MinMaxWindow handles only the four caption positions)
+	default: // CGetSetOptions::CaptionOnBottom (MinMaxWindow handles only the four caption positions)
 		return WindowPlacement{m_crFullSizeWindow.left,
 			m_crFullSizeWindow.bottom - m_captionBorderWidth,
 			m_crFullSizeWindow.Width(),
@@ -834,16 +834,16 @@ CDittoWindow::WindowPlacement CDittoWindow::RestoredPlacement(const CRect &cr) c
 {
 	switch (m_captionPosition)
 	{
-	case CAPTION_RIGHT:
+	case CGetSetOptions::CaptionOnRight:
 		return WindowPlacement{cr.right - m_crFullSizeWindow.Width(),
 			cr.top, m_crFullSizeWindow.Width(), cr.Height()};
-	case CAPTION_LEFT:
+	case CGetSetOptions::CaptionOnLeft:
 		return WindowPlacement{cr.left, cr.top,
 			m_crFullSizeWindow.Width(), cr.Height()};
-	case CAPTION_TOP:
+	case CGetSetOptions::CaptionOnTop:
 		return WindowPlacement{cr.left, cr.top,
 			cr.Width(), m_crFullSizeWindow.Height()};
-	default: // CAPTION_BOTTOM (MinMaxWindow handles only the four caption positions)
+	default: // CGetSetOptions::CaptionOnBottom (MinMaxWindow handles only the four caption positions)
 		return WindowPlacement{cr.left,
 			cr.bottom - m_crFullSizeWindow.Height(),
 			cr.Width(), m_crFullSizeWindow.Height()};

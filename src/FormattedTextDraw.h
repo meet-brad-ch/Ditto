@@ -16,11 +16,6 @@
 #include <cstddef>
 #include <string>
 
-#ifndef LY_PER_INCH
-#define LY_PER_INCH   1440
-#define HOST_BORDER 0
-#endif
-
 // The RTF bytes EM_STREAMIN reads, and how many it has read
 struct COOKIE
 {
@@ -74,6 +69,9 @@ class CFormattedTextDraw :
 	public IFormattedTextDraw
 {
 public:
+	/** @brief Twips (the rich edit font height unit) per inch. */
+	static constexpr int LyPerInch = 1440;
+
 	CFormattedTextDraw()
 	{
 		HDC hdcScreen;

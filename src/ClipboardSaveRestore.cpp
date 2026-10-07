@@ -99,7 +99,7 @@ bool CClipboardSaveRestore::Restore()
 
 	if(bRet == FALSE)
 	{
-		Log(_T("CClipboardSaveRestore::Restore failed to restore clipboard"));
+		CLogger::Log(_T("CClipboardSaveRestore::Restore failed to restore clipboard"));
 	}
 
 	return bRet;
@@ -142,7 +142,7 @@ bool CClipboardSaveRestore::RestoreTextOnly()
 
 	if(bRet == FALSE)
 	{
-		Log(_T("CClipboardSaveRestore::Restore failed to restore clipboard"));
+		CLogger::Log(_T("CClipboardSaveRestore::Restore failed to restore clipboard"));
 	}
 
 	return bRet;

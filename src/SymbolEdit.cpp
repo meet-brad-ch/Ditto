@@ -10,11 +10,6 @@
 
 // CSymbolEdit
 
-#define RANGE_START 3000
-#define CLEAR_LIST 3010
-#define LIST_MAX_COUNT 10
-#define MAX_SAVED_SEARCH_LENGTH 50
-
 IMPLEMENT_DYNAMIC(CSymbolEdit, CEdit)
 
 CSymbolEdit::CSymbolEdit() :
@@ -64,7 +59,7 @@ BEGIN_MESSAGE_MAP(CSymbolEdit, CEdit)
 	ON_WM_LBUTTONUP()
 	ON_WM_LBUTTONDOWN()
 	ON_WM_MOUSEMOVE()
-	ON_COMMAND_RANGE(RANGE_START, (RANGE_START + LIST_MAX_COUNT), OnSelectSearchString)
+	ON_COMMAND_RANGE(IdRangeStart, (IdRangeStart + s_listMaxCount), OnSelectSearchString)
 	ON_WM_EXITSIZEMOVE()
 	//ON_WM_ERASEBKGND()
 	ON_WM_NCCALCSIZE()
@@ -78,7 +73,7 @@ BOOL CSymbolEdit::PreTranslateMessage(MSG* pMsg)
 	// Intercept Ctrl + Z (Undo), Ctrl + X (Cut), Ctrl + C (Copy), Ctrl + V (Paste) and Ctrl + A (Select All)
 	// before CEdit base class gets a hold of them.
 	if (pMsg->message == WM_KEYDOWN &&
-		CONTROL_PRESSED)
+		CKeyboard::IsControlPressed())
 	{
 		if (HandleControlKey(pMsg))
 		{
@@ -126,7 +121,7 @@ void CSymbolEdit::CopySelectionOrClip(const MSG* pMsg)
 	this->GetSel(startChar, endChar);
 	if (startChar == endChar)
 	{
-		SendKeyToParent(NM_COPY_CLIP, pMsg);
+		SendKeyToParent(CQListCtrl::NmCopyClip, pMsg);
 	}
 	else
 	{
@@ -176,7 +171,7 @@ bool CSymbolEdit::HandleKeyDown(MSG* pMsg)
 	}
 	else if (IsListNavigationKey(pMsg->wParam))
 	{
-		return SendKeyToParent(CB_UPDOWN, pMsg);
+		return SendKeyToParent(CQListCtrl::CbUpDown, pMsg);
 	}
 	else if (pMsg->wParam == VK_DELETE)
 	{
@@ -193,12 +188,12 @@ void CSymbolEdit::HandleReturnKey()
 	{
 		if (CGetSetOptions::m_bFindAsYouType)
 		{
-			pWnd->SendMessage(NM_SEARCH_ENTER_PRESSED, 0, 0);
+			pWnd->SendMessage(CQListCtrl::NmSearchEnterPressed, 0, 0);
 		}
 		else
 		{
 			//Send a message to the parent to refill the lb from the search
-			pWnd->PostMessage(CB_SEARCH, 0, 0);
+			pWnd->PostMessage(CQListCtrl::CbSearch, 0, 0);
 		}
 
 		AddToSearchHistory();
@@ -216,7 +211,7 @@ bool CSymbolEdit::HandleDeleteKey(const MSG* pMsg)
 	if(startChar == cs.GetLength() &&
 		endChar == cs.GetLength())
 	{
-		return SendKeyToParent(NM_DELETE, pMsg);
+		return SendKeyToParent(CQListCtrl::NmDelete, pMsg);
 	}
 
 	return false;
@@ -265,12 +260,12 @@ void CSymbolEdit::LoadPastSearches(CString values)
 
 		while (ItemElement)
 		{
-			if (count < LIST_MAX_COUNT)
+			if (count < s_listMaxCount)
 			{
 				// the attribute is UTF-8
 				CString item = CTextConvert::Utf8ToUnicode(ItemElement->Attribute("text"));
 
-				CString toAdd = item.Left(MAX_SAVED_SEARCH_LENGTH);
+				CString toAdd = item.Left(s_maxSavedSearchLength);
 				if (toAdd != _T(""))
 				{
 					m_searches.Add(toAdd);
@@ -296,9 +291,9 @@ void CSymbolEdit::AddToSearchHistory()
 	{
 		//only save up to 50, had reports of somehow getting extremely large amounts of junk text
 		//save and causing memory issues.
-		cs = cs.Left(MAX_SAVED_SEARCH_LENGTH);
+		cs = cs.Left(s_maxSavedSearchLength);
 
-		if (m_searches.GetCount() >= LIST_MAX_COUNT)
+		if (m_searches.GetCount() >= s_listMaxCount)
 		{
 			m_searches.RemoveAt(0);
 		}
@@ -333,7 +328,7 @@ bool CSymbolEdit::ShowSearchHistoryMenu()
 	CMenu cmPopUp;
 	cmPopUp.CreatePopupMenu();
 
-	int count = min((int)m_searches.GetCount(), LIST_MAX_COUNT);
+	int count = min((int)m_searches.GetCount(), s_listMaxCount);
 	for (int i = count-1; i >= 0; i--)
 	{
 		CString text = m_searches[i];
@@ -357,11 +352,11 @@ bool CSymbolEdit::ShowSearchHistoryMenu()
 			text += cmdShortcutText;
 		}
 
-		cmPopUp.AppendMenuW(MF_STRING, (RANGE_START + i), text);
+		cmPopUp.AppendMenuW(MF_STRING, (IdRangeStart + i), text);
 	}
 
 	cmPopUp.AppendMenu(MF_SEPARATOR);
-	cmPopUp.AppendMenuW(MF_STRING, CLEAR_LIST, _T("Clear List"));
+	cmPopUp.AppendMenuW(MF_STRING, IdClearList, _T("Clear List"));
 
 	CRect windowRect;
 	this->GetWindowRect(&windowRect);
@@ -682,7 +677,7 @@ void CSymbolEdit::OnSetFocus(CWnd* pOldWnd)
 	{
 		if (CGetSetOptions::m_bFindAsYouType)
 		{
-			pWnd->SendMessage(NM_FOCUS_ON_SEARCH, 0, 0);
+			pWnd->SendMessage(CQListCtrl::NmFocusOnSearch, 0, 0);
 		}
 	}
 
@@ -747,7 +742,7 @@ void CSymbolEdit::OnLButtonUp(UINT nFlags, CPoint point)
 			CWnd *pOwner = GetOwner();
 			if (pOwner)
 			{
-				pOwner->SendMessage(NM_CANCEL_SEARCH, 0, 0);
+				pOwner->SendMessage(CQListCtrl::NmCancelSearch, 0, 0);
 			}
 		}		
 	}	
@@ -824,9 +819,9 @@ void CSymbolEdit::OnMouseMove(UINT nFlags, CPoint point)
 
 void CSymbolEdit::OnSelectSearchString(UINT idIn)
 {
-	int index = idIn - RANGE_START;
+	int index = idIn - IdRangeStart;
 
-	if (idIn == CLEAR_LIST)
+	if (idIn == IdClearList)
 	{
 		m_searches.RemoveAll();
 	}

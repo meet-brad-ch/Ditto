@@ -11,14 +11,22 @@
 
 #include <afxtempl.h>
 
-#define DR_MoveLeft			 1
-#define DR_MoveTop			 2
-#define DR_SizeWidth		 4
-#define DR_SizeHeight		 8
-
-class CDialogResizer  
+class CDialogResizer
 {
 public:
+	/** @brief How a control follows the dialog's size (AddControl's flags, combined with |). */
+	enum : int
+	{
+		/** @brief The control moves with the right edge. */
+		MoveLeft = 1,
+		/** @brief The control moves with the bottom edge. */
+		MoveTop = 2,
+		/** @brief The control's width follows the dialog's width. */
+		SizeWidth = 4,
+		/** @brief The control's height follows the dialog's height. */
+		SizeHeight = 8,
+	};
+
 	CDialogResizer();
 	virtual ~CDialogResizer();
 

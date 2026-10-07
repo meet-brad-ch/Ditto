@@ -20,6 +20,9 @@ protected:
 	bool PlaceCF_TEXT_AND_CF_UNICODETEXT_OnClipboard(CStringA &csCF_TEXT, CStringW &csCF_UNICODETEXT);
 
 private:
+	/** @brief The format version that ExportToSqliteDB writes into the export's Main table. */
+	static constexpr int s_currentExportVersion{1};
+
 	/**
 	 * @brief ImportFromSqliteDB's row step: imports a version-1 row and adds it to the database when asked.
 	 * @param db The export database.

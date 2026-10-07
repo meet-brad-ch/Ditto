@@ -3,10 +3,6 @@
 #include <map>
 #include "..\Shared\ArrayEx.h"
 
-#define ACCEL_VKEY(key)			LOBYTE(key)
-#define ACCEL_MOD(key)			HIBYTE(key)
-#define ACCEL_MAKEKEY(vkey,mod) ((mod << 8) | vkey)
-
 using namespace std;
 
 class CAccel
@@ -32,6 +28,17 @@ CAccels - Manages a set of CAccel
 class CAccels
 {
 public:
+	/**
+	 * @brief Makes an accelerator key: the modifiers in the high byte, the virtual key in the low byte.
+	 * @param vkey The virtual key code.
+	 * @param mod The HOTKEYF_* modifiers.
+	 * @return (mod << 8) | vkey.
+	 */
+	static constexpr int MakeKey(int vkey, int mod)
+	{
+		return (mod << 8) | vkey;
+	}
+
     CAccels();
 
     void AddAccel(CAccel a);
@@ -70,7 +77,7 @@ private:
 
 	/**
 	 * @brief OnMsg's second-key step: finds the shortcut whose second key is key after the pending first key.
-	 * @param key The pressed key (ACCEL_MAKEKEY of virtual key and modifiers).
+	 * @param key The pressed key (MakeKey of virtual key and modifiers).
 	 * @param a Receives the matching accelerator.
 	 * @return True when a shortcut matched (the pending first key is then cleared).
 	 */
@@ -78,7 +85,7 @@ private:
 
 	/**
 	 * @brief OnMsg's first-key step: finds the single-key shortcut of key, or starts waiting for a second key.
-	 * @param key The pressed key (ACCEL_MAKEKEY of virtual key and modifiers).
+	 * @param key The pressed key (MakeKey of virtual key and modifiers).
 	 * @param a Receives the matching single-key accelerator.
 	 * @return True when a single-key shortcut matched and no two-key shortcut starts with key.
 	 */

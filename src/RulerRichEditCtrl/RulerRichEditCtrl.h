@@ -159,6 +159,9 @@ protected:
 
 	CDPI m_dpi;
 
+	/** @brief The height of the formatting toolbar, in unscaled pixels. */
+	static constexpr int s_toolbarHeight{28};
+
 public:
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 

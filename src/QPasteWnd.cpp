@@ -35,51 +35,12 @@
 #include "QrBitmap.h"
 #include "QRCodeViewer.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif 
-
-#define QPASTE_TITLE			"Ditto"
-
-#define ID_LIST_HEADER			0x201
-#define ID_EDIT_SEARCH			0x202
-#define ID_CANCEL				0x203
-#define ID_GROUP_TEXT			0x204
-#define ID_SHOW_GROUPS_BOTTOM	0x205
-#define ID_SHOW_GROUPS_TOP		0x206
-#define ID_BACK_BUTTON			0x207
-#define ID_SEARCH_DESCRIPTION_BUTTON 0x208
-#define ON_TOP_WARNING 0x209
-#define ID_SYSTEM_BUTTON		0x210
-#define ID_NO_SEARCH_RESULTS	0x211
-
-
-#define QPASTE_WIDTH			200
-#define QPASTE_HEIGHT			200
-
-#define TIMER_FILL_CACHE		1
-#define TIMER_DO_SEARCH			2
-#define TIMER_PASTE_FROM_MODIFER	3
-#define TIMER_ERROR_MSG			4
-#define TIMER_DRAG_HIDE_WINDOW	6
-#define TIMER_DO_ACTION	7
-
-#define THREAD_DO_QUERY				0
-#define THREAD_EXIT_THREAD			1
-#define THREAD_FILL_ACCELERATORS	2
-#define THREAD_DESTROY_ACCELERATORS	3
-#define THREAD_LOAD_ITEMS			4
-#define THREAD_LOAD_EXTRA_DATA		5
-
-
 /////////////////////////////////////////////////////////////////////////////
 // CQPasteWnd
 
 CQPasteWnd::CQPasteWnd()
 {
-	m_Title = QPASTE_TITLE;
+	m_Title = s_qpasteTitle;
 	m_bHideWnd = true;
 	m_strSQLSearch = "";
 	m_strSearch = "";
@@ -129,10 +90,10 @@ BEGIN_MESSAGE_MAP(CQPasteWnd, CWndEx)
 	ON_COMMAND(ID_MENU_TOGGLECONNECTCV, OnMenuToggleConnectCV)
 	ON_COMMAND(ID_MENU_PROPERTIES, OnMenuProperties)
 	ON_WM_CLOSE()
-	ON_NOTIFY(LVN_BEGINDRAG, ID_LIST_HEADER, OnBegindrag)
+	ON_NOTIFY(LVN_BEGINDRAG, IdListHeader, OnBegindrag)
 	ON_WM_SYSKEYDOWN()
-	ON_NOTIFY(LVN_GETDISPINFO, ID_LIST_HEADER, GetDispInfo)
-	ON_NOTIFY(LVN_ODFINDITEM, ID_LIST_HEADER, OnFindItem)
+	ON_NOTIFY(LVN_GETDISPINFO, IdListHeader, GetDispInfo)
+	ON_NOTIFY(LVN_ODFINDITEM, IdListHeader, OnFindItem)
 	ON_COMMAND(ID_MENU_FIRSTTENHOTKEYS_USECTRLNUM, OnMenuFirsttenhotkeysUsectrlnum)
 	ON_COMMAND(ID_MENU_FIRSTTENHOTKEYS_SHOWHOTKEYTEXT, OnMenuFirsttenhotkeysShowhotkeytext)
 	ON_COMMAND(ID_MENU_QUICKOPTIONS_ALLWAYSSHOWDESCRIPTION, OnMenuQuickoptionsAllwaysshowdescription)
@@ -140,8 +101,8 @@ BEGIN_MESSAGE_MAP(CQPasteWnd, CWndEx)
 	ON_COMMAND(ID_MENU_QUICKOPTIONS_DOUBLECLICKINGONCAPTION_ROLLUPWINDOW, OnMenuQuickoptionsDoubleclickingoncaptionRollupwindow)
 	ON_COMMAND(ID_MENU_QUICKOPTIONS_DOUBLECLICKINGONCAPTION_TOGGLESALWAYSSHOWDESCRIPTION, OnMenuQuickoptionsDoubleclickingoncaptionTogglesshowdescription)
 	ON_COMMAND(ID_MENU_QUICKOPTIONS_PROMPTFORNEWGROUPNAMES, OnMenuQuickoptionsPromptfornewgroupnames)
-	ON_BN_CLICKED(ID_SHOW_GROUPS_BOTTOM, OnShowGroupsBottom)
-	ON_BN_CLICKED(ID_SHOW_GROUPS_TOP, OnShowGroupsTop)
+	ON_BN_CLICKED(IdShowGroupsBottom, OnShowGroupsBottom)
+	ON_BN_CLICKED(IdShowGroupsTop, OnShowGroupsTop)
 	ON_COMMAND(ID_MENU_VIEWGROUPS, OnMenuViewgroups)
 	ON_COMMAND(ID_MENU_QUICKPROPERTIES_SETTONEVERAUTODELETE, OnMenuQuickpropertiesSettoneverautodelete)
 	ON_COMMAND(ID_MENU_QUICKPROPERTIES_AUTODELETE, OnMenuQuickpropertiesAutodelete)
@@ -152,7 +113,7 @@ BEGIN_MESSAGE_MAP(CQPasteWnd, CWndEx)
 	ON_COMMAND(ID_MENU_QUICKOPTIONS_SHOWTHUMBNAILS, OnMenuQuickoptionsShowthumbnails)
 	ON_COMMAND(ID_MENU_QUICKOPTIONS_DRAWRTFTEXT, OnMenuQuickoptionsDrawrtftext)
 	ON_COMMAND(ID_MENU_QUICKOPTIONS_PASTECLIPAFTERSELECTION, OnMenuQuickoptionsPasteclipafterselection)
-	ON_EN_CHANGE(ID_EDIT_SEARCH, OnSearchEditChange)
+	ON_EN_CHANGE(IdEditSearch, OnSearchEditChange)
 	ON_COMMAND(ID_MENU_QUICKOPTIONS_FINDASYOUTYPE, OnMenuQuickoptionsFindasyoutype)
 	ON_COMMAND(ID_MENU_QUICKOPTIONS_ENSUREENTIREWINDOWISVISIBLE, OnMenuQuickoptionsEnsureentirewindowisvisible)
 	ON_COMMAND(ID_MENU_QUICKOPTIONS_SHOWCLIPSTHATAREINGROUPSINMAINLIST, OnMenuQuickoptionsShowclipsthatareingroupsinmainlist)
@@ -174,15 +135,15 @@ BEGIN_MESSAGE_MAP(CQPasteWnd, CWndEx)
 	ON_WM_DESTROY()
 
 	//}}AFX_MSG_MAP
-	ON_MESSAGE(NM_SEARCH_ENTER_PRESSED, OnSearchEnterKeyPressed)
-	ON_MESSAGE(NM_COPY_CLIP, OnCopyClip)
-	ON_MESSAGE(NM_END, OnListEnd)
-	ON_MESSAGE(CB_SEARCH, OnSearch)
-	ON_MESSAGE(NM_DELETE, OnDelete)
-	ON_NOTIFY(NM_GETTOOLTIPTEXT, ID_LIST_HEADER, OnGetToolTipText)
-	ON_MESSAGE(NM_SELECT_DB_ID, OnListSelect_DB_ID)
-	ON_MESSAGE(WM_REFRESH_VIEW, OnRefreshView)
-	ON_MESSAGE(WM_RELOAD_CLIP_IN_UI, OnReloadClipInUI)
+	ON_MESSAGE(CQListCtrl::NmSearchEnterPressed, OnSearchEnterKeyPressed)
+	ON_MESSAGE(CQListCtrl::NmCopyClip, OnCopyClip)
+	ON_MESSAGE(CQListCtrl::NmEnd, OnListEnd)
+	ON_MESSAGE(CQListCtrl::CbSearch, OnSearch)
+	ON_MESSAGE(CQListCtrl::NmDelete, OnDelete)
+	ON_NOTIFY(CQListCtrl::NmGetToolTipText, IdListHeader, OnGetToolTipText)
+	ON_MESSAGE(CQListCtrl::NmSelectDbId, OnListSelect_DB_ID)
+	ON_MESSAGE(CDittoMessage::RefreshView, OnRefreshView)
+	ON_MESSAGE(CDittoMessage::ReloadClipInUi, OnReloadClipInUI)
 	ON_WM_NCLBUTTONDBLCLK()
 	ON_WM_WINDOWPOSCHANGING()
 	ON_COMMAND(ID_VIEWCAPTIONBARON_RIGHT, OnViewcaptionbaronRight)
@@ -194,14 +155,14 @@ BEGIN_MESSAGE_MAP(CQPasteWnd, CWndEx)
 	ON_COMMAND(ID_MENU_ALLWAYSONTOP, OnMenuAllwaysontop)
 	ON_COMMAND(ID_MENU_NEWGROUP, OnMenuNewGroup)
 	ON_COMMAND(ID_MENU_NEWGROUPSELECTION, OnMenuNewGroupSelection)
-	ON_MESSAGE(NM_GROUP_TREE_MESSAGE, OnGroupTreeMessage)
-	ON_COMMAND(ID_BACK_BUTTON, OnBackButton)
-	ON_COMMAND(ID_SYSTEM_BUTTON, OnSystemButton)
-	ON_MESSAGE(CB_UPDOWN, OnUpDown)
-	ON_MESSAGE(NM_INACTIVE_TOOLTIPWND, OnToolTipWndInactive)
-	ON_MESSAGE(NM_SET_LIST_COUNT, OnSetListCount)
-	ON_MESSAGE(NM_REFRESH_ROW, OnRefeshRow)
-	ON_MESSAGE(NM_ITEM_DELETED, OnItemDeleted)
+	ON_MESSAGE(CQListCtrl::NmGroupTreeMessage, OnGroupTreeMessage)
+	ON_COMMAND(IdBackButton, OnBackButton)
+	ON_COMMAND(IdSystemButton, OnSystemButton)
+	ON_MESSAGE(CQListCtrl::CbUpDown, OnUpDown)
+	ON_MESSAGE(CQListCtrl::NmInactiveToolTipWnd, OnToolTipWndInactive)
+	ON_MESSAGE(CQListCtrl::NmSetListCount, OnSetListCount)
+	ON_MESSAGE(CQListCtrl::NmRefreshRow, OnRefeshRow)
+	ON_MESSAGE(CQListCtrl::NmItemDeleted, OnItemDeleted)
 	ON_WM_TIMER()
 	ON_COMMAND(ID_MENU_EXPORT, OnMenuExport)
 	ON_COMMAND(ID_MENU_IMPORT, OnMenuImport)
@@ -212,11 +173,11 @@ BEGIN_MESSAGE_MAP(CQPasteWnd, CWndEx)
 	ON_UPDATE_COMMAND_UI(ID_MENU_NEWCLIP, OnUpdateMenuNewclip)
 	ON_WM_CTLCOLOR_REFLECT()
 	ON_COMMAND_RANGE(3000, 4000, OnAddinSelect)
-	ON_MESSAGE(NM_ALL_SELECTED, OnSelectAll)
-	ON_MESSAGE(NM_SHOW_HIDE_SCROLLBARS, OnShowHideScrollBar)
-	ON_MESSAGE(NM_UPDATE_SCROLLBAR, OnUpdateScrollBar)
-	ON_MESSAGE(NM_CANCEL_SEARCH, OnCancelFilter)
-	ON_MESSAGE(NM_POST_OPTIONS_WINDOW, OnPostOptions)
+	ON_MESSAGE(CQListCtrl::NmAllSelected, OnSelectAll)
+	ON_MESSAGE(CQListCtrl::NmShowHideScrollBars, OnShowHideScrollBar)
+	ON_MESSAGE(CQListCtrl::NmUpdateScrollBar, OnUpdateScrollBar)
+	ON_MESSAGE(CQListCtrl::NmCancelSearch, OnCancelFilter)
+	ON_MESSAGE(CQListCtrl::NmPostOptionsWindow, OnPostOptions)
 	ON_COMMAND(ID_MENU_SEARCHDESCRIPTION, OnMenuSearchDescription)
 	ON_COMMAND(ID_MENU_SEARCHFULLTEXT, OnMenuSearchFullText)
 	ON_COMMAND(ID_MENU_SEARCHQUICKPASTE, OnMenuSearchQuickPaste)
@@ -232,9 +193,9 @@ BEGIN_MESSAGE_MAP(CQPasteWnd, CWndEx)
 	ON_COMMAND(ID_COMPARE_SELECTLEFTCOMPARE, &CQPasteWnd::OnCompareSelectleftcompare)
 	ON_COMMAND(ID_COMPARE_COMPAREAGAINST, &CQPasteWnd::OnCompareCompareagainst)
 	ON_UPDATE_COMMAND_UI(ID_COMPARE_COMPARE, &CQPasteWnd::OnUpdateCompareCompare)
-	ON_MESSAGE(NM_SHOW_PROPERTIES, OnShowProperties)
-	ON_MESSAGE(NM_NEW_GROUP, OnNewGroup)
-	ON_MESSAGE(NM_DELETE_ID, OnDeleteId)
+	ON_MESSAGE(CQListCtrl::NmShowProperties, OnShowProperties)
+	ON_MESSAGE(CQListCtrl::NmNewGroup, OnNewGroup)
+	ON_MESSAGE(CQListCtrl::NmDeleteId, OnDeleteId)
 	ON_COMMAND(ID_MENU_REGULAREXPRESSIONSEARCH, &CQPasteWnd::OnMenuRegularexpressionsearch)
 
 	ON_COMMAND(ID_IMPORT_EXPORTCLIP_BITMAP, &CQPasteWnd::OnImportExportclipBitmap)
@@ -244,7 +205,7 @@ BEGIN_MESSAGE_MAP(CQPasteWnd, CWndEx)
 
 	ON_COMMAND(ID_MENU_SAVECURRENTCLIPBOARD, &CQPasteWnd::OnMenuSavecurrentclipboard)
 	ON_UPDATE_COMMAND_UI(ID_MENU_SAVECURRENTCLIPBOARD, &CQPasteWnd::OnUpdateMenuSavecurrentclipboard)
-	ON_MESSAGE(NM_MOVE_TO_GROUP, OnListMoveSelectionToGroup)
+	ON_MESSAGE(CQListCtrl::NmMoveToGroup, OnListMoveSelectionToGroup)
 	ON_COMMAND(ID_CLIPORDER_MOVEUP, &CQPasteWnd::OnCliporderMoveup)
 	ON_UPDATE_COMMAND_UI(ID_CLIPORDER_MOVEUP, &CQPasteWnd::OnUpdateCliporderMoveup)
 	ON_COMMAND(ID_CLIPORDER_MOVEDOWN, &CQPasteWnd::OnCliporderMovedown)
@@ -255,7 +216,7 @@ BEGIN_MESSAGE_MAP(CQPasteWnd, CWndEx)
 	ON_UPDATE_COMMAND_UI(ID_MENU_FILTERON, &CQPasteWnd::OnUpdateMenuFilteron)
 	ON_COMMAND(ID_MENU_GOTOENTRY, &CQPasteWnd::OnMenuGoToEntry)
 	ON_UPDATE_COMMAND_UI(ID_MENU_GOTOENTRY, &CQPasteWnd::OnUpdateMenuGoToEntry)
-	ON_BN_CLICKED(ON_TOP_WARNING, OnAlwaysOnTopClicked)
+	ON_BN_CLICKED(IdOnTopWarning, OnAlwaysOnTopClicked)
 	//ON_WM_CTLCOLOR()
 	ON_COMMAND(ID_SPECIALPASTE_UPPERCASE, &CQPasteWnd::OnSpecialpasteUppercase)
 	ON_UPDATE_COMMAND_UI(ID_SPECIALPASTE_UPPERCASE, &CQPasteWnd::OnUpdateSpecialpasteUppercase)
@@ -273,10 +234,10 @@ BEGIN_MESSAGE_MAP(CQPasteWnd, CWndEx)
 	ON_UPDATE_COMMAND_UI(ID_SPECIALPASTE_PASTE32919, &CQPasteWnd::OnUpdateSpecialpastePaste32919)
 	ON_COMMAND(ID_SPECIALPASTE_TYPOGLYCEMIA, &CQPasteWnd::OnSpecialpasteTypoglycemia)
 	ON_UPDATE_COMMAND_UI(ID_SPECIALPASTE_TYPOGLYCEMIA, &CQPasteWnd::OnUpdateSpecialpasteTypoglycemia)
-	ON_NOTIFY(NM_CLICK, ID_LIST_HEADER, &CQPasteWnd::OnNMClickList1)
-	ON_NOTIFY(NM_DBLCLK, ID_LIST_HEADER, &CQPasteWnd::OnNMDblclkList1)
-	ON_NOTIFY(NM_RCLICK, ID_LIST_HEADER, &CQPasteWnd::OnNMRClickList1)
-	ON_NOTIFY(NM_RDBLCLK, ID_LIST_HEADER, &CQPasteWnd::OnNMRDblclkList1)
+	ON_NOTIFY(NM_CLICK, IdListHeader, &CQPasteWnd::OnNMClickList1)
+	ON_NOTIFY(NM_DBLCLK, IdListHeader, &CQPasteWnd::OnNMDblclkList1)
+	ON_NOTIFY(NM_RCLICK, IdListHeader, &CQPasteWnd::OnNMRClickList1)
+	ON_NOTIFY(NM_RDBLCLK, IdListHeader, &CQPasteWnd::OnNMRDblclkList1)
 	ON_COMMAND(ID_QUICKOPTIONS_SHOWTEXTFORFIRSTTENCOPYHOTKEYS, &CQPasteWnd::OnQuickoptionsShowtextforfirsttencopyhotkeys)
 	ON_UPDATE_COMMAND_UI(ID_QUICKOPTIONS_SHOWTEXTFORFIRSTTENCOPYHOTKEYS, &CQPasteWnd::OnUpdateQuickoptionsShowtextforfirsttencopyhotkeys)
 	ON_COMMAND(ID_QUICKOPTIONS_SHOWINDICATORACLIPHASBEENPASTED, &CQPasteWnd::OnQuickoptionsShowindicatoracliphasbeenpasted)
@@ -296,7 +257,7 @@ BEGIN_MESSAGE_MAP(CQPasteWnd, CWndEx)
 	ON_UPDATE_COMMAND_UI(ID_MENU_NEWCLIP32937, &CQPasteWnd::OnUpdateMenuNewclip32937)
 	ON_UPDATE_COMMAND_UI(ID_MENU_GLOBALHOTKEYS32933, &CQPasteWnd::OnUpdateMenuGlobalhotkeys32933)
 	ON_UPDATE_COMMAND_UI(ID_MENU_DELETECLIPDATA32934, &CQPasteWnd::OnUpdateMenuDeleteclipdata32934)
-	ON_MESSAGE(NM_FOCUS_ON_SEARCH, OnSearchFocused)
+	ON_MESSAGE(CQListCtrl::NmFocusOnSearch, OnSearchFocused)
 	ON_COMMAND(ID_CLIPORDER_REPLACETOPSTICKYCLIP, &CQPasteWnd::OnCliporderReplacetopstickyclip)
 	ON_UPDATE_COMMAND_UI(ID_CLIPORDER_REPLACETOPSTICKYCLIP, &CQPasteWnd::OnUpdateCliporderReplacetopstickyclip)
 	ON_COMMAND(ID_IMPORT_IMPORTCOPIEDFILE, &CQPasteWnd::OnImportImportcopiedfile)
@@ -384,9 +345,9 @@ int CQPasteWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	//BOOL b = this->Register(this);
 
-	SetWindowText(_T(QPASTE_TITLE));
+	SetWindowText(s_qpasteTitle);
 
-	m_search.Create(WS_TABSTOP | WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, CRect(0, 0, 0, 0), this, ID_EDIT_SEARCH);
+	m_search.Create(WS_TABSTOP | WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, CRect(0, 0, 0, 0), this, IdEditSearch);
 	m_search.SetDpiInfo(&m_DittoWindow.m_dpi);
 	m_search.SetPromptText(theApp.m_Language.GetString(_T("Search"), _T("Search")));
 	::SHAutoComplete(m_search.m_hWnd, SHACF_AUTOSUGGEST_FORCE_OFF);
@@ -400,7 +361,7 @@ int CQPasteWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	//m_search.SetButtonArea(rcCloseArea);
 
 	// Create the header control
-	if (!m_lstHeader.Create(WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | LVS_NOCOLUMNHEADER | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_OWNERDATA | LVS_OWNERDRAWFIXED, CRect(0, 0, 0, 0), this, ID_LIST_HEADER))
+	if (!m_lstHeader.Create(WS_TABSTOP | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | LVS_NOCOLUMNHEADER | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_OWNERDATA | LVS_OWNERDRAWFIXED, CRect(0, 0, 0, 0), this, IdListHeader))
 	{
 		ASSERT(FALSE);
 		return -1;
@@ -433,24 +394,24 @@ int CQPasteWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_GroupTree.ShowWindow(SW_HIDE);
 	m_GroupTree.m_showRightClickMenu = true;
 
-	m_ShowGroupsFolderBottom.Create(NULL, WS_CHILD | BS_OWNERDRAW | WS_TABSTOP, CRect(0, 0, 0, 0), this, ID_SHOW_GROUPS_BOTTOM);
+	m_ShowGroupsFolderBottom.Create(NULL, WS_CHILD | BS_OWNERDRAW | WS_TABSTOP, CRect(0, 0, 0, 0), this, IdShowGroupsBottom);
 	//m_ShowGroupsFolderBottom.LoadBitmaps(IDB_CLOSED_FOLDER, IDB_CLOSED_FOLDER_PRESSED, IDB_CLOSED_FOLDER_FOCUSED);
 	m_ShowGroupsFolderBottom.LoadStdImageDPI(m_DittoWindow.m_dpi.GetDPI(), open_folder_24, open_folder_30, open_folder_36, open_folder_42, open_folder_48, _T("PNG"), open_folder_54, open_folder_60, open_folder_66, open_folder_72, open_folder_78, open_folder_84);
 	m_ShowGroupsFolderBottom.ShowWindow(SW_SHOW);
 	m_ShowGroupsFolderBottom.SetToolTipText(theApp.m_Language.GetString(_T("GroupsTooltip"), _T("Groups")));
 	m_ShowGroupsFolderBottom.ModifyStyle(WS_TABSTOP, 0);
 
-	m_BackButton.Create(NULL, WS_CHILD | BS_OWNERDRAW | WS_TABSTOP, CRect(0, 0, 0, 0), this, ID_BACK_BUTTON);
+	m_BackButton.Create(NULL, WS_CHILD | BS_OWNERDRAW | WS_TABSTOP, CRect(0, 0, 0, 0), this, IdBackButton);
 	m_BackButton.LoadStdImageDPI(m_DittoWindow.m_dpi.GetDPI(), return_16, return_20, return_24, return_28, return_32, _T("PNG"));
 	m_BackButton.ModifyStyle(WS_TABSTOP, 0);
 	m_BackButton.ShowWindow(SW_SHOW);
 
-	m_systemMenu.Create(NULL, WS_CHILD | BS_OWNERDRAW | WS_TABSTOP, CRect(0, 0, 0, 0), this, ID_SYSTEM_BUTTON);
+	m_systemMenu.Create(NULL, WS_CHILD | BS_OWNERDRAW | WS_TABSTOP, CRect(0, 0, 0, 0), this, IdSystemButton);
 	m_systemMenu.LoadStdImageDPI(m_DittoWindow.m_dpi.GetDPI(), system_menu_2_24, system_menu_2_30, system_menu_2_36, system_menu_2_42, system_menu_2_48, _T("PNG"), system_menu_54, system_menu_60, system_menu_66, system_menu_72, system_menu_78, system_menu_84);
 	m_systemMenu.ModifyStyle(WS_TABSTOP, 0);
 	m_systemMenu.ShowWindow(SW_SHOW);
 
-	m_stGroup.Create(_T(""), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, ID_GROUP_TEXT);
+	m_stGroup.Create(_T(""), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, IdGroupText);
 
 	//Set the z-order
 	m_lstHeader.SetWindowPos(this, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
@@ -479,13 +440,13 @@ int CQPasteWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		onTopMsg += ")";
 	}
 
-	m_alwaysOnToWarningStatic.Create(onTopMsg, WS_CHILD | SS_CENTERIMAGE | SS_NOTIFY, CRect(0, 0, 0, 0), this, ON_TOP_WARNING);
+	m_alwaysOnToWarningStatic.Create(onTopMsg, WS_CHILD | SS_CENTERIMAGE | SS_NOTIFY, CRect(0, 0, 0, 0), this, IdOnTopWarning);
 	m_alwaysOnToWarningStatic.SetBkColor(COLORREF(RGB(255, 255, 0)));
 	m_alwaysOnToWarningStatic.SetTextColor(COLORREF(RGB(0, 0, 255)));
 	m_alwaysOnToWarningStatic.SetToggleCursor(true);
 	m_alwaysOnToWarningStatic.SetFont(&m_groupFont);
 
-	m_noSearchResultsStatic.Create(onTopMsg, WS_CHILD, CRect(0, 0, 0, 0), this, ID_NO_SEARCH_RESULTS);
+	m_noSearchResultsStatic.Create(onTopMsg, WS_CHILD, CRect(0, 0, 0, 0), this, IdNoSearchResults);
 
 	m_popupMsg.m_hWndPosRelativeTo = m_hWnd;
 
@@ -515,13 +476,13 @@ void CQPasteWnd::LoadShortcuts()
 	m_toolTipActions.RemoveAll();
 
 	m_actions.AddAccel(ActionEnums::NEXTTABCONTROL, VK_TAB);
-	m_actions.AddAccel(ActionEnums::PREVTABCONTROL, ACCEL_MAKEKEY(VK_TAB, HOTKEYF_CONTROL));
+	m_actions.AddAccel(ActionEnums::PREVTABCONTROL, CAccels::MakeKey(VK_TAB, HOTKEYF_CONTROL));
 	m_actions.AddAccel(ActionEnums::BACKGRROUP, VK_BACK);
 	m_actions.AddAccel(ActionEnums::DELETE_SELECTED, VK_DELETE);
 
 	m_actions.AddAccel(ActionEnums::HOMELIST, VK_HOME);
 	m_actions.AddAccel(ActionEnums::SHOWMENU, VK_APPS);
-	m_actions.AddAccel(ActionEnums::SYSTEM_MENU, ACCEL_MAKEKEY(VK_APPS, HOTKEYF_CONTROL));
+	m_actions.AddAccel(ActionEnums::SYSTEM_MENU, CAccels::MakeKey(VK_APPS, HOTKEYF_CONTROL));
 
 	m_search.SetLastSearchAccel(CAccel(0, ActionEnums::APPLY_LAST_SEARCH, 0));
 
@@ -535,8 +496,8 @@ void CQPasteWnd::LoadShortcuts()
 		}
 	}
 
-	m_actions.AddAccel(ActionEnums::TOGGLEFILELOGGING, ACCEL_MAKEKEY('D', HOTKEYF_CONTROL), ACCEL_MAKEKEY('F', HOTKEYF_CONTROL));
-	m_actions.AddAccel(ActionEnums::TOGGLEOUTPUTDEBUGSTRING, ACCEL_MAKEKEY('D', HOTKEYF_CONTROL), ACCEL_MAKEKEY('O', HOTKEYF_CONTROL));
+	m_actions.AddAccel(ActionEnums::TOGGLEFILELOGGING, CAccels::MakeKey('D', HOTKEYF_CONTROL), CAccels::MakeKey('F', HOTKEYF_CONTROL));
+	m_actions.AddAccel(ActionEnums::TOGGLEOUTPUTDEBUGSTRING, CAccels::MakeKey('D', HOTKEYF_CONTROL), CAccels::MakeKey('O', HOTKEYF_CONTROL));
 
 	m_lstHeader.SetTooltipActions(&m_toolTipActions);
 }
@@ -561,7 +522,7 @@ void CQPasteWnd::AddActionShortcut(ActionEnums::ActionEnumValues action, int a, 
 	//always add a shift variation to show description F3 so it will search backwards in the text search
 	if (action == ActionEnums::SHOWDESCRIPTION)
 	{
-		m_actions.AddAccel(action, ACCEL_MAKEKEY(LOBYTE(a), ShiftVariationModifier(a)), b);
+		m_actions.AddAccel(action, CAccels::MakeKey(LOBYTE(a), ShiftVariationModifier(a)), b);
 	}
 	else if (action == ActionEnums::APPLY_LAST_SEARCH)
 	{
@@ -574,7 +535,7 @@ void CQPasteWnd::AddActionShortcut(ActionEnums::ActionEnumValues action, int a, 
 
 		if (action == ActionEnums::SHOWDESCRIPTION)
 		{
-			m_toolTipActions.AddAccel(action, ACCEL_MAKEKEY(LOBYTE(a), ShiftVariationModifier(a)), b);
+			m_toolTipActions.AddAccel(action, CAccels::MakeKey(LOBYTE(a), ShiftVariationModifier(a)), b);
 		}
 	}
 }
@@ -788,7 +749,7 @@ void CQPasteWnd::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 		return;
 	}
 
-	Log(StrF(_T("CQPasteWnd::OnActivate, nState: %d, Other: %d, Minimized: %d"), nState, pWndOther, bMinimized));
+	CLogger::Log(StrF(_T("CQPasteWnd::OnActivate, nState: %d, Other: %d, Minimized: %d"), nState, pWndOther, bMinimized));
 
 	if (nState == WA_INACTIVE)
 	{
@@ -817,7 +778,7 @@ void CQPasteWnd::OnDeactivateWindow()
 	}
 	else if (CGetSetOptions::GetAutoHide())
 	{
-		MinMaxWindow(FORCE_MIN);
+		MinMaxWindow(CDittoWindow::ForceMin);
 	}
 
 	//re register the global hot keys for the last ten
@@ -872,12 +833,12 @@ BOOL CQPasteWnd::HideQPasteWindow(bool releaseFocus, BOOL clearSearchData)
 		clearSearchData = DefaultClearSearchData();
 	}
 
-	Log(_T("Start of HideQPasteWindow"));
+	CLogger::Log(_T("Start of HideQPasteWindow"));
 	ULONGLONG startTick = GetTickCount64();
 
 	if (!theApp.m_bShowingQuickPaste)
 	{
-		Log(_T("End of HideQPasteWindow, !theApp.m_bShowingQuickPaste"));
+		CLogger::Log(_T("End of HideQPasteWindow, !theApp.m_bShowingQuickPaste"));
 	}
 
 	{
@@ -895,7 +856,7 @@ BOOL CQPasteWnd::HideQPasteWindow(bool releaseFocus, BOOL clearSearchData)
 		theApp.m_activeWnd.ReleaseFocus();
 	}
 
-	KillTimer(TIMER_FILL_CACHE);
+	KillTimer(TimerFillCache);
 
 	m_lstHeader.HidePopup(true);
 
@@ -917,9 +878,9 @@ BOOL CQPasteWnd::HideQPasteWindow(bool releaseFocus, BOOL clearSearchData)
 
 	ULONGLONG endTick = GetTickCount64();
 	if ((endTick - startTick) > 150)
-		Log(StrF(_T("Paste Timing HideQPasteWindow: %llu"), endTick - startTick));
+		CLogger::Log(StrF(_T("Paste Timing HideQPasteWindow: %llu"), endTick - startTick));
 
-	Log(StrF(_T("End of HideQPasteWindow, ItemCount: %d"), m_listItems.size()));
+	CLogger::Log(StrF(_T("End of HideQPasteWindow, ItemCount: %d"), m_listItems.size()));
 
 	return TRUE;
 }
@@ -929,7 +890,7 @@ BOOL CQPasteWnd::DefaultClearSearchData()
 	if ((CGetSetOptions::m_maintainSearchView || CGetSetOptions::m_refreshViewAfterPasting == false) &&
 		m_strSearch != _T(""))
 	{
-		Log(_T("Currently searching for something and setting to maintain search view is enabled, not refreshing"));
+		CLogger::Log(_T("Currently searching for something and setting to maintain search view is enabled, not refreshing"));
 		return FALSE;
 	}
 
@@ -1005,7 +966,7 @@ BOOL CQPasteWnd::ShowQPasteWindow(BOOL bFillList)
 {
 	theApp.m_bShowingQuickPaste = true;
 
-	Log(StrF(_T("Start - ShowQPasteWindow - Fill List: %d, array count: %d"), bFillList, m_listItems.size()));
+	CLogger::Log(StrF(_T("Start - ShowQPasteWindow - Fill List: %d, array count: %d"), bFillList, m_listItems.size()));
 
 	//Ensure we have the latest theme file, this checks the last write time so it doesn't read the file each time
 	CGetSetOptions::m_Theme.Load(CGetSetOptions::GetTheme(), false, true);
@@ -1041,7 +1002,7 @@ BOOL CQPasteWnd::ShowQPasteWindow(BOOL bFillList)
 
 	//SetKeyModiferState(true);
 
-	Log(StrF(_T("END - ShowQPasteWindow - Fill List: %d, array count: %d"), bFillList, m_listItems.size()));
+	CLogger::Log(StrF(_T("END - ShowQPasteWindow - Fill List: %d, array count: %d"), bFillList, m_listItems.size()));
 
 	return TRUE;
 }
@@ -1062,13 +1023,13 @@ bool CQPasteWnd::Add(const CString& csHeader, const CString& /*csText*/, int nID
 
 BOOL CQPasteWnd::OpenID(int id, CSpecialPasteOptions pasteOptions)
 {
-	Log(StrF(_T("Start OpenId, Id: %d, Only CF_TEXT: %s"), id, pasteOptions.ToString().GetString()));
+	CLogger::Log(StrF(_T("Start OpenId, Id: %d, Only CF_TEXT: %s"), id, pasteOptions.ToString().GetString()));
 
 	if (pasteOptions.m_pPasteFormats == NULL)
 	{
 		if (theApp.EnterGroupID(id, FALSE, FALSE))
 		{
-			Log(_T("Entered group"));
+			CLogger::Log(_T("Entered group"));
 			return TRUE;
 		}
 	}
@@ -1093,7 +1054,7 @@ BOOL CQPasteWnd::OpenID(int id, CSpecialPasteOptions pasteOptions)
 
 		if (CGetSetOptions::m_bShowPersistent && CGetSetOptions::GetAutoHide())
 		{
-			MinMaxWindow(FORCE_MIN);
+			MinMaxWindow(CDittoWindow::ForceMin);
 		}
 	}
 	else
@@ -1101,17 +1062,17 @@ BOOL CQPasteWnd::OpenID(int id, CSpecialPasteOptions pasteOptions)
 		CString errorMessage;
 		errorMessage.Format(_T("Paste Error - %s"), paste.m_lastErrorMessage.GetString());
 		m_popupMsg.Show(errorMessage, CPoint(0, 0), true);
-		SetTimer(TIMER_ERROR_MSG, CGetSetOptions::GetErrorMsgPopupTimeout(), NULL);
+		SetTimer(TimerErrorMsg, CGetSetOptions::GetErrorMsgPopupTimeout(), NULL);
 	}
 
-	Log(StrF(_T("End OpenId, Id: %d, Only CF_TEXT: %s"), id, pasteOptions.ToString().GetString()));
+	CLogger::Log(StrF(_T("End OpenId, Id: %d, Only CF_TEXT: %s"), id, pasteOptions.ToString().GetString()));
 
 	return TRUE;
 }
 
 BOOL CQPasteWnd::OpenSelection(CSpecialPasteOptions pasteOptions)
 {
-	Log(_T("Start Open Selection"));
+	CLogger::Log(_T("Start Open Selection"));
 	ARRAY IDs;
 	m_lstHeader.GetSelectionItemData(IDs);
 
@@ -1146,7 +1107,7 @@ BOOL CQPasteWnd::OpenSelection(CSpecialPasteOptions pasteOptions)
 
 		if (CGetSetOptions::m_bShowPersistent && CGetSetOptions::GetAutoHide())
 		{
-			MinMaxWindow(FORCE_MIN);
+			MinMaxWindow(CDittoWindow::ForceMin);
 		}
 	}
 	else
@@ -1154,10 +1115,10 @@ BOOL CQPasteWnd::OpenSelection(CSpecialPasteOptions pasteOptions)
 		CString errorMessage;
 		errorMessage.Format(_T("Paste Error - %s"), paste.m_lastErrorMessage.GetString());
 		m_popupMsg.Show(errorMessage, CPoint(0, 0), true);
-		SetTimer(TIMER_ERROR_MSG, CGetSetOptions::GetErrorMsgPopupTimeout(), NULL);
+		SetTimer(TimerErrorMsg, CGetSetOptions::GetErrorMsgPopupTimeout(), NULL);
 	}
 
-	Log(_T("End Open Selection"));
+	CLogger::Log(_T("End Open Selection"));
 	return TRUE;
 }
 
@@ -1273,9 +1234,9 @@ LRESULT CQPasteWnd::OnReloadClipInUI(WPARAM wParam, LPARAM lParam)
 
 	if (CGetSetOptions::m_maintainSearchView &&
 		m_strSearch != _T("") &&
-		updateFlags & UPDATE_AFTER_PASTE_SELECT_CLIP)
+		updateFlags & CClipRefreshFlags::AfterPasteSelectClip)
 	{
-		Log(_T("Currently searching for something and setting to maintain search view is enabled, not refreshing clip order"));
+		CLogger::Log(_T("Currently searching for something and setting to maintain search view is enabled, not refreshing clip order"));
 		return FALSE;
 	}
 
@@ -1308,7 +1269,7 @@ LRESULT CQPasteWnd::OnReloadClipInUI(WPARAM wParam, LPARAM lParam)
 
 	ULONGLONG endTick = GetTickCount64();
 	if ((endTick - startTick) > 150)
-		Log(StrF(_T("Paste Timing OnReloadClipInUI: %llu, ClipId: %d"), endTick - startTick, clipId));
+		CLogger::Log(StrF(_T("Paste Timing OnReloadClipInUI: %llu, ClipId: %d"), endTick - startTick, clipId));
 
 	return foundClip;
 }
@@ -1317,7 +1278,7 @@ BOOL CQPasteWnd::ApplyReloadedClip(CMainTable &item, const ReloadedClip &reloade
 {
 	BOOL foundClip = FALSE;
 
-	if (updateFlags & UPDATE_AFTER_PASTE_SELECT_CLIP)
+	if (updateFlags & CClipRefreshFlags::AfterPasteSelectClip)
 	{
 		item.m_datePasted = reloaded.lastPasted;
 
@@ -1342,7 +1303,7 @@ BOOL CQPasteWnd::ApplyReloadedClip(CMainTable &item, const ReloadedClip &reloade
 		m_lstHeader.RedrawWindow();
 		SelectFocusID();
 	}
-	else if (updateFlags & UPDATE_CLIP_DESCRIPTION)
+	else if (updateFlags & CClipRefreshFlags::ClipDescription)
 	{
 		item.m_Desc = reloaded.description;
 
@@ -1361,7 +1322,7 @@ LRESULT CQPasteWnd::OnRefreshView(WPARAM wParam, LPARAM /*lParam*/)
 {
 	MSG msg;
 	// remove all additional refresh view messages from the queue
-	while (::PeekMessage(&msg, m_hWnd, WM_REFRESH_VIEW, WM_REFRESH_VIEW, PM_REMOVE)) {}
+	while (::PeekMessage(&msg, m_hWnd, CDittoMessage::RefreshView, CDittoMessage::RefreshView, PM_REMOVE)) {}
 
 	if (theApp.m_bShowingQuickPaste)
 	{
@@ -1373,7 +1334,7 @@ LRESULT CQPasteWnd::OnRefreshView(WPARAM wParam, LPARAM /*lParam*/)
 		}
 	}
 
-	Log(_T("OnRefreshView - Start"));
+	CLogger::Log(_T("OnRefreshView - Start"));
 	CString action;
 
 	theApp.m_FocusID = -1;
@@ -1404,7 +1365,7 @@ LRESULT CQPasteWnd::OnRefreshView(WPARAM wParam, LPARAM /*lParam*/)
 		action = _T("Cleared Items");
 	}
 
-	Log(StrF(_T("OnRefreshView - End - Count: %d, Action: %s"), m_listItems.size(), action.GetString()));
+	CLogger::Log(StrF(_T("OnRefreshView - End - Count: %d, Action: %s"), m_listItems.size(), action.GetString()));
 
 	return TRUE;
 }
@@ -1425,7 +1386,7 @@ void CQPasteWnd::UpdateStatus(bool /*bRepaintImmediately*/)
 
 	if (CGetSetOptions::m_bShowPersistent)
 	{
-		title = (StrF(_T("%s %s"), _T(QPASTE_TITLE), theApp.m_Language.GetString("top_window", "[Always on top]").GetString()));
+		title = (StrF(_T("%s %s"), s_qpasteTitle, theApp.m_Language.GetString("top_window", "[Always on top]").GetString()));
 	}
 
 	if (theApp.IsClipboardViewerConnected() == FALSE)
@@ -1466,7 +1427,7 @@ void CQPasteWnd::UpdateStatus(bool /*bRepaintImmediately*/)
 
 	SetToolTipText(title);
 
-	CString windowTitle = _T(QPASTE_TITLE);
+	CString windowTitle = s_qpasteTitle;
 
 	if (CGetSetOptions::m_bShowPersistent)
 	{
@@ -1488,11 +1449,11 @@ void CQPasteWnd::UpdateStatus(bool /*bRepaintImmediately*/)
 
 BOOL CQPasteWnd::FillList(CString csSQLSearch)
 {
-	KillTimer(TIMER_DO_SEARCH);
+	KillTimer(TimerDoSearch);
 
 	m_lstHeader.HidePopup(true);
 
-	Log(StrF(_T("Start Fill List - %s"), csSQLSearch.GetString()));
+	CLogger::Log(StrF(_T("Start Fill List - %s"), csSQLSearch.GetString()));
 
 	m_lstHeader.SetSearchText(csSQLSearch);
 
@@ -1557,7 +1518,7 @@ BOOL CQPasteWnd::FillList(CString csSQLSearch)
 
 	countSql.Replace(_T("%"), _T("%%"));
 	sql.Replace(_T("%"), _T("%%"));
-	Log(StrF(_T("Start Fill List - Count SQL: %s, Query SQL: %s"), countSql.GetString(), sql.GetString()));
+	CLogger::Log(StrF(_T("Start Fill List - Count SQL: %s, Query SQL: %s"), countSql.GetString(), sql.GetString()));
 
 	return TRUE;
 }
@@ -1862,9 +1823,9 @@ const std::array<CQPasteWnd::MenuValueCheck, 5> CQPasteWnd::s_linesPerRowMenuChe
 } };
 
 const std::array<CQPasteWnd::MenuValueCheck, 3> CQPasteWnd::s_positionMenuChecks{ {
-	{ POS_AT_CARET, ID_MENU_POSITIONING_ATCARET },
-	{ POS_AT_CURSOR, ID_MENU_POSITIONING_ATCURSOR },
-	{ POS_AT_PREVIOUS, ID_MENU_POSITIONING_ATPREVIOUSPOSITION },
+	{ CGetSetOptions::PosAtCaret, ID_MENU_POSITIONING_ATCARET },
+	{ CGetSetOptions::PosAtCursor, ID_MENU_POSITIONING_ATCURSOR },
+	{ CGetSetOptions::PosAtPrevious, ID_MENU_POSITIONING_ATPREVIOUSPOSITION },
 } };
 
 const std::array<CQPasteWnd::MenuValueCheck, 4> CQPasteWnd::s_captionPosMenuChecks{ {
@@ -1875,9 +1836,9 @@ const std::array<CQPasteWnd::MenuValueCheck, 4> CQPasteWnd::s_captionPosMenuChec
 } };
 
 const std::array<CQPasteWnd::MenuValueCheck, 3> CQPasteWnd::s_doubleClickCaptionMenuChecks{ {
-	{ TOGGLES_ALLWAYS_ON_TOP, ID_MENU_QUICKOPTIONS_DOUBLECLICKINGONCAPTION_TOGGLESALWAYSONTOP },
-	{ TOGGLES_ALLWAYS_SHOW_DESCRIPTION, ID_MENU_QUICKOPTIONS_DOUBLECLICKINGONCAPTION_TOGGLESALWAYSSHOWDESCRIPTION },
-	{ ROLLES_UP_WINDOW, ID_MENU_QUICKOPTIONS_DOUBLECLICKINGONCAPTION_ROLLUPWINDOW },
+	{ CGetSetOptions::TogglesAlwaysOnTop, ID_MENU_QUICKOPTIONS_DOUBLECLICKINGONCAPTION_TOGGLESALWAYSONTOP },
+	{ CGetSetOptions::TogglesAlwaysShowDescription, ID_MENU_QUICKOPTIONS_DOUBLECLICKINGONCAPTION_TOGGLESALWAYSSHOWDESCRIPTION },
+	{ CGetSetOptions::RollsUpWindow, ID_MENU_QUICKOPTIONS_DOUBLECLICKINGONCAPTION_ROLLUPWINDOW },
 } };
 
 void CQPasteWnd::SetMenuChecks(CMenu* pMenu)
@@ -2046,22 +2007,22 @@ void CQPasteWnd::OnMenuDelete()
 
 void CQPasteWnd::OnMenuPositioningAtcaret()
 {
-	CGetSetOptions::SetQuickPastePosition(POS_AT_CARET);
+	CGetSetOptions::SetQuickPastePosition(CGetSetOptions::PosAtCaret);
 }
 
 void CQPasteWnd::OnMenuPositioningAtcursor()
 {
-	CGetSetOptions::SetQuickPastePosition(POS_AT_CURSOR);
+	CGetSetOptions::SetQuickPastePosition(CGetSetOptions::PosAtCursor);
 }
 
 void CQPasteWnd::OnMenuPositioningAtpreviousposition()
 {
-	CGetSetOptions::SetQuickPastePosition(POS_AT_PREVIOUS);
+	CGetSetOptions::SetQuickPastePosition(CGetSetOptions::PosAtPrevious);
 }
 
 void CQPasteWnd::OnMenuOptions()
 {
-	theApp.m_pMainFrame->SendMessage(WM_SHOW_OPTIONS, 0, 0);
+	theApp.m_pMainFrame->SendMessage(CDittoMessage::ShowOptions, 0, 0);
 }
 
 void CQPasteWnd::OnMenuExitprogram()
@@ -2132,26 +2093,26 @@ void CQPasteWnd::OnMenuFirsttenhotkeysShowhotkeytext()
 
 void CQPasteWnd::OnViewcaptionbaronRight()
 {
-	SetCaptionOn(CAPTION_RIGHT, false, CGetSetOptions::m_Theme.GetCaptionSize(), CGetSetOptions::m_Theme.GetCaptionFontSize());
-	CGetSetOptions::SetCaptionPos(CAPTION_RIGHT);
+	SetCaptionOn(CGetSetOptions::CaptionOnRight, false, CGetSetOptions::m_Theme.GetCaptionSize(), CGetSetOptions::m_Theme.GetCaptionFontSize());
+	CGetSetOptions::SetCaptionPos(CGetSetOptions::CaptionOnRight);
 }
 
 void CQPasteWnd::OnViewcaptionbaronBottom()
 {
-	SetCaptionOn(CAPTION_BOTTOM, false, CGetSetOptions::m_Theme.GetCaptionSize(), CGetSetOptions::m_Theme.GetCaptionFontSize());
-	CGetSetOptions::SetCaptionPos(CAPTION_BOTTOM);
+	SetCaptionOn(CGetSetOptions::CaptionOnBottom, false, CGetSetOptions::m_Theme.GetCaptionSize(), CGetSetOptions::m_Theme.GetCaptionFontSize());
+	CGetSetOptions::SetCaptionPos(CGetSetOptions::CaptionOnBottom);
 }
 
 void CQPasteWnd::OnViewcaptionbaronLeft()
 {
-	SetCaptionOn(CAPTION_LEFT, false, CGetSetOptions::m_Theme.GetCaptionSize(), CGetSetOptions::m_Theme.GetCaptionFontSize());
-	CGetSetOptions::SetCaptionPos(CAPTION_LEFT);
+	SetCaptionOn(CGetSetOptions::CaptionOnLeft, false, CGetSetOptions::m_Theme.GetCaptionSize(), CGetSetOptions::m_Theme.GetCaptionFontSize());
+	CGetSetOptions::SetCaptionPos(CGetSetOptions::CaptionOnLeft);
 }
 
 void CQPasteWnd::OnViewcaptionbaronTop()
 {
-	SetCaptionOn(CAPTION_TOP, false, CGetSetOptions::m_Theme.GetCaptionSize(), CGetSetOptions::m_Theme.GetCaptionFontSize());
-	CGetSetOptions::SetCaptionPos(CAPTION_TOP);
+	SetCaptionOn(CGetSetOptions::CaptionOnTop, false, CGetSetOptions::m_Theme.GetCaptionSize(), CGetSetOptions::m_Theme.GetCaptionFontSize());
+	CGetSetOptions::SetCaptionPos(CGetSetOptions::CaptionOnTop);
 }
 
 void CQPasteWnd::OnMenuAutohide()
@@ -2188,19 +2149,19 @@ void CQPasteWnd::OnMenuQuickoptionsAllwaysshowdescription()
 
 void CQPasteWnd::OnMenuQuickoptionsDoubleclickingoncaptionTogglesalwaysontop()
 {
-	CGetSetOptions::SetDoubleClickingOnCaptionDoes(TOGGLES_ALLWAYS_ON_TOP);
+	CGetSetOptions::SetDoubleClickingOnCaptionDoes(CGetSetOptions::TogglesAlwaysOnTop);
 
 }
 
 void CQPasteWnd::OnMenuQuickoptionsDoubleclickingoncaptionRollupwindow()
 {
-	CGetSetOptions::SetDoubleClickingOnCaptionDoes(ROLLES_UP_WINDOW);
+	CGetSetOptions::SetDoubleClickingOnCaptionDoes(CGetSetOptions::RollsUpWindow);
 
 }
 
 void CQPasteWnd::OnMenuQuickoptionsDoubleclickingoncaptionTogglesshowdescription()
 {
-	CGetSetOptions::SetDoubleClickingOnCaptionDoes(TOGGLES_ALLWAYS_SHOW_DESCRIPTION);
+	CGetSetOptions::SetDoubleClickingOnCaptionDoes(CGetSetOptions::TogglesAlwaysShowDescription);
 }
 
 void CQPasteWnd::OnMenuQuickoptionsPromptfornewgroupnames()
@@ -2465,7 +2426,7 @@ void CQPasteWnd::OnMenuExport()
 	memset(&ofn, 0, sizeof(ofn));
 
 	CString csInitialDir = CGetSetOptions::GetLastImportDir();
-	STRCPY(szDir, csInitialDir);
+	_tcscpy(szDir, csInitialDir);
 
 	ofn.lStructSize = sizeof(OPENFILENAME);
 	ofn.hwndOwner = m_hWnd;
@@ -2770,12 +2731,12 @@ void CQPasteWnd::OnKeyStateUp()
 	{
 		if (m_bModifersMoveActive)
 		{
-			Log(_T("OnKeyStateUp"));
-			SetTimer(TIMER_PASTE_FROM_MODIFER, CGetSetOptions::GetKeyStatePasteDelay(), NULL);
+			CLogger::Log(_T("OnKeyStateUp"));
+			SetTimer(TimerPasteFromModifier, CGetSetOptions::GetKeyStatePasteDelay(), NULL);
 		}
 		else
 		{
-			Log(_T("OnKeyStateUp - Modifers not active"));
+			CLogger::Log(_T("OnKeyStateUp - Modifers not active"));
 		}
 	}
 }
@@ -2784,7 +2745,7 @@ void CQPasteWnd::SetKeyModiferState(bool bActive)
 {
 	if (CGetSetOptions::m_moveSelectionOnOpenHotkey)
 	{
-		Log(StrF(_T("SetKeyModiferState %d"), bActive));
+		CLogger::Log(StrF(_T("SetKeyModiferState %d"), bActive));
 		m_bModifersMoveActive = bActive;
 	}
 }
@@ -2818,7 +2779,7 @@ void CQPasteWnd::CheckMiddleClickActions()
 {
 	MSG msg;
 	msg.lParam = 0;
-	msg.wParam = VK_MOUSE_MIDDLE_CLICK;
+	msg.wParam = CMouseKey::MiddleClick;
 	msg.message = WM_KEYDOWN;
 	if (CheckActions(&msg) == false)
 	{
@@ -2899,13 +2860,13 @@ bool CQPasteWnd::CheckActions(MSG* pMsg)
 	{
 		if (m_actions.OnMsg(pMsg, a))
 		{
-			KillTimer(TIMER_DO_ACTION);
+			KillTimer(TimerDoAction);
 			ret = DoAction(a);
 		}
 		else if (a.Cmd > 0)
 		{
 			m_timerAction = a;
-			SetTimer(TIMER_DO_ACTION, CGetSetOptions::m_doubleKeyStrokeTimeout, NULL);
+			SetTimer(TimerDoAction, CGetSetOptions::m_doubleKeyStrokeTimeout, NULL);
 
 			ret = true;
 		}
@@ -3346,14 +3307,14 @@ bool CQPasteWnd::DoActionToggleFileLogging()
 {
 	if (CGetSetOptions::m_bEnableDebugLogging)
 	{
-		Log(_T("turning file logging OFF"));
+		CLogger::Log(_T("turning file logging OFF"));
 	}
 
 	CGetSetOptions::m_bEnableDebugLogging = !CGetSetOptions::m_bEnableDebugLogging;
 
 	if (CGetSetOptions::m_bEnableDebugLogging)
 	{
-		Log(_T("turning file logging ON"));
+		CLogger::Log(_T("turning file logging ON"));
 	}
 
 	return true;
@@ -3363,14 +3324,14 @@ bool CQPasteWnd::DoActionToggleOutputDebugString()
 {
 	if (CGetSetOptions::m_bEnableDebugLogging)
 	{
-		Log(_T("turning DebugString logging OFF"));
+		CLogger::Log(_T("turning DebugString logging OFF"));
 	}
 
 	CGetSetOptions::m_outputDebugStringLogging = !CGetSetOptions::m_outputDebugStringLogging;
 
 	if (CGetSetOptions::m_bEnableDebugLogging)
 	{
-		Log(_T("turning DebugString logging ON"));
+		CLogger::Log(_T("turning DebugString logging ON"));
 	}
 
 	return true;
@@ -3378,7 +3339,7 @@ bool CQPasteWnd::DoActionToggleOutputDebugString()
 
 bool CQPasteWnd::DoActionForceCloseWindow()
 {
-	Log(_T("Force closing window from hot keys"));
+	CLogger::Log(_T("Force closing window from hot keys"));
 	HideQPasteWindow(true);
 
 	return true;
@@ -3389,35 +3350,35 @@ bool CQPasteWnd::DoActionCloseWindow()
 	bool ret = false;
 	if (m_bModifersMoveActive)
 	{
-		Log(_T("Escape key hit setting modifers to NOT active"));
+		CLogger::Log(_T("Escape key hit setting modifers to NOT active"));
 		m_bModifersMoveActive = false;
 		ret = true;
 	}
 	else
 	{
-		Log(_T("close 1"));
+		CLogger::Log(_T("close 1"));
 
 		if (m_lstHeader.IsToolTipShowPersistant() == false &&
 			m_lstHeader.IsToolTipWindowVisible())
 		{
 			m_lstHeader.HidePopup(true);
-			Log(_T("close 2"));
+			CLogger::Log(_T("close 2"));
 			ret = true;
 		}
 		else if (m_strSQLSearch.IsEmpty() == FALSE)
 		{
 			OnCancelFilter(0, 0);
-			Log(_T("close 3"));
+			CLogger::Log(_T("close 3"));
 			ret = true;
 		}
 		else
 		{
 			if (CGetSetOptions::GetShowPersistent() && this->GetMinimized() == false)
 			{
-				MinMaxWindow(FORCE_MIN);
+				MinMaxWindow(CDittoWindow::ForceMin);
 				theApp.m_activeWnd.ReleaseFocus();
 
-				Log(_T("close 4"));
+				CLogger::Log(_T("close 4"));
 
 				ret = true;
 			}
@@ -3427,13 +3388,13 @@ bool CQPasteWnd::DoActionCloseWindow()
 				{
 					HideQPasteWindow(true);
 					ret = true;
-					Log(_T("close 5"));
+					CLogger::Log(_T("close 5"));
 				}
 			}
 		}
 	}
 
-	Log(_T("close 6"));
+	CLogger::Log(_T("close 6"));
 
 	return ret;
 }
@@ -3782,7 +3743,7 @@ bool CQPasteWnd::DoActionMoveClipToGroup()
 		{
 			int nGroup = dlg.GetSelectedGroup();
 
-			Log(StrF(_T("Move to Group, GroupId: %d"), nGroup));
+			CLogger::Log(StrF(_T("Move to Group, GroupId: %d"), nGroup));
 
 			if (nGroup >= -1)
 			{
@@ -3830,7 +3791,7 @@ bool CQPasteWnd::DoClipCompare()
 		}
 		else if (CGetSetOptions::GetAutoHide())
 		{
-			MinMaxWindow(FORCE_MIN);
+			MinMaxWindow(CDittoWindow::ForceMin);
 		}
 
 		CClipCompare compare;
@@ -3840,7 +3801,7 @@ bool CQPasteWnd::DoClipCompare()
 	}
 	else
 	{
-		Log(StrF(_T("DoClipCompare, at least 2 clips need to be selected, count: %d"), IDs.GetCount()));
+		CLogger::Log(StrF(_T("DoClipCompare, at least 2 clips need to be selected, count: %d"), IDs.GetCount()));
 	}
 
 	return false;
@@ -3859,7 +3820,7 @@ bool CQPasteWnd::DoSelectLeftSideCompare()
 	}
 	else
 	{
-		Log(StrF(_T("DoSelectLeftSideCompare, no selected clip, not assigning left side")));
+		CLogger::Log(StrF(_T("DoSelectLeftSideCompare, no selected clip, not assigning left side")));
 	}
 
 	return false;
@@ -3882,7 +3843,7 @@ bool CQPasteWnd::DoSelectRightSideAndDoCompare()
 			}
 			else if (CGetSetOptions::GetAutoHide())
 			{
-				MinMaxWindow(FORCE_MIN);
+				MinMaxWindow(CDittoWindow::ForceMin);
 			}
 
 			CClipCompare compare;
@@ -3892,12 +3853,12 @@ bool CQPasteWnd::DoSelectRightSideAndDoCompare()
 		}
 		else
 		{
-			Log(StrF(_T("DoSelectRightSideAndDoCompare, no selected clips")));
+			CLogger::Log(StrF(_T("DoSelectRightSideAndDoCompare, no selected clips")));
 		}
 	}
 	else
 	{
-		Log(StrF(_T("DoSelectRightSideAndDoCompare, no left side selected, select left side first")));
+		CLogger::Log(StrF(_T("DoSelectRightSideAndDoCompare, no left side selected, select left side first")));
 	}
 
 	return false;
@@ -3930,7 +3891,7 @@ bool CQPasteWnd::DoExportToTextFile()
 	memset(&ofn, 0, sizeof(ofn));
 
 	CString csInitialDir = CGetSetOptions::GetLastImportDir();
-	STRCPY(szDir, csInitialDir);
+	_tcscpy(szDir, csInitialDir);
 
 	ofn.lStructSize = sizeof(OPENFILENAME);
 	ofn.hwndOwner = m_hWnd;
@@ -3982,7 +3943,7 @@ bool CQPasteWnd::DoExportToTextFile()
 				}
 				else
 				{
-					Log(StrF(_T("Failed to find a valid file name for starting path: %s"), startingFilePath.GetString()));
+					CLogger::Log(StrF(_T("Failed to find a valid file name for starting path: %s"), startingFilePath.GetString()));
 				}
 			}
 		}
@@ -4106,7 +4067,7 @@ bool CQPasteWnd::DoPasteAsImage()
 
 bool CQPasteWnd::DoSaveCurrentClipboard()
 {
-	theApp.m_pMainFrame->PostMessage(WM_SAVE_CLIPBOARD, 0, 0);
+	theApp.m_pMainFrame->PostMessage(CDittoMessage::SaveClipboard, 0, 0);
 
 	return true;
 }
@@ -4797,7 +4758,7 @@ bool CQPasteWnd::DoActionSaveCF_HDROP_FileData()
 	if (errorMessage.GetLength() > 0)
 	{
 		m_popupMsg.Show(errorMessage, CPoint(0, 0), true);
-		SetTimer(TIMER_ERROR_MSG, CGetSetOptions::GetErrorMsgPopupTimeout(), NULL);
+		SetTimer(TimerErrorMsg, CGetSetOptions::GetErrorMsgPopupTimeout(), NULL);
 	}
 
 	m_lstHeader.RefreshVisibleRows();
@@ -4888,7 +4849,7 @@ bool CQPasteWnd::DoExportToBitMapFile()
 	memset(&ofn, 0, sizeof(ofn));
 
 	CString csInitialDir = CGetSetOptions::GetLastImportDir();
-	STRCPY(szDir, csInitialDir);
+	_tcscpy(szDir, csInitialDir);
 
 	ofn.lStructSize = sizeof(OPENFILENAME);
 	ofn.hwndOwner = m_hWnd;
@@ -4945,7 +4906,7 @@ bool CQPasteWnd::DoExportToBitMapFile()
 			}
 			else
 			{
-				Log(StrF(_T("Failed to find a valid file name for starting path: %s"), startingFilePath.GetString()));
+				CLogger::Log(StrF(_T("Failed to find a valid file name for starting path: %s"), startingFilePath.GetString()));
 			}
 		}
 	}
@@ -5008,7 +4969,7 @@ void CQPasteWnd::OnBegindrag(NMHDR* pNMHDR, LRESULT* pResult)
 	CProcessPaste paste;
 	paste.m_pastedFromGroup = (theApp.m_GroupID > 0);
 
-	if (CONTROL_PRESSED)
+	if (CKeyboard::IsControlPressed())
 	{
 		paste.m_pasteOptions.m_dragDropFilesOnly = true;
 	}
@@ -5027,17 +4988,17 @@ void CQPasteWnd::OnBegindrag(NMHDR* pNMHDR, LRESULT* pResult)
 		clips.Add(m_lstHeader.GetItemData(pLV->iItem));
 	}
 
-	this->SetTimer(TIMER_DRAG_HIDE_WINDOW, 500, NULL);
+	this->SetTimer(TimerDragHideWindow, 500, NULL);
 
 	if (!paste.DoDrag() && !paste.m_lastErrorMessage.IsEmpty())  // FALSE without a message: drop cancelled
 	{
 		CString errorMessage;
 		errorMessage.Format(_T("Drag Error - %s"), paste.m_lastErrorMessage.GetString());
 		m_popupMsg.Show(errorMessage, CPoint(0, 0), true);
-		SetTimer(TIMER_ERROR_MSG, CGetSetOptions::GetErrorMsgPopupTimeout(), NULL);
+		SetTimer(TimerErrorMsg, CGetSetOptions::GetErrorMsgPopupTimeout(), NULL);
 	}
 
-	KillTimer(TIMER_DRAG_HIDE_WINDOW);
+	KillTimer(TimerDragHideWindow);
 
 
 	if (CGetSetOptions::m_bShowPersistent)
@@ -5095,12 +5056,12 @@ void CQPasteWnd::GetDispInfo(NMHDR* pNMHDR, LRESULT* /*pResult*/)
 		GetDispInfoParam(pItem);
 	}
 
-	if (pItem->mask & LVIF_CF_DIB && CGetSetOptions::m_bDrawThumbnail)
+	if (pItem->mask & CQListCtrl::s_lvifCfDib && CGetSetOptions::m_bDrawThumbnail)
 	{
 		GetDispInfoExtraFormat(pItem, CF_DIB, m_cf_NO_dibCache, m_cf_dibCache);
 	}
 
-	if (pItem->mask & LVIF_CF_RICHTEXT && CGetSetOptions::m_bDrawRTF)
+	if (pItem->mask & CQListCtrl::s_lvifCfRichText && CGetSetOptions::m_bDrawRTF)
 	{
 		GetDispInfoExtraFormat(pItem, theApp.m_RTFFormat, m_cf_NO_rtfCache, m_cf_rtfCache);
 	}
@@ -5117,7 +5078,7 @@ void CQPasteWnd::GetDispInfoText(LV_ITEM* pItem)
 
 		CControlTextBuffer::CopyCut(pItem->pszText, pItem->cchTextMax, cs);
 
-		//						Log(StrF(_T("DrawItem index %d - "), pItem->iItem));//, pItem->pszText));
+		//						CLogger::Log(StrF(_T("DrawItem index %d - "), pItem->iItem));//, pItem->pszText));
 	}
 	else
 	{
@@ -5174,10 +5135,10 @@ bool CQPasteWnd::IsListItemSticky(const CMainTable &item)
 {
 	if (theApp.m_GroupID > 0)
 	{
-		return item.m_stickyClipGroupOrder != INVALID_STICKY;
+		return item.m_stickyClipGroupOrder != CClip::InvalidSticky;
 	}
 
-	return item.m_stickyClipOrder != INVALID_STICKY;
+	return item.m_stickyClipOrder != CClip::InvalidSticky;
 }
 
 void CQPasteWnd::QueueListItemLoad(int item)
@@ -5197,7 +5158,7 @@ void CQPasteWnd::QueueListItemLoad(int item)
 	{
 		CPoint loadItem(item, (m_lstHeader.GetTopIndex() + (m_lstHeader.GetCountPerPage() * 2)));
 
-		//Log(StrF(_T("DrawItem index %d, add: %d"), loadItem.x, loadItem.y));
+		//CLogger::Log(StrF(_T("DrawItem index %d, add: %d"), loadItem.x, loadItem.y));
 		m_loadItems.push_back(loadItem);
 	}
 
@@ -5411,7 +5372,7 @@ void CQPasteWnd::AppendToolTipSticky(CppSQLite3Query &q, CString &clipData)
 	if (theApp.m_GroupID > 0)
 	{
 		int sticky = q.getIntField(_T("stickyClipGroupOrder"));
-		if (sticky != INVALID_STICKY)
+		if (sticky != CClip::InvalidSticky)
 		{
 			clipData += "\r\n";
 			clipData += _T(" - Sticky In Group");
@@ -5420,7 +5381,7 @@ void CQPasteWnd::AppendToolTipSticky(CppSQLite3Query &q, CString &clipData)
 	else
 	{
 		int sticky = q.getIntField(_T("stickyClipOrder"));
-		if (sticky != INVALID_STICKY)
+		if (sticky != CClip::InvalidSticky)
 		{
 			clipData += "\r\n";
 			clipData += _T(" - Sticky");
@@ -5474,7 +5435,7 @@ void CQPasteWnd::OnNcLButtonDblClk(UINT nHitTest, CPoint point)
 	{
 		switch (CGetSetOptions::m_bDoubleClickingOnCaptionDoes)
 		{
-		case TOGGLES_ALLWAYS_ON_TOP:
+		case CGetSetOptions::TogglesAlwaysOnTop:
 		{
 			theApp.ShowPersistent(!CGetSetOptions::m_bShowPersistent);
 			if (CGetSetOptions::m_bShowPersistent)
@@ -5487,10 +5448,10 @@ void CQPasteWnd::OnNcLButtonDblClk(UINT nHitTest, CPoint point)
 			UpdateStatus();
 		}
 		break;
-		case TOGGLES_ALLWAYS_SHOW_DESCRIPTION:
+		case CGetSetOptions::TogglesAlwaysShowDescription:
 			DoAction(ActionEnums::SHOWDESCRIPTION);
 			break;
-		case ROLLES_UP_WINDOW:
+		case CGetSetOptions::RollsUpWindow:
 			MinMaxWindow();
 			break;
 		}
@@ -5647,12 +5608,12 @@ void CQPasteWnd::OnSearchEditChange()
 
 	if (m_bHandleSearchTextChange == false)
 	{
-		//Log(_T("Handle text change is NOT set"));
+		//CLogger::Log(_T("Handle text change is NOT set"));
 		return;
 	}
 
-	KillTimer(TIMER_DO_SEARCH);
-	SetTimer(TIMER_DO_SEARCH, 250, NULL);
+	KillTimer(TimerDoSearch);
+	SetTimer(TimerDoSearch, 250, NULL);
 
 	return;
 }
@@ -5857,7 +5818,7 @@ LRESULT CQPasteWnd::OnRefeshRow(WPARAM wParam, LPARAM lParam)
 		m_lstHeader.Invalidate();
 		m_lstHeader.RedrawWindow();
 
-		//Log(_T("End of first load, showing listbox and loading actual count, then accelerators"));
+		//CLogger::Log(_T("End of first load, showing listbox and loading actual count, then accelerators"));
 	}
 
 	return true;
@@ -5917,26 +5878,26 @@ void CQPasteWnd::OnDestroy()
 
 void CQPasteWnd::OnTimer(UINT_PTR nIDEvent)
 {
-	if (nIDEvent == TIMER_DO_SEARCH)
+	if (nIDEvent == TimerDoSearch)
 	{
 		OnDoSearchTimer();
 	}
-	if (nIDEvent == TIMER_PASTE_FROM_MODIFER)
+	if (nIDEvent == TimerPasteFromModifier)
 	{
 		OnPasteFromModifierTimer();
 	}
-	else if (nIDEvent == TIMER_ERROR_MSG)
+	else if (nIDEvent == TimerErrorMsg)
 	{
-		KillTimer(TIMER_ERROR_MSG);
+		KillTimer(TimerErrorMsg);
 		m_popupMsg.Hide();
 	}
-	else if (nIDEvent == TIMER_DRAG_HIDE_WINDOW)
+	else if (nIDEvent == TimerDragHideWindow)
 	{
 		OnDragHideWindowTimer();
 	}
-	else if (nIDEvent == TIMER_DO_ACTION)
+	else if (nIDEvent == TimerDoAction)
 	{
-		KillTimer(TIMER_DO_ACTION);
+		KillTimer(TimerDoAction);
 
 		OutputDebugString(StrF(_T("DoActionTimer, cmd: %d"), m_timerAction.Cmd));
 
@@ -5952,9 +5913,9 @@ void CQPasteWnd::OnTimer(UINT_PTR nIDEvent)
 
 void CQPasteWnd::OnDoSearchTimer()
 {
-	Log(_T("TIMER_DO_SEARCH timer\n"));
+	CLogger::Log(_T("TIMER_DO_SEARCH timer\n"));
 
-	KillTimer(TIMER_DO_SEARCH);
+	KillTimer(TimerDoSearch);
 
 	CString csText;
 	m_search.GetWindowText(csText);
@@ -5970,17 +5931,17 @@ void CQPasteWnd::OnDoSearchTimer()
 
 void CQPasteWnd::OnPasteFromModifierTimer()
 {
-	Log(_T("TIMER_PASTE_FROM_MODIFER timer\n"));
-	KillTimer(TIMER_PASTE_FROM_MODIFER);
+	CLogger::Log(_T("TIMER_PASTE_FROM_MODIFER timer\n"));
+	KillTimer(TimerPasteFromModifier);
 	if (m_bModifersMoveActive)
 	{
-		Log(_T("Open Selection\n"));
+		CLogger::Log(_T("Open Selection\n"));
 		CSpecialPasteOptions pasteOptions;
 		OpenSelection(pasteOptions);
 	}
 	else
 	{
-		Log(_T("m_bModifersMoveActive set to false\n"));
+		CLogger::Log(_T("m_bModifersMoveActive set to false\n"));
 	}
 }
 
@@ -5997,7 +5958,7 @@ void CQPasteWnd::OnDragHideWindowTimer()
 	if (PtInRect(&windowRect, mouse) == FALSE)
 	{
 		HideQPasteWindow(false, false);
-		KillTimer(TIMER_DRAG_HIDE_WINDOW);
+		KillTimer(TimerDragHideWindow);
 	}
 }
 
@@ -6033,7 +5994,7 @@ LRESULT CQPasteWnd::OnSelectAll(WPARAM /*wParam*/, LPARAM /*lParam*/)
 
 	if ((int)m_listItems.size() < m_lstHeader.GetItemCount())
 	{
-		Log(_T("All items selected loading all items from the db"));
+		CLogger::Log(_T("All items selected loading all items from the db"));
 
 		CPoint loadItem(0, m_lstHeader.GetItemCount());
 		m_loadItems.push_back(loadItem);
@@ -6052,13 +6013,13 @@ LRESULT CQPasteWnd::OnShowHideScrollBar(WPARAM wParam, LPARAM /*lParam*/)
 {
 	if (wParam == 1)
 	{
-		Log(_T("OnShowHideScrollBar Showing ScrollBars"));
+		CLogger::Log(_T("OnShowHideScrollBar Showing ScrollBars"));
 		m_showScrollBars = true;
 		MoveControls();
 	}
 	else
 	{
-		Log(_T("OnShowHideScrollBar Hiding ScrollBars"));
+		CLogger::Log(_T("OnShowHideScrollBar Hiding ScrollBars"));
 
 		m_showScrollBars = false;
 		MoveControls();
@@ -6097,7 +6058,7 @@ LRESULT CQPasteWnd::OnUpdateScrollBar(WPARAM wParam, LPARAM /*lParam*/)
 //	case CTLCOLOR_STATIC:
 //		switch (pWnd->GetDlgCtrlID())
 //		{
-//			case ON_TOP_WARNING:
+//			case IdOnTopWarning:
 //			{
 //				pDC->SetBkMode(TRANSPARENT);
 //				pDC->SetBkColor(RGB(0, 0, 255));
@@ -6484,7 +6445,7 @@ void CQPasteWnd::OnMenuGoToEntry()
 	m_lstHeader.SetListPos(targetIndex);
 	m_lstHeader.SetFocus();
 
-	Log(StrF(_T("GoToEntry: scrolled to index %d of %d"), targetIndex, totalRows));
+	CLogger::Log(StrF(_T("GoToEntry: scrolled to index %d of %d"), targetIndex, totalRows));
 }
 
 bool CQPasteWnd::LoadGoToEntryKey(long targetID, GoToEntryKey &key)
@@ -6539,7 +6500,7 @@ int CQPasteWnd::GoToEntryRank(const CString &filter, const GoToEntryKey &key)
 
 void CQPasteWnd::WaitForListLoad()
 {
-	// The list loader thread reports completion via PostMessage(NM_SET_LIST_COUNT),
+	// The list loader thread reports completion via PostMessage(CQListCtrl::NmSetListCount),
 	// so we must pump messages while waiting or that handler never runs.
 	ULONGLONG waitStart = GetTickCount64();
 	while (WaitForSingleObject(m_thread.m_SearchingEvent, 0) == WAIT_TIMEOUT)
@@ -6745,7 +6706,7 @@ void CQPasteWnd::OnNMClickList1(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 	m_search.GetWindowText(csText);
 	if (csText == _T("crash"))
 	{
-		if (CONTROL_PRESSED)
+		if (CKeyboard::IsControlPressed())
 		{
 			if (GetKeyState(VK_SHIFT) & 0x8000)
 			{
@@ -6756,7 +6717,7 @@ void CQPasteWnd::OnNMClickList1(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 
 	MSG msg;
 	msg.lParam = 0;
-	msg.wParam = VK_MOUSE_CLICK;
+	msg.wParam = CMouseKey::Click;
 	msg.message = WM_KEYDOWN;
 	if (CheckActions(&msg) == false)
 	{
@@ -6769,7 +6730,7 @@ void CQPasteWnd::OnNMDblclkList1(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
 	MSG msg;
 	msg.lParam = 0;
-	msg.wParam = VK_MOUSE_DOUBLE_CLICK;
+	msg.wParam = CMouseKey::DoubleClick;
 	msg.message = WM_KEYDOWN;
 	if (CheckActions(&msg) == false)
 	{
@@ -6783,7 +6744,7 @@ void CQPasteWnd::OnNMRClickList1(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
 	MSG msg;
 	msg.lParam = 0;
-	msg.wParam = VK_MOUSE_RIGHT_CLICK;
+	msg.wParam = CMouseKey::RightClick;
 	msg.message = WM_KEYDOWN;
 	if (CheckActions(&msg) == false)
 	{
@@ -6795,7 +6756,7 @@ void CQPasteWnd::OnNMRDblclkList1(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
 	/*MSG msg;
 	msg.lParam = 0;
-	msg.wParam = VK_MOUSE_RIGHT_CLICK;
+	msg.wParam = CMouseKey::RightClick;
 	msg.message = WM_KEYDOWN;
 	if (CheckActions(&msg) == false)
 	{
@@ -7382,7 +7343,7 @@ void CQPasteWnd::SetTransparency(int percent)
 
 		float fPercent = percent / (float)100.0;
 
-		m_Alpha.SetOpacity(OPACITY_MAX - (int)(fPercent * OPACITY_MAX));
+		m_Alpha.SetOpacity(CAlphaBlend::OpacityMax - (int)(fPercent * CAlphaBlend::OpacityMax));
 	}
 	else
 	{
@@ -7400,7 +7361,7 @@ void CQPasteWnd::SetCurrentTransparency()
 
 		float fPercent = CGetSetOptions::GetTransparencyPercent() / (float)100.0;
 
-		m_Alpha.SetOpacity(OPACITY_MAX - (int)(fPercent * OPACITY_MAX));
+		m_Alpha.SetOpacity(CAlphaBlend::OpacityMax - (int)(fPercent * CAlphaBlend::OpacityMax));
 	}
 	else
 	{
@@ -7507,12 +7468,12 @@ void CQPasteWnd::OnFirstShowstartupmessage()
 
 void CQPasteWnd::OnFirstRestoreDb()
 {
-	theApp.m_pMainFrame->PostMessage(WM_RESTORE_DB, 0, 0);
+	theApp.m_pMainFrame->PostMessage(CDittoMessage::RestoreDb, 0, 0);
 }
 
 void CQPasteWnd::OnFirstBackupDb()
 {
-	theApp.m_pMainFrame->PostMessage(WM_BACKUP_DB, 0, 0);
+	theApp.m_pMainFrame->PostMessage(CDittoMessage::BackupDb, 0, 0);
 }
 
 void CQPasteWnd::OnMenuDeleteallnonusedclips()

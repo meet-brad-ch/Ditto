@@ -88,7 +88,7 @@ bool CAccels::OnMsg(MSG *pMsg, CAccel &a)
 	{
 		mod = GetKeyStateModifiers();
 	}
-    const DWORD key = ACCEL_MAKEKEY(vkey, mod);
+    const DWORD key = MakeKey(vkey, mod);
 
     //CString cs;
     //cs.Format(_T("Key: %d, Mod: %d, vkey: %d, diff: %d\r\n"), key, mod, vkey, (GetTickCount() - m_firstMapTick));

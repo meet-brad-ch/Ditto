@@ -30,12 +30,6 @@
 #include "stdafx.h"
 #include "AlphaBlend.h"
 
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
-
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
@@ -90,7 +84,7 @@ BOOL CAlphaBlend::SetWindowHandle(CWnd *pWnd)
 
 BOOL CAlphaBlend::SetOpacity(int nOpacity)
 {
-	if (nOpacity >= 0 && nOpacity <= OPACITY_MAX)
+	if (nOpacity >= 0 && nOpacity <= OpacityMax)
 	{
 		m_nOpacity = nOpacity;
 		if (m_bTransparent)
@@ -109,7 +103,7 @@ void CAlphaBlend::SetTransparent(BOOL bTransparent)
 	if (bTransparent)
 	{
 		// make sure they have set it up properly
-		ASSERT(m_nOpacity >= 0 && m_nOpacity <= OPACITY_MAX);
+		ASSERT(m_nOpacity >= 0 && m_nOpacity <= OpacityMax);
 		ASSERT(m_hWnd && ::IsWindow(m_hWnd));
 
 		// make it transparent

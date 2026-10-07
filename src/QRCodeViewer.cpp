@@ -7,8 +7,6 @@
 #include "MainTableFunctions.h"
 #include "ErrorReport.h"
 
-#define TIMER_BUTTON_UP 1
-
 // QRCodeViewer
 
 IMPLEMENT_DYNAMIC(QRCodeViewer, CWnd)
@@ -89,8 +87,8 @@ BOOL QRCodeViewer::CreateEx(CWnd *pParentWnd, CString desc, int rowHeight, LOGFO
 		rect.top = parentRect.top;
 
 		rect.right = rect.left + m_DittoWindow.m_borderSize + m_DittoWindow.m_borderSize + m_qrCodeDrawer.ImageWidth() + (CGetSetOptions::GetQRCodeBorderPixels() * 2);
-		if (m_DittoWindow.m_captionPosition == CAPTION_LEFT ||
-			m_DittoWindow.m_captionPosition == CAPTION_RIGHT)
+		if (m_DittoWindow.m_captionPosition == CGetSetOptions::CaptionOnLeft ||
+			m_DittoWindow.m_captionPosition == CGetSetOptions::CaptionOnRight)
 		{
 			rect.right += m_DittoWindow.m_captionBorderWidth;
 		}
@@ -193,7 +191,7 @@ void QRCodeViewer::OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpn
 	m_DittoWindow.DoNcCalcSize(bCalcValidRects, lpncsp);
 }
 
-HITTEST_RET QRCodeViewer::OnNcHitTest(CPoint point) 
+LRESULT QRCodeViewer::OnNcHitTest(CPoint point) 
 {
 	UINT Ret = m_DittoWindow.DoNcHitTest(this, point);
 	if(Ret == -1)
@@ -220,7 +218,7 @@ void QRCodeViewer::OnNcLButtonDown(UINT nHitTest, CPoint point)
 
 	if (buttonPressed != 0)
 	{
-		SetTimer(TIMER_BUTTON_UP, 100, NULL);
+		SetTimer(TimerButtonUp, 100, NULL);
 	}
 
 	CWnd::OnNcLButtonDown(nHitTest, point);
@@ -232,12 +230,12 @@ void QRCodeViewer::OnNcLButtonUp(UINT nHitTest, CPoint point)
 
 	switch(lRet)
 	{
-	case BUTTON_CLOSE:
+	case CDittoWindow::ButtonClose:
 		::PostMessage(m_hWnd, WM_CLOSE, 0, 0);
 		break;
 	}
 
-	KillTimer(TIMER_BUTTON_UP);
+	KillTimer(TimerButtonUp);
 
 	CWnd::OnNcLButtonUp(nHitTest, point);
 }
@@ -264,12 +262,12 @@ void QRCodeViewer::OnTimer(UINT_PTR nIDEvent)
 {
 	switch (nIDEvent)
 	{
-		case TIMER_BUTTON_UP:
+		case TimerButtonUp:
 		{
 			if ((GetKeyState(VK_LBUTTON) & 0x100) == 0)
 			{
 				m_DittoWindow.DoNcLButtonUp(this, 0, CPoint(0, 0));
-				KillTimer(TIMER_BUTTON_UP);
+				KillTimer(TimerButtonUp);
 			}
 			break;
 		}

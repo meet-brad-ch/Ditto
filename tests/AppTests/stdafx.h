@@ -5,5 +5,5 @@
  */
 #pragma once
 
-#define VC_EXTRALEAN
+// VC_EXTRALEAN is set in AppTests.vcxproj's PreprocessorDefinitions
 #include <afxwin.h>

@@ -130,8 +130,8 @@ int CDittoRulerRichEditCtrl::SaveToDB(BOOL bUpdateDesc)
 
 	if(m_rtf.GetModify() == FALSE)
 	{
-		Log(_T("Clip has not been modified"));
-		return DIDNT_NEED_TO_SAVE;
+		CLogger::Log(_T("Clip has not been modified"));
+		return DidntNeedToSave;
 	}
 
 	bool bSetModifyToFalse = true;
@@ -166,7 +166,7 @@ int CDittoRulerRichEditCtrl::SaveToDB(BOOL bUpdateDesc)
 			bSetModifyToFalse = AddNewClip(Clip, bUpdateDesc);
 		}
 
-		nRet = SAVED_CLIP_TO_DB;
+		nRet = SavedClipToDb;
 
 		if(bUpdateDesc)
 			theApp.RefreshView();
@@ -242,7 +242,7 @@ bool CDittoRulerRichEditCtrl::LoadRTFData(CClip &Clip)
 	CString csRTFOriginal = GetRTF();
 	if(csRTFOriginal.IsEmpty())
 	{
-		Log(_T("Rtf is empty, returning"));
+		CLogger::Log(_T("Rtf is empty, returning"));
 		return false;
 	}
 
@@ -279,11 +279,11 @@ bool CDittoRulerRichEditCtrl::LoadTextData(CClip &Clip)
 			if(csText.IsEmpty() == FALSE)
 				break;
 
-			Log(StrF(_T("Get Text still empty pass = %d"), i));
+			CLogger::Log(StrF(_T("Get Text still empty pass = %d"), i));
 		}
 		if(csText.IsEmpty())
 		{
-			Log(_T("Get Text still empty pass returning"));
+			CLogger::Log(_T("Get Text still empty pass returning"));
 			return false;
 		}
 	}

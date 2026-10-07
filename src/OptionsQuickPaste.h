@@ -79,6 +79,9 @@ public:
 	afx_msg void OnBnClickedButtonDiffBrowse();
 
 private:
+	/** @brief The theme list's entry for the built-in theme. */
+	static constexpr const TCHAR* s_defaultTheme{_T("(Default)")};
+
 	/** @brief Saves the quick paste position of the checked position radio button. */
 	void ApplyQuickPastePosition();
 	/** @brief Saves the chosen theme and flags the parent when the theme changed. */

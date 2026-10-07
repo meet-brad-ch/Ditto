@@ -11,10 +11,6 @@
 #include "GdipButton.h"
 #include "SnapWindow.h"
 
-#define	SWAP_MIN_MAX			1
-#define FORCE_MIN				2
-#define FORCE_MAX				3
-
 class CWndEx : public CWnd
 {
 // Construction
@@ -38,7 +34,7 @@ public:
 public:
 	void InvalidateNc();
 	void SetCaptionOn(int nPos, bool bOnstartup, int captionSize, int captionFontSize);
-	void MinMaxWindow(long lOption = SWAP_MIN_MAX);
+	void MinMaxWindow(long lOption = CDittoWindow::SwapMinMax);
 	void GetWindowRectEx(LPRECT lpRect);
 	bool SetCaptionColorActive(BOOL bPersistant, BOOL ConnectedToClipboard);
 	void SetAutoMaxDelay(long lDelay)	{ m_lDelayMaxSeconds = lDelay; }
@@ -59,6 +55,15 @@ protected:
 	CToolTipCtrl m_toolTip;
 	SnapWindow m_snap;
 
+	/** @brief The timer ids of the window's caption (SetTimer / OnTimer). */
+	enum : UINT
+	{
+		/** @brief Restores the minimized window when the mouse is still over its caption. */
+		TimerAutoMax = 5,
+		/** @brief Finishes a caption click once the mouse button is up. */
+		TimerButtonUp = 6,
+	};
+
 // Implementation
 public:
 	virtual ~CWndEx();
@@ -69,7 +74,7 @@ protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnNcPaint();
 	afx_msg void OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp);
-	afx_msg HITTEST_RET OnNcHitTest(CPoint point);
+	afx_msg LRESULT OnNcHitTest(CPoint point);
 	afx_msg void OnNcLButtonDown(UINT nHitTest, CPoint point);
 	afx_msg void OnNcMouseMove(UINT nHitTest, CPoint point);
 	afx_msg void OnNcLButtonUp(UINT nHitTest, CPoint point);

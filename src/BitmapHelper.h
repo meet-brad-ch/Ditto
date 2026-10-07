@@ -9,8 +9,6 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#define IS_WIN30_DIB(lpbi)  ((*(LPDWORD)(lpbi)) == sizeof(BITMAPINFOHEADER))
-
 #include "clip.h"
 
 class CBitmapHelper
@@ -18,6 +16,17 @@ class CBitmapHelper
 public:
 	CBitmapHelper();
 	virtual ~CBitmapHelper();
+
+	/**
+	 * @brief Whether a packed DIB has a Windows 3.0 style header (BITMAPINFOHEADER): its first
+	 * DWORD, the header size, is sizeof(BITMAPINFOHEADER).
+	 * @param lpbi The packed DIB.
+	 * @return true for a BITMAPINFOHEADER DIB.
+	 */
+	static bool		IsWin30Dib(const void* lpbi)
+	{
+		return (*static_cast<const DWORD*>(lpbi)) == sizeof(BITMAPINFOHEADER);
+	}
 
 	static int		GetCBitmapWidth(const CBitmap& cbm);
 	static int		GetCBitmapHeight(const CBitmap& cbm);

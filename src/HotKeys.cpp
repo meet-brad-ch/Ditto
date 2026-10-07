@@ -62,16 +62,16 @@ CString CHotKey::GetHotKeyDisplayStatic(DWORD dwHotKey)
 
 	switch (vk)
 	{
-	case VK_MOUSE_CLICK:
+	case CMouseKey::Click:
 		keyDisplay += "Click";
 		break;
-	case VK_MOUSE_DOUBLE_CLICK:
+	case CMouseKey::DoubleClick:
 		keyDisplay += "Double Click";
 		break;
-	case VK_MOUSE_RIGHT_CLICK:
+	case CMouseKey::RightClick:
 		keyDisplay += "Right Click";
 		break;
-	case VK_MOUSE_MIDDLE_CLICK:
+	case CMouseKey::MiddleClick:
 		keyDisplay += "Middle Click";
 		break;
 	default:
@@ -215,11 +215,11 @@ void CHotKey::CopyFromCtrl(CHotKeyCtrl& ctrl, HWND hParent, int nWindowsCBID)
 
 void CHotKey::CopyToCtrl(CHotKeyCtrl& ctrl, HWND hParent, int nWindowsCBID)
 {
-	DWORD shortcut = ACCEL_MAKEKEY(LOBYTE(m_Key), ((HIBYTE(m_Key)) &~HOTKEYF_EXT));
+	DWORD shortcut = CAccels::MakeKey(LOBYTE(m_Key), ((HIBYTE(m_Key)) &~HOTKEYF_EXT));
 
 	if (IsExtendedKey(LOBYTE(shortcut)))
 	{
-		shortcut = ACCEL_MAKEKEY(LOBYTE(shortcut), (HIBYTE(shortcut) | HOTKEYF_EXT));
+		shortcut = CAccels::MakeKey(LOBYTE(shortcut), (HIBYTE(shortcut) | HOTKEYF_EXT));
 	}
 
 	long lModifiers = HIBYTE(shortcut);
@@ -275,7 +275,7 @@ bool CHotKey::Unregister(bool bOnShowingDitto)
 		}
 		else
 		{
-			Log(_T("Unregister FAILED!"));
+			CLogger::Log(_T("Unregister FAILED!"));
 			ASSERT(0);
 		}
 	}
@@ -406,7 +406,7 @@ void CHotKeys::RegisterAll(bool bMsgOnError)
 		{
 			str =  "Error Registering ";
 			str += pHotKey->GetName();
-			Log(str);
+			CLogger::Log(str);
 			if(bMsgOnError)
 				AfxMessageBox(str);
 		}
@@ -425,7 +425,7 @@ void CHotKeys::UnregisterAll(bool bMsgOnError, bool bOnShowDitto)
 		{
 			str = "Error Unregistering ";
 			str += pHotKey->GetName();
-			Log(str);
+			CLogger::Log(str);
 			if(bMsgOnError)
 				AfxMessageBox(str);
 		}

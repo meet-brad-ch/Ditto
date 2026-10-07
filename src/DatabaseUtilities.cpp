@@ -226,7 +226,7 @@ void ReOrderStickyClips(int parentID, CppSQLite3DB& db)
 {
 	try
 	{
-		Log(StrF(_T("Start of ReOrderStickyClips, ParentId %d"), parentID));
+		CLogger::Log(StrF(_T("Start of ReOrderStickyClips, ParentId %d"), parentID));
 
 		//groups where created with 0 in these fields, fix them up if they are 0
 		if (parentID == -1)
@@ -277,7 +277,7 @@ void ReOrderStickyClips(int parentID, CppSQLite3DB& db)
 			}
 		}
 
-		Log(StrF(_T("End of ReOrderStickyClips, ParentId %d"), parentID));
+		CLogger::Log(StrF(_T("End of ReOrderStickyClips, ParentId %d"), parentID));
 	}
 	catch (CppSQLite3Exception& e)
 	{
@@ -571,7 +571,7 @@ BOOL BackupDB(CString dbPath, CString backupPath)
 
 	status.Show(StrF(_T("Ditto - %s - %s"), msg.GetString(), backupPath.GetString()));
 
-	Log(StrF(_T("Start backing up db, from: %s to %s"), dbPath.GetString(), backupPath.GetString()));
+	CLogger::Log(StrF(_T("Start backing up db, from: %s to %s"), dbPath.GetString(), backupPath.GetString()));
 
 	try
 	{
@@ -610,7 +610,7 @@ BOOL BackupDB(CString dbPath, CString backupPath)
 		return FALSE;
 	}
 
-	Log(StrF(_T("Done backing up db, to: %s"), backupPath.GetString()));
+	CLogger::Log(StrF(_T("Done backing up db, to: %s"), backupPath.GetString()));
 	return TRUE;
 }
 
@@ -622,11 +622,11 @@ BOOL RestoreDB(CString backupPath)
 	CString msg = theApp.m_Language.GetString("RestoreDbMsg", "Restoring database");
 	status.Show(StrF(_T("Ditto - %s - %s"), msg.GetString(), backupPath.GetString()));
 
-	Log(StrF(_T("Start restoring db, from: %s"), backupPath.GetString()));
+	CLogger::Log(StrF(_T("Start restoring db, from: %s"), backupPath.GetString()));
 
 	using namespace nsPath;
 	CPath backupPathPath(backupPath);
-	const CString tempPath = CGetSetOptions::GetPath(PATH_RESTORE_TEMP) + backupPathPath.GetName();
+	const CString tempPath = CGetSetOptions::GetPath(CGetSetOptions::PathRestoreTemp) + backupPathPath.GetName();
 
 	try
 	{
@@ -676,7 +676,7 @@ BOOL RestoreDB(CString backupPath)
 		return FALSE;
 	}
 
-	Log(StrF(_T("Done restoring db, from: %s"), backupPath.GetString()));
+	CLogger::Log(StrF(_T("Done restoring db, from: %s"), backupPath.GetString()));
 	theApp.RefreshView();
 	return TRUE;
 }
@@ -864,7 +864,7 @@ static void RemoveClipsOverMaxEntries(CppSQLite3DB& db)
 			{
 				clipId = q.getIntField(_T("lID"));
 				IDs.Add(clipId);
-				Log(StrF(_T("From MaxEntries - Deleting Id: %d"), clipId));
+				CLogger::Log(StrF(_T("From MaxEntries - Deleting Id: %d"), clipId));
 			}
 
 			q.nextRow();
@@ -898,7 +898,7 @@ static void RemoveExpiredClips(CppSQLite3DB& db)
 		{
 			IDs.Add(q.getIntField(_T("lID")));
 
-			Log(StrF(_T("From Clips Expire - Deleting Id: %d"), q.getIntField(_T("lID"))));
+			CLogger::Log(StrF(_T("From Clips Expire - Deleting Id: %d"), q.getIntField(_T("lID"))));
 
 			q.nextRow();
 		}
@@ -912,7 +912,7 @@ static void RemoveExpiredClips(CppSQLite3DB& db)
 
 BOOL RemoveOldEntries(bool checkIdleTime)
 {
-	Log(StrF(_T("Beginning of RemoveOldEntries MaxEntries: %d - Keep days: %d"), CGetSetOptions::GetMaxEntries(), CGetSetOptions::GetExpiredEntries()));
+	CLogger::Log(StrF(_T("Beginning of RemoveOldEntries MaxEntries: %d - Keep days: %d"), CGetSetOptions::GetMaxEntries(), CGetSetOptions::GetExpiredEntries()));
 
 	try
 	{
@@ -932,7 +932,7 @@ BOOL RemoveOldEntries(bool checkIdleTime)
 
 		int toDeleteCount = db.execScalar(_T("SELECT COUNT(clipID) FROM MainDeletes"));
 
-		Log(StrF(_T("Before Deleting emptied out data, count: %d, Idle Seconds: %f"), toDeleteCount, IdleSeconds()));
+		CLogger::Log(StrF(_T("Before Deleting emptied out data, count: %d, Idle Seconds: %f"), toDeleteCount, IdleSeconds()));
 
 		//Only delete 1 at a time, was finding that it was taking a long time to delete clips, locking the db and causing other queries
 		//to lock up
@@ -950,7 +950,7 @@ BOOL RemoveOldEntries(bool checkIdleTime)
 			}
 			else
 			{
-				Log(StrF(_T("Computer has not been idle long enough to delete clips, Min Idle: %d, current Idle: %d"),
+				CLogger::Log(StrF(_T("Computer has not been idle long enough to delete clips, Min Idle: %d, current Idle: %d"),
 					CGetSetOptions::GetIdleSecondsBeforeDelete(), idleSeconds));
 
 				break;
@@ -960,7 +960,7 @@ BOOL RemoveOldEntries(bool checkIdleTime)
 
 		toDeleteCount = db.execScalar(_T("SELECT COUNT(clipID) FROM MainDeletes"));
 
-		Log(StrF(_T("After Deleting emptied out data rows, Count: %d, toDelete: %d"), deleteCount, toDeleteCount));
+		CLogger::Log(StrF(_T("After Deleting emptied out data rows, Count: %d, toDelete: %d"), deleteCount, toDeleteCount));
 	}
 	catch (CppSQLite3Exception& e)
 	{
@@ -968,14 +968,14 @@ BOOL RemoveOldEntries(bool checkIdleTime)
 		return FALSE;
 	}
 
-		Log(_T("End of RemoveOldEntries"));
+		CLogger::Log(_T("End of RemoveOldEntries"));
 
 	return TRUE;
 }
 
 BOOL DeleteNonUsedClips(bool fromAppWindow)
 {
-	Log(_T("Start of delete all non used clips"));
+	CLogger::Log(_T("Start of delete all non used clips"));
 	CClipIDs IDs;
 
 	CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID FROM Main WHERE bIsGroup = 0 AND lShortCut = 0 AND lParentID <= 0 AND lDontAutoDelete = 0 AND stickyClipOrder = -(2147483647) AND stickyClipGroupOrder = -(2147483647)"));
@@ -984,7 +984,7 @@ BOOL DeleteNonUsedClips(bool fromAppWindow)
 	{
 		IDs.Add(q.getIntField(_T("lID")));
 
-		Log(StrF(_T("From Clips DeleteNonUsedClips - Deleting Id: %d"), q.getIntField(_T("lID"))));
+		CLogger::Log(StrF(_T("From Clips DeleteNonUsedClips - Deleting Id: %d"), q.getIntField(_T("lID"))));
 
 		q.nextRow();
 	}
@@ -999,7 +999,7 @@ BOOL DeleteNonUsedClips(bool fromAppWindow)
 		deletedTableCount = theApp.m_db.execDMLEx(_T("DELETE FROM MainDeletes"));
 	}
 
-	Log(StrF(_T("End of delete all non used clips, clips deleted: %d, delete table delted: %d"), clipsDeleted, deletedTableCount));
+	CLogger::Log(StrF(_T("End of delete all non used clips, clips deleted: %d, delete table delted: %d"), clipsDeleted, deletedTableCount));
 
 	return TRUE;
 }
@@ -1011,7 +1011,7 @@ BOOL EnsureDirectory(CString csPath)
 	TCHAR fname[_MAX_FNAME];
 	TCHAR ext[_MAX_EXT];
 
-	SPLITPATH(csPath, drive, dir, fname, ext);
+	_tsplitpath(csPath, drive, dir, fname, ext);
 
 	CString csDir(drive);
 	csDir += dir;
@@ -1029,17 +1029,17 @@ BOOL EnsureDirectory(CString csPath)
 
 // BOOL RunZippApp(CString csCommandLine)
 // {
-// 	CString csLocalPath = GETENV(_T("U3_HOST_EXEC_PATH"));
-// 	FIX_CSTRING_PATH(csLocalPath);
+// 	CString csLocalPath = _tgetenv(_T("U3_HOST_EXEC_PATH"));
+// 	CFolderPath::AddTrailingSlash(csLocalPath);
 // 
-// 	CString csZippApp = GETENV(_T("U3_DEVICE_EXEC_PATH"));
-// 	FIX_CSTRING_PATH(csZippApp);
+// 	CString csZippApp = _tgetenv(_T("U3_DEVICE_EXEC_PATH"));
+// 	CFolderPath::AddTrailingSlash(csZippApp);
 // 	csZippApp += "7za.exe";
 // 
 // 	csZippApp += " ";
 // 	csZippApp += csCommandLine;
 // 
-// 	Log(csZippApp);
+// 	CLogger::Log(csZippApp);
 // 
 // 	STARTUPINFO			StartupInfo;
 // 	PROCESS_INFORMATION	ProcessInformation;
@@ -1064,7 +1064,7 @@ BOOL EnsureDirectory(CString csPath)
 // 
 // 		CString cs;
 // 		cs.Format(_T("Exit code from unzip = %d"), dwExitCode);
-// 		Log(cs);
+// 		CLogger::Log(cs);
 // 
 // 		if(dwExitCode != 0)
 // 		{
@@ -1074,7 +1074,7 @@ BOOL EnsureDirectory(CString csPath)
 // 	else
 // 	{
 // 		bRet = FALSE;
-// 		Log(_T("Create Process Failed"));
+// 		CLogger::Log(_T("Create Process Failed"));
 // 	}
 // 
 // 	csZippApp.ReleaseBuffer();
@@ -1086,16 +1086,16 @@ BOOL EnsureDirectory(CString csPath)
 // {
 // 	BOOL bRet = FALSE;
 // 
-// 	CString csZippedPath = GETENV(_T("U3_APP_DATA_PATH"));
-// 	FIX_CSTRING_PATH(csZippedPath);
+// 	CString csZippedPath = _tgetenv(_T("U3_APP_DATA_PATH"));
+// 	CFolderPath::AddTrailingSlash(csZippedPath);
 // 	
 // 	CString csUnZippedPath = csZippedPath;
 // 	csUnZippedPath += "Ditto.db";
 // 
 // 	csZippedPath += "Ditto.7z";
 // 	
-// 	CString csLocalPath = GETENV(_T("U3_HOST_EXEC_PATH"));
-// 	FIX_CSTRING_PATH(csLocalPath);
+// 	CString csLocalPath = _tgetenv(_T("U3_HOST_EXEC_PATH"));
+// 	CFolderPath::AddTrailingSlash(csLocalPath);
 // 
 // 	if(FileExists(csZippedPath))
 // 	{
@@ -1127,7 +1127,7 @@ BOOL EnsureDirectory(CString csPath)
 // 
 // 	if(FileExists(csLocalPath) == FALSE)
 // 	{
-// 		Log(_T("Failed to copy files from device zip file"));
+// 		CLogger::Log(_T("Failed to copy files from device zip file"));
 // 	}
 // 
 // 	CGetSetOptions::nLastDbWriteTime = GetLastWriteTime(csLocalPath);
@@ -1138,11 +1138,11 @@ BOOL EnsureDirectory(CString csPath)
 //BOOL CopyUpDatabase()
 //{
 //	CStringA csZippedPath = "C:\\";//getenv("U3_APP_DATA_PATH");
-//	FIX_CSTRING_PATH(csZippedPath);
+//	CFolderPath::AddTrailingSlash(csZippedPath);
 //	csZippedPath += "Ditto.zip";
 
 //	CStringA csLocalPath = GetDBName();//getenv("U3_HOST_EXEC_PATH");
-//	//FIX_CSTRING_PATH(csLocalPath);
+//	//CFolderPath::AddTrailingSlash(csLocalPath);
 //	//csLocalPath += "Ditto.db";
 //
 //	CZipper Zip;

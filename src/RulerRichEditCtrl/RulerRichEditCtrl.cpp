@@ -57,12 +57,6 @@
 
 
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 /////////////////////////////////////////////////////////////////////////////
 // Registered messages for ruler/CRulerRichEditCtrl communication
 
@@ -71,8 +65,6 @@ UINT urm_GETSCROLLPOS = ::RegisterWindowMessage( _T( "_RULERRICHEDITCTRL_GET_SCR
 UINT urm_SETCURRENTFONTNAME = ::RegisterWindowMessage( _T( "_RULERRICHEDITCTRL_SET_CURRENT_FONT_NAME" ) );
 UINT urm_SETCURRENTFONTSIZE = ::RegisterWindowMessage( _T( "_RULERRICHEDITCTRL_SET_CURRENT_FONT_SIZE" ) );
 UINT urm_SETCURRENTFONTCOLOR = ::RegisterWindowMessage( _T( "_RULERRICHEDITCTRL_SET_CURRENT_FONT_COLOR" ) );
-
-#define TOOLBAR_HEIGHT		28
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -201,7 +193,7 @@ BOOL CRulerRichEditCtrl::CreateToolbar()
 	CRect rect;
 	GetClientRect( rect );
 
-	CRect toolbarRect( 0, 0, rect.right, m_dpi.Scale(TOOLBAR_HEIGHT));
+	CRect toolbarRect( 0, 0, rect.right, m_dpi.Scale(s_toolbarHeight));
 	return m_toolbar.Create( this, toolbarRect, ToolbarIdPerDPI());
 }
 
@@ -226,7 +218,7 @@ BOOL CRulerRichEditCtrl::CreateRTFControl( BOOL autohscroll )
 	CRect rect;
 	GetClientRect( rect );
 
-	int top = TOOLBAR_HEIGHT;
+	int top = s_toolbarHeight;
 	CRect rtfRect( 0, top, rect.right, rect.bottom );
 	DWORD style = ES_NOHIDESEL|WS_CHILD|WS_VISIBLE|WS_HSCROLL|WS_VSCROLL|ES_WANTRETURN|ES_MULTILINE;
 	if( autohscroll )
@@ -249,13 +241,6 @@ BOOL CRulerRichEditCtrl::CreateRTFControl( BOOL autohscroll )
  		cf.dwEffects = 0;
  		lstrcpy( cf.szFaceName, _T( "Segoe UI" ) );
  		m_rtf.SendMessage(EM_SETCHARFORMAT, 0, (LPARAM)&cf);
-
-#ifndef SES_HYPERLINKTOOLTIPS
-#define SES_HYPERLINKTOOLTIPS   8
-#endif
-#ifndef SES_NOFOCUSLINKNOTIFY
-#define SES_NOFOCUSLINKNOTIFY   32
-#endif 
 
 		DWORD editStyle = SES_HYPERLINKTOOLTIPS | SES_NOFOCUSLINKNOTIFY;
 		m_rtf.SendMessage(EM_SETEDITSTYLE, editStyle, editStyle);
@@ -406,7 +391,7 @@ BOOL CRulerRichEditCtrl::OnNotify( WPARAM wParam, LPARAM lParam, LRESULT* pResul
    ============================================================*/
 {
 
-	if( wParam == RTF_CONTROL )
+	if( wParam == CRulerRichEdit::s_controlId )
 	{
 
 		// Update the toolbar
@@ -415,7 +400,7 @@ BOOL CRulerRichEditCtrl::OnNotify( WPARAM wParam, LPARAM lParam, LRESULT* pResul
 		// Update ruler
 		CRect rect;
 		GetClientRect( rect );
-		rect.top = TOOLBAR_HEIGHT;
+		rect.top = s_toolbarHeight;
 		rect.bottom = rect.top;
 
 		RedrawWindow( rect );
@@ -1658,7 +1643,7 @@ void CRulerRichEditCtrl::LayoutControls( int width, int height )
 {
 	int toolbarHeight = 0;
 	if( m_showToolbar )
-		toolbarHeight = m_dpi.Scale(TOOLBAR_HEIGHT);
+		toolbarHeight = m_dpi.Scale(s_toolbarHeight);
 
 	m_toolbar.MoveWindow( 0, 0, width, toolbarHeight );
 
@@ -1752,7 +1737,7 @@ bool CRulerRichEditCtrl::RunControlShortcut(WPARAM key, std::span<const ControlS
 	{
 		if(shortcut.key == key)
 		{
-			if(CONTROL_PRESSED)
+			if(CKeyboard::IsControlPressed())
 			{
 				(this->*shortcut.handler)();
 				return true;

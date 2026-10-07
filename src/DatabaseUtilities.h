@@ -12,9 +12,6 @@
 #include "DittoPopupWindow.h"
 #include "sqlite/CppSQLite3.h"
 
-#define DEFAULT_DB_NAME "Ditto.db"
-#define ERROR_OPENING_DATABASE	2
-
 BOOL CreateBackup(CString csPath);
 CString GetDBName();
 CString GetDefaultDBName();

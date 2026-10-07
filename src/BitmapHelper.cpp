@@ -11,12 +11,6 @@
 #include <memory>
 #include <span>
 
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#define new DEBUG_NEW
-#endif
-
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
@@ -185,7 +179,7 @@ BOOL CBitmapHelper::GetCBitmap(CClipFormats& clips, CDC* pDC, CBitmap* pBitMap, 
 WORD CBitmapHelper::PaletteSize(LPSTR lpDIB)
 {
 	// calculate the size required by the palette
-	if (IS_WIN30_DIB(lpDIB))
+	if (IsWin30Dib(lpDIB))
 		return (DIBNumColors(lpDIB) * sizeof(RGBQUAD));
 	else
 		return (DIBNumColors(lpDIB) * sizeof(RGBTRIPLE));
@@ -201,7 +195,7 @@ WORD CBitmapHelper::DIBNumColors(LPSTR lpDIB)
 	// If this is the case, return the appropriate value.
 
 
-	if (IS_WIN30_DIB(lpDIB))
+	if (IsWin30Dib(lpDIB))
 	{
 		DWORD dwClrUsed;
 
@@ -214,7 +208,7 @@ WORD CBitmapHelper::DIBNumColors(LPSTR lpDIB)
 	// Calculate the number of colors in the color table based on
 	// the number of bits per pixel for the DIB.
 
-	if (IS_WIN30_DIB(lpDIB))
+	if (IsWin30Dib(lpDIB))
 		wBitCount = ((LPBITMAPINFOHEADER)lpDIB)->biBitCount;
 	else
 		wBitCount = ((LPBITMAPCOREHEADER)lpDIB)->bcBitCount;

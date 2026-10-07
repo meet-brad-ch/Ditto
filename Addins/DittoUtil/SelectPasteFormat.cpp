@@ -51,10 +51,10 @@ BOOL CSelectPasteFormat::OnInitDialog()
 	}
 
 	m_Resize.SetParent(m_hWnd);
-	m_Resize.AddControl(IDC_LIST1, DR_SizeHeight | DR_SizeWidth);
-	m_Resize.AddControl(IDOK, DR_MoveTop | DR_MoveLeft);
-	m_Resize.AddControl(IDCANCEL, DR_MoveTop | DR_MoveLeft);
-	m_Resize.AddControl(IDC_CHECK_PASTE_AS_UNICODE, DR_MoveTop);
+	m_Resize.AddControl(IDC_LIST1, CDialogResizer::SizeHeight | CDialogResizer::SizeWidth);
+	m_Resize.AddControl(IDOK, CDialogResizer::MoveTop | CDialogResizer::MoveLeft);
+	m_Resize.AddControl(IDCANCEL, CDialogResizer::MoveTop | CDialogResizer::MoveLeft);
+	m_Resize.AddControl(IDC_CHECK_PASTE_AS_UNICODE, CDialogResizer::MoveTop);
 
 	return TRUE;
 }

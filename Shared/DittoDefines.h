@@ -9,8 +9,6 @@
 #include <new>
 #include <string>
 
-#define DITTO_ADD_IN_VERSION 1
-
 typedef enum
 {
 	eFuncType_PRE_PASTE
@@ -27,9 +25,15 @@ public:
 class CDittoAddinInfo
 {
 public:
+	/**
+	 * @brief The version of the add-in interface (CDittoAddinInfo, CDittoInfo) that Ditto and its
+	 * add-in DLLs exchange; a static member, so the classes' layout does not change.
+	 */
+	static constexpr int AddInVersion = 1;
+
 	CDittoAddinInfo()
 	{
-		m_nPrivateVersion = DITTO_ADD_IN_VERSION;
+		m_nPrivateVersion = AddInVersion;
 		m_AddinVersion = 0;
 		m_nSizeOfThis = sizeof(CDittoAddinInfo);
 	}
@@ -50,7 +54,7 @@ class CDittoInfo
 public:
 	CDittoInfo()
 	{
-		m_nPrivateVersion = DITTO_ADD_IN_VERSION;
+		m_nPrivateVersion = CDittoAddinInfo::AddInVersion;
 		m_nVersion = 0;
 		m_hWndDitto = NULL;
 		m_nSizeOfThis = sizeof(CDittoInfo);

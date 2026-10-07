@@ -14,7 +14,7 @@ CQPasteWndThread::CQPasteWndThread(void)
 {
 	m_rowHeight = 0;
 	m_threadName = "CQPasteWndThread";
-    m_waitTimeout = ONE_HOUR * 12;
+    m_waitTimeout = CMilliseconds::OneHour * 12;
 
     m_SearchingEvent = CreateEvent(NULL, TRUE, FALSE, _T(""));
 
@@ -36,7 +36,7 @@ void CQPasteWndThread::OnTimeOut(void * /*param*/)
 void CQPasteWndThread::OnEvent(int eventId, void *param)
 {
 	ULONGLONG startTick = GetTickCount64();
-	Log(StrF(_T("Start of OnEvent, eventId: %s"), EnumName((eCQPasteWndThreadEvents)eventId).GetString()));
+	CLogger::Log(StrF(_T("Start of OnEvent, eventId: %s"), EnumName((eCQPasteWndThreadEvents)eventId).GetString()));
 
     switch((eCQPasteWndThreadEvents)eventId)
     {
@@ -58,7 +58,7 @@ void CQPasteWndThread::OnEvent(int eventId, void *param)
     }
 
 	ULONGLONG length = GetTickCount64() - startTick;
-	Log(StrF(_T("End of OnEvent, eventId: %s, Time: %llu(ms)"), EnumName((eCQPasteWndThreadEvents)eventId).GetString(), length));
+	CLogger::Log(StrF(_T("End of OnEvent, eventId: %s, Time: %llu(ms)"), EnumName((eCQPasteWndThreadEvents)eventId).GetString(), length));
 }
 
 void CQPasteWndThread::OnSetListCount(void *param)
@@ -82,7 +82,7 @@ void CQPasteWndThread::OnSetListCount(void *param)
     try
     {
         lRecordCount = theApp.m_db.execScalar(countSQL);
-        ::PostMessage(pasteWnd->m_hWnd, NM_SET_LIST_COUNT, lRecordCount, 0);
+        ::PostMessage(pasteWnd->m_hWnd, CQListCtrl::NmSetListCount, lRecordCount, 0);
     }
 	catch (CppSQLite3Exception& e)
 	{
@@ -93,7 +93,7 @@ void CQPasteWndThread::OnSetListCount(void *param)
 
     SetEvent(m_SearchingEvent);
 
-    Log(StrF(_T("Set list count = %d, time = %llu"), lRecordCount, GetTickCount64() - lTick));
+    CLogger::Log(StrF(_T("Set list count = %d, time = %llu"), lRecordCount, GetTickCount64() - lTick));
 }
 
 void CQPasteWndThread::OnLoadItems(void *param)
@@ -114,7 +114,7 @@ void CQPasteWndThread::OnLoadItems(void *param)
 	    {
 			try
 			{
-				Log(StrF(_T("Load Items start = %d, count = %d, list size: %zu"), request.index, request.count, request.listSize));
+				CLogger::Log(StrF(_T("Load Items start = %d, count = %d, list size: %zu"), request.index, request.count, request.listSize));
 
 				CString limit;
 				limit.Format(_T(" LIMIT %d OFFSET %d"), request.count, request.index);
@@ -130,7 +130,7 @@ void CQPasteWndThread::OnLoadItems(void *param)
 				if(request.firstLoad)
 				{
 					// OnRefeshRow reads the clip id back as an int, so -2 survives the WPARAM round trip.
-					::PostMessage(pasteWnd->m_hWnd, NM_REFRESH_ROW, static_cast<WPARAM>(-2), 0);
+					::PostMessage(pasteWnd->m_hWnd, CQListCtrl::NmRefreshRow, static_cast<WPARAM>(-2), 0);
 					//allow the next thread message to process, this should be the message to set the list count
 
 					OnSetListCount(param);
@@ -144,7 +144,7 @@ void CQPasteWndThread::OnLoadItems(void *param)
 				}
 				else
 				{
-					::PostMessage(pasteWnd->m_hWnd, NM_REFRESH_ROW, static_cast<WPARAM>(-1), 0);
+					::PostMessage(pasteWnd->m_hWnd, CQListCtrl::NmRefreshRow, static_cast<WPARAM>(-1), 0);
 				}
 
 				if(request.clearFirstLoadItem)
@@ -154,11 +154,11 @@ void CQPasteWndThread::OnLoadItems(void *param)
 					pasteWnd->m_loadItems.erase(pasteWnd->m_loadItems.begin());
 				}
 
-				Log(StrF(_T("Load items End count = %d, Total Time = %llu, LoadItems: %llu, Count: %llu, Accel: %llu"), loadCount, GetTickCount64() - startTick, loadTime, countCount, acceleratorCount));
+				CLogger::Log(StrF(_T("Load items End count = %d, Total Time = %llu, LoadItems: %llu, Count: %llu, Accel: %llu"), loadCount, GetTickCount64() - startTick, loadTime, countCount, acceleratorCount));
 			}
 			catch (CppSQLite3Exception& e)	\
 			{								\
-				Log(StrF(_T("ONLoadItems - SQLITE Exception %d - %s"), e.errorCode(), e.errorMessage()));	\
+				CLogger::Log(StrF(_T("ONLoadItems - SQLITE Exception %d - %s"), e.errorCode(), e.errorMessage()));	\
 				ASSERT(FALSE);				\
 				break;
 			}	
@@ -204,7 +204,7 @@ int CQPasteWndThread::LoadItemRows(CQPasteWnd *pasteWnd, const CString &localSql
 
 		if(pasteWnd->m_bStopQuery)
 		{
-			Log(StrF(_T("StopQuery called exiting filling cache count = %d"), loadItemsIndex));
+			CLogger::Log(StrF(_T("StopQuery called exiting filling cache count = %d"), loadItemsIndex));
 			break;
 		}
 
@@ -214,10 +214,10 @@ int CQPasteWndThread::LoadItemRows(CQPasteWnd *pasteWnd, const CString &localSql
 		{
 			/*if (updateIndex != loadItemsIndex)
 			{
-				Log(StrF(_T("index difference old: %d, new: %d"), loadItemsIndex, updateIndex));
+				CLogger::Log(StrF(_T("index difference old: %d, new: %d"), loadItemsIndex, updateIndex));
 			}*/
 
-    		::PostMessage(pasteWnd->m_hWnd, NM_REFRESH_ROW, table.m_lID, updateIndex);
+    		::PostMessage(pasteWnd->m_hWnd, CQListCtrl::NmRefreshRow, table.m_lID, updateIndex);
 		}
 
 		loadItemsIndex++;
@@ -242,13 +242,13 @@ int CQPasteWndThread::StoreLoadedItem(CQPasteWnd *pasteWnd, const CMainTable &ta
 
 		updateIndex = pos;
 
-		//Log(StrF(_T("updating list pos = %d, id: %d, size: %d"), pos, table.m_lID, pasteWnd->m_listItems.size() - 1));
+		//CLogger::Log(StrF(_T("updating list pos = %d, id: %d, size: %d"), pos, table.m_lID, pasteWnd->m_listItems.size() - 1));
 	}
 	else if (listPos == pasteWnd->m_listItems.size())
 	{
 		pasteWnd->m_listItems.push_back(table);
 		updateIndex = (int)pasteWnd->m_listItems.size() - 1;
-		//Log(StrF(_T("adding (same size) list pos = %d, id: %d, size: %d"), pasteWnd->m_listItems.size()-1, table.m_lID, pasteWnd->m_listItems.size() - 1));
+		//CLogger::Log(StrF(_T("adding (same size) list pos = %d, id: %d, size: %d"), pasteWnd->m_listItems.size()-1, table.m_lID, pasteWnd->m_listItems.size() - 1));
 	}
 	else if (listPos > pasteWnd->m_listItems.size())
 	{
@@ -258,14 +258,14 @@ int CQPasteWndThread::StoreLoadedItem(CQPasteWnd *pasteWnd, const CMainTable &ta
 			empty.m_lID = -1;
 			pasteWnd->m_listItems.push_back(empty);
 
-			//Log(StrF(_T("adding dummy row size: %d"), pasteWnd->m_listItems.size()-1));
+			//CLogger::Log(StrF(_T("adding dummy row size: %d"), pasteWnd->m_listItems.size()-1));
 		}
 
 		pasteWnd->m_listItems.push_back(table);
 
 		updateIndex = (int)pasteWnd->m_listItems.size() - 1;
 
-		//Log(StrF(_T("adding list pos = %d, id: %d, size: %d"), pasteWnd->m_listItems.size()-1, table.m_lID, pasteWnd->m_listItems.size() - 1));
+		//CLogger::Log(StrF(_T("adding list pos = %d, id: %d, size: %d"), pasteWnd->m_listItems.size()-1, table.m_lID, pasteWnd->m_listItems.size() - 1));
 	}
 
 	return updateIndex;
@@ -294,7 +294,7 @@ void ReduceMapItems(CF_DibTypeMap &mapItem, CCriticalSection &critSection, CStri
 		{
 			if (std::binary_search(counterArray.begin(), counterArray.end(), iterDib->second.m_counter) == false)
 			{
-				Log(StrF(_T("reduced size of %s cache, Id: %d, Row: %d"), mapName.GetString(), iterDib->second.m_parentId, iterDib->second.m_clipRow));
+				CLogger::Log(StrF(_T("reduced size of %s cache, Id: %d, Row: %d"), mapName.GetString(), iterDib->second.m_parentId, iterDib->second.m_clipRow));
 
 				mapItem.erase(iterDib++);
 			}
@@ -304,7 +304,7 @@ void ReduceMapItems(CF_DibTypeMap &mapItem, CCriticalSection &critSection, CStri
 			}
 		}
 
-		Log(StrF(_T("reduced size of %s cache, count: %d"), mapName.GetString(), mapItem.size()));
+		CLogger::Log(StrF(_T("reduced size of %s cache, count: %d"), mapName.GetString(), mapItem.size()));
 	}
 }
 
@@ -314,7 +314,7 @@ void CQPasteWndThread::OnLoadExtraData(void *param)
 
     CQPasteWnd *pasteWnd = (CQPasteWnd*)param;
 
-    Log(_T("Start of load extra data, Bitmaps/rtf"));
+    CLogger::Log(_T("Start of load extra data, Bitmaps/rtf"));
 
     std::list<CClipFormatQListCtrl> localFormats;
 	{
@@ -347,7 +347,7 @@ void CQPasteWndThread::OnLoadExtraData(void *param)
     }
 
     SetEvent(m_SearchingEvent);
-    Log(_T("End of load extra data, Bitmaps/rtf"));
+    CLogger::Log(_T("End of load extra data, Bitmaps/rtf"));
 }
 
 bool CQPasteWndThread::NeedsExtraDataLoad(CQPasteWnd *pasteWnd, const CClipFormatQListCtrl &format)
@@ -405,12 +405,12 @@ void CQPasteWndThread::LoadExtraDataFormat(CQPasteWnd *pasteWnd, CClipFormatQLis
 		ULONGLONG timeTook = GetTickCount64() - startLoadClipData;
 		if (timeTook > 20)
 		{
-			Log(StrF(_T("GetClipData for clip %d, took: %llu"), format.m_parentId, timeTook));
+			CLogger::Log(StrF(_T("GetClipData for clip %d, took: %llu"), format.m_parentId, timeTook));
 		}
 
 		CacheExtraData(pasteWnd, format);
 
-		::PostMessage(pasteWnd->m_hWnd, NM_REFRESH_ROW, format.m_parentId, format.m_clipRow);
+		::PostMessage(pasteWnd->m_hWnd, CQListCtrl::NmRefreshRow, format.m_parentId, format.m_clipRow);
 	}
 	else
 	{
@@ -449,7 +449,7 @@ void CQPasteWndThread::CacheExtraData(CQPasteWnd *pasteWnd, CClipFormatQListCtrl
 		ULONGLONG convertTime = GetTickCount64() - startConvertImage;
 		if (convertTime > 20)
 		{
-			Log(StrF(_T("GetDibFittingToHeight for clip %d, took: %llu"), format.m_parentId, convertTime));
+			CLogger::Log(StrF(_T("GetDibFittingToHeight for clip %d, took: %llu"), format.m_parentId, convertTime));
 		}
 
 		{
@@ -459,7 +459,7 @@ void CQPasteWndThread::CacheExtraData(CQPasteWnd *pasteWnd, CClipFormatQListCtrl
 			//the cache now owns the format data, set it to delete the data in the destructor
 			pasteWnd->m_cf_dibCache[format.m_parentId].m_autoDeleteData = true;
 
-			Log(StrF(_T("Loaded, extra data for clipId: %d, Row: %d image cache count: %d"), format.m_parentId, format.m_clipRow, pasteWnd->m_cf_dibCache.size()));
+			CLogger::Log(StrF(_T("Loaded, extra data for clipId: %d, Row: %d image cache count: %d"), format.m_parentId, format.m_clipRow, pasteWnd->m_cf_dibCache.size()));
 		}
 	}
 	else if (format.m_cfType == theApp.m_RTFFormat)
@@ -471,7 +471,7 @@ void CQPasteWndThread::CacheExtraData(CQPasteWnd *pasteWnd, CClipFormatQListCtrl
 		//the cache now owns the format data, set it to delete the data in the destructor
 		pasteWnd->m_cf_rtfCache[format.m_parentId].m_autoDeleteData = true;
 
-		Log(StrF(_T("Loaded, extra data for clip %d, rtf cache count: %d"), format.m_parentId, pasteWnd->m_cf_rtfCache.size()));
+		CLogger::Log(StrF(_T("Loaded, extra data for clip %d, rtf cache count: %d"), format.m_parentId, pasteWnd->m_cf_rtfCache.size()));
 	}
 }
 

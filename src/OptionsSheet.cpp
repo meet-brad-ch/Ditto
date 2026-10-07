@@ -14,11 +14,6 @@
 #include "Misc.h"
 #include "QuickPasteKeyboard.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif 
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -107,5 +102,5 @@ BOOL COptionsSheet::OnInitDialog()
 void COptionsSheet::OnNcDestroy()
 {
 	CPropertySheet::OnNcDestroy();
-	::PostMessage(m_hWndParent, WM_OPTIONS_CLOSED, m_themeChanged, 0);
+	::PostMessage(m_hWndParent, CDittoMessage::OptionsClosed, m_themeChanged, 0);
 }

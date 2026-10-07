@@ -123,6 +123,9 @@ public:
 	// Copies the clip's data; the save settings stay this clip's own
 	const CClip& operator=(const CClip &clip);
 
+	/** @brief The sticky order of a clip that is not sticky (stored in the database's sticky columns). */
+	static constexpr int InvalidSticky = -(2147483647);
+
 	static DWORD m_LastAddedCRC;
 	static int m_lastAddedID;
 

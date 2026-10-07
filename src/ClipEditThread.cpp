@@ -7,15 +7,11 @@
 #include "ConvertRTFToText.h"
 #include "..\Shared\TextConvert.h"
 
-#define EVENT_FILE_CHANGED 1
-
-#define MAX_TIMEOUT 86400
-
 CClipEditThread::CClipEditThread()
 {
 	m_folderHandle = INVALID_HANDLE_VALUE;
 	m_threadName = _T("ClipEditTrackingThread");
-	m_waitTimeout = MAX_TIMEOUT;
+	m_waitTimeout = s_maxTimeout;
 }
 
 CClipEditThread::~CClipEditThread()
@@ -33,21 +29,21 @@ void CClipEditThread::Close()
 		m_folderHandle = INVALID_HANDLE_VALUE;
 	}
 
-	RemoveEvent(EVENT_FILE_CHANGED);
+	RemoveEvent(EventFileChanged);
 	m_overlapped.hEvent = INVALID_HANDLE_VALUE;	
 
-	CString editClipFolder = CGetSetOptions::GetPath(PATH_EDIT_CLIPS);
+	CString editClipFolder = CGetSetOptions::GetPath(CGetSetOptions::PathEditClips);
 	DeleteFolderFiles(editClipFolder, TRUE, CTimeSpan(7, 0, 0, 0));
 }
 
 void CClipEditThread::StartWatchingFolderForChanges()
 {
-	CString editClipFolder = CGetSetOptions::GetPath(PATH_EDIT_CLIPS);
+	CString editClipFolder = CGetSetOptions::GetPath(CGetSetOptions::PathEditClips);
 
 	m_folderHandle = CreateFileW(editClipFolder, FILE_LIST_DIRECTORY, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, NULL);
 	
 	m_overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-	AddEvent(EVENT_FILE_CHANGED, m_overlapped.hEvent);	
+	AddEvent(EventFileChanged, m_overlapped.hEvent);	
 
 	RefreshWatch();		
 
@@ -76,9 +72,9 @@ void CClipEditThread::RefreshWatch()
 
 void CClipEditThread::OnTimeOut(void* /*param*/)
 {
-	if (m_waitTimeout == MAX_TIMEOUT)
+	if (m_waitTimeout == s_maxTimeout)
 	{
-		CString editClipFolder = CGetSetOptions::GetPath(PATH_EDIT_CLIPS);
+		CString editClipFolder = CGetSetOptions::GetPath(CGetSetOptions::PathEditClips);
 		DeleteFolderFiles(editClipFolder, TRUE, CTimeSpan(7, 0, 0, 0));
 
 		//cleanup up the list of edits that we started, after 7 days just keeps the list from growing too large, hopefull they don't have millions of edits in 7 days
@@ -121,7 +117,7 @@ void CClipEditThread::OnTimeOut(void* /*param*/)
 		}
 
 		m_filesToSave.clear();
-		m_waitTimeout = MAX_TIMEOUT;
+		m_waitTimeout = s_maxTimeout;
 	}
 }
 
@@ -129,7 +125,7 @@ void CClipEditThread::OnEvent(int eventId, void* /*param*/)
 {
 	switch (eventId)
 	{
-		case EVENT_FILE_CHANGED:
+		case EventFileChanged:
 		{
 			OnFileChanged();
 			break;
@@ -154,7 +150,7 @@ void CClipEditThread::OnFileChanged()
 		{
 			if (ShouldSaveChangedFile(fileName))
 			{
-				Log(StrF(_T("%s file changed, adding to list to be saved back to Ditto"), fileName.GetString()));
+				CLogger::Log(StrF(_T("%s file changed, adding to list to be saved back to Ditto"), fileName.GetString()));
 				m_filesToSave[fileName] = true;
 				fileModified = true;
 			}
@@ -203,7 +199,7 @@ bool CClipEditThread::ShouldSaveChangedFile(const CString& fileName)
 			auto diff = CTime::GetCurrentTime() - startEdit;
 			if (diff.GetTotalSeconds() < CGetSetOptions::m_clipEditSaveDelayAfterLoadSeconds)
 			{
-				Log(StrF(_T("%s has changed close to when we started editing the file, diff: %lld, limit: %d, not handling change"), fileName.GetString(), diff.GetTotalSeconds(), CGetSetOptions::m_clipEditSaveDelayAfterLoadSeconds));
+				CLogger::Log(StrF(_T("%s has changed close to when we started editing the file, diff: %lld, limit: %d, not handling change"), fileName.GetString(), diff.GetTotalSeconds(), CGetSetOptions::m_clipEditSaveDelayAfterLoadSeconds));
 				addToChanges = false;
 			}
 		}
@@ -211,7 +207,7 @@ bool CClipEditThread::ShouldSaveChangedFile(const CString& fileName)
 		{
 			if (fileName.Find(newClipFileName, 0) == 0)
 			{
-				Log(StrF(_T("New clip file changed: %s, this was not in Ditto list of files we initiated the change for, not handling change"), fileName.GetString()));
+				CLogger::Log(StrF(_T("New clip file changed: %s, this was not in Ditto list of files we initiated the change for, not handling change"), fileName.GetString()));
 				addToChanges = false;
 			}
 		}
@@ -220,7 +216,7 @@ bool CClipEditThread::ShouldSaveChangedFile(const CString& fileName)
 	if (fileName.Find(editClipFileName, 0) == -1 && fileName.Find(newClipFileName, 0) == -1)
 	{
 		addToChanges = false;
-		Log(StrF(_T("File %s is not a Ditto file of format EditClip or NewClip, not handling change"), fileName.GetString()));
+		CLogger::Log(StrF(_T("File %s is not a Ditto file of format EditClip or NewClip, not handling change"), fileName.GetString()));
 	}
 
 	return addToChanges;
@@ -230,7 +226,7 @@ bool CClipEditThread::SaveToClip(CString filePath, int id)
 {
 	bool savedClip = false;
 
-	Log(StrF(_T("ClipFile: %s, ClipId: %d, has changed saving back to Ditto"), filePath.GetString(), id));
+	CLogger::Log(StrF(_T("ClipFile: %s, ClipId: %d, has changed saving back to Ditto"), filePath.GetString(), id));
 
 	id = ResolveNewClipId(filePath, id);
 
@@ -239,7 +235,7 @@ bool CClipEditThread::SaveToClip(CString filePath, int id)
 	{
 		if (clip.LoadMainTable(id) == FALSE)
 		{
-			Log(StrF(_T("Error loading clip id: %d, not saving"), id));
+			CLogger::Log(StrF(_T("Error loading clip id: %d, not saving"), id));
 			return false;
 		}
 
@@ -248,7 +244,7 @@ bool CClipEditThread::SaveToClip(CString filePath, int id)
 
 	EditedClipData data{};
 
-	CString editClipFolder = CGetSetOptions::GetPath(PATH_EDIT_CLIPS);
+	CString editClipFolder = CGetSetOptions::GetPath(CGetSetOptions::PathEditClips);
 	CString fullFilePath = editClipFolder + filePath;
 
 	nsPath::CPath path(filePath);
@@ -261,7 +257,7 @@ bool CClipEditThread::SaveToClip(CString filePath, int id)
 
 	if (IsEmptyNewClip(id, data))
 	{
-		Log(StrF(_T("Not saving new clip that is empty, no text or image bytes, path: %s, clip id: %d, not saving"), fullFilePath.GetString(), id));
+		CLogger::Log(StrF(_T("Not saving new clip that is empty, no text or image bytes, path: %s, clip id: %d, not saving"), fullFilePath.GetString(), id));
 		return false;
 	}
 
@@ -295,13 +291,13 @@ bool CClipEditThread::ReadEditedFile(const CString& fullFilePath, const CString&
 	{
 		if (ReadImageFile(fullFilePath, data.cf_dibBytes, data.pngBytes) == false)
 		{
-			Log(StrF(_T("Error reading image file %s, clip id: %d, not saving"), fullFilePath.GetString(), id));
+			CLogger::Log(StrF(_T("Error reading image file %s, clip id: %d, not saving"), fullFilePath.GetString(), id));
 			return false;
 		}
 	}
 	else if (ReadFile(fullFilePath, data.unicode, data.unicodeText, data.utf8Text) == false)
 	{
-		Log(StrF(_T("Error reading text file %s, clip id: %d, not saving"), fullFilePath.GetString(), id));
+		CLogger::Log(StrF(_T("Error reading text file %s, clip id: %d, not saving"), fullFilePath.GetString(), id));
 		return false;
 	}
 	return true;
@@ -357,7 +353,7 @@ void CClipEditThread::RefreshEditedClip(const CString& filePath, int id, const C
 	}
 	else if (id > 0)
 	{
-		theApp.RefreshClipInUI(id, UPDATE_CLIP_DESCRIPTION);
+		theApp.RefreshClipInUI(id, CClipRefreshFlags::ClipDescription);
 	}
 }
 
@@ -456,7 +452,7 @@ bool CClipEditThread::ReadImageFile(CString path, std::vector<BYTE> &/*cf_dibByt
 	HRESULT hr = image.Load(path);
 	if (FAILED(hr))
 	{
-		Log(StrF(_T("Failed to load image, %s"), path.GetString()));
+		CLogger::Log(StrF(_T("Failed to load image, %s"), path.GetString()));
 		return false;
 	}
 

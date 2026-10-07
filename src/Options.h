@@ -7,7 +7,6 @@
 #include <set>
 #include <vector>
 
-#define MAX_COPY_BUFFER	3
 class CCopyBufferItem
 {
 public:
@@ -24,35 +23,52 @@ public:
 	BOOL m_bPlaySoundOnCopy;
 };
 
-#define REG_PATH					"Software\\Ditto"
-
-#define POS_AT_CARET	1
-#define POS_AT_CURSOR	2
-#define POS_AT_PREVIOUS	3
-
-#define CAPTION_RIGHT	1
-#define CAPTION_BOTTOM	2
-#define CAPTION_LEFT	3
-#define CAPTION_TOP		4
-
-#define TOGGLES_ALLWAYS_ON_TOP				1
-#define TOGGLES_ALLWAYS_SHOW_DESCRIPTION	2
-#define	ROLLES_UP_WINDOW					3
-
-#define PATH_HELP			0
-#define PATH_REMOTE_FILES	1
-#define PATH_LOG_FILE		2
-#define PATH_LANGUAGE		3
-#define PATH_THEMES			8
-#define PATH_ADDINS			9
-#define PATH_DRAG_FILES		10
-#define PATH_CLIP_DIFF		11
-#define PATH_RESTORE_TEMP	12
-#define PATH_EDIT_CLIPS		13
-
 class CGetSetOptions
 {
 public:
+	/** @brief The registry key of the settings under HKEY_CURRENT_USER. */
+	static constexpr const TCHAR* RegPath = _T("Software\\Ditto");
+
+	/** @brief Where the quick paste window opens (the stored ShowQuickPastePosition value). */
+	enum : int
+	{
+		PosAtCaret = 1,    ///< at the caret of the focused window
+		PosAtCursor = 2,   ///< at the mouse cursor
+		PosAtPrevious = 3  ///< where it was last
+	};
+
+	/** @brief The side of a Ditto window its caption bar is on (the stored CaptionPos value). */
+	enum : int
+	{
+		CaptionOnRight = 1,  ///< on the right
+		CaptionOnBottom = 2, ///< at the bottom
+		CaptionOnLeft = 3,   ///< on the left
+		CaptionOnTop = 4     ///< at the top
+	};
+
+	/** @brief What double-clicking the caption does (the stored DoubleClickingOnCaptionDoes value). */
+	enum : int
+	{
+		TogglesAlwaysOnTop = 1,           ///< toggles always on top
+		TogglesAlwaysShowDescription = 2, ///< toggles always showing the description
+		RollsUpWindow = 3                 ///< rolls the window up
+	};
+
+	/** @brief The folder ids of GetPath. */
+	enum : int
+	{
+		PathHelp = 0,          ///< the help files
+		PathRemoteFiles = 1,   ///< files received from other computers
+		PathLogFile = 2,       ///< the log file's folder
+		PathLanguage = 3,      ///< the language files
+		PathThemes = 8,        ///< the theme files
+		PathAddins = 9,        ///< the add-in DLLs
+		PathDragFiles = 10,    ///< files written for drag and drop
+		PathClipDiff = 11,     ///< files written for clip compare
+		PathRestoreTemp = 12,  ///< the temporary copy of a database to restore
+		PathEditClips = 13     ///< files written for editing clips
+	};
+
 	CGetSetOptions();
 	virtual ~CGetSetOptions();
 
@@ -686,10 +702,10 @@ private:
 		TempUnlessPortable      ///< the temp folder, the exe's folder for portable Ditto
 	};
 
-	/** @brief How GetPath builds the folder of one PATH_* id. */
+	/** @brief How GetPath builds the folder of one Path* id. */
 	struct PathRule
 	{
-		/** @brief The PATH_* id. */
+		/** @brief The Path* id. */
 		long pathId{};
 		/** @brief The folder the path starts from. */
 		PathRoot root{};
@@ -697,18 +713,18 @@ private:
 		const TCHAR* subDir{};
 	};
 
-	/** @brief GetPath's folders by PATH_* id; an id without a rule is the exe's folder. */
+	/** @brief GetPath's folders by Path* id; an id without a rule is the exe's folder. */
 	static constexpr std::array<PathRule, 10> s_pathRules{ {
-		{ PATH_HELP, PathRoot::ExeDir, _T("Help\\") },
-		{ PATH_LANGUAGE, PathRoot::ExeDir, _T("language\\") },
-		{ PATH_THEMES, PathRoot::ExeDir, _T("Themes\\") },
-		{ PATH_LOG_FILE, PathRoot::AppDataUnlessPortable, _T("") },
-		{ PATH_ADDINS, PathRoot::ExeDir, _T("Addins\\") },
-		{ PATH_REMOTE_FILES, PathRoot::TempUnlessPortable, _T("ReceivedFiles\\") },
-		{ PATH_DRAG_FILES, PathRoot::TempUnlessPortable, _T("DragFiles\\") },
-		{ PATH_CLIP_DIFF, PathRoot::TempUnlessPortable, _T("ClipCompare\\") },
-		{ PATH_RESTORE_TEMP, PathRoot::TempUnlessPortable, _T("RestoreDb\\") },
-		{ PATH_EDIT_CLIPS, PathRoot::TempUnlessPortable, _T("EditClips\\") },
+		{ PathHelp, PathRoot::ExeDir, _T("Help\\") },
+		{ PathLanguage, PathRoot::ExeDir, _T("language\\") },
+		{ PathThemes, PathRoot::ExeDir, _T("Themes\\") },
+		{ PathLogFile, PathRoot::AppDataUnlessPortable, _T("") },
+		{ PathAddins, PathRoot::ExeDir, _T("Addins\\") },
+		{ PathRemoteFiles, PathRoot::TempUnlessPortable, _T("ReceivedFiles\\") },
+		{ PathDragFiles, PathRoot::TempUnlessPortable, _T("DragFiles\\") },
+		{ PathClipDiff, PathRoot::TempUnlessPortable, _T("ClipCompare\\") },
+		{ PathRestoreTemp, PathRoot::TempUnlessPortable, _T("RestoreDb\\") },
+		{ PathEditClips, PathRoot::TempUnlessPortable, _T("EditClips\\") },
 	} };
 
 	/**

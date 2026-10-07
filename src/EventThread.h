@@ -21,6 +21,15 @@ protected:
 	HANDLE GetHandle(int eventId);
 	bool RemoveEvent(int eventId);
 
+	/** @brief The event ids the thread reserves for itself (the users' event ids are not negative). */
+	enum : int
+	{
+		/** @brief Ends the thread. */
+		ExitEvent = -1,
+		/** @brief Rebuilds the handle list after an event was added or removed. */
+		RebuildEvents = -2,
+	};
+
 	UINT m_threadID;
 	HANDLE m_thread;
 	HANDLE m_hEvt;

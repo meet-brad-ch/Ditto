@@ -225,27 +225,6 @@ to maintain a single distribution point for the source code.
 #endif //#ifndef _INC_SHELLAPI
 
 
-/////////////////////////////////  Macros /////////////////////////////////////
-
-#ifdef _AFX
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#endif //#ifdef _DEBUG
-#endif //#ifdef _AFX
-
-#ifndef NIF_REALTIME
-#define NIF_REALTIME 0x00000040
-#endif //#ifndef NIF_REALTIME
-
-#ifndef NIIF_LARGE_ICON
-#define NIIF_LARGE_ICON 0x00000020
-#endif //#ifndef NIIF_LARGE_ICON
-
-#ifndef NIIF_RESPECT_QUIET_TIME
-#define NIIF_RESPECT_QUIET_TIME 0x00000080
-#endif //#ifndef NIIF_RESPECT_QUIET_TIME
-
-
 ///////////////////////////////// Implementation //////////////////////////////
 
 const UINT wm_TaskbarCreated = RegisterWindowMessage(_T("TaskbarCreated"));

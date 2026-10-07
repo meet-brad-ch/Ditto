@@ -60,7 +60,7 @@ private:
 	 *  @return true for those keys. */
 	static bool IsCutCopyDeleteKey(WPARAM key);
 
-	/** @brief Sends the key to the parent window as CB_UPDOWN.
+	/** @brief Sends the key to the parent window as CQListCtrl::CbUpDown.
 	 *  @param pMsg The key message.
 	 *  @return true if there is a parent and the message was sent. */
 	bool SendKeyToParent(const MSG* pMsg);

@@ -183,7 +183,7 @@ private:
 	{
 		/** @brief The action. */
 		ActionEnumValues action{};
-		/** @brief The key, as ACCEL_MAKEKEY(virtual key, modifiers). */
+		/** @brief The key, as CAccels::MakeKey(virtual key, modifiers). */
 		int key{};
 	};
 

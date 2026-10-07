@@ -15,14 +15,14 @@ ULONG CALLBACK PowerChanged(PVOID /*Context*/, ULONG Type, PVOID /*Setting*/)
 	//c
 	CString cs;
 	cs.Format(_T("PowerChanged Type %d"), Type);
-	Log(cs);
+	CLogger::Log(cs);
 
 	if(Type == PBT_APMRESUMEAUTOMATIC)
 	{
 		//had reports of the main window not showing clips after resuming (report was from a vmware vm), catch the resuming callback from windows
 		//and close and reopen the database
-		Log(_T("windows is RESUMING, sending message to main window to close and reopen the database/qpastewnd"));
-		::PostMessage(s_notifyHwnd, WM_REOPEN_DATABASE, 0, 0);
+		CLogger::Log(_T("windows is RESUMING, sending message to main window to close and reopen the database/qpastewnd"));
+		::PostMessage(s_notifyHwnd, CDittoMessage::ReopenDatabase, 0, 0);
 	}
 
 	return 0;

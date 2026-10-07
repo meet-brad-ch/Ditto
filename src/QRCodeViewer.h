@@ -41,7 +41,7 @@ public:
 	CStatic m_desc;
 
 protected:
-	afx_msg HITTEST_RET OnNcHitTest(CPoint point);
+	afx_msg LRESULT OnNcHitTest(CPoint point);
 	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 	afx_msg void OnNcLButtonUp(UINT nHitTest, CPoint point); 
 	afx_msg void OnNcLButtonDown(UINT nHitTest, CPoint point); 
@@ -67,6 +67,13 @@ protected:
 	LOGFONT m_logFont{};
 	int m_originalFontHeight{};
 	SnapWindow m_snap;
+
+	/** @brief The timer ids of the window (SetTimer / OnTimer). */
+	enum : UINT
+	{
+		/** @brief Finishes a caption click once the mouse button is up. */
+		TimerButtonUp = 1,
+	};
 
 	void MoveControls();
 };

@@ -45,7 +45,7 @@ int CEditWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	m_toolBarControl.EnableWindow();
 	
-	m_tabControl.Create(WS_CHILD|WS_VISIBLE|WS_TABSTOP|SCS_TOP, CRect(0, 0, 0, 0), this, 101);
+	m_tabControl.Create(WS_CHILD|WS_VISIBLE|WS_TABSTOP|CTabCtrlEx::ScsTop, CRect(0, 0, 0, 0), this, 101);
 	
 	//m_font.CreatePointFont(m_dpi.Scale(90), _T("Arial Unicode MS"), this->GetDC());
 	m_font.CreateFont(-m_dpi.Scale(13), 0, 0, 0, 400, 0, 0, 0, DEFAULT_CHARSET, 3, 2, 1, 34, _T("Segoe UI"));
@@ -208,7 +208,7 @@ bool CEditWnd::DoSaveItem(int index)
 				m_tabControl.SetTabTitle(index, pEdit->GetDesc());
 			}
 
-			if(nRet == SAVED_CLIP_TO_DB)
+			if(nRet == CDittoRulerRichEditCtrl::SavedClipToDb)
 			{
 				CSaveAnimation Ani;
 				CRect cr;
@@ -471,7 +471,7 @@ bool CEditWnd::HandleKeyDown(WPARAM key)
 	}
 	else if(key == 'S')
 	{
-		if(CONTROL_PRESSED)
+		if(CKeyboard::IsControlPressed())
 		{
 			if(GetKeyState(VK_SHIFT) & 0x8000)
 			{
@@ -487,7 +487,7 @@ bool CEditWnd::HandleKeyDown(WPARAM key)
 	}
 	else if(key == 'N')
 	{
-		if(CONTROL_PRESSED)
+		if(CKeyboard::IsControlPressed())
 		{
 			OnNew();
 		}

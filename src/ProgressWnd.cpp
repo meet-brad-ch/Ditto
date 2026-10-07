@@ -1,21 +1,9 @@
 #include "stdafx.h"
 #include "ProgressWnd.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
-#define IDC_CANCEL   10
-#define IDC_TEXT     11
-#define IDC_PROGRESS 12
-
-LPCTSTR szSection = _T("Settings");   
+LPCTSTR szSection = _T("Settings");
 LPCTSTR szEntryX  = _T("X");
 LPCTSTR szEntryY  = _T("Y");
-
-#define _CRT_NON_CONFORMING_SWPRINTFS 1
 
 /////////////////////////////////////////////////////////////////////////////
 // CProgressWnd
@@ -92,7 +80,7 @@ BOOL CProgressWnd::Create(CWnd* pParent, LPCTSTR pszTitle, BOOL bSmooth /* = FAL
     CRect TempRect(0,0,10,10);
 
     bSuccess = m_Text.Create(_T(""), WS_CHILD|WS_VISIBLE|SS_NOPREFIX|SS_LEFTNOWORDWRAP,
-                             TempRect, this, IDC_TEXT);
+                             TempRect, this, IdcText);
     if (!bSuccess) return FALSE;
 
     DWORD dwProgressStyle = WS_CHILD|WS_VISIBLE;
@@ -100,12 +88,12 @@ BOOL CProgressWnd::Create(CWnd* pParent, LPCTSTR pszTitle, BOOL bSmooth /* = FAL
     if (bSmooth)
        dwProgressStyle |= PBS_SMOOTH;
 #endif
-    bSuccess = m_wndProgress.Create(dwProgressStyle,TempRect, this, IDC_PROGRESS);
+    bSuccess = m_wndProgress.Create(dwProgressStyle,TempRect, this, IdcProgress);
     if (!bSuccess) return FALSE;
 
     bSuccess = m_CancelButton.Create(m_strCancelLabel, 
                                    WS_CHILD|WS_VISIBLE|WS_TABSTOP| BS_PUSHBUTTON, 
-                                     TempRect, this, IDC_CANCEL);
+                                     TempRect, this, IdcCancel);
     if (!bSuccess) return FALSE;
 
     m_CancelButton.SetFont(&m_font, TRUE);
@@ -337,7 +325,7 @@ BEGIN_MESSAGE_MAP(CProgressWnd, CWnd)
     //{{AFX_MSG_MAP(CProgressWnd)
     ON_WM_ERASEBKGND()
 	//}}AFX_MSG_MAP
-    ON_BN_CLICKED(IDC_CANCEL, OnCancel)
+    ON_BN_CLICKED(IdcCancel, OnCancel)
 END_MESSAGE_MAP()
 
 

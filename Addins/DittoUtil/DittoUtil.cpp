@@ -5,10 +5,6 @@
 #include "DittoUtil.h"
 #include "PasteImageAsHtmlImage.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#endif
-
 //
 //	Note!
 //

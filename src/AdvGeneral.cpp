@@ -44,198 +44,87 @@ END_MESSAGE_MAP()
 
 // CAdvGeneral message handlers
 
-#define SETTING_DESC_SIZE 1
-#define SETTING_SHOW_TASKBAR_ICON 2
-#define SETTING_SAVE_MULTI_PASTE 3
-#define SETTING_HIDE_ON_HOTKEY_IF_VISIBLE 4
-#define SETTING_PASTE_IN_ACTIVE_WINDOW 5
-#define SETTING_MAX_CLIP_SIZE 6
-#define SETTING_CLIP_SEPARATOR 7
-#define SETTING_ENSURE_CONNECTED 8
-#define SETTING_COPY_PLAY_SOUND 9
-#define SETTING_TEXT_FIRST_TEN 10 
-#define SETTING_SHOW_LEADING_WHITESPACE 11
-#define SETTING_LINES_PER_ROW 12
-#define SETTING_ENABLE_TRANSPARENCY 13
-#define SETTING_DRAW_THUMBNAILS 14
-#define SETTING_DRAW_RTF 15
-#define SETTING_FIND_AS_TYPE 16
-#define SETTING_ENSURE_WINDOW_IS_VISIBLE 17
-#define SETTING_SHOW_GROUP_CLIPS_IN_LIST 18
-#define SETTING_PROMPT_ON_DELETE 19
-#define SETTING_ALWAYS_SHOW_SCROLL_BAR 20
-#define SETTING_PASTE_AS_ADMIN 21
-#define SETTTING_SHOW_IN_TASKBAR 22
-#define SETTING_SHOW_CLIP_PASTED 23
-#define SETTING_DIFF_APP 24
-#define SETTING_TRANSPARENCY 25
-#define SETTING_UPDATE_ORDER_ON_PASTE 26
-#define SETTING_ALLOW_DUPLICATES 27
-#define SETTING_REGEX_FILTERING_1 28
-#define SETTING_REGEX_FILTERING_2 29
-#define SETTING_REGEX_FILTERING_3 30
-#define SETTING_REGEX_FILTERING_4 31
-#define SETTING_REGEX_FILTERING_5 32
-#define SETTING_REGEX_FILTERING_6 33
-#define SETTING_REGEX_FILTERING_7 34
-#define SETTING_REGEX_FILTERING_8 35
-#define SETTING_REGEX_FILTERING_9 36
-#define SETTING_REGEX_FILTERING_10 37
-#define SETTING_REGEX_FILTERING_11 38
-#define SETTING_REGEX_FILTERING_12 39
-#define SETTING_REGEX_FILTERING_13 40
-#define SETTING_REGEX_FILTERING_14 41
-#define SETTING_REGEX_FILTERING_15 42
-
-#define SETTING_REGEX_FILTERING_BY_PROCESS_NAME_1 43
-#define SETTING_REGEX_FILTERING_BY_PROCESS_NAME_2 44
-#define SETTING_REGEX_FILTERING_BY_PROCESS_NAME_3 45
-#define SETTING_REGEX_FILTERING_BY_PROCESS_NAME_4 46
-#define SETTING_REGEX_FILTERING_BY_PROCESS_NAME_5 47
-#define SETTING_REGEX_FILTERING_BY_PROCESS_NAME_6 48
-#define SETTING_REGEX_FILTERING_BY_PROCESS_NAME_7 49
-#define SETTING_REGEX_FILTERING_BY_PROCESS_NAME_8 50
-#define SETTING_REGEX_FILTERING_BY_PROCESS_NAME_9 51
-#define SETTING_REGEX_FILTERING_BY_PROCESS_NAME_10 52
-#define SETTING_REGEX_FILTERING_BY_PROCESS_NAME_11 53
-#define SETTING_REGEX_FILTERING_BY_PROCESS_NAME_12 54
-#define SETTING_REGEX_FILTERING_BY_PROCESS_NAME_13 55
-#define SETTING_REGEX_FILTERING_BY_PROCESS_NAME_14 56
-#define SETTING_REGEX_FILTERING_BY_PROCESS_NAME_15 57
-
-#define SETTING_SHOW_STARTUP_MESSAGE 58
-#define SETTING_TOOLTIP_TIMEOUT 59
-#define SETTING_SELECTED_INDEX 60
-#define SETTING_CLIPBOARD_SAVE_DELAY 61
-#define SETTING_MULTIPASTE_REVERSE_ORDER 63
-#define SETTING_DEFAULT_PASTE_STRING 64
-#define SETTING_DEFAULT_COPY_STRING 65
-#define SETTING_DEFAULT_CUT_STRING 66
-#define SETTING_REVERT_TO_TOP_LEVEL_GROUP 67
-#define SETTING_UPDATE_ORDER_ON_CTRL_C 68
-
-#define SETTING_TOOLTIP_LINES 69
-#define SETTING_TOOLTIP_CHARACTERS 70
-
-
-#define SETTING_ACTIVATE_WINDOW_DELAY 71
-#define SETTING_DOUBLE_KEYSTROKE_TIMEOUT 72
-#define SETTING_SEND_KEYS_DELAY 73
-#define SETTING_FIRST_TEN_HOTKEYS_START 74
-#define SETTING_FIRST_TEN_HOTKEYS_FONT_SIZE 75
-
-#define SETTING_OPEN_TO_GROUP_AS_ACTIVE_EXE 76
-#define SETTING_ADD_CF_HDROP_ON_DRAG 77
-#define SETTING_COPY_SAVE_DELAY 78
-#define SETTING_EDITOR_FONT_SIZE 79
-#define SETTING_MOVE_SELECTION_ON_OPEN_HOTKEY 80
-#define SETTING_ALOW_BACK_TO_BACK_DUPLICATES 81
-#define SETTING_MAINTAIN_SEARCH_VIEW 82
-#define SETTING_DEBUG_TO_FILE 84
-#define SETTING_DEBUG_TO_OUTPUT_STRING 85
-#define SETTING_IGNORE_FALSE_COPIES_DELAY 88
-#define SETTING_REFRESH_VIEW_AFTER_PASTE 89
-#define SETTING_SLUGIFY_SEPARATOR 90
-#define SETTING_FAST_THUMBNAIL_MODE 91
-#define SETTING_CLIPBOARD_RESTORE_AFTER_COPY_BUFFER_DELAY 92
-#define SETTING_SUPPORT_ALL_TYPES 93
-#define SETTING_IGNORE_ANNOYING_CF_DIB 94
-#define SETTING_REGEX_CASE_INSENSITIVE 95
-#define SETTING_DRAW_COPIED_COLOR_CODE 96
-#define SETTING_CENTER_WINDOW_BELOW_CURSOR_CARET 97
-#define SETTING_TEXT_EDITOR_PATH 98
-#define SETTING_RTF_EDITOR_PATH 99
-#define SETTING_UPDATE_DESC_ON_CLIP_EDIT 100
-#define SETTING_USE_UTF8_FOR_DIFF 103
-#define SETTING_IMAGE_EDITOR_PATH 104
-#define SETTING_CLIP_EDIT_SAVE_DELAY_AFTER_LOAD 105
-#define SETTING_ClIP_EDIT_SAVE_DELAY_AFTER_SAVE 106
-#define SETTING_DO_NOT_HIDE_ON_DEACTIVATE 108
-#define SETTING_HIDE_TASKBAR_ICON_ON_CLOSE 109
-#define SETTING_USE_MODERN_SCROLLBAR 110
-#define SETTING_ENFORCE_CLIPBOARD_IGNORE_FORMATS 111
-
 const std::array<CAdvGeneral::LongSetting, 20> CAdvGeneral::s_longSettings{ {
-	{ SETTING_DESC_SIZE, [](long value) { CGetSetOptions::SetDescTextSize(value); } },
-	{ SETTING_SELECTED_INDEX, [](long value) { CGetSetOptions::SetSelectedIndex(max((value - 1), 0)); } },
-	{ SETTING_CLIPBOARD_SAVE_DELAY, [](long value) { CGetSetOptions::SetProcessDrawClipboardDelay(max(value, 0)); } },
-	{ SETTING_MAX_CLIP_SIZE, [](long value) { CGetSetOptions::SetMaxClipSizeInBytes(value); } },
-	{ SETTING_LINES_PER_ROW, [](long value) { CGetSetOptions::SetLinesPerRow(value); } },
-	{ SETTING_TRANSPARENCY, &CAdvGeneral::WriteTransparencyPercent },
-	{ SETTING_TOOLTIP_TIMEOUT, [](long value) { CGetSetOptions::SetToolTipTimeout(value); } },
-	{ SETTING_TOOLTIP_LINES, [](long value) { CGetSetOptions::SetMaxToolTipLines(value); } },
-	{ SETTING_TOOLTIP_CHARACTERS, [](long value) { CGetSetOptions::SetMaxToolTipCharacters(value); } },
-	{ SETTING_ACTIVATE_WINDOW_DELAY, [](long value) { CGetSetOptions::SetSendKeysDelay(value); } },
-	{ SETTING_SEND_KEYS_DELAY, [](long value) { CGetSetOptions::SetRealSendKeysDelay(value); } },
-	{ SETTING_CLIPBOARD_RESTORE_AFTER_COPY_BUFFER_DELAY, [](long value) { CGetSetOptions::SetDittoRestoreClipboardDelay(value); } },
-	{ SETTING_DOUBLE_KEYSTROKE_TIMEOUT, [](long value) { CGetSetOptions::SetDoubleKeyStrokeTimeout(value); } },
-	{ SETTING_FIRST_TEN_HOTKEYS_START, [](long value) { CGetSetOptions::SetFirstTenHotKeysStart(value); } },
-	{ SETTING_FIRST_TEN_HOTKEYS_FONT_SIZE, [](long value) { CGetSetOptions::SetFirstTenHotKeysFontSize(value); } },
-	{ SETTING_COPY_SAVE_DELAY, [](long value) { CGetSetOptions::SetCopyAndSveDelay(value); } },
-	{ SETTING_EDITOR_FONT_SIZE, [](long value) { CGetSetOptions::SetEditorDefaultFontSize(value); } },
-	{ SETTING_IGNORE_FALSE_COPIES_DELAY, [](long value) { CGetSetOptions::SetSaveClipDelay(value); } },
-	{ SETTING_CLIP_EDIT_SAVE_DELAY_AFTER_LOAD, [](long value) { CGetSetOptions::SetClipEditSaveDelayAfterLoadSeconds(value); } },
-	{ SETTING_ClIP_EDIT_SAVE_DELAY_AFTER_SAVE, [](long value) { CGetSetOptions::SetClipEditSaveDelayAfterSaveSeconds(value); } },
+	{ SettingDescSize, [](long value) { CGetSetOptions::SetDescTextSize(value); } },
+	{ SettingSelectedIndex, [](long value) { CGetSetOptions::SetSelectedIndex(max((value - 1), 0)); } },
+	{ SettingClipboardSaveDelay, [](long value) { CGetSetOptions::SetProcessDrawClipboardDelay(max(value, 0)); } },
+	{ SettingMaxClipSize, [](long value) { CGetSetOptions::SetMaxClipSizeInBytes(value); } },
+	{ SettingLinesPerRow, [](long value) { CGetSetOptions::SetLinesPerRow(value); } },
+	{ SettingTransparency, &CAdvGeneral::WriteTransparencyPercent },
+	{ SettingTooltipTimeout, [](long value) { CGetSetOptions::SetToolTipTimeout(value); } },
+	{ SettingTooltipLines, [](long value) { CGetSetOptions::SetMaxToolTipLines(value); } },
+	{ SettingTooltipCharacters, [](long value) { CGetSetOptions::SetMaxToolTipCharacters(value); } },
+	{ SettingActivateWindowDelay, [](long value) { CGetSetOptions::SetSendKeysDelay(value); } },
+	{ SettingSendKeysDelay, [](long value) { CGetSetOptions::SetRealSendKeysDelay(value); } },
+	{ SettingClipboardRestoreAfterCopyBufferDelay, [](long value) { CGetSetOptions::SetDittoRestoreClipboardDelay(value); } },
+	{ SettingDoubleKeystrokeTimeout, [](long value) { CGetSetOptions::SetDoubleKeyStrokeTimeout(value); } },
+	{ SettingFirstTenHotkeysStart, [](long value) { CGetSetOptions::SetFirstTenHotKeysStart(value); } },
+	{ SettingFirstTenHotkeysFontSize, [](long value) { CGetSetOptions::SetFirstTenHotKeysFontSize(value); } },
+	{ SettingCopySaveDelay, [](long value) { CGetSetOptions::SetCopyAndSveDelay(value); } },
+	{ SettingEditorFontSize, [](long value) { CGetSetOptions::SetEditorDefaultFontSize(value); } },
+	{ SettingIgnoreFalseCopiesDelay, [](long value) { CGetSetOptions::SetSaveClipDelay(value); } },
+	{ SettingClipEditSaveDelayAfterLoad, [](long value) { CGetSetOptions::SetClipEditSaveDelayAfterLoadSeconds(value); } },
+	{ SettingClipEditSaveDelayAfterSave, [](long value) { CGetSetOptions::SetClipEditSaveDelayAfterSaveSeconds(value); } },
 } };
 
 const std::array<CAdvGeneral::BoolSetting, 43> CAdvGeneral::s_boolSettings{ {
-	{ SETTING_SHOW_TASKBAR_ICON, [](BOOL value) { CGetSetOptions::SetShowIconInSysTray(value); } },
-	{ SETTING_SAVE_MULTI_PASTE, [](BOOL value) { CGetSetOptions::SetSaveMultiPaste(value); } },
-	{ SETTING_HIDE_ON_HOTKEY_IF_VISIBLE, [](BOOL value) { CGetSetOptions::SetHideDittoOnHotKeyIfAlreadyShown(value); } },
-	{ SETTING_PASTE_IN_ACTIVE_WINDOW, [](BOOL value) { CGetSetOptions::SetSendPasteAfterSelection(value); } },
-	{ SETTING_ENSURE_CONNECTED, [](BOOL value) { CGetSetOptions::SetEnsureConnectToClipboard(value); } },
-	{ SETTING_TEXT_FIRST_TEN, [](BOOL value) { CGetSetOptions::SetShowTextForFirstTenHotKeys(value); } },
-	{ SETTING_SHOW_LEADING_WHITESPACE, [](BOOL value) { CGetSetOptions::SetDescShowLeadingWhiteSpace(value); } },
-	{ SETTING_ENABLE_TRANSPARENCY, [](BOOL value) { CGetSetOptions::SetEnableTransparency(value); } },
-	{ SETTING_DRAW_THUMBNAILS, [](BOOL value) { CGetSetOptions::SetDrawThumbnail(value); } },
-	{ SETTING_FAST_THUMBNAIL_MODE, [](BOOL value) { CGetSetOptions::SetFastThumbnailMode(value); } },
-	{ SETTING_DRAW_RTF, [](BOOL value) { CGetSetOptions::SetDrawRTF(value); } },
-	{ SETTING_FIND_AS_TYPE, [](BOOL value) { CGetSetOptions::SetFindAsYouType(value); } },
-	{ SETTING_ENSURE_WINDOW_IS_VISIBLE, [](BOOL value) { CGetSetOptions::SetEnsureEntireWindowCanBeSeen(value); } },
-	{ SETTING_SHOW_GROUP_CLIPS_IN_LIST, [](BOOL value) { CGetSetOptions::SetShowAllClipsInMainList(value); } },
-	{ SETTING_PROMPT_ON_DELETE, [](BOOL value) { CGetSetOptions::SetPromptWhenDeletingClips(value); } },
-	{ SETTING_ALWAYS_SHOW_SCROLL_BAR, [](BOOL value) { CGetSetOptions::SetShowScrollBar(value); } },
-	{ SETTING_USE_MODERN_SCROLLBAR, [](BOOL value) { CGetSetOptions::SetUseModernScrollBar(value); } },
-	{ SETTING_PASTE_AS_ADMIN, [](BOOL value) { CGetSetOptions::SetPasteAsAdmin(value); } },
-	{ SETTTING_SHOW_IN_TASKBAR, [](BOOL value) { CGetSetOptions::SetShowInTaskBar(value); } },
-	{ SETTING_SHOW_CLIP_PASTED, [](BOOL value) { CGetSetOptions::SetShowIfClipWasPasted(value); } },
-	{ SETTING_UPDATE_ORDER_ON_PASTE, [](BOOL value) { CGetSetOptions::SetUpdateTimeOnPaste(value); } },
-	{ SETTING_UPDATE_ORDER_ON_CTRL_C, [](BOOL value) { CGetSetOptions::SetUpdateClipOrderOnCtrlC(value); } },
-	{ SETTING_MULTIPASTE_REVERSE_ORDER, [](BOOL value) { CGetSetOptions::SetMultiPasteReverse(value); } },
-	{ SETTING_ALLOW_DUPLICATES, [](BOOL value) { CGetSetOptions::SetAllowDuplicates(value); } },
-	{ SETTING_ALOW_BACK_TO_BACK_DUPLICATES, [](BOOL value) { CGetSetOptions::SetAllowBackToBackDuplicates(value); } },
-	{ SETTING_SHOW_STARTUP_MESSAGE, [](BOOL value) { CGetSetOptions::SetShowStartupMessage(value); } },
-	{ SETTING_REVERT_TO_TOP_LEVEL_GROUP, [](BOOL value) { CGetSetOptions::SetRevertToTopLevelGroup(value); } },
-	{ SETTING_OPEN_TO_GROUP_AS_ACTIVE_EXE, [](BOOL value) { CGetSetOptions::SetOpenToGroupByActiveExe(value); } },
-	{ SETTING_ADD_CF_HDROP_ON_DRAG, [](BOOL value) { CGetSetOptions::SetAddCFHDROP_OnDrag(value); } },
-	{ SETTING_MOVE_SELECTION_ON_OPEN_HOTKEY, [](BOOL value) { CGetSetOptions::SetMoveSelectionOnOpenHotkey(value); } },
-	{ SETTING_MAINTAIN_SEARCH_VIEW, [](BOOL value) { CGetSetOptions::SetMaintainSearchView(value); } },
-	{ SETTING_DEBUG_TO_FILE, [](BOOL value) { CGetSetOptions::SetEnableDebugLogging(value); } },
-	{ SETTING_DEBUG_TO_OUTPUT_STRING, [](BOOL value) { CGetSetOptions::SetEnableOutputDebugStringLogging(value); } },
-	{ SETTING_REFRESH_VIEW_AFTER_PASTE, [](BOOL value) { CGetSetOptions::SetRefreshViewAfterPasting(value); } },
-	{ SETTING_SUPPORT_ALL_TYPES, [](BOOL value) { CGetSetOptions::SetSupportAllTypes(value); } },
-	{ SETTING_REGEX_CASE_INSENSITIVE, [](BOOL value) { CGetSetOptions::SetRegexCaseInsensitive(value); } },
-	{ SETTING_DRAW_COPIED_COLOR_CODE, [](BOOL value) { CGetSetOptions::SetDrawCopiedColorCode(value); } },
-	{ SETTING_CENTER_WINDOW_BELOW_CURSOR_CARET, [](BOOL value) { CGetSetOptions::SetCenterWindowBelowCursorOrCaret(value); } },
-	{ SETTING_UPDATE_DESC_ON_CLIP_EDIT, [](BOOL value) { CGetSetOptions::SetUpdateDescWhenSavingClip(value); } },
-	{ SETTING_USE_UTF8_FOR_DIFF, [](BOOL value) { CGetSetOptions::SetPreferUtf8ForCompare(value); } },
-	{ SETTING_DO_NOT_HIDE_ON_DEACTIVATE, [](BOOL value) { CGetSetOptions::SetDoNotHideOnDeactivate(value); } },
-	{ SETTING_HIDE_TASKBAR_ICON_ON_CLOSE, [](BOOL value) { CGetSetOptions::SetHideTaskbarIconOnClose(value); } },
-	{ SETTING_ENFORCE_CLIPBOARD_IGNORE_FORMATS, [](BOOL value) { CGetSetOptions::SetEnforceClipboardIgnoreFormats(value); } },
+	{ SettingShowTaskbarIcon, [](BOOL value) { CGetSetOptions::SetShowIconInSysTray(value); } },
+	{ SettingSaveMultiPaste, [](BOOL value) { CGetSetOptions::SetSaveMultiPaste(value); } },
+	{ SettingHideOnHotkeyIfVisible, [](BOOL value) { CGetSetOptions::SetHideDittoOnHotKeyIfAlreadyShown(value); } },
+	{ SettingPasteInActiveWindow, [](BOOL value) { CGetSetOptions::SetSendPasteAfterSelection(value); } },
+	{ SettingEnsureConnected, [](BOOL value) { CGetSetOptions::SetEnsureConnectToClipboard(value); } },
+	{ SettingTextFirstTen, [](BOOL value) { CGetSetOptions::SetShowTextForFirstTenHotKeys(value); } },
+	{ SettingShowLeadingWhitespace, [](BOOL value) { CGetSetOptions::SetDescShowLeadingWhiteSpace(value); } },
+	{ SettingEnableTransparency, [](BOOL value) { CGetSetOptions::SetEnableTransparency(value); } },
+	{ SettingDrawThumbnails, [](BOOL value) { CGetSetOptions::SetDrawThumbnail(value); } },
+	{ SettingFastThumbnailMode, [](BOOL value) { CGetSetOptions::SetFastThumbnailMode(value); } },
+	{ SettingDrawRtf, [](BOOL value) { CGetSetOptions::SetDrawRTF(value); } },
+	{ SettingFindAsType, [](BOOL value) { CGetSetOptions::SetFindAsYouType(value); } },
+	{ SettingEnsureWindowIsVisible, [](BOOL value) { CGetSetOptions::SetEnsureEntireWindowCanBeSeen(value); } },
+	{ SettingShowGroupClipsInList, [](BOOL value) { CGetSetOptions::SetShowAllClipsInMainList(value); } },
+	{ SettingPromptOnDelete, [](BOOL value) { CGetSetOptions::SetPromptWhenDeletingClips(value); } },
+	{ SettingAlwaysShowScrollBar, [](BOOL value) { CGetSetOptions::SetShowScrollBar(value); } },
+	{ SettingUseModernScrollbar, [](BOOL value) { CGetSetOptions::SetUseModernScrollBar(value); } },
+	{ SettingPasteAsAdmin, [](BOOL value) { CGetSetOptions::SetPasteAsAdmin(value); } },
+	{ SettingShowInTaskbar, [](BOOL value) { CGetSetOptions::SetShowInTaskBar(value); } },
+	{ SettingShowClipPasted, [](BOOL value) { CGetSetOptions::SetShowIfClipWasPasted(value); } },
+	{ SettingUpdateOrderOnPaste, [](BOOL value) { CGetSetOptions::SetUpdateTimeOnPaste(value); } },
+	{ SettingUpdateOrderOnCtrlC, [](BOOL value) { CGetSetOptions::SetUpdateClipOrderOnCtrlC(value); } },
+	{ SettingMultipasteReverseOrder, [](BOOL value) { CGetSetOptions::SetMultiPasteReverse(value); } },
+	{ SettingAllowDuplicates, [](BOOL value) { CGetSetOptions::SetAllowDuplicates(value); } },
+	{ SettingAllowBackToBackDuplicates, [](BOOL value) { CGetSetOptions::SetAllowBackToBackDuplicates(value); } },
+	{ SettingShowStartupMessage, [](BOOL value) { CGetSetOptions::SetShowStartupMessage(value); } },
+	{ SettingRevertToTopLevelGroup, [](BOOL value) { CGetSetOptions::SetRevertToTopLevelGroup(value); } },
+	{ SettingOpenToGroupAsActiveExe, [](BOOL value) { CGetSetOptions::SetOpenToGroupByActiveExe(value); } },
+	{ SettingAddCfHdropOnDrag, [](BOOL value) { CGetSetOptions::SetAddCFHDROP_OnDrag(value); } },
+	{ SettingMoveSelectionOnOpenHotkey, [](BOOL value) { CGetSetOptions::SetMoveSelectionOnOpenHotkey(value); } },
+	{ SettingMaintainSearchView, [](BOOL value) { CGetSetOptions::SetMaintainSearchView(value); } },
+	{ SettingDebugToFile, [](BOOL value) { CGetSetOptions::SetEnableDebugLogging(value); } },
+	{ SettingDebugToOutputString, [](BOOL value) { CGetSetOptions::SetEnableOutputDebugStringLogging(value); } },
+	{ SettingRefreshViewAfterPaste, [](BOOL value) { CGetSetOptions::SetRefreshViewAfterPasting(value); } },
+	{ SettingSupportAllTypes, [](BOOL value) { CGetSetOptions::SetSupportAllTypes(value); } },
+	{ SettingRegexCaseInsensitive, [](BOOL value) { CGetSetOptions::SetRegexCaseInsensitive(value); } },
+	{ SettingDrawCopiedColorCode, [](BOOL value) { CGetSetOptions::SetDrawCopiedColorCode(value); } },
+	{ SettingCenterWindowBelowCursorCaret, [](BOOL value) { CGetSetOptions::SetCenterWindowBelowCursorOrCaret(value); } },
+	{ SettingUpdateDescOnClipEdit, [](BOOL value) { CGetSetOptions::SetUpdateDescWhenSavingClip(value); } },
+	{ SettingUseUtf8ForDiff, [](BOOL value) { CGetSetOptions::SetPreferUtf8ForCompare(value); } },
+	{ SettingDoNotHideOnDeactivate, [](BOOL value) { CGetSetOptions::SetDoNotHideOnDeactivate(value); } },
+	{ SettingHideTaskbarIconOnClose, [](BOOL value) { CGetSetOptions::SetHideTaskbarIconOnClose(value); } },
+	{ SettingEnforceClipboardIgnoreFormats, [](BOOL value) { CGetSetOptions::SetEnforceClipboardIgnoreFormats(value); } },
 } };
 
 const std::array<CAdvGeneral::TextSetting, 11> CAdvGeneral::s_textSettings{ {
-	{ SETTING_CLIP_SEPARATOR, [](LPCTSTR value) { CGetSetOptions::SetMultiPasteSeparator(value); } },
-	{ SETTING_COPY_PLAY_SOUND, [](LPCTSTR value) { CGetSetOptions::SetPlaySoundOnCopy(value); } },
-	{ SETTING_DIFF_APP, [](LPCTSTR value) { CGetSetOptions::SetDiffApp(value); } },
-	{ SETTING_DEFAULT_PASTE_STRING, [](LPCTSTR value) { CGetSetOptions::SetDefaultPasteString(value); } },
-	{ SETTING_DEFAULT_COPY_STRING, [](LPCTSTR value) { CGetSetOptions::SetDefaultCopyString(value); } },
-	{ SETTING_DEFAULT_CUT_STRING, [](LPCTSTR value) { CGetSetOptions::SetDefaultCutString(value); } },
-	{ SETTING_SLUGIFY_SEPARATOR, [](LPCTSTR value) { CGetSetOptions::SetSlugifySeparator(value); } },
-	{ SETTING_IGNORE_ANNOYING_CF_DIB, [](LPCTSTR value) { CGetSetOptions::SetIgnoreAnnoyingCFDIB(value); } },
-	{ SETTING_TEXT_EDITOR_PATH, [](LPCTSTR value) { CGetSetOptions::SetTextEditorPath(value); } },
-	{ SETTING_IMAGE_EDITOR_PATH, [](LPCTSTR value) { CGetSetOptions::SetImageEditorPath(value); } },
-	{ SETTING_RTF_EDITOR_PATH, [](LPCTSTR value) { CGetSetOptions::SetRTFEditorPath(value); } },
+	{ SettingClipSeparator, [](LPCTSTR value) { CGetSetOptions::SetMultiPasteSeparator(value); } },
+	{ SettingCopyPlaySound, [](LPCTSTR value) { CGetSetOptions::SetPlaySoundOnCopy(value); } },
+	{ SettingDiffApp, [](LPCTSTR value) { CGetSetOptions::SetDiffApp(value); } },
+	{ SettingDefaultPasteString, [](LPCTSTR value) { CGetSetOptions::SetDefaultPasteString(value); } },
+	{ SettingDefaultCopyString, [](LPCTSTR value) { CGetSetOptions::SetDefaultCopyString(value); } },
+	{ SettingDefaultCutString, [](LPCTSTR value) { CGetSetOptions::SetDefaultCutString(value); } },
+	{ SettingSlugifySeparator, [](LPCTSTR value) { CGetSetOptions::SetSlugifySeparator(value); } },
+	{ SettingIgnoreAnnoyingCfDib, [](LPCTSTR value) { CGetSetOptions::SetIgnoreAnnoyingCFDIB(value); } },
+	{ SettingTextEditorPath, [](LPCTSTR value) { CGetSetOptions::SetTextEditorPath(value); } },
+	{ SettingImageEditorPath, [](LPCTSTR value) { CGetSetOptions::SetImageEditorPath(value); } },
+	{ SettingRtfEditorPath, [](LPCTSTR value) { CGetSetOptions::SetRTFEditorPath(value); } },
 } };
 
 BOOL CAdvGeneral::OnInitDialog()
@@ -251,12 +140,12 @@ BOOL CAdvGeneral::OnInitDialog()
 	m_propertyGrid.AddProperty(pGroupTest);
 
 	m_Resize.SetParent(m_hWnd);
-	m_Resize.AddControl(IDC_MFCPROPERTYGRID1, DR_SizeWidth | DR_SizeHeight);
-	m_Resize.AddControl(IDOK, DR_MoveTop | DR_MoveLeft);
-	m_Resize.AddControl(IDCANCEL, DR_MoveTop | DR_MoveLeft);
-	m_Resize.AddControl(IDC_BT_COMPACT_AND_REPAIR, DR_MoveTop);
-	m_Resize.AddControl(IDC_EDIT_ADV_FILTER, DR_SizeWidth);
-	m_Resize.AddControl(IDC_BUTTON_NEXT_MATCH, DR_MoveLeft);
+	m_Resize.AddControl(IDC_MFCPROPERTYGRID1, CDialogResizer::SizeWidth | CDialogResizer::SizeHeight);
+	m_Resize.AddControl(IDOK, CDialogResizer::MoveTop | CDialogResizer::MoveLeft);
+	m_Resize.AddControl(IDCANCEL, CDialogResizer::MoveTop | CDialogResizer::MoveLeft);
+	m_Resize.AddControl(IDC_BT_COMPACT_AND_REPAIR, CDialogResizer::MoveTop);
+	m_Resize.AddControl(IDC_EDIT_ADV_FILTER, CDialogResizer::SizeWidth);
+	m_Resize.AddControl(IDC_BUTTON_NEXT_MATCH, CDialogResizer::MoveLeft);
 
 	HDITEM hdItem;
 	hdItem.mask = HDI_WIDTH; // indicating cxy is width
@@ -266,143 +155,143 @@ BOOL CAdvGeneral::OnInitDialog()
 
 	m_propertyGrid.SetFont(this->GetFont());	
 
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Activate window delay (100ms default)"), (long)CGetSetOptions::SendKeysDelay(), _T(""), SETTING_ACTIVATE_WINDOW_DELAY));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Activate window delay (100ms default)"), (long)CGetSetOptions::SendKeysDelay(), _T(""), SettingActivateWindowDelay));
 
-	AddTrueFalse(pGroupTest, _T("Add file drop when dragging clips"), CGetSetOptions::GetAddCFHDROP_OnDrag(), SETTING_ADD_CF_HDROP_ON_DRAG);
+	AddTrueFalse(pGroupTest, _T("Add file drop when dragging clips"), CGetSetOptions::GetAddCFHDROP_OnDrag(), SettingAddCfHdropOnDrag);
 
-	AddTrueFalse(pGroupTest, _T("Allow duplicates"), CGetSetOptions::GetAllowDuplicates(), SETTING_ALLOW_DUPLICATES);
-	AddTrueFalse(pGroupTest, _T("Allow back to back duplicates (if allowing duplicates)"), CGetSetOptions::GetAllowBackToBackDuplicates(), SETTING_ALOW_BACK_TO_BACK_DUPLICATES);
+	AddTrueFalse(pGroupTest, _T("Allow duplicates"), CGetSetOptions::GetAllowDuplicates(), SettingAllowDuplicates);
+	AddTrueFalse(pGroupTest, _T("Allow back to back duplicates (if allowing duplicates)"), CGetSetOptions::GetAllowBackToBackDuplicates(), SettingAllowBackToBackDuplicates);
 
-	AddTrueFalse(pGroupTest, _T("Always show scroll bar"), CGetSetOptions::GetShowScrollBar(), SETTING_ALWAYS_SHOW_SCROLL_BAR);
-	AddTrueFalse(pGroupTest, _T("Use modern scroll bar"), CGetSetOptions::GetUseModernScrollBar(), SETTING_USE_MODERN_SCROLLBAR);
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Amount of text to save for description"), CGetSetOptions::m_bDescTextSize, _T(""), SETTING_DESC_SIZE));
-	AddTrueFalse(pGroupTest, _T("Center window below cursor or caret"), CGetSetOptions::GetCenterWindowBelowCursorOrCaret(), SETTING_CENTER_WINDOW_BELOW_CURSOR_CARET);
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Copy and save clipboard delay (ms)"), (long)CGetSetOptions::GetCopyAndSveDelay(), _T(""), SETTING_COPY_SAVE_DELAY));
+	AddTrueFalse(pGroupTest, _T("Always show scroll bar"), CGetSetOptions::GetShowScrollBar(), SettingAlwaysShowScrollBar);
+	AddTrueFalse(pGroupTest, _T("Use modern scroll bar"), CGetSetOptions::GetUseModernScrollBar(), SettingUseModernScrollbar);
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Amount of text to save for description"), CGetSetOptions::m_bDescTextSize, _T(""), SettingDescSize));
+	AddTrueFalse(pGroupTest, _T("Center window below cursor or caret"), CGetSetOptions::GetCenterWindowBelowCursorOrCaret(), SettingCenterWindowBelowCursorCaret);
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Copy and save clipboard delay (ms)"), (long)CGetSetOptions::GetCopyAndSveDelay(), _T(""), SettingCopySaveDelay));
 
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Clip edit save delay after load"), (long)(CGetSetOptions::GetClipEditSaveDelayAfterLoadSeconds()), _T(""), SETTING_CLIP_EDIT_SAVE_DELAY_AFTER_LOAD));
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Clip edit save delay after Save"), (long)(CGetSetOptions::GetClipEditSaveDelayAfterSaveSeconds()), _T(""), SETTING_ClIP_EDIT_SAVE_DELAY_AFTER_SAVE));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Clip edit save delay after load"), (long)(CGetSetOptions::GetClipEditSaveDelayAfterLoadSeconds()), _T(""), SettingClipEditSaveDelayAfterLoad));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Clip edit save delay after Save"), (long)(CGetSetOptions::GetClipEditSaveDelayAfterSaveSeconds()), _T(""), SettingClipEditSaveDelayAfterSave));
 
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Clipboard restore delay after copy buffer sent paste (ms, default: 750)"), (long)(CGetSetOptions::GetDittoRestoreClipboardDelay()), _T(""), SETTING_CLIPBOARD_RESTORE_AFTER_COPY_BUFFER_DELAY));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Clipboard restore delay after copy buffer sent paste (ms, default: 750)"), (long)(CGetSetOptions::GetDittoRestoreClipboardDelay()), _T(""), SettingClipboardRestoreAfterCopyBufferDelay));
 
 	CString defaultPasteString = CGetSetOptions::GetDefaultPasteString();
 	CString defaultCopyString = CGetSetOptions::GetDefaultCopyString();
 	CString defaultCutString = CGetSetOptions::GetDefaultCutString();
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Default paste string"), defaultPasteString, _T(""), SETTING_DEFAULT_PASTE_STRING));
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Default copy string"), defaultCopyString, _T(""), SETTING_DEFAULT_COPY_STRING));
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Default cut string"), defaultCutString, _T(""), SETTING_DEFAULT_CUT_STRING));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Default paste string"), defaultPasteString, _T(""), SettingDefaultPasteString));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Default copy string"), defaultCopyString, _T(""), SettingDefaultCopyString));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Default cut string"), defaultCutString, _T(""), SettingDefaultCutString));
 	
 	static TCHAR BASED_CODE szDiffFilter[] = _T("Diff Applications(*.exe)|*.exe||");
-	CMFCPropertyGridFileProperty* pDiffProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("Diff application path"), TRUE, CGetSetOptions::GetDiffApp(), _T("exe"), 0, szDiffFilter, (LPCTSTR)0, SETTING_DIFF_APP);
+	CMFCPropertyGridFileProperty* pDiffProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("Diff application path"), TRUE, CGetSetOptions::GetDiffApp(), _T("exe"), 0, szDiffFilter, (LPCTSTR)0, SettingDiffApp);
 	pGroupTest->AddSubItem(pDiffProp);
 
-	AddTrueFalse(pGroupTest, _T("Diff save compare files as utf8"), CGetSetOptions::GetPreferUtf8ForCompare(), SETTING_USE_UTF8_FOR_DIFF);
+	AddTrueFalse(pGroupTest, _T("Diff save compare files as utf8"), CGetSetOptions::GetPreferUtf8ForCompare(), SettingUseUtf8ForDiff);
 
-	AddTrueFalse(pGroupTest, _T("Display icon in system tray"), CGetSetOptions::GetShowIconInSysTray(), SETTING_SHOW_TASKBAR_ICON);
+	AddTrueFalse(pGroupTest, _T("Display icon in system tray"), CGetSetOptions::GetShowIconInSysTray(), SettingShowTaskbarIcon);
 
-	AddTrueFalse(pGroupTest, _T("Do not hide Ditto window on deactivate"), CGetSetOptions::GetDoNotHideOnDeactivate(), SETTING_DO_NOT_HIDE_ON_DEACTIVATE);
+	AddTrueFalse(pGroupTest, _T("Do not hide Ditto window on deactivate"), CGetSetOptions::GetDoNotHideOnDeactivate(), SettingDoNotHideOnDeactivate);
 
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Double shortcut keystroke timeout)"), (long)CGetSetOptions::GetDoubleKeyStrokeTimeout(), _T(""), SETTING_DOUBLE_KEYSTROKE_TIMEOUT));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Double shortcut keystroke timeout)"), (long)CGetSetOptions::GetDoubleKeyStrokeTimeout(), _T(""), SettingDoubleKeystrokeTimeout));
 
-	AddTrueFalse(pGroupTest, _T("Draw swatch for hex, RGB, and HSL colors"), CGetSetOptions::GetDrawCopiedColorCode(), SETTING_DRAW_COPIED_COLOR_CODE);
+	AddTrueFalse(pGroupTest, _T("Draw swatch for hex, RGB, and HSL colors"), CGetSetOptions::GetDrawCopiedColorCode(), SettingDrawCopiedColorCode);
 
-	AddTrueFalse(pGroupTest, _T("Draw RTF text in list (for RTF types) (could increase memory usage an display speed)"), CGetSetOptions::GetDrawRTF(), SETTING_DRAW_RTF);
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Editor default font size"), (long)CGetSetOptions::GetEditorDefaultFontSize(), _T(""), SETTING_EDITOR_FONT_SIZE));
-	AddTrueFalse(pGroupTest, _T("Enforce clipboard ignore formats"), CGetSetOptions::GetEnforceClipboardIgnoreFormats(), SETTING_ENFORCE_CLIPBOARD_IGNORE_FORMATS);
-	AddTrueFalse(pGroupTest, _T("Elevated privileges to paste into elevated apps"), CGetSetOptions::GetPasteAsAdmin(), SETTING_PASTE_AS_ADMIN);
-	AddTrueFalse(pGroupTest, _T("Ensure Ditto is always connected to the clipboard"), CGetSetOptions::GetEnsureConnectToClipboard(), SETTING_ENSURE_CONNECTED);
-	AddTrueFalse(pGroupTest, _T("Ensure entire window is visible"), CGetSetOptions::GetEnsureEntireWindowCanBeSeen(), SETTING_ENSURE_WINDOW_IS_VISIBLE);
+	AddTrueFalse(pGroupTest, _T("Draw RTF text in list (for RTF types) (could increase memory usage an display speed)"), CGetSetOptions::GetDrawRTF(), SettingDrawRtf);
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Editor default font size"), (long)CGetSetOptions::GetEditorDefaultFontSize(), _T(""), SettingEditorFontSize));
+	AddTrueFalse(pGroupTest, _T("Enforce clipboard ignore formats"), CGetSetOptions::GetEnforceClipboardIgnoreFormats(), SettingEnforceClipboardIgnoreFormats);
+	AddTrueFalse(pGroupTest, _T("Elevated privileges to paste into elevated apps"), CGetSetOptions::GetPasteAsAdmin(), SettingPasteAsAdmin);
+	AddTrueFalse(pGroupTest, _T("Ensure Ditto is always connected to the clipboard"), CGetSetOptions::GetEnsureConnectToClipboard(), SettingEnsureConnected);
+	AddTrueFalse(pGroupTest, _T("Ensure entire window is visible"), CGetSetOptions::GetEnsureEntireWindowCanBeSeen(), SettingEnsureWindowIsVisible);
 
-	AddTrueFalse(pGroupTest, _T("Fast thumbnails (True = fast / low quality (default). False = slow / high quality)"), CGetSetOptions::GetFastThumbnailMode(), SETTING_FAST_THUMBNAIL_MODE);
+	AddTrueFalse(pGroupTest, _T("Fast thumbnails (True = fast / low quality (default). False = slow / high quality)"), CGetSetOptions::GetFastThumbnailMode(), SettingFastThumbnailMode);
 
-	AddTrueFalse(pGroupTest, _T("Find as you type"), CGetSetOptions::GetFindAsYouType(), SETTING_FIND_AS_TYPE);
+	AddTrueFalse(pGroupTest, _T("Find as you type"), CGetSetOptions::GetFindAsYouType(), SettingFindAsType);
 
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("First ten hot keys start index"), (long)CGetSetOptions::GetFirstTenHotKeysStart(), _T(""), SETTING_FIRST_TEN_HOTKEYS_START));
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("First ten hot keys font size"), (long)CGetSetOptions::GetFirstTenHotKeysFontSize(), _T(""), SETTING_FIRST_TEN_HOTKEYS_FONT_SIZE));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("First ten hot keys start index"), (long)CGetSetOptions::GetFirstTenHotKeysStart(), _T(""), SettingFirstTenHotkeysStart));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("First ten hot keys font size"), (long)CGetSetOptions::GetFirstTenHotKeysFontSize(), _T(""), SettingFirstTenHotkeysFontSize));
 
-	AddTrueFalse(pGroupTest, _T("Hide Ditto on hot key if Ditto is visible"), CGetSetOptions::GetHideDittoOnHotKeyIfAlreadyShown(), SETTING_HIDE_ON_HOTKEY_IF_VISIBLE);
+	AddTrueFalse(pGroupTest, _T("Hide Ditto on hot key if Ditto is visible"), CGetSetOptions::GetHideDittoOnHotKeyIfAlreadyShown(), SettingHideOnHotkeyIfVisible);
 
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Ignore copies faster than (ms) (default: 500)"), (long)CGetSetOptions::GetSaveClipDelay(), _T(""), SETTING_IGNORE_FALSE_COPIES_DELAY));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Ignore copies faster than (ms) (default: 500)"), (long)CGetSetOptions::GetSaveClipDelay(), _T(""), SettingIgnoreFalseCopiesDelay));
 	CString ignoreAnnoyingCFDIB = CGetSetOptions::GetIgnoreAnnoyingCFDIB();
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Ignore CF_DIB when a clip is detected as text content"), ignoreAnnoyingCFDIB, _T("Case insensitive. Recommended option is \"excel.exe; onenote.exe; powerpnt.exe\" "), SETTING_IGNORE_ANNOYING_CF_DIB));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Ignore CF_DIB when a clip is detected as text content"), ignoreAnnoyingCFDIB, _T("Case insensitive. Recommended option is \"excel.exe; onenote.exe; powerpnt.exe\" "), SettingIgnoreAnnoyingCfDib));
 
 	static TCHAR BASED_CODE szImageEditorFilter[] = _T("Applications(*.exe)|*.exe||");
-	CMFCPropertyGridFileProperty* pImageEditorProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("Image editor path (empty for system mapping)"), TRUE, CGetSetOptions::GetImageEditorPath(), _T("exe"), 0, szImageEditorFilter, (LPCTSTR)0, SETTING_IMAGE_EDITOR_PATH);
+	CMFCPropertyGridFileProperty* pImageEditorProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("Image editor path (empty for system mapping)"), TRUE, CGetSetOptions::GetImageEditorPath(), _T("exe"), 0, szImageEditorFilter, (LPCTSTR)0, SettingImageEditorPath);
 	pGroupTest->AddSubItem(pImageEditorProp);
 
-	pGroupTest->AddSubItem( MakeGridProperty<CMFCPropertyGridProperty>(_T("Maximum clip size in bytes (0 for no limit)"), CGetSetOptions::m_lMaxClipSizeInBytes, _T(""), SETTING_MAX_CLIP_SIZE));
+	pGroupTest->AddSubItem( MakeGridProperty<CMFCPropertyGridProperty>(_T("Maximum clip size in bytes (0 for no limit)"), CGetSetOptions::m_lMaxClipSizeInBytes, _T(""), SettingMaxClipSize));
 		
-	AddTrueFalse(pGroupTest, _T("Maintain search view"), CGetSetOptions::GetMaintainSearchView(), SETTING_MAINTAIN_SEARCH_VIEW);
+	AddTrueFalse(pGroupTest, _T("Maintain search view"), CGetSetOptions::GetMaintainSearchView(), SettingMaintainSearchView);
 
-	AddTrueFalse(pGroupTest, _T("Move selection on open hot key"), CGetSetOptions::GetMoveSelectionOnOpenHotkey(), SETTING_MOVE_SELECTION_ON_OPEN_HOTKEY);
+	AddTrueFalse(pGroupTest, _T("Move selection on open hot key"), CGetSetOptions::GetMoveSelectionOnOpenHotkey(), SettingMoveSelectionOnOpenHotkey);
 	
 	CString multiPasteSeparator = CGetSetOptions::GetMultiPasteSeparator(false);
-	pGroupTest->AddSubItem( MakeGridProperty<CMFCPropertyGridProperty>(_T("Multi-paste clip separator ([LF] = line feed)"), multiPasteSeparator, _T(""), SETTING_CLIP_SEPARATOR));
+	pGroupTest->AddSubItem( MakeGridProperty<CMFCPropertyGridProperty>(_T("Multi-paste clip separator ([LF] = line feed)"), multiPasteSeparator, _T(""), SettingClipSeparator));
 
-	AddTrueFalse(pGroupTest, _T("Multi-paste in reverse order"), CGetSetOptions::m_bMultiPasteReverse, SETTING_MULTIPASTE_REVERSE_ORDER);
+	AddTrueFalse(pGroupTest, _T("Multi-paste in reverse order"), CGetSetOptions::m_bMultiPasteReverse, SettingMultipasteReverseOrder);
 
-	AddTrueFalse(pGroupTest, _T("Open to group same as active exe"), CGetSetOptions::GetOpenToGroupByActiveExe(), SETTING_OPEN_TO_GROUP_AS_ACTIVE_EXE);
+	AddTrueFalse(pGroupTest, _T("Open to group same as active exe"), CGetSetOptions::GetOpenToGroupByActiveExe(), SettingOpenToGroupAsActiveExe);
 
 	static TCHAR BASED_CODE szFilter[] = _T("Sounds(*.wav)|*.wav||");
-	CMFCPropertyGridFileProperty* pFileProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("On copy play the sound"), TRUE, CGetSetOptions::GetPlaySoundOnCopy(), _T("wav"), 0, szFilter, (LPCTSTR)0, SETTING_COPY_PLAY_SOUND);
+	CMFCPropertyGridFileProperty* pFileProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("On copy play the sound"), TRUE, CGetSetOptions::GetPlaySoundOnCopy(), _T("wav"), 0, szFilter, (LPCTSTR)0, SettingCopyPlaySound);
 	pGroupTest->AddSubItem(pFileProp);
 
 	static TCHAR BASED_CODE szTextEditorFilter[] = _T("Applications(*.exe)|*.exe||");
-	CMFCPropertyGridFileProperty* pTextEditorProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("Text editor path (empty for system mapping)"), TRUE, CGetSetOptions::GetTextEditorPath(), _T("exe"), 0, szTextEditorFilter, (LPCTSTR)0, SETTING_TEXT_EDITOR_PATH);
+	CMFCPropertyGridFileProperty* pTextEditorProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("Text editor path (empty for system mapping)"), TRUE, CGetSetOptions::GetTextEditorPath(), _T("exe"), 0, szTextEditorFilter, (LPCTSTR)0, SettingTextEditorPath);
 	pGroupTest->AddSubItem(pTextEditorProp);
 
-	AddTrueFalse(pGroupTest, _T("Paste clip in active window after selection"), CGetSetOptions::GetSendPasteAfterSelection(), SETTING_PASTE_IN_ACTIVE_WINDOW);	
+	AddTrueFalse(pGroupTest, _T("Paste clip in active window after selection"), CGetSetOptions::GetSendPasteAfterSelection(), SettingPasteInActiveWindow);	
 
-	AddTrueFalse(pGroupTest, _T("Prompt when deleting clips"), CGetSetOptions::GetPromptWhenDeletingClips(), SETTING_PROMPT_ON_DELETE);
+	AddTrueFalse(pGroupTest, _T("Prompt when deleting clips"), CGetSetOptions::GetPromptWhenDeletingClips(), SettingPromptOnDelete);
 
-	AddTrueFalse(pGroupTest, _T("Revert to top level group on close"), CGetSetOptions::GetRevertToTopLevelGroup(), SETTING_REVERT_TO_TOP_LEVEL_GROUP);
+	AddTrueFalse(pGroupTest, _T("Revert to top level group on close"), CGetSetOptions::GetRevertToTopLevelGroup(), SettingRevertToTopLevelGroup);
 
-	AddTrueFalse(pGroupTest, _T("Refresh view after paste"), CGetSetOptions::GetRefreshViewAfterPasting(), SETTING_REFRESH_VIEW_AFTER_PASTE);
+	AddTrueFalse(pGroupTest, _T("Refresh view after paste"), CGetSetOptions::GetRefreshViewAfterPasting(), SettingRefreshViewAfterPaste);
 
-	AddTrueFalse(pGroupTest, _T("Regex case insensitive search"), CGetSetOptions::GetRegexCaseInsensitive(), SETTING_REGEX_CASE_INSENSITIVE);
+	AddTrueFalse(pGroupTest, _T("Regex case insensitive search"), CGetSetOptions::GetRegexCaseInsensitive(), SettingRegexCaseInsensitive);
 
 	static TCHAR BASED_CODE szRTFEditorFilter[] = _T("Applications(*.exe)|*.exe||");
-	CMFCPropertyGridFileProperty* pRTFEditorProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("RTF editor path"), TRUE, CGetSetOptions::GetRTFEditorPath(), _T("exe"), 0, szRTFEditorFilter, (LPCTSTR)0, SETTING_RTF_EDITOR_PATH);
+	CMFCPropertyGridFileProperty* pRTFEditorProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("RTF editor path"), TRUE, CGetSetOptions::GetRTFEditorPath(), _T("exe"), 0, szRTFEditorFilter, (LPCTSTR)0, SettingRtfEditorPath);
 	pGroupTest->AddSubItem(pRTFEditorProp);
 
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Save clipboard delay (ms, default: 100)"), (long)(CGetSetOptions::GetProcessDrawClipboardDelay()), _T(""), SETTING_CLIPBOARD_SAVE_DELAY));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Save clipboard delay (ms, default: 100)"), (long)(CGetSetOptions::GetProcessDrawClipboardDelay()), _T(""), SettingClipboardSaveDelay));
 
-	AddTrueFalse(pGroupTest, _T("Save multi-pastes"), CGetSetOptions::GetSaveMultiPaste(), SETTING_SAVE_MULTI_PASTE);
+	AddTrueFalse(pGroupTest, _T("Save multi-pastes"), CGetSetOptions::GetSaveMultiPaste(), SettingSaveMultiPaste);
 
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Selected index"), (long)(CGetSetOptions::SelectedIndex()+1), _T(""), SETTING_SELECTED_INDEX));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Selected index"), (long)(CGetSetOptions::SelectedIndex()+1), _T(""), SettingSelectedIndex));
 
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Send keys delay (ms)"), (long)CGetSetOptions::RealSendKeysDelay(), _T(""), SETTING_SEND_KEYS_DELAY));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Send keys delay (ms)"), (long)CGetSetOptions::RealSendKeysDelay(), _T(""), SettingSendKeysDelay));
 
 
-	AddTrueFalse(pGroupTest, _T("Show clips that are in groups in main list"), CGetSetOptions::GetShowAllClipsInMainList(), SETTING_SHOW_GROUP_CLIPS_IN_LIST);
-	AddTrueFalse(pGroupTest, _T("Show leading whitespace"), CGetSetOptions::GetDescShowLeadingWhiteSpace(), SETTING_SHOW_LEADING_WHITESPACE);
-	AddTrueFalse(pGroupTest, _T("Show in taskbar"), CGetSetOptions::GetShowInTaskBar(), SETTTING_SHOW_IN_TASKBAR);
-	AddTrueFalse(pGroupTest, _T("Hide taskbar icon when Ditto window closes"), CGetSetOptions::GetHideTaskbarIconOnClose(), SETTING_HIDE_TASKBAR_ICON_ON_CLOSE);
-	AddTrueFalse(pGroupTest, _T("Show indicator a clip has been pasted"), CGetSetOptions::GetShowIfClipWasPasted(), SETTING_SHOW_CLIP_PASTED);
+	AddTrueFalse(pGroupTest, _T("Show clips that are in groups in main list"), CGetSetOptions::GetShowAllClipsInMainList(), SettingShowGroupClipsInList);
+	AddTrueFalse(pGroupTest, _T("Show leading whitespace"), CGetSetOptions::GetDescShowLeadingWhiteSpace(), SettingShowLeadingWhitespace);
+	AddTrueFalse(pGroupTest, _T("Show in taskbar"), CGetSetOptions::GetShowInTaskBar(), SettingShowInTaskbar);
+	AddTrueFalse(pGroupTest, _T("Hide taskbar icon when Ditto window closes"), CGetSetOptions::GetHideTaskbarIconOnClose(), SettingHideTaskbarIconOnClose);
+	AddTrueFalse(pGroupTest, _T("Show indicator a clip has been pasted"), CGetSetOptions::GetShowIfClipWasPasted(), SettingShowClipPasted);
 
-	AddTrueFalse(pGroupTest, _T("Show startup tooltip message"), CGetSetOptions::GetShowStartupMessage(), SETTING_SHOW_STARTUP_MESSAGE);
+	AddTrueFalse(pGroupTest, _T("Show startup tooltip message"), CGetSetOptions::GetShowStartupMessage(), SettingShowStartupMessage);
 
-	AddTrueFalse(pGroupTest, _T("Show text for first ten copy hot keys"), CGetSetOptions::GetShowTextForFirstTenHotKeys(), SETTING_TEXT_FIRST_TEN);
-	AddTrueFalse(pGroupTest, _T("Show thumbnails(for CF_DIB and PNG types) (could increase memory usage and display speed)"), CGetSetOptions::GetDrawThumbnail(), SETTING_DRAW_THUMBNAILS);
+	AddTrueFalse(pGroupTest, _T("Show text for first ten copy hot keys"), CGetSetOptions::GetShowTextForFirstTenHotKeys(), SettingTextFirstTen);
+	AddTrueFalse(pGroupTest, _T("Show thumbnails(for CF_DIB and PNG types) (could increase memory usage and display speed)"), CGetSetOptions::GetDrawThumbnail(), SettingDrawThumbnails);
 	
 	CString slugifySeparator = CGetSetOptions::GetSlugifySeparator();
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Slugify Separator (default: -)"), slugifySeparator, _T(""), SETTING_SLUGIFY_SEPARATOR));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Slugify Separator (default: -)"), slugifySeparator, _T(""), SettingSlugifySeparator));
 
-	AddTrueFalse(pGroupTest, _T("Support all types ignoring supported type list (default: false))"), CGetSetOptions::GetSupportAllTypes(), SETTING_SUPPORT_ALL_TYPES);
+	AddTrueFalse(pGroupTest, _T("Support all types ignoring supported type list (default: false))"), CGetSetOptions::GetSupportAllTypes(), SettingSupportAllTypes);
 
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Text lines per clip"), CGetSetOptions::GetLinesPerRow(), _T(""), SETTING_LINES_PER_ROW));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Text lines per clip"), CGetSetOptions::GetLinesPerRow(), _T(""), SettingLinesPerRow));
 
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Tooltip display time(ms) max of 32000 (-1 default (5 seconds), 0 to turn off)"), CGetSetOptions::m_tooltipTimeout, _T(""), SETTING_TOOLTIP_TIMEOUT));
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Tooltip maximum display lines"), (long)CGetSetOptions::GetMaxToolTipLines(), _T(""), SETTING_TOOLTIP_LINES));
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Tooltip display characters"), (long)CGetSetOptions::GetMaxToolTipCharacters(), _T(""), SETTING_TOOLTIP_CHARACTERS));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Tooltip display time(ms) max of 32000 (-1 default (5 seconds), 0 to turn off)"), CGetSetOptions::m_tooltipTimeout, _T(""), SettingTooltipTimeout));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Tooltip maximum display lines"), (long)CGetSetOptions::GetMaxToolTipLines(), _T(""), SettingTooltipLines));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Tooltip display characters"), (long)CGetSetOptions::GetMaxToolTipCharacters(), _T(""), SettingTooltipCharacters));
 
-	AddTrueFalse(pGroupTest, _T("Transparency enabled"), CGetSetOptions::GetEnableTransparency(), SETTING_ENABLE_TRANSPARENCY);
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Transparency percentage"), CGetSetOptions::GetTransparencyPercent(), _T(""), SETTING_TRANSPARENCY));
-	AddTrueFalse(pGroupTest, _T("Update description on clip edit"), CGetSetOptions::GetUpdateDescWhenSavingClip(), SETTING_UPDATE_DESC_ON_CLIP_EDIT);
-	AddTrueFalse(pGroupTest, _T("Update clip order on paste"), CGetSetOptions::GetUpdateTimeOnPaste(), SETTING_UPDATE_ORDER_ON_PASTE);
-	AddTrueFalse(pGroupTest, _T("Update clip Order on ctrl-c"), CGetSetOptions::GetUpdateClipOrderOnCtrlC(), SETTING_UPDATE_ORDER_ON_CTRL_C);
+	AddTrueFalse(pGroupTest, _T("Transparency enabled"), CGetSetOptions::GetEnableTransparency(), SettingEnableTransparency);
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Transparency percentage"), CGetSetOptions::GetTransparencyPercent(), _T(""), SettingTransparency));
+	AddTrueFalse(pGroupTest, _T("Update description on clip edit"), CGetSetOptions::GetUpdateDescWhenSavingClip(), SettingUpdateDescOnClipEdit);
+	AddTrueFalse(pGroupTest, _T("Update clip order on paste"), CGetSetOptions::GetUpdateTimeOnPaste(), SettingUpdateOrderOnPaste);
+	AddTrueFalse(pGroupTest, _T("Update clip Order on ctrl-c"), CGetSetOptions::GetUpdateClipOrderOnCtrlC(), SettingUpdateOrderOnCtrlC);
 
-	AddTrueFalse(pGroupTest, _T("Write debug to file"), CGetSetOptions::GetEnableDebugLogging(), SETTING_DEBUG_TO_FILE);
-	AddTrueFalse(pGroupTest, _T("Write debug to OutputDebugString"), CGetSetOptions::GetEnableDebugLogging(), SETTING_DEBUG_TO_OUTPUT_STRING);
+	AddTrueFalse(pGroupTest, _T("Write debug to file"), CGetSetOptions::GetEnableDebugLogging(), SettingDebugToFile);
+	AddTrueFalse(pGroupTest, _T("Write debug to OutputDebugString"), CGetSetOptions::GetEnableDebugLogging(), SettingDebugToOutputString);
 
 	CMFCPropertyGridProperty * regexFilterGroup = MakeGridProperty<CMFCPropertyGridProperty>(_T("Exclude clips by Regular Expressions"));
 	m_propertyGrid.AddProperty(regexFilterGroup);
@@ -441,36 +330,36 @@ BOOL CAdvGeneral::OnInitDialog()
 	CString regexFilter15 = CGetSetOptions::GetRegexFilter(14);
 	CString regexProcessName15 = CGetSetOptions::GetRegexFilterByProcessName(14);
 
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("1 Regex"), regexFilter1, regexFilterDesc, SETTING_REGEX_FILTERING_1));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("1 Process Name"), regexProcessName1, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_1));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("2 Regex"), regexFilter2, regexFilterDesc, SETTING_REGEX_FILTERING_2));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("2 Process Name"), regexProcessName2, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_2));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("3 Regex"), regexFilter3, regexFilterDesc, SETTING_REGEX_FILTERING_3));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("3 Process Name"), regexProcessName3, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_3));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("4 Regex"), regexFilter4, regexFilterDesc, SETTING_REGEX_FILTERING_4));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("4 Process Name"), regexProcessName4, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_4));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("5 Regex"), regexFilter5, regexFilterDesc, SETTING_REGEX_FILTERING_5));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("5 Process Name"), regexProcessName5, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_5));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("6 Regex"), regexFilter6, regexFilterDesc, SETTING_REGEX_FILTERING_6));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("6 Process Name"), regexProcessName6, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_6));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("7 Regex"), regexFilter7, regexFilterDesc, SETTING_REGEX_FILTERING_7));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("7 Process Name"), regexProcessName7, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_7));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("8 Regex"), regexFilter8, regexFilterDesc, SETTING_REGEX_FILTERING_8));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("8 Process Name"), regexProcessName8, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_8));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("9 Regex"), regexFilter9, regexFilterDesc, SETTING_REGEX_FILTERING_9));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("9 Process Name"), regexProcessName9, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_9));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("10 Regex"), regexFilter10, regexFilterDesc, SETTING_REGEX_FILTERING_10));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("10 Process Name"), regexProcessName10, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_10));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("11 Regex"), regexFilter11, regexFilterDesc, SETTING_REGEX_FILTERING_11));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("11 Process Name"), regexProcessName11, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_11));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("12 Regex"), regexFilter12, regexFilterDesc, SETTING_REGEX_FILTERING_12));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("12 Process Name"), regexProcessName12, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_12));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("13 Regex"), regexFilter13, regexFilterDesc, SETTING_REGEX_FILTERING_13));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("13 Process Name"), regexProcessName13, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_13));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("14 Regex"), regexFilter14, regexFilterDesc, SETTING_REGEX_FILTERING_14));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("14 Process Name"), regexProcessName14, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_14));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("15 Regex"), regexFilter15, regexFilterDesc, SETTING_REGEX_FILTERING_15));
-	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("15 Process Name"), regexProcessName15, processFilterDesc, SETTING_REGEX_FILTERING_BY_PROCESS_NAME_15));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("1 Regex"), regexFilter1, regexFilterDesc, SettingRegexFiltering1));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("1 Process Name"), regexProcessName1, processFilterDesc, SettingRegexFilteringByProcessName1));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("2 Regex"), regexFilter2, regexFilterDesc, SettingRegexFiltering2));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("2 Process Name"), regexProcessName2, processFilterDesc, SettingRegexFilteringByProcessName2));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("3 Regex"), regexFilter3, regexFilterDesc, SettingRegexFiltering3));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("3 Process Name"), regexProcessName3, processFilterDesc, SettingRegexFilteringByProcessName3));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("4 Regex"), regexFilter4, regexFilterDesc, SettingRegexFiltering4));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("4 Process Name"), regexProcessName4, processFilterDesc, SettingRegexFilteringByProcessName4));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("5 Regex"), regexFilter5, regexFilterDesc, SettingRegexFiltering5));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("5 Process Name"), regexProcessName5, processFilterDesc, SettingRegexFilteringByProcessName5));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("6 Regex"), regexFilter6, regexFilterDesc, SettingRegexFiltering6));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("6 Process Name"), regexProcessName6, processFilterDesc, SettingRegexFilteringByProcessName6));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("7 Regex"), regexFilter7, regexFilterDesc, SettingRegexFiltering7));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("7 Process Name"), regexProcessName7, processFilterDesc, SettingRegexFilteringByProcessName7));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("8 Regex"), regexFilter8, regexFilterDesc, SettingRegexFiltering8));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("8 Process Name"), regexProcessName8, processFilterDesc, SettingRegexFilteringByProcessName8));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("9 Regex"), regexFilter9, regexFilterDesc, SettingRegexFiltering9));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("9 Process Name"), regexProcessName9, processFilterDesc, SettingRegexFilteringByProcessName9));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("10 Regex"), regexFilter10, regexFilterDesc, SettingRegexFiltering10));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("10 Process Name"), regexProcessName10, processFilterDesc, SettingRegexFilteringByProcessName10));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("11 Regex"), regexFilter11, regexFilterDesc, SettingRegexFiltering11));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("11 Process Name"), regexProcessName11, processFilterDesc, SettingRegexFilteringByProcessName11));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("12 Regex"), regexFilter12, regexFilterDesc, SettingRegexFiltering12));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("12 Process Name"), regexProcessName12, processFilterDesc, SettingRegexFilteringByProcessName12));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("13 Regex"), regexFilter13, regexFilterDesc, SettingRegexFiltering13));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("13 Process Name"), regexProcessName13, processFilterDesc, SettingRegexFilteringByProcessName13));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("14 Regex"), regexFilter14, regexFilterDesc, SettingRegexFiltering14));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("14 Process Name"), regexProcessName14, processFilterDesc, SettingRegexFilteringByProcessName14));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("15 Regex"), regexFilter15, regexFilterDesc, SettingRegexFiltering15));
+	regexFilterGroup->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("15 Process Name"), regexProcessName15, processFilterDesc, SettingRegexFilteringByProcessName15));
 
 	regexFilterGroup->Expand(FALSE);
 
@@ -557,18 +446,18 @@ void CAdvGeneral::WriteTransparencyPercent(long newValue)
 
 void CAdvGeneral::WriteRegexSetting(int id, const VARIANT& newValue, const VARIANT& origValue)
 {
-	if (id >= SETTING_REGEX_FILTERING_1 && id <= SETTING_REGEX_FILTERING_15)
+	if (id >= SettingRegexFiltering1 && id <= SettingRegexFiltering15)
 	{
 		if (wcscmp(newValue.bstrVal, origValue.bstrVal) != 0)
 		{
-			CGetSetOptions::SetRegexFilter(newValue.bstrVal, (id - SETTING_REGEX_FILTERING_1));
+			CGetSetOptions::SetRegexFilter(newValue.bstrVal, (id - SettingRegexFiltering1));
 		}
 	}
-	else if (id >= SETTING_REGEX_FILTERING_BY_PROCESS_NAME_1 && id <= SETTING_REGEX_FILTERING_BY_PROCESS_NAME_15)
+	else if (id >= SettingRegexFilteringByProcessName1 && id <= SettingRegexFilteringByProcessName15)
 	{
 		if (wcscmp(newValue.bstrVal, origValue.bstrVal) != 0)
 		{
-			CGetSetOptions::SetRegexFilterByProcessName(newValue.bstrVal, (id - SETTING_REGEX_FILTERING_BY_PROCESS_NAME_1));
+			CGetSetOptions::SetRegexFilterByProcessName(newValue.bstrVal, (id - SettingRegexFilteringByProcessName1));
 		}
 	}
 }

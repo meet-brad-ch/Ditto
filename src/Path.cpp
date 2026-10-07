@@ -128,12 +128,6 @@
 #include <shlwapi.h>    // Link to Shell Helper API
 #pragma comment(lib, "shlwapi.lib")
 
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
-
 
 namespace nsPath
 {

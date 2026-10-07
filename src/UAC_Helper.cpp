@@ -25,7 +25,7 @@ bool CUAC_Helper::PasteAsAdmin(HWND hWnd)
 		pasteAsAdmin = true;
 	}
 
-	Log(StrF(_T("I'm running elevated: %d, They are running elevated: %d, PASTE AS ADMIN: %d"), runningElevated, theirRunningElevated, pasteAsAdmin));
+	CLogger::Log(StrF(_T("I'm running elevated: %d, They are running elevated: %d, PASTE AS ADMIN: %d"), runningElevated, theirRunningElevated, pasteAsAdmin));
 
 	return pasteAsAdmin;
 }
@@ -60,7 +60,7 @@ bool CUAC_Helper::RunningElevated(HANDLE hProcess, bool defaultValue)
 	{
 		dwError = GetLastError();
 
-		Log(StrF(_T("RunningElevated, initial Handle is NULL, Last Error: %d"), dwError));
+		CLogger::Log(StrF(_T("RunningElevated, initial Handle is NULL, Last Error: %d"), dwError));
 	}
 	else
 	{
@@ -68,7 +68,7 @@ bool CUAC_Helper::RunningElevated(HANDLE hProcess, bool defaultValue)
 		{
 			dwError = GetLastError();
 
-			Log(StrF(_T("RunningElevated, OpenProcessToken failed, Last Error: %d"), dwError));
+			CLogger::Log(StrF(_T("RunningElevated, OpenProcessToken failed, Last Error: %d"), dwError));
 		}
 		else
 		{			
@@ -81,7 +81,7 @@ bool CUAC_Helper::RunningElevated(HANDLE hProcess, bool defaultValue)
 				// not supported on those operating systems.
 				dwError = GetLastError();
 
-				Log(StrF(_T("RunningElevated, GetTokenInformation failed, Last Error: %d"), dwError));
+				CLogger::Log(StrF(_T("RunningElevated, GetTokenInformation failed, Last Error: %d"), dwError));
 			}
 			else
 			{

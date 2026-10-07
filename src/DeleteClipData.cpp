@@ -104,18 +104,18 @@ BOOL CDeleteClipData::OnInitDialog()
 	theApp.m_Language.UpdateDeleteClipData(this);
 
 	m_Resize.SetParent(m_hWnd);
-	m_Resize.AddControl(IDC_LIST2, DR_SizeHeight | DR_SizeWidth);
-	m_Resize.AddControl(IDCLOSE, DR_MoveTop | DR_MoveLeft);
-	m_Resize.AddControl(IDC_BUTTON_APPLY, DR_MoveTop | DR_MoveLeft);
-	m_Resize.AddControl(IDC_STATIC_TO_DELETE_TEXT, DR_MoveTop);
-	m_Resize.AddControl(IDC_STATIC_TO_DELETE_SIZE, DR_MoveTop);
-	m_Resize.AddControl(IDC_STATIC_SELECTED_SIZE, DR_MoveTop);
-	m_Resize.AddControl(IDC_STATIC_SELECTED_SIZE_TEXT, DR_MoveTop);
-	m_Resize.AddControl(IDC_STATIC_DB_SIZE, DR_MoveTop);
-	m_Resize.AddControl(IDC_STATIC_DB_SIZE_TEXT, DR_MoveTop);
-	m_Resize.AddControl(IDC_BUTTON_SEARCH, DR_MoveLeft);
-	m_Resize.AddControl(IDC_STATIC_GROUP_SEARCH, DR_SizeWidth);
-	m_Resize.AddControl(IDC_BT_COMPACT_AND_REPAIR, DR_MoveTop | DR_MoveLeft);
+	m_Resize.AddControl(IDC_LIST2, CDialogResizer::SizeHeight | CDialogResizer::SizeWidth);
+	m_Resize.AddControl(IDCLOSE, CDialogResizer::MoveTop | CDialogResizer::MoveLeft);
+	m_Resize.AddControl(IDC_BUTTON_APPLY, CDialogResizer::MoveTop | CDialogResizer::MoveLeft);
+	m_Resize.AddControl(IDC_STATIC_TO_DELETE_TEXT, CDialogResizer::MoveTop);
+	m_Resize.AddControl(IDC_STATIC_TO_DELETE_SIZE, CDialogResizer::MoveTop);
+	m_Resize.AddControl(IDC_STATIC_SELECTED_SIZE, CDialogResizer::MoveTop);
+	m_Resize.AddControl(IDC_STATIC_SELECTED_SIZE_TEXT, CDialogResizer::MoveTop);
+	m_Resize.AddControl(IDC_STATIC_DB_SIZE, CDialogResizer::MoveTop);
+	m_Resize.AddControl(IDC_STATIC_DB_SIZE_TEXT, CDialogResizer::MoveTop);
+	m_Resize.AddControl(IDC_BUTTON_SEARCH, CDialogResizer::MoveLeft);
+	m_Resize.AddControl(IDC_STATIC_GROUP_SEARCH, CDialogResizer::SizeWidth);
+	m_Resize.AddControl(IDC_BT_COMPACT_AND_REPAIR, CDialogResizer::MoveTop | CDialogResizer::MoveLeft);
 
 	InitListCtrlCols();
 
@@ -234,7 +234,7 @@ void CDeleteClipData::OnSize(UINT nType, int cx, int cy)
 void CDeleteClipData::OnNcDestroy()
 {
 	CDialog::OnNcDestroy();
-	::PostMessage(m_hWndParent, WM_DELETE_CLIPS_CLOSED, 0, 0);
+	::PostMessage(m_hWndParent, CDittoMessage::DeleteClipsClosed, 0, 0);
 }
 
 // CDeleteClipData message handlers
@@ -1012,7 +1012,7 @@ CString CDeleteClipData::DescribeClip(CClip& selectedClip)
 	if (theApp.m_GroupID > 0)
 	{
 		double sticky = selectedClip.m_stickyClipGroupOrder;
-		if (sticky != INVALID_STICKY)
+		if (sticky != CClip::InvalidSticky)
 		{
 			clipData += _T(" | ");
 			clipData += _T(" - Sticky In Group");
@@ -1021,7 +1021,7 @@ CString CDeleteClipData::DescribeClip(CClip& selectedClip)
 	else
 	{
 		double sticky = selectedClip.m_stickyClipOrder;
-		if (sticky != INVALID_STICKY)
+		if (sticky != CClip::InvalidSticky)
 		{
 			clipData += _T(" | ");
 			clipData += _T(" - Sticky");

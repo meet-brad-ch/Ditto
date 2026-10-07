@@ -25,18 +25,6 @@
 #include "stdafx.h"
 #include "RulerRichEdit.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
-#ifdef _UNICODE
-	#define RTF_CLASS RICHEDIT_CLASSW
-#else
-	#define RTF_CLASS RICHEDIT_CLASSA
-#endif
-
 /////////////////////////////////////////////////////////////////////////////
 // CRulerRichEdit
 
@@ -94,7 +82,7 @@ BOOL CRulerRichEdit::Create( DWORD style, CRect rect, CWnd* parent )
    ============================================================*/
 {
 
-	return CWnd::Create (L"RICHEDIT50W", NULL, style, rect, parent, RTF_CONTROL );
+	return CWnd::Create (L"RICHEDIT50W", NULL, style, rect, parent, s_controlId );
 
 };
 

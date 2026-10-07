@@ -6,12 +6,6 @@
 #include "ErrorReport.h"
 #include <memory>
 
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
-
 CProcessPaste::CProcessPaste()
 {
 	m_pOle = std::make_unique<COleClipSource>().release(); // ownership: COM reference count (one reference, held by this object until SetClipboard or InternalRelease)
@@ -58,7 +52,7 @@ BOOL CProcessPaste::RunAtBoundary(LPCTSTR operation, const std::function<BOOL()>
 		// e.g. std::bad_alloc, or std::runtime_error from a failed system call while rendering the clip
 		m_lastErrorMessage.Format(_T("%s failed: %s"), operation, CString(error.what()).GetString());
 	}
-	Log(m_lastErrorMessage);
+	CLogger::Log(m_lastErrorMessage);
 	return FALSE;
 }
 
@@ -97,12 +91,12 @@ BOOL CProcessPaste::DoPaste()
 
 		if (m_bSendPaste)
 		{
-			Log(_T("Sending Paste to active window"));
+			CLogger::Log(_T("Sending Paste to active window"));
 			theApp.m_activeWnd.SendPaste(m_bActivateTarget);
 		}
 		else if (m_bActivateTarget)
 		{
-			Log(_T("Activating active window"));
+			CLogger::Log(_T("Activating active window"));
 			theApp.m_activeWnd.ActivateTarget();
 		}
 		return TRUE;
@@ -148,7 +142,7 @@ BOOL CProcessPaste::DoDrag()
 
 void CProcessPaste::MarkAsPasted(bool updateClipOrder)
 {
-	Log(_T("start of MarkAsPasted"));
+	CLogger::Log(_T("start of MarkAsPasted"));
 
 	CClipIDs& clips = GetClipIDs();
 	
@@ -169,7 +163,7 @@ void CProcessPaste::MarkAsPasted(bool updateClipOrder)
 		pData.release(); // ownership: MarkAsPastedThread retakes it in a std::unique_ptr
 	}
 
-	Log(_T("End of MarkAsPasted"));
+	CLogger::Log(_T("End of MarkAsPasted"));
 }
 
 UINT CProcessPaste::MarkAsPastedThread(LPVOID pParam)
@@ -179,7 +173,7 @@ UINT CProcessPaste::MarkAsPastedThread(LPVOID pParam)
 	static CEvent UpdateTimeEvent(TRUE, TRUE, _T("Ditto_Update_Clip_Time"), NULL);
 	UpdateTimeEvent.ResetEvent();
 
-	Log(_T("Start of MarkAsPastedThread"));
+	CLogger::Log(_T("Start of MarkAsPastedThread"));
 
 	BOOL bRet = FALSE;
 	int clipId = 0;
@@ -201,11 +195,11 @@ UINT CProcessPaste::MarkAsPastedThread(LPVOID pParam)
 		CErrorReport::Show(StrF(_T("Updating the order and paste time of pasted clip id %d failed: %s"), clipId, e.errorMessage()));
 	}
 
-	Log(_T("End of MarkAsPastedThread"));
+	CLogger::Log(_T("End of MarkAsPastedThread"));
 
 	ULONGLONG endTick = GetTickCount64();
 	if((endTick-startTick) > 350)
-		Log(StrF(_T("Paste Timing MarkAsPastedThread: %llu, ClipId: %d"), endTick-startTick, clipId));
+		CLogger::Log(StrF(_T("Paste Timing MarkAsPastedThread: %llu, ClipId: %d"), endTick-startTick, clipId));
 
 	UpdateTimeEvent.SetEvent();
 	return bRet;
@@ -222,7 +216,7 @@ void CProcessPaste::UpdatePastedClips(MarkAsPastedData& data, int& clipId)
 	{
 		if (CGetSetOptions::m_refreshViewAfterPasting)
 		{
-			refreshFlags |= UPDATE_AFTER_PASTE_SELECT_CLIP;
+			refreshFlags |= CClipRefreshFlags::AfterPasteSelectClip;
 		}
 
 		for (int i = 0; i < clipCount; i++)
@@ -258,7 +252,7 @@ void CProcessPaste::MoveToTopOrder(int id, bool pastedFromGroup)
 			double latestDate{q.getFloatField(_T("clipGroupOrder"))};
 			latestDate += 1;
 
-			Log(StrF(_T("Setting clipId: %d, GroupOrder: %f"), id, latestDate));
+			CLogger::Log(StrF(_T("Setting clipId: %d, GroupOrder: %f"), id, latestDate));
 
 			theApp.m_db.execDMLEx(_T("UPDATE Main SET clipGroupOrder = %f where lID = %d;"), latestDate, id);
 		}
@@ -272,7 +266,7 @@ void CProcessPaste::MoveToTopOrder(int id, bool pastedFromGroup)
 			double latestDate{q.getFloatField(_T("clipOrder"))};
 			latestDate += 1;
 
-			Log(StrF(_T("Setting clipId: %d, order: %f"), id, latestDate));
+			CLogger::Log(StrF(_T("Setting clipId: %d, order: %f"), id, latestDate));
 
 			theApp.m_db.execDMLEx(_T("UPDATE Main SET clipOrder = %f where lID = %d;"), latestDate, id);
 		}

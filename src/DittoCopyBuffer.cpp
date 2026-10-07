@@ -23,7 +23,7 @@ CDittoCopyBuffer::~CDittoCopyBuffer(void)
 
 bool CDittoCopyBuffer::StartCopy(long lCopyBuffer, bool bCut)
 {
-	Log(StrF(_T("Start of Ditto Copy buffer = %d"), lCopyBuffer));
+	CLogger::Log(StrF(_T("Start of Ditto Copy buffer = %d"), lCopyBuffer));
 
 	//Tell the timer thread to exit
 	m_ActiveTimer.SetEvent();
@@ -50,7 +50,7 @@ bool CDittoCopyBuffer::StartCopy(long lCopyBuffer, bool bCut)
 	}
 	else
 	{
-		Log(_T("Start of Ditto Failed to save buffer"));
+		CLogger::Log(_T("Start of Ditto Failed to save buffer"));
 	}
 
 	return true;
@@ -78,20 +78,20 @@ bool CDittoCopyBuffer::EndCopy(long lID)
 {
 	if(m_lCurrentDittoBuffer < 0 || m_lCurrentDittoBuffer >= 10)
 	{
-		Log(_T("tried to save copy buffer but copy buffer is empty"));
+		CLogger::Log(_T("tried to save copy buffer but copy buffer is empty"));
 		return false;
 	}
 
 	if(m_bActive == false)
 	{
-		Log(_T("Current buffer is not active can't save copy buffer to db"));
+		CLogger::Log(_T("Current buffer is not active can't save copy buffer to db"));
 		return false;
 	}
 
 	m_ActiveTimer.SetEvent();
 	m_bActive = false;
 
-	Log(StrF(_T("Start - Ditto EndCopy buffer = %d"), m_lCurrentDittoBuffer));
+	CLogger::Log(StrF(_T("Start - Ditto EndCopy buffer = %d"), m_lCurrentDittoBuffer));
 
 	bool bRet = false;
 
@@ -100,13 +100,13 @@ bool CDittoCopyBuffer::EndCopy(long lID)
 	
 	if(PutClipOnDittoCopyBuffer(lID, m_lCurrentDittoBuffer))
 	{
-		Log(StrF(_T("Ditto end copy, saved clip successfully Clip ID = %d"), lID));	
+		CLogger::Log(StrF(_T("Ditto end copy, saved clip successfully Clip ID = %d"), lID));	
 
 		bRet = true;
 	}
 	else
 	{
-		Log(StrF(_T("Ditto end copy, ERROR associating clip to Copy buffer ID = %d"), lID));
+		CLogger::Log(StrF(_T("Ditto end copy, ERROR associating clip to Copy buffer ID = %d"), lID));
 	}
 
 	return bRet;
@@ -148,7 +148,7 @@ bool CDittoCopyBuffer::PastCopyBuffer(long lCopyBuffer)
 	//Can't paste while another is still active
 	if(WaitForSingleObject(m_Pasting, 1) == WAIT_TIMEOUT)
 	{
-		Log(_T("Copy Buffer pasted to fast"));
+		CLogger::Log(_T("Copy Buffer pasted to fast"));
 		return false;
 	}
 
@@ -156,7 +156,7 @@ bool CDittoCopyBuffer::PastCopyBuffer(long lCopyBuffer)
 	m_Pasting.ResetEvent();
 	bool bRet = false;
 
-	Log(StrF(_T("Start - PastCopyBuffer buffer = %d"), m_lCurrentDittoBuffer));
+	CLogger::Log(StrF(_T("Start - PastCopyBuffer buffer = %d"), m_lCurrentDittoBuffer));
 
 	try
 	{
@@ -177,7 +177,7 @@ bool CDittoCopyBuffer::PastCopyBuffer(long lCopyBuffer)
 
 				m_pClipboard->m_lRestoreDelay = CGetSetOptions::GetDittoRestoreClipboardDelay();
 
-				Log(StrF(_T("PastCopyBuffer sent paste, starting thread to restore clipboard, Delay = %d"), m_pClipboard->m_lRestoreDelay));
+				CLogger::Log(StrF(_T("PastCopyBuffer sent paste, starting thread to restore clipboard, Delay = %d"), m_pClipboard->m_lRestoreDelay));
 
 				// the thread takes m_pClipboard over; this thread does not touch it until m_Pasting is set
 				AfxBeginThread(CDittoCopyBuffer::DelayRestoreClipboard, (LPVOID)this, THREAD_PRIORITY_LOWEST);
@@ -186,7 +186,7 @@ bool CDittoCopyBuffer::PastCopyBuffer(long lCopyBuffer)
 			}
 			else
 			{
-				Log(_T("PastCopyBuffer failed to save clipboard"));
+				CLogger::Log(_T("PastCopyBuffer failed to save clipboard"));
 			}
 		}
 	}
@@ -228,17 +228,17 @@ UINT CDittoCopyBuffer::DelayRestoreClipboard(LPVOID pParam)
 
 		if(GetKeyState(VK_SHIFT) & 0x8000)
 		{
-			Log(_T("Shift key is down not restoring clipboard, custom Buffer on normal clipboard"));
+			CLogger::Log(_T("Shift key is down not restoring clipboard, custom Buffer on normal clipboard"));
 		}
 		else
 		{
 			if(pLocalClipboard->Restore())
 			{
-				Log(_T("CDittoCopyBuffer::DelayRestoreClipboard Successfully"));
+				CLogger::Log(_T("CDittoCopyBuffer::DelayRestoreClipboard Successfully"));
 			}
 			else
 			{
-				Log(_T("CDittoCopyBuffer::DelayRestoreClipboard Failed to restore"));
+				CLogger::Log(_T("CDittoCopyBuffer::DelayRestoreClipboard Failed to restore"));
 			}
 		}
 

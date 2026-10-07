@@ -13,17 +13,11 @@
 
 #pragma warning(disable : 4995)
 
-//remove 2005 warnings
-#define _CRT_SECURE_NO_DEPRECATE 1
-#define _CRT_NON_CONFORMING_SWPRINTFS 1
+// _WIN32_WINNT and WINVER (Windows 10) are set for every project in Directory.Build.targets.
+// _CRT_SECURE_NO_DEPRECATE, _CRT_NON_CONFORMING_SWPRINTFS and VC_EXTRALEAN are set in the
+// PreprocessorDefinitions of CP_Main.vcxproj and tests\AppTests\AppTests.vcxproj.
 
-#define HITTEST_RET LRESULT
-
-// _WIN32_WINNT and WINVER (Windows 10) are set for every project in Directory.Build.targets
-
-#define VC_EXTRALEAN		// Exclude rarely-used stuff from Windows headers
-
-#include <afxwin.h>         // MFC core and standard components
+#include <afxwin.h>        // MFC core and standard components
 #include <afxext.h>         // MFC extensions
 #include <afxdisp.h>        // MFC Automation classes
 #include <afxdtctl.h>		// MFC support for Internet Explorer 4 Common Controls
@@ -31,8 +25,6 @@
 #include <afxcmn.h>			// MFC support for Windows Common Controls
 #endif // _AFX_NO_AFXCMN_SUPPORT
 #include <afxole.h>
-
-#include "UnicodeMacros.h"
 
 #include <imm.h>
 #include <afxcontrolbars.h>

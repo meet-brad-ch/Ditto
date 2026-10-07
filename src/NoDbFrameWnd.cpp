@@ -7,17 +7,12 @@
 #include "CP_Main.h"
 #include "Misc.h"
 
-#define WM_TRAYNOTIFY WM_USER + 100
-
-#define TIMER_OPEN_DB 1
-#define TIMER_ERROR_MSG 2
-
 BEGIN_MESSAGE_MAP(CNoDbFrameWnd, CFrameWnd)
 	ON_WM_CREATE()
 	ON_COMMAND(ID_FIRST_OPTIONS, &CNoDbFrameWnd::OnFirstOptions)
 	ON_COMMAND(ID_FIRST_EXIT_NO_DB, &CNoDbFrameWnd::OnFirstExitNoDb)
-	ON_MESSAGE(WM_TRAYNOTIFY, &CNoDbFrameWnd::OnTrayNotification)
-	ON_MESSAGE(WM_OPTIONS_CLOSED, OnOptionsClosed)
+	ON_MESSAGE(WmTrayNotify, &CNoDbFrameWnd::OnTrayNotification)
+	ON_MESSAGE(CDittoMessage::OptionsClosed, OnOptionsClosed)
 	ON_WM_TIMER()
 	ON_WM_HOTKEY()
 END_MESSAGE_MAP()
@@ -43,12 +38,12 @@ int CNoDbFrameWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	SetWindowText(_T("Ditto"));
 
-	m_trayIcon.Create(this, IDR_MENU_NO_DB, _T("Ditto"), CTrayNotifyIcon::LoadIcon(IDI_MAINFRAME_NO_DB), WM_TRAYNOTIFY, 0, 1);
+	m_trayIcon.Create(this, IDR_MENU_NO_DB, _T("Ditto"), CTrayNotifyIcon::LoadIcon(IDI_MAINFRAME_NO_DB), WmTrayNotify, 0, 1);
 	m_trayIcon.SetDefaultMenuItem(ID_FIRST_OPTIONS, FALSE);
 	m_trayIcon.MinimiseToTray(this);
 
-	SetTimer(TIMER_OPEN_DB, 15000, NULL);
-	SetTimer(TIMER_ERROR_MSG, 180000, NULL);
+	SetTimer(TimerOpenDb, 15000, NULL);
+	SetTimer(TimerErrorMsg, 180000, NULL);
 
 	g_HotKeys.Init(m_hWnd);
 
@@ -91,11 +86,11 @@ void CNoDbFrameWnd::OnTimer(UINT_PTR nIDEvent)
 {
 	switch (nIDEvent)
 	{
-	case TIMER_OPEN_DB:
+	case TimerOpenDb:
 		TryOpenDatabase();
 		break;
-	case TIMER_ERROR_MSG:
-		KillTimer(TIMER_ERROR_MSG);
+	case TimerErrorMsg:
+		KillTimer(TimerErrorMsg);
 		ShowNoDbMessage();
 		break;
 	}
@@ -125,8 +120,8 @@ void CNoDbFrameWnd::TryOpenDatabase()
 		g_HotKeys.Remove(m_pDittoHotKey3);
 		m_pDittoHotKey3 = NULL;
 
-		KillTimer(TIMER_OPEN_DB);
-		KillTimer(TIMER_ERROR_MSG);
+		KillTimer(TimerOpenDb);
+		KillTimer(TimerErrorMsg);
 		m_trayIcon.Hide();
 
 		theApp.CreateMainWnd();

@@ -1,9 +1,7 @@
 #pragma once
 
-#define VC_EXTRALEAN		// Exclude rarely-used stuff from Windows headers
-
-#define _CRT_SECURE_NO_DEPRECATE 1
-#define _CRT_NON_CONFORMING_SWPRINTFS 1
+// VC_EXTRALEAN, _CRT_SECURE_NO_DEPRECATE and _CRT_NON_CONFORMING_SWPRINTFS are set in the
+// PreprocessorDefinitions of DittoUtil.vcxproj.
 
 #include <SDKDDKVer.h>
 

@@ -13,12 +13,6 @@
 #include "..\Shared\TextConvert.h"
 #include <algorithm>
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 /////////////////////////////////////////////////////////////////////////////
 // CCopyProperties dialog
 
@@ -125,16 +119,16 @@ BOOL CCopyProperties::OnInitDialog()
 	}
 	
 	m_Resize.SetParent(m_hWnd);
-	m_Resize.AddControl(IDC_EDIT_PROPERTIES, DR_SizeHeight | DR_SizeWidth);
-	m_Resize.AddControl(IDC_STATIC_FORMATS, DR_MoveTop);
-	m_Resize.AddControl(IDC_COPY_DATA, DR_MoveTop | DR_SizeWidth);
-	m_Resize.AddControl(IDC_DELETE_COPY_DATA, DR_MoveTop);
-	m_Resize.AddControl(IDOK, DR_MoveTop | DR_MoveLeft);
-	m_Resize.AddControl(IDCANCEL, DR_MoveTop | DR_MoveLeft);
-	m_Resize.AddControl(IDC_EDIT_QUICK_PASTE, DR_SizeWidth);
-	m_Resize.AddControl(IDC_COMBO1, DR_SizeWidth);
-	m_Resize.AddControl(IDC_STATIC_MD5, DR_MoveTop | DR_MoveLeft);
-	m_Resize.AddControl(IDC_EDIT_MD5, DR_MoveTop | DR_MoveLeft);
+	m_Resize.AddControl(IDC_EDIT_PROPERTIES, CDialogResizer::SizeHeight | CDialogResizer::SizeWidth);
+	m_Resize.AddControl(IDC_STATIC_FORMATS, CDialogResizer::MoveTop);
+	m_Resize.AddControl(IDC_COPY_DATA, CDialogResizer::MoveTop | CDialogResizer::SizeWidth);
+	m_Resize.AddControl(IDC_DELETE_COPY_DATA, CDialogResizer::MoveTop);
+	m_Resize.AddControl(IDOK, CDialogResizer::MoveTop | CDialogResizer::MoveLeft);
+	m_Resize.AddControl(IDCANCEL, CDialogResizer::MoveTop | CDialogResizer::MoveLeft);
+	m_Resize.AddControl(IDC_EDIT_QUICK_PASTE, CDialogResizer::SizeWidth);
+	m_Resize.AddControl(IDC_COMBO1, CDialogResizer::SizeWidth);
+	m_Resize.AddControl(IDC_STATIC_MD5, CDialogResizer::MoveTop | CDialogResizer::MoveLeft);
+	m_Resize.AddControl(IDC_EDIT_MD5, CDialogResizer::MoveTop | CDialogResizer::MoveLeft);
 	
 	theApp.m_Language.UpdateClipProperties(this);
 
@@ -195,11 +189,11 @@ bool CCopyProperties::IsExtendedHotKey(BYTE key)
 
 void CCopyProperties::LoadHotKeys(CClip &Clip)
 {
-	DWORD shortcut = ACCEL_MAKEKEY(LOBYTE(Clip.m_shortCut), ((HIBYTE(Clip.m_shortCut)) &~HOTKEYF_EXT));
+	DWORD shortcut = CAccels::MakeKey(LOBYTE(Clip.m_shortCut), ((HIBYTE(Clip.m_shortCut)) &~HOTKEYF_EXT));
 
 	if (IsExtendedHotKey(LOBYTE(shortcut)))
 	{
-		shortcut = ACCEL_MAKEKEY(LOBYTE(shortcut), (HIBYTE(shortcut) | HOTKEYF_EXT));
+		shortcut = CAccels::MakeKey(LOBYTE(shortcut), (HIBYTE(shortcut) | HOTKEYF_EXT));
 	}
 
 	m_HotKey.SetHotKey(LOBYTE(shortcut), (HIBYTE(shortcut)));

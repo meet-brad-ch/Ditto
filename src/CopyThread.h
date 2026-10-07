@@ -7,7 +7,7 @@
 struct CCopyConfig
 {
 public:
-	// WM_CLIPBOARD_COPIED is sent to this window when a copy is made.
+	// CDittoMessage::ClipboardCopied is sent to this window when a copy is made.
 	HWND        m_hClipHandler{};
 	// true to use PostMessage (asynchronous)
 	// false to use SendMessage (synchronous)

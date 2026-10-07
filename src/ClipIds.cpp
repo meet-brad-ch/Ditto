@@ -189,7 +189,7 @@ BOOL CClipIDs::MoveTo(long lParentID, double /*dFirst*/, double /*dIncrement*/)
 	{
 		int count = (int)GetSize();
 
-		Log(StrF(_T("MoveTo, Start, Size: %d, ParentId: %d"), count, lParentID));
+		CLogger::Log(StrF(_T("MoveTo, Start, Size: %d, ParentId: %d"), count, lParentID));
 
 		for(int i = count-1; i >= 0; i--)
 		{
@@ -213,7 +213,7 @@ BOOL CClipIDs::MoveTo(long lParentID, double /*dFirst*/, double /*dIncrement*/)
 
 			int ret = theApp.m_db.execDMLEx(sql);
 
-			Log(StrF(_T("MoveTo, Sql Ret: %d, SQL: %s"), ret, sql.GetString()));
+			CLogger::Log(StrF(_T("MoveTo, Sql Ret: %d, SQL: %s"), ret, sql.GetString()));
 		}
 	}
 	catch (CppSQLite3Exception& e)
@@ -288,7 +288,7 @@ BOOL CClipIDs::CopyTo(int parentId)
 
 					if(clip.AddToDB(false) == false)
 					{
-						Log(_T("failed to add copy to database"));
+						CLogger::Log(_T("failed to add copy to database"));
 					}
 				}
 			}
@@ -315,7 +315,7 @@ BOOL CClipIDs::DeleteIDs(bool fromClipWindow, CppSQLite3DB& db)
 	INT_PTR count = GetSize();
 	int batchCount = 25;
 
-	Log(StrF(_T("Begin delete clips, Count: %d from Window: %d"), count, fromClipWindow));
+	CLogger::Log(StrF(_T("Begin delete clips, Count: %d from Window: %d"), count, fromClipWindow));
 	
 	if(count <= 0)
 		return FALSE;
@@ -336,7 +336,7 @@ BOOL CClipIDs::DeleteIDs(bool fromClipWindow, CppSQLite3DB& db)
 			if(clipId <= 0)
 				continue;
 
-			Log(StrF(_T("Delete clip Id: %d"), clipId));
+			CLogger::Log(StrF(_T("Delete clip Id: %d"), clipId));
 
 			AddExistingClipToDelete(db, clipId, sqlIn);
 
@@ -373,7 +373,7 @@ BOOL CClipIDs::DeleteIDs(bool fromClipWindow, CppSQLite3DB& db)
 		return FALSE;
 	}
 	
-	Log(StrF(_T("End delete clips, Count: %d"), count));
+	CLogger::Log(StrF(_T("End delete clips, Count: %d"), count));
 
 	return bRet;
 }
@@ -466,7 +466,7 @@ BOOL CClipIDs::Export(CString csFilePath)
 
 	if(FileExists(csFilePath) && DeleteFile(csFilePath) == FALSE)
 	{
-		Log(StrF(_T("Export::Error deleting the file %s"), csFilePath.GetString()));
+		CLogger::Log(StrF(_T("Export::Error deleting the file %s"), csFilePath.GetString()));
 		return FALSE;
 	}
 

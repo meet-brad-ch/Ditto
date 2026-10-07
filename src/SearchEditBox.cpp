@@ -5,12 +5,6 @@
 #include "cp_main.h"
 #include "SearchEditBox.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 /////////////////////////////////////////////////////////////////////////////
 // CSearchEditBox
 
@@ -76,12 +70,12 @@ void CSearchEditBox::HandleReturnKey()
 	{
 		if(CGetSetOptions::m_bFindAsYouType)
 		{
-			pWnd->SendMessage(NM_SEARCH_ENTER_PRESSED, 0, 0);
+			pWnd->SendMessage(CQListCtrl::NmSearchEnterPressed, 0, 0);
 		}
 		else
 		{
 			//Send a message to the parent to refill the lb from the search
-			pWnd->PostMessage(CB_SEARCH, 0, 0);
+			pWnd->PostMessage(CQListCtrl::CbSearch, 0, 0);
 		}
 	}
 }
@@ -95,8 +89,8 @@ bool CSearchEditBox::IsListNavigationKey(WPARAM key)
 
 bool CSearchEditBox::IsCutCopyDeleteKey(WPARAM key)
 {
-	return key == 'C' && CONTROL_PRESSED ||
-		key == 'X' && CONTROL_PRESSED ||
+	return key == 'C' && CKeyboard::IsControlPressed() ||
+		key == 'X' && CKeyboard::IsControlPressed() ||
 		key == VK_DELETE;
 }
 
@@ -105,7 +99,7 @@ bool CSearchEditBox::SendKeyToParent(const MSG* pMsg)
 	CWnd *pWnd = GetParent();
 	if(pWnd)
 	{
-		pWnd->SendMessage(CB_UPDOWN, pMsg->wParam, pMsg->lParam);
+		pWnd->SendMessage(CQListCtrl::CbUpDown, pMsg->wParam, pMsg->lParam);
 		return true;
 	}
 

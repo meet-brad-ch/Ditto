@@ -35,7 +35,7 @@ public:
 	afx_msg void OnDummy();
 	afx_msg void OnNcPaint();
 	afx_msg void OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp);
-	afx_msg HITTEST_RET OnNcHitTest(CPoint point);
+	afx_msg LRESULT OnNcHitTest(CPoint point);
 protected:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 public:
@@ -50,6 +50,14 @@ public:
 	afx_msg LRESULT OnDpiChanged(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnMoving(UINT fwSide, LPRECT pRect);
 	afx_msg void OnEnterSizeMove();
+
+private:
+	/** @brief The timer ids of the window (SetTimer / OnTimer). */
+	enum : UINT
+	{
+		/** @brief Finishes a caption click once the mouse button is up. */
+		TimerButtonUp = 1,
+	};
 };
 
 

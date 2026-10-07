@@ -1,11 +1,18 @@
 #pragma once
 #include "rulerricheditctrl\rulerricheditctrl.h"
 
-#define SAVED_CLIP_TO_DB	1
-#define DIDNT_NEED_TO_SAVE	2
 class CDittoRulerRichEditCtrl :	public CRulerRichEditCtrl
 {
 public:
+	/** @brief SaveToDB's results besides FALSE (nothing saved). */
+	enum : int
+	{
+		/** @brief The clip was saved to the database. */
+		SavedClipToDb = 1,
+		/** @brief The clip was not modified, so nothing was saved. */
+		DidntNeedToSave = 2,
+	};
+
 	CDittoRulerRichEditCtrl(void);
 	~CDittoRulerRichEditCtrl(void);
 

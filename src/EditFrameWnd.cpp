@@ -6,8 +6,6 @@
 #include "EditFrameWnd.h"
 #include ".\editframewnd.h"
 
-#define TIMER_BUTTON_UP 1
-
 // CEditFrameWnd
 
 IMPLEMENT_DYNCREATE(CEditFrameWnd, CFrameWnd)
@@ -66,7 +64,7 @@ int CEditFrameWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_DittoWindow.DoCreate(this);
 	m_DittoWindow.m_bDrawChevron = false;
 	m_DittoWindow.SetCaptionColors(g_Opt.m_Theme.CaptionLeft(), g_Opt.m_Theme.CaptionRight(), g_Opt.m_Theme.Border());
-	m_DittoWindow.SetCaptionOn(this, CAPTION_TOP, true, g_Opt.m_Theme.GetCaptionSize(), g_Opt.m_Theme.GetCaptionFontSize());
+	m_DittoWindow.SetCaptionOn(this, CGetSetOptions::CaptionOnTop, true, g_Opt.m_Theme.GetCaptionSize(), g_Opt.m_Theme.GetCaptionFontSize());
 
 	m_crIcon.SetRect(-2, -15, 15, 0);
 
@@ -84,7 +82,7 @@ void CEditFrameWnd::OnDestroy()
 	CGetSetOptions::SetEditWndSize(rect.Size());
 	CGetSetOptions::SetEditWndPoint(rect.TopLeft());
 
-	::SendMessage(m_hNotifyWnd, WM_EDIT_WND_CLOSING, 0, 0);
+	::SendMessage(m_hNotifyWnd, CDittoMessage::EditWndClosing, 0, 0);
 }
 
 void CEditFrameWnd::OnSize(UINT nType, int cx, int cy)
@@ -170,7 +168,7 @@ void CEditFrameWnd::OnNcPaint()
 	m_DittoWindow.DoNcPaint(this);	
 }
 
-HITTEST_RET CEditFrameWnd::OnNcHitTest(CPoint point) 
+LRESULT CEditFrameWnd::OnNcHitTest(CPoint point) 
 {
 	UINT Ret = m_DittoWindow.DoNcHitTest(this, point);
 	if(Ret == -1)
@@ -184,7 +182,7 @@ void CEditFrameWnd::OnNcLButtonDown(UINT nHitTest, CPoint point)
 
 	if (buttonPressed != 0)
 	{
-		SetTimer(TIMER_BUTTON_UP, 100, NULL);
+		SetTimer(TimerButtonUp, 100, NULL);
 	}
 
 	CFrameWnd::OnNcLButtonDown(nHitTest, point);
@@ -195,7 +193,7 @@ void CEditFrameWnd::OnNcLButtonUp(UINT nHitTest, CPoint point)
 	if(m_DittoWindow.DoNcLButtonUp(this, nHitTest, point) > 0)
 		return;
 
-	KillTimer(TIMER_BUTTON_UP);
+	KillTimer(TimerButtonUp);
 
 	CFrameWnd::OnNcLButtonUp(nHitTest, point);
 }
@@ -234,12 +232,12 @@ void CEditFrameWnd::OnTimer(UINT_PTR nIDEvent)
 {
 	switch (nIDEvent)
 	{
-		case TIMER_BUTTON_UP:
+		case TimerButtonUp:
 		{
 			if ((GetKeyState(VK_LBUTTON) & 0x100) == 0)
 			{
 				m_DittoWindow.DoNcLButtonUp(this, 0, CPoint(0, 0));
-				KillTimer(TIMER_BUTTON_UP);
+				KillTimer(TimerButtonUp);
 			}
 			break;
 		}

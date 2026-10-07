@@ -18,9 +18,21 @@ HWND g_hKeyboardNotifyWnd = NULL;
 
 HINSTANCE hDllInst;
 
-#define KH_KEY_DOWN				0x01 // Key-down event
-#define KH_KEY_UP				0x02 // Key-up event
-#define KH_KEY_REPEAT			0x04 // Key-repeat event, the key is held down for long enough
+/** @brief The kinds of keyboard event that GetKeyEventType reads from a key message's lParam. */
+class KeyEventType
+{
+public:
+	/** @brief The event kinds (bit values, as GetKeyEventType returns them). */
+	enum : BYTE
+	{
+		/** @brief Key-down event. */
+		KeyDown = 0x01,
+		/** @brief Key-up event. */
+		KeyUp = 0x02,
+		/** @brief Key-repeat event: the key is held down for long enough. */
+		KeyRepeat = 0x04,
+	};
+};
 
 BOOL WINAPI DllMain(HINSTANCE hInstance,DWORD dwReason,LPVOID /*lpReserved*/)
 {
@@ -60,7 +72,7 @@ LRESULT CALLBACK KeyboardProc(INT nCode, WPARAM wParam, LPARAM lParam)
 
 	const BYTE KEYEVENT = GetKeyEventType(lParam);	
 
-	if(g_CaptureKeys && KEYEVENT == KH_KEY_DOWN)
+	if(g_CaptureKeys && KEYEVENT == KeyEventType::KeyDown)
 	{
 		if(g_hKeyboardNotifyWnd)
 		{
@@ -80,19 +92,19 @@ BYTE GetKeyEventType(LPARAM lParam)
 	// Reference: WM_KEYDOWN on MSDN
 	if (lParam & 0x80000000) // check bit 31 for up/down
 	{
-		return KH_KEY_UP;
+		return KeyEventType::KeyUp;
 	}
 	else
 	{
 		if (lParam & 0x40000000) // check bit 30 for previous up/down
-			return KH_KEY_REPEAT; // It was pressed down before this key-down event, so it's a key-repeat for sure
+			return KeyEventType::KeyRepeat; // It was pressed down before this key-down event, so it's a key-repeat for sure
 		else
-			return KH_KEY_DOWN;
+			return KeyEventType::KeyDown;
 	}
 }
 
 
-DLLEXPORT DWORD WINAPI MonitorFocusChanges(HWND hWnd, UINT message)
+__declspec(dllexport) DWORD WINAPI MonitorFocusChanges(HWND hWnd, UINT message)
 {    
     if(hHook)
 	{
@@ -107,7 +119,7 @@ DLLEXPORT DWORD WINAPI MonitorFocusChanges(HWND hWnd, UINT message)
     return TRUE;
 }
 
-DLLEXPORT DWORD WINAPI StopMonitoringFocusChanges()
+__declspec(dllexport) DWORD WINAPI StopMonitoringFocusChanges()
 {
     if(hHook) 
 		UnhookWindowsHookEx(hHook);
@@ -118,7 +130,7 @@ DLLEXPORT DWORD WINAPI StopMonitoringFocusChanges()
     return TRUE;
 }
 
-DLLEXPORT DWORD WINAPI MonitorKeyboardChanges(HWND hWnd,UINT message)
+__declspec(dllexport) DWORD WINAPI MonitorKeyboardChanges(HWND hWnd,UINT message)
 {
 	if(g_hKeyboardHook)
 	{
@@ -133,7 +145,7 @@ DLLEXPORT DWORD WINAPI MonitorKeyboardChanges(HWND hWnd,UINT message)
 	return TRUE;
 }
 
-DLLEXPORT DWORD WINAPI StopMonitoringKeyboardChanges()
+__declspec(dllexport) DWORD WINAPI StopMonitoringKeyboardChanges()
 {
 	if(g_hKeyboardHook) 
 		UnhookWindowsHookEx(g_hKeyboardHook);
@@ -144,17 +156,17 @@ DLLEXPORT DWORD WINAPI StopMonitoringKeyboardChanges()
 	return TRUE;
 }
 
-DLLEXPORT HWND WINAPI GetCurrentFocus()
+__declspec(dllexport) HWND WINAPI GetCurrentFocus()
 {
     return hFocusWnd;
 }
 
-DLLEXPORT void  WINAPI SetCaptureKeys(bool bCapture)
+__declspec(dllexport) void  WINAPI SetCaptureKeys(bool bCapture)
 {
 	g_CaptureKeys = bCapture;
 }
 
-DLLEXPORT bool  WINAPI GetCaptureKeys()
+__declspec(dllexport) bool  WINAPI GetCaptureKeys()
 {
 	return g_CaptureKeys;
 }

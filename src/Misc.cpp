@@ -72,7 +72,7 @@ void log(const TCHAR* msg, CString csFile, long lLine)
 		return;
 #endif
 	
-	CString csExeFile = CGetSetOptions::GetPath(PATH_LOG_FILE);
+	CString csExeFile = CGetSetOptions::GetPath(CGetSetOptions::PathLogFile);
 	csExeFile += "Ditto.log";
 
 	AppendToFile(csExeFile, csText);
@@ -126,7 +126,7 @@ double IdleSeconds()
 		//Output message the first time
 		if(g_funnyGetTickCountAdjustment == 1)
 		{
-			Log(StrF(_T("Adjusting time of get tickcount by: %d, on startup we found GetTickCount to be less than last input"), CGetSetOptions::GetFunnyTickCountAdjustment()));
+			CLogger::Log(StrF(_T("Adjusting time of get tickcount by: %d, on startup we found GetTickCount to be less than last input"), CGetSetOptions::GetFunnyTickCountAdjustment()));
 			g_funnyGetTickCountAdjustment = 2;
 		}
 		currentTick += CGetSetOptions::GetFunnyTickCountAdjustment();
@@ -187,7 +187,7 @@ CString RemoveEscapes( const TCHAR* str )
 	ASSERT( str );
 	CString ret;
 	TCHAR* pSrc = (TCHAR*) str;
-	TCHAR* pDest = ret.GetBuffer((int)STRLEN(pSrc));
+	TCHAR* pDest = ret.GetBuffer((int)_tcslen(pSrc));
 	TCHAR* pStart = pDest;
 	while( *pSrc != '\0' )
 	{
@@ -362,7 +362,7 @@ CLIPFORMAT GetFormatID(LPCTSTR cbName)
 	} };
 	for (const NamedFormat& format : formats)
 	{
-		if (STRCMP(cbName, format.name) == 0)
+		if (_tcscmp(cbName, format.name) == 0)
 		{
 			return format.id;
 		}
@@ -462,6 +462,9 @@ struct MONITOR_ENUM_PARAM
 	int		iMonitor;			// Ndx to the mointor to look at, -1 for all, -or- result of the monitor search method
 	int		nMonitorCount;		// Total number of monitors found, -1 for monitor search method
 
+	/** @brief The lFlags bit that asks for the index of the monitor that pVirtualRect falls inside of. */
+	static constexpr long s_monitorSearchMethod{0x00000001};
+
 	/**
 	 * @brief Whether pVirtualRect lies wholly outside a monitor (a shared edge counts as inside).
 	 * @param monitor The monitor's rect.
@@ -475,7 +478,6 @@ struct MONITOR_ENUM_PARAM
 			(pVirtualRect->top > monitor.bottom);
 	}
 };
-#define	MONITOR_SEARCH_METOHD	0x00000001
 BOOL CALLBACK MyMonitorEnumProc(HMONITOR /*hMonitor*/, HDC /*hdcMonitor*/, LPRECT lprcMonitor, LPARAM dwData)
 {
 	// Typecast param
@@ -485,9 +487,9 @@ BOOL CALLBACK MyMonitorEnumProc(HMONITOR /*hMonitor*/, HDC /*hdcMonitor*/, LPREC
 		// If a dest rect was passed
 		if(pParam->pVirtualRect)
 		{
-			// If MONITOR_SEARCH_METOHD then we are being asked for the index of the monitor
+			// If s_monitorSearchMethod then we are being asked for the index of the monitor
 			// that the rect falls inside of
-			if(pParam->lFlags & MONITOR_SEARCH_METOHD)
+			if(pParam->lFlags & MONITOR_ENUM_PARAM::s_monitorSearchMethod)
 			{
 				if(!pParam->IsOutside(*lprcMonitor))
 				{
@@ -898,7 +900,7 @@ CString GetProcessName(HWND hWnd, DWORD processId)
 
 	if (strProcessName == _T(""))
 	{
-		Log(StrF(_T("failed to get process name from open process, LastError: %d, looping over process names to find process"), GetLastError()));
+		CLogger::Log(StrF(_T("failed to get process name from open process, LastError: %d, looping over process names to find process"), GetLastError()));
 
 		PROCESSENTRY32 processEntry = { 0 };
 
@@ -930,7 +932,7 @@ CString GetProcessName(HWND hWnd, DWORD processId)
 	ULONGLONG diff = endTick - startTick;
 	if(diff > 5)
 	{
-		Log(StrF(_T("GetProcessName Time (ms): %llu, pid: %d, name: %s"), diff, Id, strProcessName.GetString()));
+		CLogger::Log(StrF(_T("GetProcessName Time (ms): %llu, pid: %d, name: %s"), diff, Id, strProcessName.GetString()));
 	}
 
 	return strProcessName;
@@ -963,19 +965,19 @@ bool IsRunningLimited()
 
 void DeleteDittoTempFiles(BOOL checkFileLastAccess)
 {
-	CString csDir = CGetSetOptions::GetPath(PATH_REMOTE_FILES);
+	CString csDir = CGetSetOptions::GetPath(CGetSetOptions::PathRemoteFiles);
 	if (FileExists(csDir))
 	{
 		DeleteFolderFiles(csDir, checkFileLastAccess, CTimeSpan(0, 1, 0, 0));
 	}
 
-	csDir = CGetSetOptions::GetPath(PATH_DRAG_FILES);
+	csDir = CGetSetOptions::GetPath(CGetSetOptions::PathDragFiles);
 	if (FileExists(csDir))
 	{
 		DeleteFolderFiles(csDir, checkFileLastAccess, CTimeSpan(0, 1, 0, 0));
 	}
 
-	csDir = CGetSetOptions::GetPath(PATH_CLIP_DIFF);
+	csDir = CGetSetOptions::GetPath(CGetSetOptions::PathClipDiff);
 	if (FileExists(csDir))
 	{
 		DeleteFolderFiles(csDir, checkFileLastAccess, CTimeSpan(0, 1, 0, 0));
@@ -989,9 +991,9 @@ void DeleteFolderFiles(CString csDir, BOOL checkFileLastAccess, CTimeSpan lastAc
 	if (std::none_of(tempFolderMarkers.begin(), tempFolderMarkers.end(), [&csDir](const TCHAR* marker) { return csDir.Find(marker) != -1; }))
 		return;
 
-	Log(StrF(_T("Deleting files in Folder %s Check Last Access %d"), csDir.GetString(), checkFileLastAccess));
+	CLogger::Log(StrF(_T("Deleting files in Folder %s Check Last Access %d"), csDir.GetString(), checkFileLastAccess));
 
-	FIX_CSTRING_PATH(csDir);
+	CFolderPath::AddTrailingSlash(csDir);
 
 	CTime ctOld = CTime::GetCurrentTime();
 	CTime ctFile;
@@ -1016,13 +1018,13 @@ void DeleteFolderFiles(CString csDir, BOOL checkFileLastAccess, CTimeSpan lastAc
 			//Delete the remote copied file if it hasn't been used for the last day
 			if(ctFile < ctOld)
 			{
-				Log(StrF(_T("Deleting temp file %s"), Find.GetFilePath().GetString()));
+				CLogger::Log(StrF(_T("Deleting temp file %s"), Find.GetFilePath().GetString()));
 				DeleteFile(Find.GetFilePath());
 			}
 		}
 		else
 		{
-			Log(StrF(_T("Deleting temp file %s"), Find.GetFilePath().GetString()));
+			CLogger::Log(StrF(_T("Deleting temp file %s"), Find.GetFilePath().GetString()));
 			DeleteFile(Find.GetFilePath());
 		}
 	}

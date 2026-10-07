@@ -13,14 +13,6 @@
 
 using namespace nsPath;
 
-#define DEFAULT_THEME _T("(Ditto)")
-
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 /////////////////////////////////////////////////////////////////////////////
 // COptionsGeneral property page
 
@@ -142,23 +134,23 @@ BOOL COptionsGeneral::OnInitDialog()
 	FillLanguages();
 
 	int caretPos = m_popupPositionCombo.AddString(theApp.m_Language.GetString("AtCaret", "At Caret"));
-	m_popupPositionCombo.SetItemData(caretPos, POS_AT_CARET);
+	m_popupPositionCombo.SetItemData(caretPos, CGetSetOptions::PosAtCaret);
 
 	int cursorPos = m_popupPositionCombo.AddString(theApp.m_Language.GetString("AtCursor", "At Cursor"));
-	m_popupPositionCombo.SetItemData(cursorPos, POS_AT_CURSOR);
+	m_popupPositionCombo.SetItemData(cursorPos, CGetSetOptions::PosAtCursor);
 
 	int prevPos = m_popupPositionCombo.AddString(theApp.m_Language.GetString("AtPreviousPosition", "At Previous Position"));
-	m_popupPositionCombo.SetItemData(prevPos, POS_AT_PREVIOUS);
+	m_popupPositionCombo.SetItemData(prevPos, CGetSetOptions::PosAtPrevious);
 
 	switch (CGetSetOptions::GetQuickPastePosition())
 	{
-	case POS_AT_CARET:
+	case CGetSetOptions::PosAtCaret:
 		m_popupPositionCombo.SetCurSel(caretPos);
 		break;
-	case POS_AT_CURSOR:
+	case CGetSetOptions::PosAtCursor:
 		m_popupPositionCombo.SetCurSel(cursorPos);
 		break;
-	case POS_AT_PREVIOUS:
+	case CGetSetOptions::PosAtPrevious:
 		m_popupPositionCombo.SetCurSel(prevPos);
 		break;
 	default:
@@ -176,19 +168,16 @@ BOOL COptionsGeneral::OnInitDialog()
 	return TRUE;
 }
 
-#define NO_MATCH	-2
-#define FOUND_MATCH	-1
-
 void COptionsGeneral::FillLanguages()
 {
-	CString csFile = CGetSetOptions::GetPath(PATH_LANGUAGE);
+	CString csFile = CGetSetOptions::GetPath(CGetSetOptions::PathLanguage);
 	csFile += "*.xml";
 
 	CString csLanguage = CGetSetOptions::GetLanguageFile();
 
 	CFileFind find;
 	BOOL bCont = find.FindFile(csFile);
-	int nEnglishIndex = NO_MATCH;
+	int nEnglishIndex = s_noMatch;
 
 	while(bCont)
 	{
@@ -202,7 +191,7 @@ void COptionsGeneral::FillLanguages()
 		}
 		else if(find.GetFileTitle() == _T("English"))
 		{
-			if(nEnglishIndex == NO_MATCH)
+			if(nEnglishIndex == s_noMatch)
 				nEnglishIndex = nIndex;
 		}
 	}
@@ -508,7 +497,7 @@ HBRUSH COptionsGeneral::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 
 void COptionsGeneral::FillThemes()
 {
-	CString csFile = CGetSetOptions::GetPath(PATH_THEMES);
+	CString csFile = CGetSetOptions::GetPath(CGetSetOptions::PathThemes);
 	csFile += "*.xml";
 
 	CString csTheme = CGetSetOptions::GetTheme();
@@ -522,9 +511,9 @@ void COptionsGeneral::FillThemes()
 
 	bool bSetCurSel = AddThemeFiles(csFile, csTheme);
 
-	int nIndex = m_cbTheme.AddString(DEFAULT_THEME);
+	int nIndex = m_cbTheme.AddString(s_defaultTheme);
 	m_cbTheme.SetItemData(nIndex, 1);
-	if (csTheme == DEFAULT_THEME)
+	if (csTheme == s_defaultTheme)
 	{
 		m_cbTheme.SetCurSel(nIndex);
 		bSetCurSel = true;
@@ -590,7 +579,7 @@ void COptionsGeneral::OnBnClickedButtonTheme()
 	if (m_cbTheme.GetItemData(m_cbTheme.GetCurSel()) == 0)
 		return;
 
-	if (csTheme == DEFAULT_THEME)
+	if (csTheme == s_defaultTheme)
 		return;
 
 	if (theme.Load(csTheme, true, false))
@@ -624,7 +613,7 @@ void COptionsGeneral::OnBnClickedButtonDefaultFault()
 	m_LogFont.lfHeight = -13;
 	m_LogFont.lfWeight = 400;
 	m_LogFont.lfCharSet = 1;
-	STRCPY(m_LogFont.lfFaceName, _T("Segoe UI"));
+	_tcscpy(m_LogFont.lfFaceName, _T("Segoe UI"));
 		
 	CString cs;
 	cs.Format(_T("Font - %s (%d)"), m_LogFont.lfFaceName, GetFontSize(m_hWnd, m_LogFont));

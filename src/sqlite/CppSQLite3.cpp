@@ -28,7 +28,6 @@
 #include "StdAfx.h"
 #include "CppSQLite3.h"
 #include <cstdlib>
-#include "..\UnicodeMacros.h"
 #include <atlconv.h>
 #include <memory>
 #include <regex>
@@ -173,7 +172,7 @@ const TCHAR* CppSQLite3Query::fieldValue(int nField)
 
 	if (nField < 0 || nField > mnCols-1)
 	{
-		throw CppSQLite3Exception(CPPSQLITE_ERROR,
+		throw CppSQLite3Exception(CppSQLite3Exception::CppSqliteError,
 								_T("Invalid field index requested"),
 								DONT_DELETE_MSG);
 	}
@@ -274,7 +273,7 @@ int CppSQLite3Query::getBlobFieldSize(int nField)
 
 	if (nField < 0 || nField > mnCols-1)
 	{
-		throw CppSQLite3Exception(CPPSQLITE_ERROR,
+		throw CppSQLite3Exception(CppSQLite3Exception::CppSqliteError,
 								_T("Invalid field index requested"),
 								DONT_DELETE_MSG);
 	}
@@ -290,7 +289,7 @@ const unsigned char* CppSQLite3Query::getBlobField(int nField, int& nLen)
 
 	if (nField < 0 || nField > mnCols-1)
 	{
-		throw CppSQLite3Exception(CPPSQLITE_ERROR,
+		throw CppSQLite3Exception(CppSQLite3Exception::CppSqliteError,
 								_T("Invalid field index requested"),
 								DONT_DELETE_MSG);
 	}
@@ -335,7 +334,7 @@ int CppSQLite3Query::fieldIndex(const TCHAR* szField)
 		{
 			const TCHAR* szTemp = (const TCHAR*)sqlite3_column_name16(mpVM, nField);
 
-			if(STRCMP(szField, szTemp) == 0)
+			if(_tcscmp(szField, szTemp) == 0)
 			{
 				return nField;
 			}
@@ -343,7 +342,7 @@ int CppSQLite3Query::fieldIndex(const TCHAR* szField)
 	}
 
 
-	throw CppSQLite3Exception(CPPSQLITE_ERROR,
+	throw CppSQLite3Exception(CppSQLite3Exception::CppSqliteError,
 							_T("Invalid field name requested"),
 							DONT_DELETE_MSG);
 }
@@ -355,7 +354,7 @@ const TCHAR* CppSQLite3Query::fieldName(int nCol)
 
 	if (nCol < 0 || nCol > mnCols-1)
 	{
-		throw CppSQLite3Exception(CPPSQLITE_ERROR,
+		throw CppSQLite3Exception(CppSQLite3Exception::CppSqliteError,
 								_T("Invalid field index requested"),
 								DONT_DELETE_MSG);
 	}
@@ -370,7 +369,7 @@ const TCHAR* CppSQLite3Query::fieldDeclType(int nCol)
 
 	if (nCol < 0 || nCol > mnCols-1)
 	{
-		throw CppSQLite3Exception(CPPSQLITE_ERROR,
+		throw CppSQLite3Exception(CppSQLite3Exception::CppSqliteError,
 								_T("Invalid field index requested"),
 								DONT_DELETE_MSG);
 	}
@@ -385,7 +384,7 @@ int CppSQLite3Query::fieldDataType(int nCol)
 
 	if (nCol < 0 || nCol > mnCols-1)
 	{
-		throw CppSQLite3Exception(CPPSQLITE_ERROR,
+		throw CppSQLite3Exception(CppSQLite3Exception::CppSqliteError,
 								_T("Invalid field index requested"),
 								DONT_DELETE_MSG);
 	}
@@ -420,7 +419,7 @@ void CppSQLite3Query::nextRow()
 	{
 		nRet = sqlite3_finalize(mpVM);
 		mpVM = 0;
-		SQLITE3_ERRMSG(mpDB);
+		const TCHAR* szError = static_cast<const TCHAR*>(sqlite3_errmsg16(mpDB));
 		throw CppSQLite3Exception(nRet, (TCHAR*)szError, DONT_DELETE_MSG);
 	}
 }
@@ -434,7 +433,7 @@ void CppSQLite3Query::finalize()
 		mpVM = 0;
 		if (nRet != SQLITE_OK)
 		{
-			SQLITE3_ERRMSG(mpDB);
+			const TCHAR* szError = static_cast<const TCHAR*>(sqlite3_errmsg16(mpDB));
 			throw CppSQLite3Exception(nRet, (TCHAR*)szError, DONT_DELETE_MSG);
 		}
 	}
@@ -445,7 +444,7 @@ void CppSQLite3Query::checkVM()
 {
 	if (mpVM == 0)
 	{
-		throw CppSQLite3Exception(CPPSQLITE_ERROR,
+		throw CppSQLite3Exception(CppSQLite3Exception::CppSqliteError,
 								_T("Null Virtual Machine pointer"),
 								DONT_DELETE_MSG);
 	}
@@ -514,7 +513,7 @@ int CppSQLite3Statement::execDML()
 
 		if (nRet != SQLITE_OK)
 		{
-			SQLITE3_ERRMSG(mpDB);
+			const TCHAR* szError = static_cast<const TCHAR*>(sqlite3_errmsg16(mpDB));
 			throw CppSQLite3Exception(nRet, (TCHAR*)szError, DONT_DELETE_MSG);
 		}
 
@@ -523,7 +522,7 @@ int CppSQLite3Statement::execDML()
 	else
 	{
 		nRet = sqlite3_reset(mpVM);
-		SQLITE3_ERRMSG(mpDB);
+		const TCHAR* szError = static_cast<const TCHAR*>(sqlite3_errmsg16(mpDB));
 		throw CppSQLite3Exception(nRet, (TCHAR*)szError, DONT_DELETE_MSG);
 	}
 }
@@ -549,7 +548,7 @@ CppSQLite3Query CppSQLite3Statement::execQuery()
 	else
 	{
 		nRet = sqlite3_reset(mpVM);
-		SQLITE3_ERRMSG(mpDB);
+		const TCHAR* szError = static_cast<const TCHAR*>(sqlite3_errmsg16(mpDB));
 		throw CppSQLite3Exception(nRet, (TCHAR*)szError, DONT_DELETE_MSG);
 	}
 }
@@ -634,7 +633,7 @@ void CppSQLite3Statement::reset()
 
 		if (nRet != SQLITE_OK)
 		{
-			SQLITE3_ERRMSG(mpDB);
+			const TCHAR* szError = static_cast<const TCHAR*>(sqlite3_errmsg16(mpDB));
 			throw CppSQLite3Exception(nRet, (TCHAR*)szError, DONT_DELETE_MSG);
 		}
 	}
@@ -650,7 +649,7 @@ void CppSQLite3Statement::finalize()
 
 		if (nRet != SQLITE_OK)
 		{
-			SQLITE3_ERRMSG(mpDB);
+			const TCHAR* szError = static_cast<const TCHAR*>(sqlite3_errmsg16(mpDB));
 			throw CppSQLite3Exception(nRet, (TCHAR*)szError, DONT_DELETE_MSG);
 		}
 	}
@@ -661,7 +660,7 @@ void CppSQLite3Statement::checkDB()
 {
 	if (mpDB == 0)
 	{
-		throw CppSQLite3Exception(CPPSQLITE_ERROR,
+		throw CppSQLite3Exception(CppSQLite3Exception::CppSqliteError,
 								_T("Database not open"),
 								DONT_DELETE_MSG);
 	}
@@ -672,7 +671,7 @@ void CppSQLite3Statement::checkVM()
 {
 	if (mpVM == 0)
 	{
-		throw CppSQLite3Exception(CPPSQLITE_ERROR,
+		throw CppSQLite3Exception(CppSQLite3Exception::CppSqliteError,
 								_T("Null Virtual Machine pointer"),
 								DONT_DELETE_MSG);
 	}
@@ -827,7 +826,7 @@ void CppSQLite3DB::loadExtension(const char* szFile, const char* szEntryPoint)
 
 void CppSQLite3DB::throwAndClose(int nErrCode)
 {
-	SQLITE3_ERRMSG(mpDB);
+	const TCHAR* szError = static_cast<const TCHAR*>(sqlite3_errmsg16(mpDB));
 	// the exception copies the message before close() frees it
 	CppSQLite3Exception error(nErrCode, (TCHAR*)szError, DONT_DELETE_MSG);
 	close();
@@ -867,7 +866,7 @@ bool CppSQLite3DB::tableExists(const TCHAR* szTable)
 {
 	TCHAR szSQL[128];
 
-	SPRINTF(szSQL,
+	wsprintf(szSQL,
 			_T("select count(*) from sqlite_master where type='table' and name='%s'"),
 			szTable);
 	int nRet = execScalar(szSQL);
@@ -903,7 +902,7 @@ int CppSQLite3DB::execDML(const TCHAR* szSQL)
 	else
 	{
 		nRet = sqlite3_finalize(pVM);
-		SQLITE3_ERRMSG(mpDB);
+		const TCHAR* szError = static_cast<const TCHAR*>(sqlite3_errmsg16(mpDB));
 		throw CppSQLite3Exception(nRet, (TCHAR*)szError, DONT_DELETE_MSG);
 	}
 	
@@ -945,7 +944,7 @@ CppSQLite3Query CppSQLite3DB::execQuery(const TCHAR* szSQL)
 	else
 	{
 		nRet = sqlite3_finalize(pVM);
-		SQLITE3_ERRMSG(mpDB);
+		const TCHAR* szError = static_cast<const TCHAR*>(sqlite3_errmsg16(mpDB));
 		throw CppSQLite3Exception(nRet, (TCHAR*)szError, DONT_DELETE_MSG);
 	}
 }
@@ -970,11 +969,11 @@ int CppSQLite3DB::execScalar(const TCHAR* szSQL)
 
 	if (q.eof() || q.numFields() < 1)
 	{
-		throw CppSQLite3Exception(CPPSQLITE_ERROR,
+		throw CppSQLite3Exception(CppSQLite3Exception::CppSqliteError,
 								_T("Invalid scalar query"),
 								DONT_DELETE_MSG);
 	}
-	return ATOI(q.fieldValue(0));
+	return _ttoi(q.fieldValue(0));
 }
 
 sqlite_int64 CppSQLite3DB::lastRowId()
@@ -994,7 +993,7 @@ void CppSQLite3DB::checkDB()
 {
 	if (!mpDB)
 	{
-		throw CppSQLite3Exception(CPPSQLITE_ERROR,
+		throw CppSQLite3Exception(CppSQLite3Exception::CppSqliteError,
 								_T("Database not open"),
 								DONT_DELETE_MSG);
 	}
@@ -1011,7 +1010,7 @@ sqlite3_stmt* CppSQLite3DB::compile(const TCHAR* szSQL)
 	int nRet = sqlite3_prepare16_v2(mpDB, szSQL, -1, &pVM, (const void**)szTail);
 	if (nRet != SQLITE_OK)
 	{
-		SQLITE3_ERRMSG(mpDB);
+		const TCHAR* szError = static_cast<const TCHAR*>(sqlite3_errmsg16(mpDB));
 		throw CppSQLite3Exception(nRet, (TCHAR*)szError);
 	}
 

@@ -3,8 +3,6 @@
 #include <vector>
 #include <string>
 
-#define MAX_REGEX_FILTERS 15
-
 class CRegExFilterData
 {
 public:
@@ -31,6 +29,9 @@ public:
 class CRegExFilterHelper
 {
 public:
+	/** @brief The number of filter slots (stored in the settings by slot number). */
+	static constexpr int MaxRegexFilters = 15;
+
 	CRegExFilterHelper();
 	~CRegExFilterHelper();
 
@@ -38,7 +39,7 @@ public:
 	void SetRegEx(int pos, std::wstring regEx);
 	void SetProcessFilter(int pos, CString processName);
 
-	CRegExFilterData m_filters[MAX_REGEX_FILTERS];
+	CRegExFilterData m_filters[MaxRegexFilters];
 
 	bool TextMatchFilters(CString &activeApp, std::wstring &copiedText);
 

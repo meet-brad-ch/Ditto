@@ -78,7 +78,7 @@ bool CDittoAddin::SupportedFunctions(const CDittoInfo &DittoInfo, FunctionType t
 			for(int i = 0; i < nCount; i++)
 			{
 				CFunction func = Functions[i];
-				Log(StrF(_T("Ditto Addin - Supported Function Display: %s, Function: %s, Desc: %s"), func.m_csDisplayName.GetString(), CTextConvert::AnsiToUnicode(func.m_csFunction).GetString(), func.m_csDetailDescription.GetString()));
+				CLogger::Log(StrF(_T("Ditto Addin - Supported Function Display: %s, Function: %s, Desc: %s"), func.m_csDisplayName.GetString(), CTextConvert::AnsiToUnicode(func.m_csFunction).GetString(), func.m_csDetailDescription.GetString()));
 			}
 		}
 		else

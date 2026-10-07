@@ -588,6 +588,49 @@ public:
 	afx_msg void OnUpdateSpecialpastePasteAsImage(CCmdUI* pCmdUI);
 
 private:
+	/** @brief The window title (and the prefix of the "always on top" title). */
+	static constexpr const TCHAR* s_qpasteTitle{_T("Ditto")};
+
+	/** @brief The control ids of the window's child controls (Create and the message map). */
+	enum : UINT
+	{
+		/** @brief The clip list. */
+		IdListHeader = 0x201,
+		/** @brief The search box. */
+		IdEditSearch = 0x202,
+		/** @brief The group name text. */
+		IdGroupText = 0x204,
+		/** @brief The "show groups" button at the bottom. */
+		IdShowGroupsBottom = 0x205,
+		/** @brief The "show groups" button at the top. */
+		IdShowGroupsTop = 0x206,
+		/** @brief The back (leave group) button. */
+		IdBackButton = 0x207,
+		/** @brief The "always on top" warning text. */
+		IdOnTopWarning = 0x209,
+		/** @brief The system menu button. */
+		IdSystemButton = 0x210,
+		/** @brief The "no search results" text. */
+		IdNoSearchResults = 0x211,
+	};
+
+	/** @brief The timer ids of the window (SetTimer / OnTimer); CWndEx uses 5 and 6 too. */
+	enum : UINT
+	{
+		/** @brief Fills the list cache. */
+		TimerFillCache = 1,
+		/** @brief Runs the search after typing paused. */
+		TimerDoSearch = 2,
+		/** @brief Pastes after the modifier keys were released. */
+		TimerPasteFromModifier = 3,
+		/** @brief Hides the error message. */
+		TimerErrorMsg = 4,
+		/** @brief Hides the window while a clip is dragged out of it. */
+		TimerDragHideWindow = 6,
+		/** @brief Ends the wait for the second key stroke of an action. */
+		TimerDoAction = 7,
+	};
+
 	// OnGetToolTipText's clip text: the clip's lines, each ended with "\r\n", up to the max tool tip lines
 	static CString ToolTipClipLines(const CString& clipText);
 

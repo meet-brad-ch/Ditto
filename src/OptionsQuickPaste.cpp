@@ -7,14 +7,6 @@
 #include "OptionsQuickPaste.h"
 #include ".\optionsquickpaste.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
-#define DEFAULT_THEME _T("(Default)")
-
 /////////////////////////////////////////////////////////////////////////////
 // COptionsQuickPaste property page
 
@@ -93,11 +85,11 @@ BOOL COptionsQuickPaste::OnInitDialog()
 	m_ShowAllInMainList.SetCheck(CGetSetOptions::m_bShowAllClipsInMainList);
 	m_FindAsYouType.SetCheck(CGetSetOptions::m_bFindAsYouType);
 
-	if(CGetSetOptions::GetQuickPastePosition() == POS_AT_CARET)
+	if(CGetSetOptions::GetQuickPastePosition() == CGetSetOptions::PosAtCaret)
 		CheckDlgButton(IDC_AT_CARET, BST_CHECKED);
-	else if(CGetSetOptions::GetQuickPastePosition() == POS_AT_CURSOR)
+	else if(CGetSetOptions::GetQuickPastePosition() == CGetSetOptions::PosAtCursor)
 		CheckDlgButton(IDC_AT_CURSOR, BST_CHECKED);
-	else if(CGetSetOptions::GetQuickPastePosition() == POS_AT_PREVIOUS)
+	else if(CGetSetOptions::GetQuickPastePosition() == CGetSetOptions::PosAtPrevious)
 		CheckDlgButton(IDC_AT_PREVIOUS, BST_CHECKED);
 
 	m_btDescShowLeadingWhiteSpace.SetCheck(CGetSetOptions::m_bDescShowLeadingWhiteSpace);
@@ -182,11 +174,11 @@ BOOL COptionsQuickPaste::OnApply()
 void COptionsQuickPaste::ApplyQuickPastePosition()
 {
 	if(IsDlgButtonChecked(IDC_AT_CARET))
-		CGetSetOptions::SetQuickPastePosition(POS_AT_CARET);
+		CGetSetOptions::SetQuickPastePosition(CGetSetOptions::PosAtCaret);
 	else if(IsDlgButtonChecked(IDC_AT_CURSOR))
-		CGetSetOptions::SetQuickPastePosition(POS_AT_CURSOR);
+		CGetSetOptions::SetQuickPastePosition(CGetSetOptions::PosAtCursor);
 	else if(IsDlgButtonChecked(IDC_AT_PREVIOUS))
-		CGetSetOptions::SetQuickPastePosition(POS_AT_PREVIOUS);
+		CGetSetOptions::SetQuickPastePosition(CGetSetOptions::PosAtPrevious);
 }
 
 void COptionsQuickPaste::ApplyTheme()
@@ -197,7 +189,7 @@ void COptionsQuickPaste::ApplyTheme()
 	if(m_cbTheme.GetCurSel() >= 0)
 	{
 		m_cbTheme.GetLBText(m_cbTheme.GetCurSel(), csTheme);
-		if (csTheme == DEFAULT_THEME)
+		if (csTheme == s_defaultTheme)
 		{
 			CGetSetOptions::SetTheme("");
 			csTheme = _T("");
@@ -245,7 +237,7 @@ void COptionsQuickPaste::OnButtonDefaultFault()
 	m_LogFont.lfHeight = -10;
 	m_LogFont.lfWeight = 400;
 	m_LogFont.lfCharSet = 1;
-	STRCPY(m_LogFont.lfFaceName, _T("Segoe UI"));
+	_tcscpy(m_LogFont.lfFaceName, _T("Segoe UI"));
 
 	m_Font.DeleteObject();
 	m_Font.CreateFontIndirect(&m_LogFont);
@@ -259,7 +251,7 @@ void COptionsQuickPaste::OnButtonDefaultFault()
 
 void COptionsQuickPaste::FillThemes()
 {
-	CString csFile = CGetSetOptions::GetPath(PATH_THEMES);
+	CString csFile = CGetSetOptions::GetPath(CGetSetOptions::PathThemes);
 	csFile += "*.xml";
 
 	CString csTheme = CGetSetOptions::GetTheme();
@@ -288,7 +280,7 @@ void COptionsQuickPaste::FillThemes()
 		}
 	}
 
-	int nIndex = m_cbTheme.AddString(DEFAULT_THEME);
+	int nIndex = m_cbTheme.AddString(s_defaultTheme);
 	if(bSetCurSel == false)
 	{
 		m_cbTheme.SetCurSel(nIndex);
@@ -302,7 +294,7 @@ void COptionsQuickPaste::OnBnClickedButtonTheme()
 	CString csTheme;
 	m_cbTheme.GetLBText(m_cbTheme.GetCurSel(), csTheme);
 
-	if(csTheme == DEFAULT_THEME)
+	if(csTheme == s_defaultTheme)
 		return;
 	
 	if(theme.Load(csTheme, true, false))

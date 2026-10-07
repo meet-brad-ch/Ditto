@@ -5,12 +5,6 @@
 #include "stdafx.h"
 #include "ScrollHelper.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 // Helper function to get client rect with possible
 // modification by adding scrollbar width/height.
 static void GetClientRectSB(CWnd* pWnd, CRect& rect)

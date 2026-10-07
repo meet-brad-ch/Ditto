@@ -6,12 +6,19 @@
 #endif // _MSC_VER > 1000
 
 
-#define TIMER_ENSURE_VIEWER_IN_CHAIN	6
-#define TIMER_DRAW_CLIPBOARD			7
-#define TIMER_PING						8
-
 class CClipboardViewer : public CWnd
 {
+	/** @brief The timer ids of the clipboard viewer (SetTimer / KillTimer / OnTimer). */
+	enum : UINT_PTR
+	{
+		/** @brief Checks now and then that the viewer is still connected to the clipboard. */
+		TimerEnsureViewerInChain = 6,
+		/** @brief Handles a clipboard change after the configured delay. */
+		TimerDrawClipboard = 7,
+		/** @brief Waits for the answer to the ping. */
+		TimerPing = 8,
+	};
+
 // Construction
 public:
 	CClipboardViewer(CCopyThread* pHandler);
@@ -75,12 +82,12 @@ private:
 	 */
 	bool FindAppMatch(const CString& apps, CString& line);
 	/**
-	 * @brief OnTimer's TIMER_DRAW_CLIPBOARD step: hands the clipboard change on unless it came too fast.
+	 * @brief OnTimer's TimerDrawClipboard step: hands the clipboard change on unless it came too fast.
 	 * @param nIDEvent the timer id (killed here).
 	 */
 	void OnDrawClipboardTimer(UINT_PTR nIDEvent);
 	/**
-	 * @brief OnTimer's TIMER_PING step: reconnects when the ping was not answered.
+	 * @brief OnTimer's TimerPing step: reconnects when the ping was not answered.
 	 */
 	void OnPingTimer();
 };

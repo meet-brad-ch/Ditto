@@ -8,11 +8,12 @@
 // CRulerRichEdit window
 #include "../RichEditCtrlEx.h"
 
-#define RTF_CONTROL		12
-
 class CRulerRichEdit : public CRichEditCtrlEx
 {
 public:
+	/** @brief The control id of the rich edit control (its notifications to the ruler control carry it). */
+	static constexpr UINT s_controlId{12};
+
 // Construction/creation/destruction
 	CRulerRichEdit();
 	virtual ~CRulerRichEdit();

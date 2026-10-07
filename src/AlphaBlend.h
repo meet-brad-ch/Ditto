@@ -34,11 +34,12 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#define OPACITY_MAX			255
-
-class CAlphaBlend  
+class CAlphaBlend
 {
 public:
+	/** @brief The opacity of an opaque window (the layered window alpha). */
+	static constexpr int OpacityMax = 255;
+
 	CAlphaBlend();
 	CAlphaBlend(HWND hWnd, int nOpacity=220);
 	CAlphaBlend(CWnd *pWnd, int nOpacity=220);

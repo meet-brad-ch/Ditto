@@ -5,12 +5,6 @@
 #include "CP_Main.h"
 #include "OptionsKeyBoard.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 /////////////////////////////////////////////////////////////////////////////
 // COptionsKeyBoard property page
 

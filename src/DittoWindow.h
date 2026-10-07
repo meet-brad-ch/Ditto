@@ -6,14 +6,33 @@
 #include "GdiImageDrawer.h"
 #include "DPI.h"
 
-#define BUTTON_CLOSE 1
-#define BUTTON_CHEVRON 2
-#define BUTTON_MINIMIZE 3
-#define BUTTON_MAXIMIZE 4
-
 class CDittoWindow
 {
 public:
+	/** @brief The caption buttons: DoNcLButtonDown and DoNcLButtonUp return the pressed one (0: none). */
+	enum : int
+	{
+		/** @brief The close button. */
+		ButtonClose = 1,
+		/** @brief The chevron (roll up / down) button. */
+		ButtonChevron = 2,
+		/** @brief The minimize button. */
+		ButtonMinimize = 3,
+		/** @brief The maximize button. */
+		ButtonMaximize = 4,
+	};
+
+	/** @brief MinMaxWindow's options. */
+	enum : int
+	{
+		/** @brief Rolls the window up when it is down, else down. */
+		SwapMinMax = 1,
+		/** @brief Rolls the window up (does nothing when it is up). */
+		ForceMin = 2,
+		/** @brief Rolls the window down (does nothing when it is down). */
+		ForceMax = 3,
+	};
+
 	CDittoWindow(void);
 	~CDittoWindow(void);
 
@@ -274,34 +293,34 @@ private:
 	 * @brief Releases the close button: closes the window when the mouse is still on it.
 	 * @param pWnd the window.
 	 * @param localPoint the point relative to the window.
-	 * @return BUTTON_CLOSE when the button was clicked, else 0.
+	 * @return ButtonClose when the button was clicked, else 0.
 	 */
 	long ReleaseCloseButton(CWnd* pWnd, const CPoint& localPoint);
 	/**
 	 * @brief Releases the chevron button.
 	 * @param pWnd the window.
 	 * @param localPoint the point relative to the window.
-	 * @return BUTTON_CHEVRON when the button was clicked, else 0.
+	 * @return ButtonChevron when the button was clicked, else 0.
 	 */
 	long ReleaseChevronButton(CWnd* pWnd, const CPoint& localPoint);
 	/**
 	 * @brief Releases the minimize button: minimizes the window when the mouse is still on it.
 	 * @param pWnd the window.
 	 * @param localPoint the point relative to the window.
-	 * @return BUTTON_MINIMIZE when the button was clicked, else 0.
+	 * @return ButtonMinimize when the button was clicked, else 0.
 	 */
 	long ReleaseMinimizeButton(CWnd* pWnd, const CPoint& localPoint);
 	/**
 	 * @brief Releases the maximize button: maximizes or restores the window when the mouse is still on it.
 	 * @param pWnd the window.
 	 * @param localPoint the point relative to the window.
-	 * @return BUTTON_MAXIMIZE when the button was clicked, else 0.
+	 * @return ButtonMaximize when the button was clicked, else 0.
 	 */
 	long ReleaseMaximizeButton(CWnd* pWnd, const CPoint& localPoint);
 
 	/**
 	 * @brief Whether the caption position is one of the four sides.
-	 * @return true for CAPTION_RIGHT, CAPTION_LEFT, CAPTION_TOP and CAPTION_BOTTOM.
+	 * @return true for the four CGetSetOptions::CaptionOn* positions.
 	 */
 	bool IsKnownCaptionPosition() const;
 	/**

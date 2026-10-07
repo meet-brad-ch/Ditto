@@ -23,7 +23,7 @@ void CMainFrmThread::AddClipToSave(std::unique_ptr<CClip> clip)
 {
 	ATL::CCritSecLock csLock(m_cs.m_sect);
 
-	Log(_T("Adding clip to thread for save to db"));
+	CLogger::Log(_T("Adding clip to thread for save to db"));
 	m_saveClips.Add(std::move(clip));
 	FireEvent(SAVE_CLIPS);
 }
@@ -103,21 +103,21 @@ void CMainFrmThread::OnSaveClips()
 		copyReason = localClips.Last().m_copyReason;
 	}
 
-	Log(_T("SaveCopyClips Before AddToDb"));
+	CLogger::Log(_T("SaveCopyClips Before AddToDb"));
 
 	int count = localClips.AddToDB(true);
 
-	Log(StrF(_T("SaveCopyclips After AddToDb, Count: %d"), count));
+	CLogger::Log(StrF(_T("SaveCopyclips After AddToDb, Count: %d"), count));
 
 	if(count > 0)
 	{
 		int Id = localClips.Last().m_id;
 
-		Log(StrF(_T("SaveCopyclips After AddToDb, Id: %d Before OnCopyCopyCompleted"), Id));
+		CLogger::Log(StrF(_T("SaveCopyclips After AddToDb, Id: %d Before OnCopyCopyCompleted"), Id));
 
 		theApp.OnCopyCompleted(Id, count, copyReason);
 
-		Log(StrF(_T("SaveCopyclips After AddToDb, Id: %d After OnCopyCopyCompleted"), Id));
+		CLogger::Log(StrF(_T("SaveCopyclips After AddToDb, Id: %d After OnCopyCopyCompleted"), Id));
 
 		const CClip& lastClip{localClips.Last()};
 		if (lastClip.m_copyReason == CopyReasonEnum::COPY_TO_GROUP &&
@@ -133,7 +133,7 @@ void CMainFrmThread::OnSaveClips()
 			auto message{std::make_unique<CString>()};
 			message->Format(_T("Saved new clip \"%s\"\r\ndirectly to the group \"%s\""), lastClip.m_Desc.Left(35).GetString(), groupName.GetString());
 
-			if (theApp.m_pMainFrame->PostMessageW(WM_SHOW_MSG_WINDOW, reinterpret_cast<WPARAM>(message.get()), lastClip.m_parentId))
+			if (theApp.m_pMainFrame->PostMessageW(CDittoMessage::ShowMsgWindow, reinterpret_cast<WPARAM>(message.get()), lastClip.m_parentId))
 			{
 				message.release(); // ownership: CMainFrame::OnShowMsgWindow retakes it in a std::unique_ptr
 			}

@@ -52,6 +52,17 @@ protected:
      *  @param bCancelOnESCkey TRUE to cancel on the ESC key. */
     void CancelOnMessage(const MSG& msg, BOOL bCancelOnESCkey);
 
+    /** @brief The control ids of the window's child controls. */
+    enum : UINT
+    {
+        /** @brief The cancel button. */
+        IdcCancel = 10,
+        /** @brief The text above the progress bar. */
+        IdcText = 11,
+        /** @brief The progress bar. */
+        IdcProgress = 12,
+    };
+
 protected:
     BOOL m_bCancelled;
     BOOL m_bModal;

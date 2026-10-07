@@ -7,17 +7,6 @@
 #include <Richedit.h>
 #include <algorithm>
 
-#ifdef _DEBUG
-    #define new DEBUG_NEW
-    #undef THIS_FILE
-    static char THIS_FILE[] = __FILE__;
-#endif 
-
-#define HIDE_WINDOW_TIMER 1
-#define SAVE_SIZE 2
-#define TIMER_BUTTON_UP 3
-#define TIMER_AUTO_MAX		4
-
 /////////////////////////////////////////////////////////////////////////////
 // CToolTipEx
 
@@ -68,7 +57,7 @@ BEGIN_MESSAGE_MAP(CToolTipEx, CWnd)
 	ON_WM_MOVING()
 	ON_WM_ENTERSIZEMOVE()
 	ON_WM_HSCROLL()
-	ON_MESSAGE(WM_REFRESH_FOOTER, OnRefreshFooter)
+	ON_MESSAGE(CDittoMessage::RefreshFooter, OnRefreshFooter)
 	ON_COMMAND(ID_FIRST_VIEWTEXT, &CToolTipEx::OnFirstViewtext)
 	ON_COMMAND(ID_FIRST_VIEWRTF, &CToolTipEx::OnFirstViewrtf)
 	ON_COMMAND(ID_FIRST_VIEWASIMAGE, &CToolTipEx::OnFirstViewImage)
@@ -176,7 +165,7 @@ BOOL CToolTipEx::Show(CPoint point)
 
 	if (m_DittoWindow.m_bMinimized)
 	{
-		//m_DittoWindow.MinMaxWindow(this, FORCE_MAX);
+		//m_DittoWindow.MinMaxWindow(this, CDittoWindow::ForceMax);
 		m_DittoWindow.m_bMinimized = false;
 	}
 
@@ -462,7 +451,7 @@ void CToolTipEx::CheckToolTipActions(MSG *pMsg)
 				/*if (this->m_showPersistant &&
 					m_DittoWindow.m_bMinimized == false)
 				{
-					m_DittoWindow.MinMaxWindow(this, FORCE_MIN);
+					m_DittoWindow.MinMaxWindow(this, CDittoWindow::ForceMin);
 					theApp.m_activeWnd.ReleaseFocus();
 
 					return TRUE;
@@ -614,7 +603,7 @@ CRect CToolTipEx::GetBoundsRect()
 	ULONGLONG diff = GetTickCount64() - d;
 	if (diff > 10)
 	{
-		Log(StrF(_T("Size To Content: %llu\n"), diff));
+		CLogger::Log(StrF(_T("Size To Content: %llu\n"), diff));
 	}
 
     return rect;
@@ -778,7 +767,7 @@ void CToolTipEx::MoveControls()
 
 	if (m_saveWindowLockout == false)
 	{
-		SetTimer(SAVE_SIZE, 250, NULL);
+		SetTimer(TimerSaveSize, 250, NULL);
 	}
 }
 
@@ -948,7 +937,7 @@ void CToolTipEx::OnActivate(UINT nState, CWnd *pWndOther, BOOL bMinimized)
 	{		
         if(m_pNotifyWnd)
         {
-            m_pNotifyWnd->PostMessage(NM_INACTIVE_TOOLTIPWND, 0, 0);
+            m_pNotifyWnd->PostMessage(CQListCtrl::NmInactiveToolTipWnd, 0, 0);
         }
     }
 }
@@ -957,18 +946,18 @@ void CToolTipEx::OnTimer(UINT_PTR nIDEvent)
 {
     switch(nIDEvent)
     {
-        case HIDE_WINDOW_TIMER:
+        case TimerHideWindow:
             Hide();
             PostMessage(WM_DESTROY, 0, 0);
             break;
-		case SAVE_SIZE:
+		case TimerSaveSize:
 			SaveWindowSize();
-			KillTimer(SAVE_SIZE);
+			KillTimer(TimerSaveSize);
 			break;
-		case TIMER_BUTTON_UP:
+		case TimerButtonUp:
 			OnButtonUpTimer();
 			break;
-		case TIMER_AUTO_MAX:
+		case TimerAutoMax:
 			OnAutoMaxTimer();
 			break;
     }
@@ -981,7 +970,7 @@ void CToolTipEx::OnButtonUpTimer()
 	if ((GetKeyState(VK_LBUTTON) & 0x100) == 0)
 	{
 		m_DittoWindow.DoNcLButtonUp(this, 0, CPoint(0, 0));
-		KillTimer(TIMER_BUTTON_UP);
+		KillTimer(TimerButtonUp);
 
 		auto f = GetFocus();
 		if (f != NULL &&
@@ -1013,12 +1002,12 @@ void CToolTipEx::OnAutoMaxTimer()
 			{
 				if (m_DittoWindow.m_crMinimizeBT.PtInRect(cp) == false)
 				{
-					m_DittoWindow.MinMaxWindow(this, FORCE_MAX);
+					m_DittoWindow.MinMaxWindow(this, CDittoWindow::ForceMax);
 				}
 			}
 		}
 	}
-	KillTimer(TIMER_AUTO_MAX);
+	KillTimer(TimerAutoMax);
 	m_bMaxSetTimer = false;
 }
 
@@ -1035,7 +1024,7 @@ void CToolTipEx::OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncs
 	m_DittoWindow.DoNcCalcSize(bCalcValidRects, lpncsp);
 }
 
-HITTEST_RET CToolTipEx::OnNcHitTest(CPoint point) 
+LRESULT CToolTipEx::OnNcHitTest(CPoint point) 
 {
 	UINT Ret = m_DittoWindow.DoNcHitTest(this, point);
 	if(Ret == -1)
@@ -1048,7 +1037,7 @@ void CToolTipEx::OnNcLButtonDown(UINT nHitTest, CPoint point)
 {
 	m_DittoWindow.DoNcLButtonDown(this, nHitTest, point);
 
-	SetTimer(TIMER_BUTTON_UP, 100, NULL);
+	SetTimer(TimerButtonUp, 100, NULL);
 	
 	CWnd::OnNcLButtonDown(nHitTest, point);
 }
@@ -1059,16 +1048,16 @@ void CToolTipEx::OnNcLButtonUp(UINT nHitTest, CPoint point)
 
 	switch(lRet)
 	{
-	case BUTTON_CLOSE:
+	case CDittoWindow::ButtonClose:
 		Hide();
 		break;
-	case BUTTON_CHEVRON:
-		m_DittoWindow.MinMaxWindow(this, SWAP_MIN_MAX);
+	case CDittoWindow::ButtonChevron:
+		m_DittoWindow.MinMaxWindow(this, CDittoWindow::SwapMinMax);
 		OnNcPaint();
 		break;
 	}
 
-	KillTimer(TIMER_BUTTON_UP);
+	KillTimer(TimerButtonUp);
 
 	auto f = GetFocus();
 
@@ -1092,7 +1081,7 @@ void CToolTipEx::OnNcMouseMove(UINT nHitTest, CPoint point)
 		COleDateTimeSpan sp = COleDateTime::GetCurrentTime() - m_DittoWindow.m_TimeMinimized;
 		if (sp.GetTotalSeconds() >= m_lDelayMaxSeconds)
 		{
-			SetTimer(TIMER_AUTO_MAX, CGetSetOptions::GetTimeBeforeExpandWindow(), NULL);
+			SetTimer(TimerAutoMax, CGetSetOptions::GetTimeBeforeExpandWindow(), NULL);
 			m_bMaxSetTimer = true;
 		}
 	}
@@ -1293,7 +1282,7 @@ void CToolTipEx::ApplyWordWrap()
 
 void CToolTipEx::HideWindowInXMilliSeconds(long lms) 
 { 
-	SetTimer(HIDE_WINDOW_TIMER, lms, NULL); 
+	SetTimer(TimerHideWindow, lms, NULL); 
 }
 
 void CToolTipEx::OnWindowPosChanging(WINDOWPOS* lpwndpos)

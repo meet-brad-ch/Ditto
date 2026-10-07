@@ -5,25 +5,6 @@
 #include "TabCtrl.h"
 #include "Misc.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
-#define TEXT_PAD			7
-#define SPIN_PAD			3
-#define SHIFT_UNITS			10
-
-#define COLOR_WHITE			RGB(255, 255, 255)
-#define COLOR_GRAY			RGB(128, 128, 128)
-#define COLOR_MEDGRAY		GetSysColor(COLOR_BTNFACE)
-#define COLOR_DARKGRAY		RGB(64, 64, 64)
-
-#define ID_SCROLL_TIMER		0x1010
-
-#define VK_TILDAE			0xC0
-
 /////////////////////////////////////////////////////////////////////////////
 // CTabCtrlEx
 
@@ -77,7 +58,7 @@ BOOL CTabCtrlEx::Create(DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT 
 	// If the window border style is set, change it to sheet border style
 	if (dwStyle & WS_BORDER)
 	{
-		m_nStyle |= SCS_BORDER;
+		m_nStyle |= ScsBorder;
 		dwStyle &= ~WS_BORDER;
 	}
 
@@ -87,15 +68,15 @@ BOOL CTabCtrlEx::Create(DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT 
 	
 	BOOL bRet = false;
 	HINSTANCE hInst = AfxGetInstanceHandle();
-	if (::GetClassInfo(hInst, SHEET_CLASSNAME, &wndClass))
+	if (::GetClassInfo(hInst, s_className, &wndClass))
 	{
-		bRet = (wndClass.style == SHEET_CLASSTYLE);
+		bRet = (wndClass.style == s_classStyle);
 	}
 
 	if (bRet == FALSE)
 	{
 		memset(&wndClass, 0, sizeof(wndClass));
-		wndClass.style = SHEET_CLASSTYLE;
+		wndClass.style = s_classStyle;
 		wndClass.lpfnWndProc = ::DefWindowProc;
 		wndClass.cbClsExtra = wndClass.cbWndExtra = 0;
 		wndClass.hInstance = hInst;
@@ -103,14 +84,14 @@ BOOL CTabCtrlEx::Create(DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT 
 		wndClass.hCursor = NULL;
 		wndClass.hbrBackground = NULL;
 		wndClass.lpszMenuName = NULL;
-		wndClass.lpszClassName = SHEET_CLASSNAME;
+		wndClass.lpszClassName = s_className;
 		if ((bRet = AfxRegisterClass(&wndClass)) == FALSE)
 			ASSERT(FALSE);
 	}
 
 	if (bRet)
 	{
-		bRet = CWnd::Create(SHEET_CLASSNAME, _T(""), dwStyle, rect, pParentWnd, nID);
+		bRet = CWnd::Create(s_className, _T(""), dwStyle, rect, pParentWnd, nID);
 	}
 
 	m_dpi.SetHwnd(m_hWnd);
@@ -273,7 +254,7 @@ int CTabCtrlEx::GetTextWidth(const CString& csText)
 		pDC->SelectObject(pPrevFont);
 		ReleaseDC(pDC);
 
-		return (nWidth + 2*TEXT_PAD);
+		return (nWidth + 2*s_textPad);
 	}
 	
 	return 0;
@@ -299,7 +280,7 @@ int CTabCtrlEx::GetTabsWidth()
 	for (int iTab=0; iTab<m_Tabs.GetSize(); iTab++)
 		nWidth += m_Tabs[iTab].lWidth;
 
-	nWidth += TEXT_PAD;
+	nWidth += s_textPad;
 
 	return nWidth;
 }
@@ -307,7 +288,7 @@ int CTabCtrlEx::GetTabsWidth()
 int CTabCtrlEx::GetSpinnerWidth()
 {
 	int nSpinWidth = m_nTabHeight-2*1;
-	return (2*nSpinWidth + SPIN_PAD);
+	return (2*nSpinWidth + s_spinPad);
 }
 
 void CTabCtrlEx::GetFullRect(CRect& rcTab)
@@ -316,7 +297,7 @@ void CTabCtrlEx::GetFullRect(CRect& rcTab)
 	GetClientRect(rcTab);
 	
 	// Get the full tab area
-	if (m_nStyle & SCS_TOP)
+	if (m_nStyle & ScsTop)
 		rcTab.bottom = m_nTabHeight;
 	else
 		rcTab.top = rcTab.Height()-m_nTabHeight;
@@ -328,7 +309,7 @@ void CTabCtrlEx::GetTabListRect(CRect& rcTab)
 	GetFullRect(rcTab);
 	
 	// Get the area for the tabs
-	if (m_nStyle & SCS_TOP)
+	if (m_nStyle & ScsTop)
 		rcTab.bottom -= 1;
 	else
 		rcTab.top += 1;
@@ -372,7 +353,7 @@ void CTabCtrlEx::GetSpinnerRect(CRect& rcSpin)
 void CTabCtrlEx::GetButtonRect(int nBtn, CRect& rcBtn)
 {
 	GetSpinnerRect(rcBtn);
-	rcBtn.DeflateRect(SPIN_PAD, 0, 0, 0);
+	rcBtn.DeflateRect(s_spinPad, 0, 0, 0);
 	
 	rcBtn.DeflateRect(1, 1);
 	if (nBtn == 0)
@@ -526,7 +507,7 @@ long CTabCtrlEx::ShowTabWindow(int nNewTab, bool bOnSize)
 	if (IsLiveWindow(pNextWnd))
 	{
 		// Resize the tab window
-		if (m_nStyle & SCS_TOP)
+		if (m_nStyle & ScsTop)
 		{
 			pNextWnd->SetWindowPos(&wndTop, rcWnd.left+nPad, rcWnd.top+m_nTabHeight+nPad,
 				rcWnd.Width()-2*nPad, rcWnd.Height()-m_nTabHeight-2*nPad, SWP_SHOWWINDOW);
@@ -556,7 +537,7 @@ void CTabCtrlEx::NotifyTabChange(int nOldTab, int nNewTab, long lOldItemData, lo
 	{
 		NMTABCHANGE nmTab;
 		ZeroMemory(&nmTab, sizeof(nmTab));
-		nmTab.hdr.code = SN_SETACTIVETAB;
+		nmTab.hdr.code = SnSetActiveTab;
 		nmTab.hdr.hwndFrom = GetSafeHwnd();
 		nmTab.hdr.idFrom = GetDlgCtrlID();
 		nmTab.lOldTab = nOldTab;
@@ -575,7 +556,7 @@ void CTabCtrlEx::MakeTabVisible(int nTab)
 	rcTab.OffsetRect(-m_nLeftShifted, 0);
 
 	if (rcTab.right > GetDisplayWidth())
-		m_nLeftShifted += (rcTab.right-GetDisplayWidth()+TEXT_PAD);
+		m_nLeftShifted += (rcTab.right-GetDisplayWidth()+s_textPad);
 	
 	GetTabRect(nTab, rcTab);
 	rcTab.OffsetRect(-m_nLeftShifted, 0);
@@ -664,10 +645,10 @@ void CTabCtrlEx::DrawBar(CDC* pDC)
 	// Set the background color for the tabs
 	pDC->FillRect(rcBar, &m_brNonSelectedTab);
 
-	if (m_nStyle & SCS_BOLD)
+	if (m_nStyle & ScsBold)
 	{
 		// Draw the line
-		if (m_nStyle & SCS_TOP)
+		if (m_nStyle & ScsTop)
 		{
 			pDC->MoveTo(CPoint(rcBar.left, rcBar.bottom-1));
 			pDC->LineTo(CPoint(rcBar.right, rcBar.bottom-1));
@@ -752,7 +733,7 @@ void CTabCtrlEx::DrawSpinner(CDC *pDC)
 	// Draw the line
 	pDC->MoveTo(CPoint(rcSpin.left+1, rcSpin.top));
 	pDC->LineTo(CPoint(rcSpin.left+1, rcSpin.bottom));
-	rcSpin.DeflateRect(SPIN_PAD, 0, 0, 0);
+	rcSpin.DeflateRect(s_spinPad, 0, 0, 0);
 
 	CRect rcBtn;
 	GetButtonRect(0, rcBtn);
@@ -800,9 +781,9 @@ void CTabCtrlEx::DrawButton(CDC *pDC, CRect& rcBtn, ButtonState btnState,
 
 	// Draw the button frame
 	if (btnState == BtnUp)
-		pDC->Draw3dRect(rcBtn, COLOR_WHITE, COLOR_DARKGRAY);
+		pDC->Draw3dRect(rcBtn, s_colorWhite, s_colorDarkGray);
 	else// if (btnState == BtnDown)
-		pDC->Draw3dRect(rcBtn, COLOR_DARKGRAY, COLOR_WHITE);
+		pDC->Draw3dRect(rcBtn, s_colorDarkGray, s_colorWhite);
 }
 
 void CTabCtrlEx::OnLButtonDown(UINT nFlags, CPoint point) 
@@ -825,7 +806,7 @@ void CTabCtrlEx::OnLButtonDown(UINT nFlags, CPoint point)
 		SetCapture();
 
 		// Start the timer message
-		SetTimer(ID_SCROLL_TIMER, 100, NULL);
+		SetTimer(IdScrollTimer, 100, NULL);
 
 		// Redraw the buttons
 		RedrawWindow();
@@ -836,7 +817,7 @@ void CTabCtrlEx::OnLButtonDown(UINT nFlags, CPoint point)
 
 void CTabCtrlEx::OnTimer(UINT_PTR nIDEvent) 
 {
-	if (nIDEvent == ID_SCROLL_TIMER)
+	if (nIDEvent == IdScrollTimer)
 	{
 		CPoint point(0, 0);
 		GetCursorPos(&point);
@@ -898,7 +879,7 @@ void CTabCtrlEx::OnLButtonUp(UINT nFlags, CPoint point)
 	ReleaseCapture();
 
 	// End the timer
-	KillTimer(ID_SCROLL_TIMER);
+	KillTimer(IdScrollTimer);
 	
 	// Check and scroll the tabs
 	ScrollTab(point);
@@ -927,13 +908,13 @@ void CTabCtrlEx::ScrollTab(CPoint point)
 
 				if (iBtn == 0)
 				{
-					m_nLeftShifted -= SHIFT_UNITS;
+					m_nLeftShifted -= s_shiftUnits;
 					if (m_nLeftShifted < 0)
 						m_nLeftShifted = 0;
 				}
 				else
 				{
-					m_nLeftShifted += SHIFT_UNITS;
+					m_nLeftShifted += s_shiftUnits;
 				}	
 			}
 			else
@@ -993,9 +974,9 @@ BOOL CTabCtrlEx::PreTranslateMessage(MSG* pMsg)
 	switch (pMsg->message)
 	{
 	case WM_KEYDOWN:
-		if (CONTROL_PRESSED)
+		if (CKeyboard::IsControlPressed())
 		{
-			if (pMsg->wParam == VK_TILDAE)
+			if (pMsg->wParam == VkTilde)
 			{
 				SwitchTabs((GetKeyState(VK_SHIFT) & 0x8000) == 0);
 				return TRUE;

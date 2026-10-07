@@ -20,51 +20,6 @@
 #include "DPI.h"
 #include "HtmlTextDrawer.h"
 
-#define NM_SEARCH_ENTER_PRESSED		WM_USER+0x100
-#define NM_RIGHT					WM_USER+0x101
-#define NM_LEFT						WM_USER+0x102
-#define NM_END						WM_USER+0x103
-#define NM_DELETE					WM_USER+0x104
-#define NM_PROPERTIES				WM_USER+0x105
-#define NM_LBUTTONDOWN				WM_USER+0x106
-#define NM_GETTOOLTIPTEXT	        WM_USER+0x107
-#define NM_SELECT_DB_ID		        WM_USER+0x108
-#define NM_GROUP_TREE_MESSAGE       WM_USER+0x110
-#define CB_SEARCH					WM_USER+0x112
-#define CB_UPDOWN					WM_USER+0x113
-#define NM_INACTIVE_TOOLTIPWND		WM_USER+0x114
-#define NM_FILL_REST_OF_LIST		WM_USER+0x115
-
-#define NM_SET_LIST_COUNT			WM_USER+0x116
-#define NM_ITEM_DELETED				WM_USER+0x118
-#define NM_ALL_SELECTED				WM_USER+0x119
-#define NM_REFRESH_ROW				WM_USER+0x120
-#define NM_REFRESH_ROW_EXTRA_DATA	WM_USER+0x121
-#define NM_SHOW_HIDE_SCROLLBARS		WM_USER+0x122
-#define NM_CANCEL_SEARCH			WM_USER+0x123
-#define NM_POST_OPTIONS_WINDOW		WM_USER+0x124
-#define NM_SHOW_PROPERTIES			WM_USER+0x125
-#define NM_NEW_GROUP				WM_USER+0x126
-#define NM_DELETE_ID				WM_USER+0x127
-#define NM_MOVE_TO_GROUP			WM_USER+0x128
-#define NM_FOCUS_ON_SEARCH			WM_USER+0x129
-#define NM_COPY_CLIP				WM_USER+0x130
-#define NM_UPDATE_SCROLLBAR			WM_USER+0x131
-
-
-
-#define COPY_BUFFER_HOT_KEY_1_ID	-100
-#define COPY_BUFFER_HOT_KEY_2_ID	-101
-#define COPY_BUFFER_HOT_KEY_3_ID	-102
-
-#define LVIF_CF_DIB 0x10000000
-#define LVIF_CF_RICHTEXT 0x10000000
-
-
-//#define NM_LIST_CUT			        WM_USER+0x111
-//#define NM_LIST_COPY		        WM_USER+0x112
-//#define NM_LIST_PASTE		        WM_USER+0x113
-
 class CQListToolTipText
 {
 public:
@@ -80,6 +35,75 @@ typedef CMap<long, long, CClipFormat, CClipFormat&> CMapIDtoCF;
 
 class CQListCtrl : public CListCtrl
 {
+public:
+	/**
+	 * @brief The window messages and notification codes that the list, the search box, the group tree
+	 * and the tool tip send to the paste window (WM_USER based; the values never change).
+	 */
+	enum : UINT
+	{
+		/** @brief The search box got the Enter key. */
+		NmSearchEnterPressed = WM_USER + 0x100,
+		/** @brief The End key in the list. */
+		NmEnd = WM_USER + 0x103,
+		/** @brief The Delete key in the list or the search box. */
+		NmDelete = WM_USER + 0x104,
+		/** @brief The WM_NOTIFY code that asks the parent for a row's tool tip text. */
+		NmGetToolTipText = WM_USER + 0x107,
+		/** @brief Selects the clip with a database id (wParam). */
+		NmSelectDbId = WM_USER + 0x108,
+		/** @brief The group tree selected a group (wParam: the group id). */
+		NmGroupTreeMessage = WM_USER + 0x110,
+		/** @brief Starts the search of the search box text. */
+		CbSearch = WM_USER + 0x112,
+		/** @brief An up/down key in the search box (wParam, lParam: the key message's). */
+		CbUpDown = WM_USER + 0x113,
+		/** @brief The tool tip window became inactive. */
+		NmInactiveToolTipWnd = WM_USER + 0x114,
+		/** @brief Loads the rows from wParam to lParam (the list's cache hint). */
+		NmFillRestOfList = WM_USER + 0x115,
+		/** @brief The loader thread counted the rows (wParam: the count). */
+		NmSetListCount = WM_USER + 0x116,
+		/** @brief A clip was deleted (wParam: the clip id). */
+		NmItemDeleted = WM_USER + 0x118,
+		/** @brief Every row of the list is selected. */
+		NmAllSelected = WM_USER + 0x119,
+		/** @brief Refreshes a row (wParam: the clip id, lParam: the row). */
+		NmRefreshRow = WM_USER + 0x120,
+		/** @brief Shows (wParam 1) or hides (wParam 0) the scroll bars. */
+		NmShowHideScrollBars = WM_USER + 0x122,
+		/** @brief Cancels the search. */
+		NmCancelSearch = WM_USER + 0x123,
+		/** @brief Opens the options window. */
+		NmPostOptionsWindow = WM_USER + 0x124,
+		/** @brief Shows the properties of a group (wParam: the group id). */
+		NmShowProperties = WM_USER + 0x125,
+		/** @brief Creates a new group (wParam: the parent group id). */
+		NmNewGroup = WM_USER + 0x126,
+		/** @brief Deletes a group (wParam: the group id). */
+		NmDeleteId = WM_USER + 0x127,
+		/** @brief Moves the selection to a group (wParam: the group id). */
+		NmMoveToGroup = WM_USER + 0x128,
+		/** @brief The search box got the focus. */
+		NmFocusOnSearch = WM_USER + 0x129,
+		/** @brief Copies the selected clip. */
+		NmCopyClip = WM_USER + 0x130,
+		/** @brief Updates the paste window's scroll bar. */
+		NmUpdateScrollBar = WM_USER + 0x131,
+	};
+
+	/** @brief The accelerator command of copy buffer 1's copy hot key (-100; CAccel::Cmd keeps its bit pattern). */
+	static constexpr DWORD s_copyBufferHotKey1Cmd{static_cast<DWORD>(-100)};
+	/** @brief The accelerator command of copy buffer 2's copy hot key (-101; CAccel::Cmd keeps its bit pattern). */
+	static constexpr DWORD s_copyBufferHotKey2Cmd{static_cast<DWORD>(-101)};
+	/** @brief The accelerator command of copy buffer 3's copy hot key (-102; CAccel::Cmd keeps its bit pattern). */
+	static constexpr DWORD s_copyBufferHotKey3Cmd{static_cast<DWORD>(-102)};
+
+	/** @brief The LVITEM mask bit that asks the parent for a row's CF_DIB format (LVN_GETDISPINFO). */
+	static constexpr UINT s_lvifCfDib{0x10000000};
+	/** @brief The LVITEM mask bit that asks the parent for a row's RTF format (LVN_GETDISPINFO; same bit as s_lvifCfDib). */
+	static constexpr UINT s_lvifCfRichText{0x10000000};
+
 // Construction
 public:
 	CQListCtrl();
@@ -190,6 +214,28 @@ protected:
     COLORREF HslToRgb(double h, double s, double l);
 		
 	void DrawCheckerboard(CDC* pDC, CRect rect);
+
+	/** @brief The timer ids of the list (SetTimer / OnTimer). */
+	enum : UINT
+	{
+		/** @brief Shows the selected clip's description in the tool tip after the selection settled. */
+		TimerShowProperties = 1,
+		/** @brief Hides the scroll bars after the mouse left their area. */
+		TimerHideScroll = 2,
+		/** @brief Shows the scroll bars when the mouse rests in their area. */
+		TimerShowScroll = 3,
+	};
+	/** @brief The space below a row's text, in unscaled pixels. */
+	static constexpr int s_rowBottomBorder{4};
+	/** @brief The space left of a row's text, in unscaled pixels. */
+	static constexpr int s_rowLeftBorder{3};
+
+	/**
+	 * @brief Whether the description tool tip exists and its window is alive.
+	 * @return true when m_pToolTip is set and its window handle is a window.
+	 */
+	bool IsToolTipValid() const;
+
 	// The tool tip texts handed to the tool tip control; they must outlive OnToolTipText
 	CStringW m_toolTipTextW{};
 	CStringA m_toolTipTextA{};
