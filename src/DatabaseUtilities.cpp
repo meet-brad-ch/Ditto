@@ -70,6 +70,11 @@ CString GetDefaultDBName()
 
 BOOL CheckDBExists(CString csDBPath)
 {
+	return DatabaseLocator::CheckDBExists(csDBPath);
+}
+
+BOOL DatabaseLocator::CheckDBExists(CString csDBPath)
+{
 	// No path set (first run, or the settings were removed by an uninstall): open Ditto.db in the
 	// default location, which may hold the existing history; it is created below only if missing
 	if (csDBPath.IsEmpty())
@@ -86,80 +91,97 @@ BOOL CheckDBExists(CString csDBPath)
 	{
 		//if the database is on a shared drive, network share or anything other than C:\ than don't create a new db
 		//Ditto will wait until that drive is available
-		int len = 0;
-		auto rootType = path.GetRootType(&len);
-		auto driveLetter = path.GetDriveLetter();
-
-		if (rootType == ERootType::rtServerShare ||
-			((rootType == ERootType::rtDriveCur || rootType == rtDriveRoot) && driveLetter >= 'A' && driveLetter != 'C'))
+		if (IsNetworkShareOrNonCDrive(path))
 		{
 			return FALSE;
 		}
 
-		//first try and create create a db at the same path that was selectd
-		bRet = CreateDB(csDBPath);
-
-		//if that didn't work then go back to the default location
-		if (FileExists(csDBPath) == FALSE)
-		{
-			csDBPath = GetDefaultDBName();
-
-			nsPath::CPath FullPath(csDBPath);
-			CString csPath = FullPath.GetPath().GetStr();
-			if (csPath.IsEmpty() == false && FileExists(csDBPath) == FALSE)
-			{
-				CreateDirectory(csPath, NULL);
-			}
-
-			CGetSetOptions::SetDBPath(csDBPath);
-
-			bRet = CreateDB(csDBPath);
-		}
+		bRet = CreateMissingDB(csDBPath);
 	}
 	else
 	{
-		if (ValidDB(csDBPath) == FALSE)
-		{
-			//Db existed but was bad
-			CString csMarkAsBad;
-
-			csMarkAsBad = csDBPath;
-			csMarkAsBad.Replace(_T("."), _T("_BAD."));
-
-			CString csPath = GetDefaultDBName();
-
-			CString cs;
-			cs.Format(_T("%s \"%s\",\n")
-				_T("%s \"%s\",\n")
-				_T("%s,\n")
-				_T("\"%s\""),
-				theApp.m_Language.GetString("Database_Format", "Unrecognized Database Format").GetString(),
-				csDBPath.GetString(),
-				theApp.m_Language.GetString("File_Renamed", "the file will be renamed").GetString(),
-				csMarkAsBad.GetString(),
-				theApp.m_Language.GetString("New_Database", "and a new database will be created").GetString(),
-				csPath.GetString());
-
-			AfxMessageBox(cs);
-
-			CFile::Rename(csDBPath, csMarkAsBad);
-
-			csDBPath = csPath;
-
-			bRet = CreateDB(csDBPath);
-
-			CGetSetOptions::SetDBPath(csDBPath);
-		}
-		else
-		{
-			bRet = TRUE;
-		}
+		bRet = CheckExistingDB(csDBPath);
 	}
 
 	if (bRet)
 	{
 		bRet = OpenDatabase(csDBPath);
 	}
+
+	return bRet;
+}
+
+bool DatabaseLocator::IsNetworkShareOrNonCDrive(CPath& path)
+{
+	int len = 0;
+	auto rootType = path.GetRootType(&len);
+	auto driveLetter = path.GetDriveLetter();
+
+	return rootType == ERootType::rtServerShare ||
+		((rootType == ERootType::rtDriveCur || rootType == rtDriveRoot) && driveLetter >= 'A' && driveLetter != 'C');
+}
+
+BOOL DatabaseLocator::CreateMissingDB(CString& csDBPath)
+{
+	//first try and create create a db at the same path that was selectd
+	BOOL bRet = CreateDB(csDBPath);
+
+	//if that didn't work then go back to the default location
+	if (FileExists(csDBPath) == FALSE)
+	{
+		csDBPath = GetDefaultDBName();
+
+		nsPath::CPath FullPath(csDBPath);
+		CString csPath = FullPath.GetPath().GetStr();
+		if (csPath.IsEmpty() == false && FileExists(csDBPath) == FALSE)
+		{
+			CreateDirectory(csPath, NULL);
+		}
+
+		CGetSetOptions::SetDBPath(csDBPath);
+
+		bRet = CreateDB(csDBPath);
+	}
+
+	return bRet;
+}
+
+BOOL DatabaseLocator::CheckExistingDB(CString& csDBPath)
+{
+	if (DatabaseSchemaUpgrader::ValidDB(csDBPath) != FALSE)
+	{
+		return TRUE;
+	}
+
+	//Db existed but was bad
+	CString csMarkAsBad;
+
+	csMarkAsBad = csDBPath;
+	csMarkAsBad.Replace(_T("."), _T("_BAD."));
+
+	CString csPath = GetDefaultDBName();
+
+	CString cs;
+	cs.Format(_T("%s \"%s\",\n")
+		_T("%s \"%s\",\n")
+		_T("%s,\n")
+		_T("\"%s\""),
+		theApp.m_Language.GetString("Database_Format", "Unrecognized Database Format").GetString(),
+		csDBPath.GetString(),
+		theApp.m_Language.GetString("File_Renamed", "the file will be renamed").GetString(),
+		csMarkAsBad.GetString(),
+		theApp.m_Language.GetString("New_Database", "and a new database will be created").GetString(),
+		csPath.GetString());
+
+	AfxMessageBox(cs);
+
+	CFile::Rename(csDBPath, csMarkAsBad);
+
+	csDBPath = csPath;
+
+	BOOL bRet = CreateDB(csDBPath);
+
+	CGetSetOptions::SetDBPath(csDBPath);
 
 	return bRet;
 }
@@ -175,13 +197,10 @@ BOOL OpenDatabase(CString dbPath)
 	{
 		CPath path(dbPath);
 
-		int len = 0;
-		auto rootType = path.GetRootType(&len);
-		auto driveLetter = path.GetDriveLetter();
+		const bool onNetworkShareOrNonCDrive = DatabaseLocator::IsNetworkShareOrNonCDrive(path);
 
 		theApp.m_databaseOnNetworkShare = false;
-		if (rootType == ERootType::rtServerShare ||
-			((rootType == ERootType::rtDriveCur || rootType == rtDriveRoot) && driveLetter >= 'A' && driveLetter != 'C'))
+		if (onNetworkShareOrNonCDrive)
 		{
 			theApp.m_databaseOnNetworkShare = true;
 		}
@@ -301,179 +320,34 @@ static void UpgradeStickyOrderIndexes(CppSQLite3DB& db)
 	}
 }
 
-BOOL ValidDB(CString csPath, BOOL /*bUpgrade*/)
+BOOL ValidDB(CString csPath, BOOL bUpgrade)
+{
+	return DatabaseSchemaUpgrader::ValidDB(csPath, bUpgrade);
+}
+
+BOOL DatabaseSchemaUpgrader::ValidDB(CString csPath, BOOL /*bUpgrade*/)
 {
 	try
 	{
 		CppSQLite3DB db;
 		db.open(csPath);
 
-		db.execQuery(_T("SELECT lID, lDate, mText, lShortCut, lDontAutoDelete, ")
-			_T("CRC, bIsGroup, lParentID, QuickPasteText ")
-			_T("FROM Main"));
-
-		db.execQuery(_T("SELECT lID, lParentID, strClipBoardFormat, ooData FROM Data"));
-
-		db.execQuery(_T("SELECT lID, TypeText FROM Types"));
-
-		try
-		{
-			db.execDML(_T("DROP TRIGGER delete_data_trigger"));
-		}
-		catch (CppSQLite3Exception& e)
-		{
-			e.errorCode();
-		}
-
-		try
-		{
-			db.execDML(_T("DROP TRIGGER delete_copy_buffer_trigger"));
-		}
-		catch (CppSQLite3Exception& e)
-		{
-			e.errorCode();
-		}
-
-		//This was added later so try to add each time and catch the exception here
-		try
-		{
-			db.execDML(_T("CREATE TRIGGER delete_data_trigger BEFORE DELETE ON Main FOR EACH ROW\n")
-				_T("BEGIN\n")
-				_T("INSERT INTO MainDeletes VALUES(old.lID, datetime('now'));\n")
-				_T("END\n"));
-		}
-		catch (CppSQLite3Exception& e)
-		{
-			e.errorCode();
-		}
-
-		//This was added later so try to add each time and catch the exception here
-		try
-		{
-			db.execQuery(_T("SELECT lID, lClipID, lCopyBuffer FROM CopyBuffers"));
-		}
-		catch (CppSQLite3Exception& e)
-		{
-			e.errorCode();
-
-			db.execDML(_T("CREATE TABLE CopyBuffers(")
-				_T("lID INTEGER PRIMARY KEY AUTOINCREMENT, ")
-				_T("lClipID INTEGER,")
-				_T("lCopyBuffer INTEGER)"));
-		}
-
-		//This was added later so try to add each time and catch the exception here
-		try
-		{
-			db.execQuery(_T("SELECT clipId FROM MainDeletes"));
-		}
-		catch (CppSQLite3Exception& e)
-		{
-			e.errorCode();
-
-			db.execDML(_T("CREATE TABLE MainDeletes(")
-				_T("clipID INTEGER,")
-				_T("modifiedDate)"));
-
-			db.execDML(_T("CREATE TRIGGER MainDeletes_delete_data_trigger BEFORE DELETE ON MainDeletes FOR EACH ROW\n")
-				_T("BEGIN\n")
-				_T("DELETE FROM CopyBuffers WHERE lClipID = old.clipID;\n")
-				_T("DELETE FROM Data WHERE lParentID = old.clipID;\n")
-				_T("END\n"));
-		}
-
-		try
-		{
-			db.execDML(_T("CREATE INDEX Main_ParentId on Main(lParentID DESC)"));
-			db.execDML(_T("CREATE INDEX Main_IsGroup on Main(bIsGroup DESC)"));
-			db.execDML(_T("CREATE INDEX Main_ShortCut on Main(lShortCut DESC)"));
-		}
-		catch (CppSQLite3Exception& e)
-		{
-			e.errorCode();
-		}
-
-		try
-		{
-			db.execQuery(_T("SELECT clipOrder, clipGroupOrder FROM Main"));
-		}
-		catch (CppSQLite3Exception& e)
-		{
-			db.execDML(_T("ALTER TABLE Main ADD clipOrder REAL"));
-			db.execDML(_T("ALTER TABLE Main ADD clipGroupOrder REAL"));
-
-			db.execDML(_T("Update Main set clipOrder = lDate, clipGroupOrder = lDate"));
-
-			db.execDML(_T("CREATE INDEX Main_ClipOrder on Main(clipOrder DESC)"));
-			db.execDML(_T("CREATE INDEX Main_ClipGroupOrder on Main(clipGroupOrder DESC)"));
-
-			db.execDML(_T("DROP INDEX Main_Date"));
-
-			e.errorCode();
-		}
-
-		try
-		{
-			db.execQuery(_T("SELECT globalShortCut FROM Main"));
-		}
-		catch (CppSQLite3Exception& e)
-		{
-			db.execDML(_T("ALTER TABLE Main ADD globalShortCut INTEGER"));
-
-			e.errorCode();
-		}
-
-		try
-		{
-			db.execQuery(_T("SELECT lastPasteDate FROM Main"));
-		}
-		catch (CppSQLite3Exception& e)
-		{
-			db.execDML(_T("ALTER TABLE Main ADD lastPasteDate INTEGER"));
-			db.execDML(_T("Update Main set lastPasteDate = lDate"));
-			db.execDMLEx(_T("Update Main set lastPasteDate = %d where lastPasteDate <= 0"), (int)CTime::GetCurrentTime().GetTime());
-
-			e.errorCode();
-		}
-
-		try
-		{
-			db.execQuery(_T("SELECT stickyClipOrder FROM Main"));
-		}
-		catch (CppSQLite3Exception& e)
-		{
-			db.execDML(_T("ALTER TABLE Main ADD stickyClipOrder REAL"));
-			db.execDML(_T("ALTER TABLE Main ADD stickyClipGroupOrder REAL"));
-
-			e.errorCode();
-		}
+		CheckRequiredTables(db);
+		DropDeleteDataTrigger(db);
+		DropCopyBufferTrigger(db);
+		CreateDeleteDataTrigger(db);
+		AddCopyBuffersTable(db);
+		AddMainDeletesTable(db);
+		CreateMainIndexes(db);
+		AddClipOrderColumns(db);
+		AddGlobalShortCutColumn(db);
+		AddLastPasteDateColumn(db);
+		AddStickyOrderColumns(db);
 
 		UpgradeStickyOrderIndexes(db);
 
-		try
-		{
-			db.execQuery(_T("SELECT MoveToGroupShortCut FROM Main"));
-			db.execQuery(_T("SELECT GlobalMoveToGroupShortCut FROM Main"));
-		}
-		catch (CppSQLite3Exception& e)
-		{
-			db.execDML(_T("ALTER TABLE Main ADD MoveToGroupShortCut INTEGER"));
-			db.execDML(_T("ALTER TABLE Main ADD GlobalMoveToGroupShortCut INTEGER"));
-
-			e.errorCode();
-		}
-
-		db.execDML(_T("DROP INDEX IF EXISTS Main_NoGroup"));
-		db.execDML(_T("DROP INDEX IF EXISTS Main_InGroup"));
-		db.execDML(_T("DROP INDEX IF EXISTS Main_ShortCut"));
-
-		db.execDML(_T("CREATE INDEX IF NOT EXISTS Main_TopLevelParentID ON Main(lParentId ASC, stickyClipOrder DESC, bIsGroup ASC, clipOrder DESC);"));
-		db.execDML(_T("CREATE INDEX IF NOT EXISTS Main_TopLevel ON Main(stickyClipOrder DESC, bIsGroup ASC, clipOrder DESC);"));
-		db.execDML(_T("CREATE INDEX IF NOT EXISTS Main_InGroup2 ON Main(lParentId ASC, stickyClipGroupOrder DESC, bIsGroup ASC, clipGroupOrder DESC);"));
-
-		db.execDML(_T("CREATE INDEX IF NOT EXISTS Main_ShortCut2 on Main(lShortCut DESC, globalShortCut DESC)"));
-		db.execDML(_T("CREATE INDEX IF NOT EXISTS Main_MoveToGroup on Main(MoveToGroupShortCut DESC, GlobalMoveToGroupShortCut DESC)"));
-		db.execDML(_T("CREATE INDEX IF NOT EXISTS Main_CRC on Main(CRC ASC)"));
+		AddMoveToGroupColumns(db);
+		CreateCurrentIndexes(db);
 	}
 	catch (CppSQLite3Exception& e)
 	{
@@ -482,6 +356,210 @@ BOOL ValidDB(CString csPath, BOOL /*bUpgrade*/)
 	}
 
 		return TRUE;
+}
+
+void DatabaseSchemaUpgrader::CheckRequiredTables(CppSQLite3DB& db)
+{
+	db.execQuery(_T("SELECT lID, lDate, mText, lShortCut, lDontAutoDelete, ")
+		_T("CRC, bIsGroup, lParentID, QuickPasteText ")
+		_T("FROM Main"));
+
+	db.execQuery(_T("SELECT lID, lParentID, strClipBoardFormat, ooData FROM Data"));
+
+	db.execQuery(_T("SELECT lID, TypeText FROM Types"));
+}
+
+void DatabaseSchemaUpgrader::DropDeleteDataTrigger(CppSQLite3DB& db)
+{
+	try
+	{
+		db.execDML(_T("DROP TRIGGER delete_data_trigger"));
+	}
+	catch (CppSQLite3Exception& e)
+	{
+		e.errorCode();
+	}
+}
+
+void DatabaseSchemaUpgrader::DropCopyBufferTrigger(CppSQLite3DB& db)
+{
+	try
+	{
+		db.execDML(_T("DROP TRIGGER delete_copy_buffer_trigger"));
+	}
+	catch (CppSQLite3Exception& e)
+	{
+		e.errorCode();
+	}
+}
+
+void DatabaseSchemaUpgrader::CreateDeleteDataTrigger(CppSQLite3DB& db)
+{
+	//This was added later so try to add each time and catch the exception here
+	try
+	{
+		db.execDML(_T("CREATE TRIGGER delete_data_trigger BEFORE DELETE ON Main FOR EACH ROW\n")
+			_T("BEGIN\n")
+			_T("INSERT INTO MainDeletes VALUES(old.lID, datetime('now'));\n")
+			_T("END\n"));
+	}
+	catch (CppSQLite3Exception& e)
+	{
+		e.errorCode();
+	}
+}
+
+void DatabaseSchemaUpgrader::AddCopyBuffersTable(CppSQLite3DB& db)
+{
+	//This was added later so try to add each time and catch the exception here
+	try
+	{
+		db.execQuery(_T("SELECT lID, lClipID, lCopyBuffer FROM CopyBuffers"));
+	}
+	catch (CppSQLite3Exception& e)
+	{
+		e.errorCode();
+
+		db.execDML(_T("CREATE TABLE CopyBuffers(")
+			_T("lID INTEGER PRIMARY KEY AUTOINCREMENT, ")
+			_T("lClipID INTEGER,")
+			_T("lCopyBuffer INTEGER)"));
+	}
+}
+
+void DatabaseSchemaUpgrader::AddMainDeletesTable(CppSQLite3DB& db)
+{
+	//This was added later so try to add each time and catch the exception here
+	try
+	{
+		db.execQuery(_T("SELECT clipId FROM MainDeletes"));
+	}
+	catch (CppSQLite3Exception& e)
+	{
+		e.errorCode();
+
+		db.execDML(_T("CREATE TABLE MainDeletes(")
+			_T("clipID INTEGER,")
+			_T("modifiedDate)"));
+
+		db.execDML(_T("CREATE TRIGGER MainDeletes_delete_data_trigger BEFORE DELETE ON MainDeletes FOR EACH ROW\n")
+			_T("BEGIN\n")
+			_T("DELETE FROM CopyBuffers WHERE lClipID = old.clipID;\n")
+			_T("DELETE FROM Data WHERE lParentID = old.clipID;\n")
+			_T("END\n"));
+	}
+}
+
+void DatabaseSchemaUpgrader::CreateMainIndexes(CppSQLite3DB& db)
+{
+	try
+	{
+		db.execDML(_T("CREATE INDEX Main_ParentId on Main(lParentID DESC)"));
+		db.execDML(_T("CREATE INDEX Main_IsGroup on Main(bIsGroup DESC)"));
+		db.execDML(_T("CREATE INDEX Main_ShortCut on Main(lShortCut DESC)"));
+	}
+	catch (CppSQLite3Exception& e)
+	{
+		e.errorCode();
+	}
+}
+
+void DatabaseSchemaUpgrader::AddClipOrderColumns(CppSQLite3DB& db)
+{
+	try
+	{
+		db.execQuery(_T("SELECT clipOrder, clipGroupOrder FROM Main"));
+	}
+	catch (CppSQLite3Exception& e)
+	{
+		db.execDML(_T("ALTER TABLE Main ADD clipOrder REAL"));
+		db.execDML(_T("ALTER TABLE Main ADD clipGroupOrder REAL"));
+
+		db.execDML(_T("Update Main set clipOrder = lDate, clipGroupOrder = lDate"));
+
+		db.execDML(_T("CREATE INDEX Main_ClipOrder on Main(clipOrder DESC)"));
+		db.execDML(_T("CREATE INDEX Main_ClipGroupOrder on Main(clipGroupOrder DESC)"));
+
+		db.execDML(_T("DROP INDEX Main_Date"));
+
+		e.errorCode();
+	}
+}
+
+void DatabaseSchemaUpgrader::AddGlobalShortCutColumn(CppSQLite3DB& db)
+{
+	try
+	{
+		db.execQuery(_T("SELECT globalShortCut FROM Main"));
+	}
+	catch (CppSQLite3Exception& e)
+	{
+		db.execDML(_T("ALTER TABLE Main ADD globalShortCut INTEGER"));
+
+		e.errorCode();
+	}
+}
+
+void DatabaseSchemaUpgrader::AddLastPasteDateColumn(CppSQLite3DB& db)
+{
+	try
+	{
+		db.execQuery(_T("SELECT lastPasteDate FROM Main"));
+	}
+	catch (CppSQLite3Exception& e)
+	{
+		db.execDML(_T("ALTER TABLE Main ADD lastPasteDate INTEGER"));
+		db.execDML(_T("Update Main set lastPasteDate = lDate"));
+		db.execDMLEx(_T("Update Main set lastPasteDate = %d where lastPasteDate <= 0"), (int)CTime::GetCurrentTime().GetTime());
+
+		e.errorCode();
+	}
+}
+
+void DatabaseSchemaUpgrader::AddStickyOrderColumns(CppSQLite3DB& db)
+{
+	try
+	{
+		db.execQuery(_T("SELECT stickyClipOrder FROM Main"));
+	}
+	catch (CppSQLite3Exception& e)
+	{
+		db.execDML(_T("ALTER TABLE Main ADD stickyClipOrder REAL"));
+		db.execDML(_T("ALTER TABLE Main ADD stickyClipGroupOrder REAL"));
+
+		e.errorCode();
+	}
+}
+
+void DatabaseSchemaUpgrader::AddMoveToGroupColumns(CppSQLite3DB& db)
+{
+	try
+	{
+		db.execQuery(_T("SELECT MoveToGroupShortCut FROM Main"));
+		db.execQuery(_T("SELECT GlobalMoveToGroupShortCut FROM Main"));
+	}
+	catch (CppSQLite3Exception& e)
+	{
+		db.execDML(_T("ALTER TABLE Main ADD MoveToGroupShortCut INTEGER"));
+		db.execDML(_T("ALTER TABLE Main ADD GlobalMoveToGroupShortCut INTEGER"));
+
+		e.errorCode();
+	}
+}
+
+void DatabaseSchemaUpgrader::CreateCurrentIndexes(CppSQLite3DB& db)
+{
+	db.execDML(_T("DROP INDEX IF EXISTS Main_NoGroup"));
+	db.execDML(_T("DROP INDEX IF EXISTS Main_InGroup"));
+	db.execDML(_T("DROP INDEX IF EXISTS Main_ShortCut"));
+
+	db.execDML(_T("CREATE INDEX IF NOT EXISTS Main_TopLevelParentID ON Main(lParentId ASC, stickyClipOrder DESC, bIsGroup ASC, clipOrder DESC);"));
+	db.execDML(_T("CREATE INDEX IF NOT EXISTS Main_TopLevel ON Main(stickyClipOrder DESC, bIsGroup ASC, clipOrder DESC);"));
+	db.execDML(_T("CREATE INDEX IF NOT EXISTS Main_InGroup2 ON Main(lParentId ASC, stickyClipGroupOrder DESC, bIsGroup ASC, clipGroupOrder DESC);"));
+
+	db.execDML(_T("CREATE INDEX IF NOT EXISTS Main_ShortCut2 on Main(lShortCut DESC, globalShortCut DESC)"));
+	db.execDML(_T("CREATE INDEX IF NOT EXISTS Main_MoveToGroup on Main(MoveToGroupShortCut DESC, GlobalMoveToGroupShortCut DESC)"));
+	db.execDML(_T("CREATE INDEX IF NOT EXISTS Main_CRC on Main(CRC ASC)"));
 }
 
 BOOL BackupDB(CString dbPath, CString backupPath)

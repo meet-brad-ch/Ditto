@@ -222,6 +222,59 @@ void CClipboardViewer::ProcessClipboardChange()
 
 bool CClipboardViewer::ValidActiveWnd()
 {
+	UpdateActiveWindowName();
+
+	CString includeApps = CGetSetOptions::GetCopyAppInclude().MakeLower();
+
+	Log(StrF(_T("INCLUDE app names: %s, Active App: %s"), includeApps.GetString(), m_activeWindow.GetString()));
+
+	CString line;
+	if(FindAppMatch(includeApps, line) == false)
+	{
+		Log(StrF(_T("Didn't find a match to INCLUDE match %s, NOT SAVING COPY"), includeApps.GetString()));
+		return false;
+	}
+
+	Log(StrF(_T("Inlclude app names Found Match %s - %s"), line.GetString(), m_activeWindow.GetString()));
+
+	CString excludeApps = CGetSetOptions::GetCopyAppExclude().MakeLower();
+
+	if(excludeApps != "")
+	{
+		Log(StrF(_T("EXCLUDE app names %s, Active App: %s"), excludeApps.GetString(), m_activeWindow.GetString()));
+
+		CString line2;
+		if(FindAppMatch(excludeApps, line2))
+		{
+			Log(StrF(_T("Exclude app names Found Match %s - %s - NOT SAVING COPY"), line2.GetString(), m_activeWindow.GetString()));
+
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool CClipboardViewer::FindAppMatch(const CString& apps, CString& line)
+{
+	CTokenizer token(apps, CGetSetOptions::GetCopyAppSeparator());
+
+	while(token.Next(line))
+	{
+		if(line != "")
+		{
+			if(CWildCardMatch::WildMatch(line.Trim(), m_activeWindow, ""))
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+void CClipboardViewer::UpdateActiveWindowName()
+{
 	m_activeWindow = _T("");
 
 	HWND owner = ::GetClipboardOwner();
@@ -244,64 +297,9 @@ bool CClipboardViewer::ValidActiveWnd()
 	}
 
 	m_activeWindow = m_activeWindow.MakeLower();
-
-	CString includeApps = CGetSetOptions::GetCopyAppInclude().MakeLower();
-
-	Log(StrF(_T("INCLUDE app names: %s, Active App: %s"), includeApps.GetString(), m_activeWindow.GetString()));
-
-	bool tokenMatch = false;
-
-	CTokenizer token(includeApps, CGetSetOptions::GetCopyAppSeparator());
-	CString line;
-
-	while(token.Next(line))
-	{
-		if(line != "")
-		{
-			if(CWildCardMatch::WildMatch(line.Trim(), m_activeWindow, ""))
-			{
-				Log(StrF(_T("Inlclude app names Found Match %s - %s"), line.GetString(), m_activeWindow.GetString()));
-
-				tokenMatch = true;
-				break;
-			}
-		}
-	}				
-
-	if(tokenMatch)
-	{
-		CString excludeApps = CGetSetOptions::GetCopyAppExclude().MakeLower();
-
-		if(excludeApps != "")
-		{
-			Log(StrF(_T("EXCLUDE app names %s, Active App: %s"), excludeApps.GetString(), m_activeWindow.GetString()));
-
-			CTokenizer token2(excludeApps, CGetSetOptions::GetCopyAppSeparator());
-			CString line2;
-			while(token2.Next(line2))
-			{
-				if(line2 != "")
-				{
-					if(CWildCardMatch::WildMatch(line2.Trim(), m_activeWindow, ""))
-					{
-						Log(StrF(_T("Exclude app names Found Match %s - %s - NOT SAVING COPY"), line2.GetString(), m_activeWindow.GetString()));
-
-						return false;
-					}
-				}
-			}
-		}
-	}
-	else
-	{
-		Log(StrF(_T("Didn't find a match to INCLUDE match %s, NOT SAVING COPY"), includeApps.GetString()));
-		return false;
-	}
-
-	return true;
 }
 
-void CClipboardViewer::OnTimer(UINT_PTR nIDEvent) 
+void CClipboardViewer::OnTimer(UINT_PTR nIDEvent)
 {
 	switch(nIDEvent)
 	{
@@ -310,61 +308,68 @@ void CClipboardViewer::OnTimer(UINT_PTR nIDEvent)
 		break;
 
 	case TIMER_DRAW_CLIPBOARD:
-		{
-			KillTimer(nIDEvent);
-		
-			ULONGLONG dwNow = GetTickCount64();
-
-			if(dwNow - m_dwLastCopy > CGetSetOptions::m_dwSaveClipDelay || m_dwLastCopy > dwNow)
-			{
-				if (GetIgnoreClipboardChange() == false)				
-				{
-					Log(StrF(_T("OnDrawClipboard::OnTimer %llu"), dwNow));
-
-					m_pHandler->OnClipboardChange(m_activeWindow);
-
-					m_dwLastCopy = dwNow;
-				}
-			}
-			else
-			{
-				Log(StrF(_T("Clip copy to fast difference from last copy = %llu"), (dwNow - m_dwLastCopy)));
-			}
-
-			m_activeWindow = _T("");
-		}
+		OnDrawClipboardTimer(nIDEvent);
 		break;
 
 	case TIMER_PING:
-		KillTimer(TIMER_PING);
+		OnPingTimer();
+		break;
+	}
 
-		//If we haven't received the change clipboard message then we are disconnected
-		//if so reconnect
-		if(m_bPinging)
+	CWnd::OnTimer(nIDEvent);
+}
+
+void CClipboardViewer::OnDrawClipboardTimer(UINT_PTR nIDEvent)
+{
+	KillTimer(nIDEvent);
+
+	ULONGLONG dwNow = GetTickCount64();
+
+	if(dwNow - m_dwLastCopy > CGetSetOptions::m_dwSaveClipDelay || m_dwLastCopy > dwNow)
+	{
+		if (GetIgnoreClipboardChange() == false)
 		{
-			if(m_bConnect)
-			{
-				Log(_T("Ping Failed Reconnecting to clipboard"));
-				Disconnect(false);
-				Connect();
-			}
-			else
-			{
-				Log(_T("Ping Failed but Connected set to FALSE so this is ok"));
-			}
+			Log(StrF(_T("OnDrawClipboard::OnTimer %llu"), dwNow));
+
+			m_pHandler->OnClipboardChange(m_activeWindow);
+
+			m_dwLastCopy = dwNow;
+		}
+	}
+	else
+	{
+		Log(StrF(_T("Clip copy to fast difference from last copy = %llu"), (dwNow - m_dwLastCopy)));
+	}
+
+	m_activeWindow = _T("");
+}
+
+void CClipboardViewer::OnPingTimer()
+{
+	KillTimer(TIMER_PING);
+
+	//If we haven't received the change clipboard message then we are disconnected
+	//if so reconnect
+	if(m_bPinging)
+	{
+		if(m_bConnect)
+		{
+			Log(_T("Ping Failed Reconnecting to clipboard"));
+			Disconnect(false);
+			Connect();
 		}
 		else
 		{
-			if(m_bConnect)
-			{
-				m_bIsConnected = true;
-			}
+			Log(_T("Ping Failed but Connected set to FALSE so this is ok"));
 		}
-
-		break;
 	}
-	
-	CWnd::OnTimer(nIDEvent);
+	else
+	{
+		if(m_bConnect)
+		{
+			m_bIsConnected = true;
+		}
+	}
 }
 
 LRESULT CClipboardViewer::OnSetConnect(WPARAM wParam, LPARAM /*lParam*/)

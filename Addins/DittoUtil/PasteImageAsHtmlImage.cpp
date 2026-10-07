@@ -34,62 +34,8 @@ bool CPasteImageAsHtmlImage::ConvertPathToHtmlImageTag(const CDittoInfo &DittoIn
 
 		CString csIMG = _T("");
 
-		IClipFormat *pCF_DIB = pFormats->FindFormatEx(CF_DIB);
-		if(pCF_DIB != NULL)
-		{
-			if (!DibImageTag(DittoInfo.m_hWndDitto, pCF_DIB, csIMG))
-				return false;
-		}
-		else
-		{
-			IClipFormat *pHDrop = pFormats->FindFormatEx(CF_HDROP);
-			if(pHDrop)
-			{
-				std::vector<std::wstring> files;
-				try
-				{
-					files = DittoCore::GlobalFileDrop::Read(pHDrop->Data()).Paths();
-				}
-				catch (const DittoCore::ClipboardFormatError& error)
-				{
-					// add-in boundary: no exception may cross into Ditto
-					CString message;
-					message.Format(_T("The images were not pasted as HTML: the clip's file list is malformed (%s)."), CString(error.what()).GetString());
-					::MessageBox(DittoInfo.m_hWndDitto, message, _T("Ditto"), MB_OK | MB_ICONERROR);
-					return false;
-				}
-
-				const size_t nNumFiles = files.size();
-				for(size_t nFile = 0; nFile < nNumFiles; nFile++)
-				{
-					{
-						CString csOrigfile(files[nFile].c_str());
-						CString csFile(csOrigfile);
-						csFile = csFile.MakeLower();
-
-						if(csFile.Find(_T(".bmp")) != -1 || 
-							csFile.Find(_T(".dib")) != -1 ||
-							csFile.Find(_T(".jpg")) != -1 ||
-							csFile.Find(_T(".jpeg")) != -1 ||
-							csFile.Find(_T(".jpe")) != -1 ||
-							csFile.Find(_T(".jfif")) != -1 ||
-							csFile.Find(_T(".gif")) != -1 ||
-							csFile.Find(_T(".tif")) != -1 ||
-							csFile.Find(_T(".tiff")) != -1 ||
-							csFile.Find(_T(".png")) != -1)
-						{
-							CString csFormat;
-							csFormat.Format(_T("<IMG src=\"file:///%s\">"), csOrigfile.GetString());
-							if(nFile < nNumFiles-1)
-							{
-								csFormat += _T("<br>");
-							}
-							csIMG += csFormat;
-						}
-					}
-				}
-			}
-		}
+		if (!GetImageTags(DittoInfo.m_hWndDitto, pFormats, csIMG))
+			return false;
 
 		if(csIMG.IsEmpty() == FALSE)
 		{
@@ -103,6 +49,73 @@ bool CPasteImageAsHtmlImage::ConvertPathToHtmlImageTag(const CDittoInfo &DittoIn
 	}
 
 	return bRet;
+}
+
+bool CPasteImageAsHtmlImage::GetImageTags(HWND owner, IClipFormats *pFormats, CString& csIMG)
+{
+	IClipFormat *pCF_DIB = pFormats->FindFormatEx(CF_DIB);
+	if(pCF_DIB != NULL)
+	{
+		return DibImageTag(owner, pCF_DIB, csIMG);
+	}
+
+	IClipFormat *pHDrop = pFormats->FindFormatEx(CF_HDROP);
+	if(pHDrop)
+	{
+		return HDropImageTags(owner, pHDrop, csIMG);
+	}
+
+	return true;
+}
+
+bool CPasteImageAsHtmlImage::HDropImageTags(HWND owner, IClipFormat* pHDrop, CString& csIMG)
+{
+	std::vector<std::wstring> files;
+	try
+	{
+		files = DittoCore::GlobalFileDrop::Read(pHDrop->Data()).Paths();
+	}
+	catch (const DittoCore::ClipboardFormatError& error)
+	{
+		// add-in boundary: no exception may cross into Ditto
+		CString message;
+		message.Format(_T("The images were not pasted as HTML: the clip's file list is malformed (%s)."), CString(error.what()).GetString());
+		::MessageBox(owner, message, _T("Ditto"), MB_OK | MB_ICONERROR);
+		return false;
+	}
+
+	const size_t nNumFiles = files.size();
+	for(size_t nFile = 0; nFile < nNumFiles; nFile++)
+	{
+		CString csOrigfile(files[nFile].c_str());
+		CString csFile(csOrigfile);
+		csFile = csFile.MakeLower();
+
+		if(IsImageFile(csFile))
+		{
+			CString csFormat;
+			csFormat.Format(_T("<IMG src=\"file:///%s\">"), csOrigfile.GetString());
+			if(nFile < nNumFiles-1)
+			{
+				csFormat += _T("<br>");
+			}
+			csIMG += csFormat;
+		}
+	}
+
+	return true;
+}
+
+bool CPasteImageAsHtmlImage::IsImageFile(const CString& csFile)
+{
+	for (const TCHAR* extension : m_imageExtensions)
+	{
+		if (csFile.Find(extension) != -1)
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 bool CPasteImageAsHtmlImage::DibImageTag(HWND owner, IClipFormat* pCF_DIB, CString& csIMG)

@@ -3,6 +3,7 @@
 
 #include <windows.h>
 #include <tchar.h>
+#include <span>
 // Please see SendKeys.cpp for copyright and usage issues.
 
 class CSendKeys
@@ -56,7 +57,62 @@ private:
 
   void PopUpShiftKeys();
 
-  
+  /**
+   * @brief Sends a key up for a modifier key when its "down" flag is set.
+   * @param bDown the "down" flag of the modifier key.
+   * @param VKey the virtual key to release.
+   */
+  void ReleaseKeyIfDown(bool bDown, BYTE VKey);
+
+  /**
+   * @brief Sends the key string character at pKey (a control character, a {...} group or a normal key).
+   * @param pKey in: the current character; out: the last character consumed ('}' of a group).
+   * @param KeyString the group buffer shared by all groups of one SendKeys() call.
+   * @param NumTimes repeat count of the last group key; kept between groups.
+   * @return false if a group is invalid (SendKeys() then stops and returns false).
+   */
+  bool SendKeysChar(LPTSTR &pKey, std::span<TCHAR> KeyString, WORD &NumTimes);
+
+  /**
+   * @brief Handles the modifier and control characters ( ) % + ^ @ ~ of a key string.
+   * @param ch the key string character.
+   * @return true if ch was a control character and was handled, false for a normal key.
+   */
+  bool SendControlChar(TCHAR ch);
+
+  /**
+   * @brief Copies a {...} group into KeyString, parses it and sends its key.
+   * @param pKey in: the '{'; out: the character that ends the group.
+   * @param KeyString the group buffer shared by all groups of one SendKeys() call.
+   * @param NumTimes repeat count of the last group key; kept between groups.
+   * @return false if the group is too long or has an invalid number.
+   */
+  bool SendKeyGroup(LPTSTR &pKey, std::span<TCHAR> KeyString, WORD &NumTimes);
+
+  /**
+   * @brief Parses a group text (VKEY, BEEP, APPACTIVATE, DELAY or a key name) and runs commands.
+   * @param KeyString the group text without braces (BEEP edits it in place).
+   * @param MKey in: INVALIDKEY; out: the key to send, if any.
+   * @param NumTimes out: the repeat count of a key name with a count.
+   * @return false if a VKEY or count number is out of the WORD range.
+   */
+  bool ParseKeyCommand(LPTSTR KeyString, WORD &MKey, WORD &NumTimes);
+
+  /**
+   * @brief Runs a {BEEP frequency delay} group.
+   * @param KeyString the group text starting with "BEEP" (the space between the numbers is cut).
+   */
+  void BeepCommand(LPTSTR KeyString);
+
+  /**
+   * @brief Looks up a key name (with an optional repeat count) in KeyNames.
+   * @param KeyString the group text.
+   * @param MKey out: the key, INVALIDKEY if the name is unknown.
+   * @param NumTimes out: the repeat count (1 when none is given); unchanged for an unknown name.
+   * @return false if the repeat count is out of the WORD range.
+   */
+  bool ParseKeyName(LPCTSTR KeyString, WORD &MKey, WORD &NumTimes);
+
   static bool IsVkExtended(BYTE VKey);
   void SendKeyUp(BYTE VKey);
   void SendKeyDown(BYTE VKey, WORD NumTimes, bool GenUpMsg, bool bDelay = false);

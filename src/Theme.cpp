@@ -73,33 +73,15 @@ void CTheme::LoadDefaults()
 
 bool CTheme::Load(CString csTheme, bool bHeaderOnly, bool bCheckLastWriteTime)
 {
-	bool followWindows10Theme = false;
-	if (csTheme.IsEmpty())
+	const bool followWindows10Theme = csTheme.IsEmpty();
+	if (followWindows10Theme)
 	{
-		followWindows10Theme = true;
-
-		if (DarkAppWindows10Setting())
-		{
-			csTheme = _T("DarkerDitto");
-			Log(_T("Loading theme based on windows setting of dark mode for apps"));			
-		}
+		csTheme = GetWindowsThemeName();
 	}
 
-	if (csTheme.IsEmpty() || csTheme == _T("Ditto") || csTheme == _T("(Default)") || csTheme == _T("(Ditto)"))
+	if (IsDefaultThemeName(csTheme))
 	{
-		LoadDefaults();
-
-		if (followWindows10Theme)
-		{
-			LoadWindowsAccentColor();
-		}
-
-		m_LastWriteTime = 0;
-		m_lastTheme = _T("");
-
-		Log(_T("Loading default ditto values for themes"));
-
-		return false;
+		return LoadDefaultTheme(followWindows10Theme);
 	}
 
 	CString csPath = CGetSetOptions::GetPath(PATH_THEMES);
@@ -124,6 +106,43 @@ bool CTheme::Load(CString csTheme, bool bHeaderOnly, bool bCheckLastWriteTime)
 
 	Log(StrF(_T("Loading Theme %s"), csPath.GetString()));
 
+	return LoadThemeFile(csPath, bHeaderOnly, followWindows10Theme);
+}
+
+CString CTheme::GetWindowsThemeName()
+{
+	if (DarkAppWindows10Setting())
+	{
+		Log(_T("Loading theme based on windows setting of dark mode for apps"));
+		return _T("DarkerDitto");
+	}
+	return _T("");
+}
+
+bool CTheme::IsDefaultThemeName(const CString& csTheme)
+{
+	return csTheme.IsEmpty() || csTheme == _T("Ditto") || csTheme == _T("(Default)") || csTheme == _T("(Ditto)");
+}
+
+bool CTheme::LoadDefaultTheme(bool followWindows10Theme)
+{
+	LoadDefaults();
+
+	if (followWindows10Theme)
+	{
+		LoadWindowsAccentColor();
+	}
+
+	m_LastWriteTime = 0;
+	m_lastTheme = _T("");
+
+	Log(_T("Loading default ditto values for themes"));
+
+	return false;
+}
+
+bool CTheme::LoadThemeFile(const CString& csPath, bool bHeaderOnly, bool followWindows10Theme)
+{
 	// collapsed whitespace, as TinyXML (Ditto's earlier parser) read the theme files
 	tinyxml2::XMLDocument doc(true, tinyxml2::COLLAPSE_WHITESPACE);
 	if(CXmlFile::Load(doc, csPath) != tinyxml2::XML_SUCCESS)
@@ -152,6 +171,18 @@ bool CTheme::Load(CString csTheme, bool bHeaderOnly, bool bCheckLastWriteTime)
 		return true;
 
 
+	LoadThemeValues(ItemHeader);
+
+	if (followWindows10Theme)
+	{
+		LoadWindowsAccentColor();
+	}
+
+	return true;
+}
+
+void CTheme::LoadThemeValues(const tinyxml2::XMLElement *ItemHeader)
+{
 	LoadColor(ItemHeader, "CaptionLeft", m_CaptionLeft);
 	LoadColor(ItemHeader, "CaptionRight", m_CaptionRight);
 	LoadColor(ItemHeader, "CaptionLeftTopMost", m_CaptionLeftTopMost);
@@ -191,13 +222,6 @@ bool CTheme::Load(CString csTheme, bool bHeaderOnly, bool bCheckLastWriteTime)
 	LoadColor(ItemHeader, "ScrollBarThumb", m_scrollBarThumb);
 	LoadColor(ItemHeader, "ScrollBarThumbHover", m_scrollBarThumbHover);
 	LoadColor(ItemHeader, "ScrollBarTrack", m_scrollBarTrack);
-
-	if (followWindows10Theme)
-	{
-		LoadWindowsAccentColor();
-	}
-
-	return true;
 }
 
 void CTheme::LoadWindowsAccentColor()
@@ -295,70 +319,13 @@ bool CTheme::LoadElement(const tinyxml2::XMLElement *pParent, CStringA csNode, C
 		return false;
 	}
 
-	if (csColor.GetLength() > 4 && csColor.Left(4).CompareNoCase(_T("rgb(")) == 0)
+	if (HasColorPrefix(csColor, _T("rgb(")))
 	{
-		CString values = csColor.Mid(4, csColor.GetLength() - 5);
-		values.Trim();
-
-		CTokenizer token(values, _T(", "));
-		CString csR, csG, csB;
-
-		token.Next(csR);
-		token.Next(csG);
-		token.Next(csB);
-
-		csR.Trim();
-		csG.Trim();
-		csB.Trim();
-
-		if (!csR.IsEmpty() && csG.IsEmpty() && csB.IsEmpty())
-		{
-			Color = ATOI(csR);
-		}
-		else if (!csR.IsEmpty() && !csG.IsEmpty() && !csB.IsEmpty())
-		{
-			Color = RGB(ATOI(csR), ATOI(csG), ATOI(csB));
-		}
-		else
-		{
-			m_csLastError.Format(_T("Theme Load, malformed/incomplete RGB value for Node = %hs, Value = %s"), csNode.GetString(), csColor.GetString());
-			Log(m_csLastError);
-			return false;
-		}
+		return ParseRgbValue(csNode, csColor, Color);
 	}
-	else if (csColor.GetLength() > 4 && csColor.Left(4).CompareNoCase(_T("hsl(")) == 0)
+	else if (HasColorPrefix(csColor, _T("hsl(")))
 	{
-		CString values = csColor.Mid(4, csColor.GetLength() - 5);
-		values.Trim();
-
-		CTokenizer token(values, _T(", %"));
-		CString csH, csS, csL;
-
-		token.Next(csH);
-		token.Next(csS);
-		token.Next(csL);
-
-		csH.Trim();
-		csS.Trim();
-		csL.Trim();
-
-		if (!csH.IsEmpty() && !csS.IsEmpty() && !csL.IsEmpty())
-		{
-			float h = (float)_tstof(csH);
-			float s = (float)_tstof(csS);
-			float l = (float)_tstof(csL);
-
-			s = max(0.0f, min(100.0f, s)) / 100.0f;
-			l = max(0.0f, min(100.0f, l)) / 100.0f;
-
-			Color = HslToRgb(h, s, l);
-		}
-		else
-		{
-			m_csLastError.Format(_T("Theme Load, malformed/incomplete HSL value for Node = %hs, Value = %s"), csNode.GetString(), csColor.GetString());
-			Log(m_csLastError);
-			return false;
-		}
+		return ParseHslValue(csNode, csColor, Color);
 	}
 	else if (csColor.GetAt(0) == _T('#') && csColor.GetLength() == 7)
 	{
@@ -374,5 +341,79 @@ bool CTheme::LoadElement(const tinyxml2::XMLElement *pParent, CStringA csNode, C
 		Color = (COLORREF)intValue;
 	}
 
+	return true;
+}
+
+bool CTheme::HasColorPrefix(const CString& csColor, LPCTSTR prefix)
+{
+	return csColor.GetLength() > 4 && csColor.Left(4).CompareNoCase(prefix) == 0;
+}
+
+bool CTheme::ParseRgbValue(const CStringA& csNode, const CString& csColor, COLORREF &Color)
+{
+	CString values = csColor.Mid(4, csColor.GetLength() - 5);
+	values.Trim();
+
+	CTokenizer token(values, _T(", "));
+	CString csR, csG, csB;
+
+	token.Next(csR);
+	token.Next(csG);
+	token.Next(csB);
+
+	csR.Trim();
+	csG.Trim();
+	csB.Trim();
+
+	if (!csR.IsEmpty() && csG.IsEmpty() && csB.IsEmpty())
+	{
+		Color = ATOI(csR);
+	}
+	else if (!csR.IsEmpty() && !csG.IsEmpty() && !csB.IsEmpty())
+	{
+		Color = RGB(ATOI(csR), ATOI(csG), ATOI(csB));
+	}
+	else
+	{
+		m_csLastError.Format(_T("Theme Load, malformed/incomplete RGB value for Node = %hs, Value = %s"), csNode.GetString(), csColor.GetString());
+		Log(m_csLastError);
+		return false;
+	}
+	return true;
+}
+
+bool CTheme::ParseHslValue(const CStringA& csNode, const CString& csColor, COLORREF &Color)
+{
+	CString values = csColor.Mid(4, csColor.GetLength() - 5);
+	values.Trim();
+
+	CTokenizer token(values, _T(", %"));
+	CString csH, csS, csL;
+
+	token.Next(csH);
+	token.Next(csS);
+	token.Next(csL);
+
+	csH.Trim();
+	csS.Trim();
+	csL.Trim();
+
+	if (!csH.IsEmpty() && !csS.IsEmpty() && !csL.IsEmpty())
+	{
+		float h = (float)_tstof(csH);
+		float s = (float)_tstof(csS);
+		float l = (float)_tstof(csL);
+
+		s = max(0.0f, min(100.0f, s)) / 100.0f;
+		l = max(0.0f, min(100.0f, l)) / 100.0f;
+
+		Color = HslToRgb(h, s, l);
+	}
+	else
+	{
+		m_csLastError.Format(_T("Theme Load, malformed/incomplete HSL value for Node = %hs, Value = %s"), csNode.GetString(), csColor.GetString());
+		Log(m_csLastError);
+		return false;
+	}
 	return true;
 }

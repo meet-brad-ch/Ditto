@@ -398,78 +398,114 @@ inline ERootType GRT_Return(ERootType type, int len, int * pLen)
 /// 
 ERootType GetRootType(LPCTSTR path, int * pLen, bool greedy)
 {
-//   ERootType   type = rtNoRoot;
-//   int len = 0;
+   return PathRootParser::GetRootType(path, pLen, greedy);
+}
 
-   const TCHAR * invalidChars = _T("\\/:*/\"<>|");
-   const TCHAR bk = '\\';
-
+ERootType PathRootParser::GetRootType(LPCTSTR path, int * pLen, bool greedy)
+{
    if (!path || !*path)
       return GRT_Return(rtNoRoot, 0, pLen);
 
+   const RootMatch match = MatchRoot(path, greedy);
+   return GRT_Return(match.type, match.len, pLen);
+}
+
+PathRootParser::RootMatch PathRootParser::MatchRoot(LPCTSTR path, bool greedy)
+{
    // drive spec
-   if (_istalpha(*path) && path[1] == ':')
+   if (IsDriveSpec(path))
+      return MatchDrive(path);
+
+   // UNC long path? (starts with "\\?\")
+   if (_tcsncmp(path, _T("\\\\?\\"), 4) == 0)
+      return MatchLongPath(path);
+
+   // anything else starting with two backslashes
+   if (_tcsncmp(path, _T("\\\\"), 2) == 0)
    {
-      if (path[2] == bk) { return GRT_Return(rtDriveRoot, 3, pLen); }
-      else               { return GRT_Return(rtDriveCur, 2, pLen); }
-   }
-
-   // anything starting with two backslashes
-   if (path[0] == bk && path[1] == bk)
-   {
-      // UNC long path?
-      if (path[2] == '?' && path[3] == bk)
-      {
-         int extraLen = 0;
-         GetRootType(path+4, &extraLen) ;
-         return GRT_Return(rtLongPath, 4 + extraLen, pLen);
-      }
-
-      // position of next backslash or colon
-      int len = 2 + (int)_tcscspn(path+2, invalidChars);
-      TCHAR const * end = path+len;
-
-      // server only, no backslash
-      if (*end == 0) 
-         return GRT_Return(rtServerOnly, len, pLen);
-
-      // server only, terminated with backslash
-      if (*end == bk && end[1] == 0) 
-         return GRT_Return(rtServerOnly, len+1, pLen); 
-
-      // server, backslash, and more...
-      if (*end == bk)
-      {
-          if (!greedy)  // return server only
-              return GRT_Return(rtServer, len, pLen);
-
-         len += 1 + (int)_tcscspn(end+1, invalidChars);
-         end = path + len;
-
-         // server, share, no backslash
-         if (*end == 0) 
-            return GRT_Return(rtServerShare, len, pLen); 
-
-         // server, share, backslash
-         if (*end == '\\') 
-            return GRT_Return(rtServerShare, len+1, pLen);
-      }
+      const RootMatch server = MatchServer(path, greedy);
+      if (server.found)
+         return server;
       // fall through to other tests
    }
 
-   int len = (int)_tcscspn(path, invalidChars);
+   return MatchProtocol(path);
+}
+
+bool PathRootParser::IsDriveSpec(LPCTSTR path)
+{
+   return _istalpha(*path) && path[1] == ':';
+}
+
+PathRootParser::RootMatch PathRootParser::MatchDrive(LPCTSTR path)
+{
+   if (path[2] == _T('\\'))
+      return RootMatch{ true, rtDriveRoot, 3 };
+   return RootMatch{ true, rtDriveCur, 2 };
+}
+
+PathRootParser::RootMatch PathRootParser::MatchLongPath(LPCTSTR path)
+{
+   int extraLen = 0;
+   GetRootType(path+4, &extraLen) ;
+   return RootMatch{ true, rtLongPath, 4 + extraLen };
+}
+
+PathRootParser::RootMatch PathRootParser::MatchServer(LPCTSTR path, bool greedy)
+{
+   // position of next backslash or colon
+   const int len = 2 + (int)_tcscspn(path+2, m_nameEndChars);
+   TCHAR const * end = path+len;
+
+   // server only, no backslash
+   if (*end == 0)
+      return RootMatch{ true, rtServerOnly, len };
+
+   // server only, terminated with backslash
+   if (_tcscmp(end, _T("\\")) == 0)
+      return RootMatch{ true, rtServerOnly, len+1 };
+
+   // server, backslash, and more...
+   if (*end == _T('\\'))
+      return MatchShare(path, len, greedy);
+
+   return RootMatch{};
+}
+
+PathRootParser::RootMatch PathRootParser::MatchShare(LPCTSTR path, int serverLen, bool greedy)
+{
+   if (!greedy)  // return server only
+      return RootMatch{ true, rtServer, serverLen };
+
+   const int len = serverLen + 1 + (int)_tcscspn(path + serverLen + 1, m_nameEndChars);
+   TCHAR const * end = path + len;
+
+   // server, share, no backslash
+   if (*end == 0)
+      return RootMatch{ true, rtServerShare, len };
+
+   // server, share, backslash
+   if (*end == '\\')
+      return RootMatch{ true, rtServerShare, len+1 };
+
+   return RootMatch{};
+}
+
+PathRootParser::RootMatch PathRootParser::MatchProtocol(LPCTSTR path)
+{
+   const int len = (int)_tcscspn(path, m_nameEndChars);
    TCHAR const * end = path + len;
 
    // (pseudo) protocol:
    if (len > 0 && *end == ':')
    {
-      if (end[1] == '/' && end[2] == '/') 
-         return GRT_Return(rtProtocol, len+3, pLen);
-      else 
-         return GRT_Return(rtPseudoProtocol, len+1, pLen); 
+      if (_tcsncmp(end+1, _T("//"), 2) == 0)
+         return RootMatch{ true, rtProtocol, len+3 };
+      else
+         return RootMatch{ true, rtPseudoProtocol, len+1 };
    }
 
-   return GRT_Return(rtNoRoot, 0, pLen);
+   return RootMatch{};
 }
 
 
@@ -641,28 +677,9 @@ CPath & CPath::MakePretty()
 //
 CPath & CPath::Clean(DWORD cleanup)
 {
-    if (cleanup & epcRemoveArgs)
-    {
-       // remove leading spaces, otherwise PathRemoveArgs considers everything a space
-       if (cleanup & epcTrim)
-          m_path.TrimLeft();  
-       
-        PathRemoveArgs(CStringLock(m_path));
-    }
+    CleanArgsAndIcon(cleanup);
 
-    if (cleanup & epcRemoveIconLocation)
-        PathParseIconLocation(CStringLock(m_path));
-
-
-    if (cleanup & epcTrim)
-        Trim();
-
-    if (cleanup & epcUnquote)
-    {
-        Unquote();
-        if (cleanup & epcTrimInQuote)
-            Trim();
-    }
+    CleanTrimAndQuotes(cleanup);
 
     if (cleanup & epcExpandEnvStrings)
         ExpandEnvStrings();
@@ -680,6 +697,34 @@ CPath & CPath::Clean(DWORD cleanup)
         MakePretty();
 
     return *this;
+}
+
+void CPath::CleanArgsAndIcon(DWORD cleanup)
+{
+    if (cleanup & epcRemoveArgs)
+    {
+       // remove leading spaces, otherwise PathRemoveArgs considers everything a space
+       if (cleanup & epcTrim)
+          m_path.TrimLeft();
+
+        PathRemoveArgs(CStringLock(m_path));
+    }
+
+    if (cleanup & epcRemoveIconLocation)
+        PathParseIconLocation(CStringLock(m_path));
+}
+
+void CPath::CleanTrimAndQuotes(DWORD cleanup)
+{
+    if (cleanup & epcTrim)
+        Trim();
+
+    if (cleanup & epcUnquote)
+    {
+        Unquote();
+        if (cleanup & epcTrimInQuote)
+            Trim();
+    }
 }
 
 

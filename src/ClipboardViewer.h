@@ -62,6 +62,27 @@ protected:
 
 private:
 	void ProcessClipboardChange();
+	/**
+	 * @brief ValidActiveWnd's step: sets m_activeWindow to the lower-case process name of the
+	 * clipboard owner, or of the foreground window when the owner has none.
+	 */
+	void UpdateActiveWindowName();
+	/**
+	 * @brief Looks for the first entry of an app name list that matches m_activeWindow.
+	 * @param apps the lower-case app name list (wildcards allowed, CGetSetOptions::GetCopyAppSeparator separated).
+	 * @param line receives the matching (trimmed) entry.
+	 * @return true if an entry matches.
+	 */
+	bool FindAppMatch(const CString& apps, CString& line);
+	/**
+	 * @brief OnTimer's TIMER_DRAW_CLIPBOARD step: hands the clipboard change on unless it came too fast.
+	 * @param nIDEvent the timer id (killed here).
+	 */
+	void OnDrawClipboardTimer(UINT_PTR nIDEvent);
+	/**
+	 * @brief OnTimer's TIMER_PING step: reconnects when the ping was not answered.
+	 */
+	void OnPingTimer();
 };
 
 /////////////////////////////////////////////////////////////////////////////

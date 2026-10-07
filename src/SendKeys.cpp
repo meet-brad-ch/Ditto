@@ -392,38 +392,14 @@ void CSendKeys::PopUpShiftKeys()
   if (m_bUsingParens)
 		return;
 
-  if (m_bShiftDown)
-	{
-      SendKeyUp(VK_SHIFT);
-	}
-	if (m_bLShiftDown)
-	{
-		SendKeyUp(VK_LSHIFT);
-	}
-	if (m_bRShiftDown)
-	{
-		SendKeyUp(VK_RSHIFT);
-	}
-    if (m_bControlDown)
-	{
-      SendKeyUp(VK_CONTROL);
-	}
-	if (m_bLControlDown)
-	{
-		SendKeyUp(VK_LCONTROL);
-	}
-	if (m_bRControlDown)
-	{
-		SendKeyUp(VK_RCONTROL);
-	}
-    if (m_bAltDown)
-	{
-      SendKeyUp(VK_MENU);
-	}
-    if (m_bWinDown)
-	{
-      SendKeyUp(VK_LWIN);
-	}
+	ReleaseKeyIfDown(m_bShiftDown, VK_SHIFT);
+	ReleaseKeyIfDown(m_bLShiftDown, VK_LSHIFT);
+	ReleaseKeyIfDown(m_bRShiftDown, VK_RSHIFT);
+	ReleaseKeyIfDown(m_bControlDown, VK_CONTROL);
+	ReleaseKeyIfDown(m_bLControlDown, VK_LCONTROL);
+	ReleaseKeyIfDown(m_bRControlDown, VK_RCONTROL);
+	ReleaseKeyIfDown(m_bAltDown, VK_MENU);
+	ReleaseKeyIfDown(m_bWinDown, VK_LWIN);
 
 	m_bWinDown = m_bShiftDown = m_bLShiftDown = m_bRShiftDown = m_bControlDown = m_bLControlDown = m_bRControlDown = m_bAltDown = false;
 }
@@ -431,13 +407,11 @@ void CSendKeys::PopUpShiftKeys()
 // Sends a key string
 bool CSendKeys::SendKeys(LPCTSTR KeysString, bool Wait)
 {
-  WORD MKey;
   WORD NumTimes = 1;
+  // one buffer for all {...} groups of the string (a group reads past its own text into it)
   TCHAR KeyString[300] = {0};
-  int  keyIdx;
 
   LPTSTR pKey = (LPTSTR) KeysString;
-  TCHAR  ch;
 
   m_bWait = Wait;
 
@@ -445,159 +419,206 @@ bool CSendKeys::SendKeys(LPCTSTR KeysString, bool Wait)
 
   while (*pKey)
   {
-    ch = *pKey;
-    switch (ch)
-    {
-    // begin modifier group
-    case _TXCHAR('('):
-      m_bUsingParens = true;
-      break;
-
-    // end modifier group
-    case _TXCHAR(')'):
-      m_bUsingParens = false;
-      PopUpShiftKeys(); // pop all shift keys when we finish a modifier group close
-      break;
-
-    // ALT key
-    case _TXCHAR('%'):
-      m_bAltDown = true;
-      SendKeyDown(VK_MENU, 1, false);
-      break;
-
-    // SHIFT key
-    case _TXCHAR('+'):
-      m_bShiftDown = true;
-      SendKeyDown(VK_SHIFT, 1, false);
-      break;
-
-    // CTRL key
-    case _TXCHAR('^'):
-      m_bControlDown = true;
-      SendKeyDown(VK_CONTROL, 1, false);
-      break;
-
-    // WINKEY (Left-WinKey)
-    case '@':
-      m_bWinDown = true;
-      SendKeyDown(VK_LWIN, 1, false);
-      break;
-
-    // enter
-    case _TXCHAR('~'):
-      SendKeyDown(VK_RETURN, 1, true);
-      PopUpShiftKeys();
-      break;
-
-    // begin special keys
-    case _TXCHAR('{'):
-      {
-        LPTSTR p = pKey+1; // skip past the beginning '{'
-        size_t t;
-
-        // find end of close
-        while (*p && *p != _TXCHAR('}'))
-          p++;
-
-        t = p - pKey;
-        // special key definition too big? (t characters are written, KeyString[t-1] included)
-        if (t > _countof(KeyString))
-          return false;
-
-        // Take this KeyString into local buffer
-        _tcsncpy(KeyString, pKey+1, t);
-
-        KeyString[t-1] = _TXCHAR('\0');
-        keyIdx = -1;
-
-        pKey += t; // skip to next keystring
-
-        // Invalidate key
-        MKey = INVALIDKEY;
-
-        // sending arbitrary vkeys?
-        if (_tcsnicmp(KeyString, _T("VKEY"), 4) == 0)
-        {
-          p = KeyString + 4;
-          const int vkey = _ttoi(p);
-          if (vkey < 0 || vkey > 0xFFFF)
-            return false;
-          MKey = static_cast<WORD>(vkey);
-        }
-        else if (_tcsnicmp(KeyString, _T("BEEP"), 4) == 0)
-        {
-          p = KeyString + 4 + 1;
-          LPTSTR p1 = p;
-          DWORD frequency, delay;
-
-          if ((p1 = _tcsstr(p, _T(" "))) != NULL)
-          {
-            *p1++ = _TXCHAR('\0');
-            frequency = _ttoi(p);
-            delay = _ttoi(p1);
-            ::Beep(frequency, delay);
-          }
-        }
-        // Should activate a window?
-        else if (_tcsnicmp(KeyString, _T("APPACTIVATE"), 11) == 0)
-        {
-          p = KeyString + 11 + 1;
-          AppActivate(p);
-        }
-        // want to send/set delay?
-        else if (_tcsnicmp(KeyString, _T("DELAY"), 5) == 0)
-        {
-          // Advance to parameters
-          p = KeyString + 5;
-          // set "sleep factor"
-          if (*p == _TXCHAR('='))
-            m_nDelayAlways = _ttoi(p + 1); // Take number after the '=' character
-          else
-            // set "sleep now"
-            m_nDelayNow = _ttoi(p);
-        }
-        // not command special keys, then process as keystring to VKey
-        else
-        {
-          MKey = StringToVKey(KeyString, keyIdx);
-          // Key found in table
-          if (keyIdx != -1)
-          {
-            NumTimes = 1;
-
-            // Does the key string have also count specifier?
-            t = _tcslen(KeyNames[keyIdx].keyName);
-            if (_tcslen(KeyString) > t)
-            {
-              p = KeyString + t;
-              // Take the specified number of times
-              const int numTimes = _ttoi(p);
-              if (numTimes < 0 || numTimes > 0xFFFF)
-                return false;
-              NumTimes = static_cast<WORD>(numTimes);
-            }
-
-            if (KeyNames[keyIdx].normalkey)
-              MKey = ::VkKeyScan(KeyNames[keyIdx].VKey);
-          }
-        }
-
-        SendSpecialKey(MKey, NumTimes);
-      }
-      break;
-
-      // a normal key was pressed
-    default:
-      // Get the VKey from the key
-      MKey = ::VkKeyScan(ch);
-      SendKey(MKey, 1, true);
-      PopUpShiftKeys();
-    }
+    if (!SendKeysChar(pKey, KeyString, NumTimes))
+      return false;
     pKey++;
   }
 
   m_bUsingParens = false;
   PopUpShiftKeys();
+  return true;
+}
+
+void CSendKeys::ReleaseKeyIfDown(bool bDown, BYTE VKey)
+{
+  if (bDown)
+  {
+    SendKeyUp(VKey);
+  }
+}
+
+bool CSendKeys::SendKeysChar(LPTSTR &pKey, std::span<TCHAR> KeyString, WORD &NumTimes)
+{
+  const TCHAR ch = *pKey;
+
+  // begin special keys
+  if (ch == _TXCHAR('{'))
+    return SendKeyGroup(pKey, KeyString, NumTimes);
+
+  if (!SendControlChar(ch))
+  {
+    // a normal key was pressed
+    // Get the VKey from the key
+    const WORD MKey = ::VkKeyScan(ch);
+    SendKey(MKey, 1, true);
+    PopUpShiftKeys();
+  }
+  return true;
+}
+
+bool CSendKeys::SendControlChar(TCHAR ch)
+{
+  switch (ch)
+  {
+  // begin modifier group
+  case _TXCHAR('('):
+    m_bUsingParens = true;
+    return true;
+
+  // end modifier group
+  case _TXCHAR(')'):
+    m_bUsingParens = false;
+    PopUpShiftKeys(); // pop all shift keys when we finish a modifier group close
+    return true;
+
+  // ALT key
+  case _TXCHAR('%'):
+    m_bAltDown = true;
+    SendKeyDown(VK_MENU, 1, false);
+    return true;
+
+  // SHIFT key
+  case _TXCHAR('+'):
+    m_bShiftDown = true;
+    SendKeyDown(VK_SHIFT, 1, false);
+    return true;
+
+  // CTRL key
+  case _TXCHAR('^'):
+    m_bControlDown = true;
+    SendKeyDown(VK_CONTROL, 1, false);
+    return true;
+
+  // WINKEY (Left-WinKey)
+  case '@':
+    m_bWinDown = true;
+    SendKeyDown(VK_LWIN, 1, false);
+    return true;
+
+  // enter
+  case _TXCHAR('~'):
+    SendKeyDown(VK_RETURN, 1, true);
+    PopUpShiftKeys();
+    return true;
+
+  default:
+    return false;
+  }
+}
+
+bool CSendKeys::SendKeyGroup(LPTSTR &pKey, std::span<TCHAR> KeyString, WORD &NumTimes)
+{
+  LPTSTR p = pKey+1; // skip past the beginning '{'
+  size_t t{};
+
+  // find end of close
+  while (*p && *p != _TXCHAR('}'))
+    p++;
+
+  t = p - pKey;
+  // special key definition too big? (t characters are written, KeyString[t-1] included)
+  if (t > KeyString.size())
+    return false;
+
+  // Take this KeyString into local buffer
+  _tcsncpy(KeyString.data(), pKey+1, t);
+
+  KeyString[t-1] = _TXCHAR('\0');
+
+  pKey += t; // skip to next keystring
+
+  // Invalidate key
+  WORD MKey = INVALIDKEY;
+
+  if (!ParseKeyCommand(KeyString.data(), MKey, NumTimes))
+    return false;
+
+  SendSpecialKey(MKey, NumTimes);
+  return true;
+}
+
+bool CSendKeys::ParseKeyCommand(LPTSTR KeyString, WORD &MKey, WORD &NumTimes)
+{
+  LPTSTR p = nullptr;
+
+  // sending arbitrary vkeys?
+  if (_tcsnicmp(KeyString, _T("VKEY"), 4) == 0)
+  {
+    p = KeyString + 4;
+    const int vkey = _ttoi(p);
+    if (vkey < 0 || vkey > 0xFFFF)
+      return false;
+    MKey = static_cast<WORD>(vkey);
+  }
+  else if (_tcsnicmp(KeyString, _T("BEEP"), 4) == 0)
+  {
+    BeepCommand(KeyString);
+  }
+  // Should activate a window?
+  else if (_tcsnicmp(KeyString, _T("APPACTIVATE"), 11) == 0)
+  {
+    p = KeyString + 11 + 1;
+    AppActivate(p);
+  }
+  // want to send/set delay?
+  else if (_tcsnicmp(KeyString, _T("DELAY"), 5) == 0)
+  {
+    // Advance to parameters
+    p = KeyString + 5;
+    // set "sleep factor"
+    if (*p == _TXCHAR('='))
+      m_nDelayAlways = _ttoi(p + 1); // Take number after the '=' character
+    else
+      // set "sleep now"
+      m_nDelayNow = _ttoi(p);
+  }
+  // not command special keys, then process as keystring to VKey
+  else
+  {
+    return ParseKeyName(KeyString, MKey, NumTimes);
+  }
+  return true;
+}
+
+void CSendKeys::BeepCommand(LPTSTR KeyString)
+{
+  LPTSTR p = KeyString + 4 + 1;
+  LPTSTR p1 = p;
+  DWORD frequency{}, delay{};
+
+  if ((p1 = _tcsstr(p, _T(" "))) != NULL)
+  {
+    *p1++ = _TXCHAR('\0');
+    frequency = _ttoi(p);
+    delay = _ttoi(p1);
+    ::Beep(frequency, delay);
+  }
+}
+
+bool CSendKeys::ParseKeyName(LPCTSTR KeyString, WORD &MKey, WORD &NumTimes)
+{
+  int keyIdx = -1;
+  MKey = StringToVKey(KeyString, keyIdx);
+  // Key not found in table
+  if (keyIdx == -1)
+    return true;
+
+  NumTimes = 1;
+
+  // Does the key string have also count specifier?
+  const size_t t = _tcslen(KeyNames[keyIdx].keyName);
+  if (_tcslen(KeyString) > t)
+  {
+    LPCTSTR p = KeyString + t;
+    // Take the specified number of times
+    const int numTimes = _ttoi(p);
+    if (numTimes < 0 || numTimes > 0xFFFF)
+      return false;
+    NumTimes = static_cast<WORD>(numTimes);
+  }
+
+  if (KeyNames[keyIdx].normalkey)
+    MKey = ::VkKeyScan(KeyNames[keyIdx].VKey);
   return true;
 }
 

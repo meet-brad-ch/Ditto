@@ -142,54 +142,21 @@ void CClipEditThread::OnFileChanged()
 	FILE_NOTIFY_INFORMATION* pNotify = m_fileChangeBuffer;
 	int loopCount = 0;
 	bool fileModified = false;
-	CString editClipFileName = _T("EditClip_");
-	CString newClipFileName = _T("NewClip_");
 
 	while (true)
 	{
 		CString fileName(pNotify->FileName, pNotify->FileNameLength / sizeof(WCHAR));
-				
+
 		//we can't filter by the action, modify as ms word doesn't modify the file they replace it
 		///so just look for anything that matches our file names
 
-		if (pNotify->Action != FILE_ACTION_ADDED && pNotify->Action != FILE_ACTION_REMOVED)
+		if (IsChangeAction(pNotify->Action))
 		{
-			bool addToChanges = true;			
-
+			if (ShouldSaveChangedFile(fileName))
 			{
-				ATL::CCritSecLock csLock(m_fileEditsLock.m_sect);
-				auto exists = m_fileEditStarts.find(fileName);
-				if (exists != m_fileEditStarts.end())
-				{
-					auto startEdit = m_fileEditStarts[fileName];
-					auto diff = CTime::GetCurrentTime() - startEdit;
-					if (diff.GetTotalSeconds() < CGetSetOptions::m_clipEditSaveDelayAfterLoadSeconds)
-					{
-						Log(StrF(_T("%s has changed close to when we started editing the file, diff: %lld, limit: %d, not handling change"), fileName.GetString(), diff.GetTotalSeconds(), CGetSetOptions::m_clipEditSaveDelayAfterLoadSeconds));
-						addToChanges = false;
-					}
-				}
-				else //not in our list of files we initiated the change with
-				{
-					if (fileName.Find(newClipFileName, 0) == 0)
-					{
-						Log(StrF(_T("New clip file changed: %s, this was not in Ditto list of files we initiated the change for, not handling change"), fileName.GetString()));						
-						addToChanges = false;
-					}
-				}
-			}
-
-			if (fileName.Find(editClipFileName, 0) == -1 && fileName.Find(newClipFileName, 0) == -1)
-			{
-				addToChanges = false;
-				Log(StrF(_T("File %s is not a Ditto file of format EditClip or NewClip, not handling change"), fileName.GetString()));
-			}
-
-			if (addToChanges)
-			{				
 				Log(StrF(_T("%s file changed, adding to list to be saved back to Ditto"), fileName.GetString()));
 				m_filesToSave[fileName] = true;
-				fileModified = true;				
+				fileModified = true;
 			}
 		}
 
@@ -216,20 +183,56 @@ void CClipEditThread::OnFileChanged()
 	}
 }
 
+bool CClipEditThread::IsChangeAction(DWORD action)
+{
+	return action != FILE_ACTION_ADDED && action != FILE_ACTION_REMOVED;
+}
+
+bool CClipEditThread::ShouldSaveChangedFile(const CString& fileName)
+{
+	CString editClipFileName = _T("EditClip_");
+	CString newClipFileName = _T("NewClip_");
+	bool addToChanges = true;
+
+	{
+		ATL::CCritSecLock csLock(m_fileEditsLock.m_sect);
+		auto exists = m_fileEditStarts.find(fileName);
+		if (exists != m_fileEditStarts.end())
+		{
+			auto startEdit = m_fileEditStarts[fileName];
+			auto diff = CTime::GetCurrentTime() - startEdit;
+			if (diff.GetTotalSeconds() < CGetSetOptions::m_clipEditSaveDelayAfterLoadSeconds)
+			{
+				Log(StrF(_T("%s has changed close to when we started editing the file, diff: %lld, limit: %d, not handling change"), fileName.GetString(), diff.GetTotalSeconds(), CGetSetOptions::m_clipEditSaveDelayAfterLoadSeconds));
+				addToChanges = false;
+			}
+		}
+		else //not in our list of files we initiated the change with
+		{
+			if (fileName.Find(newClipFileName, 0) == 0)
+			{
+				Log(StrF(_T("New clip file changed: %s, this was not in Ditto list of files we initiated the change for, not handling change"), fileName.GetString()));
+				addToChanges = false;
+			}
+		}
+	}
+
+	if (fileName.Find(editClipFileName, 0) == -1 && fileName.Find(newClipFileName, 0) == -1)
+	{
+		addToChanges = false;
+		Log(StrF(_T("File %s is not a Ditto file of format EditClip or NewClip, not handling change"), fileName.GetString()));
+	}
+
+	return addToChanges;
+}
+
 bool CClipEditThread::SaveToClip(CString filePath, int id)
 {
 	bool savedClip = false;
 
 	Log(StrF(_T("ClipFile: %s, ClipId: %d, has changed saving back to Ditto"), filePath.GetString(), id));
 
-	if (id < 0)
-	{
-		auto exists = m_newClipIds.find(filePath);
-		if (exists != m_newClipIds.end())
-		{
-			id = m_newClipIds[filePath];
-		}
-	}
+	id = ResolveNewClipId(filePath, id);
 
 	CClip clip;
 	if (id >= 0)
@@ -241,74 +244,111 @@ bool CClipEditThread::SaveToClip(CString filePath, int id)
 		}
 
 		clip.LoadFormats(id);
-	}			
+	}
 
-	CString unicodeText;
-	CStringA utf8Text;
-	bool unicode = false;
-	std::vector<BYTE> cf_dibBytes;
-	std::vector<BYTE> pngBytes;
-	
+	EditedClipData data{};
+
 	CString editClipFolder = CGetSetOptions::GetPath(PATH_EDIT_CLIPS);
 	CString fullFilePath = editClipFolder + filePath;
 
 	nsPath::CPath path(filePath);
 	auto extenstion = path.GetExtension().MakeLower();
 
+	if (ReadEditedFile(fullFilePath, extenstion, id, data) == false)
+	{
+		return false;
+	}
+
+	if (IsEmptyNewClip(id, data))
+	{
+		Log(StrF(_T("Not saving new clip that is empty, no text or image bytes, path: %s, clip id: %d, not saving"), fullFilePath.GetString(), id));
+		return false;
+	}
+
+	BOOL modifyDescription = CGetSetOptions::GetUpdateDescWhenSavingClip();
+
+	SaveEditedFormats(clip, extenstion, data, modifyDescription);
+
+	RefreshEditedClip(filePath, id, clip);
+
+	savedClip = true;
+
+	return savedClip;
+}
+
+int CClipEditThread::ResolveNewClipId(const CString& filePath, int id)
+{
+	if (id < 0)
+	{
+		auto exists = m_newClipIds.find(filePath);
+		if (exists != m_newClipIds.end())
+		{
+			id = m_newClipIds[filePath];
+		}
+	}
+	return id;
+}
+
+bool CClipEditThread::ReadEditedFile(const CString& fullFilePath, const CString& extenstion, int id, EditedClipData& data)
+{
 	if (extenstion == _T("png") || extenstion == _T("bmp"))
 	{
-		if (ReadImageFile(fullFilePath, cf_dibBytes, pngBytes) == false)
+		if (ReadImageFile(fullFilePath, data.cf_dibBytes, data.pngBytes) == false)
 		{
 			Log(StrF(_T("Error reading image file %s, clip id: %d, not saving"), fullFilePath.GetString(), id));
 			return false;
 		}
 	}
-	else if (ReadFile(fullFilePath, unicode, unicodeText, utf8Text) == false)
+	else if (ReadFile(fullFilePath, data.unicode, data.unicodeText, data.utf8Text) == false)
 	{
 		Log(StrF(_T("Error reading text file %s, clip id: %d, not saving"), fullFilePath.GetString(), id));
 		return false;
 	}
+	return true;
+}
 
-	if (id < 0 &&
-		unicodeText == _T("") &&
-		utf8Text == "" &&
-		cf_dibBytes.size() <= 0 &&
-		pngBytes.size() <= 0)
-	{
-		Log(StrF(_T("Not saving new clip that is empty, no text or image bytes, path: %s, clip id: %d, not saving"), fullFilePath.GetString(), id));
-		return false;
-	}	
+bool CClipEditThread::IsEmptyNewClip(int id, const EditedClipData& data)
+{
+	return id < 0 &&
+		data.unicodeText == _T("") &&
+		data.utf8Text == "" &&
+		data.cf_dibBytes.size() <= 0 &&
+		data.pngBytes.size() <= 0;
+}
 
-	BOOL modifyDescription = CGetSetOptions::GetUpdateDescWhenSavingClip();
-	
+void CClipEditThread::SaveEditedFormats(CClip& clip, const CString& extenstion, EditedClipData& data, BOOL modifyDescription)
+{
 	if (extenstion == _T("bmp") || extenstion == _T("png"))
-	{		
-		clip.SaveFormats(nullptr, nullptr, nullptr, modifyDescription, &cf_dibBytes, &pngBytes);				
+	{
+		clip.SaveFormats(nullptr, nullptr, nullptr, modifyDescription, &data.cf_dibBytes, &data.pngBytes);
 	}
 	else if (extenstion == _T("txt"))
 	{
-		if (unicode)
+		if (data.unicode)
 		{
-			clip.SaveFormats(&unicodeText, nullptr, nullptr, modifyDescription);
+			clip.SaveFormats(&data.unicodeText, nullptr, nullptr, modifyDescription);
 		}
 		else
 		{
-			unicodeText = CTextConvert::Utf8ToUnicode(utf8Text);
-			clip.SaveFormats(&unicodeText, nullptr, nullptr, modifyDescription);
+			data.unicodeText = CTextConvert::Utf8ToUnicode(data.utf8Text);
+			clip.SaveFormats(&data.unicodeText, nullptr, nullptr, modifyDescription);
 		}
 	}
 	else if (extenstion == _T("rtf"))
 	{
-		if (GetTextFromRTF(utf8Text, unicodeText))
+		if (GetTextFromRTF(data.utf8Text, data.unicodeText))
 		{
-			clip.SaveFormats(&unicodeText, nullptr, &utf8Text, modifyDescription);
+			clip.SaveFormats(&data.unicodeText, nullptr, &data.utf8Text, modifyDescription);
 		}
 		else
 		{
-			clip.SaveFormats(nullptr, nullptr, &utf8Text, modifyDescription);			
+			clip.SaveFormats(nullptr, nullptr, &data.utf8Text, modifyDescription);
 		}
 	}
+}
 
+void CClipEditThread::RefreshEditedClip(const CString& filePath, int id, const CClip& clip)
+{
 	//refresh the clip in the UI
 	if (id == -1)
 	{
@@ -318,11 +358,7 @@ bool CClipEditThread::SaveToClip(CString filePath, int id)
 	else if (id > 0)
 	{
 		theApp.RefreshClipInUI(id, UPDATE_CLIP_DESCRIPTION);
-	}			
-
-	savedClip = true;	
-
-	return savedClip;
+	}
 }
 
 bool CClipEditThread::ReadFile(CString filePath, bool &unicode, CString &unicodeText, CStringA &utf8Text)

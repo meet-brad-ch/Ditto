@@ -27,17 +27,7 @@ bool CReadOnlyFlag::ResetReadOnlyFlag(const CDittoInfo &DittoInfo, IClip *pClip,
 
 		try
 		{
-			LoadHDropFiles(lines, pFormats);
-
-			if(lines.GetSize() <= 0)
-			{
-				LoadUnicodeFiles(lines, pFormats);
-			}
-
-			if(lines.GetSize() <= 0)
-			{
-				LoadTextFiles(lines, pFormats);
-			}
+			LoadFileLines(lines, pFormats);
 		}
 		catch (const DittoCore::ClipboardFormatError& error)
 		{
@@ -50,47 +40,7 @@ bool CReadOnlyFlag::ResetReadOnlyFlag(const CDittoInfo &DittoInfo, IClip *pClip,
 
 		for(int i = 0; i < lines.GetSize(); i++)
 		{
-			CString file = lines[i].TrimLeft(' ').TrimRight(' ').MakeLower();
-
-			//Find the first occurance of a file // or \\ for a network file or a->z:\\ for a local files
-			int pos = file.Find(_T("//"));
-			if(pos >= 0)
-			{
-				file = file.Mid(pos);
-			}
-			else
-			{
-				pos = file.Find(_T("\\\\"));
-				if(pos >= 0)
-				{
-					file = file.Mid(pos);
-				}
-				else
-				{
-					for(wchar_t drive = 'a'; drive <= 'z'; drive++)
-					{
-						CString csDrive(drive);
-						csDrive += _T(":\\");
-
-						pos = file.Find(csDrive);
-						if(pos >= 0)
-						{
-							file = file.Mid(pos);
-							break;
-						}
-
-						csDrive =  drive;
-						csDrive += _T(":/");
-
-						pos = file.Find(csDrive);
-						if(pos >= 0)
-						{
-							file = file.Mid(pos);
-							break;
-						}
-					}
-				}
-			}
+			CString file = SkipToFileStart(lines[i].TrimLeft(' ').TrimRight(' ').MakeLower());
 
 			BOOL success = FALSE;
 			if(resetFlag)
@@ -105,6 +55,66 @@ bool CReadOnlyFlag::ResetReadOnlyFlag(const CDittoInfo &DittoInfo, IClip *pClip,
 	}
 
 	return true;
+}
+
+void CReadOnlyFlag::LoadFileLines(CStringArray &lines, IClipFormats *pFormats)
+{
+	LoadHDropFiles(lines, pFormats);
+
+	if(lines.GetSize() <= 0)
+	{
+		LoadUnicodeFiles(lines, pFormats);
+	}
+
+	if(lines.GetSize() <= 0)
+	{
+		LoadTextFiles(lines, pFormats);
+	}
+}
+
+CString CReadOnlyFlag::SkipToFileStart(CString file)
+{
+	//Find the first occurance of a file // or \\ for a network file or a->z:\\ for a local files
+	int pos = file.Find(_T("//"));
+	if(pos >= 0)
+	{
+		file = file.Mid(pos);
+	}
+	else
+	{
+		pos = file.Find(_T("\\\\"));
+		if(pos >= 0)
+		{
+			file = file.Mid(pos);
+		}
+		else
+		{
+			for(wchar_t drive = 'a'; drive <= 'z'; drive++)
+			{
+				CString csDrive(drive);
+				csDrive += _T(":\\");
+
+				pos = file.Find(csDrive);
+				if(pos >= 0)
+				{
+					file = file.Mid(pos);
+					break;
+				}
+
+				csDrive =  drive;
+				csDrive += _T(":/");
+
+				pos = file.Find(csDrive);
+				if(pos >= 0)
+				{
+					file = file.Mid(pos);
+					break;
+				}
+			}
+		}
+	}
+
+	return file;
 }
 
 bool CReadOnlyFlag::LoadUnicodeFiles(CStringArray &lines, IClipFormats *pFormats)

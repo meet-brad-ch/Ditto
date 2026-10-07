@@ -61,19 +61,7 @@ void CFormatSQL::Parse(CString cs)
 		case ' ':
 			if(bInQuotes == false)
 			{
-				eSpecialTypes sp = ConvetToKey(csCurrentWord);
-				switch(sp)
-				{
-				case eNOT:
-					eNotValue = sp;
-					break;
-				case eOR:
-				case eAND:
-					eOrValue = sp;
-					break;
-				default:
-					AddToSQL(csCurrentWord, eNotValue, eOrValue);
-				}
+				AddWord(csCurrentWord, eNotValue, eOrValue);
 				csCurrentWord = "";
 			}
 			else
@@ -88,6 +76,23 @@ void CFormatSQL::Parse(CString cs)
 
 	if(csCurrentWord.GetLength() > 0)
 		AddToSQL(csCurrentWord, eNotValue, eOrValue);
+}
+
+void CFormatSQL::AddWord(const CString& csCurrentWord, eSpecialTypes &eNotValue, eSpecialTypes &eOrValue)
+{
+	eSpecialTypes sp = ConvetToKey(csCurrentWord);
+	switch(sp)
+	{
+	case eNOT:
+		eNotValue = sp;
+		break;
+	case eOR:
+	case eAND:
+		eOrValue = sp;
+		break;
+	default:
+		AddToSQL(csCurrentWord, eNotValue, eOrValue);
+	}
 }
 
 CFormatSQL::eSpecialTypes CFormatSQL::ConvetToKey(CString cs)

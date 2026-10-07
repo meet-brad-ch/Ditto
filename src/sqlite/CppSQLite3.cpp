@@ -32,6 +32,8 @@
 #include <atlconv.h>
 #include <memory>
 #include <regex>
+#include <algorithm>
+#include <array>
 
 
 // Named constant for passing to CppSQLite3Exception when passing it a string
@@ -75,39 +77,14 @@ CppSQLite3Exception::CppSQLite3Exception(const CppSQLite3Exception&  e) :
 
 const TCHAR* CppSQLite3Exception::errorCodeAsString(int nErrCode)
 {
-	switch (nErrCode)
+	for (const ErrorCodeName& entry : m_errorCodeNames)
 	{
-		case SQLITE_OK          : return _T("SQLITE_OK");
-		case SQLITE_ERROR       : return _T("SQLITE_ERROR");
-		case SQLITE_INTERNAL    : return _T("SQLITE_INTERNAL");
-		case SQLITE_PERM        : return _T("SQLITE_PERM");
-		case SQLITE_ABORT       : return _T("SQLITE_ABORT");
-		case SQLITE_BUSY        : return _T("SQLITE_BUSY");
-		case SQLITE_LOCKED      : return _T("SQLITE_LOCKED");
-		case SQLITE_NOMEM       : return _T("SQLITE_NOMEM");
-		case SQLITE_READONLY    : return _T("SQLITE_READONLY");
-		case SQLITE_INTERRUPT   : return _T("SQLITE_INTERRUPT");
-		case SQLITE_IOERR       : return _T("SQLITE_IOERR");
-		case SQLITE_CORRUPT     : return _T("SQLITE_CORRUPT");
-		case SQLITE_NOTFOUND    : return _T("SQLITE_NOTFOUND");
-		case SQLITE_FULL        : return _T("SQLITE_FULL");
-		case SQLITE_CANTOPEN    : return _T("SQLITE_CANTOPEN");
-		case SQLITE_PROTOCOL    : return _T("SQLITE_PROTOCOL");
-		case SQLITE_EMPTY       : return _T("SQLITE_EMPTY");
-		case SQLITE_SCHEMA      : return _T("SQLITE_SCHEMA");
-		case SQLITE_TOOBIG      : return _T("SQLITE_TOOBIG");
-		case SQLITE_CONSTRAINT  : return _T("SQLITE_CONSTRAINT");
-		case SQLITE_MISMATCH    : return _T("SQLITE_MISMATCH");
-		case SQLITE_MISUSE      : return _T("SQLITE_MISUSE");
-		case SQLITE_NOLFS       : return _T("SQLITE_NOLFS");
-		case SQLITE_AUTH        : return _T("SQLITE_AUTH");
-		case SQLITE_FORMAT      : return _T("SQLITE_FORMAT");
-		case SQLITE_RANGE       : return _T("SQLITE_RANGE");
-		case SQLITE_ROW         : return _T("SQLITE_ROW");
-		case SQLITE_DONE        : return _T("SQLITE_DONE");
-		case CPPSQLITE_ERROR    : return _T("CPPSQLITE_ERROR");
-		default: return _T("UNKNOWN_ERROR");
+		if (entry.code == nErrCode)
+		{
+			return entry.name;
+		}
 	}
+	return _T("UNKNOWN_ERROR");
 }
 
 
@@ -1187,17 +1164,14 @@ int sqlite3_encode_binary(const unsigned char *in, int n, unsigned char *out){
   }
   out[0] = static_cast<unsigned char>(e); // e is an offset chosen from 1-255
   j = 1;
+  // escaped values in escape-code order: 0x00 -> 0x01 0x01, 0x01 -> 0x01 0x02, 0x27 -> 0x01 0x03
+  const std::array<int, 3> escaped{ 0, 1, '\'' };
   for(i=0; i<n; i++){
     int c = (in[i] - e)&0xff;
-    if( c==0 ){
+    const auto hit = std::find(escaped.begin(), escaped.end(), c);
+    if( hit!=escaped.end() ){
       out[j++] = 1;
-      out[j++] = 1;
-    }else if( c==1 ){
-      out[j++] = 1;
-      out[j++] = 2;
-    }else if( c=='\'' ){
-      out[j++] = 1;
-      out[j++] = 3;
+      out[j++] = static_cast<unsigned char>(1 + (hit - escaped.begin())); // escape code 1-3
     }else{
       out[j++] = static_cast<unsigned char>(c); // c is masked to 0-255 above
     }

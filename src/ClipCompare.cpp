@@ -21,61 +21,7 @@ void CClipCompare::Compare(int leftId, int rightId)
 		CClip rightClip;
 		if(rightClip.LoadFormats(rightId, true))
 		{
-			bool saveW = true;
-			bool saveA = true;
-			bool saveUtf8 = true;
-
-			if (CGetSetOptions::GetPreferUtf8ForCompare() == FALSE)
-			{
-				Log(StrF(_T("CClipCompare::Compare, option is set to not use utf8")));
-				saveUtf8 = false;
-			}
-			
-			if(leftClip.GetUnicodeTextFormat() == _T("") || rightClip.GetUnicodeTextFormat() == _T(""))
-			{
-				saveW = false;
-				saveUtf8 = false;
-			}
-
-			if(leftClip.GetCFTextTextFormat() == "" || rightClip.GetCFTextTextFormat() == "")
-			{
-				saveA = false;
-			}
-
-			if(saveW || saveA || saveUtf8)
-			{
-				CString leftFile = SaveToFile(leftId, &leftClip, saveW, saveA, saveUtf8);
-				CString rightFile = SaveToFile(rightId, &rightClip, saveW, saveA, saveUtf8);
-
-				CString params = _T("");
-				CString path = GetComparePath(params);
-
-				if(path != _T(""))
-				{
-					SHELLEXECUTEINFO sei = { sizeof(sei) };
-					sei.lpFile = path;
-					CString csParam;
-					csParam.Format(_T("%s\"%s\" \"%s\""), params.GetString(), leftFile.GetString(), rightFile.GetString());
-					sei.lpParameters = csParam;
-					sei.nShow = SW_NORMAL;
-
-					Log(StrF(_T("Comparing two clips, left Id %d, right Id %d, Path: %s %s"), leftId, rightId, path.GetString(), csParam.GetString()));
-
-					if (!ShellExecuteEx(&sei))
-					{
-					}
-				}
-				else
-				{
-					Log(StrF(_T("CClipCompare::Compare, No Valid compare apps, not doing compare")));
-
-					MessageBox(NULL, _T("No compare application found. Install WinMerge or set \"Diff application path\" in Advanced options."), _T("Ditto"), MB_OK | MB_ICONINFORMATION | MB_TOPMOST);
-				}
-			}
-			else	
-			{
-				Log(StrF(_T("CClipCompare::Compare, did not find valid text for both passed in clips")));
-			}
+			CompareClips(leftId, leftClip, rightId, rightClip);
 		}
 		else
 		{
@@ -88,140 +34,117 @@ void CClipCompare::Compare(int leftId, int rightId)
 	}
 }
 
+CClipCompare::CompareFormats CClipCompare::GetCompareFormats(CClip& leftClip, CClip& rightClip)
+{
+	CompareFormats formats{};
+
+	if (CGetSetOptions::GetPreferUtf8ForCompare() == FALSE)
+	{
+		Log(StrF(_T("CClipCompare::Compare, option is set to not use utf8")));
+		formats.saveUtf8 = false;
+	}
+
+	if(leftClip.GetUnicodeTextFormat() == _T("") || rightClip.GetUnicodeTextFormat() == _T(""))
+	{
+		formats.saveW = false;
+		formats.saveUtf8 = false;
+	}
+
+	if(leftClip.GetCFTextTextFormat() == "" || rightClip.GetCFTextTextFormat() == "")
+	{
+		formats.saveA = false;
+	}
+
+	return formats;
+}
+
+void CClipCompare::CompareClips(int leftId, CClip& leftClip, int rightId, CClip& rightClip)
+{
+	const CompareFormats formats = GetCompareFormats(leftClip, rightClip);
+
+	if(formats.saveW || formats.saveA || formats.saveUtf8)
+	{
+		LaunchCompare(leftId, leftClip, rightId, rightClip, formats);
+	}
+	else
+	{
+		Log(StrF(_T("CClipCompare::Compare, did not find valid text for both passed in clips")));
+	}
+}
+
+void CClipCompare::LaunchCompare(int leftId, CClip& leftClip, int rightId, CClip& rightClip, const CompareFormats& formats)
+{
+	CString leftFile = SaveToFile(leftId, &leftClip, formats.saveW, formats.saveA, formats.saveUtf8);
+	CString rightFile = SaveToFile(rightId, &rightClip, formats.saveW, formats.saveA, formats.saveUtf8);
+
+	CString params = _T("");
+	CString path = GetComparePath(params);
+
+	if(path != _T(""))
+	{
+		SHELLEXECUTEINFO sei = { sizeof(sei) };
+		sei.lpFile = path;
+		CString csParam;
+		csParam.Format(_T("%s\"%s\" \"%s\""), params.GetString(), leftFile.GetString(), rightFile.GetString());
+		sei.lpParameters = csParam;
+		sei.nShow = SW_NORMAL;
+
+		Log(StrF(_T("Comparing two clips, left Id %d, right Id %d, Path: %s %s"), leftId, rightId, path.GetString(), csParam.GetString()));
+
+		if (!ShellExecuteEx(&sei))
+		{
+		}
+	}
+	else
+	{
+		Log(StrF(_T("CClipCompare::Compare, No Valid compare apps, not doing compare")));
+
+		MessageBox(NULL, _T("No compare application found. Install WinMerge or set \"Diff application path\" in Advanced options."), _T("Ditto"), MB_OK | MB_ICONINFORMATION | MB_TOPMOST);
+	}
+}
+
 CString CClipCompare::GetComparePath(CString &params)
 {
 	CString path = CGetSetOptions::GetDiffApp().MakeLower();
 
 	if(path != _T(""))
 	{
-		if (path.Find(_T("totalcmd.exe")) != -1 || 
-			path.Find(_T("totalcmd64.exe")) != -1)
+		SetConfiguredAppParams(path, params);
+		return path;
+	}
+
+	for (const CompareApp& app : m_compareApps)
+	{
+		path = app.path;
+		if (app.resolvePath)
 		{
-			params = _T(" /S=C ");
+			path = CGetSetOptions::ResolvePath(app.path);
 		}
-		else if (path.Find(_T("code.exe")) != -1)
+
+		if (FileExists(path))
 		{
-			params = _T(" --diff ");
+			if (app.params != nullptr)
+			{
+				params = app.params;
+			}
+			return path;
 		}
-		return path;
-	}
-
-	path = _T("C:\\Program Files\\Beyond Compare 5\\BCompare.exe");
-	if (FileExists(path))
-	{
-		return path;
-	}
-
-	path = _T("C:\\Program Files (x86)\\Beyond Compare 4\\BCompare.exe");
-	if (FileExists(path))
-	{
-		return path;
-	}
-
-	path = _T("C:\\Program Files\\Beyond Compare 4\\BCompare.exe");
-	if (FileExists(path))
-	{
-		return path;
-	}
-
-	path = _T("C:\\Program Files (x86)\\Beyond Compare 3\\BCompare.exe");
-	if (FileExists(path))
-	{
-		return path;
-	}
-
-	path = _T("C:\\Program Files\\Beyond Compare 3\\BCompare.exe");
-	if (FileExists(path))
-	{
-		return path;
-	}
-
-	path = _T("C:\\Program Files (x86)\\WinMerge\\WinMergeU.exe");
-	if(FileExists(path))
-	{
-		return path;
-	}
-
-	path = _T("C:\\Program Files\\WinMerge\\WinMergeU.exe");
-	if (FileExists(path))
-	{
-		return path;
-	}
-
-	path = _T("C:\\Program Files (x86)\\Araxis\\Araxis Merge\\compare.exe");
-	if(FileExists(path))
-	{
-		return path;
-	}
-
-	path = _T("C:\\Program Files\\Araxis\\Araxis Merge\\compare.exe");
-	if(FileExists(path))
-	{
-		return path;
-	}
-
-	path = _T("C:\\Program Files (x86)\\Perforce\\p4merge.exe");
-	if (FileExists(path))
-	{
-		return path;
-	}
-
-	path = _T("C:\\Program Files\\Perforce\\p4merge.exe");
-	if (FileExists(path))
-	{
-		return path;
-	}
-
-	path = _T("c:\\Program Files\\totalcmd\\totalcmd64.exe");
-	if (FileExists(path))
-	{
-		params = _T(" /S=C ");
-		return path;
-	}
-
-	path = _T("c:\\Program Files (x86)\\totalcmd\\totalcmd.exe");
-	if (FileExists(path))
-	{
-		params = _T(" /S=C ");
-		return path;
-	}
-
-	path = _T("c:\\totalcmd\\totalcmd64.exe");
-	if (FileExists(path))
-	{
-		params = _T(" /S=C ");
-		return path;
-	}
-
-	path = _T("c:\\totalcmd\\totalcmd.exe");
-	if (FileExists(path))
-	{
-		params = _T(" /S=C ");
-		return path;
-	}
-
-	path = CGetSetOptions::ResolvePath(_T("%localappdata%\\Programs\\Microsoft VS Code\\Code.exe"));
-	if (FileExists(path))
-	{
-		params = _T(" --diff ");
-		return path;
-	}
-
-	path = _T("C:\\Program Files\\Microsoft VS Code\\Code.exe");
-	if (FileExists(path))
-	{
-		params = _T(" --diff ");
-		return path;
-	}
-
-	path = _T("C:\\Program Files (x86)\\Microsoft VS Code\\Code.exe");
-	if (FileExists(path))
-	{
-		params = _T(" --diff ");
-		return path;
 	}
 
 	return _T("");
+}
+
+void CClipCompare::SetConfiguredAppParams(const CString& path, CString& params)
+{
+	if (path.Find(_T("totalcmd.exe")) != -1 ||
+		path.Find(_T("totalcmd64.exe")) != -1)
+	{
+		params = _T(" /S=C ");
+	}
+	else if (path.Find(_T("code.exe")) != -1)
+	{
+		params = _T(" --diff ");
+	}
 }
 
 CString CClipCompare::SaveToFile(int id, CClip *pClip, bool saveW, bool saveA, bool saveUtf8)

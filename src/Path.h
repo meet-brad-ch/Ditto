@@ -95,7 +95,90 @@ enum ERootType
    rtServer         = 9,    ///< server with share following (for GetRootType(_,_,greedy=false)
 };
 
-ERootType GetRootType(LPCTSTR path, int * pLen, bool greedy = true); 
+ERootType GetRootType(LPCTSTR path, int * pLen, bool greedy = true);
+
+
+// ==================================================================
+//  nsPath::PathRootParser
+// ------------------------------------------------------------------
+/**
+ * @brief Finds the root of a path (drive, long path, server/share, protocol) and its length.
+ * nsPath::GetRootType forwards to it.
+ */
+class PathRootParser
+{
+public:
+    /**
+     * @brief Returns the type of the path root, and its length (see nsPath::GetRootType).
+     * @param path the path to analyze; may be NULL.
+     * @param pLen if not NULL, receives the length of the root part (in characters).
+     * @param greedy true: "\\server\share" is one rtServerShare root; false: it is an rtServer root.
+     * @return the type of the root element (rtNoRoot when there is none).
+     */
+    static ERootType GetRootType(LPCTSTR path, int * pLen, bool greedy = true);
+
+private:
+    /** @brief The characters that end a server, share or protocol name. */
+    static constexpr const TCHAR * m_nameEndChars{ _T("\\/:*/\"<>|") };
+
+    /** @brief A root found at the start of a path. */
+    struct RootMatch
+    {
+        /** @brief true if a root of this kind was found. */
+        bool found{};
+        /** @brief The root type (rtNoRoot when none was found). */
+        ERootType type{ rtNoRoot };
+        /** @brief The root length in characters (0 when none was found). */
+        int len{};
+    };
+
+    /**
+     * @brief Finds the root of a non-empty path.
+     * @param path the path (not empty).
+     * @param greedy see GetRootType.
+     * @return the root found, or rtNoRoot with length 0.
+     */
+    static RootMatch MatchRoot(LPCTSTR path, bool greedy);
+    /**
+     * @brief Tells whether a path starts with a drive specification ("C:").
+     * @param path the path (not empty).
+     * @return true for a letter followed by a colon.
+     */
+    static bool IsDriveSpec(LPCTSTR path);
+    /**
+     * @brief Root of a path that starts with a drive specification.
+     * @param path the path ("C:...").
+     * @return rtDriveRoot (3) for "C:\", rtDriveCur (2) otherwise.
+     */
+    static RootMatch MatchDrive(LPCTSTR path);
+    /**
+     * @brief Root of a long path ("\\?\" followed by another root).
+     * @param path the path ("\\?\...").
+     * @return rtLongPath, with 4 plus the length of the root after the prefix.
+     */
+    static RootMatch MatchLongPath(LPCTSTR path);
+    /**
+     * @brief Root of a path that starts with two backslashes (server, server + share).
+     * @param path the path ("\\...").
+     * @param greedy see GetRootType.
+     * @return the server root, or not found when the name is followed by another character.
+     */
+    static RootMatch MatchServer(LPCTSTR path, bool greedy);
+    /**
+     * @brief Root of a "\\server\..." path: the server alone (not greedy) or server + share.
+     * @param path the path ("\\server\...").
+     * @param serverLen the length of "\\server" (the backslash after it not included).
+     * @param greedy see GetRootType.
+     * @return the server or server + share root, or not found when the share name is followed by another character.
+     */
+    static RootMatch MatchShare(LPCTSTR path, int serverLen, bool greedy);
+    /**
+     * @brief Root of a (pseudo) protocol path ("http://", "mailto:").
+     * @param path the path.
+     * @return rtProtocol or rtPseudoProtocol, or rtNoRoot with length 0.
+     */
+    static RootMatch MatchProtocol(LPCTSTR path);
+};
 
 
 
@@ -159,6 +242,18 @@ class CPath
 protected:
     CString     m_path;
     void        CAssign(CString const & src);
+
+private:
+    /**
+     * @brief Clean's first step: the epcRemoveArgs and epcRemoveIconLocation cleanups.
+     * @param cleanup the nsPath::EPathCleanup flags passed to Clean.
+     */
+    void CleanArgsAndIcon(DWORD cleanup);
+    /**
+     * @brief Clean's second step: the epcTrim, epcUnquote and epcTrimInQuote cleanups.
+     * @param cleanup the nsPath::EPathCleanup flags passed to Clean.
+     */
+    void CleanTrimAndQuotes(DWORD cleanup);
 
 public:
 

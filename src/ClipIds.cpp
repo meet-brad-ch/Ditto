@@ -33,44 +33,38 @@ HGLOBAL CClipIDs::Render(UINT cfType)
 	if(cfType == CF_TEXT)
 	{
 		CCF_TextAggregator CFText(SepA);
-		if(AggregateData(CFText, CF_TEXT, CGetSetOptions::m_bMultiPasteReverse, false))
-		{
-			return CFText.GetHGlobal();
-		}
+		return RenderAggregated(CFText, CF_TEXT);
 	}
 	else if(cfType == CF_UNICODETEXT)
 	{
 		CCF_UnicodeTextAggregator CFUnicodeText(SepW);
-		if(AggregateData(CFUnicodeText, CF_UNICODETEXT, CGetSetOptions::m_bMultiPasteReverse, false))
-		{
-			return CFUnicodeText.GetHGlobal();
-		}
+		return RenderAggregated(CFUnicodeText, CF_UNICODETEXT);
 	}
 	else if(cfType == CF_HDROP)
 	{
 		CCF_HDropAggregator HDrop;
-		if(AggregateData(HDrop, CF_HDROP, CGetSetOptions::m_bMultiPasteReverse, false))
-		{
-			return HDrop.GetHGlobal();
-		}
+		return RenderAggregated(HDrop, CF_HDROP);
 	}
 	else if(cfType == theApp.m_HTML_Format)
 	{
 		CHTMLFormatAggregator Html(SepW);
-		if(AggregateData(Html, theApp.m_HTML_Format, CGetSetOptions::m_bMultiPasteReverse, false))
-		{
-			return Html.GetHGlobal();
-		}
+		return RenderAggregated(Html, theApp.m_HTML_Format);
 	}
 	else if(cfType == theApp.m_RTFFormat)
 	{
 		CRichTextAggregator RichText(SepW);
-		if(AggregateData(RichText, theApp.m_RTFFormat, CGetSetOptions::m_bMultiPasteReverse, false))
-		{
-			return RichText.GetHGlobal();
-		}
+		return RenderAggregated(RichText, theApp.m_RTFFormat);
 	}
-	
+
+	return NULL;
+}
+
+HGLOBAL CClipIDs::RenderAggregated(IClipAggregator& Aggregator, UINT cfType)
+{
+	if(AggregateData(Aggregator, cfType, CGetSetOptions::m_bMultiPasteReverse, false))
+	{
+		return Aggregator.GetHGlobal();
+	}
 	return NULL;
 }
 
@@ -85,44 +79,49 @@ void CClipIDs::GetTypes(CClipTypes& types)
 	}
 	else if(count > 1)
 	{
-		//Add the types that are common across all paste ids
-		long lCount;
-		CMap<CLIPFORMAT, CLIPFORMAT, long, long> RenderTypes;
+		GetCommonTypes(types, count);
+	}
+}
 
-		for(int nIDPos = 0; nIDPos < count; nIDPos++)
+void CClipIDs::GetCommonTypes(CClipTypes& types, INT_PTR count)
+{
+	//Add the types that are common across all paste ids
+	long lCount{};
+	CMap<CLIPFORMAT, CLIPFORMAT, long, long> RenderTypes;
+
+	for(int nIDPos = 0; nIDPos < count; nIDPos++)
+	{
+		CClipTypes CurrTypes;
+		CClip::LoadTypes(ElementAt(nIDPos), CurrTypes);
+
+		INT_PTR typeCount = CurrTypes.GetSize();
+
+		for(int type = 0; type < typeCount; type++)
 		{
-			CClipTypes CurrTypes;
-			CClip::LoadTypes(ElementAt(nIDPos), CurrTypes);
-
-			INT_PTR typeCount = CurrTypes.GetSize();
-
-			for(int type = 0; type < typeCount; type++)
-			{	
-				lCount = 0;
-				if(nIDPos == 0 || RenderTypes.Lookup(CurrTypes[type], lCount) == TRUE)
-				{
-					lCount++;
-					RenderTypes.SetAt(CurrTypes[type], lCount);
-				}
+			lCount = 0;
+			if(nIDPos == 0 || RenderTypes.Lookup(CurrTypes[type], lCount) == TRUE)
+			{
+				lCount++;
+				RenderTypes.SetAt(CurrTypes[type], lCount);
 			}
 		}
+	}
 
-		CLIPFORMAT Format;
-		POSITION pos = RenderTypes.GetStartPosition();
-		while(pos)
+	CLIPFORMAT Format{};
+	POSITION pos = RenderTypes.GetStartPosition();
+	while(pos)
+	{
+		RenderTypes.GetNextAssoc(pos, Format, lCount);
+		if(lCount == count)
 		{
-			RenderTypes.GetNextAssoc(pos, Format, lCount);
-			if(lCount == count)
-			{
-				types.Add(Format);
-			}			
+			types.Add(Format);
 		}
+	}
 
-		//If there were no common types add the first clip
-		if(types.GetSize() <= 0)
-		{
-			CClip::LoadTypes(ElementAt(0), types);
-		}
+	//If there were no common types add the first clip
+	if(types.GetSize() <= 0)
+	{
+		CClip::LoadTypes(ElementAt(0), types);
 	}
 }
 
@@ -329,10 +328,7 @@ BOOL CClipIDs::DeleteIDs(bool fromClipWindow, CppSQLite3DB& db)
 		INT_PTR startIndex = 0;
 		INT_PTR index = 0;
 
-		if(bAllowShow)
-		{
-			status.Show(workingString);
-		}
+		ShowDeleteStatus(status, bAllowShow, workingString);
 
 		for(index = 0; index < count; index++)
 		{
@@ -344,23 +340,16 @@ BOOL CClipIDs::DeleteIDs(bool fromClipWindow, CppSQLite3DB& db)
 
 			AddExistingClipToDelete(db, clipId, sqlIn);
 
-			if(index > 0 &&
-				(index % batchCount) == 0)
+			if(IsDeleteBatchEnd(index, batchCount))
 			{
-				if(bAllowShow)
-				{
-					status.Show(StrF(_T("Deleting %d - %d of %d..."), startIndex+1, index, count));
-				}
+				ShowDeleteStatus(status, bAllowShow, StrF(_T("Deleting %d - %d of %d..."), startIndex+1, index, count));
 				startIndex = index;
 
 				db.execDMLEx(sql + sqlIn + _T(")"));
 				sqlIn = "";
 				bRet = TRUE;
 
-				if(bAllowShow)
-				{
-					status.Show(workingString);
-				}
+				ShowDeleteStatus(status, bAllowShow, workingString);
 			}
 
 
@@ -372,10 +361,7 @@ BOOL CClipIDs::DeleteIDs(bool fromClipWindow, CppSQLite3DB& db)
 
 		if(sqlIn.GetLength() > 0)
 		{
-			if(bAllowShow)
-			{
-				status.Show(StrF(_T("Deleting %d - %d of %d..."), startIndex+1, index, count));
-			}
+			ShowDeleteStatus(status, bAllowShow, StrF(_T("Deleting %d - %d of %d..."), startIndex+1, index, count));
 
 			db.execDMLEx(sql + sqlIn + _T(")"));
 			bRet = TRUE;
@@ -390,6 +376,20 @@ BOOL CClipIDs::DeleteIDs(bool fromClipWindow, CppSQLite3DB& db)
 	Log(StrF(_T("End delete clips, Count: %d"), count));
 
 	return bRet;
+}
+
+bool CClipIDs::IsDeleteBatchEnd(INT_PTR index, int batchCount)
+{
+	return index > 0 &&
+		(index % batchCount) == 0;
+}
+
+void CClipIDs::ShowDeleteStatus(CPopup& status, bool bAllowShow, const CString& text)
+{
+	if(bAllowShow)
+	{
+		status.Show(text);
+	}
 }
 
 void CClipIDs::AddExistingClipToDelete(CppSQLite3DB& db, int clipId, CString& sqlIn)

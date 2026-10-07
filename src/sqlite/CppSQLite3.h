@@ -32,6 +32,7 @@
 #include "sqlite3mc_amalgamation.h"
 #include <cstdio>
 #include <cstring>
+#include <array>
 
 #define CPPSQLITE_ERROR 1000
 
@@ -59,6 +60,49 @@ public:
     static const TCHAR* errorCodeAsString(int nErrCode);
 
 private:
+
+    /** @brief One entry of the error code to name table. */
+    struct ErrorCodeName
+    {
+        /** @brief SQLite (or CppSQLite) error code. */
+        int code;
+        /** @brief Name of the error code, e.g. "SQLITE_BUSY". */
+        const TCHAR* name;
+    };
+
+    /** @brief Names of the known error codes, used by errorCodeAsString(). */
+    static constexpr std::array<ErrorCodeName, 29> m_errorCodeNames
+    {{
+        { SQLITE_OK,         _T("SQLITE_OK") },
+        { SQLITE_ERROR,      _T("SQLITE_ERROR") },
+        { SQLITE_INTERNAL,   _T("SQLITE_INTERNAL") },
+        { SQLITE_PERM,       _T("SQLITE_PERM") },
+        { SQLITE_ABORT,      _T("SQLITE_ABORT") },
+        { SQLITE_BUSY,       _T("SQLITE_BUSY") },
+        { SQLITE_LOCKED,     _T("SQLITE_LOCKED") },
+        { SQLITE_NOMEM,      _T("SQLITE_NOMEM") },
+        { SQLITE_READONLY,   _T("SQLITE_READONLY") },
+        { SQLITE_INTERRUPT,  _T("SQLITE_INTERRUPT") },
+        { SQLITE_IOERR,      _T("SQLITE_IOERR") },
+        { SQLITE_CORRUPT,    _T("SQLITE_CORRUPT") },
+        { SQLITE_NOTFOUND,   _T("SQLITE_NOTFOUND") },
+        { SQLITE_FULL,       _T("SQLITE_FULL") },
+        { SQLITE_CANTOPEN,   _T("SQLITE_CANTOPEN") },
+        { SQLITE_PROTOCOL,   _T("SQLITE_PROTOCOL") },
+        { SQLITE_EMPTY,      _T("SQLITE_EMPTY") },
+        { SQLITE_SCHEMA,     _T("SQLITE_SCHEMA") },
+        { SQLITE_TOOBIG,     _T("SQLITE_TOOBIG") },
+        { SQLITE_CONSTRAINT, _T("SQLITE_CONSTRAINT") },
+        { SQLITE_MISMATCH,   _T("SQLITE_MISMATCH") },
+        { SQLITE_MISUSE,     _T("SQLITE_MISUSE") },
+        { SQLITE_NOLFS,      _T("SQLITE_NOLFS") },
+        { SQLITE_AUTH,       _T("SQLITE_AUTH") },
+        { SQLITE_FORMAT,     _T("SQLITE_FORMAT") },
+        { SQLITE_RANGE,      _T("SQLITE_RANGE") },
+        { SQLITE_ROW,        _T("SQLITE_ROW") },
+        { SQLITE_DONE,       _T("SQLITE_DONE") },
+        { CPPSQLITE_ERROR,   _T("CPPSQLITE_ERROR") },
+    }};
 
     int mnErrCode;
     TCHAR mpszErrMess[1000];

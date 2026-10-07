@@ -24,31 +24,9 @@ bool CClipboardSaveRestore::Save(BOOL textOnly)
 		UINT nFormat = EnumClipboardFormats(0);
 		while(nFormat != 0)
 		{
-			if(textOnly == false || (nFormat == CF_TEXT || nFormat == CF_UNICODETEXT || nFormat == CF_HDROP))
+			if(IsFormatToSave(textOnly, nFormat))
 			{
-				HGLOBAL hGlobal = ::GetClipboardData(nFormat);
-				if(hGlobal && ::GlobalSize(hGlobal) > 0) // Ensure clipboard data is valid
-				{
-					LPVOID pvData = GlobalLock(hGlobal);
-					if(pvData)
-					{
-						INT_PTR size = GlobalSize(hGlobal);
-						if(size > 0)
-						{
-							//Copy the data locally
-							cf.m_hgData = NewGlobalP(pvData, size);	
-							// Clipboard format ids are 16-bit values, so they fit a CLIPFORMAT
-							cf.m_cfType = static_cast<CLIPFORMAT>(nFormat);
-
-							m_Clipboard.Add(cf);
-
-							//m_Clipboard owns the data now
-							cf.m_hgData = NULL;
-						}
-
-						GlobalUnlock(hGlobal);
-					}
-				}
+				SaveFormat(nFormat, cf);
 			}
 			nFormat = EnumClipboardFormats(nFormat);
 		}
@@ -58,6 +36,38 @@ bool CClipboardSaveRestore::Save(BOOL textOnly)
 	}
 
 	return bRet;
+}
+
+bool CClipboardSaveRestore::IsFormatToSave(BOOL textOnly, UINT nFormat)
+{
+	return textOnly == false || (nFormat == CF_TEXT || nFormat == CF_UNICODETEXT || nFormat == CF_HDROP);
+}
+
+void CClipboardSaveRestore::SaveFormat(UINT nFormat, CClipFormat& cf)
+{
+	HGLOBAL hGlobal = ::GetClipboardData(nFormat);
+	if(hGlobal && ::GlobalSize(hGlobal) > 0) // Ensure clipboard data is valid
+	{
+		LPVOID pvData = GlobalLock(hGlobal);
+		if(pvData)
+		{
+			INT_PTR size = GlobalSize(hGlobal);
+			if(size > 0)
+			{
+				//Copy the data locally
+				cf.m_hgData = NewGlobalP(pvData, size);
+				// Clipboard format ids are 16-bit values, so they fit a CLIPFORMAT
+				cf.m_cfType = static_cast<CLIPFORMAT>(nFormat);
+
+				m_Clipboard.Add(cf);
+
+				//m_Clipboard owns the data now
+				cf.m_hgData = NULL;
+			}
+
+			GlobalUnlock(hGlobal);
+		}
+	}
 }
 
 bool CClipboardSaveRestore::Restore()
@@ -101,39 +111,15 @@ bool CClipboardSaveRestore::RestoreTextOnly()
 
 	// Find the text formats and the file list first. The file list is read before the clipboard is
 	// opened, so malformed data throws while the clipboard is still untouched.
-	bool foundText = false;
 	int hDropIndex = -1;
-
-	INT_PTR size = m_Clipboard.GetSize();
-	for(int pos = 0; pos < size; pos++)
-	{
-		CClipFormat *pCF = &m_Clipboard.ElementAt(pos);
-		if(pCF && pCF->m_hgData && ::GlobalSize(pCF->m_hgData) > 0) // Ensure clipboard data is valid
-		{
-			if(pCF->m_cfType == CF_TEXT || pCF->m_cfType == CF_UNICODETEXT)
-			{
-				foundText = true;
-			}
-			else if(pCF->m_cfType == CF_HDROP)
-			{
-				hDropIndex = pos;
-			}
-		}
-	}
+	const bool foundText = FindTextFormats(hDropIndex);
 
 	//if there is no text but a hdrop, the hdrop is converted to text with the paths it lists
 	const bool convertHDrop = (foundText == false && hDropIndex > -1);
 	CString hDropString;
 	if(convertHDrop)
 	{
-		for (const std::wstring& path : DittoCore::GlobalFileDrop::Read(m_Clipboard.ElementAt(hDropIndex).m_hgData).Paths())
-		{
-			if (PathIsDirectory(path.c_str()) == FALSE)
-			{
-				hDropString += path.c_str();
-				hDropString += _T("\r\n");
-			}
-		}
+		hDropString = GetHDropFilePaths(hDropIndex);
 	}
 
 	if(::OpenClipboard(theApp.m_MainhWnd))
@@ -142,22 +128,7 @@ bool CClipboardSaveRestore::RestoreTextOnly()
 
 		SetClipboardData(theApp.m_cfIgnoreClipboard, NewGlobalP("Ignore", sizeof("Ignore")));
 
-		for(int pos = 0; pos < size; pos++)
-		{
-			CClipFormat *pCF = &m_Clipboard.ElementAt(pos);
-			if(pCF && pCF->m_hgData && ::GlobalSize(pCF->m_hgData) > 0 &&
-				(pCF->m_cfType == CF_TEXT || pCF->m_cfType == CF_UNICODETEXT))
-			{
-				//Make a copy of the data we are putting on the clipboard so we can still
-				//restore all clips later in Restore()
-				LPVOID localData = ::GlobalLock(pCF->m_hgData);
-
-				HGLOBAL newData = NewGlobalP(localData, ::GlobalSize(pCF->m_hgData));
-				::SetClipboardData(pCF->m_cfType, newData);
-
-				::GlobalUnlock(pCF->m_hgData);
-			}
-		}
+		SetTextFormatCopies();
 
 		if(convertHDrop)
 		{
@@ -175,4 +146,72 @@ bool CClipboardSaveRestore::RestoreTextOnly()
 	}
 
 	return bRet;
+}
+
+bool CClipboardSaveRestore::HasValidData(const CClipFormat *pCF)
+{
+	return pCF && pCF->m_hgData && ::GlobalSize(pCF->m_hgData) > 0; // Ensure clipboard data is valid
+}
+
+bool CClipboardSaveRestore::IsTextFormat(CLIPFORMAT cfType)
+{
+	return cfType == CF_TEXT || cfType == CF_UNICODETEXT;
+}
+
+bool CClipboardSaveRestore::FindTextFormats(int& hDropIndex)
+{
+	bool foundText = false;
+
+	INT_PTR size = m_Clipboard.GetSize();
+	for(int pos = 0; pos < size; pos++)
+	{
+		CClipFormat *pCF = &m_Clipboard.ElementAt(pos);
+		if(HasValidData(pCF))
+		{
+			if(IsTextFormat(pCF->m_cfType))
+			{
+				foundText = true;
+			}
+			else if(pCF->m_cfType == CF_HDROP)
+			{
+				hDropIndex = pos;
+			}
+		}
+	}
+
+	return foundText;
+}
+
+CString CClipboardSaveRestore::GetHDropFilePaths(int hDropIndex)
+{
+	CString hDropString;
+	for (const std::wstring& path : DittoCore::GlobalFileDrop::Read(m_Clipboard.ElementAt(hDropIndex).m_hgData).Paths())
+	{
+		if (PathIsDirectory(path.c_str()) == FALSE)
+		{
+			hDropString += path.c_str();
+			hDropString += _T("\r\n");
+		}
+	}
+	return hDropString;
+}
+
+void CClipboardSaveRestore::SetTextFormatCopies()
+{
+	INT_PTR size = m_Clipboard.GetSize();
+	for(int pos = 0; pos < size; pos++)
+	{
+		CClipFormat *pCF = &m_Clipboard.ElementAt(pos);
+		if(HasValidData(pCF) && IsTextFormat(pCF->m_cfType))
+		{
+			//Make a copy of the data we are putting on the clipboard so we can still
+			//restore all clips later in Restore()
+			LPVOID localData = ::GlobalLock(pCF->m_hgData);
+
+			HGLOBAL newData = NewGlobalP(localData, ::GlobalSize(pCF->m_hgData));
+			::SetClipboardData(pCF->m_cfType, newData);
+
+			::GlobalUnlock(pCF->m_hgData);
+		}
+	}
 }
