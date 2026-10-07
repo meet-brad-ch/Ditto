@@ -61,7 +61,7 @@ try {
     }
 
     # The other configurations (/W4 /WX like Release|x64): Debug code and 32-bit types show warnings
-    # Release|x64 does not. ARM64 is not built: this machine has no ARM64 compiler or MFC.
+    # Release|x64 does not.
     Invoke-Step 'Debug|x64, Debug|Win32 and Release|Win32 builds' {
         $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.VisualStudio.Component.VC.ATLMFC -property installationPath
         $vcpkgRoot = if ($env:VCPKG_ROOT) { $env:VCPKG_ROOT } else { 'C:\vcpkg' }

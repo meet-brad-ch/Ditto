@@ -125,8 +125,8 @@ runs the same job as `.github\workflows\build.yml` on this machine.
 - **Clean clone:** it clones the commit into `build\ci\<commit>\work`, so only committed files take
   part. Uncommitted changes are not built; the script says so.
 - **Steps:** `verify.ps1 -Analyze`, `fuzz.ps1`, Debug|x64, Debug|Win32 and Release|Win32
-  builds (all `/W4 /WX`), then the installer. The ARM64 configurations are not built: this
-  machine has no ARM64 compiler or ARM64 MFC.
+  builds (all `/W4 /WX`), then the installer. Together with `verify.ps1`'s Release|x64 build
+  that is every configuration of the solution.
 - **Output:** `build\ci\<commit>\summary.md` holds each step's result, the §38 block, the
   installer's SHA256 and the per-test table. `build\ci\<commit>\artifacts\` holds the installer,
   the binaries, the test XML, the coverage report and the logs.
@@ -379,6 +379,10 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   - **Gate:** every project builds with `/W4 /WX`, and `verify.ps1` fails on any warning or
     code analysis finding in the build log (`/WX` lets C26495 findings pass); the warnings and
     analysis ratchets are gone.
+  - **Every configuration:** Debug|x64 and the Win32 configurations showed warnings Release|x64
+    did not (Debug-only code, 32-bit `size_t`); they are fixed, and CI builds all of them. The
+    ARM64 configurations are removed (owner decision): this machine has no ARM64 compiler or
+    ARM64 MFC to build or check them, and no installer ships them.
 - 2026-10-06: The clip SQL is in `CClipRepository`, tested by AppTests (Phase C11, second part).
   - **Repository:** `CClipRepository` takes the database as a parameter and works on plain
     records (`ClipRecord`, `FormatRecord`), so it builds and is tested without `CClip` or the
