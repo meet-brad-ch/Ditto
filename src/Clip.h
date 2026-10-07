@@ -74,8 +74,18 @@ public:
 
 	// The format's UTF-16 text up to the first null or the end of the block; empty without data
 	CString GetAsCString();
-	
-	std::unique_ptr<Gdiplus::Bitmap> CreateGdiplusBitmap();
+
+	/**
+	 * @brief Decodes a PNG or DIB format into a GDI+ bitmap.
+	 * @return The bitmap, owned by the caller; null for other formats or unreadable data.
+	 */
+	std::unique_ptr<Gdiplus::Bitmap> LoadGdiplusBitmap();
+
+	/**
+	 * @brief IClipFormat (the add-in interface): LoadGdiplusBitmap for an add-in.
+	 * @return The bitmap, owned by the add-in caller (the interface's raw-pointer ABI); null as for LoadGdiplusBitmap.
+	 */
+	virtual Gdiplus::Bitmap* CreateGdiplusBitmap() override;
 };
 
 /*----------------------------------------------------------------------------*\

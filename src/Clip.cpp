@@ -214,7 +214,12 @@ CString CClipFormat::GetAsCString()
 	return CString(text.c_str(), static_cast<int>(text.size()));
 }
 
-std::unique_ptr<Gdiplus::Bitmap> CClipFormat::CreateGdiplusBitmap()
+Gdiplus::Bitmap *CClipFormat::CreateGdiplusBitmap()
+{
+	return LoadGdiplusBitmap().release(); // ownership: the add-in caller (IClipFormat's raw-pointer ABI)
+}
+
+std::unique_ptr<Gdiplus::Bitmap> CClipFormat::LoadGdiplusBitmap()
 {
 	if (this->m_cfType != CF_DIB && this->m_cfType != theApp.m_PNG_Format)
 		return nullptr;
@@ -1696,11 +1701,11 @@ std::unique_ptr<Gdiplus::Bitmap> CClip::CreateGdiplusBitmap()
 {
 	CClipFormat *png = this->m_Formats.FindFormat(GetFormatID(_T("PNG")));
 	if (png != NULL)
-		return png->CreateGdiplusBitmap();
+		return png->LoadGdiplusBitmap();
 
 	CClipFormat *dib = this->m_Formats.FindFormat(CF_DIB);
 	if (dib != NULL)
-		return dib->CreateGdiplusBitmap();
+		return dib->LoadGdiplusBitmap();
 
 	return nullptr;
 }

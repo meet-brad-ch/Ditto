@@ -1084,10 +1084,10 @@ void CDeleteClipData::SetDescriptionWindowImage(CClip& selectedClip)
 		// PNG is closer to the original, so it replaces the DIB when the clip has both
 		for (const CLIPFORMAT cfType : { (CLIPFORMAT)CF_DIB, (CLIPFORMAT)theApp.m_PNG_Format })
 		{
-			IClipFormat* format = selectedClip.Clips()->FindFormatEx(cfType);
+			CClipFormat* format = selectedClip.m_Formats.FindFormat(cfType);
 			if (format != nullptr)
 			{
-				m_pDescriptionWindow->SetGdiplusBitmap(format->CreateGdiplusBitmap());
+				m_pDescriptionWindow->SetGdiplusBitmap(format->LoadGdiplusBitmap());
 			}
 		}
 	}
