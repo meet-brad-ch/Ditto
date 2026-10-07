@@ -26,6 +26,15 @@ public:
 		std::optional<int> dataId{};
 	};
 
+	// The hot keys of a clip; 0 for none
+	struct ShortCuts
+	{
+		// pastes the clip
+		int paste{};
+		// moves the selected clips to this group
+		int moveToGroup{};
+	};
+
 	// db: the connection; it must outlive the repository
 	explicit CClipRepository(CDittoDb& db);
 
@@ -35,6 +44,9 @@ public:
 	void UpdateClip(const ClipRecord& clip);
 	void UpdateDescription(int clipId, const CString& description);
 	void UpdateCrc(int clipId, DWORD crc);
+	// A hot key belongs to one clip: takes each non-zero hot key of shortCuts away from every
+	// clip other than clipId
+	void ReleaseShortCuts(int clipId, const ShortCuts& shortCuts);
 	// Inserts the formats of a clip and returns their Data ids, in the same order
 	std::vector<int> InsertFormats(int clipId, std::span<const FormatRecord> formats);
 	void DeleteFormats(int clipId);

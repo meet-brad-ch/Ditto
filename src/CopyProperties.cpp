@@ -5,6 +5,7 @@
 #include "cp_main.h"
 #include "CopyProperties.h"
 #include ".\copyproperties.h"
+#include "ClipRepository.h"
 #include "Md5.h"
 #include "..\Shared\TextConvert.h"
 
@@ -418,15 +419,8 @@ void CCopyProperties::LoadDataIntoCClip(CClip &Clip)
 	Clip.m_moveToGroupShortCut = MAKEWORD(moveToGroupKeyKode, moveToGroupModifers); 
 
 	//remove any others that have the same hot key
-	if(Clip.m_shortCut > 0)
-	{
-		theApp.m_db.execDMLEx(_T("UPDATE Main SET lShortCut = 0 where lShortCut = %d AND lID <> %d;"), Clip.m_shortCut, m_lCopyID);
-	}
-
-	if(Clip.m_moveToGroupShortCut > 0)
-	{
-		theApp.m_db.execDMLEx(_T("UPDATE Main SET MoveToGroupShortCut = 0 where MoveToGroupShortCut = %d AND lID <> %d;"), Clip.m_shortCut, m_lCopyID);
-	}
+	CClipRepository repository(theApp.m_db);
+	repository.ReleaseShortCuts(m_lCopyID, { .paste = Clip.m_shortCut, .moveToGroup = Clip.m_moveToGroupShortCut });
 
 	m_description.GetWindowText(Clip.m_Desc);
 

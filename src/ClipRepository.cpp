@@ -71,6 +71,25 @@ void CClipRepository::UpdateCrc(int clipId, DWORD crc)
 	update.execDML();
 }
 
+void CClipRepository::ReleaseShortCuts(int clipId, const ShortCuts& shortCuts)
+{
+	if (shortCuts.paste > 0)
+	{
+		CppSQLite3Statement update = m_db.compileStatement(_T("UPDATE Main SET lShortCut = 0 WHERE lShortCut = ? AND lID <> ?;"));
+		update.bind(1, shortCuts.paste);
+		update.bind(2, clipId);
+		update.execDML();
+	}
+
+	if (shortCuts.moveToGroup > 0)
+	{
+		CppSQLite3Statement update = m_db.compileStatement(_T("UPDATE Main SET MoveToGroupShortCut = 0 WHERE MoveToGroupShortCut = ? AND lID <> ?;"));
+		update.bind(1, shortCuts.moveToGroup);
+		update.bind(2, clipId);
+		update.execDML();
+	}
+}
+
 std::vector<int> CClipRepository::InsertFormats(int clipId, std::span<const FormatRecord> formats)
 {
 	std::vector<int> ids;

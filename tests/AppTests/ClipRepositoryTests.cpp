@@ -90,6 +90,55 @@ TEST(ClipRepository, UpdatesClip)
 	EXPECT_EQ(repository.LoadClip(clip.id)->description, _T("third"));
 }
 
+// Regression: the copy properties dialog cleared other clips' move-to-group hot key by the
+// clip's paste hot key, so a duplicate move-to-group key stayed and the paste key's owner lost
+// its move-to-group key.
+TEST(ClipRepository, ReleasesEachShortCutByItsOwnValue)
+{
+	TestDatabase test;
+	CClipRepository repository(test.Db());
+	ClipRecord kept = Clip(_T("kept"), 1);
+	kept.shortCut = 65;
+	kept.moveToGroupShortCut = 66;
+	kept.id = repository.InsertClip(kept);
+	ClipRecord samePaste = Clip(_T("same paste key"), 2);
+	samePaste.shortCut = 65;
+	samePaste.moveToGroupShortCut = 65;
+	samePaste.id = repository.InsertClip(samePaste);
+	ClipRecord sameMove = Clip(_T("same move key"), 3);
+	sameMove.shortCut = 66;
+	sameMove.moveToGroupShortCut = 66;
+	sameMove.id = repository.InsertClip(sameMove);
+
+	repository.ReleaseShortCuts(kept.id, { .paste = 65, .moveToGroup = 66 });
+
+	const ClipRecord keptLoaded = repository.LoadClip(kept.id).value();
+	const ClipRecord samePasteLoaded = repository.LoadClip(samePaste.id).value();
+	const ClipRecord sameMoveLoaded = repository.LoadClip(sameMove.id).value();
+	EXPECT_EQ(keptLoaded.shortCut, 65);
+	EXPECT_EQ(keptLoaded.moveToGroupShortCut, 66);
+	EXPECT_EQ(samePasteLoaded.shortCut, 0);
+	EXPECT_EQ(samePasteLoaded.moveToGroupShortCut, 65);
+	EXPECT_EQ(sameMoveLoaded.shortCut, 66);
+	EXPECT_EQ(sameMoveLoaded.moveToGroupShortCut, 0);
+}
+
+TEST(ClipRepository, ReleasingNoShortCutsChangesNothing)
+{
+	TestDatabase test;
+	CClipRepository repository(test.Db());
+	ClipRecord other = Clip(_T("other"), 1);
+	other.shortCut = 65;
+	other.moveToGroupShortCut = 66;
+	other.id = repository.InsertClip(other);
+
+	repository.ReleaseShortCuts(other.id + 1, {});
+
+	const ClipRecord loaded = repository.LoadClip(other.id).value();
+	EXPECT_EQ(loaded.shortCut, 65);
+	EXPECT_EQ(loaded.moveToGroupShortCut, 66);
+}
+
 TEST(ClipRepository, MissingClipIsEmpty)
 {
 	TestDatabase test;
