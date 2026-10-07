@@ -493,9 +493,6 @@
     <ClInclude Include="src\CP_Main.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\CP_Main_i.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\DatabaseUtilities.h">
       <Filter>src</Filter>
     </ClInclude>
