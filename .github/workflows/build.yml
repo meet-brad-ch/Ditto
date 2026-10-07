@@ -1,0 +1,109 @@
+# CI for the local-only Ditto fork: builds the whole package and runs every gate.
+# - tools\verify.ps1 -Analyze: Release|x64 rebuild with /analyze, the warnings/analysis/complexity
+#   ratchets, network and hardening scans, every unit test on its own under ASan, coverage, docs;
+# - a Debug|x64 build (catches configuration-only breakage);
+# - the Inno Setup installer.
+# Results: a unit-test table in the run summary; the installer, binaries, test XML, coverage and
+# logs as artifacts. Nothing is published, signed or uploaded anywhere else.
+name: build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2025-vs2026   # Visual Studio 2026 (toolset v145) with ATL/MFC and ASan
+    timeout-minutes: 60
+    env:
+      DOXYGEN_URL: https://github.com/doxygen/doxygen/releases/download/Release_1_15_0/doxygen-1.15.0.windows.x64.bin.zip
+      DOXYGEN_SHA256: 44658B9CC5C91749E6E3CC426BA63E2550B4A4A7619065ACD77029AA234719C6
+      INNO_URL: https://github.com/jrsoftware/issrc/releases/download/is-7_0_2/innosetup-7.0.2-x64.exe
+      INNO_SHA256: 5AD54CA3DEF786F8F4212552E54CC6D8D61329E2D24A1CFEE0571D42C2684FF1
+      LIZARD_VERSION: 1.17.31
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: vcpkg at the vcpkg.json baseline
+        shell: pwsh
+        run: |
+          $baseline = (Get-Content vcpkg.json -Raw | ConvertFrom-Json).'builtin-baseline'
+          $root = Join-Path $env:RUNNER_TEMP 'vcpkg'
+          git clone --quiet https://github.com/microsoft/vcpkg $root
+          git -C $root checkout --quiet $baseline
+          if ($LASTEXITCODE -ne 0) { throw "vcpkg baseline $baseline not found" }
+          & (Join-Path $root 'bootstrap-vcpkg.bat') -disableMetrics
+          if ($LASTEXITCODE -ne 0) { throw "vcpkg bootstrap failed" }
+          "VCPKG_ROOT=$root" >> $env:GITHUB_ENV
+
+      - name: Tools (Doxygen, Inno Setup, lizard), pinned and hash-checked
+        shell: pwsh
+        run: |
+          function Get-Checked([string] $url, [string] $sha256) {
+            $file = Join-Path $env:RUNNER_TEMP ([IO.Path]::GetFileName($url))
+            Invoke-WebRequest -Uri $url -OutFile $file -UseBasicParsing
+            $actual = (Get-FileHash $file -Algorithm SHA256).Hash
+            if ($actual -ne $sha256) { throw "SHA256 mismatch for ${url}: $actual" }
+            return $file
+          }
+          $zip = Get-Checked $env:DOXYGEN_URL $env:DOXYGEN_SHA256
+          $doxygen = Join-Path $env:RUNNER_TEMP 'doxygen'
+          Expand-Archive $zip -DestinationPath $doxygen
+          $doxygen >> $env:GITHUB_PATH
+
+          $inno = Get-Checked $env:INNO_URL $env:INNO_SHA256
+          $innoDir = Join-Path $env:RUNNER_TEMP 'innosetup'
+          Start-Process $inno -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', "/DIR=$innoDir" -Wait
+          if (-not (Test-Path (Join-Path $innoDir 'ISCC.exe'))) { throw 'Inno Setup did not install' }
+          "INNO_DIR=$innoDir" >> $env:GITHUB_ENV
+
+          python -m pip install --disable-pip-version-check "lizard==$env:LIZARD_VERSION"
+          if ($LASTEXITCODE -ne 0) { throw 'pip install lizard failed' }
+          python -c "import sysconfig; print(sysconfig.get_path('scripts'))" >> $env:GITHUB_PATH
+
+      - name: Verify (all gates, /analyze)
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File tools\verify.ps1 -Analyze
+
+      - name: Unit test summary
+        if: always()
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File tools\test-summary.ps1 -Results build\test-results -Output $env:GITHUB_STEP_SUMMARY
+
+      - name: Debug|x64 build
+        shell: pwsh
+        run: |
+          $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
+          & (Join-Path $vs 'MSBuild\Current\Bin\amd64\MSBuild.exe') CP_Main_10.sln /p:Configuration=Debug /p:Platform=x64 "/p:VcpkgRoot=$env:VCPKG_ROOT" /m /nologo /v:m
+          if ($LASTEXITCODE -ne 0) { throw "Debug|x64 build failed ($LASTEXITCODE)" }
+
+      - name: Installer
+        shell: pwsh
+        run: |
+          & (Join-Path $env:INNO_DIR 'ISCC.exe') /Q DittoSetup\DittoSetup_10.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed ($LASTEXITCODE)" }
+          Get-ChildItem DittoSetup\Output\*.exe | ForEach-Object { "{0}  {1}" -f $_.Name, (Get-FileHash $_.FullName -Algorithm SHA256).Hash } | Tee-Object -Append -FilePath $env:GITHUB_STEP_SUMMARY
+
+      - name: Upload installer and binaries
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ditto-local-only
+          path: |
+            DittoSetup/Output/*.exe
+            Release64/**/*.exe
+            Release64/**/*.dll
+          if-no-files-found: error
+
+      - name: Upload test results, coverage and logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: reports
+          path: |
+            build/test-results/
+            build/coverage/
+            build/logs/
+          if-no-files-found: warn
