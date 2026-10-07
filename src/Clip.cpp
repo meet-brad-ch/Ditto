@@ -1584,8 +1584,7 @@ bool CClip::ReadFileContents(const CString& path, ULONGLONG maxSize, CopiedFile&
 		return false;
 	}
 
-	CMd5 md5;
-	file.md5 = md5.CalcMD5FromString(reinterpret_cast<const char*>(file.contents.data()), static_cast<int>(fileSize));
+	file.md5 = DittoCore::Md5::Hex(file.contents);
 	const CStringA utf8Path = CTextConvert::UnicodeToUTF8(path);
 	file.path.assign(utf8Path.GetString(), utf8Path.GetLength());
 

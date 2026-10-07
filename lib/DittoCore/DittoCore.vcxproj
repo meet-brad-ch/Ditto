@@ -60,6 +60,7 @@
     <ClInclude Include="GlobalFileDrop.h" />
     <ClInclude Include="GlobalLockGuard.h" />
     <ClInclude Include="GzipStream.h" />
+    <ClInclude Include="Md5.h" />
     <ClInclude Include="QrBitmap.h" />
     <ClInclude Include="RtfJoin.h" />
     <ClInclude Include="RtfNormalizer.h" />
@@ -87,6 +88,7 @@
     <ClCompile Include="GlobalFileDrop.cpp" />
     <ClCompile Include="GlobalLockGuard.cpp" />
     <ClCompile Include="GzipStream.cpp" />
+    <ClCompile Include="Md5.cpp" />
     <ClCompile Include="QrBitmap.cpp" />
     <ClCompile Include="RtfJoin.cpp" />
     <ClCompile Include="RtfNormalizer.cpp" />

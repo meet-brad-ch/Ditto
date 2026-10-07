@@ -193,9 +193,6 @@
     <ClCompile Include="src\MainTableFunctions.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Md5.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\MessagePumpThread.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -614,9 +611,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\MainTableFunctions.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Md5.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\memdc.h">

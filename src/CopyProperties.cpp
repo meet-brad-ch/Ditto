@@ -6,6 +6,8 @@
 #include "CopyProperties.h"
 #include ".\copyproperties.h"
 #include "ClipRepository.h"
+#include "ClipboardFormatError.h"
+#include "GlobalBytes.h"
 #include "Md5.h"
 #include "ErrorReport.h"
 #include "..\Shared\TextConvert.h"
@@ -579,20 +581,17 @@ void CCopyProperties::OnLbnSelchangeCopyData()
 					{
 						if (pCF->m_dataId == itemData)
 						{
-							CMd5 md5;
-							md5.MD5Init();
-
-							SIZE_T size = ::GlobalSize(pCF->Data());
-							void* pv = GlobalLock(pCF->Data());
-							if (pv != NULL)
+							try
 							{
-								md5.MD5Update((unsigned char*)pv, (unsigned int)size);
-
-								GlobalUnlock(pCF->Data());
-
-								CStringA md5String = md5.MD5FinalToString();
-
-								this->SetDlgItemText(IDC_EDIT_MD5, CTextConvert::AnsiToUnicode(md5String));
+								// GlobalBytes locks the block and unlocks it when it goes out of scope
+								const DittoCore::GlobalBytes data(pCF->Data());
+								const std::string md5String = DittoCore::Md5::Hex(data.Bytes());
+								this->SetDlgItemText(IDC_EDIT_MD5, CTextConvert::AnsiToUnicode(md5String.c_str()));
+							}
+							catch (const DittoCore::ClipboardFormatError& error)
+							{
+								// the box shows why there is no MD5 (the format has no readable data)
+								this->SetDlgItemText(IDC_EDIT_MD5, CString(error.what()));
 							}
 						}
 					}

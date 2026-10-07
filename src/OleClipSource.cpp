@@ -416,9 +416,7 @@ bool COleClipSource::SaveFileDataRecord(HGLOBAL record, std::vector<std::wstring
 	for (const DittoCore::FileDataEntry& file : files)
 	{
 		const CString originalPath = CTextConvert::Utf8ToUnicode(CStringA(file.path.data(), static_cast<int>(file.path.size())));
-		CMd5 calcMd5;
-		const std::string md5 = calcMd5.CalcMD5FromString(reinterpret_cast<const char*>(file.data.data()), static_cast<int>(file.data.size()));
-		if (md5 != file.md5)
+		if (DittoCore::Md5::Hex(file.data) != file.md5)
 		{
 			throw DittoCore::ClipboardFormatError("the saved contents of " + std::string(file.path) + " fail their MD5 check");
 		}
