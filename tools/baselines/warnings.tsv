@@ -60,6 +60,7 @@ C4100	src\traywnd.cpp	1
 C4100	src\uac_thread.cpp	2
 C4133	src\drawhtml.c	5
 C4189	focusdll\focusdll.cpp	1
+C4192	src\stdafx.h	1
 C4206	src\qrcode\qrenc.c	1
 C4239	src\advgeneral.cpp	36
 C4239	src\popup.cpp	1
@@ -107,6 +108,7 @@ C4267	src\clip.cpp	2
 C4267	src\drawhtml.c	1
 C4267	src\qpastewndthread.cpp	1
 C4267	src\qrcode\qrencode.c	4
+C4278	src\stdafx.h	1
 C4302	src\editwithbutton.cpp	1
 C4389	src\hotkeys.cpp	1
 C4389	src\qlistctrl.cpp	1

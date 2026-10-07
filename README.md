@@ -115,6 +115,19 @@ Branch coverage), on failure too. Run time: about 2 min, or about 3.5 min with `
 - a 9-branch function in `src\` and in `lib\DittoCore`;
 - coverage measured against a raised minimum of 99 %.
 
+**Local CI:** `powershell -NoProfile -ExecutionPolicy Bypass -File tools\ci.ps1 [-Ref <commit>]`
+runs the same job as `.github\workflows\build.yml` on this machine.
+- **Clean clone:** it clones the commit into `build\ci\<commit>\work`, so only committed files take
+  part. Uncommitted changes are not built; the script says so.
+- **Steps:** `verify.ps1 -Analyze`, a Debug|x64 build, then the installer.
+- **Output:** `build\ci\<commit>\summary.md` holds each step's result, the §38 block, the
+  installer's SHA256 and the per-test table. `build\ci\<commit>\artifacts\` holds the installer,
+  the binaries, the test XML, the coverage report and the logs.
+- **Cleanup:** the clone is deleted afterwards. The exit code is 0 only if every step passed.
+- **Why it exists:** GitHub Actions do not run for this account while it is under a GitHub
+  restriction (2026-10-06). The workflow stays in the repo and runs again once Actions work.
+  Run `ci.ps1` before every push in the meantime.
+
 **Runtime network check:** `powershell -NoProfile -ExecutionPolicy Bypass -File
 tools\runtime-netcheck.ps1 [-WatchSeconds 20]` runs after a build.
 - It runs `Release64` as a portable copy in a new temporary folder and copies four kinds of content
