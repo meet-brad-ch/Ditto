@@ -45,6 +45,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\lib\DittoCore\ByteCursor.cpp" />
+    <ClCompile Include="..\lib\DittoCore\CaseTransforms.cpp" />
     <ClCompile Include="..\lib\DittoCore\CfHtml.cpp" />
     <ClCompile Include="..\lib\DittoCore\ClipText.cpp" />
     <ClCompile Include="..\lib\DittoCore\DatabasePath.cpp" />
@@ -58,6 +59,10 @@
     <ClCompile Include="..\lib\DittoCore\GlobalLockGuard.cpp" />
     <ClCompile Include="..\lib\DittoCore\RtfJoin.cpp" />
     <ClCompile Include="..\lib\DittoCore\RtfNormalizer.cpp" />
+    <ClCompile Include="..\lib\DittoCore\RtfTransforms.cpp" />
+    <ClCompile Include="..\lib\DittoCore\Slugifier.cpp" />
+    <ClCompile Include="..\lib\DittoCore\TextTransforms.cpp" />
+    <ClCompile Include="..\lib\DittoCore\Typoglycemia.cpp" />
     <ClCompile Include="CfHtmlTests.cpp" />
     <ClCompile Include="ClipTextTests.cpp" />
     <ClCompile Include="DatabasePathTests.cpp" />
@@ -69,6 +74,7 @@
     <ClCompile Include="GlobalFileDropTests.cpp" />
     <ClCompile Include="RtfTests.cpp" />
     <ClCompile Include="TextJoinTests.cpp" />
+    <ClCompile Include="TransformsTests.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

@@ -310,6 +310,27 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   The ARM64 script still added firewall rules for TCP 23443 and launched URLs, and the portable
   one packaged files that no longer exist (`DittoU.exe`, `sqlite3.dll`, `zlib1.dll`). The
   installer gate now checks every `.iss` file.
+- 2026-10-06: The special-paste transforms live in DittoCore (Phase C10): `CaseTransforms` (with
+  an injected `ICaseMapper`, ICU in the app), `TextTransforms`, `RtfTransforms`, `Typoglycemia`
+  (with an injected `IRandomRange`) and `Slugifier`. `OleClipSource` keeps one helper that reads
+  the clip's text, applies a transform and writes it back, instead of a copy of that code for
+  every transform and format.
+  - **One text, both formats:** the transform runs once on the Unicode text, and CF_TEXT is
+    written from the result, so the two formats always match. Before, each format was changed
+    on its own: upper and lower case wrote UTF-16 bytes into CF_TEXT, slugify and typoglycemia
+    left CF_TEXT unchanged, and the date line had one line break in CF_UNICODETEXT but two in
+    CF_TEXT.
+  - **Fixed:** camel case wrote stale characters after the shortened text; sentence case missed
+    the first word after a period at the end of a line; typoglycemia added a trailing space;
+    slugify dropped its trim (separators at both ends) and threw `std::regex_error` for a
+    separator such as `]`; the RTF date line was not escaped and left `\r\n\r\n` after the
+    closing brace.
+  - **ICU:** upper- and lower-casing a text sized ICU's output at 1.2 times the input and
+    ignored ICU's error, so a short text that grows (German sharp s becomes "SS") was cut off.
+    The length is now asked for first and errors are raised. Without icu.dll the character
+    functions use the wide C runtime functions instead of `isupper` on a `wchar_t`.
+  - **Removed:** `src\Slugify.h` (free functions in a header) and the drive-letter helpers.
+  - **Tests:** 22 unit tests.
 - 2026-10-06: Exported `.dto` files are compressed and read by `DittoCore::DtoCodec` (Phase C9).
   - **Untrusted size:** a `.dto` file stores each format's original size, and upstream
     allocated that many bytes (`new Bytef[lOriginalSize]`) before looking at the data, so a

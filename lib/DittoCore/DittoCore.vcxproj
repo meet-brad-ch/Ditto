@@ -40,6 +40,7 @@
   <!-- one class per .h/.cpp pair -->
   <ItemGroup>
     <ClInclude Include="ByteCursor.h" />
+    <ClInclude Include="CaseTransforms.h" />
     <ClInclude Include="CfHtml.h" />
     <ClInclude Include="CfHtmlFragment.h" />
     <ClInclude Include="ClipboardFormatError.h" />
@@ -52,15 +53,22 @@
     <ClInclude Include="FileDataEntry.h" />
     <ClInclude Include="FileDataRecord.h" />
     <ClInclude Include="FileDropList.h" />
+    <ClInclude Include="ICaseMapper.h" />
+    <ClInclude Include="IRandomRange.h" />
     <ClInclude Include="GlobalBytes.h" />
     <ClInclude Include="GlobalFileDrop.h" />
     <ClInclude Include="GlobalLockGuard.h" />
     <ClInclude Include="RtfJoin.h" />
     <ClInclude Include="RtfNormalizer.h" />
+    <ClInclude Include="RtfTransforms.h" />
+    <ClInclude Include="Slugifier.h" />
     <ClInclude Include="TextJoin.h" />
+    <ClInclude Include="TextTransforms.h" />
+    <ClInclude Include="Typoglycemia.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ByteCursor.cpp" />
+    <ClCompile Include="CaseTransforms.cpp" />
     <ClCompile Include="CfHtml.cpp" />
     <ClCompile Include="ClipText.cpp" />
     <ClCompile Include="DatabasePath.cpp" />
@@ -74,6 +82,10 @@
     <ClCompile Include="GlobalLockGuard.cpp" />
     <ClCompile Include="RtfJoin.cpp" />
     <ClCompile Include="RtfNormalizer.cpp" />
+    <ClCompile Include="RtfTransforms.cpp" />
+    <ClCompile Include="Slugifier.cpp" />
+    <ClCompile Include="TextTransforms.cpp" />
+    <ClCompile Include="Typoglycemia.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

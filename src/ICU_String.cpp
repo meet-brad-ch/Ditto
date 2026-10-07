@@ -2,6 +2,10 @@
 #include "ICU_String.h"
 #include "Misc.h"
 
+#include <cwctype>
+#include <stdexcept>
+#include <string>
+
 
 CICU_String::CICU_String()
 {
@@ -46,11 +50,12 @@ bool CICU_String::Load()
 	return loaded;
 }
 
+
 bool CICU_String::IsUpperEx(wchar_t c)
 {
-	if (m_dllHandle == NULL || u_tolower == NULL)
+	if (u_isUUppercase == NULL)
 	{
-		return ::isupper(c);
+		return ::iswupper(c) != 0;
 	}
 
 	return u_isUUppercase(c);
@@ -58,9 +63,9 @@ bool CICU_String::IsUpperEx(wchar_t c)
 
 wchar_t CICU_String::ToLowerEx(wchar_t c)
 {
-	if (m_dllHandle == NULL || u_tolower == NULL)
+	if (u_tolower == NULL)
 	{
-		return ::tolower(c);
+		return static_cast<wchar_t>(::towlower(c));
 	}
 
 	return u_tolower(c);
@@ -68,9 +73,9 @@ wchar_t CICU_String::ToLowerEx(wchar_t c)
 
 wchar_t CICU_String::ToUpperEx(wchar_t c)
 {
-	if (m_dllHandle == NULL || u_tolower == NULL)
+	if (u_toupper == NULL)
 	{
-		return ::toupper(c);
+		return static_cast<wchar_t>(::towupper(c));
 	}
 
 	return u_toupper(c);
@@ -78,38 +83,45 @@ wchar_t CICU_String::ToUpperEx(wchar_t c)
 
 CString CICU_String::ToLowerStringEx(CString source)
 {
-	if (m_dllHandle == NULL || u_tolower == NULL)
+	if (u_strToLower == NULL)
 	{
 		return CString(source).MakeLower();
 	}
 
-	CString dest;
-
-	int length = source.GetLength();
-	int errorCode = 0;
-	u_strToLower(dest.GetBufferSetLength((int)(length * 1.2)), (int)(length * 1.2), source.GetBuffer(), length, NULL, &errorCode);
-
-	source.ReleaseBuffer();
-	dest.ReleaseBuffer();
-
-	return dest;
+	return ConvertCase(u_strToLower, source);
 }
 
 CString CICU_String::ToUpperStringEx(CString source)
 {
-	if (m_dllHandle == NULL || u_tolower == NULL)
+	if (u_strToUpper == NULL)
 	{
 		return CString(source).MakeUpper();
 	}
 
-	CString dest;
+	return ConvertCase(u_strToUpper, source);
+}
 
-	int length = source.GetLength();
+CString CICU_String::ConvertCase(CaseFunction convert, const CString& source)
+{
+	// ask for the length first: the result can be longer than the source (German sharp s
+	// becomes "SS"); upstream guessed 1.2 times the length and ignored the error, so a short
+	// text could be cut off
 	int errorCode = 0;
-	u_strToUpper(dest.GetBufferSetLength((int)(length * 1.2)), (int)(length * 1.2), source.GetBuffer(), length, NULL, &errorCode);
+	const int length = convert(NULL, 0, source.GetString(), source.GetLength(), NULL, &errorCode);
+	if (errorCode > 0 && errorCode != BufferOverflowError)
+	{
+		throw std::runtime_error("ICU case conversion failed with error " + std::to_string(errorCode));
+	}
 
-	source.ReleaseBuffer();
-	dest.ReleaseBuffer();
+	CString dest;
+	errorCode = 0;
+	convert(dest.GetBufferSetLength(length), length, source.GetString(), source.GetLength(), NULL, &errorCode);
+	dest.ReleaseBuffer(length);
+	// U_STRING_NOT_TERMINATED_WARNING (-124) is expected: the buffer has no room for a null
+	if (errorCode > 0)
+	{
+		throw std::runtime_error("ICU case conversion failed with error " + std::to_string(errorCode));
+	}
 
 	return dest;
 }

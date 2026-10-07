@@ -2,10 +2,14 @@
 
 #include "ClipIds.h"
 #include "SpecialPasteOptions.h"
+#include "CaseTransforms.h"
+#include "IcuCaseMapper.h"
 
+#include <functional>
 #include <optional>
 #include <set>
 #include <string>
+#include <string_view>
 #include <vector>
 
 /*------------------------------------------------------------------*\
@@ -39,6 +43,16 @@ protected:
 
 	std::optional<HGLOBAL> RenderClipsOrReport(CLIPFORMAT format);
 
+	// Case mapping for the special-paste transforms (ICU)
+	CIcuCaseMapper m_caseMapper;
+	DittoCore::CaseTransforms m_cases;
+
+	// Applies a transform to the clip's text: CF_UNICODETEXT, or CF_TEXT when there is none;
+	// CF_TEXT is then rewritten from the result
+	void TransformText(CClip &clip, const std::function<std::wstring(std::wstring_view)>& transform);
+	// Applies a transform to the clip's RTF, when it has one
+	void TransformRtf(CClip &clip, const std::function<std::string(std::string_view)>& transform);
+
 	void DoUpperLowerCase(CClip &clip, bool upper);
 	void Capitalize(CClip &clip);
 	void SentenceCase(CClip &clip);
@@ -56,20 +70,6 @@ protected:
 	static CString UniqueFileName(const CString& originalPath, std::set<CString>& usedNames);
 	void TrimWhiteSpace(CClip &clip);
 	void PosixifyPaths(CClip &clip);
-	struct MatchInfoA
-	{
-		size_t pos;
-		char drive;
-	};
-	struct MatchInfoW
-	{
-		size_t pos;
-		wchar_t drive;
-	};
-	void ApplyDriveReplacements(std::string& str, const std::vector<MatchInfoA>& matches);
-	void ApplyDriveReplacements(std::wstring& str, const std::vector<MatchInfoW>& matches);
-	CStringA ConvertDrivesASCII(const CStringA& input);
-	CStringW ConvertDrivesWide(const CStringW& input);
 	void Slugify(CClip &clip);
 	void InvertCase(CClip &clip);
 	void CamelCase(CClip& clip);

@@ -1,6 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClCompile Include="src\RandomRange.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IcuCaseMapper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="src\FileDialogPath.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -433,6 +439,12 @@
     <ClCompile Include="src\ModernScrollBar.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\RandomRange.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\IcuCaseMapper.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="src\FileDialogPath.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -752,9 +764,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\ShowTaskBarIcon.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Slugify.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\SnapWindow.h">

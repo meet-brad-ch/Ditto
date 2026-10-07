@@ -5,6 +5,8 @@ PROJECT_NAME           = "Ditto local-only"
 OUTPUT_DIRECTORY       = build/doxygen
 INPUT                  = lib/DittoCore/ByteCursor.h \
                          lib/DittoCore/ByteCursor.cpp \
+                         lib/DittoCore/CaseTransforms.h \
+                         lib/DittoCore/CaseTransforms.cpp \
                          lib/DittoCore/CfHtml.h \
                          lib/DittoCore/CfHtml.cpp \
                          lib/DittoCore/CfHtmlFragment.h \
@@ -31,11 +33,21 @@ INPUT                  = lib/DittoCore/ByteCursor.h \
                          lib/DittoCore/GlobalFileDrop.cpp \
                          lib/DittoCore/GlobalLockGuard.h \
                          lib/DittoCore/GlobalLockGuard.cpp \
+                         lib/DittoCore/ICaseMapper.h \
+                         lib/DittoCore/IRandomRange.h \
                          lib/DittoCore/RtfJoin.h \
                          lib/DittoCore/RtfJoin.cpp \
                          lib/DittoCore/RtfNormalizer.h \
                          lib/DittoCore/RtfNormalizer.cpp \
+                         lib/DittoCore/RtfTransforms.h \
+                         lib/DittoCore/RtfTransforms.cpp \
+                         lib/DittoCore/Slugifier.h \
+                         lib/DittoCore/Slugifier.cpp \
                          lib/DittoCore/TextJoin.h \
+                         lib/DittoCore/TextTransforms.h \
+                         lib/DittoCore/TextTransforms.cpp \
+                         lib/DittoCore/Typoglycemia.h \
+                         lib/DittoCore/Typoglycemia.cpp \
                          src/ErrorReport.h \
                          src/FileDialogPath.h \
                          src/FileDialogPath.cpp \
