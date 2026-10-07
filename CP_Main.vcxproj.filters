@@ -535,6 +535,9 @@
     <ClInclude Include="src\ConvertRTFToText.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\ControlTextBuffer.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="src\CopyProperties.h">
       <Filter>src</Filter>
     </ClInclude>

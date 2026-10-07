@@ -61,6 +61,12 @@ private:
   void SendKeyUp(BYTE VKey);
   void SendKeyDown(BYTE VKey, WORD NumTimes, bool GenUpMsg, bool bDelay = false);
   void SendKey(WORD MKey, WORD NumTimes, bool GenDownMsg);
+  /**
+   * @brief Sends the key parsed from a {...} group; INVALIDKEY sends nothing.
+   * @param MKey the key: a left/right CTRL or SHIFT is held down, any other key is pressed.
+   * @param NumTimes how often a pressed key is sent.
+   */
+  void SendSpecialKey(WORD MKey, WORD NumTimes);
   static WORD StringToVKey(LPCTSTR KeyString, int &idx);
   void KeyboardEvent(BYTE VKey, BYTE ScanCode, LONG Flags);
 

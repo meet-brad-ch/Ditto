@@ -35,6 +35,16 @@ class CGdiPlusBitmapResource : public CGdiPlusBitmap
 protected:
 	HGLOBAL m_hBuffer;
 
+	/**
+	 * @brief Finds a resource and locks its data.
+	 * @param pName the resource name.
+	 * @param pType the resource type.
+	 * @param hInst the module holding the resource.
+	 * @param imageSize receives the size of the data in bytes.
+	 * @return the locked data, or NULL when the resource is missing, empty or cannot be loaded.
+	 */
+	static const void* LockResourceData(LPCTSTR pName, LPCTSTR pType, HMODULE hInst, DWORD& imageSize);
+
 public:
 	CGdiPlusBitmapResource()					{ m_hBuffer = NULL; }
 	CGdiPlusBitmapResource(LPCTSTR pName, LPCTSTR pType = RT_RCDATA, HMODULE hInst = NULL)
@@ -138,23 +148,30 @@ void CGdiPlusBitmapResource::Empty()
 }
 
 inline
+const void* CGdiPlusBitmapResource::LockResourceData(LPCTSTR pName, LPCTSTR pType, HMODULE hInst, DWORD& imageSize)
+{
+	HRSRC hResource = ::FindResource(hInst, pName, pType);
+	if (!hResource)
+		return NULL;
+
+	imageSize = ::SizeofResource(hInst, hResource);
+	if (!imageSize)
+		return NULL;
+
+	HGLOBAL hResourceData = ::LoadResource(hInst, hResource);
+	if (!hResourceData)
+		return NULL;
+
+	return ::LockResource(hResourceData);
+}
+
+inline
 bool CGdiPlusBitmapResource::Load(LPCTSTR pName, LPCTSTR pType, HMODULE hInst)
 {
 	Empty();
 
-	HRSRC hResource = ::FindResource(hInst, pName, pType);
-	if (!hResource)
-		return false;
-	
-	DWORD imageSize = ::SizeofResource(hInst, hResource);
-	if (!imageSize)
-		return false;
-
-	HGLOBAL hResourceData = ::LoadResource(hInst, hResource);
-	if (!hResourceData)
-		return false;
-
-	const void* pResourceData = ::LockResource(hResourceData);
+	DWORD imageSize{};
+	const void* pResourceData = LockResourceData(pName, pType, hInst, imageSize);
 	if (!pResourceData)
 		return false;
 

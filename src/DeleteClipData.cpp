@@ -6,6 +6,7 @@
 #include "CP_Main.h"
 #include "DeleteClipData.h"
 #include "ClipboardFormatError.h"
+#include "ControlTextBuffer.h"
 #include "ErrorReport.h"
 #include "afxdialogex.h"
 #include "Misc.h"
@@ -568,18 +569,7 @@ void CDeleteClipData::OnLvnGetdispinfoList2(NMHDR *pNMHDR, LRESULT *pResult)
 
 void CDeleteClipData::CopyDisplayText(LVITEM& item, LPCTSTR text)
 {
-	if (item.pszText == nullptr || item.cchTextMax <= 0)
-	{
-		Log(StrF(_T("List display buffer is missing, size: %d"), item.cchTextMax));
-		return;
-	}
-
-	// cutting the text at the column buffer size is the intended display behaviour
-	const errno_t result = _tcsncpy_s(item.pszText, static_cast<size_t>(item.cchTextMax), text, _TRUNCATE);
-	if (result != 0 && result != STRUNCATE)
-	{
-		Log(StrF(_T("Failed to copy list display text, error: %d"), result));
-	}
+	CControlTextBuffer::CopyCut(item.pszText, item.cchTextMax, text);
 }
 
 

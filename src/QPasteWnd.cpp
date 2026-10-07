@@ -12,6 +12,7 @@
 #include "CF_UnicodeTextAggregator.h"
 #include "..\Shared\TextConvert.h"
 #include "ClipCompare.h"
+#include "ControlTextBuffer.h"
 #include "CopyProperties.h"
 #include "CP_Main.h"
 #include "DimWnd.h"
@@ -5223,12 +5224,7 @@ void CQPasteWnd::GetDispInfo(NMHDR* pNMHDR, LRESULT* /*pResult*/)
 					// pipe is the "end of symbols" marker
 					cs += "|" + CMainTableFunctions::GetDisplayText(CGetSetOptions::m_nLinesPerRow, m_listItems[pItem->iItem].m_Desc);
 
-					// The display text is cut to the size of the list control's buffer.
-					const errno_t copyError = _tcsncpy_s(pItem->pszText, pItem->cchTextMax, cs, _TRUNCATE);
-					if (copyError != 0 && copyError != STRUNCATE)
-					{
-						Log(StrF(_T("GetDispInfo: copying the item text failed, error: %d"), copyError));
-					}
+					CControlTextBuffer::CopyCut(pItem->pszText, pItem->cchTextMax, cs);
 
 					//						Log(StrF(_T("DrawItem index %d - "), pItem->iItem));//, pItem->pszText));
 				}
@@ -5414,15 +5410,7 @@ void CQPasteWnd::OnGetToolTipText(NMHDR* pNMHDR, LRESULT* /*pResult*/)
 
 	if (pInfo->lItem < 0)
 	{
-		CString cs("no item selected");
-
-		// The tool tip text is cut to the size of the control's buffer.
-		const errno_t copyError = _tcsncpy_s(pInfo->pszText, pInfo->cchTextMax, cs, _TRUNCATE);
-		if (copyError != 0 && copyError != STRUNCATE)
-		{
-			Log(StrF(_T("OnGetToolTipText: copying the tool tip text failed, error: %d"), copyError));
-		}
-
+		CControlTextBuffer::CopyCut(pInfo->pszText, pInfo->cchTextMax, _T("no item selected"));
 		return;
 	}
 
@@ -5523,12 +5511,7 @@ void CQPasteWnd::OnGetToolTipText(NMHDR* pNMHDR, LRESULT* /*pResult*/)
 		cs += "\r\n\r\n";
 		cs += clipData;
 
-		// The tool tip text is cut to the size of the control's buffer.
-		const errno_t copyError = _tcsncpy_s(pInfo->pszText, pInfo->cchTextMax, cs, _TRUNCATE);
-		if (copyError != 0 && copyError != STRUNCATE)
-		{
-			Log(StrF(_T("OnGetToolTipText: copying the tool tip text failed, error: %d"), copyError));
-		}
+		CControlTextBuffer::CopyCut(pInfo->pszText, pInfo->cchTextMax, cs);
 	}
 	CATCH_SQLITE_EXCEPTION
 }

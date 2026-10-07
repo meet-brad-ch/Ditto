@@ -904,6 +904,7 @@
     <ClInclude Include="src\ClipFormatQListCtrl.h" />
     <ClInclude Include="src\ClipIds.h" />
     <ClInclude Include="src\Clip_ImportExport.h" />
+    <ClInclude Include="src\ControlTextBuffer.h" />
     <ClInclude Include="src\ConvertRTFToText.h" />
     <ClInclude Include="src\CopyProperties.h" />
     <ClInclude Include="src\CopyThread.h" />

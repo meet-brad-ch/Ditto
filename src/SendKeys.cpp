@@ -581,28 +581,7 @@ bool CSendKeys::SendKeys(LPCTSTR KeysString, bool Wait)
           }
         }
 
-        // A valid key to send?
-        if (MKey != INVALIDKEY)
-        {
-          if (MKey == VK_LCONTROL || MKey == VK_RCONTROL)
-          {
-            m_bLControlDown = (MKey == VK_LCONTROL);
-            m_bRControlDown = (MKey == VK_RCONTROL);
-            // MKey is one of the single-byte VK_ codes tested above
-            SendKeyDown(static_cast<BYTE>(MKey), 1, false);
-          }
-          else if (MKey == VK_LSHIFT || MKey == VK_RSHIFT)
-          {
-            m_bLShiftDown = (MKey == VK_LSHIFT);
-            m_bRShiftDown = (MKey == VK_RSHIFT);
-            SendKeyDown(static_cast<BYTE>(MKey), 1, false);
-          }
-          else
-          {
-            SendKey(MKey, NumTimes, true);	
-            PopUpShiftKeys();
-          }
-        }
+        SendSpecialKey(MKey, NumTimes);
       }
       break;
 
@@ -619,6 +598,31 @@ bool CSendKeys::SendKeys(LPCTSTR KeysString, bool Wait)
   m_bUsingParens = false;
   PopUpShiftKeys();
   return true;
+}
+
+void CSendKeys::SendSpecialKey(WORD MKey, WORD NumTimes)
+{
+  if (MKey == INVALIDKEY)
+    return;
+
+  if (MKey == VK_LCONTROL || MKey == VK_RCONTROL)
+  {
+    m_bLControlDown = (MKey == VK_LCONTROL);
+    m_bRControlDown = (MKey == VK_RCONTROL);
+    // MKey is one of the single-byte VK_ codes tested above
+    SendKeyDown(static_cast<BYTE>(MKey), 1, false);
+  }
+  else if (MKey == VK_LSHIFT || MKey == VK_RSHIFT)
+  {
+    m_bLShiftDown = (MKey == VK_LSHIFT);
+    m_bRShiftDown = (MKey == VK_RSHIFT);
+    SendKeyDown(static_cast<BYTE>(MKey), 1, false);
+  }
+  else
+  {
+    SendKey(MKey, NumTimes, true);
+    PopUpShiftKeys();
+  }
 }
 
 bool CSendKeys::AppActivate(HWND wnd)

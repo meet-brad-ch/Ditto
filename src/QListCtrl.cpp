@@ -1317,12 +1317,8 @@ BOOL CQListCtrl::OnToolTipText(UINT /*id*/, NMHDR* pNMHDR, LRESULT* pResult)
 			delete m_pwchTip;
 
 		m_pwchTip = new WCHAR[nLength];
-		// the buffer is sized from the text, so the copy is never cut
-		const errno_t copyResult = wcsncpy_s(m_pwchTip, nLength, strTipText, _TRUNCATE);
-		if (copyResult != 0)
-		{
-			Log(StrF(_T("Failed to copy the tooltip text, error: %d"), copyResult));
-		}
+		// the buffer is sized from the text: the text and its terminator always fit
+		std::copy_n(strTipText.GetString(), strTipText.GetLength() + 1, m_pwchTip);
 		m_pwchTip[nLength - 1] = 0;
 		pTTTW->lpszText = (LPTSTR)m_pwchTip;
 	}
