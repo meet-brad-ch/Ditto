@@ -54,7 +54,6 @@ C28159	src\qpastewndthread.cpp	16
 C28159	src\tooltipex.cpp	2
 C28159	src\uac_thread.cpp	2
 C28182	src\sqlite\sqlite3mc_amalgamation.c	12
-C28183	src\clip.cpp	1
 C6001	src\sqlite\sqlite3mc_amalgamation.c	6
 C6011	src\qrcode\qrinput.c	1
 C6011	src\sqlite\sqlite3mc_amalgamation.c	28
@@ -104,14 +103,11 @@ C6385	src\qrcode\rscode.c	2
 C6385	src\sqlite\sqlite3mc_amalgamation.c	10
 C6386	src\qrcode\rsecc.c	2
 C6386	src\sqlite\sqlite3mc_amalgamation.c	1
-C6387	shared\dittodefines.h	1
 C6387	src\cgdiplusbitmap.h	1
-C6387	src\clip.cpp	2
 C6387	src\formattedtextdraw.cpp	2
 C6387	src\imagehelper.h	1
 C6387	src\mainfrm.cpp	2
 C6387	src\messagepumpthread.cpp	1
-C6387	src\misc.cpp	2
 C6387	src\nodbframewnd.cpp	1
 C6387	src\qrcode\qrencode.c	1
 C6387	src\sqlite\sqlite3mc_amalgamation.c	4

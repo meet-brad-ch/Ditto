@@ -295,6 +295,28 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   The ARM64 script still added firewall rules for TCP 23443 and launched URLs, and the portable
   one packaged files that no longer exist (`DittoU.exe`, `sqlite3.dll`, `zlib1.dll`). The
   installer gate now checks every `.iss` file.
+- 2026-10-06: Locked clipboard memory is read through `DittoCore::GlobalBytes` (Phase C2).
+  - It locks the block, measures it with `GlobalSize`, and hands out a bounded `std::span`. A
+    null handle, a failed lock or an empty block throws, and null is rejected before
+    `GlobalLock` (under ASan, `GlobalLock(NULL)` crashes).
+  - **Global-memory helpers** (`Misc.cpp`, the add-in's `DittoDefines.h`): they checked sizes only
+    with `ASSERT`, which is off in Release. They now check every length against the block.
+    `CompareGlobalHH` locked one handle and unlocked the other.
+  - **Text reads:** `CClipFormat::GetAsCString/GetAsCStringA` and `CClip::SetDescFromText` read
+    up to the first null or the end of the block (`ClipText::ReadAnsiBounded`, new
+    `ReadWideBounded`). They no longer drop the last character or carry embedded nulls.
+  - **CRC:** `GenerateCRC` no longer runs `strlen`/`wcslen` past the block. CRC values of
+    well-formed data are unchanged, so duplicate detection works as before.
+  - **CanIncludeInClipboardHistory:** the block must hold a whole DWORD, and it is freed on every
+    path.
+  - **IStream data:** it is copied only when the whole stream (up to 4 GB) is read. Before, the
+    allocation was unchecked, the read count ignored, and the size truncated to 32 bits.
+  - **Add-in readers** (`ReadOnlyFlag`, `RemoveLineFeeds`): reads are bounded, the write-back is
+    checked, and their export boundaries show a message instead of letting an exception cross
+    into Ditto.
+  - **CRC table:** freed with `delete[]`, matching its `new[]`.
+  - **Baselines:** `/analyze` 308 → 302 (the format-related C6387s), warnings 594 → 593,
+    complexity 3461 → 3449.
 - 2026-10-06: A multi-clip paste no longer hides errors (Phase C1).
   - `CClipIDs::AggregateData` ended in `catch(...) {}` and a log-and-continue SQLite catch, so a
     malformed clip or a database error during a multi-clip paste vanished silently.

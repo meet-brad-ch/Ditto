@@ -10,8 +10,11 @@
 #endif // _MSC_VER > 1000
 #include <afxole.h>
 #include <afxtempl.h>
+#include <cstddef>
 #include <memory>
+#include <span>
 #include "tinyxml\tinyxml.h"
+#include "Crc32Dynamic.h"
 #include "..\Shared\IClip.h"
 #include "Misc.h"
 
@@ -29,6 +32,11 @@ public:
 	// creates global from IStream if necessary
 	HGLOBAL GetGlobalData(CLIPFORMAT cfFormat, LPFORMATETC lpFormatEtc = NULL);
 	std::shared_ptr<CClipTypes> GetAvailableTypes();
+
+private:
+	// Copies a whole stream into a new global block; null when the stream is empty, over 4 GB, or
+	// cannot be read completely
+	static HGLOBAL StreamToGlobal(IStream* stream);
 };
 
 /*----------------------------------------------------------------------------*\
@@ -56,41 +64,11 @@ public:
 	virtual void AutoDeleteData(bool autoDeleteData) { m_autoDeleteData = autoDeleteData; }
 	virtual bool AutoDeleteData()	{ return m_autoDeleteData; }
 
-	CStringA GetAsCStringA() {
-		CStringA ret;
+	// The format's 8-bit text up to the first null or the end of the block; empty without data
+	CStringA GetAsCStringA();
 
-		if (m_hgData)
-		{
-			LPVOID data = GlobalLock(m_hgData);
-			int size = (int)GlobalSize(m_hgData);
-			if (data != NULL && size > 0)
-			{
-				ret = CStringA((char *)data, size-1);
-			}
-
-			GlobalUnlock(m_hgData);
-		}
-
-		return ret;
-	}
-
-	CString GetAsCString() {
-		CString ret;
-		
-		if (m_hgData)
-		{
-			LPVOID data = GlobalLock(m_hgData);
-			int size = (int)GlobalSize(m_hgData);
-			if (data != NULL && size > 0)
-			{
-				ret = CString((wchar_t *)data, ((size / (sizeof(wchar_t))) - 1));
-			}
-
-			GlobalUnlock(m_hgData);
-		}
-
-		return ret;
-	}
+	// The format's UTF-16 text up to the first null or the end of the block; empty without data
+	CString GetAsCString();
 	
 	Gdiplus::Bitmap *CreateGdiplusBitmap();
 };
@@ -224,6 +202,19 @@ protected:
 	int FindDuplicate();
 
 	AddToDbStickyEnum::AddToDbSticky m_addToDbStickyEnum;
+
+private:
+	// Reads the DWORD at the start of a clipboard block and frees the block; throws
+	// DittoCore::ClipboardFormatError when the block is shorter than a DWORD
+	static DWORD TakeDword(HGLOBAL block);
+
+	// Adds one format's data to the clip's CRC; with adjust, ignores the parts that change on every
+	// copy (RTF datastore and rsid values, text block slack)
+	static void AddToCrc(CCrc32Dynamic& crc32, const CClipFormat& format, bool adjust, DWORD& crc);
+
+	// CF_TEXT and CF_UNICODETEXT bytes up to and including the terminator, within the block;
+	// other formats unchanged
+	static std::span<const std::byte> TextBytesWithTerminator(CLIPFORMAT type, std::span<const std::byte> bytes);
 };
 
 

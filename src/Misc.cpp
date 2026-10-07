@@ -9,7 +9,11 @@
 #include <sys/types.h>  
 #include <sys/stat.h> 
 #include "Path.h"
+#include "GlobalBytes.h"
+#include "ClipboardFormatError.h"
+#include <new>
 #include <regex>
+#include <string>
 #include <vector>
 
 void AppendToFile(const TCHAR* fn, const TCHAR* msg)
@@ -211,35 +215,35 @@ BOOL IsValid(HGLOBAL hGlobal)
 	return (pvData != NULL);
 }
 
-// asserts if hDest isn't big enough
+// Copies ulBufLen bytes into hDest; throws when hDest is not a lockable block of at least that size
 void CopyToGlobalHP(HGLOBAL hDest, LPVOID pBuf, SIZE_T ulBufLen)
 {
-	ASSERT(hDest && pBuf && ulBufLen);
-	LPVOID pvData = GlobalLock(hDest);
-	ASSERT(pvData);
-	SIZE_T size = GlobalSize(hDest);
-	ASSERT(size >= ulBufLen);	// assert if hDest isn't big enough
-	memcpy(pvData, pBuf, ulBufLen);
-	GlobalUnlock(hDest);
+	DittoCore::GlobalBytes dest(hDest);
+	if (pBuf == nullptr || ulBufLen > dest.WritableBytes().size())
+	{
+		throw DittoCore::ClipboardFormatError("copy of " + std::to_string(ulBufLen) + " bytes does not fit a block of " + std::to_string(dest.WritableBytes().size()));
+	}
+	memcpy(dest.WritableBytes().data(), pBuf, ulBufLen);
 }
 
 void CopyToGlobalHH(HGLOBAL hDest, HGLOBAL hSource, SIZE_T ulBufLen)
 {
-	ASSERT(hDest && hSource && ulBufLen);
-	LPVOID pvData = GlobalLock(hSource);
-	ASSERT(pvData );
-	SIZE_T size = GlobalSize(hSource);
-	ASSERT(size >= ulBufLen);	// assert if hSource isn't big enough
-	CopyToGlobalHP(hDest, pvData, ulBufLen);
-	GlobalUnlock(hSource);
+	const DittoCore::GlobalBytes source(hSource);
+	if (ulBufLen > source.Bytes().size())
+	{
+		throw DittoCore::ClipboardFormatError("copy of " + std::to_string(ulBufLen) + " bytes reads past a block of " + std::to_string(source.Bytes().size()));
+	}
+	CopyToGlobalHP(hDest, const_cast<std::byte*>(source.Bytes().data()), ulBufLen);
 }
 
 
 HGLOBAL NewGlobalP(LPVOID pBuf, SIZE_T nLen)
 {
-	ASSERT(pBuf && nLen);
 	HGLOBAL hDest = GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, nLen);
-	ASSERT(hDest );
+	if (hDest == nullptr)
+	{
+		throw std::bad_alloc();
+	}
 	CopyToGlobalHP(hDest, pBuf, nLen);
 	return hDest;
 }
@@ -253,38 +257,32 @@ HGLOBAL NewGlobal(SIZE_T nLen)
 
 HGLOBAL NewGlobalH(HGLOBAL hSource, SIZE_T nLen)
 {
-	ASSERT(hSource && nLen);
-	LPVOID pvData = GlobalLock(hSource);
-	HGLOBAL hDest = NewGlobalP(pvData, nLen);
-	GlobalUnlock(hSource);
-	return hDest;
+	const DittoCore::GlobalBytes source(hSource);
+	if (nLen > source.Bytes().size())
+	{
+		throw DittoCore::ClipboardFormatError("copy of " + std::to_string(nLen) + " bytes reads past a block of " + std::to_string(source.Bytes().size()));
+	}
+	return NewGlobalP(const_cast<std::byte*>(source.Bytes().data()), nLen);
 }
 
 int CompareGlobalHP(HGLOBAL hLeft, LPVOID pBuf, SIZE_T ulBufLen)
 {
-	ASSERT(hLeft && pBuf && ulBufLen);
-
-	LPVOID pvData = GlobalLock(hLeft);
-	
-	ASSERT(pvData);
-	ASSERT(ulBufLen <= GlobalSize(hLeft));
-
-	int result = memcmp(pvData, pBuf, ulBufLen);
-	
-	GlobalUnlock(hLeft);
-
-	return result;
+	const DittoCore::GlobalBytes left(hLeft);
+	if (pBuf == nullptr || ulBufLen > left.Bytes().size())
+	{
+		throw DittoCore::ClipboardFormatError("compare of " + std::to_string(ulBufLen) + " bytes reads past a block of " + std::to_string(left.Bytes().size()));
+	}
+	return memcmp(left.Bytes().data(), pBuf, ulBufLen);
 }
 
 int CompareGlobalHH( HGLOBAL hLeft, HGLOBAL hRight, SIZE_T ulBufLen)
 {
-	ASSERT(hLeft && hRight && ulBufLen);
-	ASSERT(ulBufLen <= GlobalSize(hRight));
-	LPVOID pvData = GlobalLock(hRight);
-	ASSERT(pvData);
-	int result = CompareGlobalHP(hLeft, pvData, ulBufLen);
-	GlobalUnlock(hLeft);
-	return result;
+	const DittoCore::GlobalBytes right(hRight);
+	if (ulBufLen > right.Bytes().size())
+	{
+		throw DittoCore::ClipboardFormatError("compare of " + std::to_string(ulBufLen) + " bytes reads past a block of " + std::to_string(right.Bytes().size()));
+	}
+	return CompareGlobalHP(hLeft, const_cast<std::byte*>(right.Bytes().data()), ulBufLen);
 }
 
 // https://learn.microsoft.com/en-us/windows/win32/dataxchg/standard-clipboard-formats

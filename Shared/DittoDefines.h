@@ -2,6 +2,12 @@
 
 #include <shlwapi.h>
 
+#include "GlobalBytes.h"
+#include "ClipboardFormatError.h"
+
+#include <new>
+#include <string>
+
 #define DITTO_ADD_IN_VERSION 1
 
 typedef enum
@@ -65,22 +71,24 @@ private:
 class DittoAddinHelpers
 {
 public:
+	// Copies ulBufLen bytes into hDest; throws when hDest is not a lockable block of at least that size
 	static void CopyToGlobalHP(HGLOBAL hDest, LPVOID pBuf, ULONG ulBufLen)
 	{
-		ASSERT(hDest && pBuf && ulBufLen);
-		LPVOID pvData = GlobalLock(hDest);
-		ASSERT(pvData);
-		ULONG size = (ULONG)GlobalSize(hDest);
-		ASSERT(size >= ulBufLen);	// assert if hDest isn't big enough
-		memcpy(pvData, pBuf, ulBufLen);
-		GlobalUnlock(hDest);
+		DittoCore::GlobalBytes dest(hDest);
+		if (pBuf == nullptr || ulBufLen > dest.WritableBytes().size())
+		{
+			throw DittoCore::ClipboardFormatError("copy of " + std::to_string(ulBufLen) + " bytes does not fit a block of " + std::to_string(dest.WritableBytes().size()));
+		}
+		memcpy(dest.WritableBytes().data(), pBuf, ulBufLen);
 	}
 
 	static HGLOBAL NewGlobalP(LPVOID pBuf, UINT nLen)
 	{
-		ASSERT(pBuf && nLen);
 		HGLOBAL hDest = GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, nLen);
-		ASSERT(hDest);
+		if (hDest == nullptr)
+		{
+			throw std::bad_alloc();
+		}
 		CopyToGlobalHP(hDest, pBuf, nLen);
 		return hDest;
 	}

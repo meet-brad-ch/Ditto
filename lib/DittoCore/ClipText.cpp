@@ -36,6 +36,29 @@ namespace DittoCore
 		return std::string(text, end);
 	}
 
+	std::string ClipText::ReadAnsiBounded(std::span<const std::byte> block)
+	{
+		return ReadAnsiBounded(block.data(), block.size());
+	}
+
+	std::wstring ClipText::ReadWideBounded(std::span<const std::byte> block)
+	{
+		const std::size_t characters = block.size() / sizeof(wchar_t);
+		std::wstring text;
+		text.reserve(characters);
+		for (std::size_t i = 0; i < characters; ++i)
+		{
+			wchar_t c{};
+			std::memcpy(&c, block.data() + i * sizeof(wchar_t), sizeof(c));
+			if (c == L'\0')
+			{
+				break;
+			}
+			text.push_back(c);
+		}
+		return text;
+	}
+
 	std::wstring ClipText::ReadWide(const void* data, std::size_t size)
 	{
 		if (data == nullptr)

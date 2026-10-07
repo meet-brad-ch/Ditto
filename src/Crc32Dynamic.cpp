@@ -39,7 +39,7 @@ void CCrc32Dynamic::Init()
 
 void CCrc32Dynamic::Free()
 {
-	delete m_pdwCrc32Table;
+	delete[] m_pdwCrc32Table;   // allocated with new DWORD[256]
 	m_pdwCrc32Table = NULL;
 }
 

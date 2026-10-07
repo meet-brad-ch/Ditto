@@ -3,6 +3,8 @@
 #include "../../Shared/Tokenizer.h"
 #include "../../Shared/TextConvert.h"
 #include "ClipboardFormatError.h"
+#include "ClipText.h"
+#include "GlobalBytes.h"
 #include "GlobalFileDrop.h"
 
 
@@ -26,24 +28,24 @@ bool CReadOnlyFlag::ResetReadOnlyFlag(const CDittoInfo &DittoInfo, IClip *pClip,
 		try
 		{
 			LoadHDropFiles(lines, pFormats);
+
+			if(lines.GetSize() <= 0)
+			{
+				LoadUnicodeFiles(lines, pFormats);
+			}
+
+			if(lines.GetSize() <= 0)
+			{
+				LoadTextFiles(lines, pFormats);
+			}
 		}
 		catch (const DittoCore::ClipboardFormatError& error)
 		{
 			// add-in boundary: no exception may cross into Ditto
 			CString message;
-			message.Format(_T("The read-only flag was not changed: the clip's file list is malformed (%s)."), CString(error.what()).GetString());
+			message.Format(_T("The read-only flag was not changed: the clip's data is malformed (%s)."), CString(error.what()).GetString());
 			::MessageBox(DittoInfo.m_hWndDitto, message, _T("Ditto"), MB_OK | MB_ICONERROR);
 			return false;
-		}
-
-		if(lines.GetSize() <= 0)
-		{
-			LoadUnicodeFiles(lines, pFormats);
-		}
-
-		if(lines.GetSize() <= 0)
-		{
-			LoadTextFiles(lines, pFormats);
 		}
 
 		for(int i = 0; i < lines.GetSize(); i++)
@@ -110,20 +112,15 @@ bool CReadOnlyFlag::LoadUnicodeFiles(CStringArray &lines, IClipFormats *pFormats
 	IClipFormat *pFormat = pFormats->FindFormatEx(CF_UNICODETEXT);
 	if(pFormat != NULL)
 	{
-		wchar_t *stringData = (wchar_t *)GlobalLock(pFormat->Data());
-		if(stringData != NULL)
+		const DittoCore::GlobalBytes bytes(pFormat->Data());
+		CString string(DittoCore::ClipText::ReadWideBounded(bytes.Bytes()).c_str());
+		CString delim(_T("\r\n"));
+
+		CTokenizer token(string, delim);
+		CString line;
+		while(token.Next(line))
 		{
-			CString string(stringData);
-			CString delim(_T("\r\n"));
-
-			CTokenizer token(string, delim);
-			CString line;
-			while(token.Next(line))
-			{
-				lines.Add(line);
-			}
-
-			GlobalUnlock(pFormat->Data());
+			lines.Add(line);
 		}
 	}
 
@@ -135,21 +132,16 @@ bool CReadOnlyFlag::LoadTextFiles(CStringArray &lines, IClipFormats *pFormats)
 	IClipFormat *pFormat = pFormats->FindFormatEx(CF_TEXT);
 	if(pFormat != NULL)
 	{
-		char *stringData = (char *)GlobalLock(pFormat->Data());
-		if(stringData != NULL)
+		const DittoCore::GlobalBytes bytes(pFormat->Data());
+		CStringA string(DittoCore::ClipText::ReadAnsiBounded(bytes.Bytes()).c_str());
+		CStringW unicodeString(CTextConvert::AnsiToUnicode(string));
+		CString delim(_T("\r\n"));
+
+		CTokenizer token(unicodeString, delim);
+		CString line;
+		while(token.Next(line))
 		{
-			CStringA string(stringData);
-			CStringW unicodeString(CTextConvert::AnsiToUnicode(string));
-			CString delim(_T("\r\n"));
-
-			CTokenizer token(unicodeString, delim);
-			CString line;
-			while(token.Next(line))
-			{
-				lines.Add(line);
-			}
-
-			GlobalUnlock(pFormat->Data());
+			lines.Add(line);
 		}
 	}
 

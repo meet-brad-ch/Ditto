@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -103,4 +104,40 @@ TEST(ClipText, BoundedReadOfEmptyBlockIsEmpty)
 	const char block[] = { 'x' };
 
 	EXPECT_EQ(ClipText::ReadAnsiBounded(block, 0), "");
+}
+
+TEST(ClipText, SpanBoundedAnsiReadStopsAtTerminator)
+{
+	const std::string block("<b>x</b>\0tail", 13);
+
+	EXPECT_EQ(ClipText::ReadAnsiBounded(std::as_bytes(std::span(block))), "<b>x</b>");
+}
+
+TEST(ClipText, SpanBoundedAnsiReadKeepsWholeBlockWithoutTerminator)
+{
+	const std::string block = "{\\rtf1 x}";
+
+	EXPECT_EQ(ClipText::ReadAnsiBounded(std::as_bytes(std::span(block))), "{\\rtf1 x}");
+}
+
+TEST(ClipText, BoundedWideReadStopsAtTerminator)
+{
+	const std::vector<std::uint8_t> block = WideBytes(std::wstring(L"hello\0tail", 10));
+
+	EXPECT_EQ(ClipText::ReadWideBounded(std::as_bytes(std::span(block))), L"hello");
+}
+
+TEST(ClipText, BoundedWideReadKeepsWholeBlockWithoutTerminator)
+{
+	const std::vector<std::uint8_t> block = WideBytes(L"hello");
+
+	EXPECT_EQ(ClipText::ReadWideBounded(std::as_bytes(std::span(block))), L"hello");
+}
+
+TEST(ClipText, BoundedWideReadIgnoresTrailingOddByte)
+{
+	std::vector<std::uint8_t> block = WideBytes(L"hi");
+	block.push_back(0x41);
+
+	EXPECT_EQ(ClipText::ReadWideBounded(std::as_bytes(std::span(block))), L"hi");
 }

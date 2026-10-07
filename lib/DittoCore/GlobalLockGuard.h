@@ -34,6 +34,12 @@ namespace DittoCore
 		 */
 		const void* Data() const { return m_data; }
 
+		/**
+		 * @brief The locked memory, writable.
+		 * @return The start of the block, or null when GlobalLock failed.
+		 */
+		void* MutableData() { return m_data; }
+
 	private:
 		/// The locked handle.
 		HGLOBAL m_block{};

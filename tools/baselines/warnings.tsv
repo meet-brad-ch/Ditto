@@ -2,7 +2,6 @@ C4005	src\misc.cpp	2
 C4018	src\options.cpp	2
 C4018	src\symboledit.cpp	1
 C4100	addins\dittoutil\exports.cpp	1
-C4100	addins\dittoutil\removelinefeeds.cpp	1
 C4100	focusdll\focusdll.cpp	1
 C4100	icu_loader\icu.cpp	1
 C4100	src\actionenums.cpp	1

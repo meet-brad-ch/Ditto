@@ -19,7 +19,10 @@
 
 #include "Path.h"
 #include "ClipboardFormatError.h"
+#include "ClipText.h"
+#include "GlobalBytes.h"
 #include "GlobalFileDrop.h"
+#include <algorithm>
 #include <set>
 
 #ifdef _DEBUG
@@ -32,6 +35,36 @@ static char THIS_FILE[]=__FILE__;
 /*----------------------------------------------------------------------------*\
 COleDataObjectEx
 \*----------------------------------------------------------------------------*/
+
+HGLOBAL COleDataObjectEx::StreamToGlobal(IStream* stream)
+{
+	const LARGE_INTEGER start{};
+	ULARGE_INTEGER size{};
+	if (FAILED(stream->Seek(start, STREAM_SEEK_END, &size)) || size.HighPart != 0 || size.LowPart == 0)
+	{
+		return NULL;
+	}
+	HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, size.LowPart);
+	if (hGlobal == NULL)
+	{
+		return NULL;
+	}
+
+	ULONG bytesRead{};
+	HRESULT result{ E_FAIL };
+	{
+		DittoCore::GlobalBytes block(hGlobal);
+		if (SUCCEEDED(stream->Seek(start, STREAM_SEEK_SET, NULL)))
+		{
+			result = stream->Read(block.WritableBytes().data(), size.LowPart, &bytesRead);
+		}
+	}
+	if (FAILED(result) || bytesRead != size.LowPart)
+	{
+		return GlobalFree(hGlobal);   // returns NULL
+	}
+	return hGlobal;
+}
 
 HGLOBAL COleDataObjectEx::GetGlobalData(CLIPFORMAT cfFormat, LPFORMATETC lpFormatEtc)
 {
@@ -64,27 +97,8 @@ HGLOBAL COleDataObjectEx::GetGlobalData(CLIPFORMAT cfFormat, LPFORMATETC lpForma
 		break;
 		
 	case TYMED_ISTREAM:
-		{
-			UINT            uDataSize;
-			LARGE_INTEGER	li;
-			ULARGE_INTEGER	uli;
-			
-			li.HighPart = li.LowPart = 0;
-			
-			if ( SUCCEEDED( stg.pstm->Seek ( li, STREAM_SEEK_END, &uli )))
-			{
-				hGlobal = GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, uli.LowPart );
-				
-				void* pv = GlobalLock(hGlobal);
-				stg.pstm->Seek(li, STREAM_SEEK_SET, NULL);
-				HRESULT result = stg.pstm->Read(pv, uli.LowPart, (PULONG)&uDataSize);
-				GlobalUnlock(hGlobal);
-				
-				if( FAILED(result) )
-					hGlobal = GlobalFree(hGlobal);
-			}
-			break;  // case TYMED_ISTREAM
-		}
+		hGlobal = StreamToGlobal(stg.pstm);
+		break;
 	} // end switch
 	
 	ReleaseStgMedium(&stg);
@@ -156,6 +170,41 @@ void CClipFormat::Free()
 		m_hgData = ::GlobalFree( m_hgData );
 		m_hgData = NULL;
 	}
+}
+
+DWORD CClip::TakeDword(HGLOBAL block)
+{
+	const std::unique_ptr<void, decltype(&::GlobalFree)> owner(block, &::GlobalFree);
+	const DittoCore::GlobalBytes bytes(block);
+	DWORD value{};
+	if (bytes.Bytes().size() < sizeof(value))
+	{
+		throw DittoCore::ClipboardFormatError("DWORD clipboard format has " + std::to_string(bytes.Bytes().size()) + " bytes");
+	}
+	memcpy(&value, bytes.Bytes().data(), sizeof(value));
+	return value;
+}
+
+CStringA CClipFormat::GetAsCStringA()
+{
+	if (m_hgData == nullptr)
+	{
+		return CStringA();
+	}
+	const DittoCore::GlobalBytes bytes(m_hgData);
+	const std::string text = DittoCore::ClipText::ReadAnsiBounded(bytes.Bytes());
+	return CStringA(text.c_str(), static_cast<int>(text.size()));
+}
+
+CString CClipFormat::GetAsCString()
+{
+	if (m_hgData == nullptr)
+	{
+		return CString();
+	}
+	const DittoCore::GlobalBytes bytes(m_hgData);
+	const std::wstring text = DittoCore::ClipText::ReadWideBounded(bytes.Bytes());
+	return CString(text.c_str(), static_cast<int>(text.size()));
 }
 
 Gdiplus::Bitmap *CClipFormat::CreateGdiplusBitmap()
@@ -401,28 +450,11 @@ int CClip::LoadFromClipboard(CClipTypes* pClipTypes, bool checkClipboardIgnore, 
 		oleData.IsDataAvailable(theApp.m_canIncludeInClipboardHistory))
 	{
 		HGLOBAL includeInHistory = oleData.GetGlobalData(theApp.m_canIncludeInClipboardHistory);
-		if (includeInHistory != nullptr)
+		if (includeInHistory != nullptr && TakeDword(includeInHistory) == 0)
 		{
-			bool doReturn = false;
-
-			DWORD* data = static_cast<DWORD*>(GlobalLock(includeInHistory));
-			if (data != nullptr)
-			{			
-				if(*data == 0)
-				{
-					Log(_T("CanIncludeInClipboardHistory is 0, skipping this clipboard change"));
-					doReturn = true;
-				}
-
-				GlobalUnlock(includeInHistory);				
-			}
-
-			GlobalFree(includeInHistory);
-			if (doReturn)
-			{
-				oleData.Release();
-				return FALSE;
-			}
+			Log(_T("CanIncludeInClipboardHistory is 0, skipping this clipboard change"));
+			oleData.Release();
+			return FALSE;
 		}
 	}
 		
@@ -601,35 +633,24 @@ bool CClip::SetDescFromText(HGLOBAL hgData, bool unicode)
 	if(hgData == 0)
 		return false;
 	
-	bool bRet = false;
-	INT_PTR bufLen = 0;
-
+	const DittoCore::GlobalBytes bytes(hgData);
 	if(unicode)
 	{
-		TCHAR* text = (TCHAR *) GlobalLock(hgData);
-		bufLen = GlobalSize(hgData);
-
-		m_Desc = CString(text, (int)(bufLen/(sizeof(wchar_t))));
-		bRet = true;
+		const std::wstring text = DittoCore::ClipText::ReadWideBounded(bytes.Bytes());
+		m_Desc = CString(text.c_str(), static_cast<int>(text.size()));
 	}
 	else
 	{
-		char* text = (char *) GlobalLock(hgData);
-		bufLen = GlobalSize(hgData);
-	
-		m_Desc = CString(text, (int)bufLen);
-		bRet = true;
+		const std::string text = DittoCore::ClipText::ReadAnsiBounded(bytes.Bytes());
+		m_Desc = CString(CStringA(text.c_str(), static_cast<int>(text.size())));
 	}
-		
-	if(bufLen > CGetSetOptions::m_bDescTextSize)
+
+	if(m_Desc.GetLength() > CGetSetOptions::m_bDescTextSize)
 	{
 		m_Desc = m_Desc.Left(CGetSetOptions::m_bDescTextSize);
 	}
-	
-	//Unlock the data
-	GlobalUnlock(hgData);
-	
-	return bRet;
+
+	return true;
 }
 
 bool CClip::SetDescFromType()
@@ -798,69 +819,59 @@ int CClip::FindDuplicate()
 
 DWORD CClip::GenerateCRC()
 {
-	CClipFormat* pCF;
+	CCrc32Dynamic crc32;
 	DWORD dwCRC = 0xFFFFFFFF;
+	const bool adjust = CGetSetOptions::GetAdjustClipsForCRC() != FALSE;
 
-	CCrc32Dynamic *pCrc32 = new CCrc32Dynamic;
-	if(pCrc32)
+	const INT_PTR size = m_Formats.GetSize();
+	for (INT_PTR i = 0; i < size; i++)
 	{
-		//Generate a CRC value for all copied data
-
-		INT_PTR size = m_Formats.GetSize();
-		for(int i = 0; i < size ; i++)
+		const CClipFormat& format = m_Formats.ElementAt(i);
+		if (format.m_hgData != NULL)
 		{
-			pCF = & m_Formats.ElementAt(i);
-			
-			const unsigned char *Data = (const unsigned char *)GlobalLock(pCF->m_hgData);
-			if(Data)
-			{
-				if (CGetSetOptions::GetAdjustClipsForCRC())
-				{
-					//Try and remove known things that change in rtf (word and outlook)
-					if (pCF->m_cfType == theApp.m_RTFFormat)
-					{
-						CStringA CStringData((char*)Data);
-
-						//In word and outlook I was finding that data in the \\datastore section was always changing, remove this for the crc check
-						RemoveRTFSection(CStringData, "{\\*\\datastore");
-
-						//In word and outlook rsid values are always changing, remove these for the crc check
-						DeleteParamFromRTF(CStringData, "\\rsid", true);
-						DeleteParamFromRTF(CStringData, "\\insrsid", true);
-						DeleteParamFromRTF(CStringData, "\\mdispDef1", false);
-
-						pCrc32->GenerateCrc32((const LPBYTE)CStringData.GetBuffer(), (DWORD)CStringData.GetLength(), dwCRC);
-					}
-					else
-					{
-						//i've seen examble where the text size was 10 but the data size was 20, leading to random crc values
-						//try and only check the crc for the actual text
-						int dataLength = (int)GlobalSize(pCF->m_hgData);
-						if (pCF->m_cfType == CF_TEXT)
-						{
-							dataLength = min(dataLength, ((int)strlen((char*)Data) + 1));
-						}
-						else if (pCF->m_cfType == CF_UNICODETEXT)
-						{
-							dataLength = min(dataLength, (((int)wcslen((wchar_t*)Data) + 1) * 2));
-						}
-						pCrc32->GenerateCrc32((const LPBYTE)Data, (DWORD)dataLength, dwCRC);
-					}
-				}
-				else
-				{
-					pCrc32->GenerateCrc32((const LPBYTE)Data, (DWORD)GlobalSize(pCF->m_hgData), dwCRC);
-				}
-			}
-			GlobalUnlock(pCF->m_hgData);
+			AddToCrc(crc32, format, adjust, dwCRC);
 		}
-
-		dwCRC = ~dwCRC;
-
-		delete pCrc32;
 	}
+	return ~dwCRC;
+}
 
-	return dwCRC;
+void CClip::AddToCrc(CCrc32Dynamic& crc32, const CClipFormat& format, bool adjust, DWORD& crc)
+{
+	const DittoCore::GlobalBytes block(format.m_hgData);
+	std::span<const std::byte> bytes = block.Bytes();
+	if (adjust && format.m_cfType == theApp.m_RTFFormat)
+	{
+		// In Word and Outlook the \datastore section and the rsid values change on every copy: leave them out
+		const std::string rtf = DittoCore::ClipText::ReadAnsiBounded(bytes);
+		CStringA normalized(rtf.c_str(), static_cast<int>(rtf.size()));
+		RemoveRTFSection(normalized, "{\\*\\datastore");
+		DeleteParamFromRTF(normalized, "\\rsid", true);
+		DeleteParamFromRTF(normalized, "\\insrsid", true);
+		DeleteParamFromRTF(normalized, "\\mdispDef1", false);
+		crc32.GenerateCrc32(reinterpret_cast<LPBYTE>(normalized.GetBuffer()), static_cast<DWORD>(normalized.GetLength()), crc);
+		return;
+	}
+	if (adjust)
+	{
+		// some programs put text in a block larger than the text: only the text counts
+		bytes = TextBytesWithTerminator(format.m_cfType, bytes);
+	}
+	crc32.GenerateCrc32(reinterpret_cast<LPBYTE>(const_cast<std::byte*>(bytes.data())), static_cast<DWORD>(bytes.size()), crc);
+}
+
+std::span<const std::byte> CClip::TextBytesWithTerminator(CLIPFORMAT type, std::span<const std::byte> bytes)
+{
+	if (type == CF_TEXT)
+	{
+		const std::size_t length = DittoCore::ClipText::ReadAnsiBounded(bytes).size() + 1;
+		return bytes.first((std::min)(bytes.size(), length));
+	}
+	if (type == CF_UNICODETEXT)
+	{
+		const std::size_t length = (DittoCore::ClipText::ReadWideBounded(bytes).size() + 1) * sizeof(wchar_t);
+		return bytes.first((std::min)(bytes.size(), length));
+	}
+	return bytes;
 }
 
 // assigns m_ID

@@ -12,6 +12,8 @@ INPUT                  = lib/DittoCore/ClipboardFormatError.h \
                          lib/DittoCore/DropBlockReader.cpp \
                          lib/DittoCore/FileDropList.h \
                          lib/DittoCore/FileDropList.cpp \
+                         lib/DittoCore/GlobalBytes.h \
+                         lib/DittoCore/GlobalBytes.cpp \
                          lib/DittoCore/GlobalFileDrop.h \
                          lib/DittoCore/GlobalFileDrop.cpp \
                          lib/DittoCore/GlobalLockGuard.h \

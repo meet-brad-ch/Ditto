@@ -5,6 +5,7 @@
 #pragma once
 
 #include <cstddef>
+#include <span>
 #include <string>
 
 namespace DittoCore
@@ -44,5 +45,19 @@ namespace DittoCore
 		 * @throws ClipboardFormatError When @p data is null.
 		 */
 		static std::string ReadAnsiBounded(const void* data, std::size_t size);
+
+		/**
+		 * @brief Reads 8-bit text up to the first null, or the whole block when there is none.
+		 * @param block The block's bytes.
+		 * @return The characters before the first null.
+		 */
+		static std::string ReadAnsiBounded(std::span<const std::byte> block);
+
+		/**
+		 * @brief Reads UTF-16 text up to the first null character, or the whole block when there is none.
+		 * @param block The block's bytes; a trailing odd byte is not part of any character.
+		 * @return The characters before the first null character.
+		 */
+		static std::wstring ReadWideBounded(std::span<const std::byte> block);
 	};
 }
