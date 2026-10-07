@@ -91,8 +91,10 @@ jobs:
       - name: Installer
         shell: pwsh
         run: |
-          & (Join-Path $env:INNO_DIR 'ISCC.exe') /Q DittoSetup\DittoSetup_10.iss
-          if ($LASTEXITCODE -ne 0) { throw "ISCC failed ($LASTEXITCODE)" }
+          $out = & (Join-Path $env:INNO_DIR 'ISCC.exe') DittoSetup\DittoSetup_10.iss 2>&1
+          if ($LASTEXITCODE -ne 0) { $out; throw "ISCC failed ($LASTEXITCODE)" }
+          $warnings = @($out | Where-Object { "$_" -match '^Warning:' })
+          if ($warnings.Count -gt 0) { $warnings; throw "$($warnings.Count) Inno Setup warnings" }
           Get-ChildItem DittoSetup\Output\*.exe | ForEach-Object { "{0}  {1}" -f $_.Name, (Get-FileHash $_.FullName -Algorithm SHA256).Hash } | Tee-Object -Append -FilePath $env:GITHUB_STEP_SUMMARY
 
       - name: Upload installer and binaries

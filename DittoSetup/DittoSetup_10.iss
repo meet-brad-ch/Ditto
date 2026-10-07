@@ -7,7 +7,7 @@
 #define MyAppSupportURL         "https://github.com/meet-brad-ch/Ditto"
 #define MyAppCopyrighEndYear    GetDateTimeString('yyyy','','')
 #define MyOutputBaseFilename    "DittoLocalSetup_" + StringChange(MyAppVersion, '.', '_')
- 
+
 [Setup]
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
@@ -34,10 +34,11 @@ AppCopyright={#MyAppAuthor} {#MyAppCopyrighEndYear}
 OutputBaseFilename={#MyOutputBaseFilename}
 ArchitecturesInstallIn64BitMode=x64compatible
 ArchitecturesAllowed=x64compatible
-DefaultDirName={commonpf}\{#MyAppName}
+;per-user install, no administrator rights (owner decision 2026-10-07): {autopf} is the user's
+;%LOCALAPPDATA%\Programs, and every registry write goes to the installing user's HKCU
+PrivilegesRequired=lowest
+DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
-;UsePreviousTasks=no
-;DisableDirPage=yes
 DisableProgramGroupPage=yes
 DisableReadyPage=yes
 DirExistsWarning=no
@@ -49,47 +50,14 @@ MinVersion=10.0.14393
 SetupLogging=yes
 
 [Languages]
+;English only (owner decision 2026-10-07); Ditto's own language files are installed below
 Name: English; MessagesFile: compiler:Default.isl
-
-;Inno Setup Official translations
-Name: Czech;               MessagesFile: compiler:Languages\Czech.isl
-Name: Danish;              MessagesFile: compiler:Languages\Danish.isl
-Name: Dutch;               MessagesFile: compiler:Languages\Dutch.isl
-Name: Finnish;             MessagesFile: compiler:Languages\Finnish.isl
-Name: French;              MessagesFile: compiler:Languages\French.isl
-Name: Deutsch;             MessagesFile: compiler:Languages\German.isl
-Name: Hebrew;              MessagesFile: compiler:Languages\Hebrew.isl
-Name: Italiano;            MessagesFile: compiler:Languages\Italian.isl
-Name: Japanese;            MessagesFile: compiler:Languages\Japanese.isl
-Name: Polski;              MessagesFile: compiler:Languages\Polish.isl
-Name: Portuguese;          MessagesFile: compiler:Languages\Portuguese.isl
-Name: Russian;             MessagesFile: compiler:Languages\Russian.isl
-Name: Slovak;              MessagesFile: compiler:Languages\Slovak.isl
-Name: Slovenian;           MessagesFile: compiler:Languages\Slovenian.isl
-Name: Spanish;             MessagesFile: compiler:Languages\Spanish.isl
-Name: Turkish;             MessagesFile: compiler:Languages\Turkish.isl
-Name: Ukrainian;           MessagesFile: compiler:Languages\Ukrainian.isl
-
-;Inno Setup Unofficial translations
-Name: ChineseSimplified;   MessagesFile: ChineseSimplified.isl
-Name: ChineseTraditional;  MessagesFile: ChineseTraditional.isl
-Name: Croatian;            MessagesFile: Croatian.isl
-Name: Greek;               MessagesFile: Greek.isl
-Name: Hungarian;           MessagesFile: Hungarian.isl
-Name: Korean;              MessagesFile: Korean.isl
-Name: Romanian;            MessagesFile: Romanian.isl
-Name: Swedish;             MessagesFile: Swedish.isl
 
 [CustomMessages]
 English.RunDittoOnStartup=Run Ditto on Windows startup
 English.LaunchDitto=Launch Ditto
 English.UninstallDitto=Uninstall Ditto
-English.VCRuntimeInstallFailed=VCRuntime prerequisite install failed.
-
-Italiano.RunDittoOnStartup=Esegui Ditto all'avvio di Windows
-Italiano.LaunchDitto=Esegui Ditto
-Italiano.UninstallDitto=Disinstalla Ditto
-Italiano.VCRuntimeInstallFailed=Installazione prerequisito VCRuntime non riuscita.
+English.MachineInstallExists=Ditto is already installed for all users in %1.%nUninstall it first (Settings > Apps, as an administrator), then run this setup again.
 
 [Tasks]
 Name: RunAtStartup; Description: {cm:RunDittoOnStartup}
@@ -99,8 +67,9 @@ Source: ..\Release64\Ditto.exe; DestDir: {app}; DestName: Ditto.exe; Flags: igno
 Source: ..\Release64\ICU_Loader.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\Release64\Addins\DittoUtil.dll; DestDir: {app}\Addins; Flags: ignoreversion
 
-; the 64-bit runtime DLLs live in System32; a 32-bit compiler (Inno Setup 6) sees them
-; only through "sysnative", a 64-bit compiler (Inno Setup 7) only through "System32"
+; the VC++/MFC runtime ships next to Ditto.exe (app-local), so the install needs no
+; administrator rights. The 64-bit DLLs live in System32; a 32-bit compiler (Inno Setup 6)
+; sees them only through "sysnative", a 64-bit compiler (Inno Setup 7) only through "System32"
 #if FileExists("C:\Windows\sysnative\vcruntime140.dll")
   #define Sys64Dir "C:\Windows\sysnative"
 #else
@@ -111,8 +80,7 @@ Source: {#Sys64Dir}\vcruntime140_1.dll;  DestDir: {app}; Flags: ignoreversion
 Source: {#Sys64Dir}\msvcp140.dll;  DestDir: {app}; Flags: ignoreversion
 Source: {#Sys64Dir}\mfc140u.dll;  DestDir: {app}; Flags: ignoreversion
 
-
-Source: ..\Debug\Language\*; DestDir: {app}\Language; BeforeInstall: BeforeLanguageInstall()
+Source: ..\Debug\Language\*; DestDir: {app}\Language
 Source: ..\Debug\Themes\*; DestDir: {app}\Themes
 
 [Icons]
@@ -129,8 +97,6 @@ Root: HKCU; Subkey: SOFTWARE\Microsoft\Windows\CurrentVersion\Run; ValueType: st
 
 Root: HKCU; Subkey: Software\Ditto; ValueType: dword; ValueName: SetFocus_iexplore.exe; ValueData: 00000001
 
-Root: HKCU; Subkey: Software\Ditto; ValueType: string; ValueName: LanguageFile; ValueData: "{code:AdjustedLanguage|{language}}"
-
 Root: HKCU; Subkey: Software\Ditto\PasteStrings; ValueType: string; ValueName: gvim.exe; ValueData: """{{PLUS}gP"
 Root: HKCU; Subkey: Software\Ditto\CopyStrings; ValueType: string; ValueName: gvim.exe; ValueData: """{{PLUS}y"
 Root: HKCU; Subkey: Software\Ditto\CutStrings; ValueType: string; ValueName: gvim.exe; ValueData: """{{PLUS}x"
@@ -139,148 +105,28 @@ Root: HKCU; Subkey: Software\Ditto\CutStrings; ValueType: string; ValueName: gvi
 Root: HKCU; Subkey: Software\Ditto\PasteStrings; ValueName: cmd.exe; Flags: deletevalue
 Root: HKCU; Subkey: Software\Ditto\CopyStrings; ValueName: cmd.exe; Flags: deletevalue
 
-;associate .dto with Ditto
-Root: HKCR; Subkey: .dto; ValueType: string; ValueName: ; ValueData: Ditto; Flags: uninsdeletevalue
-Root: HKCR; Subkey: Ditto; ValueType: string; ValueName: ; ValueData: Ditto; Flags: uninsdeletekey
-Root: HKCR; Subkey: Ditto\DefaultIcon; ValueType: string; ValueName: ; ValueData: {app}\Ditto.exe,0
-Root: HKCR; Subkey: Ditto\shell\open\command; ValueType: string; ValueName: ; ValueData: """{app}\Ditto.exe"" ""%1"""
+;associate .dto with Ditto, for this user (HKCU\Software\Classes needs no administrator rights)
+Root: HKCU; Subkey: Software\Classes\.dto; ValueType: string; ValueName: ; ValueData: Ditto; Flags: uninsdeletevalue
+Root: HKCU; Subkey: Software\Classes\Ditto; ValueType: string; ValueName: ; ValueData: Ditto; Flags: uninsdeletekey
+Root: HKCU; Subkey: Software\Classes\Ditto\DefaultIcon; ValueType: string; ValueName: ; ValueData: {app}\Ditto.exe,0
+Root: HKCU; Subkey: Software\Classes\Ditto\shell\open\command; ValueType: string; ValueName: ; ValueData: """{app}\Ditto.exe"" ""%1"""
 
 
 [Code]
-procedure BeforeLanguageInstall();
-var
-  sDir: String;
-begin
-end;
+const
+  MachineUninstallKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#MyAppName}_is1';
 
-function AdjustedLanguage(Param: String): String;  
+// An earlier per-machine (administrator) install is not seen by this per-user setup, which would
+// install a second Ditto beside it: stop and say what to do instead.
+function InitializeSetup(): Boolean;
+var
+  MachineInstallDir: String;
 begin
-  Case Param of
-    'ChineseSimplified' : Result := 'Chinese Simplified';
-    'ChineseTraditional' : Result := 'Chinese Traditional';
-  else
-    Result := Param;
+  Result := True;
+  if RegQueryStringValue(HKLM64, MachineUninstallKey, 'InstallLocation', MachineInstallDir) or
+     RegQueryStringValue(HKLM32, MachineUninstallKey, 'InstallLocation', MachineInstallDir) then
+  begin
+    SuppressibleMsgBox(FmtMessage(CustomMessage('MachineInstallExists'), [MachineInstallDir]), mbCriticalError, MB_OK, IDOK);
+    Result := False;
   end;
 end;
-
-procedure CleanupOldFiles();
-var
-  sDir: String;
-  begin
-    sDir := ExpandConstant('{app}');
-
-    DeleteFile(sDir+'\mfc100u.dll')
-    DeleteFile(sDir+'\mfcm100u.dll')
-    DeleteFile(sDir+'\msvcp100.dll')
-    DeleteFile(sDir+'\msvcr100.dll')
-
-    DeleteFile(sDir+'\iculx55.dll')
-    DeleteFile(sDir+'\icule55.dll')
-    DeleteFile(sDir+'\icuuc55.dll')
-    DeleteFile(sDir+'\icutu55.dll')
-    DeleteFile(sDir+'\icuio55.dll')
-    DeleteFile(sDir+'\icuin55.dll')
-    DeleteFile(sDir+'\icudt55.dll')
-
-
-    //moved to use the windows included dll
-    DeleteFile(sDir+'\icuuc58.dll')
-    DeleteFile(sDir+'\icuin58.dll')
-    DeleteFile(sDir+'\icutu58.dll')
-    DeleteFile(sDir+'\icuio58.dll')
-    DeleteFile(sDir+'\icudt58.dll')
-
-    DelTree(sDir+'\Help', TRUE, TRUE, TRUE)
-end;
-
-
-procedure RegisterForCrashDump(theApp : String);
-var
-   theExe : String;
-begin
-  theExe := theApp + '.exe';
-  if IsWin64() then
-    begin
-      if RegValueExists(HKLM64, 'Software\Microsoft\Windows\Windows Error Reporting\LocalDumps\' + theExe, 'DumpFolder') = false then
-        RegWriteStringValue(HKLM64, 'Software\Microsoft\Windows\Windows Error Reporting\LocalDumps\' + theExe, 'DumpFolder', ExpandConstant('{userappdata}') + '\Ditto\Dumps');
-      if RegValueExists(HKLM64, 'Software\Microsoft\Windows\Windows Error Reporting\LocalDumps\' + theExe, 'DumpType') = false then
-        RegWriteDWordValue(HKLM64, 'Software\Microsoft\Windows\Windows Error Reporting\LocalDumps\' + theExe, 'DumpType', 2);
-      if RegValueExists(HKLM64, 'Software\Microsoft\Windows\Windows Error Reporting\LocalDumps\' + theExe, 'DumpCount') = false then
-        RegWriteDWordValue(HKLM64, 'Software\Microsoft\Windows\Windows Error Reporting\LocalDumps\' + theExe, 'DumpCount', 3);
-    end
-  else
-    begin
-      if RegValueExists(HKEY_LOCAL_MACHINE, 'Software\Microsoft\Windows\Windows Error Reporting\LocalDumps\' + theExe, 'DumpFolder') = false then
-        RegWriteStringValue(HKEY_LOCAL_MACHINE, 'Software\Microsoft\Windows\Windows Error Reporting\LocalDumps\' + theExe, 'DumpFolder', ExpandConstant('{userappdata}') + '\Ditto\Dumps');
-      if RegValueExists(HKEY_LOCAL_MACHINE, 'Software\Microsoft\Windows\Windows Error Reporting\LocalDumps\' + theExe, 'DumpType') = false then
-        RegWriteDWordValue(HKEY_LOCAL_MACHINE, 'Software\Microsoft\Windows\Windows Error Reporting\LocalDumps\' + theExe, 'DumpType', 2);
-      if RegValueExists(HKEY_LOCAL_MACHINE, 'Software\Microsoft\Windows\Windows Error Reporting\LocalDumps\' + theExe, 'DumpCount') = false then
-        RegWriteDWordValue(HKEY_LOCAL_MACHINE, 'Software\Microsoft\Windows\Windows Error Reporting\LocalDumps\' + theExe, 'DumpCount', 3);
-    end;
-end;
-
-function IsVC2017CRuntimeInstalled(): Boolean;
-var
-  Installed: Boolean;
-  IsInstalled: Cardinal;
-begin
-  Installed := false
-  IsInstalled := 0;
-
-  if RegQueryDWordValue(HKLM, 'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64', 'Installed', IsInstalled) then
-  begin
-    if (IsInstalled = 1) then
-    begin
-      Installed := true;
-    end;
-  end;  
-
-  //double check the HKLM64 key
-  if (IsInstalled <> 1) and IsWin64() then 
-  begin
-    if RegQueryDWordValue(HKLM64, 'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64', 'Installed', IsInstalled) then
-    begin
-      if (IsInstalled = 1) then
-      begin
-        Installed := true;
-      end;
-    end;  
-  end;
-
-  Result := Installed;
-end;
-
-procedure CheckForPreReqs();
-var
-  nReturnCode: Integer;
-begin
- 
-
-end;
-
-procedure CurStepChanged(CurStep: TSetupStep);
-var
-  ProgressPage: TOutputProgressWizardPage;
-  ErrorCode : Integer;
-  AbortNeeded: Boolean;
-begin
-  AbortNeeded := false;
-  case CurStep of
-    ssInstall:      
-    begin
-      CheckForPreReqs();
-    end;
-
-	  ssPostInstall:
-  	begin            
-    end;
-	
-    ssDone:
-    begin
-      RegisterForCrashDump('Ditto')
-      CleanupOldFiles()
-    end;
-
-  end;
-end;
-

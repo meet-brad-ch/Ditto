@@ -4,7 +4,7 @@
 #   2. tools\verify.ps1 -Analyze (rebuild with /analyze, all gates, every test alone under ASan)
 #   3. tools\fuzz.ps1: every libFuzzer target for 60 s
 #   4. Debug|x64, Debug|Win32 and Release|Win32 solution builds
-#   5. the Inno Setup installer
+#   5. the Inno Setup installer (an Inno Setup warning fails it)
 # Writes build\ci\<commit>\summary.md (steps, the section 38 block, the per-test table, installer
 # SHA256) and build\ci\<commit>\artifacts\ (installer, binaries, test XML, coverage, logs), then
 # deletes the clone. Prints one timestamped line per step; exits 0 when every step passed.
@@ -81,7 +81,14 @@ try {
 
     Invoke-Step 'installer' {
         $iscc = if ($env:INNO_DIR) { Join-Path $env:INNO_DIR 'ISCC.exe' } else { 'C:\Program Files\Inno Setup 7\ISCC.exe' }
-        & $iscc /Q (Join-Path $work 'DittoSetup\DittoSetup_10.iss')
+        # not /Q: that hides the compiler's warnings, and a warning fails the step like a C++ one
+        $out = & $iscc (Join-Path $work 'DittoSetup\DittoSetup_10.iss') 2>&1
+        $code = $LASTEXITCODE
+        $warnings = @($out | Where-Object { "$_" -match '^Warning:' })
+        $warnings | ForEach-Object { "    $_" }
+        if ($code -eq 0 -and $warnings.Count -gt 0) { "    $($warnings.Count) Inno Setup warnings"; $code = 1 }
+        if ($code -ne 0) { $out | Where-Object { "$_" -match '^(Error|Line \d+)' } | ForEach-Object { "    $_" } }
+        $global:LASTEXITCODE = $code
     }
 }
 finally {

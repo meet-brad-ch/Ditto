@@ -214,21 +214,39 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
 
 - **Output:** `DittoSetup\Output\DittoLocalSetup_<exe version>.exe`, unsigned. The version comes
   from `Ditto.exe`, which is currently 3.24.238.2 from `CP_Main.rc`.
+- **Per user, no administrator rights** (owner decision 2026-10-07): Ditto installs into
+  `%LOCALAPPDATA%\Programs\Ditto`, its start menu entry and the `.dto` association
+  (`HKCU\Software\Classes`) are the installing user's, and every registry write goes to that
+  user's HKCU.
+- **English only** (owner decision 2026-10-07): the setup's own pages are English. Ditto's
+  language files are still installed and chosen in Options; the setup no longer writes
+  `LanguageFile`, so a reinstall keeps the chosen language.
+- **An earlier per-machine install** (Program Files, from upstream's or an earlier fork
+  installer) stops the setup with a message: uninstall it first, as an administrator. The
+  settings in `HKCU\Software\Ditto` survive that uninstall.
+- **Crash dumps:** Windows Error Reporting's `LocalDumps` settings live under HKLM only and need
+  administrator rights, so the setup no longer registers them. Without them WER writes its
+  default dumps to `%LOCALAPPDATA%\CrashDumps`; to keep full dumps, add the key
+  `HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\Ditto.exe` as an
+  administrator.
 - **What it packages:** Ditto.exe, ICU_Loader.dll, Addins\DittoUtil.dll, the VC++/MFC runtime
-  DLLs from System32 (14.51), and `Debug\Language` and `Debug\Themes`.
+  DLLs from System32 (14.51) next to Ditto.exe (app-local, no redistributable install), and
+  `Debug\Language` and `Debug\Themes`.
 - **What changed from upstream's script:**
   - The netsh firewall task (TCP 23443) is removed.
   - The post-install "View Help" and "View Change History" browser links are removed.
   - The publisher names the fork.
   - The runtime DLL folder works with both 32-bit and 64-bit ISCC.
-  - `{pf}` is now `{commonpf}`.
+  - `{pf}` is now `{autopf}` with `PrivilegesRequired=lowest` (per user, see above).
+  - The VC++ runtime check, the empty pre-install steps, the cleanup of upstream's pre-2017 DLLs
+    and the HKLM crash-dump registration are removed, as are the eight unofficial translations.
   - `MinVersion` is Windows 10 1607 (was Windows 7). The Windows 7/8 `cmd.exe` paste strings are
     no longer written; the leftover values are deleted on every install.
   - Uninstalling keeps `HKCU\Software\Ditto` (settings and database path). Upstream deleted it.
-- **Existing install:** the AppName is still "Ditto", so the installer upgrades an existing Ditto
-  install in place and keeps its settings. It closes a running Ditto while it installs.
-- **Warnings:** the remaining ISCC warnings come from upstream: outdated unofficial translations,
-  unused variables, and HKCU writes from an admin install.
+- **Existing install:** the AppName is still "Ditto", so the installer upgrades an earlier
+  per-user install in place and keeps its settings. It closes a running Ditto while it installs.
+- **Warnings:** none. `tools\ci.ps1` and the workflow fail on any Inno Setup warning, as on a
+  compiler warning.
 
 ## Remotes
 
