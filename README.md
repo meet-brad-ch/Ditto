@@ -310,6 +310,20 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   The ARM64 script still added firewall rules for TCP 23443 and launched URLs, and the portable
   one packaged files that no longer exist (`DittoU.exe`, `sqlite3.dll`, `zlib1.dll`). The
   installer gate now checks every `.iss` file.
+- 2026-10-06: CF_DIB images are checked by `DittoCore::DibHeader` before they are drawn or
+  saved (Phase C5). It checks the header size (40, 52, 56, 108 or 124 bytes), planes, bit count,
+  compression, color count, and that the color table and pixels fit in the block.
+  - **Pixel offset:** the old code assumed a 40-byte header and ignored the three bit masks of a
+    `BI_BITFIELDS` image. The image preview, *Export to bitmap file* and the image-to-HTML add-in
+    wrote a `.bmp` header pointing at the wrong byte, and the list thumbnail drew the pixels from
+    the wrong place with palette indexes (`DIB_PAL_COLORS`) instead of RGB colors.
+  - **Malformed images:** a DIB whose sizes do not fit its block now shows a message (thumbnail,
+    preview, tooltip, export, save, edit, drag as file, add-in). Before, it was read past the
+    end of the block.
+  - **Crashes fixed:** combining the images of several clips dereferenced a null bitmap when one
+    image could not be loaded; saving an image dereferenced a null image when the data was
+    missing.
+  - **Tests:** 22 unit tests; fuzz target `dib`, which reads every pixel byte the layout names.
 - 2026-10-06: CF_HTML is read and written by `DittoCore::CfHtml` (Phase C4).
   - **Offsets:** the old parser decoded the UTF-8 block with the ANSI code page and used the
     byte offsets as UTF-16 indexes. Non-ASCII text before or in the fragment cut it in the wrong

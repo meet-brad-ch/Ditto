@@ -174,6 +174,9 @@ public:
 
 	BOOL WriteTextToFile(CString path, BOOL unicode, BOOL asci, BOOL rtf, BOOL forceUnicode = FALSE, BOOL utf8 = FALSE);
 	BOOL WriteImageToFile(CString path);
+	// Boundary for the user operations that save an image (edit, export, save): a malformed
+	// image is reported with the operation's verb ("edit", "export", "save") and false returned.
+	bool WriteImageToFileOrReport(const CString& path, const CString& operation);
 	BOOL WriteTextToHtmlFile(CString path);
 
 	BOOL SaveFormats(CString* unicode, CStringA* asci, CStringA* rtf, BOOL updateDescription, std::vector<BYTE>* cf_dibBytes = nullptr, std::vector<BYTE>* pngBytes = nullptr);

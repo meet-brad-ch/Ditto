@@ -2,6 +2,8 @@
 #include "FileDialogPath.h"
 #include "CP_Main.h"
 #include "MainFrm.h"
+#include "ClipboardFormatError.h"
+#include "ErrorReport.h"
 #include "Misc.h"
 #include ".\cp_main.h"
 #include <io.h>
@@ -1174,7 +1176,7 @@ bool CCP_MainApp::EditItems(CClipIDs &Ids, bool bShowError, bool forceTextEdit)
 
 		if (imageFile)
 		{
-			clip.WriteImageToFile(savePath);
+			clip.WriteImageToFileOrReport(savePath, _T("edit"));
 		}
 		else
 		{

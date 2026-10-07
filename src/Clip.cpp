@@ -20,6 +20,7 @@
 #include "Path.h"
 #include "ClipboardFormatError.h"
 #include "ClipText.h"
+#include "ErrorReport.h"
 #include "GlobalBytes.h"
 #include "GlobalFileDrop.h"
 #include <algorithm>
@@ -1869,8 +1870,23 @@ BOOL CClip::WriteImageToFile(CString path)
 		i = PNGImageHelper::CImageFromHGLOBAL(png->m_hgData);
 	else
 		i = DIBImageHelper::CImageFromHGLOBAL(bitmap->m_hgData);
+	if (!i)
+		return false;
 
 	return i->Save(path) == S_OK;
+}
+
+bool CClip::WriteImageToFileOrReport(const CString& path, const CString& operation)
+{
+	try
+	{
+		return WriteImageToFile(path) != FALSE;
+	}
+	catch (const DittoCore::ClipboardFormatError& error)
+	{
+		CErrorReport::Show(StrF(_T("Ditto cannot %s the clip's image: the image data is malformed (%s)."), operation.GetString(), CString(error.what()).GetString()));
+		return false;
+	}
 }
 
 bool CClip::AddFileDataToData(CString &errorMessage)

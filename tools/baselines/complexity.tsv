@@ -12,7 +12,6 @@ src\actionenums.cpp	ActionEnums::EnumDescription	119
 src\actionenums.cpp	ActionEnums::GetDefaultShortCutKeyA	45
 src\advgeneral.cpp	CAdvGeneral::OnBnClickedOk	185
 src\advgeneral.cpp	CAdvGeneral::Search	13
-src\bitmaphelper.cpp	CBitmapHelper::GetCBitmap	11
 src\clip.cpp	CClip::AddFileDataToData	15
 src\clip.cpp	CClip::AddToDB	12
 src\clip.cpp	CClip::LoadFormats	13
@@ -51,7 +50,7 @@ src\deleteclipdata.cpp	CDeleteClipData::OnLvnColumnclickList2	15
 src\deleteclipdata.cpp	CDeleteClipData::OnLvnGetdispinfoList2	11
 src\deleteclipdata.cpp	CDeleteClipData::OnLvnKeydownList2	11
 src\deleteclipdata.cpp	CDeleteClipData::SaveClipDataItemToFile	12
-src\deleteclipdata.cpp	CDeleteClipData::SetDescriptionWindowText	20
+src\deleteclipdata.cpp	CDeleteClipData::SetDescriptionWindowText	17
 src\dittorulerricheditctrl.cpp	CDittoRulerRichEditCtrl::LoadItem	10
 src\dittorulerricheditctrl.cpp	CDittoRulerRichEditCtrl::SaveToDB	14
 src\dittowindow.cpp	CDittoWindow::DoNcHitTest	33
@@ -73,7 +72,6 @@ src\gdipbutton.cpp	CGdipButton::DrawItem	10
 src\gdipbutton.cpp	CGdipButton::LoadStdImageDPI	17
 src\hotkeys.cpp	CHotKey::CopyToCtrl	14
 src\hotkeys.cpp	CHotKey::GetVirKeyName	34
-src\htmlformataggregator.cpp	CHTMFormatStruct::GetData	13
 src\imageviewer.cpp	CImageViewer::OnGesture	11
 src\magneticwnd.cpp	CMagneticWnd::OnWindowPosChanging	17
 src\mainfrm.cpp	CMainFrame::OnHotKey	75
@@ -104,7 +102,7 @@ src\oleclipsource.cpp	COleClipSource::ConvertDrivesASCII	10
 src\oleclipsource.cpp	COleClipSource::ConvertDrivesWide	10
 src\oleclipsource.cpp	COleClipSource::ConvertToFileDrop	13
 src\oleclipsource.cpp	COleClipSource::DoImmediateRender	34
-src\oleclipsource.cpp	COleClipSource::OnRenderGlobalData	15
+src\oleclipsource.cpp	COleClipSource::OnRenderGlobalData	12
 src\oleclipsource.cpp	COleClipSource::PlainTextFilter	10
 src\oleclipsource.cpp	COleClipSource::SentenceCase	17
 src\oleclipsource.cpp	COleClipSource::Typoglycemia	10
@@ -123,7 +121,7 @@ src\qlistctrl.cpp	CQListCtrl::HandleKeyDown	11
 src\qlistctrl.cpp	CQListCtrl::OnCustomdrawList	31
 src\qlistctrl.cpp	CQListCtrl::OnSelectionChange	12
 src\qlistctrl.cpp	CQListCtrl::PreTranslateMessage	15
-src\qlistctrl.cpp	CQListCtrl::ShowFullDescription	35
+src\qlistctrl.cpp	CQListCtrl::ShowFullDescription	31
 src\qpastewnd.cpp	CQPasteWnd::DoAction	118
 src\qpastewnd.cpp	CQPasteWnd::DoActionSaveCF_HDROP_FileData	11
 src\qpastewnd.cpp	CQPasteWnd::DoExportToBitMapFile	13

@@ -3,6 +3,8 @@
 #include "../../shared/TextConvert.h"
 #include "CfHtml.h"
 #include "ClipboardFormatError.h"
+#include "DibHeader.h"
+#include "GlobalBytes.h"
 #include "GlobalFileDrop.h"
 
 #include <string>
@@ -35,24 +37,8 @@ bool CPasteImageAsHtmlImage::ConvertPathToHtmlImageTag(const CDittoInfo &DittoIn
 		IClipFormat *pCF_DIB = pFormats->FindFormatEx(CF_DIB);
 		if(pCF_DIB != NULL)
 		{
-			CString csFile;
-			csFile.Format(_T("%s\\%d.bmp"), g_csDIBImagePath, g_nDIBImageName);
-			g_nDIBImageName++;
-
-
-			LPVOID pvData = GlobalLock(pCF_DIB->Data());
-			ULONG size = (ULONG)GlobalSize(pCF_DIB->Data());
-
-			if(WriteDataToFile(csFile, pvData, size))
-			{
-				GlobalUnlock(pCF_DIB->Data());
-
-				csIMG.Format(_T("<IMG src=\"file:///%s\">"), csFile);
-			}
-			else
-			{
-				GlobalUnlock(pCF_DIB->Data());
-			}
+			if (!DibImageTag(DittoInfo.m_hWndDitto, pCF_DIB, csIMG))
+				return false;
 		}
 		else
 		{
@@ -119,45 +105,50 @@ bool CPasteImageAsHtmlImage::ConvertPathToHtmlImageTag(const CDittoInfo &DittoIn
 	return bRet;
 }
 
-bool CPasteImageAsHtmlImage::WriteDataToFile(CString csPath, LPVOID data, ULONG size)
+bool CPasteImageAsHtmlImage::DibImageTag(HWND owner, IClipFormat* pCF_DIB, CString& csIMG)
 {
-	bool bRet = false;
+	CString csFile;
+	csFile.Format(_T("%s\\%d.bmp"), g_csDIBImagePath.GetString(), g_nDIBImageName);
+	g_nDIBImageName++;
+
+	CString errorMessage;
+	try
+	{
+		// add-in boundary: no exception may cross into Ditto
+		const DittoCore::GlobalBytes block(pCF_DIB->Data());
+		if (WriteDibToFile(csFile, block.Bytes(), errorMessage))
+		{
+			csIMG.Format(_T("<IMG src=\"file:///%s\">"), csFile.GetString());
+			return true;
+		}
+	}
+	catch (const DittoCore::ClipboardFormatError& error)
+	{
+		errorMessage.Format(_T("The image was not pasted as HTML: the clip's image is malformed (%s)."), CString(error.what()).GetString());
+	}
+	::MessageBox(owner, errorMessage, _T("Ditto"), MB_OK | MB_ICONERROR);
+	return false;
+}
+
+bool CPasteImageAsHtmlImage::WriteDibToFile(const CString& csPath, std::span<const std::byte> dib, CString& errorMessage)
+{
+	// Read validates the DIB before anything is written
+	const auto header = DittoCore::DibHeader::FileHeader(DittoCore::DibHeader::Read(dib), dib.size());
+
 	CFile file;
 	CFileException ex;
-	if(file.Open(csPath, CFile::modeCreate|CFile::modeWrite|CFile::typeBinary, &ex))
+	if (!file.Open(csPath, CFile::modeCreate | CFile::modeWrite | CFile::typeBinary, &ex))
 	{
-		BITMAPINFO *lpBI = (BITMAPINFO *)data;
-
-		int nPaletteEntries = 1 << lpBI->bmiHeader.biBitCount;
-		if(lpBI->bmiHeader.biBitCount > 8)
-			nPaletteEntries = 0;
-		else if( lpBI->bmiHeader.biClrUsed != 0 )
-			nPaletteEntries = lpBI->bmiHeader.biClrUsed;
-
-		BITMAPFILEHEADER BFH;
-		memset(&BFH, 0, sizeof( BITMAPFILEHEADER));
-		BFH.bfType = 'MB';
-		BFH.bfSize = sizeof(BITMAPFILEHEADER) + size;
-		BFH.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + nPaletteEntries * sizeof(RGBQUAD);
-
-		file.Write(&BFH, sizeof(BITMAPFILEHEADER));
-		file.Write(data, size);
-
-		file.Close();
-
-		bRet = true;
-	}
-	else
-	{
-		CString csError;
-		TCHAR exError[250];
+		TCHAR exError[250]{};
 		ex.GetErrorMessage(exError, _countof(exError));
-
-		csError.Format(_T("OutLookExpress Addin - Failed to write CF_DIB to file: %s, Error: %s"), csPath, exError);
-		OutputDebugString(csPath);
+		errorMessage.Format(_T("The image was not pasted as HTML: it could not be saved to %s (%s)."), csPath.GetString(), exError);
+		return false;
 	}
 
-	return bRet;
+	file.Write(header.data(), static_cast<UINT>(header.size()));
+	file.Write(dib.data(), static_cast<UINT>(dib.size()));
+	file.Close();
+	return true;
 }
 
 bool CPasteImageAsHtmlImage::CleanupPastedImages()

@@ -5,6 +5,8 @@
 #include "FileDialogPath.h"
 #include "..\Shared\Tokenizer.h"
 #include ".\qpastewnd.h"
+#include "ClipboardFormatError.h"
+#include "ErrorReport.h"
 #include "ActionEnums.h"
 #include "CF_TextAggregator.h"
 #include "CF_UnicodeTextAggregator.h"
@@ -5031,9 +5033,7 @@ bool CQPasteWnd::DoExportToBitMapFile()
 
 			if (savePath != _T(""))
 			{
-				toSave.WriteImageToFile(savePath);
-
-				ret = true;
+				ret = toSave.WriteImageToFileOrReport(savePath, _T("export"));
 			}
 			else
 			{

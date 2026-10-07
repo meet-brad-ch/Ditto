@@ -9,6 +9,8 @@
 
 // CDeleteClipData dialog
 
+class CClip;
+
 class CDeleteData
 {
 public:
@@ -81,6 +83,8 @@ protected:
 	void SelectRow(int selectedRow);
 	void CreateAndShowDescriptionWindow();
 	void SetDescriptionWindowText(INT_PTR row);
+	// Shows the clip's image in the description window; reports a malformed image.
+	void SetDescriptionWindowImage(CClip& selectedClip);
 	void SaveClipDataItemToFile(CDeleteData item);
 
 public:

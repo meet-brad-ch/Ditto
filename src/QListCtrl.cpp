@@ -6,6 +6,8 @@
 #include "QListCtrl.h"
 #include "ProcessPaste.h"
 #include "BitmapHelper.h"
+#include "ClipboardFormatError.h"
+#include "ErrorReport.h"
 #include "MainTableFunctions.h"
 #include "DittoCopyBuffer.h"
 #include <atlbase.h>
@@ -1174,16 +1176,26 @@ BOOL CQListCtrl::DrawBitMap(int nItem, CRect& crRect, CDC* pDC, const CString& c
 	CClipFormatQListCtrl* format = GetItem_CF_DIB_ClipFormat(nItem);
 	if (format != NULL)
 	{
-		HGLOBAL smallImage = format->GetDibFittingToHeight(pDC, crRect.Height());
-		if (smallImage != NULL)
+		try
 		{
-			//Will return the width of the bitmap in nWidth
-			int nWidth = 0;
-			if (CBitmapHelper::DrawDIB(pDC, smallImage, crRect.left, crRect.top, nWidth))
+			HGLOBAL smallImage = format->GetDibFittingToHeight(pDC, crRect.Height());
+			if (smallImage != NULL)
 			{
-				// adjust the rect so other information can be drawn next to the thumbnail
-				crRect.left += nWidth + 3;
+				//Will return the width of the bitmap in nWidth
+				int nWidth = 0;
+				if (CBitmapHelper::DrawDIB(pDC, smallImage, crRect.left, crRect.top, nWidth))
+				{
+					// adjust the rect so other information can be drawn next to the thumbnail
+					crRect.left += nWidth + 3;
+				}
 			}
+		}
+		catch (const DittoCore::ClipboardFormatError& error)
+		{
+			// the thumbnail is made once per clip; freeing the image keeps the next paint from
+			// drawing it again, so the error is shown once
+			format->Free();
+			CErrorReport::Show(StrF(_T("Ditto cannot draw the clip's image: the image data is malformed (%s)."), CString(error.what()).GetString()));
 		}
 	}
 	else if (csDescription.Find(_T("CF_DIB")) == 0)
@@ -1519,6 +1531,28 @@ bool CQListCtrl::PostEventLoadedCheckDescription(int updatedRow)
 	return loadedClip;
 }
 
+void CQListCtrl::SetToolTipImage(int nItem, CClipFormat& Clip)
+{
+	try
+	{
+		// the DIB if the clip has one, else the PNG
+		for (const CLIPFORMAT cfType : { (CLIPFORMAT)CF_DIB, (CLIPFORMAT)theApp.m_PNG_Format })
+		{
+			Clip.m_cfType = cfType;
+			if (GetClipData(nItem, Clip) && Clip.m_hgData)
+			{
+				m_pToolTip->SetGdiplusBitmap(Clip.CreateGdiplusBitmap());
+				return;
+			}
+		}
+	}
+	catch (const DittoCore::ClipboardFormatError& error)
+	{
+		// the description is still shown, without the image
+		CErrorReport::Show(StrF(_T("Ditto cannot show the clip's image: the image data is malformed (%s)."), CString(error.what()).GetString()));
+	}
+}
+
 bool CQListCtrl::ShowFullDescription(bool bFromAuto, bool fromNextPrev)
 {
 	if (this->GetSelectedCount() == 0)
@@ -1719,19 +1753,7 @@ bool CQListCtrl::ShowFullDescription(bool bFromAuto, bool fromNextPrev)
 			Clip.Clear();
 		}
 
-		Clip.m_cfType = CF_DIB;
-		if (GetClipData(nItem, Clip) && Clip.m_hgData)
-		{
-			m_pToolTip->SetGdiplusBitmap(Clip.CreateGdiplusBitmap());
-		}
-		else
-		{
-			Clip.m_cfType = theApp.m_PNG_Format;
-			if (GetClipData(nItem, Clip) && Clip.m_hgData)
-			{
-				m_pToolTip->SetGdiplusBitmap(Clip.CreateGdiplusBitmap());
-			}
-		}
+		SetToolTipImage(nItem, Clip);
 
 		m_pToolTip->Show(pt);
 	}

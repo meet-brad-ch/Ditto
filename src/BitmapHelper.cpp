@@ -5,6 +5,10 @@
 #include "stdafx.h"
 #include "BitmapHelper.h"
 #include "cp_main.h"
+#include "DibHeader.h"
+#include "GlobalBytes.h"
+
+#include <span>
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -98,6 +102,25 @@ BOOL CBitmapHelper::GetCBitmap(void* pClip2, CDC* pDC, CBitmap* pBitMap, int nMa
 	return true;
 }
 
+CSize CBitmapHelper::MeasureImages(CClipFormats& clips, BOOL horizontal)
+{
+	CSize size{ 0, 0 };
+	const int count = (int)clips.GetCount();
+	for (int i = 0; i < count; i++)
+	{
+		// null for formats that are not images; GetCBitmap's drawing loop skips the same ones
+		const std::unique_ptr<Gdiplus::Bitmap> gdipBitmap(clips[i].CreateGdiplusBitmap());
+		if (!gdipBitmap)
+			continue;
+
+		const int width = (int)gdipBitmap->GetWidth();
+		const int height = (int)gdipBitmap->GetHeight();
+		size.cx = horizontal ? size.cx + width : (std::max)(size.cx, (LONG)width);
+		size.cy = horizontal ? (std::max)(size.cy, (LONG)height) : size.cy + height;
+	}
+	return size;
+}
+
 BOOL CBitmapHelper::GetCBitmap(CClipFormats& clips, CDC* pDC, CBitmap* pBitMap, BOOL horizontal)
 {
 	BOOL bRet = FALSE;
@@ -105,30 +128,9 @@ BOOL CBitmapHelper::GetCBitmap(CClipFormats& clips, CDC* pDC, CBitmap* pBitMap, 
 		return bRet;
 
 	int count = (int)clips.GetCount();
-	int width = 0;
-	int height = 0;
+	const CSize size = MeasureImages(clips, horizontal);
 
-	for (int i = 0; i < count; i++)
-	{
-		CClipFormat clip = clips[i];
-
-		Gdiplus::Bitmap* gdipBitmap = clip.CreateGdiplusBitmap();
-
-		if (horizontal)
-		{
-			width += (int)gdipBitmap->GetWidth();
-			height = max((int)gdipBitmap->GetHeight(), height);
-		}
-		else
-		{
-			width = max((int)gdipBitmap->GetWidth(), width);
-			height += (int)gdipBitmap->GetHeight();
-		}
-
-		delete gdipBitmap;
-	}
-
-	pBitMap->CreateCompatibleBitmap(pDC, width, height);
+	pBitMap->CreateCompatibleBitmap(pDC, size.cx, size.cy);
 	ASSERT(pBitMap->m_hObject != NULL);
 
 	CDC MemDc2;
@@ -361,35 +363,21 @@ HANDLE CBitmapHelper::hBitmapToDIB(HBITMAP hBitmap, DWORD dwCompression, HPALETT
 
 bool CBitmapHelper::DrawDIB(CDC* pDC, HANDLE hData, int nLeft, int nRight, int& nWidth)
 {
-	LPBITMAPINFO	lpBI;
-	void* pDIBBits;
+	const DittoCore::GlobalBytes block(static_cast<HGLOBAL>(hData));
+	const std::span<const std::byte> dib = block.Bytes();
+	// Read checks that the header, color table and pixels lie inside the block
+	const DittoCore::DibLayout layout = DittoCore::DibHeader::Read(dib);
+	const int height = layout.height < 0 ? -layout.height : layout.height;
 
-	lpBI = (LPBITMAPINFO)GlobalLock(hData);
-	if (!lpBI)
+	// the color table holds RGB values, not palette indexes
+	const int lines = ::StretchDIBits(pDC->m_hDC,
+		nLeft, nRight,
+		layout.width, height,
+		0, 0, layout.width, height,
+		dib.data() + layout.bitsOffset, reinterpret_cast<const BITMAPINFO*>(dib.data()), DIB_RGB_COLORS, SRCCOPY);
+	if (lines == 0)
 		return false;
 
-	int nColors = lpBI->bmiHeader.biClrUsed ? lpBI->bmiHeader.biClrUsed : 1 << lpBI->bmiHeader.biBitCount;
-
-	if (lpBI->bmiHeader.biBitCount > 8)
-	{
-		pDIBBits = (LPVOID)((LPDWORD)(lpBI->bmiColors + lpBI->bmiHeader.biClrUsed) +
-			((lpBI->bmiHeader.biCompression == BI_BITFIELDS) ? 3 : 0));
-	}
-	else
-	{
-		pDIBBits = (LPVOID)(lpBI->bmiColors + nColors);
-	}
-
-	::StretchDIBits(pDC->m_hDC,
-		nLeft, nRight,
-		lpBI->bmiHeader.biWidth, lpBI->bmiHeader.biHeight,
-		0, 0, lpBI->bmiHeader.biWidth,
-		lpBI->bmiHeader.biHeight,
-		pDIBBits, lpBI, DIB_PAL_COLORS, SRCCOPY);
-
-	nWidth = lpBI->bmiHeader.biWidth;
-
-	GlobalUnlock(hData);
-
+	nWidth = layout.width;
 	return true;
 }

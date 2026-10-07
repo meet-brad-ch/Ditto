@@ -5,6 +5,8 @@
 #include "FileDialogPath.h"
 #include "CP_Main.h"
 #include "DeleteClipData.h"
+#include "ClipboardFormatError.h"
+#include "ErrorReport.h"
 #include "afxdialogex.h"
 #include "Misc.h"
 #include "ProgressWnd.h"
@@ -1053,20 +1055,27 @@ void CDeleteClipData::SetDescriptionWindowText(INT_PTR row)
 
 	if (format == nullptr)
 	{
-		IClipFormat* format = selectedClip.Clips()->FindFormatEx(CF_DIB);
-		if (format != nullptr)
+		SetDescriptionWindowImage(selectedClip);
+	}
+}
+
+void CDeleteClipData::SetDescriptionWindowImage(CClip& selectedClip)
+{
+	try
+	{
+		// PNG is closer to the original, so it replaces the DIB when the clip has both
+		for (const CLIPFORMAT cfType : { (CLIPFORMAT)CF_DIB, (CLIPFORMAT)theApp.m_PNG_Format })
 		{
-			m_pDescriptionWindow->SetGdiplusBitmap(format->CreateGdiplusBitmap());
+			IClipFormat* format = selectedClip.Clips()->FindFormatEx(cfType);
+			if (format != nullptr)
+			{
+				m_pDescriptionWindow->SetGdiplusBitmap(format->CreateGdiplusBitmap());
+			}
 		}
 	}
-
-	if (format == nullptr)
+	catch (const DittoCore::ClipboardFormatError& error)
 	{
-		IClipFormat* format = selectedClip.Clips()->FindFormatEx(theApp.m_PNG_Format);
-		if (format != nullptr)
-		{
-			m_pDescriptionWindow->SetGdiplusBitmap(format->CreateGdiplusBitmap());
-		}
+		CErrorReport::Show(StrF(_T("Ditto cannot show the clip's image: the image data is malformed (%s)."), CString(error.what()).GetString()));
 	}
 }
 
@@ -1187,13 +1196,9 @@ void CDeleteClipData::SaveClipDataItemToFile(CDeleteData item)
 		CClip selectedClip;
 		selectedClip.LoadFormats(item.m_lID, false, false, item.m_DatalID);
 
-		if (item.m_clipboardFormat == _T("PNG"))
+		if (item.m_clipboardFormat == _T("PNG") || item.m_clipboardFormat == _T("CF_DIB"))
 		{
-			selectedClip.WriteImageToFile(CFileDialogPath::From(ofn));
-		}
-		else if (item.m_clipboardFormat == _T("CF_DIB"))
-		{
-			selectedClip.WriteImageToFile(CFileDialogPath::From(ofn));
+			selectedClip.WriteImageToFileOrReport(CFileDialogPath::From(ofn), _T("save"));
 		}
 		else if (item.m_clipboardFormat == _T("CF_UNICODETEXT"))
 		{

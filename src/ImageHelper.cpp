@@ -1,20 +1,9 @@
 #include "stdafx.h"
 #include "ImageHelper.h"
+#include "DibHeader.h"
 
-void DIBImageHelper::prependStream(IStream* pIStream, LPVOID pvData, ULONG size)
+bool DIBImageHelper::prependStream(IStream* pIStream, std::span<const std::byte> dib)
 {
-	BITMAPINFO* lpBI = (BITMAPINFO*)pvData;
-
-	int nPaletteEntries = 1 << lpBI->bmiHeader.biBitCount;
-	if (lpBI->bmiHeader.biBitCount > 8)
-		nPaletteEntries = 0;
-	else if (lpBI->bmiHeader.biClrUsed != 0)
-		nPaletteEntries = lpBI->bmiHeader.biClrUsed;
-
-	BITMAPFILEHEADER BFH;
-	memset(&BFH, 0, sizeof(BITMAPFILEHEADER));
-	BFH.bfType = 'MB';
-	BFH.bfSize = sizeof(BITMAPFILEHEADER) + size;
-	BFH.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + nPaletteEntries * sizeof(RGBQUAD);
-	pIStream->Write(&BFH, sizeof(BITMAPFILEHEADER), NULL);
+	const auto header = DittoCore::DibHeader::FileHeader(DittoCore::DibHeader::Read(dib), dib.size());
+	return pIStream->Write(header.data(), static_cast<ULONG>(header.size()), NULL) == S_OK;
 }

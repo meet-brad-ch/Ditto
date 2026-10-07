@@ -1252,7 +1252,15 @@ std::optional<HGLOBAL> COleClipSource::RenderClipsOrReport(CLIPFORMAT format)
 {
 	try
 	{
-		return m_ClipIDs.Render(format);
+		HGLOBAL hData = m_ClipIDs.Render(format);
+		// image and text clips are dropped as files written for the drop
+		if (m_convertToHDROPOnDelayRender &&
+			hData == NULL &&
+			format == CF_HDROP)
+		{
+			hData = ConvertToFileDrop();
+		}
+		return hData;
 	}
 	catch (const DittoCore::ClipboardFormatError& error)
 	{
@@ -1306,13 +1314,6 @@ BOOL COleClipSource::OnRenderGlobalData(LPFORMATETC lpFormatEtc, HGLOBAL* phGlob
 				return FALSE;   // FALSE tells the target the render failed
 			}
 			hData = *rendered;
-
-			if (m_convertToHDROPOnDelayRender &&
-				hData == NULL &&
-				lpFormatEtc->cfFormat == CF_HDROP)
-			{
-				hData = ConvertToFileDrop();
-			}
 		}
 
 		//Add to a cache of already rendered data

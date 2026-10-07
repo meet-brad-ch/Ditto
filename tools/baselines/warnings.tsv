@@ -24,7 +24,6 @@ C4100	src\groupstatic.cpp	1
 C4100	src\grouptree.cpp	3
 C4100	src\htmlformataggregator.cpp	1
 C4100	src\imageformataggregator.cpp	1
-C4100	src\imagehelper.h	1
 C4100	src\imageviewer.cpp	3
 C4100	src\mainfrm.cpp	19
 C4100	src\mainfrmthread.cpp	1
@@ -115,7 +114,7 @@ C4456	addins\dittoutil\pasteanyastext.cpp	2
 C4456	src\clip.cpp	1
 C4456	src\copyproperties.cpp	1
 C4456	src\cp_main.cpp	2
-C4456	src\deleteclipdata.cpp	4
+C4456	src\deleteclipdata.cpp	2
 C4456	src\gdipbutton.cpp	9
 C4456	src\misc.cpp	1
 C4456	src\oleclipsource.cpp	1
@@ -135,7 +134,7 @@ C4706	src\createqrcodeimage.cpp	1
 C4706	src\qpastewnd.cpp	1
 C4706	src\qrcode\qrgenerator.cpp	1
 C4706	src\sendkeys.cpp	1
-C4840	addins\dittoutil\pasteimageashtmlimage.cpp	4
+C4840	addins\dittoutil\pasteimageashtmlimage.cpp	1
 C4840	src\clip.cpp	27
 C4840	src\clip_importexport.cpp	1
 C4840	src\clipboardviewer.cpp	5
@@ -153,7 +152,6 @@ C4840	src\eventthread.cpp	8
 C4840	src\externalwindowtracker.cpp	6
 C4840	src\formatsql.cpp	5
 C4840	src\hotkeys.cpp	1
-C4840	src\htmlformataggregator.cpp	7
 C4840	src\mainfrm.cpp	5
 C4840	src\mainfrmthread.cpp	1
 C4840	src\misc.cpp	7

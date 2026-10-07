@@ -28,6 +28,10 @@ public:
 	static WORD		DIBNumColors(LPSTR lpDIB);
 	static bool		DrawDIB(CDC* pDC, HANDLE hData, int nLeft, int nRight, int& nWidth);
 
+private:
+	// The size of the images of clips placed side by side (horizontal) or stacked.
+	static CSize	MeasureImages(CClipFormats& clips, BOOL horizontal);
+
 };
 
 #endif // !defined(AFX_BITMAPHELPER_H__641D941B_5487_4F85_BFC1_012F2083A8B6__INCLUDED_)

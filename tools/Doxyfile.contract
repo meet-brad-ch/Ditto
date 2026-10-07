@@ -11,6 +11,9 @@ INPUT                  = lib/DittoCore/CfHtml.h \
                          lib/DittoCore/ClipText.cpp \
                          lib/DittoCore/DatabasePath.h \
                          lib/DittoCore/DatabasePath.cpp \
+                         lib/DittoCore/DibHeader.h \
+                         lib/DittoCore/DibHeader.cpp \
+                         lib/DittoCore/DibLayout.h \
                          lib/DittoCore/DropBlockReader.h \
                          lib/DittoCore/DropBlockReader.cpp \
                          lib/DittoCore/FileDropList.h \

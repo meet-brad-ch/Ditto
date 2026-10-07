@@ -44,6 +44,8 @@
     <ClInclude Include="ClipboardFormatError.h" />
     <ClInclude Include="ClipText.h" />
     <ClInclude Include="DatabasePath.h" />
+    <ClInclude Include="DibHeader.h" />
+    <ClInclude Include="DibLayout.h" />
     <ClInclude Include="DropBlockReader.h" />
     <ClInclude Include="FileDropList.h" />
     <ClInclude Include="GlobalBytes.h" />
@@ -54,6 +56,7 @@
     <ClCompile Include="CfHtml.cpp" />
     <ClCompile Include="ClipText.cpp" />
     <ClCompile Include="DatabasePath.cpp" />
+    <ClCompile Include="DibHeader.cpp" />
     <ClCompile Include="DropBlockReader.cpp" />
     <ClCompile Include="FileDropList.cpp" />
     <ClCompile Include="GlobalBytes.cpp" />

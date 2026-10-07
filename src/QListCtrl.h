@@ -166,6 +166,8 @@ public:
 
 protected:
 	BOOL GetClipData(int nItem, CClipFormat &Clip);
+	// Puts the item's image (DIB, else PNG) into the tooltip; reports a malformed image.
+	void SetToolTipImage(int nItem, CClipFormat& Clip);
 	BOOL DrawBitMap(int nItem, CRect &crRect, CDC *pDC, const CString &csDescription);
 	void LoadDittoCopyBufferHotkeys();
 	bool MouseInScrollBarArea(CRect crWindow, CPoint point);
