@@ -162,6 +162,14 @@ protected:
 	/** @brief The height of the formatting toolbar, in unscaled pixels. */
 	static constexpr int s_toolbarHeight{28};
 
+	/**
+	 * @brief Rich edit style SES_HYPERLINKTOOLTIPS (Richedit.h, _RICHEDIT_VER >= 0x0500). MFC's
+	 * afxwin.h sets _RICHEDIT_VER to 0x0210 before Richedit.h, so the SDK name is not defined here.
+	 */
+	static constexpr DWORD s_sesHyperlinkTooltips{8};
+	/** @brief Rich edit style SES_NOFOCUSLINKNOTIFY (Richedit.h, _RICHEDIT_VER >= 0x0500); see s_sesHyperlinkTooltips. */
+	static constexpr DWORD s_sesNoFocusLinkNotify{32};
+
 public:
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 

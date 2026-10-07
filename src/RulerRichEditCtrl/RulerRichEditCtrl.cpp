@@ -242,7 +242,7 @@ BOOL CRulerRichEditCtrl::CreateRTFControl( BOOL autohscroll )
  		lstrcpy( cf.szFaceName, _T( "Segoe UI" ) );
  		m_rtf.SendMessage(EM_SETCHARFORMAT, 0, (LPARAM)&cf);
 
-		DWORD editStyle = SES_HYPERLINKTOOLTIPS | SES_NOFOCUSLINKNOTIFY;
+		DWORD editStyle = s_sesHyperlinkTooltips | s_sesNoFocusLinkNotify;
 		m_rtf.SendMessage(EM_SETEDITSTYLE, editStyle, editStyle);
 
 		m_rtf.SendMessage(EM_AUTOURLDETECT, TRUE, 0);
