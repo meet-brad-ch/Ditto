@@ -77,6 +77,12 @@ public:
 	CButton m_alwaysShowScrollBar;
 	CEdit m_diffPathEditBox;
 	afx_msg void OnBnClickedButtonDiffBrowse();
+
+private:
+	/** @brief Saves the quick paste position of the checked position radio button. */
+	void ApplyQuickPastePosition();
+	/** @brief Saves the chosen theme and flags the parent when the theme changed. */
+	void ApplyTheme();
 };
 
 //{{AFX_INSERT_LOCATION}}

@@ -52,43 +52,119 @@ void CQuickPaste::ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboa
 {		
 	Log(StrF(_T("Start of ShowQPasteWnd, AtPrevPos: %d, FromKeyboard: %d, RefillList: %d"), bAtPrevPos, bFromKeyboard, bReFillList));
 
-	if(bFromKeyboard == false && GetKeyState(VK_SHIFT) & 0x8000 && CONTROL_PRESSED)
+	if(IsReopenDatabaseRequested(bFromKeyboard))
 	{
-		if(m_pwndPaste)
-		{
-			m_pwndPaste->CloseWindow();
-			m_pwndPaste->DestroyWindow();
-		}
-
-		Log(_T("CloseQPasteWnd called closing qpastewnd from keyboard"));
-
-		m_pwndPaste.reset();
-
-		theApp.m_db.close();
-		OpenDatabase(CGetSetOptions::GetDBPath());
+		CloseWndAndReopenDatabase();
 
 		return;
 	}
 
+	if(ShowPersistentWnd())
+	{
+		return;
+	}
+
+	int nPosition = CGetSetOptions::GetQuickPastePosition();
+
+	CPoint point;
+	CSize csSize;
+
+	if(!m_pwndPaste)
+		m_pwndPaste = std::make_unique<CQPasteWnd>();
+
+	m_pwndPaste->MinMaxWindow(FORCE_MAX);
+
+	GetInitialPointAndSize(point, csSize);
+
+	CPoint ptCaret = CaretOrCenterPoint(csSize, point);
+
+	ChooseWindowPoint(nPosition, bAtPrevPos, ptCaret, point, csSize);
+
+	CRect crRect = CRect(point, csSize);
+
+	bool forceMoveWindow = FixInitialRect(crRect, ptCaret);
+
+	bool adjustRect = CreateWndIfNeeded(pParent, crRect);
+
+	bool moveWindow = ShouldMoveWindow(nPosition, bAtPrevPos, forceMoveWindow);
+
+	//If minimized
+	if (m_pwndPaste->IsIconic())
+	{
+		m_pwndPaste->ShowWindow(SW_RESTORE);
+
+		if (moveWindow)
+		{
+			MoveQPasteWnd(crRect, adjustRect);
+		}
+	}
+	else
+	{
+		if (moveWindow)
+		{
+			MoveQPasteWnd(crRect, adjustRect);
+		}
+
+
+		// Show the window
+		m_pwndPaste->ShowWindow(SW_SHOW);
+	}
+
+	m_pwndPaste->SetKeyModiferState(bFromKeyboard);
+
+	if(bReFillList)
+	{
+		m_pwndPaste->ShowQPasteWindow(bReFillList);
+	}
+	
+	// Refresh scrollbar colors to match current theme
+	m_pwndPaste->RefreshScrollBarColors();
+	
+	m_pwndPaste->SetForegroundWindow();
+
+	Log(StrF(_T("END of ShowQPasteWnd, AtPrevPos: %d, FromKeyboard: %d, RefillList: %d, Position, %d %d %d %d"), bAtPrevPos, bFromKeyboard, bReFillList, crRect.left, crRect.top, crRect.right, crRect.bottom));
+
+	m_forceResizeOnNextShow = false;
+}
+
+bool CQuickPaste::IsReopenDatabaseRequested(bool bFromKeyboard)
+{
+	return (bFromKeyboard == false && GetKeyState(VK_SHIFT) & 0x8000 && CONTROL_PRESSED);
+}
+
+void CQuickPaste::CloseWndAndReopenDatabase()
+{
+	if(m_pwndPaste)
+	{
+		m_pwndPaste->CloseWindow();
+		m_pwndPaste->DestroyWindow();
+	}
+
+	Log(_T("CloseQPasteWnd called closing qpastewnd from keyboard"));
+
+	m_pwndPaste.reset();
+
+	theApp.m_db.close();
+	OpenDatabase(CGetSetOptions::GetDBPath());
+}
+
+bool CQuickPaste::ShowPersistentWnd()
+{
 	if(CGetSetOptions::m_bShowPersistent && m_pwndPaste != nullptr)
 	{
 		m_pwndPaste->ShowWindow(SW_SHOW);
 		m_pwndPaste->MinMaxWindow(FORCE_MAX);
 		m_pwndPaste->SetForegroundWindow();
-		return;
+		return true;
 	}
-	
-	int nPosition = CGetSetOptions::GetQuickPastePosition();
-	
-	CPoint point;
-	CRect rcPrev;
-	CSize csSize;
-	
-	if(!m_pwndPaste)
-		m_pwndPaste = std::make_unique<CQPasteWnd>();
 
-	m_pwndPaste->MinMaxWindow(FORCE_MAX);
-	
+	return false;
+}
+
+void CQuickPaste::GetInitialPointAndSize(CPoint &point, CSize &csSize)
+{
+	CRect rcPrev;
+
 	//If it is a window get the rect otherwise get the saved point and size
 	if (IsWindow(m_pwndPaste->m_hWnd) &&
 		m_pwndPaste->IsIconic() == FALSE &&
@@ -108,15 +184,18 @@ void CQuickPaste::ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboa
 			csSize.cy = m_pwndPaste->m_DittoWindow.m_dpi.Scale(csSize.cy);
 		}
 	}
+}
 
+CPoint CQuickPaste::CaretOrCenterPoint(const CSize &csSize, CPoint &point)
+{
 	CPoint ptCaret = theApp.m_activeWnd.FocusCaret();
 	if(ptCaret.x == -1 || ptCaret.y == -1)
 	{
 		CRect cr;
 		::GetWindowRect(theApp.m_activeWnd.ActiveWnd(), cr);
-		
+
 		if(theApp.m_activeWnd.DesktopHasFocus() == false &&
-			cr.Width() > 0 && 
+			cr.Width() > 0 &&
 			cr.Height() > 0)
 		{
 			ptCaret = cr.CenterPoint();
@@ -136,7 +215,12 @@ void CQuickPaste::ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboa
 			ptCaret.y -= csSize.cy/2;
 		}
 	}
-	
+
+	return ptCaret;
+}
+
+void CQuickPaste::ChooseWindowPoint(int nPosition, bool bAtPrevPos, const CPoint &ptCaret, CPoint &point, CSize &csSize)
+{
 	if(bAtPrevPos)
 	{
 		CGetSetOptions::GetQuickPastePoint(point);
@@ -164,9 +248,10 @@ void CQuickPaste::ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboa
 	}
 	else if(nPosition == POS_AT_PREVIOUS)
 		CGetSetOptions::GetQuickPastePoint(point);
+}
 
-	CRect crRect = CRect(point, csSize);
-
+bool CQuickPaste::FixInitialRect(CRect &crRect, const CPoint &ptCaret)
+{
 	bool forceMoveWindow = m_forceResizeOnNextShow;
 
 	if(CGetSetOptions::m_bEnsureEntireWindowCanBeSeen)
@@ -176,7 +261,7 @@ void CQuickPaste::ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboa
 			forceMoveWindow = true;
 		}
 	}
-	
+
 	if((crRect.left >= (crRect.right - 20)) ||
 		(crRect.top >= (crRect.bottom - 20)))
 	{
@@ -185,8 +270,13 @@ void CQuickPaste::ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboa
 		forceMoveWindow = true;
 
 		Log(StrF(_T("Invalid initial size %d %d %d %d, Centered Window %d %d %d %d"), orig.left, orig.top, orig.right, orig.bottom, crRect.left, crRect.top, crRect.right, crRect.bottom));
-	}	
-	
+	}
+
+	return forceMoveWindow;
+}
+
+bool CQuickPaste::CreateWndIfNeeded(CWnd *pParent, const CRect &crRect)
+{
 	bool adjustRect = false;
 
 	if( !IsWindow(m_pwndPaste->m_hWnd) )
@@ -201,72 +291,33 @@ void CQuickPaste::ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboa
 		VERIFY( m_pwndPaste->Create(crRect, pLocalParent) );
 
 		adjustRect = true;
-	}	
+	}
 
-	//If minimized
-	if (m_pwndPaste->IsIconic())
+	return adjustRect;
+}
+
+bool CQuickPaste::ShouldMoveWindow(int nPosition, bool bAtPrevPos, bool forceMoveWindow)
+{
+	return ((nPosition == POS_AT_CARET) ||
+		(nPosition == POS_AT_CURSOR) ||
+		bAtPrevPos ||
+		forceMoveWindow);
+}
+
+void CQuickPaste::MoveQPasteWnd(CRect &crRect, bool adjustRect)
+{
+	if (adjustRect)
 	{
-		m_pwndPaste->ShowWindow(SW_RESTORE);
+		crRect.right = crRect.left + m_pwndPaste->m_DittoWindow.m_dpi.Scale(crRect.Width());
+		crRect.bottom = crRect.top + m_pwndPaste->m_DittoWindow.m_dpi.Scale(crRect.Height());
 
-		if ((nPosition == POS_AT_CARET) ||
-			(nPosition == POS_AT_CURSOR) ||
-			bAtPrevPos ||
-			forceMoveWindow)
+		if (CGetSetOptions::m_bEnsureEntireWindowCanBeSeen)
 		{
-			if (adjustRect)
-			{
-				crRect.right = crRect.left + m_pwndPaste->m_DittoWindow.m_dpi.Scale(crRect.Width());
-				crRect.bottom = crRect.top + m_pwndPaste->m_DittoWindow.m_dpi.Scale(crRect.Height());
-
-				if (CGetSetOptions::m_bEnsureEntireWindowCanBeSeen)
-				{
-					EnsureWindowVisible(&crRect);
-				}
-			}
-
-			m_pwndPaste->MoveWindow(crRect);
+			EnsureWindowVisible(&crRect);
 		}
 	}
-	else
-	{
-		if ((nPosition == POS_AT_CARET) ||
-			(nPosition == POS_AT_CURSOR) ||
-			bAtPrevPos ||
-			forceMoveWindow)
-		{
-			if (adjustRect)
-			{
-				crRect.right = crRect.left + m_pwndPaste->m_DittoWindow.m_dpi.Scale(crRect.Width());
-				crRect.bottom = crRect.top + m_pwndPaste->m_DittoWindow.m_dpi.Scale(crRect.Height());
 
-				if (CGetSetOptions::m_bEnsureEntireWindowCanBeSeen)
-				{
-					EnsureWindowVisible(&crRect);
-				}
-			}
-			m_pwndPaste->MoveWindow(crRect);
-		}
-
-
-		// Show the window
-		m_pwndPaste->ShowWindow(SW_SHOW);
-	}	
-
-	m_pwndPaste->SetKeyModiferState(bFromKeyboard);	
-
-	if(bReFillList)
-	{
-		m_pwndPaste->ShowQPasteWindow(bReFillList);
-	}
-	
-	// Refresh scrollbar colors to match current theme
-	m_pwndPaste->RefreshScrollBarColors();
-	
-	m_pwndPaste->SetForegroundWindow();
-
-	Log(StrF(_T("END of ShowQPasteWnd, AtPrevPos: %d, FromKeyboard: %d, RefillList: %d, Position, %d %d %d %d"), bAtPrevPos, bFromKeyboard, bReFillList, crRect.left, crRect.top, crRect.right, crRect.bottom));
-
-	m_forceResizeOnNextShow = false;
+	m_pwndPaste->MoveWindow(crRect);
 }
 
 void CQuickPaste::MoveSelection(bool down)

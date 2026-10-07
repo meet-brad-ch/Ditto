@@ -140,13 +140,8 @@ BOOL COptionsQuickPaste::OnApply()
 	CGetSetOptions::SetTransparencyPercent(m_eTransparencyPercent.GetNumber());
 	CGetSetOptions::SetLinesPerRow(m_eLinesPerRow.GetNumber());
 	CGetSetOptions::SetShowScrollBar(m_alwaysShowScrollBar.GetCheck());
-	
-	if(IsDlgButtonChecked(IDC_AT_CARET))
-		CGetSetOptions::SetQuickPastePosition(POS_AT_CARET);
-	else if(IsDlgButtonChecked(IDC_AT_CURSOR))
-		CGetSetOptions::SetQuickPastePosition(POS_AT_CURSOR);
-	else if(IsDlgButtonChecked(IDC_AT_PREVIOUS))
-		CGetSetOptions::SetQuickPastePosition(POS_AT_PREVIOUS);
+
+	ApplyQuickPastePosition();
 
 	CGetSetOptions::SetDescShowLeadingWhiteSpace(m_btDescShowLeadingWhiteSpace.GetCheck());
 	CGetSetOptions::SetShowTextForFirstTenHotKeys(m_btShowText.GetCheck());
@@ -170,6 +165,32 @@ BOOL COptionsQuickPaste::OnApply()
 		CGetSetOptions::SetFont(m_LogFont);
 	}
 
+	ApplyTheme();
+
+	CString diffPath;
+	m_diffPathEditBox.GetWindowText(diffPath);
+	CGetSetOptions::SetDiffApp(diffPath);
+
+	if (IsDlgButtonChecked(IDC_CHECK_SHOW_CLIP_WAS_PASTED))
+		CGetSetOptions::SetShowIfClipWasPasted(TRUE);
+	else
+		CGetSetOptions::SetShowIfClipWasPasted(FALSE);
+
+	return CPropertyPage::OnApply();
+}
+
+void COptionsQuickPaste::ApplyQuickPastePosition()
+{
+	if(IsDlgButtonChecked(IDC_AT_CARET))
+		CGetSetOptions::SetQuickPastePosition(POS_AT_CARET);
+	else if(IsDlgButtonChecked(IDC_AT_CURSOR))
+		CGetSetOptions::SetQuickPastePosition(POS_AT_CURSOR);
+	else if(IsDlgButtonChecked(IDC_AT_PREVIOUS))
+		CGetSetOptions::SetQuickPastePosition(POS_AT_PREVIOUS);
+}
+
+void COptionsQuickPaste::ApplyTheme()
+{
 	CString currentTheme = CGetSetOptions::GetTheme();
 
 	CString csTheme;
@@ -193,17 +214,6 @@ BOOL COptionsQuickPaste::OnApply()
 	{
 		m_pParent->m_themeChanged = TRUE;
 	}
-
-	CString diffPath;
-	m_diffPathEditBox.GetWindowText(diffPath);
-	CGetSetOptions::SetDiffApp(diffPath);
-
-	if (IsDlgButtonChecked(IDC_CHECK_SHOW_CLIP_WAS_PASTED))
-		CGetSetOptions::SetShowIfClipWasPasted(TRUE);
-	else
-		CGetSetOptions::SetShowIfClipWasPasted(FALSE);
-	
-	return CPropertyPage::OnApply();
 }
 
 void COptionsQuickPaste::OnButtonFont() 

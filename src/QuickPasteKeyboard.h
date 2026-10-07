@@ -1,6 +1,7 @@
 #pragma once
 #include "afxcmn.h"
 #include "afxwin.h"
+#include <array>
 
 
 // CQuickPasteKeyboard dialog
@@ -57,6 +58,44 @@ protected:
 	int SelectedCommandRow();
 	void SelectMouseTypeCombo(CComboBox &combo, int value);
 	void SelectedRow(int row);
+
+	/** @brief The keys that get the extended key flag when a shortcut is loaded into a hot key control. */
+	static const std::array<BYTE, 12> s_extendedKeys;
+
+	/** @brief A key with the extended key flag added when it is one of s_extendedKeys.
+	@param key the key (virtual key in the low byte, modifiers in the high byte).
+	@return the key, with HOTKEYF_EXT for an extended key. */
+	static int WithExtendedKeyFlag(int key);
+	/** @brief Is a key one of the mouse "keys" (click, double click, right click, middle click)?
+	@param key the key (virtual key in the low byte).
+	@return true for a mouse key. */
+	static bool IsMouseKey(int key);
+	/** @brief Shows the first press of a shortcut in the mouse or keyboard controls.
+	@param a the first press key. */
+	void LoadFirstPress(int a);
+	/** @brief Shows the second press of a shortcut in the mouse or keyboard controls.
+	@param b the second press key. */
+	void LoadSecondPress(int b);
+	/** @brief Checks the shift, control and alt check boxes of a modifier byte.
+	@param mod the HOTKEYF_* modifiers.
+	@param shiftId the shift check box.
+	@param controlId the control check box.
+	@param altId the alt check box. */
+	void CheckModifierButtons(BYTE mod, int shiftId, int controlId, int altId);
+	/** @brief Hides the controls of the second press. */
+	void HideSecondPressControls();
+	/** @brief Reads the first press from the keyboard or mouse controls into a shortcut.
+	@param ab the shortcut; A is set when the keyboard or mouse radio is checked. */
+	void ReadFirstPress(KeyboardAB &ab);
+	/** @brief Reads the second press from the keyboard or mouse controls into a shortcut (0 when disabled).
+	@param ab the shortcut; B is set. */
+	void ReadSecondPress(KeyboardAB &ab);
+	/** @brief The HOTKEYF_* modifiers of the checked shift, control and alt check boxes.
+	@param shiftId the shift check box.
+	@param controlId the control check box.
+	@param altId the alt check box.
+	@return the modifiers. */
+	WORD CheckedModifiers(int shiftId, int controlId, int altId);
 
 public:
 	afx_msg void OnLvnItemActivateList1(NMHDR *pNMHDR, LRESULT *pResult);

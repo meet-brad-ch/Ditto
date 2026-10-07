@@ -20,6 +20,9 @@
 #include "SymbolEdit.h"
 #include "Popup.h"
 #include "ModernScrollBar.h"
+#include "ActionEnums.h"
+#include <array>
+#include <span>
 
 class CMainTable
 {
@@ -587,4 +590,321 @@ public:
 private:
 	// OnGetToolTipText's clip text: the clip's lines, each ended with "\r\n", up to the max tool tip lines
 	static CString ToolTipClipLines(const CString& clipText);
+
+	/** @brief One action that DoAction runs through a member function without arguments. */
+	struct ActionHandler
+	{
+		/** @brief The action this entry handles. */
+		ActionEnums::ActionEnumValues action{};
+		/** @brief The member function that runs the action. */
+		bool (CQPasteWnd::*handler)() = nullptr;
+		/** @brief true: DoAction returns the handler's result; false: DoAction ignores it and returns false. */
+		bool returnsResult{};
+	};
+
+	/** @brief One paste-by-position action: DoAction runs OpenIndex(index, plainText). */
+	struct PastePositionAction
+	{
+		/** @brief The action this entry handles. */
+		ActionEnums::ActionEnumValues action{};
+		/** @brief The list row to paste. */
+		int index{};
+		/** @brief true: paste the clip as plain text only. */
+		bool plainText{};
+	};
+
+	/** @brief One fixed transparency action: DoAction runs SetTransparency(percent) and returns false. */
+	struct TransparencyAction
+	{
+		/** @brief The action this entry handles. */
+		ActionEnums::ActionEnumValues action{};
+		/** @brief The transparency in percent. */
+		int percent{};
+	};
+
+	/** @brief A menu item that SetMenuChecks checks when an option has the given value. */
+	struct MenuValueCheck
+	{
+		/** @brief The option value. */
+		long value{};
+		/** @brief The menu command ID to check. */
+		UINT menuId{};
+	};
+
+	/** @brief The order, paste date and description of a clip as OnReloadClipInUI reads them from the database. */
+	struct ReloadedClip
+	{
+		/** @brief The clip order in the main list. */
+		double order{};
+		/** @brief The clip order in its group. */
+		double orderGroup{};
+		/** @brief The last paste date. */
+		__int64 lastPasted{};
+		/** @brief The clip description (mText). */
+		CString description{};
+	};
+
+	/** @brief The parts of the list queries that FillList builds. */
+	struct FillListQuery
+	{
+		/** @brief The WHERE condition. */
+		CString filter{};
+		/** @brief The group condition (Main.lParentID = n), empty outside a group. */
+		CString parentFilter{};
+		/** @brief The ORDER BY columns. */
+		CString sort{};
+		/** @brief The JOIN of the Data table for a full text search, else empty. */
+		CString dataJoin{};
+		/** @brief "DISTINCT" when the Data join can return a clip more than once, else empty. */
+		CString isDistinct{};
+	};
+
+	/** @brief The chosen export file name in parts, and the next number to try for numbered file names. */
+	struct ExportFileNames
+	{
+		/** @brief The full path the user chose. */
+		CString startingFilePath{};
+		/** @brief The folder of the chosen path. */
+		CString path{};
+		/** @brief The file name without extension. */
+		CString fileName{};
+		/** @brief The file extension. */
+		CString ext{};
+		/** @brief The next number to try for a numbered file name. */
+		int lastFileCheckId{ 1 };
+	};
+
+	/** @brief The sort key of the clip that OnMenuGoToEntry goes to. */
+	struct GoToEntryKey
+	{
+		/** @brief The clip's stickyClipOrder. */
+		int sticky{ 0 };
+		/** @brief The clip's bIsGroup. */
+		int isGroup{ 0 };
+		/** @brief The clip's clipOrder. */
+		int clipOrder{ 0 };
+		/** @brief The clip's parent group ID. */
+		long parent{ -1 };
+	};
+
+	/** @brief The actions DoAction runs through a member function without arguments. */
+	static const std::array<ActionHandler, 88> s_actionHandlers;
+	/** @brief The paste-by-position actions of DoAction. */
+	static const std::array<PastePositionAction, 20> s_pastePositionActions;
+	/** @brief The fixed transparency actions of DoAction. */
+	static const std::array<TransparencyAction, 9> s_transparencyActions;
+	/** @brief Transparency percent -> menu item. */
+	static const std::array<MenuValueCheck, 8> s_transparencyMenuChecks;
+	/** @brief Lines per row -> menu item. */
+	static const std::array<MenuValueCheck, 5> s_linesPerRowMenuChecks;
+	/** @brief Quick paste position -> menu item. */
+	static const std::array<MenuValueCheck, 3> s_positionMenuChecks;
+	/** @brief Caption position -> menu item. */
+	static const std::array<MenuValueCheck, 4> s_captionPosMenuChecks;
+	/** @brief Double click on caption setting -> menu item. */
+	static const std::array<MenuValueCheck, 3> s_doubleClickCaptionMenuChecks;
+
+	/** @brief Runs one entry of s_actionHandlers.
+	@param entry the table entry.
+	@return the handler's result, or false when the entry ignores it. */
+	bool RunActionHandler(const ActionHandler &entry);
+	/** @brief The MAKE_TOP_STICKY action: OnMakeTopSticky(false).
+	@return the result of OnMakeTopSticky. */
+	bool DoActionMakeTopSticky();
+	/** @brief The SHOW_STARRED_CLIPS action: toggles the starred clips view.
+	@return true. */
+	bool DoActionShowStarredClips();
+
+	/** @brief Adds the configured shortcuts of one user configurable action.
+	@param action the action. */
+	void LoadActionShortcuts(ActionEnums::ActionEnumValues action);
+	/** @brief Adds one configured shortcut of an action to the action and tool tip accelerators.
+	@param action the action.
+	@param a the first key.
+	@param b the second key. */
+	void AddActionShortcut(ActionEnums::ActionEnumValues action, int a, int b);
+	/** @brief The modifier of the shift variation of a key: shift, or none when the key already has shift.
+	@param a the key.
+	@return HOTKEYF_SHIFT or 0. */
+	static int ShiftVariationModifier(int a);
+
+	/** @brief Shows and places, or hides, the group name and back button.
+	@param cx the client width.
+	@return the top of the list box. */
+	int MoveGroupHeader(int cx);
+	/** @brief Updates, shows or hides the modern scroll bars by the options. */
+	void UpdateModernScrollBars();
+
+	/** @brief Is a window the list's tool tip window?
+	@param pWndOther the window.
+	@return true for the tool tip window. */
+	bool IsListToolTipWnd(CWnd* pWndOther);
+	/** @brief OnActivate's work when the window becomes inactive. */
+	void OnDeactivateWindow();
+	/** @brief OnActivate's work when the window becomes active.
+	@param bMinimized the window is minimized. */
+	void OnActivateWindow(BOOL bMinimized);
+	/** @brief Must the list be filled again on activation (empty list, or a newer database on a network share)?
+	@return TRUE to fill the list. */
+	BOOL NeedsFillListOnActivate();
+
+	/** @brief HideQPasteWindow's default for clearSearchData.
+	@return FALSE when a search view is kept, else TRUE. */
+	BOOL DefaultClearSearchData();
+	/** @brief Minimizes the window when it shows in the task bar, else hides it. */
+	void HideOrMinimizeWindow();
+	/** @brief Clears the search text and, when needed, the list, on hiding the window. */
+	void ClearSearchOnHide();
+	/** @brief Goes back to the top level group or to the old group state on hiding the window. */
+	void RestoreGroupOnHide();
+
+	/** @brief Applies the reloaded fields of a clip to its list item.
+	@param item the list item of the clip.
+	@param reloaded the fields read from the database.
+	@param updateFlags the UPDATE_* flags.
+	@param clipId the clip ID.
+	@return TRUE when the item was updated. */
+	BOOL ApplyReloadedClip(CMainTable &item, const ReloadedClip &reloaded, int updateFlags, int clipId);
+
+	/** @brief Sets the filter and sort of the list for the starred view, the main list or a group.
+	@param query the query parts to set.
+	@param strStarredFilter the starred clips condition. */
+	void SetGroupFilter(FillListQuery &query, const CString &strStarredFilter);
+	/** @brief The main list condition by the options.
+	@return the condition. */
+	static CString MainListFilter();
+	/** @brief Sets the filter of the list for a search text.
+	@param csSQLSearch the search text; a /q or /f prefix is removed.
+	@param query the query parts to set.
+	@param strStarredFilter the starred clips condition. */
+	void SetSearchFilter(CString &csSQLSearch, FillListQuery &query, const CString &strStarredFilter);
+	/** @brief The description search condition.
+	@param csSQLSearch the search text.
+	@return the condition, or empty when the description is not searched. */
+	static CString SearchDescriptionSql(const CString &csSQLSearch);
+	/** @brief The quick paste text search condition.
+	@param csSQLSearch the search text; a /q prefix is removed.
+	@return the condition, or empty when the quick paste text is not searched. */
+	static CString SearchQuickPasteSql(CString &csSQLSearch);
+	/** @brief The full text search condition; sets the Data join and DISTINCT.
+	@param csSQLSearch the search text; a /f prefix is removed.
+	@param descriptionSql the description condition.
+	@param quickPasteSql the quick paste text condition.
+	@param query the query parts to set.
+	@return the condition, or empty when the full text is not searched. */
+	static CString SearchFullTextSql(CString &csSQLSearch, const CString &descriptionSql, const CString &quickPasteSql, FillListQuery &query);
+	/** @brief Joins the search conditions with OR, in parentheses.
+	@param descriptionSql the description condition.
+	@param quickPasteSql the quick paste text condition.
+	@param fullTextSql the full text condition.
+	@return the joined condition. */
+	static CString JoinSearchSql(const CString &descriptionSql, const CString &quickPasteSql, const CString &fullTextSql);
+
+	/** @brief Checks a menu item when a condition holds.
+	@param pMenu the menu.
+	@param condition the condition.
+	@param menuId the menu command ID. */
+	static void CheckMenuItemIf(CMenu* pMenu, BOOL condition, UINT menuId);
+	/** @brief Checks the menu item of the table entry with the given value, if there is one.
+	@param pMenu the menu.
+	@param checks the value -> menu item table.
+	@param value the option value. */
+	static void CheckMenuItemForValue(CMenu* pMenu, std::span<const MenuValueCheck> checks, long value);
+
+	/** @brief Runs the action of the middle mouse button. */
+	void CheckMiddleClickActions();
+	/** @brief Tracks the active window on mouse moves over the inactive always-on-top window. */
+	void TrackNonActiveMouseMove();
+	/** @brief Runs the action of a key message, or starts a search with a character typed in the list.
+	@param pMsg the message.
+	@return true when the message was handled. */
+	bool PreTranslateActionOrChar(MSG* pMsg);
+	/** @brief Moves the focus to the search box and adds a character to the search.
+	@param ch the character. */
+	void StartSearchWithChar(TCHAR ch);
+
+	/** @brief The list row of a clip.
+	@param id the clip ID.
+	@param notFoundRow the result when the clip is not in the list.
+	@return the row, or notFoundRow. */
+	int FindListRow(int id, int notFoundRow);
+	/** @brief Removes the list item of a clip.
+	@param id the clip ID. */
+	void EraseListItem(int id);
+	/** @brief Saves the file data of a clip with CF_HDROP data and reloads its list item.
+	@param row the list row.
+	@param id the clip ID.
+	@param errorMessage the errors, added to. */
+	void SaveClipFileData(int row, int id, CString &errorMessage);
+
+	/** @brief The file path for the next exported clip: the chosen path, or the next free numbered path.
+	@param names the chosen file name; its next number is advanced.
+	@param clipCount the number of clips to export.
+	@return the path, or empty when no free path was found. */
+	static CString NextExportFilePath(ExportFileNames &names, INT_PTR clipCount);
+	/** @brief Has a clip a bitmap or PNG format to export?
+	@param toSave the clip, with its formats loaded.
+	@return true when it has one. */
+	static bool HasExportImage(CClip &toSave);
+
+	/** @brief GetDispInfo's text of a row, or queues the row to load.
+	@param pItem the list item. */
+	void GetDispInfoText(LV_ITEM* pItem);
+	/** @brief The list text of a clip: its symbol tags, "|" and its display text.
+	@param item the list item.
+	@return the text. */
+	static CString ListItemDisplayText(const CMainTable &item);
+	/** @brief Is a clip sticky in the current view (group or main list)?
+	@param item the list item.
+	@return true when sticky. */
+	static bool IsListItemSticky(const CMainTable &item);
+	/** @brief Queues a list row to load, unless a queued range has it, and starts the load.
+	@param item the list row. */
+	void QueueListItemLoad(int item);
+	/** @brief GetDispInfo's item data (clip ID) of a row.
+	@param pItem the list item. */
+	void GetDispInfoParam(LV_ITEM* pItem);
+	/** @brief GetDispInfo's cached image or rich text of a row, or queues it to load.
+	@param pItem the list item.
+	@param cfType the clip format.
+	@param noFormatCache the rows known not to have the format.
+	@param formatCache the loaded formats. */
+	void GetDispInfoExtraFormat(LV_ITEM* pItem, CLIPFORMAT cfType, CF_NoDibTypeMap &noFormatCache, CF_DibTypeMap &formatCache);
+	/** @brief Queues a format of a list row to load, unless it is queued, and starts the load.
+	@param row the list row.
+	@param cfType the clip format. */
+	void QueueExtraDataLoad(int row, CLIPFORMAT cfType);
+
+	/** @brief Adds the clip details (ID, dates, flags, shortcut, sticky, group) to the tool tip.
+	@param q the clip's query row.
+	@param clipData the tool tip details, added to. */
+	static void AppendToolTipClipDetails(CppSQLite3Query &q, CString &clipData);
+	/** @brief Adds the clip's shortcut to the tool tip.
+	@param q the clip's query row.
+	@param clipData the tool tip details, added to. */
+	static void AppendToolTipShortCut(CppSQLite3Query &q, CString &clipData);
+	/** @brief Adds the clip's sticky state to the tool tip.
+	@param q the clip's query row.
+	@param clipData the tool tip details, added to. */
+	static void AppendToolTipSticky(CppSQLite3Query &q, CString &clipData);
+
+	/** @brief The search timer: fills the list with the search text. */
+	void OnDoSearchTimer();
+	/** @brief The paste-from-modifier timer: pastes the selection while the modifiers are active. */
+	void OnPasteFromModifierTimer();
+	/** @brief The drag timer: hides the window when the mouse left it. */
+	void OnDragHideWindowTimer();
+
+	/** @brief Reads the sort key of a clip.
+	@param targetID the clip ID.
+	@param key the sort key to set.
+	@return true when the clip was found. */
+	static bool LoadGoToEntryKey(long targetID, GoToEntryKey &key);
+	/** @brief The row of a clip in the main list.
+	@param filter the main list condition.
+	@param key the clip's sort key.
+	@return the row, or -1 on a database error. */
+	static int GoToEntryRank(const CString &filter, const GoToEntryKey &key);
+	/** @brief Waits up to 5 s for the list load, pumping messages. */
+	void WaitForListLoad();
 };

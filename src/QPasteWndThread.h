@@ -2,6 +2,10 @@
 #include "EventThread.h"
 #include "sqlite/CppSQLite3.h"
 
+class CQPasteWnd;
+class CMainTable;
+class CClipFormatQListCtrl;
+
 class CQPasteWndThread: public CEventThread
 {
 public:
@@ -59,6 +63,61 @@ protected:
     void OnUnloadAccelerators(void *param);
 
 	CString EnumName(eCQPasteWndThreadEvents e);
+
+	/** @brief The first queued range of list rows to load, as OnLoadItems takes it. */
+	struct LoadItemsRequest
+	{
+		/** @brief The first row to load. */
+		int index{ 0 };
+		/** @brief The number of rows to load. */
+		int count{ 0 };
+		/** @brief true for the first load after a fill (the range starts at -1). */
+		bool firstLoad{ false };
+		/** @brief The list size when the range was taken (for the log). */
+		size_t listSize{ 0 };
+		/** @brief true when a range was queued (and must be removed after the load). */
+		bool clearFirstLoadItem{ false };
+	};
+
+	/** @brief Takes the first queued range of rows to load, if there is one, and clears the stop flag.
+	@param pasteWnd the paste window.
+	@param request the range to set. */
+	void TakeLoadItemsRequest(CQPasteWnd *pasteWnd, LoadItemsRequest &request);
+	/** @brief Loads the rows of a range into the list.
+	@param pasteWnd the paste window.
+	@param localSql the list query with LIMIT and OFFSET.
+	@param request the range.
+	@return the number of rows loaded.
+	@throws CppSQLite3Exception on a database error. */
+	int LoadItemRows(CQPasteWnd *pasteWnd, const CString &localSql, const LoadItemsRequest &request);
+	/** @brief Stores a loaded row in the list at a position, adding empty rows before it when needed.
+	@param pasteWnd the paste window.
+	@param table the loaded row.
+	@param pos the list position.
+	@return the list index of the row, or -1. */
+	int StoreLoadedItem(CQPasteWnd *pasteWnd, const CMainTable &table, int pos);
+
+	/** @brief Is a queued format neither cached nor known to be missing?
+	@param pasteWnd the paste window.
+	@param format the queued format.
+	@return true when it must be loaded. */
+	bool NeedsExtraDataLoad(CQPasteWnd *pasteWnd, const CClipFormatQListCtrl &format);
+	/** @brief Loads a queued format and caches it, or records that the clip does not have it.
+	@param pasteWnd the paste window.
+	@param format the queued format. */
+	void LoadExtraDataFormat(CQPasteWnd *pasteWnd, CClipFormatQListCtrl &format);
+	/** @brief Reads the data of a format; a missing bitmap falls back to PNG.
+	@param format the format; its type changes to PNG on the fallback.
+	@return TRUE when the data was found. */
+	BOOL GetExtraClipData(CClipFormatQListCtrl &format);
+	/** @brief Puts a loaded image (scaled to the row height) or rich text format in its cache.
+	@param pasteWnd the paste window.
+	@param format the loaded format. */
+	void CacheExtraData(CQPasteWnd *pasteWnd, CClipFormatQListCtrl &format);
+	/** @brief Records that a clip does not have an image or rich text format.
+	@param pasteWnd the paste window.
+	@param format the format that was not found. */
+	void MarkNoExtraData(CQPasteWnd *pasteWnd, const CClipFormatQListCtrl &format);
 
 	int m_rowHeight;
 
