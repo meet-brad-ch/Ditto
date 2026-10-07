@@ -9,6 +9,8 @@
       <PreprocessorDefinitions>_WIN32_WINNT=0x0A00;WINVER=0x0A00;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <ControlFlowGuard>Guard</ControlFlowGuard>
+      <!-- /ZI (Edit and Continue) cannot be combined with /guard:cf: use a plain program database -->
+      <DebugInformationFormat Condition="'%(ClCompile.DebugInformationFormat)' == 'EditAndContinue'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
   </ItemDefinitionGroup>
   <Target Name="DittoRequireVcpkg" BeforeTargets="PrepareForBuild">
