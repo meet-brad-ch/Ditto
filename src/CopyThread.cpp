@@ -86,27 +86,7 @@ void CCopyThread::OnClipboardChange(CString activeWindow)
 	int bResult = FALSE;
 	try
 	{
-		Log(_T("LoadFromClipboard - Before"));
-		bResult = pClip->LoadFromClipboard(pSupportedTypes, CGetSetOptions::m_regexHelper, true, activeWindow);
-		Log(_T("LoadFromClipboard - After"));
-
-		if(bResult == FALSE)
-		{
-			DWORD delay = CGetSetOptions::GetNoFormatsRetryDelay();
-			if(delay > 0)
-			{
-				Log(StrF(_T("LoadFromClipboard didn't find any clips to save, sleeping %dms, then trying again"), delay));
-				Sleep(delay);
-
-				Log(_T("LoadFromClipboard #2 - Before"));
-				bResult = pClip->LoadFromClipboard(pSupportedTypes, CGetSetOptions::m_regexHelper, true, activeWindow);
-				Log(_T("LoadFromClipboard #2 - After"));
-			}
-			else
-			{
-				Log(_T("LoadFromClipboard didn't find any clips to save, retry setting is not set, not retrying"));
-			}
-		}
+		bResult = LoadClipWithRetry(*pClip, pSupportedTypes, activeWindow);
 	}
 	catch(const DittoCore::ClipboardFormatError& error)
 	{
@@ -128,6 +108,40 @@ void CCopyThread::OnClipboardChange(CString activeWindow)
 		pClip->m_parentId = groupId;
 	}
 
+	HandOverClip(pClip);
+
+	Log(_T("OnClipboardChange - End"));
+}
+
+int CCopyThread::LoadClipWithRetry(CClip& clip, CClipTypes* pSupportedTypes, const CString& activeWindow)
+{
+	Log(_T("LoadFromClipboard - Before"));
+	int bResult = clip.LoadFromClipboard(pSupportedTypes, CGetSetOptions::m_regexHelper, true, activeWindow);
+	Log(_T("LoadFromClipboard - After"));
+
+	if(bResult == FALSE)
+	{
+		DWORD delay = CGetSetOptions::GetNoFormatsRetryDelay();
+		if(delay > 0)
+		{
+			Log(StrF(_T("LoadFromClipboard didn't find any clips to save, sleeping %dms, then trying again"), delay));
+			Sleep(delay);
+
+			Log(_T("LoadFromClipboard #2 - Before"));
+			bResult = clip.LoadFromClipboard(pSupportedTypes, CGetSetOptions::m_regexHelper, true, activeWindow);
+			Log(_T("LoadFromClipboard #2 - After"));
+		}
+		else
+		{
+			Log(_T("LoadFromClipboard didn't find any clips to save, retry setting is not set, not retrying"));
+		}
+	}
+
+	return bResult;
+}
+
+void CCopyThread::HandOverClip(std::unique_ptr<CClip>& pClip)
+{
 	// the WM_CLIPBOARD_COPIED handler takes ownership of the clip
 	if(m_LocalConfig.m_bAsyncCopy)
 	{
@@ -144,8 +158,6 @@ void CCopyThread::OnClipboardChange(CString activeWindow)
 	{
 		::SendMessage(m_LocalConfig.m_hClipHandler, WM_CLIPBOARD_COPIED, reinterpret_cast<WPARAM>(pClip.release()), 0); // ownership: CMainFrame::OnClipboardCopied retakes it in a std::unique_ptr
 	}
-
-	Log(_T("OnClipboardChange - End"));
 }
 
 void CCopyThread::SyncConfig()

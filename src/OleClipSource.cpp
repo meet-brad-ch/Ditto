@@ -99,22 +99,7 @@ BOOL COleClipSource::DoImmediateRender()
 
 	if(count > 1)
 	{
-		if (m_pasteOptions.m_pasteImagesHorizontal ||
-			m_pasteOptions.m_pasteImagesVertically)
-		{
-			CImageFormatAggregator bigImage(m_pasteOptions.m_pasteImagesHorizontal);
-			if (m_ClipIDs.AggregateData(bigImage, CF_DIB, CGetSetOptions::m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
-			{
-				CClipFormat cf(CF_DIB, bigImage.GetHGlobal());
-				clip.m_Formats.Add(cf);
-				//clip.m_Formats now owns the global data
-				cf.m_autoDeleteData = false;
-			}
-		}
-		else
-		{
-			AggregateTextFormats(clip);
-		}
+		AggregateClips(clip);
 	}
 
 	if (count >= 1 && clip.m_Formats.GetCount() == 0)
@@ -127,84 +112,102 @@ BOOL COleClipSource::DoImmediateRender()
 		PlainTextFilter(clip);
 	}
 
-	if(m_pasteOptions.m_pasteUpperCase ||
-		m_pasteOptions.m_pasteLowerCase)
+	if (!ApplySpecialPaste(clip))
 	{
-		DoUpperLowerCase(clip, m_pasteOptions.m_pasteUpperCase);
-	}
-	else if(m_pasteOptions.m_pasteCapitalize)
-	{
-		Capitalize(clip);
-	}
-	else if(m_pasteOptions.m_pasteSentenceCase)
-	{
-		SentenceCase(clip);
-	}
-	else if(m_pasteOptions.m_pasteRemoveLineFeeds)
-	{
-		RemoveLineFeeds(clip);
-	}
-	else if(m_pasteOptions.m_pasteAddOneLineFeed)
-	{
-		AddLineFeeds(clip, 1);
-	}
-	else if (m_pasteOptions.m_pasteAddTwoLineFeeds)
-	{
-		AddLineFeeds(clip, 2);
-	}
-	else if (m_pasteOptions.m_pasteTypoglycemia)
-	{
-		Typoglycemia(clip);
-	}
-	else if (m_pasteOptions.m_pasteAddingDateTime)
-	{
-		AddDateTime(clip);
-	}
-	else if (m_pasteOptions.m_trimWhiteSpace)
-	{
-		TrimWhiteSpace(clip);
-	}
-	else if (m_pasteOptions.m_PosixifyPaths)
-	{
-		PosixifyPaths(clip);
-	}
-	else if (m_pasteOptions.m_pasteSlugify)
-	{
-		Slugify(clip);
-	}
-	else if (m_pasteOptions.m_invertCase)
-	{
-		InvertCase(clip);
-	}
-	else if (m_pasteOptions.m_pasteCamelCase)
-	{
-		CamelCase(clip);
-	}
-	else if (m_pasteOptions.m_pasteAsciiOnly)
-	{
-		AsciiOnly(clip);
-	}
-	else if (m_pasteOptions.m_pasteGuid)
-	{
-		try
-		{
-			PutGuidOntoClipboard(clip);
-		}
-		catch (const std::runtime_error& e)
-		{
-			// NewGuidString() throws it when CoCreateGuid fails; the paste stops
-			CErrorReport::Show(StrF(_T("Pasting a new GUID failed: %s"), CString(e.what()).GetString()));
-			return FALSE;
-		}
-	}
-	else if (m_pasteOptions.m_pasteAsImage)
-	{
-		PasteAsImage(clip);
+		return FALSE;
 	}
 
 	SaveDittoFileDataToFile(clip);
 
 	return PutFormatOnClipboard(&clip.m_Formats) > 0;
+}
+
+void COleClipSource::AggregateClips(CClip& clip)
+{
+	if (m_pasteOptions.m_pasteImagesHorizontal ||
+		m_pasteOptions.m_pasteImagesVertically)
+	{
+		CImageFormatAggregator bigImage(m_pasteOptions.m_pasteImagesHorizontal);
+		if (m_ClipIDs.AggregateData(bigImage, CF_DIB, CGetSetOptions::m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
+		{
+			CClipFormat cf(CF_DIB, bigImage.GetHGlobal());
+			clip.m_Formats.Add(cf);
+			//clip.m_Formats now owns the global data
+			cf.m_autoDeleteData = false;
+		}
+	}
+	else
+	{
+		AggregateTextFormats(clip);
+	}
+}
+
+// upper and lower case share one transform, which picks upper when m_pasteUpperCase is set
+const std::array<COleClipSource::SpecialPaste, 17> COleClipSource::s_specialPastes{ {
+	{ &CSpecialPasteOptions::m_pasteUpperCase, &COleClipSource::ApplyUpperLowerCase, nullptr },
+	{ &CSpecialPasteOptions::m_pasteLowerCase, &COleClipSource::ApplyUpperLowerCase, nullptr },
+	{ &CSpecialPasteOptions::m_pasteCapitalize, &COleClipSource::Capitalize, nullptr },
+	{ &CSpecialPasteOptions::m_pasteSentenceCase, &COleClipSource::SentenceCase, nullptr },
+	{ &CSpecialPasteOptions::m_pasteRemoveLineFeeds, &COleClipSource::RemoveLineFeeds, nullptr },
+	{ &CSpecialPasteOptions::m_pasteAddOneLineFeed, &COleClipSource::AddOneLineFeed, nullptr },
+	{ &CSpecialPasteOptions::m_pasteAddTwoLineFeeds, &COleClipSource::AddTwoLineFeeds, nullptr },
+	{ &CSpecialPasteOptions::m_pasteTypoglycemia, &COleClipSource::Typoglycemia, nullptr },
+	{ &CSpecialPasteOptions::m_pasteAddingDateTime, &COleClipSource::AddDateTime, nullptr },
+	{ &CSpecialPasteOptions::m_trimWhiteSpace, &COleClipSource::TrimWhiteSpace, nullptr },
+	{ &CSpecialPasteOptions::m_PosixifyPaths, &COleClipSource::PosixifyPaths, nullptr },
+	{ &CSpecialPasteOptions::m_pasteSlugify, &COleClipSource::Slugify, nullptr },
+	{ &CSpecialPasteOptions::m_invertCase, &COleClipSource::InvertCase, nullptr },
+	{ &CSpecialPasteOptions::m_pasteCamelCase, &COleClipSource::CamelCase, nullptr },
+	{ &CSpecialPasteOptions::m_pasteAsciiOnly, &COleClipSource::AsciiOnly, nullptr },
+	{ &CSpecialPasteOptions::m_pasteGuid, nullptr, &COleClipSource::PutGuidOntoClipboardOrReport },
+	{ &CSpecialPasteOptions::m_pasteAsImage, &COleClipSource::PasteAsImage, nullptr },
+} };
+
+bool COleClipSource::ApplySpecialPaste(CClip& clip)
+{
+	for (const SpecialPaste& paste : s_specialPastes)
+	{
+		if (m_pasteOptions.*paste.option)
+		{
+			if (paste.applyChecked != nullptr)
+			{
+				return (this->*paste.applyChecked)(clip);
+			}
+			(this->*paste.apply)(clip);
+			return true;
+		}
+	}
+	return true;
+}
+
+void COleClipSource::ApplyUpperLowerCase(CClip& clip)
+{
+	DoUpperLowerCase(clip, m_pasteOptions.m_pasteUpperCase);
+}
+
+void COleClipSource::AddOneLineFeed(CClip& clip)
+{
+	AddLineFeeds(clip, 1);
+}
+
+void COleClipSource::AddTwoLineFeeds(CClip& clip)
+{
+	AddLineFeeds(clip, 2);
+}
+
+bool COleClipSource::PutGuidOntoClipboardOrReport(CClip& clip)
+{
+	try
+	{
+		PutGuidOntoClipboard(clip);
+	}
+	catch (const std::runtime_error& e)
+	{
+		// NewGuidString() throws it when CoCreateGuid fails; the paste stops
+		CErrorReport::Show(StrF(_T("Pasting a new GUID failed: %s"), CString(e.what()).GetString()));
+		return false;
+	}
+	return true;
 }
 
 void COleClipSource::AggregateTextFormats(CClip& clip)
@@ -337,10 +340,9 @@ void COleClipSource::AsciiOnly(CClip& clip)
 	TransformText(clip, &DittoCore::TextTransforms::AsciiOnly);
 }
 
-void COleClipSource::PlainTextFilter(CClip &clip)
+COleClipSource::PlainTextScan COleClipSource::ScanForTextAndHDrop(CClip& clip)
 {
-	bool foundText = false;
-	INT_PTR hDropIndex = -1;
+	PlainTextScan scan{};
 	INT_PTR	count = clip.m_Formats.GetCount();
 	for (INT_PTR i = 0; i < count; i++)
 	{
@@ -349,13 +351,21 @@ void COleClipSource::PlainTextFilter(CClip &clip)
 		if (pCF->m_cfType == CF_TEXT ||
 			pCF->m_cfType == CF_UNICODETEXT)
 		{
-			foundText = true;
+			scan.foundText = true;
 		}
 		else if (pCF->m_cfType == CF_HDROP)
 		{
-			hDropIndex = i;
+			scan.hDropIndex = i;
 		}
 	}
+	return scan;
+}
+
+void COleClipSource::PlainTextFilter(CClip &clip)
+{
+	const PlainTextScan scan{ ScanForTextAndHDrop(clip) };
+	const bool foundText{ scan.foundText };
+	const INT_PTR hDropIndex{ scan.hDropIndex };
 
 	if (foundText &&
 		hDropIndex > -1)
@@ -571,42 +581,63 @@ BOOL COleClipSource::OnRenderGlobalData(LPFORMATETC lpFormatEtc, HGLOBAL* phGlob
 			hData = NewGlobalH(pFind->m_hgData, GlobalSize(pFind->m_hgData));
 		}
 	}
-	else
+	else if (!RenderAndCache(lpFormatEtc->cfFormat, hData))
 	{
-		// m_delayRenderLockout holds a 32-bit tick value, so the difference uses 32-bit wrap-around arithmetic
-		const DWORD now = static_cast<DWORD>(GetTickCount64());
-		if (m_pasteOptions.m_delayRenderLockout > 0 &&
-			(now - m_pasteOptions.m_delayRenderLockout) < (DWORD)CGetSetOptions::GetDelayRenderLockout())
-		{
-			bInHere = false;
-			return false;
-		}
-
-		if(m_ClipIDs.GetCount() > 0)
-		{
-			const std::optional<HGLOBAL> rendered = RenderClipsOrReport(lpFormatEtc->cfFormat);
-			if (!rendered)
-			{
-				bInHere = false;
-				return FALSE;   // FALSE tells the target the render failed
-			}
-			hData = *rendered;
-		}
-
-		//Add to a cache of already rendered data
-		//Windows seems to call this function multiple times
-		//so only the first time do we need to go get the data
-		HGLOBAL hCopy = NULL;
-		if(hData)
-		{
-			hCopy = NewGlobalH(hData, GlobalSize(hData));
-		}
-
-		CClipFormat format(lpFormatEtc->cfFormat, hCopy);
-		m_DelayRenderedFormats.Add(format);
-		format.m_autoDeleteData = false; //owned by m_DelayRenderedFormats
+		// refused (lockout), or FALSE tells the target the render failed
+		bInHere = false;
+		return FALSE;
 	}
 
+	BOOL bRet = HandOverRenderedData(hData, phGlobal);
+
+	bInHere = false;
+
+	return bRet;
+}
+
+bool COleClipSource::IsDelayRenderLockedOut() const
+{
+	// m_delayRenderLockout holds a 32-bit tick value, so the difference uses 32-bit wrap-around arithmetic
+	const DWORD now = static_cast<DWORD>(GetTickCount64());
+	return m_pasteOptions.m_delayRenderLockout > 0 &&
+		(now - m_pasteOptions.m_delayRenderLockout) < (DWORD)CGetSetOptions::GetDelayRenderLockout();
+}
+
+bool COleClipSource::RenderAndCache(CLIPFORMAT cfFormat, HGLOBAL& hData)
+{
+	if (IsDelayRenderLockedOut())
+	{
+		return false;
+	}
+
+	if(m_ClipIDs.GetCount() > 0)
+	{
+		const std::optional<HGLOBAL> rendered = RenderClipsOrReport(cfFormat);
+		if (!rendered)
+		{
+			return false;
+		}
+		hData = *rendered;
+	}
+
+	//Add to a cache of already rendered data
+	//Windows seems to call this function multiple times
+	//so only the first time do we need to go get the data
+	HGLOBAL hCopy = NULL;
+	if(hData)
+	{
+		hCopy = NewGlobalH(hData, GlobalSize(hData));
+	}
+
+	CClipFormat format(cfFormat, hCopy);
+	m_DelayRenderedFormats.Add(format);
+	format.m_autoDeleteData = false; //owned by m_DelayRenderedFormats
+
+	return true;
+}
+
+BOOL COleClipSource::HandOverRenderedData(HGLOBAL hData, HGLOBAL* phGlobal)
+{
 	BOOL bRet = FALSE;
 	if(hData)
 	{
@@ -627,26 +658,22 @@ BOOL COleClipSource::OnRenderGlobalData(LPFORMATETC lpFormatEtc, HGLOBAL* phGlob
 		}
 		bRet = TRUE;
 	}
-
-	bInHere = false;
-
 	return bRet;
 }
 
 HGLOBAL COleClipSource::ConvertToFileDrop()
 {
-	CString path = CGetSetOptions::GetPath(PATH_DRAG_FILES);
-	CreateDirectory(path, NULL);
+	DragFiles drag{};
+	drag.folder = CGetSetOptions::GetPath(PATH_DRAG_FILES);
+	CreateDirectory(drag.folder, NULL);
 
-	std::vector<std::wstring> fileList;
+	drag.nextId = CGetSetOptions::GetDragId();
+	int origDragId = drag.nextId;
 
-	int dragId = CGetSetOptions::GetDragId();
-	int origDragId = dragId;
-
-	auto customDragName = CGetSetOptions::GetTempDragFileName();
-	if (customDragName != _T(""))
+	drag.customName = CGetSetOptions::GetTempDragFileName();
+	if (drag.customName != _T(""))
 	{
-		dragId = 1;
+		drag.nextId = 1;
 	}
 
 	for (int i = 0; i < m_ClipIDs.GetCount(); i++)
@@ -654,79 +681,70 @@ HGLOBAL COleClipSource::ConvertToFileDrop()
 		CClip fileClip;
 		fileClip.LoadFormats(m_ClipIDs[i]);
 
-		CClipFormat *unicodeText = fileClip.m_Formats.FindFormat(CF_UNICODETEXT);
-		if (unicodeText)
-		{
-			CString name = _T("text");
-			CString file;
-			if (customDragName != _T(""))
-			{
-				name = customDragName;
-				file.Format(_T("%s%s.txt"), path.GetString(), name.GetString());
-			}
-			else
-			{
-				file.Format(_T("%s%s_%d.txt"), path.GetString(), name.GetString(), dragId++);
-			}
-
-			fileClip.WriteTextToFile(file, TRUE, FALSE, FALSE);
-			fileList.push_back(file.GetString());
-			continue;
-		}
-
-		CClipFormat *asciiText = fileClip.m_Formats.FindFormat(CF_TEXT);
-		if (asciiText)
-		{
-			CString name = _T("text");
-			CString file;
-			if (customDragName != _T(""))
-			{
-				name = customDragName;
-				file.Format(_T("%s%s.txt"), path.GetString(), name.GetString());
-			}
-			else
-			{
-				file.Format(_T("%s%s_%d.txt"), path.GetString(), name.GetString(), dragId++);
-			}
-
-			fileClip.WriteTextToFile(file, FALSE, TRUE, FALSE);
-			fileList.push_back(file.GetString());
-			continue;
-		}
-
-		CClipFormat *png = fileClip.m_Formats.FindFormat(theApp.m_PNG_Format);
-		CClipFormat *bitmap = fileClip.m_Formats.FindFormat(CF_DIB);
-		if (bitmap != NULL ||
-			png != NULL)
-		{
-			CString name = _T("image");
-			CString file;
-			if (customDragName != _T(""))
-			{
-				name = customDragName;
-				file.Format(_T("%s%s.png"), path.GetString(), name.GetString());
-			}
-			else
-			{
-				file.Format(_T("%s%s_%d.png"), path.GetString(), name.GetString(), dragId++);
-			}
-
-			if (fileClip.WriteImageToFile(file))
-			{
-				fileList.push_back(file.GetString());
-			}
-		}
+		AddDragFile(fileClip, drag);
 	}
 
-	if(customDragName == _T("") &&
-		dragId != origDragId)
+	if(drag.customName == _T("") &&
+		drag.nextId != origDragId)
 	{
-		CGetSetOptions::SetDragId(dragId);
+		CGetSetOptions::SetDragId(drag.nextId);
 	}
 
-	HGLOBAL hData = CCF_HDropAggregator::NewDropBlock(fileList);
+	HGLOBAL hData = CCF_HDropAggregator::NewDropBlock(drag.paths);
 
 	return hData;
+}
+
+CString COleClipSource::NextDragFilePath(DragFiles& drag, const TCHAR* defaultName, const TCHAR* extension)
+{
+	CString name = defaultName;
+	CString file;
+	if (drag.customName != _T(""))
+	{
+		name = drag.customName;
+		file.Format(_T("%s%s.%s"), drag.folder.GetString(), name.GetString(), extension);
+	}
+	else
+	{
+		file.Format(_T("%s%s_%d.%s"), drag.folder.GetString(), name.GetString(), drag.nextId++, extension);
+	}
+	return file;
+}
+
+void COleClipSource::AddDragFile(CClip& fileClip, DragFiles& drag)
+{
+	CClipFormat *unicodeText = fileClip.m_Formats.FindFormat(CF_UNICODETEXT);
+	if (unicodeText)
+	{
+		CString file = NextDragFilePath(drag, _T("text"), _T("txt"));
+
+		fileClip.WriteTextToFile(file, TRUE, FALSE, FALSE);
+		drag.paths.push_back(file.GetString());
+		return;
+	}
+
+	CClipFormat *asciiText = fileClip.m_Formats.FindFormat(CF_TEXT);
+	if (asciiText)
+	{
+		CString file = NextDragFilePath(drag, _T("text"), _T("txt"));
+
+		fileClip.WriteTextToFile(file, FALSE, TRUE, FALSE);
+		drag.paths.push_back(file.GetString());
+		return;
+	}
+
+	CClipFormat *png = fileClip.m_Formats.FindFormat(theApp.m_PNG_Format);
+	CClipFormat *bitmap = fileClip.m_Formats.FindFormat(CF_DIB);
+	if (bitmap != NULL ||
+		png != NULL)
+	{
+		CString file = NextDragFilePath(drag, _T("image"), _T("png"));
+
+		if (fileClip.WriteImageToFile(file))
+		{
+			drag.paths.push_back(file.GetString());
+		}
+	}
 }
 
 void COleClipSource::Slugify(CClip &clip)

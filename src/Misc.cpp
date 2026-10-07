@@ -12,6 +12,8 @@
 #include "GlobalBytes.h"
 #include "ClipboardFormatError.h"
 #include "ErrorReport.h"
+#include <algorithm>
+#include <array>
 #include <new>
 #include <regex>
 #include <stdexcept>
@@ -148,20 +150,34 @@ CString StrF(const TCHAR * pszFormat, ...)
 
 BYTE GetEscapeChar( BYTE ch )
 {
-	switch(ch)
+	/** @brief One C escape sequence: the character after the backslash and the character it stands for. */
+	struct EscapeChar
 	{
-	case '\'':	return '\''; // Single quotation mark (') = 39 or 0x27
-	case '\"':	return '\"'; // Double quotation mark (") = 34 or 0x22
-	case '?':	return '\?'; // Question mark (?) = 63 or 0x3f
-	case '\\':	return '\\'; // Backslash (\) = 92 or 0x5c
-	case 'a':	return '\a'; // Alert (BEL) = 7
-	case 'b':	return '\b'; // Backspace (BS) = 8
-	case 'f':	return '\f'; // Formfeed (FF) = 12 or 0x0c
-	case 'n':	return '\n'; // Newline (NL or LF) = 10 or 0x0a
-	case 'r':	return '\r'; // Carriage Return (CR) = 13 or 0x0d
-	case 't':	return '\t'; // Horizontal tab (HT) = 9
-	case 'v':	return '\v'; // Vertical tab (VT) = 11 or 0x0b
-	case '0':	return '\0'; // Null character (NUL) = 0
+		/** @brief The character after the backslash. */
+		BYTE escaped{};
+		/** @brief The character the sequence stands for. */
+		BYTE value{};
+	};
+	static constexpr std::array<EscapeChar, 12> escapes{ {
+		{ '\'', '\'' }, // Single quotation mark (') = 39 or 0x27
+		{ '\"', '\"' }, // Double quotation mark (") = 34 or 0x22
+		{ '?', '\?' }, // Question mark (?) = 63 or 0x3f
+		{ '\\', '\\' }, // Backslash (\) = 92 or 0x5c
+		{ 'a', '\a' }, // Alert (BEL) = 7
+		{ 'b', '\b' }, // Backspace (BS) = 8
+		{ 'f', '\f' }, // Formfeed (FF) = 12 or 0x0c
+		{ 'n', '\n' }, // Newline (NL or LF) = 10 or 0x0a
+		{ 'r', '\r' }, // Carriage Return (CR) = 13 or 0x0d
+		{ 't', '\t' }, // Horizontal tab (HT) = 9
+		{ 'v', '\v' }, // Vertical tab (VT) = 11 or 0x0b
+		{ '0', '\0' }, // Null character (NUL) = 0
+	} };
+	for (const EscapeChar& escape : escapes)
+	{
+		if (escape.escaped == ch)
+		{
+			return escape.value;
+		}
 	}
 	return 0; // invalid
 }
@@ -312,49 +328,45 @@ std::vector<CLIPFORMAT> GetSystemClipFormats()
 //Do not change these these are stored in the database
 CLIPFORMAT GetFormatID(LPCTSTR cbName)
 {
-	if (STRCMP(cbName, _T("CF_TEXT")) == 0)
-		return CF_TEXT;
-	else if (STRCMP(cbName, _T("CF_METAFILEPICT")) == 0)
-		return CF_METAFILEPICT;
-	else if (STRCMP(cbName, _T("CF_SYLK")) == 0)
-		return CF_SYLK;
-	else if (STRCMP(cbName, _T("CF_DIF")) == 0)
-		return CF_DIF;
-	else if (STRCMP(cbName, _T("CF_TIFF")) == 0)
-		return CF_TIFF;
-	else if (STRCMP(cbName, _T("CF_OEMTEXT")) == 0)
-		return CF_OEMTEXT;
-	else if (STRCMP(cbName, _T("CF_DIB")) == 0)
-		return CF_DIB;
-	else if (STRCMP(cbName, _T("CF_PALETTE")) == 0)
-		return CF_PALETTE;
-	else if (STRCMP(cbName, _T("CF_PENDATA")) == 0)
-		return CF_PENDATA;
-	else if (STRCMP(cbName, _T("CF_RIFF")) == 0)
-		return CF_RIFF;
-	else if (STRCMP(cbName, _T("CF_WAVE")) == 0)
-		return CF_WAVE;
-	else if (STRCMP(cbName, _T("CF_UNICODETEXT")) == 0)
-		return CF_UNICODETEXT;
-	else if (STRCMP(cbName, _T("CF_ENHMETAFILE")) == 0)
-		return CF_ENHMETAFILE;
-	else if (STRCMP(cbName, _T("CF_HDROP")) == 0)
-		return CF_HDROP;
-	else if (STRCMP(cbName, _T("CF_LOCALE")) == 0)
-		return CF_LOCALE;
-	else if (STRCMP(cbName, _T("CF_OWNERDISPLAY")) == 0)
-		return CF_OWNERDISPLAY;
-	else if (STRCMP(cbName, _T("CF_DSPTEXT")) == 0)
-		return CF_DSPTEXT;
-	else if (STRCMP(cbName, _T("CF_DSPBITMAP")) == 0)
-		return CF_DSPBITMAP;
-	else if (STRCMP(cbName, _T("CF_DSPMETAFILEPICT")) == 0)
-		return CF_DSPMETAFILEPICT;
-	else if (STRCMP(cbName, _T("CF_DSPENHMETAFILE")) == 0)
-		return CF_DSPENHMETAFILE;
-	else if (STRCMP(cbName, _T("CF_DIBV5")) == 0)
-		return CF_DIBV5;
-
+	/** @brief A standard clipboard format and the name it is stored under. */
+	struct NamedFormat
+	{
+		/** @brief The stored name. */
+		const TCHAR* name{};
+		/** @brief The format. */
+		CLIPFORMAT id{};
+	};
+	// CF_BITMAP has no entry: its name is registered as a format of its own (as before)
+	static constexpr std::array<NamedFormat, 21> formats{ {
+		{ _T("CF_TEXT"), CF_TEXT },
+		{ _T("CF_METAFILEPICT"), CF_METAFILEPICT },
+		{ _T("CF_SYLK"), CF_SYLK },
+		{ _T("CF_DIF"), CF_DIF },
+		{ _T("CF_TIFF"), CF_TIFF },
+		{ _T("CF_OEMTEXT"), CF_OEMTEXT },
+		{ _T("CF_DIB"), CF_DIB },
+		{ _T("CF_PALETTE"), CF_PALETTE },
+		{ _T("CF_PENDATA"), CF_PENDATA },
+		{ _T("CF_RIFF"), CF_RIFF },
+		{ _T("CF_WAVE"), CF_WAVE },
+		{ _T("CF_UNICODETEXT"), CF_UNICODETEXT },
+		{ _T("CF_ENHMETAFILE"), CF_ENHMETAFILE },
+		{ _T("CF_HDROP"), CF_HDROP },
+		{ _T("CF_LOCALE"), CF_LOCALE },
+		{ _T("CF_OWNERDISPLAY"), CF_OWNERDISPLAY },
+		{ _T("CF_DSPTEXT"), CF_DSPTEXT },
+		{ _T("CF_DSPBITMAP"), CF_DSPBITMAP },
+		{ _T("CF_DSPMETAFILEPICT"), CF_DSPMETAFILEPICT },
+		{ _T("CF_DSPENHMETAFILE"), CF_DSPENHMETAFILE },
+		{ _T("CF_DIBV5"), CF_DIBV5 },
+	} };
+	for (const NamedFormat& format : formats)
+	{
+		if (STRCMP(cbName, format.name) == 0)
+		{
+			return format.id;
+		}
+	}
 
 	// Registered clipboard formats are in the range 0xC000..0xFFFF, so they fit in a CLIPFORMAT.
 	return static_cast<CLIPFORMAT>(::RegisterClipboardFormat(cbName));
@@ -363,65 +375,56 @@ CLIPFORMAT GetFormatID(LPCTSTR cbName)
 //Do not change these these are stored in the database
 CString GetFormatName(CLIPFORMAT cbType)
 {
-	switch(cbType)
+	/** @brief A standard clipboard format and the name it is stored under. */
+	struct FormatName
 	{
-	case CF_TEXT:
-		return _T("CF_TEXT");
-	case CF_BITMAP:
-		return _T("CF_BITMAP");
-	case CF_METAFILEPICT:
-		return _T("CF_METAFILEPICT");
-	case CF_SYLK:
-		return _T("CF_SYLK");
-	case CF_DIF:
-		return _T("CF_DIF");
-	case CF_TIFF:
-		return _T("CF_TIFF");
-	case CF_OEMTEXT:
-		return _T("CF_OEMTEXT");
-	case CF_DIB:
-		return _T("CF_DIB");
-	case CF_PALETTE:
-		return _T("CF_PALETTE");
-	case CF_PENDATA:
-		return _T("CF_PENDATA");
-	case CF_RIFF:
-		return _T("CF_RIFF");
-	case CF_WAVE:
-		return _T("CF_WAVE");
-	case CF_UNICODETEXT:
-		return _T("CF_UNICODETEXT");
-	case CF_ENHMETAFILE:
-		return _T("CF_ENHMETAFILE");
-	case CF_HDROP:
-		return _T("CF_HDROP");
-	case CF_LOCALE:
-		return _T("CF_LOCALE");
-	case CF_OWNERDISPLAY:
-		return _T("CF_OWNERDISPLAY");
-	case CF_DSPTEXT:
-		return _T("CF_DSPTEXT");
-	case CF_DSPBITMAP:
-		return _T("CF_DSPBITMAP");
-	case CF_DSPMETAFILEPICT:
-		return _T("CF_DSPMETAFILEPICT");
-	case CF_DSPENHMETAFILE:
-		return _T("CF_DSPENHMETAFILE");
-	case CF_DIBV5:
-		return _T("CF_DIBV5");
-	default:
-		//Not a default type get the name from the clipboard
-		if (cbType != 0)
+		/** @brief The format. */
+		CLIPFORMAT id{};
+		/** @brief The stored name. */
+		const TCHAR* name{};
+	};
+	static constexpr std::array<FormatName, 22> formats{ {
+		{ CF_TEXT, _T("CF_TEXT") },
+		{ CF_BITMAP, _T("CF_BITMAP") },
+		{ CF_METAFILEPICT, _T("CF_METAFILEPICT") },
+		{ CF_SYLK, _T("CF_SYLK") },
+		{ CF_DIF, _T("CF_DIF") },
+		{ CF_TIFF, _T("CF_TIFF") },
+		{ CF_OEMTEXT, _T("CF_OEMTEXT") },
+		{ CF_DIB, _T("CF_DIB") },
+		{ CF_PALETTE, _T("CF_PALETTE") },
+		{ CF_PENDATA, _T("CF_PENDATA") },
+		{ CF_RIFF, _T("CF_RIFF") },
+		{ CF_WAVE, _T("CF_WAVE") },
+		{ CF_UNICODETEXT, _T("CF_UNICODETEXT") },
+		{ CF_ENHMETAFILE, _T("CF_ENHMETAFILE") },
+		{ CF_HDROP, _T("CF_HDROP") },
+		{ CF_LOCALE, _T("CF_LOCALE") },
+		{ CF_OWNERDISPLAY, _T("CF_OWNERDISPLAY") },
+		{ CF_DSPTEXT, _T("CF_DSPTEXT") },
+		{ CF_DSPBITMAP, _T("CF_DSPBITMAP") },
+		{ CF_DSPMETAFILEPICT, _T("CF_DSPMETAFILEPICT") },
+		{ CF_DSPENHMETAFILE, _T("CF_DSPENHMETAFILE") },
+		{ CF_DIBV5, _T("CF_DIBV5") },
+	} };
+	for (const FormatName& format : formats)
+	{
+		if (format.id == cbType)
 		{
-			// zero-initialized: a failed call leaves an empty name; upstream returned the
-			// uninitialized buffer, so a failed call gave stack garbage
-			TCHAR szFormat[256]{};
-			GetClipboardFormatName(cbType, szFormat, _countof(szFormat));
-			return szFormat;
+			return format.name;
 		}
-		break;
 	}
-	
+
+	//Not a default type get the name from the clipboard
+	if (cbType != 0)
+	{
+		// zero-initialized: a failed call leaves an empty name; upstream returned the
+		// uninitialized buffer, so a failed call gave stack garbage
+		TCHAR szFormat[256]{};
+		GetClipboardFormatName(cbType, szFormat, _countof(szFormat));
+		return szFormat;
+	}
+
 	return "ERROR";
 }
 
@@ -452,13 +455,26 @@ CString GetFileName(CString csFileName)
 /****************************************************************************************************
 BOOL CALLBACK MyMonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData)
 ***************************************************************************************************/
-typedef struct
+struct MONITOR_ENUM_PARAM
 {
 	long	lFlags;				// Flags
 	LPRECT	pVirtualRect;		// Ptr to rect that receives the results, or the src of the monitor search method
 	int		iMonitor;			// Ndx to the mointor to look at, -1 for all, -or- result of the monitor search method
 	int		nMonitorCount;		// Total number of monitors found, -1 for monitor search method
-}	MONITOR_ENUM_PARAM;
+
+	/**
+	 * @brief Whether pVirtualRect lies wholly outside a monitor (a shared edge counts as inside).
+	 * @param monitor The monitor's rect.
+	 * @return True when pVirtualRect is left of, right of, above or below the monitor.
+	 */
+	bool IsOutside(const RECT& monitor) const
+	{
+		return (pVirtualRect->right < monitor.left) ||
+			(pVirtualRect->left > monitor.right) ||
+			(pVirtualRect->bottom < monitor.top) ||
+			(pVirtualRect->top > monitor.bottom);
+	}
+};
 #define	MONITOR_SEARCH_METOHD	0x00000001
 BOOL CALLBACK MyMonitorEnumProc(HMONITOR /*hMonitor*/, HDC /*hdcMonitor*/, LPRECT lprcMonitor, LPARAM dwData)
 {
@@ -473,18 +489,11 @@ BOOL CALLBACK MyMonitorEnumProc(HMONITOR /*hMonitor*/, HDC /*hdcMonitor*/, LPREC
 			// that the rect falls inside of
 			if(pParam->lFlags & MONITOR_SEARCH_METOHD)
 			{
-				if(	(pParam->pVirtualRect->right	< lprcMonitor->left)	||
-					(pParam->pVirtualRect->left		> lprcMonitor->right)	||
-					(pParam->pVirtualRect->bottom	< lprcMonitor->top)		||
-					(pParam->pVirtualRect->top		> lprcMonitor->bottom))
-				{
-					// Nothing
-				}
-				else
+				if(!pParam->IsOutside(*lprcMonitor))
 				{
 					// This is the one
 					pParam->iMonitor = pParam->nMonitorCount;
-					
+
 					// Stop the enumeration
 					return FALSE;
 				}
@@ -520,10 +529,7 @@ int GetScreenWidth(void)
 	const int height{ GetSystemMetrics(SM_CYSCREEN) };
 	switch(width)
 	{
-	default:
-	case 640:
-	case 800:
-	case 1024:
+	default: // also 640, 800 and 1024
 		return(width);
 	case 1280:
 		if(height == 480)
@@ -552,10 +558,7 @@ int GetScreenHeight(void)
 	const int height{ GetSystemMetrics(SM_CYSCREEN) };
 	switch(height)
 	{
-	default:
-	case 480:
-	case 600:
-	case 768:
+	default: // also 480, 600 and 768
 		return(height);
 	case 960:
 		if(width == 640)
@@ -774,51 +777,41 @@ BOOL EnsureWindowVisible(CRect *pcrRect)
 		}
 	}	
 
-	bool movedLeft = false;
-	//Validate the left
-	long lDiff = pcrRect->left - crMonitor.left;
-	if (lDiff < 0)
+	/** @brief One axis of a rect: its low edge (left or top) and its high edge (right or bottom). */
+	struct Axis
 	{
-		pcrRect->left += abs(lDiff);
-		pcrRect->right += abs(lDiff);
-		ret = TRUE;
-		movedLeft = true;
-	}
-
-	//Right side
-	lDiff = pcrRect->right - crMonitor.right;
-	if (lDiff > 0)
+		/** @brief The low edge. */
+		LONG RECT::* low{};
+		/** @brief The high edge. */
+		LONG RECT::* high{};
+	};
+	// horizontal first (left, right), then vertical (top, bottom)
+	static constexpr std::array<Axis, 2> axes{ { { &RECT::left, &RECT::right }, { &RECT::top, &RECT::bottom } } };
+	for (const Axis& axis : axes)
 	{
-		if (movedLeft == false)
+		bool movedLow = false;
+		//Validate the left (top)
+		long lDiff = (*pcrRect).*axis.low - crMonitor.*axis.low;
+		if (lDiff < 0)
 		{
-			pcrRect->left -= abs(lDiff);
+			(*pcrRect).*axis.low += abs(lDiff);
+			(*pcrRect).*axis.high += abs(lDiff);
+			ret = TRUE;
+			movedLow = true;
 		}
-		pcrRect->right -= abs(lDiff);
-		ret = TRUE;
-	}
 
-	bool movedTop = false;
-	//Top
-	lDiff = pcrRect->top - crMonitor.top;
-	if (lDiff < 0)
-	{
-		pcrRect->top += abs(lDiff);
-		pcrRect->bottom += abs(lDiff);
-		ret = TRUE;
-		movedTop = true;
-	}
-
-	//Bottom
-	lDiff = pcrRect->bottom - crMonitor.bottom;
-	if (lDiff > 0)
-	{
-		if (movedTop == false)
+		//Right side (bottom)
+		lDiff = (*pcrRect).*axis.high - crMonitor.*axis.high;
+		if (lDiff > 0)
 		{
-			pcrRect->top -= abs(lDiff);
+			if (movedLow == false)
+			{
+				(*pcrRect).*axis.low -= abs(lDiff);
+			}
+			(*pcrRect).*axis.high -= abs(lDiff);
+			ret = TRUE;
 		}
-		pcrRect->bottom -= abs(lDiff);
-		ret = TRUE;
-	}	
+	}
 
 	return ret;
 }
@@ -991,7 +984,9 @@ void DeleteDittoTempFiles(BOOL checkFileLastAccess)
 
 void DeleteFolderFiles(CString csDir, BOOL checkFileLastAccess, CTimeSpan lastAccessOffset)
 {
-	if (csDir.Find(_T("\\ReceivedFiles\\")) == -1 && csDir.Find(_T("\\DragFiles\\")) == -1 && csDir.Find(_T("ClipCompare")) == -1 && csDir.Find(_T("EditClips")) == -1)
+	// only Ditto's own temp folders are emptied
+	static constexpr std::array<const TCHAR*, 4> tempFolderMarkers{ _T("\\ReceivedFiles\\"), _T("\\DragFiles\\"), _T("ClipCompare"), _T("EditClips") };
+	if (std::none_of(tempFolderMarkers.begin(), tempFolderMarkers.end(), [&csDir](const TCHAR* marker) { return csDir.Find(marker) != -1; }))
 		return;
 
 	Log(StrF(_T("Deleting files in Folder %s Check Last Access %d"), csDir.GetString(), checkFileLastAccess));
@@ -1044,91 +1039,20 @@ __int64 FileSize(const TCHAR *fileName)
 
 int FindNoCaseAndInsert(CString& mainStr, CString& findStr, CString preInsert, CString postInsert, int linesPerRow)
 {
+	return CMarkerInserter::Insert(mainStr, findStr, preInsert, postInsert, linesPerRow);
+}
+
+int CMarkerInserter::Insert(CString& mainStr, CString& findStr, CString preInsert, CString postInsert, int linesPerRow)
+{
 	int replaceCount = 0;
 
 	//Prevent infinite loop when user tries to replace nothing.
 	if (findStr != "")
 	{
-		int oldLen = findStr.GetLength();
+		const InsertResult inserted{ InsertMarkers(mainStr, findStr, preInsert, postInsert) };
+		replaceCount = inserted.replaceCount;
 
-		int foundPos = 0;
-		int startFindPos = 0;
-		int newPos = 0;
-		int insertedLength = 0;
-
-		int firstFindPos = 0;
-
-		CString mainLow(theApp.m_icuString.ToLowerStringEx(mainStr));		
-		CString findLow(theApp.m_icuString.ToLowerStringEx(findStr));
-		findLow.MakeLower();
-		
-		int preLength = preInsert.GetLength();
-		int postLength = postInsert.GetLength();
-
-		while(TRUE)
-		{
-			foundPos = mainLow.Find(findLow, startFindPos);
-			if (foundPos < 0)
-				break;
-
-			if (replaceCount == 0)
-			{
-				firstFindPos = foundPos + preLength;
-			}
-
-			newPos = foundPos + insertedLength;
-
-			mainStr.Insert(newPos, preInsert);
-			mainStr.Insert(newPos + preLength + oldLen, postInsert);
-
-			startFindPos = foundPos + oldLen;
-
-			insertedLength += preLength + postLength;
-
-			replaceCount++;
-
-			//safety check, make sure we don't look forever
-			if (replaceCount > 100)
-				break;
-		}
-
-		startFindPos = 0;
-		int line = 0;
-		int prevLinePos = 0;
-		int prevPrevLinePos = 0;
-
-		while (TRUE)
-		{
-			foundPos = mainStr.Find(_T("\n"), startFindPos);
-			if (foundPos < 0)
-				break;
-
-			if (firstFindPos < foundPos)
-			{
-				if (line > linesPerRow - 1)
-				{
-					int lineStart = prevLinePos;
-					if (linesPerRow > 1)
-					{
-						lineStart = prevPrevLinePos;
-					}
-
-					mainStr = _T("... ") + mainStr.Mid(lineStart + 1);
-				}
-
-				break;
-			}			
-
-			startFindPos = foundPos + 1;
-			prevPrevLinePos = prevLinePos;
-			prevLinePos = foundPos;
-
-			line++;
-
-			//safety check, make sure we don't look forever
-			if (line > 1000)
-				break;
-		}
+		TrimLeadingLines(mainStr, inserted.firstFindPos, linesPerRow);
 
 		if(replaceCount > 0)
 		{
@@ -1142,7 +1066,102 @@ int FindNoCaseAndInsert(CString& mainStr, CString& findStr, CString preInsert, C
 	return replaceCount;
 }
 
+CMarkerInserter::InsertResult CMarkerInserter::InsertMarkers(CString& mainStr, CString& findStr, const CString& preInsert, const CString& postInsert)
+{
+	InsertResult result{};
+
+	int oldLen = findStr.GetLength();
+
+	int foundPos = 0;
+	int startFindPos = 0;
+	int newPos = 0;
+	int insertedLength = 0;
+
+	CString mainLow(theApp.m_icuString.ToLowerStringEx(mainStr));
+	CString findLow(theApp.m_icuString.ToLowerStringEx(findStr));
+	findLow.MakeLower();
+
+	int preLength = preInsert.GetLength();
+	int postLength = postInsert.GetLength();
+
+	while(TRUE)
+	{
+		foundPos = mainLow.Find(findLow, startFindPos);
+		if (foundPos < 0)
+			break;
+
+		if (result.replaceCount == 0)
+		{
+			result.firstFindPos = foundPos + preLength;
+		}
+
+		newPos = foundPos + insertedLength;
+
+		mainStr.Insert(newPos, preInsert);
+		mainStr.Insert(newPos + preLength + oldLen, postInsert);
+
+		startFindPos = foundPos + oldLen;
+
+		insertedLength += preLength + postLength;
+
+		result.replaceCount++;
+
+		//safety check, make sure we don't look forever
+		if (result.replaceCount > 100)
+			break;
+	}
+
+	return result;
+}
+
+void CMarkerInserter::TrimLeadingLines(CString& mainStr, int firstFindPos, int linesPerRow)
+{
+	int foundPos = 0;
+	int startFindPos = 0;
+	int line = 0;
+	int prevLinePos = 0;
+	int prevPrevLinePos = 0;
+
+	while (TRUE)
+	{
+		foundPos = mainStr.Find(_T("\n"), startFindPos);
+		if (foundPos < 0)
+			break;
+
+		if (firstFindPos < foundPos)
+		{
+			if (line > linesPerRow - 1)
+			{
+				int lineStart = prevLinePos;
+				if (linesPerRow > 1)
+				{
+					lineStart = prevPrevLinePos;
+				}
+
+				mainStr = _T("... ") + mainStr.Mid(lineStart + 1);
+			}
+
+			break;
+		}
+
+		startFindPos = foundPos + 1;
+		prevPrevLinePos = prevLinePos;
+		prevLinePos = foundPos;
+
+		line++;
+
+		//safety check, make sure we don't look forever
+		if (line > 1000)
+			break;
+	}
+}
+
 void OnInitMenuPopupEx(CMenu *pPopupMenu, UINT /*nIndex*/, BOOL /*bSysMenu*/, CWnd *pWnd)
+{
+	CMenuPopupUpdater::Update(pPopupMenu, pWnd);
+}
+
+void CMenuPopupUpdater::Update(CMenu *pPopupMenu, CWnd *pWnd)
 {
 	ASSERT(pPopupMenu != NULL);
 	// Check the enabled state of various menu items.
@@ -1152,9 +1171,21 @@ void OnInitMenuPopupEx(CMenu *pPopupMenu, UINT /*nIndex*/, BOOL /*bSysMenu*/, CW
 	ASSERT(state.m_pOther == NULL);
 	ASSERT(state.m_pParentMenu == NULL);
 
+	FindParentMenu(state, pPopupMenu, pWnd);
+
+	state.m_nIndexMax = pPopupMenu->GetMenuItemCount();
+	for (state.m_nIndex = 0; state.m_nIndex < state.m_nIndexMax;
+		state.m_nIndex++)
+	{
+		UpdateItem(state, pPopupMenu, pWnd);
+	}
+}
+
+void CMenuPopupUpdater::FindParentMenu(CCmdUI& state, CMenu *pPopupMenu, CWnd *pWnd)
+{
 	// Determine if menu is popup in top-level menu and set m_pOther to
 	// it if so (m_pParentMenu == NULL indicates that it is secondary popup).
-	HMENU hParentMenu;
+	HMENU hParentMenu{};
 	if (AfxGetThreadState()->m_hTrackingMenu == pPopupMenu->m_hMenu)
 	{
 		state.m_pParentMenu = pPopupMenu;    // Parent == child for tracking popup.
@@ -1178,52 +1209,55 @@ void OnInitMenuPopupEx(CMenu *pPopupMenu, UINT /*nIndex*/, BOOL /*bSysMenu*/, CW
 			}
 		}
 	}
+}
 
-	state.m_nIndexMax = pPopupMenu->GetMenuItemCount();
-	for (state.m_nIndex = 0; state.m_nIndex < state.m_nIndexMax;
-		state.m_nIndex++)
+void CMenuPopupUpdater::UpdateItem(CCmdUI& state, CMenu *pPopupMenu, CWnd *pWnd)
+{
+	state.m_nID = pPopupMenu->GetMenuItemID(state.m_nIndex);
+	if (state.m_nID == 0)
+		return; // Menu separator or invalid cmd - ignore it.
+
+	ASSERT(state.m_pOther == NULL);
+	ASSERT(state.m_pMenu != NULL);
+	if (state.m_nID == (UINT)-1)
 	{
-		state.m_nID = pPopupMenu->GetMenuItemID(state.m_nIndex);
-		if (state.m_nID == 0)
-			continue; // Menu separator or invalid cmd - ignore it.
-
-		ASSERT(state.m_pOther == NULL);
-		ASSERT(state.m_pMenu != NULL);
-		if (state.m_nID == (UINT)-1)
+		// Possibly a popup menu, route to first item of that popup.
+		state.m_pSubMenu = pPopupMenu->GetSubMenu(state.m_nIndex);
+		if (state.m_pSubMenu == NULL ||
+			(state.m_nID = state.m_pSubMenu->GetMenuItemID(0)) == 0 ||
+			state.m_nID == (UINT)-1)
 		{
-			// Possibly a popup menu, route to first item of that popup.
-			state.m_pSubMenu = pPopupMenu->GetSubMenu(state.m_nIndex);
-			if (state.m_pSubMenu == NULL ||
-				(state.m_nID = state.m_pSubMenu->GetMenuItemID(0)) == 0 ||
-				state.m_nID == (UINT)-1)
-			{
-				continue;       // First item of popup can't be routed to.
-			}
-			state.DoUpdate(pWnd, TRUE);   // Popups are never auto disabled.
+			return;       // First item of popup can't be routed to.
 		}
-		else
-		{
-			// Normal menu item.
-			// Auto enable/disable if frame window has m_bAutoMenuEnable
-			// set and command is _not_ a system command.
-			state.m_pSubMenu = NULL;
-			state.DoUpdate(pWnd, FALSE);
-		}
-
-		// Adjust for menu deletions and additions.
-		UINT nCount = pPopupMenu->GetMenuItemCount();
-		if (nCount < state.m_nIndexMax)
-		{
-			state.m_nIndex -= (state.m_nIndexMax - nCount);
-			while (state.m_nIndex < nCount &&
-				pPopupMenu->GetMenuItemID(state.m_nIndex) == state.m_nID)
-			{
-				state.m_nIndex++;
-			}
-		}
-		state.m_nIndexMax = nCount;
+		state.DoUpdate(pWnd, TRUE);   // Popups are never auto disabled.
 	}
-} 
+	else
+	{
+		// Normal menu item.
+		// Auto enable/disable if frame window has m_bAutoMenuEnable
+		// set and command is _not_ a system command.
+		state.m_pSubMenu = NULL;
+		state.DoUpdate(pWnd, FALSE);
+	}
+
+	AdjustForMenuChanges(state, pPopupMenu);
+}
+
+void CMenuPopupUpdater::AdjustForMenuChanges(CCmdUI& state, CMenu *pPopupMenu)
+{
+	// Adjust for menu deletions and additions.
+	UINT nCount = pPopupMenu->GetMenuItemCount();
+	if (nCount < state.m_nIndexMax)
+	{
+		state.m_nIndex -= (state.m_nIndexMax - nCount);
+		while (state.m_nIndex < nCount &&
+			pPopupMenu->GetMenuItemID(state.m_nIndex) == state.m_nID)
+		{
+			state.m_nIndex++;
+		}
+	}
+	state.m_nIndexMax = nCount;
+}
 
 CString NewGuidString()
 {

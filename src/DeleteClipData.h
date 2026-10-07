@@ -4,6 +4,7 @@
 #include "ShowTaskBarIcon.h"
 #include "afxwin.h"
 #include "ATLComTime.h"
+#include <array>
 #include <vector>
 #include "afxcmn.h"
 
@@ -12,6 +13,7 @@ class CProgressWnd;
 // CDeleteClipData dialog
 
 class CClip;
+class IClipFormat;
 
 class CDeleteData
 {
@@ -134,4 +136,113 @@ private:
 	// ApplyDelete's delete loop: deletes the rows' data items from the last row back, stepping the
 	// progress; stops on cancel, or after reporting the first item that fails to delete
 	void DeleteRows(const std::vector<int>& rowsToDelete, CProgressWnd& progress);
+
+	/**
+	 * @brief FilterItems' first step: finds the filtered-out items that match the filter again.
+	 * @param addBackIn Receives copies of the items that match again, in order.
+	 * @param filteredRowsToDelete Receives their indexes in m_filteredOut, ascending.
+	 */
+	void FindFilteredOutMatches(std::vector<CDeleteData>& addBackIn, std::vector<int>& filteredRowsToDelete);
+
+	/**
+	 * @brief MatchesFilter's title step: whether the title filter rejects an item.
+	 * @param pdata The item; its description is lower-cased in place (as m_clipTitle is).
+	 * @return True when the title filter is on, both texts are set and the title is not found.
+	 */
+	bool IsRejectedByTitle(CDeleteData* pdata);
+
+	/**
+	 * @brief Whether a time lies within a range given as separate date and time controls (ends included).
+	 * @param value The time to check.
+	 * @param startDate The date of the range start.
+	 * @param startTime The time of day of the range start.
+	 * @param endDate The date of the range end.
+	 * @param endTime The time of day of the range end.
+	 * @return True when start <= value <= end.
+	 */
+	static bool IsInDateRange(const CTime& value, const COleDateTime& startDate, const COleDateTime& startTime, const COleDateTime& endDate, const COleDateTime& endTime);
+
+	/**
+	 * @brief MatchesFilter's format step: whether an item has the format selected in the combo box.
+	 * @param pdata The item.
+	 * @return True when the item's clipboard format equals the selected one.
+	 */
+	bool MatchesSelectedFormat(const CDeleteData* pdata);
+
+	/**
+	 * @brief OnLvnKeydownList2's 'N' key: selects the next row and shows its description.
+	 */
+	void SelectNextRowAndDescribe();
+
+	/**
+	 * @brief OnLvnKeydownList2's 'P' key: selects the previous row and shows its description.
+	 */
+	void SelectPreviousRowAndDescribe();
+
+	/**
+	 * @brief OnLvnGetdispinfoList2's text step: copies the text of the item's column into its display buffer.
+	 * @param item The list view item; iItem must be a valid row of m_data. Unknown columns get no text.
+	 */
+	void CopyColumnText(LVITEM& item);
+
+	/** @brief The two orders a list column sorts in. */
+	struct ColumnSort
+	{
+		/** @brief The comparison for the descending order. */
+		bool (*descending)(const CDeleteData&, const CDeleteData&) = nullptr;
+		/** @brief The comparison for the ascending order. */
+		bool (*ascending)(const CDeleteData&, const CDeleteData&) = nullptr;
+	};
+
+	/** @brief The sort orders of the list columns, by column index. */
+	static const std::array<ColumnSort, 7> s_columnSorts;
+
+	/**
+	 * @brief SetDescriptionWindowText's details line: dates, auto delete, quick paste, shortcut, sticky.
+	 * @param selectedClip The loaded clip.
+	 * @return The text for the description window's clip data.
+	 */
+	static CString DescribeClip(CClip& selectedClip);
+
+	/**
+	 * @brief SetDescriptionWindowText's content step: shows the clip's text, else RTF, else HTML, else image.
+	 * @param selectedClip The loaded clip.
+	 */
+	void SetDescriptionWindowContent(CClip& selectedClip);
+
+	/**
+	 * @brief Shows the clip's unicode text, or else its CF_TEXT, in the description window.
+	 * @param selectedClip The loaded clip.
+	 * @return The text format shown; null when the clip has neither.
+	 */
+	IClipFormat* SetDescriptionWindowPlainText(CClip& selectedClip);
+
+	/** @brief A clipboard format that can be saved to a file, with the save dialog's settings. */
+	struct SaveFileType
+	{
+		/** @brief The stored clipboard format name. */
+		const TCHAR* format{};
+		/** @brief The default extension, without a period. */
+		const TCHAR* extension{};
+		/** @brief The save dialog's filter: a list of strings ending in an empty one. */
+		const TCHAR* filter{};
+	};
+
+	/** @brief The clipboard formats SaveClipDataItemToFile can save. */
+	static const std::array<SaveFileType, 5> s_saveFileTypes;
+
+	/**
+	 * @brief The save settings of a clipboard format.
+	 * @param format The stored clipboard format name.
+	 * @return The entry of s_saveFileTypes; null when the format cannot be saved.
+	 */
+	static const SaveFileType* FindSaveFileType(const CString& format);
+
+	/**
+	 * @brief SaveClipDataItemToFile's write step: writes the item's format to the chosen file.
+	 * @param selectedClip The clip, loaded with the item's data.
+	 * @param item The data item.
+	 * @param ofn The completed save dialog.
+	 */
+	static void WriteClipDataItem(CClip& selectedClip, const CDeleteData& item, const OPENFILENAME& ofn);
 };

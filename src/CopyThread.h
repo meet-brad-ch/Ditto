@@ -87,4 +87,22 @@ public:
 
 	virtual BOOL InitInstance();
 	virtual int ExitInstance();
+
+private:
+	/**
+	 * @brief OnClipboardChange's load step: loads the clipboard into the clip, once more after the
+	 * retry delay when nothing was found and the delay is set.
+	 * @param clip The new clip.
+	 * @param pSupportedTypes The types to load.
+	 * @param activeWindow The source application.
+	 * @return The result of the last CClip::LoadFromClipboard (TRUE, FALSE or -1).
+	 * @throws DittoCore::ClipboardFormatError When the clipboard data is malformed.
+	 */
+	int LoadClipWithRetry(CClip& clip, CClipTypes* pSupportedTypes, const CString& activeWindow);
+
+	/**
+	 * @brief OnClipboardChange's last step: posts or sends the clip to the clip handler window.
+	 * @param pClip The clip; released when the handler takes it (the handler then owns it).
+	 */
+	void HandOverClip(std::unique_ptr<CClip>& pClip);
 };

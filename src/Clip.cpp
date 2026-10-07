@@ -433,20 +433,62 @@ int CClip::LoadFromClipboard(CClipTypes* pClipTypes, CRegExFilterHelper& regexFi
 	// m_Formats should be empty when this is called.
 	ASSERT(m_Formats.GetSize() == 0);
 
+	if (!MayReadClipboard())
+	{
+		return FALSE;
+	}
+
+	//Attach to the clipboard
+	if(!oleData.AttachClipboard())
+	{
+		Log(_T("failed to attache to clipboard, skipping this clipboard change"));
+		ASSERT(0); // does this ever happen?
+		return FALSE;
+	}
+
+	oleData.EnsureClipboardObject();
+
+	if (IsExcludedFromHistory(oleData))
+	{
+		oleData.Release();
+		return FALSE;
+	}
+
+	m_Desc = "[Ditto Error] BAD DESCRIPTION";
+
+	// Get Description String
+	// NOTE: We make sure that the description always corresponds to the
+	//  data saved by using the exact same globalmem instance as the source
+	//  for both... i.e. we only fetch the description format type once.
+	CClipFormat cfDesc;
+	const bool bIsDescSet{ LoadDescription(oleData, cfDesc) };
+
+	CClipFormat cf;
+	if (!LoadClipboardFormats(oleData, *pTypes, cf, cfDesc, activeApp))
+	{
+		oleData.Release();
+		return -1;
+	}
+
+	return FinishLoadFromClipboard(oleData, cfDesc, bIsDescSet, regexFilters, activeApp);
+}
+
+bool CClip::MayReadClipboard()
+{
 	// If the data is supposed to be private, then return
 	if (::IsClipboardFormatAvailable(theApp.m_cfIgnoreClipboard))
 	{
 		Log(_T("Clipboard ignore type is on the clipboard, skipping this clipboard change"));
-		return FALSE;
+		return false;
 	}
-	
+
 	if (SavePolicy().Settings().enforceIgnoreFormats)
 	{
 		//https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats
 		if (::IsClipboardFormatAvailable(theApp.m_excludeClipboardContentFromMonitorProcessing))
 		{
 			Log(_T("ExcludeClipboardContentFromMonitorProcessing type is on the clipboard, skipping this clipboard change"));
-			return FALSE;
+			return false;
 		}
 	}
 
@@ -458,16 +500,11 @@ int CClip::LoadFromClipboard(CClipTypes* pClipTypes, CRegExFilterHelper& regexFi
 		Sleep(1500);
 	}
 
-	//Attach to the clipboard
-	if(!oleData.AttachClipboard())
-	{
-		Log(_T("failed to attache to clipboard, skipping this clipboard change"));
-		ASSERT(0); // does this ever happen?
-		return FALSE;
-	}
-	
-	oleData.EnsureClipboardObject();
+	return true;
+}
 
+bool CClip::IsExcludedFromHistory(COleDataObjectEx& oleData)
+{
 	//https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats
 	if (SavePolicy().Settings().enforceIgnoreFormats &&
 		oleData.IsDataAvailable(theApp.m_canIncludeInClipboardHistory))
@@ -476,145 +513,169 @@ int CClip::LoadFromClipboard(CClipTypes* pClipTypes, CRegExFilterHelper& regexFi
 		if (includeInHistory != nullptr && TakeDword(includeInHistory) == 0)
 		{
 			Log(_T("CanIncludeInClipboardHistory is 0, skipping this clipboard change"));
-			oleData.Release();
-			return FALSE;
+			return true;
 		}
 	}
-		
-	m_Desc = "[Ditto Error] BAD DESCRIPTION";
-	
-	// Get Description String
-	// NOTE: We make sure that the description always corresponds to the
-	//  data saved by using the exact same globalmem instance as the source
-	//  for both... i.e. we only fetch the description format type once.
-	CClipFormat cfDesc;
-	bool bIsDescSet = false;
 
-	cfDesc.m_cfType = CF_UNICODETEXT;	
-	if(oleData.IsDataAvailable(cfDesc.m_cfType))
+	return false;
+}
+
+bool CClip::LoadDescription(COleDataObjectEx& oleData, CClipFormat& cfDesc)
+{
+	if (TryDescriptionFormat(oleData, cfDesc, CF_UNICODETEXT, true, _T("cf_unicode")))
 	{
-		for (int i = 0; i < 10; i++)
-		{
-			cfDesc.m_hgData = oleData.GetGlobalData(cfDesc.m_cfType);
-			if (cfDesc.m_hgData == NULL)
-			{
-				Log(StrF(_T("Tried to set description from cf_unicode, data is NULL, try: %d"), i+1));
-			}
-			else
-			{
-				break;
-			}
-			Sleep(10);
-		}
-		bIsDescSet = SetDescFromText(cfDesc.m_hgData, true);
-
-		Log(StrF(_T("Tried to set description from cf_unicode text, Set: %d, Desc: [%s]"), bIsDescSet, m_Desc.Left(30).GetString()));
+		return true;
 	}
 
-	if(bIsDescSet == false)
+	return TryDescriptionFormat(oleData, cfDesc, CF_TEXT, false, _T("cf_text"));
+}
+
+bool CClip::TryDescriptionFormat(COleDataObjectEx& oleData, CClipFormat& cfDesc, CLIPFORMAT type, bool unicode, const TCHAR* typeName)
+{
+	cfDesc.m_cfType = type;
+	if(!oleData.IsDataAvailable(cfDesc.m_cfType))
 	{
-		cfDesc.m_cfType = CF_TEXT;	
-		if(oleData.IsDataAvailable(cfDesc.m_cfType))
-		{
-			for (int i = 0; i < 10; i++)
-			{
-				cfDesc.m_hgData = oleData.GetGlobalData(cfDesc.m_cfType);
-				if (cfDesc.m_hgData == NULL)
-				{
-					Log(StrF(_T("Tried to set description from cf_text, data is NULL, try: %d"), i + 1));
-				}
-				else
-				{
-					break;
-				}
-				Sleep(10);
-			}
-
-			bIsDescSet = SetDescFromText(cfDesc.m_hgData, false);
-
-			Log(StrF(_T("Tried to set description from cf_text text, Set: %d, Desc: [%s]"), bIsDescSet, m_Desc.Left(30).GetString()));
-		}
+		return false;
 	}
 
-	INT_PTR nSize;
-	CClipFormat cf;
-	INT_PTR numTypes = pTypes->GetSize();
+	for (int i = 0; i < 10; i++)
+	{
+		cfDesc.m_hgData = oleData.GetGlobalData(cfDesc.m_cfType);
+		if (cfDesc.m_hgData != NULL)
+		{
+			break;
+		}
+		Log(StrF(_T("Tried to set description from %s, data is NULL, try: %d"), typeName, i + 1));
+		Sleep(10);
+	}
+
+	const bool bIsDescSet{ SetDescFromText(cfDesc.m_hgData, unicode) };
+
+	Log(StrF(_T("Tried to set description from %s text, Set: %d, Desc: [%s]"), typeName, bIsDescSet, m_Desc.Left(30).GetString()));
+
+	return bIsDescSet;
+}
+
+bool CClip::LoadClipboardFormats(COleDataObjectEx& oleData, CClipTypes& types, CClipFormat& cf, CClipFormat& cfDesc, CString& activeApp)
+{
+	INT_PTR numTypes = types.GetSize();
 
 	Log(StrF(_T("Begin enumerating over supported types, Count: %d"), numTypes));
 
 	for(int i = 0; i < numTypes; i++)
 	{
-		cf.m_cfType = pTypes->ElementAt(i);
+		cf.m_cfType = types.ElementAt(i);
 
-		if (cf.m_cfType == CF_DIB &&
-			oleData.IsDataAvailable(CF_TEXT) &&
-			SavePolicy().IgnoresDibFrom(std::wstring(activeApp.MakeLower().GetString())))
+		if (!LoadClipboardFormat(oleData, cf, cfDesc, activeApp))
 		{
-			Log(StrF(_T("Ignore CF_DIB from %s"), activeApp.GetString()));
-			continue;
+			return false;
 		}
-
-		BOOL bSuccess = false;
-		Log(StrF(_T("Begin try and load type %s"), GetFormatName(cf.m_cfType).GetString()));
-		
-		// is this the description we already fetched?
-		if(cf.m_cfType == cfDesc.m_cfType)
-		{
-			cf = cfDesc;
-			cfDesc.m_hgData = 0; // cf owns it now (to go into m_Formats)
-		}
-		else if(!oleData.IsDataAvailable(cf.m_cfType))
-		{
-			Log(StrF(_T("End of load - Data is not available for type %s"), GetFormatName(cf.m_cfType).GetString()));
-			continue;
-		}
-		else
-		{
-			for (int tries = 0; tries < 2; tries++)
-			{
-				cf.m_hgData = oleData.GetGlobalData(cf.m_cfType);
-				if (cf.m_hgData != NULL)
-					break;
-
-				Log(StrF(_T("Tried to get data for type: %s, data is NULL, try: %d"), GetFormatName(cf.m_cfType).GetString(), tries + 1));
-				Sleep(5);
-			}
-		}
-		
-		if(cf.m_hgData)
-		{
-			nSize = GlobalSize(cf.m_hgData);
-			if(nSize > 0)
-			{
-				if(SavePolicy().TooLarge(static_cast<std::uint64_t>(nSize)))
-				{
-					CString cs;
-					cs.Format(_T("Maximum clip size reached max size = %lld, clip size = %Id"), SavePolicy().Settings().maxClipSizeInBytes, nSize);
-					Log(cs);
-
-					oleData.Release();
-					return -1;
-				}
-
-				ASSERT(::IsValid(cf.m_hgData));
-				
-				m_Formats.Add(cf);
-				bSuccess = true;
-			}
-			else
-			{
-				ASSERT(FALSE); // a valid GlobalMem with 0 size is strange
-				cf.Free();
-				Log(StrF(_T("Data length is 0 for type %s"), GetFormatName(cf.m_cfType).GetString()));
-			}
-			cf.m_hgData = 0; // m_Formats owns it now
-		}
-
-		Log(StrF(_T("End of load - type %s, Success: %d"), GetFormatName(cf.m_cfType).GetString(), bSuccess));
 	}
 
 	Log(StrF(_T("End enumerating over supported types, Count: %d"), numTypes));
-	
+
+	return true;
+}
+
+bool CClip::LoadClipboardFormat(COleDataObjectEx& oleData, CClipFormat& cf, CClipFormat& cfDesc, CString& activeApp)
+{
+	if (IsIgnoredDib(oleData, cf.m_cfType, activeApp))
+	{
+		Log(StrF(_T("Ignore CF_DIB from %s"), activeApp.GetString()));
+		return true;
+	}
+
+	BOOL bSuccess = false;
+	Log(StrF(_T("Begin try and load type %s"), GetFormatName(cf.m_cfType).GetString()));
+
+	if (!FetchFormatData(oleData, cf, cfDesc))
+	{
+		return true;
+	}
+
+	if (!StoreFetchedFormat(cf, bSuccess))
+	{
+		return false;
+	}
+
+	Log(StrF(_T("End of load - type %s, Success: %d"), GetFormatName(cf.m_cfType).GetString(), bSuccess));
+
+	return true;
+}
+
+bool CClip::IsIgnoredDib(COleDataObjectEx& oleData, CLIPFORMAT type, CString& activeApp)
+{
+	return type == CF_DIB &&
+		oleData.IsDataAvailable(CF_TEXT) &&
+		SavePolicy().IgnoresDibFrom(std::wstring(activeApp.MakeLower().GetString()));
+}
+
+bool CClip::FetchFormatData(COleDataObjectEx& oleData, CClipFormat& cf, CClipFormat& cfDesc)
+{
+	// is this the description we already fetched?
+	if(cf.m_cfType == cfDesc.m_cfType)
+	{
+		cf = cfDesc;
+		cfDesc.m_hgData = 0; // cf owns it now (to go into m_Formats)
+		return true;
+	}
+
+	if(!oleData.IsDataAvailable(cf.m_cfType))
+	{
+		Log(StrF(_T("End of load - Data is not available for type %s"), GetFormatName(cf.m_cfType).GetString()));
+		return false;
+	}
+
+	for (int tries = 0; tries < 2; tries++)
+	{
+		cf.m_hgData = oleData.GetGlobalData(cf.m_cfType);
+		if (cf.m_hgData != NULL)
+			break;
+
+		Log(StrF(_T("Tried to get data for type: %s, data is NULL, try: %d"), GetFormatName(cf.m_cfType).GetString(), tries + 1));
+		Sleep(5);
+	}
+
+	return true;
+}
+
+bool CClip::StoreFetchedFormat(CClipFormat& cf, BOOL& bSuccess)
+{
+	if(!cf.m_hgData)
+	{
+		return true;
+	}
+
+	const INT_PTR nSize = static_cast<INT_PTR>(GlobalSize(cf.m_hgData));
+	if(nSize > 0)
+	{
+		if(SavePolicy().TooLarge(static_cast<std::uint64_t>(nSize)))
+		{
+			CString cs;
+			cs.Format(_T("Maximum clip size reached max size = %lld, clip size = %Id"), SavePolicy().Settings().maxClipSizeInBytes, nSize);
+			Log(cs);
+
+			return false;
+		}
+
+		ASSERT(::IsValid(cf.m_hgData));
+
+		m_Formats.Add(cf);
+		bSuccess = true;
+	}
+	else
+	{
+		ASSERT(FALSE); // a valid GlobalMem with 0 size is strange
+		cf.Free();
+		Log(StrF(_T("Data length is 0 for type %s"), GetFormatName(cf.m_cfType).GetString()));
+	}
+	cf.m_hgData = 0; // m_Formats owns it now
+
+	return true;
+}
+
+int CClip::FinishLoadFromClipboard(COleDataObjectEx& oleData, CClipFormat& cfDesc, bool bIsDescSet, CRegExFilterHelper& regexFilters, CString& activeApp)
+{
 	m_Time = CTime::GetCurrentTime();
 			
 	if(!bIsDescSet)
@@ -748,6 +809,25 @@ bool CClip::AddToDB(bool bCheckForDuplicates)
 		return false;
 	}
 
+	int removeStickySettingClipId = ApplyAddToDbSticky();
+
+	bResult = AddRowsInTransaction(removeStickySettingClipId);
+
+	if(bResult)
+	{
+		const std::wstring& sound = SavePolicy().Settings().playSoundOnCopy;
+		if(!sound.empty())
+			PlaySound(sound.c_str(), NULL, SND_FILENAME|SND_ASYNC);
+	}
+	
+	// should be emptied by AddToDataTable
+	//ASSERT(m_Formats.GetSize() == 0);
+	
+	return bResult;
+}
+
+int CClip::ApplyAddToDbSticky()
+{
 	int removeStickySettingClipId = -1;
 
 	if (m_addToDbStickyEnum == AddToDbStickyEnum::MAKE_TOP_STICKY)
@@ -763,20 +843,8 @@ bool CClip::AddToDB(bool bCheckForDuplicates)
 		m_stickyClipOrder = this->GetNewTopSticky(m_parentId, -1);
 		removeStickySettingClipId = GetExistingTopStickyClipId(m_parentId);
 	}
-	
-	bResult = AddRowsInTransaction(removeStickySettingClipId);
 
-	if(bResult)
-	{
-		const std::wstring& sound = SavePolicy().Settings().playSoundOnCopy;
-		if(!sound.empty())
-			PlaySound(sound.c_str(), NULL, SND_FILENAME|SND_ASYNC);
-	}
-	
-	// should be emptied by AddToDataTable
-	//ASSERT(m_Formats.GetSize() == 0);
-	
-	return bResult;
+	return removeStickySettingClipId;
 }
 
 bool CClip::MoveDuplicateToTop()
@@ -1396,37 +1464,8 @@ BOOL CClip::WriteTextToFile(CString path, BOOL unicode, BOOL asci, BOOL rtf, BOO
 	CFile f;
 	if(f.Open(path, CFile::modeWrite|CFile::modeCreate))
 	{
-		CStringW w = GetUnicodeTextFormat();
-		CStringA a = GetCFTextTextFormat();
-		CStringA rtfA = GetRTFTextFormat();		
-
-		if (utf8 && w != _T(""))
+		if (WriteTextFormat(f, unicode, asci, rtf, forceUnicode, utf8))
 		{
-			CStringA utf8Data = CTextConvert::UnicodeToUTF8(w);
-			f.Write(utf8Data.GetBuffer(), utf8Data.GetLength());
-
-			ret = true;
-		}
-		else if(unicode && (w != _T("") || forceUnicode))
-		{
-			std::byte header[2];
-			header[0] = (std::byte)0xFF;
-			header[1] = (std::byte)0xFE;
-			f.Write(&header, 2);
-			f.Write(w.GetBuffer(), w.GetLength() * sizeof(wchar_t));
-
-			ret = true;
-		}
-		else if(asci && a != _T(""))
-		{
-			f.Write(a.GetBuffer(), a.GetLength());
-
-			ret = true;
-		}
-		else if (rtf && rtfA != _T(""))
-		{
-			f.Write(rtfA.GetBuffer(), rtfA.GetLength());
-
 			ret = true;
 		}
 
@@ -1434,6 +1473,53 @@ BOOL CClip::WriteTextToFile(CString path, BOOL unicode, BOOL asci, BOOL rtf, BOO
 	}
 
 	return ret;
+}
+
+bool CClip::WriteTextFormat(CFile& f, BOOL unicode, BOOL asci, BOOL rtf, BOOL forceUnicode, BOOL utf8)
+{
+	CStringW w = GetUnicodeTextFormat();
+	CStringA a = GetCFTextTextFormat();
+	CStringA rtfA = GetRTFTextFormat();
+
+	if (utf8 && w != _T(""))
+	{
+		CStringA utf8Data = CTextConvert::UnicodeToUTF8(w);
+		f.Write(utf8Data.GetBuffer(), utf8Data.GetLength());
+
+		return true;
+	}
+
+	if(unicode && (w != _T("") || forceUnicode))
+	{
+		std::byte header[2];
+		header[0] = (std::byte)0xFF;
+		header[1] = (std::byte)0xFE;
+		f.Write(&header, 2);
+		f.Write(w.GetBuffer(), w.GetLength() * sizeof(wchar_t));
+
+		return true;
+	}
+
+	return WriteAnsiTextFormat(f, a, rtfA, asci, rtf);
+}
+
+bool CClip::WriteAnsiTextFormat(CFile& f, CStringA& a, CStringA& rtfA, BOOL asci, BOOL rtf)
+{
+	if(asci && a != _T(""))
+	{
+		f.Write(a.GetBuffer(), a.GetLength());
+
+		return true;
+	}
+
+	if (rtf && rtfA != _T(""))
+	{
+		f.Write(rtfA.GetBuffer(), rtfA.GetLength());
+
+		return true;
+	}
+
+	return false;
 }
 
 BOOL CClip::SaveFormats(CString *unicode, CStringA *asci, CStringA *rtf, BOOL updateDescription, std::vector<BYTE> *cf_dibBytes, std::vector<BYTE>* pngBytes)
@@ -1446,15 +1532,7 @@ BOOL CClip::SaveFormats(CString *unicode, CStringA *asci, CStringA *rtf, BOOL up
 
 	EmptyFormats();
 
-	if (cf_dibBytes != nullptr && cf_dibBytes->size() > 0)
-	{
-		AddFormat(CF_DIB, cf_dibBytes->data(), cf_dibBytes->size(), false);
-	}
-
-	if (pngBytes != nullptr && pngBytes->size() > 0)
-	{
-		AddFormat(theApp.m_PNG_Format, pngBytes->data(), pngBytes->size(), false);
-	}
+	AddImageFormats(cf_dibBytes, pngBytes);
 
 	if (rtf != nullptr)
 	{
@@ -1475,6 +1553,19 @@ BOOL CClip::SaveFormats(CString *unicode, CStringA *asci, CStringA *rtf, BOOL up
 	}
 
 	return SaveFormatsInTransaction(deletedData, updateDescription) ? TRUE : FALSE;
+}
+
+void CClip::AddImageFormats(std::vector<BYTE>* cf_dibBytes, std::vector<BYTE>* pngBytes)
+{
+	if (cf_dibBytes != nullptr && cf_dibBytes->size() > 0)
+	{
+		AddFormat(CF_DIB, cf_dibBytes->data(), cf_dibBytes->size(), false);
+	}
+
+	if (pngBytes != nullptr && pngBytes->size() > 0)
+	{
+		AddFormat(theApp.m_PNG_Format, pngBytes->data(), pngBytes->size(), false);
+	}
 }
 
 bool CClip::SaveFormatsInTransaction(const ARRAY& deletedData, BOOL updateDescription)
@@ -1604,19 +1695,9 @@ bool CClip::AddFileDataToData(CString &errorMessage)
 
 	bool addedFileData = false;
 
-	int nCF_HDROPIndex = -1;
-	int dittoDataIndex = -1;
-	for (int i = 0; i < size; i++)
-	{
-		if (m_Formats[i].m_cfType == CF_HDROP)
-		{
-			nCF_HDROPIndex = i;
-		}
-		else if(m_Formats[i].m_cfType == theApp.m_DittoFileData)
-		{
-			dittoDataIndex = i;
-		}
-	}	
+	const FileDataIndexes indexes{ FindFileDataIndexes(size) };
+	const int nCF_HDROPIndex{ indexes.hdrop };
+	const int dittoDataIndex{ indexes.dittoData };
 
 	if (nCF_HDROPIndex < 0)
 	{
@@ -1643,8 +1724,50 @@ bool CClip::AddFileDataToData(CString &errorMessage)
 	}
 
 	CString newDesc = _T("File Contents - ");
-	const ULONGLONG maxSize = SavePolicy().Settings().maxFileContentsSize;
 	std::vector<CopiedFile> copied;
+	ReadDroppedFiles(files, copied, newDesc, errorMessage);
+
+	if (copied.empty())
+		return false;
+
+	if (!AddFileDataRecord(copied, errorMessage))
+	{
+		return false;
+	}
+	addedFileData = true;
+
+	// AddFormat appended the record after the clip's existing formats, which are already in the
+	// database; drop them so AddToDataTable saves only the record. Upstream removed index i of a
+	// shrinking array, which skipped formats and removed file data instead.
+	this->m_Formats.RemoveAt(0, size);
+
+	this->m_Desc = newDesc;
+
+	SaveFileDataToDatabase(errorMessage);
+
+	return addedFileData;
+}
+
+CClip::FileDataIndexes CClip::FindFileDataIndexes(INT_PTR size)
+{
+	FileDataIndexes indexes{};
+	for (int i = 0; i < size; i++)
+	{
+		if (m_Formats[i].m_cfType == CF_HDROP)
+		{
+			indexes.hdrop = i;
+		}
+		else if(m_Formats[i].m_cfType == theApp.m_DittoFileData)
+		{
+			indexes.dittoData = i;
+		}
+	}
+	return indexes;
+}
+
+void CClip::ReadDroppedFiles(const std::vector<std::wstring>& files, std::vector<CopiedFile>& copied, CString& newDesc, CString& errorMessage)
+{
+	const ULONGLONG maxSize = SavePolicy().Settings().maxFileContentsSize;
 	for (const std::wstring& path : files)
 	{
 		CopiedFile file{};
@@ -1655,10 +1778,10 @@ bool CClip::AddFileDataToData(CString &errorMessage)
 		newDesc += path.c_str();
 		newDesc += _T("\n");
 	}
+}
 
-	if (copied.empty())
-		return false;
-
+bool CClip::AddFileDataRecord(const std::vector<CopiedFile>& copied, CString& errorMessage)
+{
 	// one version-2 record holds every file; upstream added one format per file, and each
 	// replaced the one before, so only the last file was kept
 	std::vector<DittoCore::FileDataEntry> entries;
@@ -1673,15 +1796,11 @@ bool CClip::AddFileDataToData(CString &errorMessage)
 		return false;
 	}
 	AddFormat(theApp.m_DittoFileData, const_cast<std::byte*>(record.data()), static_cast<UINT>(record.size()));
-	addedFileData = true;
+	return true;
+}
 
-	// AddFormat appended the record after the clip's existing formats, which are already in the
-	// database; drop them so AddToDataTable saves only the record. Upstream removed index i of a
-	// shrinking array, which skipped formats and removed file data instead.
-	this->m_Formats.RemoveAt(0, size);
-
-	this->m_Desc = newDesc;
-
+void CClip::SaveFileDataToDatabase(CString& errorMessage)
+{
 	if (this->ModifyDescription())
 	{
 		if (this->AddToDataTable() == FALSE)
@@ -1693,8 +1812,6 @@ bool CClip::AddFileDataToData(CString &errorMessage)
 	{
 		errorMessage += _T("Error saving main table to database.");
 	}
-
-	return addedFileData;
 }
 
 std::unique_ptr<Gdiplus::Bitmap> CClip::CreateGdiplusBitmap()

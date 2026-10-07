@@ -188,40 +188,9 @@ UINT CProcessPaste::MarkAsPastedThread(LPVOID pParam)
 
 	try
 	{
-		int refreshFlags = 0;
-
 		if(pData)
 		{
-			int clipCount = (int)pData->ids.GetCount();
-
-			if(CGetSetOptions::m_bUpdateTimeOnPaste &&
-				pData->updateClipOrder)
-			{
-				if (CGetSetOptions::m_refreshViewAfterPasting)
-				{
-					refreshFlags |= UPDATE_AFTER_PASTE_SELECT_CLIP;
-				}
-
-				for (int i = 0; i < clipCount; i++)
-				{
-					int id = pData->ids.ElementAt(i);
-					clipId = id;
-					MoveToTopOrder(id, pData->pastedFromGroup);
-				}
-			}
-
-			for (int i = 0; i < clipCount; i++)
-			{
-				int id = pData->ids.ElementAt(i);
-				clipId = id;
-				theApp.m_db.execDMLEx(_T("UPDATE Main SET lastPasteDate = %d where lID = %d;"), (int)CTime::GetCurrentTime().GetTime(), id);
-			}
-
-			for (int i = 0; i < clipCount; i++)
-			{
-				int id = pData->ids.ElementAt(i);
-				theApp.RefreshClipInUI(id, refreshFlags);
-			}
+			UpdatePastedClips(*pData, clipId);
 
 			bRet = TRUE;
 		}
@@ -240,6 +209,42 @@ UINT CProcessPaste::MarkAsPastedThread(LPVOID pParam)
 
 	UpdateTimeEvent.SetEvent();
 	return bRet;
+}
+
+void CProcessPaste::UpdatePastedClips(MarkAsPastedData& data, int& clipId)
+{
+	int refreshFlags = 0;
+
+	int clipCount = (int)data.ids.GetCount();
+
+	if(CGetSetOptions::m_bUpdateTimeOnPaste &&
+		data.updateClipOrder)
+	{
+		if (CGetSetOptions::m_refreshViewAfterPasting)
+		{
+			refreshFlags |= UPDATE_AFTER_PASTE_SELECT_CLIP;
+		}
+
+		for (int i = 0; i < clipCount; i++)
+		{
+			int id = data.ids.ElementAt(i);
+			clipId = id;
+			MoveToTopOrder(id, data.pastedFromGroup);
+		}
+	}
+
+	for (int i = 0; i < clipCount; i++)
+	{
+		int id = data.ids.ElementAt(i);
+		clipId = id;
+		theApp.m_db.execDMLEx(_T("UPDATE Main SET lastPasteDate = %d where lID = %d;"), (int)CTime::GetCurrentTime().GetTime(), id);
+	}
+
+	for (int i = 0; i < clipCount; i++)
+	{
+		int id = data.ids.ElementAt(i);
+		theApp.RefreshClipInUI(id, refreshFlags);
+	}
 }
 
 void CProcessPaste::MoveToTopOrder(int id, bool pastedFromGroup)

@@ -77,22 +77,9 @@ bool CClip_ImportExport::ImportFromSqliteDB(CppSQLite3DB& db, bool bAddToDB, boo
 	{
 		Clear();
 
-		int nVersion = q.getIntField(_T("lVersion"));
-		if (nVersion == 1)
+		if (ImportRow(db, q, bAddToDB, bPutOnClipboard))
 		{
-			if (ImportFromSqliteV1(db, q))
-			{
-				if (bAddToDB)
-				{
-					MakeLatestOrder();
-					AddToDB(true);
-					bRet = true;
-				}
-				else if (bPutOnClipboard)
-				{
-					bRet = true;
-				}
-			}
+			bRet = true;
 		}
 
 		m_importCount++;
@@ -107,20 +94,46 @@ bool CClip_ImportExport::ImportFromSqliteDB(CppSQLite3DB& db, bool bAddToDB, boo
 		q.nextRow();
 	}
 
-	if (bRet && bAddToDB)
+	if (bRet)
 	{
-		theApp.RefreshView();
-	}
-	else if (bRet && m_importCount == 1 && bPutOnClipboard)
-	{
-		PlaceFormatsOnclipboard();
-	}
-	else if (bRet && bPutOnClipboard)
-	{
-		PlaceCF_TEXT_AND_CF_UNICODETEXT_OnClipboard(csCF_TEXT, csCF_UNICODETEXT);
+		FinishImport(bAddToDB, bPutOnClipboard, csCF_TEXT, csCF_UNICODETEXT);
 	}
 
 	return bRet;
+}
+
+bool CClip_ImportExport::ImportRow(CppSQLite3DB& db, CppSQLite3Query& q, bool bAddToDB, bool bPutOnClipboard)
+{
+	int nVersion = q.getIntField(_T("lVersion"));
+	if (nVersion != 1 || !ImportFromSqliteV1(db, q))
+	{
+		return false;
+	}
+
+	if (bAddToDB)
+	{
+		MakeLatestOrder();
+		AddToDB(true);
+		return true;
+	}
+
+	return bPutOnClipboard;
+}
+
+void CClip_ImportExport::FinishImport(bool bAddToDB, bool bPutOnClipboard, CStringA& csCF_TEXT, CStringW& csCF_UNICODETEXT)
+{
+	if (bAddToDB)
+	{
+		theApp.RefreshView();
+	}
+	else if (m_importCount == 1 && bPutOnClipboard)
+	{
+		PlaceFormatsOnclipboard();
+	}
+	else if (bPutOnClipboard)
+	{
+		PlaceCF_TEXT_AND_CF_UNICODETEXT_OnClipboard(csCF_TEXT, csCF_UNICODETEXT);
+	}
 }
 
 bool CClip_ImportExport::PlaceCF_TEXT_AND_CF_UNICODETEXT_OnClipboard(CStringA& csCF_TEXT, CStringW& csCF_UNICODETEXT)

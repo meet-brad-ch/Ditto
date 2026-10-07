@@ -288,6 +288,172 @@ private:
 	// CF_TEXT and CF_UNICODETEXT bytes up to and including the terminator, within the block;
 	// other formats unchanged
 	static std::span<const std::byte> TextBytesWithTerminator(CLIPFORMAT type, std::span<const std::byte> bytes);
+
+	/**
+	 * @brief LoadFromClipboard's checks before attaching: the ignore and exclude formats, and the
+	 * multi-paste delay (sleeps 1500 ms when the delay format is on the clipboard).
+	 * @return False when this clipboard change is to be skipped (logged).
+	 */
+	bool MayReadClipboard();
+
+	/**
+	 * @brief LoadFromClipboard's CanIncludeInClipboardHistory check (when the ignore formats are enforced).
+	 * @param oleData The attached clipboard.
+	 * @return True when the source asks to keep the copy out of the history (logged).
+	 */
+	bool IsExcludedFromHistory(COleDataObjectEx& oleData);
+
+	/**
+	 * @brief LoadFromClipboard's description step: sets m_Desc from CF_UNICODETEXT, else from CF_TEXT.
+	 * @param oleData The attached clipboard.
+	 * @param cfDesc Receives the format the description was read from and its data.
+	 * @return Whether the description was set.
+	 */
+	bool LoadDescription(COleDataObjectEx& oleData, CClipFormat& cfDesc);
+
+	/**
+	 * @brief Tries to set the description from one text format, fetching its data up to 10 times.
+	 * @param oleData The attached clipboard.
+	 * @param cfDesc Gets the format type, and its data when the format is available.
+	 * @param type CF_UNICODETEXT or CF_TEXT.
+	 * @param unicode Whether the format is UTF-16 text.
+	 * @param typeName The format's name in the log ("cf_unicode", "cf_text").
+	 * @return Whether the description was set.
+	 */
+	bool TryDescriptionFormat(COleDataObjectEx& oleData, CClipFormat& cfDesc, CLIPFORMAT type, bool unicode, const TCHAR* typeName);
+
+	/**
+	 * @brief LoadFromClipboard's format loop: adds the clipboard data of each supported type to m_Formats.
+	 * @param oleData The attached clipboard.
+	 * @param types The supported types, in order.
+	 * @param cf The working format (its data is handed to m_Formats).
+	 * @param cfDesc The description format; its data moves to m_Formats when its type is loaded.
+	 * @param activeApp The source application (lower-cased in place by the CF_DIB check).
+	 * @return False when a format is over the maximum clip size (logged); the load is then aborted.
+	 */
+	bool LoadClipboardFormats(COleDataObjectEx& oleData, CClipTypes& types, CClipFormat& cf, CClipFormat& cfDesc, CString& activeApp);
+
+	/**
+	 * @brief Loads one supported type from the clipboard into m_Formats.
+	 * @param oleData The attached clipboard.
+	 * @param cf The working format; its type is set by the caller.
+	 * @param cfDesc The description format.
+	 * @param activeApp The source application (lower-cased in place by the CF_DIB check).
+	 * @return False when the format is over the maximum clip size (logged).
+	 */
+	bool LoadClipboardFormat(COleDataObjectEx& oleData, CClipFormat& cf, CClipFormat& cfDesc, CString& activeApp);
+
+	/**
+	 * @brief Whether a CF_DIB is skipped because the clipboard has text and the source app's DIBs are ignored.
+	 * @param oleData The attached clipboard.
+	 * @param type The type being loaded.
+	 * @param activeApp The source application; lower-cased in place when the first two checks hold.
+	 * @return True when the CF_DIB is skipped.
+	 */
+	bool IsIgnoredDib(COleDataObjectEx& oleData, CLIPFORMAT type, CString& activeApp);
+
+	/**
+	 * @brief Gets the data of cf's type: the description's data when it is that type, else from the clipboard (2 tries).
+	 * @param oleData The attached clipboard.
+	 * @param cf The working format; receives the data.
+	 * @param cfDesc The description format; gives up its data when it is cf's type.
+	 * @return False when the type is not on the clipboard (logged).
+	 */
+	static bool FetchFormatData(COleDataObjectEx& oleData, CClipFormat& cf, CClipFormat& cfDesc);
+
+	/**
+	 * @brief Hands cf's data to m_Formats when it is not empty; frees empty data.
+	 * @param cf The working format; its data is cleared unless the size check fails.
+	 * @param bSuccess Set to true when the format was added.
+	 * @return False when the data is over the maximum clip size (logged).
+	 */
+	bool StoreFetchedFormat(CClipFormat& cf, BOOL& bSuccess);
+
+	/**
+	 * @brief LoadFromClipboard's last step: the time, the type description, the description cleanup, the regex filters.
+	 * @param oleData The attached clipboard; released here.
+	 * @param cfDesc The description format; its data is freed when it was not added.
+	 * @param bIsDescSet Whether the description was set from text.
+	 * @param regexFilters The text filters that keep a copy out of the history.
+	 * @param activeApp The source application.
+	 * @return TRUE when the clip is to be saved, FALSE without formats, -1 when a filter matches.
+	 */
+	int FinishLoadFromClipboard(COleDataObjectEx& oleData, CClipFormat& cfDesc, bool bIsDescSet, CRegExFilterHelper& regexFilters, CString& activeApp);
+
+	/**
+	 * @brief AddToDB's sticky step: sets the new sticky order that m_addToDbStickyEnum asks for.
+	 * @return The clip whose top-sticky setting is to be removed; -1 for none.
+	 */
+	int ApplyAddToDbSticky();
+
+	/**
+	 * @brief WriteTextToFile's write step: writes the first text format that is asked for and present.
+	 * @param f The open file.
+	 * @param unicode Write CF_UNICODETEXT (UTF-16 with a byte order mark).
+	 * @param asci Write CF_TEXT.
+	 * @param rtf Write the RTF format.
+	 * @param forceUnicode Write the UTF-16 file even when the clip has no unicode text.
+	 * @param utf8 Write CF_UNICODETEXT as UTF-8.
+	 * @return Whether a format was written.
+	 */
+	bool WriteTextFormat(CFile& f, BOOL unicode, BOOL asci, BOOL rtf, BOOL forceUnicode, BOOL utf8);
+
+	/**
+	 * @brief WriteTextFormat's 8-bit step: writes CF_TEXT, else the RTF, when asked for and not empty.
+	 * @param f The open file.
+	 * @param a The clip's CF_TEXT.
+	 * @param rtfA The clip's RTF.
+	 * @param asci Write CF_TEXT.
+	 * @param rtf Write the RTF format.
+	 * @return Whether a format was written.
+	 */
+	static bool WriteAnsiTextFormat(CFile& f, CStringA& a, CStringA& rtfA, BOOL asci, BOOL rtf);
+
+	/**
+	 * @brief SaveFormats' image step: adds the CF_DIB and PNG bytes that are given and not empty.
+	 * @param cf_dibBytes The CF_DIB bytes, or null.
+	 * @param pngBytes The PNG bytes, or null.
+	 */
+	void AddImageFormats(std::vector<BYTE>* cf_dibBytes, std::vector<BYTE>* pngBytes);
+
+	/** @brief Where AddFileDataToData found its formats in m_Formats; -1 when absent. */
+	struct FileDataIndexes
+	{
+		/** @brief The (last) CF_HDROP format. */
+		int hdrop{ -1 };
+		/** @brief The (last) "Ditto File Data" format. */
+		int dittoData{ -1 };
+	};
+
+	/**
+	 * @brief Finds the CF_HDROP and "Ditto File Data" formats.
+	 * @param size The number of formats to search.
+	 * @return Their indexes.
+	 */
+	FileDataIndexes FindFileDataIndexes(INT_PTR size);
+
+	/**
+	 * @brief Reads the dropped files for AddFileDataToData.
+	 * @param files The paths of the dropped files.
+	 * @param copied Receives the files that could be read.
+	 * @param newDesc Gets each read file's path and a line feed appended.
+	 * @param errorMessage Gets the reasons appended for the files that could not be read.
+	 */
+	void ReadDroppedFiles(const std::vector<std::wstring>& files, std::vector<CopiedFile>& copied, CString& newDesc, CString& errorMessage);
+
+	/**
+	 * @brief Adds one "Ditto File Data" record holding all copied files.
+	 * @param copied The files.
+	 * @param errorMessage Gets the reason appended when the record is too large.
+	 * @return False when the record is too large to save.
+	 */
+	bool AddFileDataRecord(const std::vector<CopiedFile>& copied, CString& errorMessage);
+
+	/**
+	 * @brief Saves the description and the file data record to the database.
+	 * @param errorMessage Gets the reason appended when a step fails.
+	 */
+	void SaveFileDataToDatabase(CString& errorMessage);
 };
 
 

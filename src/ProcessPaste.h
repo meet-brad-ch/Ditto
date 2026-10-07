@@ -54,6 +54,15 @@ private:
 	// MarkAsPastedThread's order step for one clip: gives it the newest group order (pastedFromGroup)
 	// or the newest main order, so it moves to the top of its list
 	static void MoveToTopOrder(int id, bool pastedFromGroup);
+
+	/**
+	 * @brief MarkAsPastedThread's database step: moves the clips to the top (when the options ask),
+	 * sets their paste time and refreshes them in the UI.
+	 * @param data The pasted clips.
+	 * @param clipId Set to the clip being updated, for the error report.
+	 * @throws CppSQLite3Exception When an update fails; the remaining steps are skipped.
+	 */
+	static void UpdatePastedClips(MarkAsPastedData& data, int& clipId);
 };
 
 #endif // !defined(AFX_PROCESSPASTE_H__185CBB6F_4B63_4397_8FF9_E18D777DA506__INCLUDED_)

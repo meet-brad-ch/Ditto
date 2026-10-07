@@ -11,6 +11,7 @@
 #include "Md5.h"
 #include "ErrorReport.h"
 #include "..\Shared\TextConvert.h"
+#include <algorithm>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -172,26 +173,33 @@ void CCopyProperties::LoadDataFromCClip(CClip &Clip)
 
 	m_GroupCombo.SetCurSelOnItemData(Clip.m_parentId);
 
+	LoadHotKeys(Clip);
+
+	m_QuickPasteText.SetWindowText(Clip.m_csQuickPaste);
+
+	LoadFormatList(Clip);
+
+	//show the selected data md5
+	OnLbnSelchangeCopyData();
+
+	if(Clip.m_bIsGroup == FALSE)
+	{
+		HideMoveToGroupHotKey();
+	}
+}
+
+bool CCopyProperties::IsExtendedHotKey(BYTE key)
+{
+	return std::find(s_extendedHotKeys.begin(), s_extendedHotKeys.end(), key) != s_extendedHotKeys.end();
+}
+
+void CCopyProperties::LoadHotKeys(CClip &Clip)
+{
 	DWORD shortcut = ACCEL_MAKEKEY(LOBYTE(Clip.m_shortCut), ((HIBYTE(Clip.m_shortCut)) &~HOTKEYF_EXT));
 
-	switch (LOBYTE(shortcut))
+	if (IsExtendedHotKey(LOBYTE(shortcut)))
 	{
-		case VK_LEFT:
-		case VK_UP:
-		case VK_RIGHT:
-		case VK_DOWN: // arrow keys
-		case VK_PRIOR:
-		case VK_NEXT: // page up and page down
-		case VK_END:
-		case VK_HOME:
-		case VK_INSERT:
-		case VK_DELETE:
-		case VK_DIVIDE: // numpad slash
-		case VK_NUMLOCK:
-		{
-			shortcut = ACCEL_MAKEKEY(LOBYTE(shortcut), (HIBYTE(shortcut) | HOTKEYF_EXT));
-		}
-		break;
+		shortcut = ACCEL_MAKEKEY(LOBYTE(shortcut), (HIBYTE(shortcut) | HOTKEYF_EXT));
 	}
 
 	m_HotKey.SetHotKey(LOBYTE(shortcut), (HIBYTE(shortcut)));
@@ -209,9 +217,10 @@ void CCopyProperties::LoadDataFromCClip(CClip &Clip)
 	{
 		::CheckDlgButton(m_hWnd, IDC_CHECK_WIN_MOVE_TO_GROUP, BST_CHECKED);
 	}
+}
 
-	m_QuickPasteText.SetWindowText(Clip.m_csQuickPaste);
-
+void CCopyProperties::LoadFormatList(CClip &Clip)
+{
 	CString cs;
 	CClipFormat* pCF;
 	INT_PTR count = Clip.m_Formats.GetSize();
@@ -226,14 +235,19 @@ void CCopyProperties::LoadDataFromCClip(CClip &Clip)
 
 			cs.Format(_T("%s, %s"), GetFormatName(pCF->m_cfType).GetString(), size);
 			int nIndex = m_lCopyData.AddString(cs);
-			
+
 			if(m_lCopyID == -1 && pCF->m_dataId == -1)
 				m_lCopyData.SetItemData(nIndex, i);
 			else
 				m_lCopyData.SetItemData(nIndex, pCF->m_dataId);
 		}
 	}
-	
+
+	SelectLastFormat();
+}
+
+void CCopyProperties::SelectLastFormat()
+{
 	int selectedRow = m_lCopyData.GetCount()-1;
 	if(selectedRow >= 0 && selectedRow < m_lCopyData.GetCount())
 	{
@@ -242,50 +256,47 @@ void CCopyProperties::LoadDataFromCClip(CClip &Clip)
 		m_lCopyData.SetCaretIndex(selectedRow);
 		m_lCopyData.SetAnchorIndex(selectedRow);
 	}
+}
 
-	//show the selected data md5
-	OnLbnSelchangeCopyData();
-	
-	if(Clip.m_bIsGroup == FALSE)
+void CCopyProperties::HideMoveToGroupHotKey()
+{
+	::ShowWindow(::GetDlgItem(m_hWnd, IDC_STATIC_HOT_KEY_MOVE_TO_GROUP), SW_HIDE);
+	::ShowWindow(::GetDlgItem(m_hWnd, IDC_HOTKEY_MOVE_TO_GROUP), SW_HIDE);
+	::ShowWindow(::GetDlgItem(m_hWnd, IDC_CHECK_WIN_MOVE_TO_GROUP), SW_HIDE);
+	::ShowWindow(::GetDlgItem(m_hWnd, IDC_HOT_KEY_GLOBAL_MOVE_TO_GROUP), SW_HIDE);
+
+	CRect anchorRect;
+	::GetWindowRect(::GetDlgItem(m_hWnd, IDC_STATIC_HOT_KEY_MOVE_TO_GROUP), &anchorRect);
+	ScreenToClient(&anchorRect);
+
+
+	HWND hwnd = ::GetTopWindow(this->GetSafeHwnd());
+	// while we have a valid hwnd,
+	// loop through all child windows
+	while (hwnd)
 	{
-		::ShowWindow(::GetDlgItem(m_hWnd, IDC_STATIC_HOT_KEY_MOVE_TO_GROUP), SW_HIDE);
-		::ShowWindow(::GetDlgItem(m_hWnd, IDC_HOTKEY_MOVE_TO_GROUP), SW_HIDE);
-		::ShowWindow(::GetDlgItem(m_hWnd, IDC_CHECK_WIN_MOVE_TO_GROUP), SW_HIDE);
-		::ShowWindow(::GetDlgItem(m_hWnd, IDC_HOT_KEY_GLOBAL_MOVE_TO_GROUP), SW_HIDE);
+		CRect rect;
+		::GetWindowRect(hwnd, &rect);
+		ScreenToClient(&rect);
 
-		CRect anchorRect;
-		::GetWindowRect(::GetDlgItem(m_hWnd, IDC_STATIC_HOT_KEY_MOVE_TO_GROUP), &anchorRect);
-		ScreenToClient(&anchorRect);
-		
-
-		HWND hwnd = ::GetTopWindow(this->GetSafeHwnd());
-		// while we have a valid hwnd, 
-		// loop through all child windows
-		while (hwnd)
+		if(rect.top > anchorRect.bottom)
 		{
-			CRect rect;
-			::GetWindowRect(hwnd, &rect);
-			ScreenToClient(&rect);
-
-			if(rect.top > anchorRect.bottom)
-			{
-				::MoveWindow(hwnd, rect.left, 
-					rect.top - (anchorRect.Height()+4), rect.Width(), 
-					rect.Height(), TRUE);
-			}
-
-			// do something with the hwnd
-			// and get the next child control's hwnd
-			hwnd = ::GetNextWindow(hwnd, GW_HWNDNEXT);
+			::MoveWindow(hwnd, rect.left,
+				rect.top - (anchorRect.Height()+4), rect.Width(),
+				rect.Height(), TRUE);
 		}
 
-		CRect rect2;
-		::GetWindowRect(m_hWnd, &rect2);
-
-		::MoveWindow(m_hWnd, rect2.left, 
-				rect2.top, rect2.Width(), 
-				rect2.Height() - (anchorRect.Height()+4), TRUE);
+		// do something with the hwnd
+		// and get the next child control's hwnd
+		hwnd = ::GetNextWindow(hwnd, GW_HWNDNEXT);
 	}
+
+	CRect rect2;
+	::GetWindowRect(m_hWnd, &rect2);
+
+	::MoveWindow(m_hWnd, rect2.left,
+			rect2.top, rect2.Width(),
+			rect2.Height() - (anchorRect.Height()+4), TRUE);
 }
 
 void CCopyProperties::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized) 

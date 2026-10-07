@@ -257,21 +257,11 @@ void CDeleteClipData::FilterItems()
 	//First search the already filtered text, see if we need to add them back in
 	std::vector<int> filteredRowsToDelete;
 	std::vector<CDeleteData> addBackIn;
-	INT_PTR count = m_filteredOut.size();
-	for (int i = 0; i < count; i++)
-	{
-		CDeleteData data = m_filteredOut[i];
-
-		if (MatchesFilter(&data))
-		{
-			addBackIn.push_back(data);
-			filteredRowsToDelete.push_back(i);
-		}
-	}
+	FindFilteredOutMatches(addBackIn, filteredRowsToDelete);
 
 	//next search the main list
 	std::vector<int> rowsToDelete;
-	count = m_data.size();
+	INT_PTR count = m_data.size();
 	for (int i = 0; i < count; i++)
 	{
 		CDeleteData data = m_data[i];
@@ -319,7 +309,48 @@ void CDeleteClipData::FilterItems()
 	m_clipList.SetItemCountEx((int)m_data.size(), 0);
 }
 
+void CDeleteClipData::FindFilteredOutMatches(std::vector<CDeleteData>& addBackIn, std::vector<int>& filteredRowsToDelete)
+{
+	INT_PTR count = m_filteredOut.size();
+	for (int i = 0; i < count; i++)
+	{
+		CDeleteData data = m_filteredOut[i];
+
+		if (MatchesFilter(&data))
+		{
+			addBackIn.push_back(data);
+			filteredRowsToDelete.push_back(i);
+		}
+	}
+}
+
 bool CDeleteClipData::MatchesFilter(CDeleteData *pdata)
+{
+	if (IsRejectedByTitle(pdata))
+	{
+		return false;
+	}
+
+	if (m_filterByCreatedDate)
+	{
+		return IsInDateRange(pdata->m_createdDateTime, m_createdDateStart, m_createdTimeStart, m_createdDateEnd, m_createdTimeEnd);
+	}
+
+	if (m_filterByLastUsedDate)
+	{
+		return IsInDateRange(pdata->m_lastUsedDateTime, m_usedDateStart, m_usedTimeStart, m_usedDateEnd, m_usedTimeEnd);
+	}
+
+	if (m_filterByClipboardFormat)
+	{
+		return MatchesSelectedFormat(pdata);
+	}
+
+
+	return true;
+}
+
+bool CDeleteClipData::IsRejectedByTitle(CDeleteData* pdata)
 {
 	if(m_filterByClipTitle &&
 		m_clipTitle != _T("") &&
@@ -327,59 +358,29 @@ bool CDeleteClipData::MatchesFilter(CDeleteData *pdata)
 	{
 		if(pdata->m_Desc.MakeLower().Find(m_clipTitle.MakeLower()) == -1)
 		{
-			return false;
-		}
-	}
-
-	if (m_filterByCreatedDate)
-	{		
-		CTime dateStart = CTime(m_createdDateStart.GetYear(), m_createdDateStart.GetMonth(), m_createdDateStart.GetDay(), m_createdTimeStart.GetHour(), m_createdTimeStart.GetMinute(), m_createdTimeStart.GetSecond());
-		CTime dateEnd = CTime(m_createdDateEnd.GetYear(), m_createdDateEnd.GetMonth(), m_createdDateEnd.GetDay(), m_createdTimeEnd.GetHour(), m_createdTimeEnd.GetMinute(), m_createdTimeEnd.GetSecond());
-
-		if (pdata->m_createdDateTime >= dateStart && pdata->m_createdDateTime <= dateEnd)
-		{
 			return true;
 		}
-		else
-		{
-			return false;
-		}
 	}
 
-	if (m_filterByLastUsedDate)
-	{
-		CTime dateStart = CTime(m_usedDateStart.GetYear(), m_usedDateStart.GetMonth(), m_usedDateStart.GetDay(), m_usedTimeStart.GetHour(), m_usedTimeStart.GetMinute(), m_usedTimeStart.GetSecond());
-		CTime dateEnd = CTime(m_usedDateEnd.GetYear(), m_usedDateEnd.GetMonth(), m_usedDateEnd.GetDay(), m_usedTimeEnd.GetHour(), m_usedTimeEnd.GetMinute(), m_usedTimeEnd.GetSecond());
+	return false;
+}
 
-		if (pdata->m_lastUsedDateTime >= dateStart && pdata->m_lastUsedDateTime <= dateEnd)
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
+bool CDeleteClipData::IsInDateRange(const CTime& value, const COleDateTime& startDate, const COleDateTime& startTime, const COleDateTime& endDate, const COleDateTime& endTime)
+{
+	CTime dateStart = CTime(startDate.GetYear(), startDate.GetMonth(), startDate.GetDay(), startTime.GetHour(), startTime.GetMinute(), startTime.GetSecond());
+	CTime dateEnd = CTime(endDate.GetYear(), endDate.GetMonth(), endDate.GetDay(), endTime.GetHour(), endTime.GetMinute(), endTime.GetSecond());
 
-	if (m_filterByClipboardFormat)
-	{
-		CString str1;
-		int n = m_clipboardFomatCombo.GetLBTextLen(m_clipboardFomatCombo.GetCurSel());
-		m_clipboardFomatCombo.GetLBText(m_clipboardFomatCombo.GetCurSel(), str1.GetBuffer(n));
-		str1.ReleaseBuffer();
+	return value >= dateStart && value <= dateEnd;
+}
 
-		if (pdata->m_clipboardFormat == str1)
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
+bool CDeleteClipData::MatchesSelectedFormat(const CDeleteData* pdata)
+{
+	CString str1;
+	int n = m_clipboardFomatCombo.GetLBTextLen(m_clipboardFomatCombo.GetCurSel());
+	m_clipboardFomatCombo.GetLBText(m_clipboardFomatCombo.GetCurSel(), str1.GetBuffer(n));
+	str1.ReleaseBuffer();
 
-
-	return true;
+	return pdata->m_clipboardFormat == str1;
 }
 
 void CDeleteClipData::OnLvnKeydownList2(NMHDR *pNMHDR, LRESULT *pResult)
@@ -409,31 +410,40 @@ void CDeleteClipData::OnLvnKeydownList2(NMHDR *pNMHDR, LRESULT *pResult)
 		break;
 		case 'N':
 		{
-			int nSelItem = m_clipList.GetNextItem(-1, LVNI_SELECTED);
-			if (nSelItem != -1 && nSelItem < m_clipList.GetItemCount() - 1)
-			{
-				SelectRow(nSelItem + 1);
-				CreateAndShowDescriptionWindow();
-			}
+			SelectNextRowAndDescribe();
 			*pResult = 1;
 		}
 		break;
 		case 'P':
 		{
-			int nSelItem = m_clipList.GetNextItem(-1, LVNI_SELECTED);
-			if (nSelItem != -1 && nSelItem > 0)
-			{
-				SelectRow(nSelItem - 1);
-				CreateAndShowDescriptionWindow();
-			}
-
+			SelectPreviousRowAndDescribe();
 			*pResult = 1;
 		}
 		break;
 		default:
 			*pResult = 0;
 			break;
-	}	
+	}
+}
+
+void CDeleteClipData::SelectNextRowAndDescribe()
+{
+	int nSelItem = m_clipList.GetNextItem(-1, LVNI_SELECTED);
+	if (nSelItem != -1 && nSelItem < m_clipList.GetItemCount() - 1)
+	{
+		SelectRow(nSelItem + 1);
+		CreateAndShowDescriptionWindow();
+	}
+}
+
+void CDeleteClipData::SelectPreviousRowAndDescribe()
+{
+	int nSelItem = m_clipList.GetNextItem(-1, LVNI_SELECTED);
+	if (nSelItem != -1 && nSelItem > 0)
+	{
+		SelectRow(nSelItem - 1);
+		CreateAndShowDescriptionWindow();
+	}
 }
 
 void CDeleteClipData::OnLvnItemchangedList2(NMHDR * /*pNMHDR*/, LRESULT *pResult)
@@ -517,53 +527,58 @@ void CDeleteClipData::OnLvnGetdispinfoList2(NMHDR *pNMHDR, LRESULT *pResult)
 	{
 		if (pDispInfo->item.iItem >= 0 && static_cast<size_t>(pDispInfo->item.iItem) < m_data.size())
 		{
-			switch (pDispInfo->item.iSubItem)
-			{
-				case 0:
-				{
-					CopyDisplayText(pDispInfo->item, StrF(_T("%d"), m_data[pDispInfo->item.iItem].m_lID));
-				}
-				break;
-				case 1:
-				{
-					  CopyDisplayText(pDispInfo->item, m_data[pDispInfo->item.iItem].m_Desc);
-				}
-				break;
-				case 2:
-				{
-					CopyDisplayText(pDispInfo->item, m_data[pDispInfo->item.iItem].m_quickPasteText);
-				}
-				break;
-				case 3:
-				{
-					  COleDateTime dtTime(m_data[pDispInfo->item.iItem].m_createdDateTime.GetTime());
-					  CopyDisplayText(pDispInfo->item, dtTime.Format());
-				}
-				break;
-				case 4:
-				{
-					  COleDateTime dtTime(m_data[pDispInfo->item.iItem].m_lastUsedDateTime.GetTime());
-					  CopyDisplayText(pDispInfo->item, dtTime.Format());
-				}
-				break;
-				case 5:
-				{
-					  CopyDisplayText(pDispInfo->item, m_data[pDispInfo->item.iItem].m_clipboardFormat);
-				}
-				break;
-				case 6:
-				{
-					  const int MAX_FILE_SIZE_BUFFER = 255;
-					  TCHAR szFileSize[MAX_FILE_SIZE_BUFFER];
-					  StrFormatByteSize(m_data[pDispInfo->item.iItem].m_dataSize, szFileSize, MAX_FILE_SIZE_BUFFER);
-
-					  CopyDisplayText(pDispInfo->item, szFileSize);
-				}
-				break;
-			}
+			CopyColumnText(pDispInfo->item);
 		}
 	}
 	*pResult = 0;
+}
+
+void CDeleteClipData::CopyColumnText(LVITEM& item)
+{
+	switch (item.iSubItem)
+	{
+		case 0:
+		{
+			CopyDisplayText(item, StrF(_T("%d"), m_data[item.iItem].m_lID));
+		}
+		break;
+		case 1:
+		{
+			  CopyDisplayText(item, m_data[item.iItem].m_Desc);
+		}
+		break;
+		case 2:
+		{
+			CopyDisplayText(item, m_data[item.iItem].m_quickPasteText);
+		}
+		break;
+		case 3:
+		{
+			  COleDateTime dtTime(m_data[item.iItem].m_createdDateTime.GetTime());
+			  CopyDisplayText(item, dtTime.Format());
+		}
+		break;
+		case 4:
+		{
+			  COleDateTime dtTime(m_data[item.iItem].m_lastUsedDateTime.GetTime());
+			  CopyDisplayText(item, dtTime.Format());
+		}
+		break;
+		case 5:
+		{
+			  CopyDisplayText(item, m_data[item.iItem].m_clipboardFormat);
+		}
+		break;
+		case 6:
+		{
+			  const int MAX_FILE_SIZE_BUFFER = 255;
+			  TCHAR szFileSize[MAX_FILE_SIZE_BUFFER];
+			  StrFormatByteSize(m_data[item.iItem].m_dataSize, szFileSize, MAX_FILE_SIZE_BUFFER);
+
+			  CopyDisplayText(item, szFileSize);
+		}
+		break;
+	}
 }
 
 void CDeleteClipData::CopyDisplayText(LVITEM& item, LPCTSTR text)
@@ -812,57 +827,28 @@ static bool SortByDataSizeAsc(const CDeleteData& a1, const CDeleteData& a2)
 	return a1.m_dataSize < a2.m_dataSize;
 }
 
+// the quick paste column sorts descending both ways (as before)
+const std::array<CDeleteClipData::ColumnSort, 7> CDeleteClipData::s_columnSorts{ {
+	{ SortByIDDesc, SortByIDAsc },
+	{ SortByTitleDesc, SortByTitleAsc },
+	{ SortByQuickPaste, SortByQuickPaste },
+	{ SortByCreatedDateDesc, SortByCreatedDateAsc },
+	{ SortByLastUsedDateDesc, SortByLastUsedDateAsc },
+	{ SortByFormatDesc, SortByFormatAsc },
+	{ SortByDataSizeDesc, SortByDataSizeAsc },
+} };
+
 bool desc = true;
 void CDeleteClipData::OnLvnColumnclickList2(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	HD_NOTIFY *phdn = (HD_NOTIFY *)pNMHDR;
 
-	switch (phdn->iItem)
+	if (phdn->iItem >= 0 && static_cast<size_t>(phdn->iItem) < s_columnSorts.size())
 	{
-	case 0:
-		if (desc)
-			std::sort(m_data.begin(), m_data.end(), SortByIDDesc);
-		else
-			std::sort(m_data.begin(), m_data.end(), SortByIDAsc);
-		break;
-	case 1:
-		if(desc)
-			std::sort(m_data.begin(), m_data.end(), SortByTitleDesc);
-		else
-			std::sort(m_data.begin(), m_data.end(), SortByTitleAsc);
-		break;
-	case 2:
-		if (desc)
-			std::sort(m_data.begin(), m_data.end(), SortByQuickPaste);
-		else
-			std::sort(m_data.begin(), m_data.end(), SortByQuickPaste);
-		break;
-	case 3:
-		if(desc)
-			std::sort(m_data.begin(), m_data.end(), SortByCreatedDateDesc);
-		else
-			std::sort(m_data.begin(), m_data.end(), SortByCreatedDateAsc);
-		break;
-	case 4:
-		if(desc)
-			std::sort(m_data.begin(), m_data.end(), SortByLastUsedDateDesc);
-		else
-			std::sort(m_data.begin(), m_data.end(), SortByLastUsedDateAsc);
-		break;
-	case 5:
-		if(desc)
-			std::sort(m_data.begin(), m_data.end(), SortByFormatDesc);
-		else
-			std::sort(m_data.begin(), m_data.end(), SortByFormatAsc);
-		break;
-	case 6:
-		if(desc)
-			std::sort(m_data.begin(), m_data.end(), SortByDataSizeDesc);
-		else
-			std::sort(m_data.begin(), m_data.end(), SortByDataSizeAsc);
-		break;
+		const ColumnSort& sort{ s_columnSorts[static_cast<size_t>(phdn->iItem)] };
+		std::sort(m_data.begin(), m_data.end(), desc ? sort.descending : sort.ascending);
 	}
-	
+
 	desc = !desc;
 
 	m_clipList.SetItemCountEx((int)m_data.size(), 0);
@@ -974,6 +960,23 @@ void CDeleteClipData::SetDescriptionWindowText(INT_PTR row)
 	selectedClip.LoadMainTable(m_data[row].m_lID);
 	selectedClip.LoadFormats(m_data[row].m_lID, false, false, m_data[row].m_DatalID);
 
+	CString clipData = DescribeClip(selectedClip);
+
+	int parentId = selectedClip.m_parentId;
+	if (parentId > 0)
+	{
+		CString folder = FolderPath(parentId);
+
+		m_pDescriptionWindow->SetFolderPath(folder);
+	}
+
+	m_pDescriptionWindow->SetClipData(clipData);
+
+	SetDescriptionWindowContent(selectedClip);
+}
+
+CString CDeleteClipData::DescribeClip(CClip& selectedClip)
+{
 	CString clipData;
 	COleDateTime time(selectedClip.m_Time.GetTime());
 	clipData += "Added: " + time.Format();
@@ -1025,31 +1028,12 @@ void CDeleteClipData::SetDescriptionWindowText(INT_PTR row)
 		}
 	}
 
-	int parentId = selectedClip.m_parentId;
-	if (parentId > 0)
-	{
-		CString folder = FolderPath(parentId);
+	return clipData;
+}
 
-		m_pDescriptionWindow->SetFolderPath(folder);
-	}
-
-	m_pDescriptionWindow->SetClipData(clipData);
-
-	IClipFormat* format = selectedClip.Clips()->FindFormatEx(CF_UNICODETEXT);
-	if (format != nullptr)
-	{
-		m_pDescriptionWindow->SetToolTipText(format->GetAsCString());
-	}
-	
-	if (format == NULL)
-	{
-		format = selectedClip.Clips()->FindFormatEx(CF_TEXT);
-		if (format != nullptr)
-		{
-			CString cs(format->GetAsCStringA());
-			m_pDescriptionWindow->SetToolTipText(cs);
-		}
-	}
+void CDeleteClipData::SetDescriptionWindowContent(CClip& selectedClip)
+{
+	IClipFormat* format = SetDescriptionWindowPlainText(selectedClip);
 
 	if (format == nullptr)
 	{
@@ -1075,6 +1059,27 @@ void CDeleteClipData::SetDescriptionWindowText(INT_PTR row)
 	{
 		SetDescriptionWindowImage(selectedClip);
 	}
+}
+
+IClipFormat* CDeleteClipData::SetDescriptionWindowPlainText(CClip& selectedClip)
+{
+	IClipFormat* format = selectedClip.Clips()->FindFormatEx(CF_UNICODETEXT);
+	if (format != nullptr)
+	{
+		m_pDescriptionWindow->SetToolTipText(format->GetAsCString());
+	}
+
+	if (format == NULL)
+	{
+		format = selectedClip.Clips()->FindFormatEx(CF_TEXT);
+		if (format != nullptr)
+		{
+			CString cs(format->GetAsCStringA());
+			m_pDescriptionWindow->SetToolTipText(cs);
+		}
+	}
+
+	return format;
 }
 
 void CDeleteClipData::SetDescriptionWindowImage(CClip& selectedClip)
@@ -1149,33 +1154,13 @@ void CDeleteClipData::SaveClipDataItemToFile(CDeleteData item)
 {
 	// The filter is a list of strings ending in an empty one, so it stays a literal: a CString
 	// would end it at the first \0. The default extension has no period.
-	const TCHAR* extension{};
-	const TCHAR* filter{};
-
-	if (item.m_clipboardFormat == _T("PNG"))
-	{
-		extension = _T("png");
-		filter = _T("PNG Files (*.png)\0*.png\0");
-	}
-	else if (item.m_clipboardFormat == _T("CF_DIB"))
-	{
-		extension = _T("bmp");
-		filter = _T("Bitmap Files (*.bmp)\0*.bmp\0");
-	}
-	else if (item.m_clipboardFormat == _T("CF_UNICODETEXT") || item.m_clipboardFormat == _T("CF_TEXT"))
-	{
-		extension = _T("txt");
-		filter = _T("Text Files (*.txt)\0*.txt\0");
-	}
-	else if (item.m_clipboardFormat == _T("Rich Text Format"))
-	{
-		extension = _T("rtf");
-		filter = _T("Rich Text Files (*.rtf)\0*.rtf\0");
-	}
-	else
+	const SaveFileType* saveFileType{ FindSaveFileType(item.m_clipboardFormat) };
+	if (saveFileType == nullptr)
 	{
 		return;
 	}
+	const TCHAR* extension{ saveFileType->extension };
+	const TCHAR* filter{ saveFileType->filter };
 
 	OPENFILENAME ofn{};
 	TCHAR szFile[400]{};
@@ -1197,22 +1182,47 @@ void CDeleteClipData::SaveClipDataItemToFile(CDeleteData item)
 		CClip selectedClip;
 		selectedClip.LoadFormats(item.m_lID, false, false, item.m_DatalID);
 
-		if (item.m_clipboardFormat == _T("PNG") || item.m_clipboardFormat == _T("CF_DIB"))
+		WriteClipDataItem(selectedClip, item, ofn);
+	}
+}
+
+const std::array<CDeleteClipData::SaveFileType, 5> CDeleteClipData::s_saveFileTypes{ {
+	{ _T("PNG"), _T("png"), _T("PNG Files (*.png)\0*.png\0") },
+	{ _T("CF_DIB"), _T("bmp"), _T("Bitmap Files (*.bmp)\0*.bmp\0") },
+	{ _T("CF_UNICODETEXT"), _T("txt"), _T("Text Files (*.txt)\0*.txt\0") },
+	{ _T("CF_TEXT"), _T("txt"), _T("Text Files (*.txt)\0*.txt\0") },
+	{ _T("Rich Text Format"), _T("rtf"), _T("Rich Text Files (*.rtf)\0*.rtf\0") },
+} };
+
+const CDeleteClipData::SaveFileType* CDeleteClipData::FindSaveFileType(const CString& format)
+{
+	for (const SaveFileType& type : s_saveFileTypes)
+	{
+		if (format == type.format)
 		{
-			selectedClip.WriteImageToFileOrReport(CFileDialogPath::From(ofn), _T("save"));
+			return &type;
 		}
-		else if (item.m_clipboardFormat == _T("CF_UNICODETEXT"))
-		{
-			selectedClip.WriteTextToFile(CFileDialogPath::From(ofn), TRUE, FALSE, FALSE);
-		}
-		else if (item.m_clipboardFormat == _T("CF_TEXT"))
-		{
-			selectedClip.WriteTextToFile(CFileDialogPath::From(ofn), FALSE, TRUE, FALSE);
-		}
-		else if (item.m_clipboardFormat == _T("Rich Text Format"))
-		{
-			selectedClip.WriteTextToFile(CFileDialogPath::From(ofn), FALSE, FALSE, TRUE);
-		}
+	}
+	return nullptr;
+}
+
+void CDeleteClipData::WriteClipDataItem(CClip& selectedClip, const CDeleteData& item, const OPENFILENAME& ofn)
+{
+	if (item.m_clipboardFormat == _T("PNG") || item.m_clipboardFormat == _T("CF_DIB"))
+	{
+		selectedClip.WriteImageToFileOrReport(CFileDialogPath::From(ofn), _T("save"));
+	}
+	else if (item.m_clipboardFormat == _T("CF_UNICODETEXT"))
+	{
+		selectedClip.WriteTextToFile(CFileDialogPath::From(ofn), TRUE, FALSE, FALSE);
+	}
+	else if (item.m_clipboardFormat == _T("CF_TEXT"))
+	{
+		selectedClip.WriteTextToFile(CFileDialogPath::From(ofn), FALSE, TRUE, FALSE);
+	}
+	else if (item.m_clipboardFormat == _T("Rich Text Format"))
+	{
+		selectedClip.WriteTextToFile(CFileDialogPath::From(ofn), FALSE, FALSE, TRUE);
 	}
 }
 void CDeleteClipData::OnCancel()

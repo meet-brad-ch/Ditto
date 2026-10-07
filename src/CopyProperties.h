@@ -11,6 +11,7 @@
 #include "GroupCombo.h"
 #include "RichEditCtrlEx.h"
 #include "DialogResizer.h"
+#include <array>
 
 /////////////////////////////////////////////////////////////////////////////
 // CCopyProperties dialog
@@ -94,6 +95,45 @@ private:
 	// OnOK's work for a saved clip: writes the dialog into its Main row, registers its hot keys and
 	// deletes the removed formats; false when the user cancels after a hot key error
 	bool SaveToStoredClip();
+
+	/** @brief The keys whose hot key control needs the extended-key flag (arrows, page keys, ...). */
+	static constexpr std::array<BYTE, 12> s_extendedHotKeys{
+		VK_LEFT, VK_UP, VK_RIGHT, VK_DOWN, // arrow keys
+		VK_PRIOR, VK_NEXT, // page up and page down
+		VK_END, VK_HOME, VK_INSERT, VK_DELETE,
+		VK_DIVIDE, // numpad slash
+		VK_NUMLOCK,
+	};
+
+	/**
+	 * @brief Whether a key needs the extended-key flag in the hot key control.
+	 * @param key The virtual key.
+	 * @return True for the keys in s_extendedHotKeys.
+	 */
+	static bool IsExtendedHotKey(BYTE key);
+
+	/**
+	 * @brief LoadDataFromCClip's hot key step: shows the clip's hot key and move-to-group hot key.
+	 * @param Clip The clip.
+	 */
+	void LoadHotKeys(CClip &Clip);
+
+	/**
+	 * @brief LoadDataFromCClip's format step: lists the clip's formats with their sizes, selecting the last.
+	 * @param Clip The clip.
+	 */
+	void LoadFormatList(CClip &Clip);
+
+	/**
+	 * @brief Selects the last row of the format list, when it has one.
+	 */
+	void SelectLastFormat();
+
+	/**
+	 * @brief LoadDataFromCClip's step for a clip that is not a group: hides the move-to-group hot key
+	 * controls and moves the controls below them up.
+	 */
+	void HideMoveToGroupHotKey();
 };
 
 //{{AFX_INSERT_LOCATION}}

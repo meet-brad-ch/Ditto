@@ -166,6 +166,94 @@ int FindNoCaseAndInsert(CString& mainStr, CString& findStr, CString preInsert, C
 
 void OnInitMenuPopupEx(CMenu *pPopupMenu, UINT nIndex, BOOL bSysMenu, CWnd *pWnd);
 
+/**
+ * @brief Marks the case-insensitive matches of a search text in a list row's text (search highlighting).
+ */
+class CMarkerInserter
+{
+public:
+	/**
+	 * @brief Puts markers around each match (at most 101), drops the leading lines before the
+	 * first match when it is past the row's lines, and turns the line breaks into unprintable markers.
+	 * @param mainStr The text; changed in place.
+	 * @param findStr The search text; nothing is done when it is empty.
+	 * @param preInsert The marker inserted before each match.
+	 * @param postInsert The marker inserted after each match.
+	 * @param linesPerRow The number of lines a list row shows.
+	 * @return The number of matches marked.
+	 */
+	static int Insert(CString& mainStr, CString& findStr, CString preInsert, CString postInsert, int linesPerRow);
+
+private:
+	/** @brief What the insert step did. */
+	struct InsertResult
+	{
+		/** @brief The number of matches marked. */
+		int replaceCount{};
+		/** @brief The position of the first match's text in the marked text; 0 without a match. */
+		int firstFindPos{};
+	};
+
+	/**
+	 * @brief Insert's first step: inserts the markers around each match (at most 101).
+	 * @param mainStr The text; changed in place.
+	 * @param findStr The search text, not empty.
+	 * @param preInsert The marker inserted before each match.
+	 * @param postInsert The marker inserted after each match.
+	 * @return The number of matches and where the first one now is.
+	 */
+	static InsertResult InsertMarkers(CString& mainStr, CString& findStr, const CString& preInsert, const CString& postInsert);
+
+	/**
+	 * @brief Insert's second step: when the first match is past the row's lines, drops the lines
+	 * before it (keeping one line before it when a row shows more than one) and prefixes "... ".
+	 * @param mainStr The marked text; changed in place.
+	 * @param firstFindPos The position of the first match.
+	 * @param linesPerRow The number of lines a list row shows.
+	 */
+	static void TrimLeadingLines(CString& mainStr, int firstFindPos, int linesPerRow);
+};
+
+/**
+ * @brief Updates the enabled and checked state of a popup menu's items through the command UI
+ * handlers of a window (MFC's CFrameWnd::OnInitMenuPopup for windows that are not frames).
+ */
+class CMenuPopupUpdater
+{
+public:
+	/**
+	 * @brief Runs the update handlers of pWnd for each item of the popup.
+	 * @param pPopupMenu The popup menu that is about to open.
+	 * @param pWnd The window whose handlers update the items.
+	 */
+	static void Update(CMenu *pPopupMenu, CWnd *pWnd);
+
+private:
+	/**
+	 * @brief Update's first step: sets state.m_pParentMenu to the menu that holds the popup, when found.
+	 * @param state The command UI state.
+	 * @param pPopupMenu The popup menu.
+	 * @param pWnd The window.
+	 */
+	static void FindParentMenu(CCmdUI& state, CMenu *pPopupMenu, CWnd *pWnd);
+
+	/**
+	 * @brief Update's item step: runs the handler of the item at state.m_nIndex (a sub-popup is
+	 * routed to its first item); separators and items that cannot be routed are skipped.
+	 * @param state The command UI state, on the item.
+	 * @param pPopupMenu The popup menu.
+	 * @param pWnd The window.
+	 */
+	static void UpdateItem(CCmdUI& state, CMenu *pPopupMenu, CWnd *pWnd);
+
+	/**
+	 * @brief Adjusts state.m_nIndex and state.m_nIndexMax when the handler deleted or added items.
+	 * @param state The command UI state, after the item's handler ran.
+	 * @param pPopupMenu The popup menu.
+	 */
+	static void AdjustForMenuChanges(CCmdUI& state, CMenu *pPopupMenu);
+};
+
 
 CString GetProcessName(HWND hWnd, DWORD processId = 0);
 
