@@ -13,9 +13,8 @@ src\advgeneral.cpp	CAdvGeneral::OnBnClickedOk	185
 src\advgeneral.cpp	CAdvGeneral::Search	13
 src\clip.cpp	CClip::AddFileDataToData	15
 src\clip.cpp	CClip::AddToDB	10
-src\clip.cpp	CClip::LoadFormats	13
 src\clip.cpp	CClip::LoadFromClipboard	36
-src\clip.cpp	CClip::SaveFormats	12
+src\clip.cpp	CClip::SaveFormats	10
 src\clip.cpp	CClip::WriteTextToFile	11
 src\clip_importexport.cpp	CClip_ImportExport::ImportFromSqliteDB	14
 src\clipboardsaverestore.cpp	CClipboardSaveRestore::RestoreTextOnly	21

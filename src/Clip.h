@@ -206,6 +206,11 @@ protected:
 	// Adds the Main row and the Data rows, and clears another clip's top-sticky setting, in one
 	// transaction; returns false (rolled back) when a step fails
 	bool AddRowsInTransaction(int removeStickySettingClipId);
+	// The database part of SaveFormats: deletes the replaced formats and writes the clip, in one
+	// transaction; returns false (rolled back) when a step fails
+	bool SaveFormatsInTransaction(const ARRAY& deletedData, BOOL updateDescription);
+	// Adds a new clip's Main row, or updates an existing clip's description when asked
+	bool SaveMainRow(BOOL updateDescription);
 	bool AddToMainTable();
 	bool AddToDataTable();
 	int FindDuplicate();

@@ -65,7 +65,7 @@ C4239	src\popup.cpp	1
 C4244	addins\dittoutil\removelinefeeds.cpp	1
 C4244	shared\dittodefines.h	1
 C4244	src\addtype.cpp	4
-C4244	src\clip.cpp	2
+C4244	src\clip.cpp	1
 C4244	src\clipboardsaverestore.cpp	1
 C4244	src\clipids.cpp	1
 C4244	src\cp_main.cpp	9
@@ -107,7 +107,6 @@ C4278	src\stdafx.h	1
 C4302	src\editwithbutton.cpp	1
 C4389	src\hotkeys.cpp	1
 C4389	src\qlistctrl.cpp	1
-C4456	src\clip.cpp	1
 C4456	src\copyproperties.cpp	1
 C4456	src\cp_main.cpp	2
 C4456	src\deleteclipdata.cpp	2
@@ -128,7 +127,7 @@ C4706	src\qpastewnd.cpp	1
 C4706	src\qrcode\qrgenerator.cpp	1
 C4706	src\sendkeys.cpp	1
 C4840	addins\dittoutil\pasteimageashtmlimage.cpp	1
-C4840	src\clip.cpp	15
+C4840	src\clip.cpp	12
 C4840	src\clip_importexport.cpp	1
 C4840	src\clipboardviewer.cpp	5
 C4840	src\clipcompare.cpp	4

@@ -1402,6 +1402,11 @@ BOOL CClip::SaveFormats(CString *unicode, CStringA *asci, CStringA *rtf, BOOL up
 		AddFormat(CF_UNICODETEXT, unicode->GetBuffer(nLength), nLength, true);
 	}
 
+	return SaveFormatsInTransaction(deletedData, updateDescription) ? TRUE : FALSE;
+}
+
+bool CClip::SaveFormatsInTransaction(const ARRAY& deletedData, BOOL updateDescription)
+{
 	try
 	{
 		m_CRC = GenerateCRC();
@@ -1410,28 +1415,15 @@ BOOL CClip::SaveFormats(CString *unicode, CStringA *asci, CStringA *rtf, BOOL up
 		// and ignored the steps' results, so a failed save was committed in part
 		CDittoDbTransaction transaction(theApp.m_db);
 
-		auto count = deletedData.GetSize();
+		CClipRepository repository = Repository();
+		// CArrayEx indexes with int
+		const int count = static_cast<int>(deletedData.GetSize());
 		for (int i = 0; i < count; i++)
 		{
-			Repository().DeleteFormat(deletedData[i]);
+			repository.DeleteFormat(deletedData.GetAt(i));
 		}
 
-		bool saved = true;
-		if (m_id >= 0)
-		{
-			if (updateDescription)
-			{
-				saved = ModifyDescription();
-			}
-		}
-		else
-		{
-			MakeLatestOrder();
-			MakeLatestGroupOrder();
-			saved = AddToMainTable();
-		}
-
-		if (saved == false || AddToDataTable() == false)
+		if (SaveMainRow(updateDescription) == false || AddToDataTable() == false)
 		{
 			return false;   // the transaction rolls back
 		}
@@ -1440,7 +1432,18 @@ BOOL CClip::SaveFormats(CString *unicode, CStringA *asci, CStringA *rtf, BOOL up
 	}
 	CATCH_SQLITE_EXCEPTION_AND_RETURN(false)
 
-	return TRUE;
+	return true;
+}
+
+bool CClip::SaveMainRow(BOOL updateDescription)
+{
+	if (m_id < 0)
+	{
+		MakeLatestOrder();
+		MakeLatestGroupOrder();
+		return AddToMainTable();
+	}
+	return updateDescription ? ModifyDescription() : true;
 }
 
 BOOL CClip::WriteImageToFile(CString path)
