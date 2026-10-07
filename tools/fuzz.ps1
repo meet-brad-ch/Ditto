@@ -38,7 +38,13 @@ foreach ($t in $targets) {
     if ($LASTEXITCODE -ne 0) { Say "fuzz: FAILED $t could not write its seeds"; $failed++; continue }
 
     Get-ChildItem (Join-Path $dir '*') -File -Include crash-*, leak-*, timeout-*, oom-* -ErrorAction SilentlyContinue | Remove-Item
-    $out = @(& $exe $corpus "-max_total_time=$Seconds" '-timeout=10' "-artifact_prefix=$dir\" 2>&1 | ForEach-Object { "$_" })
+    Say "fuzz: start $t for $Seconds s"
+    # libFuzzer's INITED and pulse lines (at doubling run counts) are echoed as progress
+    $out = @(& $exe $corpus "-max_total_time=$Seconds" '-timeout=10' "-artifact_prefix=$dir\" 2>&1 | ForEach-Object {
+        $line = "$_"
+        if ($line -match '^#\d+\s+(INITED|pulse)') { Say "fuzz: $t $line" | Out-Host }
+        $line
+    })
     $code = $LASTEXITCODE
     $runs = ($out | Where-Object { $_ -match '^Done (\d+) runs' } | Select-Object -Last 1) -replace '^Done (\d+) runs.*$', '$1'
     $findings = @(Get-ChildItem (Join-Path $dir '*') -File -Include crash-*, leak-*, timeout-*, oom-* -ErrorAction SilentlyContinue)
