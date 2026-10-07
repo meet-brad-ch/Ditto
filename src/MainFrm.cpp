@@ -1099,7 +1099,14 @@ void CMainFrame::ShowEditWnd(CClipIDs& Ids)
 	bool bCreatedWindow = false;
 	if (m_pEditFrameWnd == NULL)
 	{
-		m_pEditFrameWnd = std::make_unique<CEditFrameWnd>().release(); // ownership: the frame deletes itself in PostNcDestroy (also when LoadFrame fails); m_pEditFrameWnd only observes it until WM_EDIT_WND_CLOSING
+		// MFC's DYNCREATE factory (the destructor is protected): the frame deletes itself in PostNcDestroy
+		// (also when LoadFrame fails); m_pEditFrameWnd only observes it until WM_EDIT_WND_CLOSING
+		m_pEditFrameWnd = static_cast<CEditFrameWnd*>(CEditFrameWnd::CreateObject());
+		if (m_pEditFrameWnd == NULL)
+		{
+			CErrorReport::Show(_T("Opening the edit window failed (the window could not be allocated)."));
+			return;
+		}
 		if (!m_pEditFrameWnd->LoadFrame(IDR_MAINFRAME))
 		{
 			// the failed frame is already deleted
