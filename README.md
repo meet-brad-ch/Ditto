@@ -310,6 +310,10 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   The ARM64 script still added firewall rules for TCP 23443 and launched URLs, and the portable
   one packaged files that no longer exist (`DittoU.exe`, `sqlite3.dll`, `zlib1.dll`). The
   installer gate now checks every `.iss` file.
+- 2026-10-06: Contract code (`lib\`, `tests\`) is compiled with `/utf-8`. Without it, the
+  BOM-less sources were read in the ANSI code page, so the non-ASCII test strings (the emoji
+  and check marks in the CF_HTML tests) were mangled the same way on both sides of each
+  comparison, and the tests did not test those characters.
 - 2026-10-06: The clips made by *Save copied file (cf_hdrop) contents into Ditto* ("Ditto File
   Data") are read and written by
   `DittoCore::FileDataRecord` (Phase C6).
