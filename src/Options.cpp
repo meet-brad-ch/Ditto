@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Options.h"
 #include "AlphaBlend.h"
 #include "Misc.h"

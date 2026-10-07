@@ -24,7 +24,7 @@ $repo = Split-Path -Parent $PSScriptRoot
 
 function Say([string] $msg) { Write-Output "$(Get-Date -Format 'HH:mm:ss') $msg" }
 
-# The sw-quality §38 Verification block: every line starts NOT VERIFIED and is set by its stage.
+# The sw-quality section 38 Verification block: every line starts NOT VERIFIED and is set by its stage.
 $report = [ordered]@{
     'Build'                 = 'NOT VERIFIED (stage did not run)'
     'Unit tests'            = 'NOT VERIFIED (stage did not run)'
