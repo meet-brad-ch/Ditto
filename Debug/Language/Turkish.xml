@@ -394,7 +394,6 @@
 		<Item English_Text = "Keyboard Shortcuts" ID = "KeyboardShortcutsTitle">Klavye Kısayolları</Item>
 		<Item English_Text = "About Ditto" ID = "AboutTitle">Ditto Hakkında</Item>
 		<Item English_Text = "Error Opening Database." ID = "Error_Opening_Database">Veritabanı Açılırken Hata Oluştu</Item>
-		<Item English_Text = "Unable to initialize DAO/Jet db engine.\nSelect YES to download DAO from http://ditto-cp.sourceforge.net/dao_setup.exe\n\nRestart Ditto after installation of DAO." ID = "Error_Init_Dao">DAO/Jet Motoru Başlatılamıyor.\nDAO'yu http://ditto-cp.sourceforge.net/dao_setup.exe adresinden indirmek için Evet'i seçin\n\nDAO yüklemesinden sonra Ditto'yu yeniden başlatın.</Item>
 		<Item English_Text = "Unrecognized Database Format" ID = "Database_Format">Tanınmayan Veritabanı Formatı</Item>
 		<Item English_Text = "the file will be renamed" ID = "File_Renamed">dosya yeniden adlandırılacak</Item>
 		<Item English_Text = "and a new database will be created" ID = "New_Database">ve yeni bir veritabanı oluşturulacak</Item>

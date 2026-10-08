@@ -331,7 +331,6 @@
 		<Item English_Text = "Keyboard Shortcuts" ID = "KeyboardShortcutsTitle">מקשי קיצור מקלדת</Item>
 		<Item English_Text = "About" ID = "AboutTitle">אודות</Item>
 		<Item English_Text = "Error Opening Database." ID = "Error_Opening_Database">שגיאה בפתיחת מסד הנתונים</Item>
-		<Item English_Text = "Unable to initialize DAO/Jet db engine.\nSelect YES to download DAO from http://ditto-cp.sourceforge.net/dao_setup.exe\n\nRestart Ditto after installation of DAO." ID = "Error_Init_Dao">לא מצליח לאתחל את DAO/Jet.\n אשר הורדת DAO מהכתובת http://ditto-cp.sourceforge.net/dao_setup.exe\n\n הפעל מחדש את דיטטו לאחר התקנת DAO.</Item>
 		<Item English_Text = "Unrecognized Database Format" ID = "Database_Format">מסד נתונים בפורמט לא מוכר</Item>
 		<Item English_Text = "the file will be renamed" ID = "File_Renamed">הקובץ ישמר בשם חדש</Item>
 		<Item English_Text = "and a new database will be created" ID = "New_Database">מסד נתונים חדש יווצר</Item>

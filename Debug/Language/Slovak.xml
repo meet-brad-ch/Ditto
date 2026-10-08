@@ -340,7 +340,6 @@
 		<Item English_Text = "Keyboard Shortcuts" ID = "KeyboardShortcutsTitle">Klávesové skratky</Item>
 		<Item English_Text = "About Ditto" ID = "AboutTitle">O programe Ditto</Item>
 		<Item English_Text = "Error Opening Database." ID = "Error_Opening_Database">Chyba pri otváraní databázy.</Item>
-		<Item English_Text = "Unable to initialize DAO/Jet db engine.\nSelect YES to download DAO from http://ditto-cp.sourceforge.net/dao_setup.exe\n\nRestart Ditto after installation of DAO." ID = "Error_Init_Dao">Nepodarilo sa inicializovať databázový engine DAO/Jet.\nKliknite na ÁNO pre stiahnutie DAO z http://ditto-cp.sourceforge.net/dao_setup.exe\n\nPo inštalácii DAO reštartujte Ditto.</Item>
 		<Item English_Text = "Unrecognized Database Format" ID = "Database_Format">Nerozpoznaný formát databázy</Item>
 		<Item English_Text = "the file will be renamed" ID = "File_Renamed">súbor bude premenovaný</Item>
 		<Item English_Text = "and a new database will be created" ID = "New_Database">a bude vytvorený nová databáza</Item>

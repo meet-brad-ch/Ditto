@@ -371,7 +371,6 @@
 		<Item English_Text = "Keyboard Shortcuts" ID = "KeyboardShortcutsTitle">Гарячі клавіші</Item>
 		<Item English_Text = "About Ditto" ID = "AboutTitle">Про Ditto</Item>
 		<Item English_Text = "Error Opening Database." ID = "Error_Opening_Database">Помилка відкриття бази даних.</Item>
-		<Item English_Text = "Unable to initialize DAO/Jet db engine.\nSelect YES to download DAO from http://ditto-cp.sourceforge.net/dao_setup.exe\n\nRestart Ditto after installation of DAO." ID = "Error_Init_Dao">Не вдалося ініціалізувати рушій DAO/Jet.\nНатисніть «Так», щоб завантажити DAO з http://ditto-cp.sourceforge.net/dao_setup.exe\n\nПісля встановлення DAO перезапустіть Ditto.</Item>
 		<Item English_Text = "Unrecognized Database Format" ID = "Database_Format">Невідомий тип бази даних</Item>
 		<Item English_Text = "the file will be renamed" ID = "File_Renamed">файл буде перейменовано</Item>
 		<Item English_Text = "and a new database will be created" ID = "New_Database">і буде створено нову базу даних</Item>

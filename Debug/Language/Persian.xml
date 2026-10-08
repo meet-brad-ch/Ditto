@@ -382,7 +382,6 @@
 		<Item English_Text = "Keyboard Shortcuts" ID = "KeyboardShortcutsTitle">میانبرها</Item>
 		<Item English_Text = "About Ditto" ID = "AboutTitle">درباره دیتو</Item>
 		<Item English_Text = "Error Opening Database." ID = "Error_Opening_Database">خطا هنگام باز کردن پایگاه داده.‏</Item>
-		<Item English_Text = "Unable to initialize DAO/Jet db engine.\nSelect YES to download DAO from http://ditto-cp.sourceforge.net/dao_setup.exe\n\nRestart Ditto after installation of DAO." ID = "Error_Init_Dao">مقداردهی اولیه DAO/Jet db engine با مشکل مواجه شد.\nبرای دریافت DAO از نشانی زیر\nhttp://ditto-cp.sourceforge.net/dao_setup.exe\nروی بله کلیک کنید.‏\n\nدیتو را بعد از نصب DAO دوباره اجرا کنید.‏</Item>
 		<Item English_Text = "Unrecognized Database Format" ID = "Database_Format">قالب پایگاه داده ناشناخته است</Item>
 		<Item English_Text = "the file will be renamed" ID = "File_Renamed">نام فایل تغییر خواهد کرد</Item>
 		<Item English_Text = "and a new database will be created" ID = "New_Database">و پایگاه جدیدی ساخته می‌شود</Item>

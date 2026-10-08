@@ -320,7 +320,6 @@
 		<Item English_Text = "Keyboard Shortcuts" ID = "KeyboardShortcutsTitle">விசைப்பலகை குறுக்குவழிகள்</Item>
 		<Item English_Text = "About Ditto" ID = "AboutTitle">அமோதியைப் பற்றி</Item>
 		<Item English_Text = "Error Opening Database." ID = "Error_Opening_Database">தரவுத்தளத்தைத் திறப்பதில் பிழை.</Item>
-		<Item English_Text = "Unable to initialize DAO/Jet db engine.\nSelect YES to download DAO from http://ditto-cp.sourceforge.net/dao_setup.exe\n\nRestart Ditto after installation of DAO." ID = "Error_Init_Dao">DAO / Jet db இயந்திரத்தை துவக்க முடியவில்லை. DA n DAO ஐ நிறுவிய பின் DAO ஐ http://ditto-cp.sourceforge.net/dao_setup.exe\n\nRestart டிட்டோவிலிருந்து பதிவிறக்கம் செய்ய ஆம் என்பதைத் தேர்ந்தெடுக்கவும்.</Item>
 		<Item English_Text = "Unrecognized Database Format" ID = "Database_Format">அங்கீகரிக்கப்படாத தரவுத்தள வடிவமைப்பு</Item>
 		<Item English_Text = "the file will be renamed" ID = "File_Renamed">கோப்பின் பெயர் மறுபெயரிடப்படும் </Item>
 		<Item English_Text = "and a new database will be created" ID = "New_Database">மற்றும் ஒரு புதிய தரவுத்தளம் உருவாக்கப்படும்</Item>

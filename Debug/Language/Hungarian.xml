@@ -344,7 +344,6 @@
 		<Item English_Text = "Keyboard Shortcuts" ID = "KeyboardShortcutsTitle">Gyorsbillentyűk</Item>
 		<Item English_Text = "About Ditto" ID = "AboutTitle">Ditto-ról</Item>
 		<Item English_Text = "Error Opening Database." ID = "Error_Opening_Database">Hiba az adatbázis megnyitása közben.</Item>
-		<Item English_Text = "Unable to initialize DAO/Jet db engine.\nSelect YES to download DAO from http://ditto-cp.sourceforge.net/dao_setup.exe\n\nRestart Ditto after installation of DAO." ID = "Error_Init_Dao">DAO/Jet adatbázis inicializálás sikertelen\n Kattintson az Igen gombra a DAO letöltéséhez a http://ditto-cp.sourceforge.net/dao_setup.exe helyről.\n\n A DAO telepítése után indítsa újra a Ditto-t.</Item>
 		<Item English_Text = "Unrecognized Database Format" ID = "Database_Format">Ismeretlen adatbázis formátum</Item>
 		<Item English_Text = "the file will be renamed" ID = "File_Renamed">a fájl át lesz nevezve</Item>
 		<Item English_Text = "and a new database will be created" ID = "New_Database">és létrehoz egy új adatbázist</Item>

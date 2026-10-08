@@ -405,7 +405,6 @@
 		<Item English_Text = "Keyboard Shortcuts" ID = "KeyboardShortcutsTitle">Горячие клавиши</Item>
 		<Item English_Text = "About Ditto" ID = "AboutTitle">О программе Ditto</Item>
 		<Item English_Text = "Error Opening Database." ID = "Error_Opening_Database">Ошибка открытия базы данных.</Item>
-		<Item English_Text = "Unable to initialize DAO/Jet db engine.\nSelect YES to download DAO from http://ditto-cp.sourceforge.net/dao_setup.exe\n\nRestart Ditto after installation of DAO." ID = "Error_Init_Dao">Ошибка инициализации механизма БД DAO/Jet.\nНажмите «Да», чтобы загрузить компонент DAO с сайта http://ditto-cp.sourceforge.net/dao_setup.exe\nПосле установки компонента DAO перезапустите Ditto.</Item>
 		<Item English_Text = "Unrecognized Database Format" ID = "Database_Format">Неизвестный тип базы данных</Item>
 		<Item English_Text = "the file will be renamed" ID = "File_Renamed">файл будет переименован</Item>
 		<Item English_Text = "and a new database will be created" ID = "New_Database">и будет создана новая база данных</Item>

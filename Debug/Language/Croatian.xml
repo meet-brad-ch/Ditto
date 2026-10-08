@@ -325,7 +325,6 @@
 		<Item English_Text = "Keyboard Shortcuts" ID = "KeyboardShortcutsTitle">Tipkovnièke kratice</Item>
 		<Item English_Text = "About" ID = "AboutTitle">O programu</Item>
 		<Item English_Text = "Error Opening Database." ID = "Error_Opening_Database">Greška kod otvaranja baze podataka</Item>
-		<Item English_Text = "Unable to initialize DAO/Jet db engine.\nSelect YES to download DAO from http://ditto-cp.sourceforge.net/dao_setup.exe\n\nRestart Ditto after installation of DAO." ID = "Error_Init_Dao">Onemoguæena inicijalizacija DAO/Jet db engine.\nOdaberi YES za skidanje DAO sa http://ditto-cp.sourceforge.net/dao_setup.exe\n\nResetiraj Ditto nakon instalacije DAO</Item>
 		<Item English_Text = "Unrecognized Database Format" ID = "Database_Format">Nepoznat format baze podataka</Item>
 		<Item English_Text = "the file will be renamed" ID = "File_Renamed">podatak æe biti preimenovan</Item>
 		<Item English_Text = "and a new database will be created" ID = "New_Database">i biti æe otvorena nova baza podataka</Item>

@@ -323,7 +323,6 @@
 		<Item English_Text = "Keyboard Shortcuts" ID = "KeyboardShortcutsTitle">Tastaturgenveje</Item>
 		<Item English_Text = "About" ID = "AboutTitle">Om</Item>
 		<Item English_Text = "Error Opening Database." ID = "Error_Opening_Database">Fejl ved åbning af databasen</Item>
-		<Item English_Text = "Unable to initialize DAO/Jet db engine.\nSelect YES to download DAO from http://ditto-cp.sourceforge.net/dao_setup.exe\n\nRestart Ditto after installation of DAO." ID = "Error_Init_Dao">Kan ikke starte DAO/Jet-databasen. \nVælg JA for at hente DAO fra http://ditto-cp.sourceforge.net/dao_setup.exe\n\nGenstart Ditto efter installation af DAO</Item>
 		<Item English_Text = "Unrecognized Database Format" ID = "Database_Format">Database-format ikke genkendt</Item>
 		<Item English_Text = "the file will be renamed" ID = "File_Renamed">Filen vil blive omdøbt</Item>
 		<Item English_Text = "and a new database will be created" ID = "New_Database">og en ny database vil blive oprettet</Item>

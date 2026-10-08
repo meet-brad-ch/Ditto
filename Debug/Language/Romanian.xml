@@ -326,7 +326,6 @@
 		<Item English_Text = "Keyboard Shortcuts" ID = "KeyboardShortcutsTitle">Scurtături de Tastatură</Item>
 		<Item English_Text = "About" ID = "AboutTitle">Despre</Item>
 		<Item English_Text = "Error Opening Database." ID = "Error_Opening_Database">Eroare la deschiderea bazei de date</Item>
-		<Item English_Text = "Unable to initialize DAO/Jet db engine.\nSelect YES to download DAO from http://ditto-cp.sourceforge.net/dao_setup.exe\n\nRestart Ditto after installation of DAO." ID = "Error_Init_Dao">Nu pot inițializa motorul bazei de date DAO/Jet.\nSelectați DA [YES] pentru a descărca DAO de la http://ditto-cp.sourceforge.net/dao_setup.exe\n\nReporniți Ditto după instalarea DAO.</Item>
 		<Item English_Text = "Unrecognized Database Format" ID = "Database_Format">Formatul bazei de date e nerecunoscut</Item>
 		<Item English_Text = "the file will be renamed" ID = "File_Renamed">fișierul va fi redenumit</Item>
 		<Item English_Text = "and a new database will be created" ID = "New_Database">și o bază de date nouă va fi creată</Item>

@@ -390,7 +390,6 @@
 		<Item English_Text = "Keyboard Shortcuts" ID = "KeyboardShortcutsTitle">鍵盤捷徑</Item>
 		<Item English_Text = "About" ID = "AboutTitle">關於</Item>
 		<Item English_Text = "Error Opening Database." ID = "Error_Opening_Database">資料庫開啟錯誤</Item>
-		<Item English_Text = "Unable to initialize DAO/Jet db engine.\nSelect YES to download DAO from http://ditto-cp.sourceforge.net/dao_setup.exe\n\nRestart Ditto after installation of DAO." ID = "Error_Init_Dao">無法初始化 DAO/Jet db 引擎.\n選擇"是"由下列網址下載 DAO. http://ditto-cp.sourceforge.net/dao_setup.exe\n\n安裝 DAO 完成後請重新啟動 Ditto.</Item>
 		<Item English_Text = "Unrecognized Database Format" ID = "Database_Format">無法辨識的資料庫格式</Item>
 		<Item English_Text = "the file will be renamed" ID = "File_Renamed">檔案將被重新命名</Item>
 		<Item English_Text = "and a new database will be created" ID = "New_Database">並將建立一個新的資料庫</Item>
