@@ -202,7 +202,7 @@ bool CClipCommands::LaunchClipEditor(const CString& exePath, const CString& save
 bool CClipCommands::ImportClips(HWND hWnd)
 {
 	CString filePath{};
-	if (!AskImportFile(hWnd, filePath))
+	if (!AskImportFile(filePath))
 	{
 		return false;
 	}
@@ -212,7 +212,7 @@ bool CClipCommands::ImportClips(HWND hWnd)
 	return true;
 }
 
-bool CClipCommands::AskImportFile(HWND hWnd, CString& filePath)
+bool CClipCommands::AskImportFile(CString& filePath)
 {
 	OPENFILENAME	FileName{};
 	TCHAR			szFileName[400]{};

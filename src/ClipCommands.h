@@ -115,12 +115,12 @@ private:
 	bool LaunchClipEditor(const CString& exePath, const CString& savePath, int id);
 
 	/**
-	 * @brief ImportClips' file dialog: asks for the exported clip file and remembers its folder.
-	 * @param hWnd The owner of the dialog.
+	 * @brief ImportClips' file dialog (no owner window, as before): asks for the exported clip file and
+	 *        remembers its folder.
 	 * @param filePath Receives the chosen file.
 	 * @return False when the user cancelled.
 	 */
-	bool AskImportFile(HWND hWnd, CString& filePath);
+	bool AskImportFile(CString& filePath);
 
 	/**
 	 * @brief ImportClips' import step: imports the file and shows the result or the error.
