@@ -709,21 +709,17 @@ CString COleClipSource::NextDragFilePath(DragFiles& drag, const TCHAR* defaultNa
 void COleClipSource::AddDragFile(CClip& fileClip, DragFiles& drag)
 {
 	CClipFormat *unicodeText = fileClip.m_Formats.FindFormat(CF_UNICODETEXT);
-	if (unicodeText)
-	{
-		CString file = NextDragFilePath(drag, _T("text"), _T("txt"));
-
-		fileClip.WriteTextToFile(file, TRUE, FALSE, FALSE);
-		drag.paths.push_back(file.GetString());
-		return;
-	}
-
 	CClipFormat *asciiText = fileClip.m_Formats.FindFormat(CF_TEXT);
-	if (asciiText)
+	if (unicodeText || asciiText)
 	{
 		CString file = NextDragFilePath(drag, _T("text"), _T("txt"));
 
-		fileClip.WriteTextToFile(file, FALSE, TRUE, FALSE);
+		// a file that was not written is not dropped; upstream dropped it empty or missing
+		if (fileClip.WriteTextToFile(file, unicodeText != nullptr, unicodeText == nullptr, FALSE) == FALSE)
+		{
+			CErrorReport::Show(CStringUtil::Format(_T("Writing the dragged clip text to %s failed."), file.GetString()));
+			return;
+		}
 		drag.paths.push_back(file.GetString());
 		return;
 	}

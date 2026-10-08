@@ -79,51 +79,6 @@ bool CDittoRulerRichEditCtrl::HasClipData(long lID, CClipFormat& Clip)
 	return CClipDataReader(theApp.Services().Database()).GetClipData(lID, Clip) && Clip.m_hgData;
 }
 
-long CDittoRulerRichEditCtrl::GetTypeFlags(long lID)
-{
-	long lRet = stNONE;
-
-	try
-	{
-		CLIPFORMAT cfType = CF_TEXT;
-		CppSQLite3Query q = theApp.Services().Database().execQueryEx(_T("SELECT lID FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), lID, CClipboardFormats::GetFormatName(cfType).GetString());
-		if(q.eof() == false)
-		{
-			lRet |= stCF_TEXT;
-		}
-
-		cfType = CF_UNICODETEXT;
-		q = theApp.Services().Database().execQueryEx(_T("SELECT lID FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), lID, CClipboardFormats::GetFormatName(cfType).GetString());
-		if(q.eof() == false)
-		{
-			lRet |= stCF_UNICODETEXT;
-		}
-
-		// Registered formats are in 0xC000-0xFFFF, so they fit a CLIPFORMAT
-		cfType = static_cast<CLIPFORMAT>(RegisterClipboardFormat(_T("Rich Text Format")));
-		q = theApp.Services().Database().execQueryEx(_T("SELECT lID FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), lID, CClipboardFormats::GetFormatName(cfType).GetString());
-		if(q.eof() == false)
-		{
-			lRet |= stRTF;
-		}
-	}
-	catch (CppSQLite3Exception& e)
-	{
-		CErrorReport::Show(CStringUtil::Format(_T("Reading the formats of clip id %ld failed: %s"), lID, e.errorMessage()));
-		return stNONE;
-	}
-
-	return lRet;
-}
-
-void CDittoRulerRichEditCtrl::d()
-{
-	CString cs = m_rtf.GetText();
-	CString s;
-	s.Format(_T("error = %d, %s"), GetLastError(), cs.GetString());
-	MessageBox(s);
-}
-
 int CDittoRulerRichEditCtrl::SaveToDB(BOOL bUpdateDesc)
 {
 	int nRet = FALSE;
@@ -157,19 +112,12 @@ int CDittoRulerRichEditCtrl::SaveToDB(BOOL bUpdateDesc)
 
 		// no transaction around this: SaveFromEditWnd and AddToDB are each one transaction, and
 		// upstream's transaction here stayed open while the properties dialog was shown
-		if(m_lID >= 0)
+		const SaveClipResult saved{SaveClip(Clip, bUpdateDesc)};
+		if(saved == SaveClipResult::Failed)
 		{
-			// a failed save (shown by SaveFromEditWnd) keeps the edit marked as modified, so it is
-			// not lost; upstream marked it saved
-			if(Clip.SaveFromEditWnd(bUpdateDesc) == false)
-			{
-				return FALSE;
-			}
+			return FALSE;
 		}
-		else
-		{
-			bSetModifyToFalse = AddNewClip(Clip, bUpdateDesc);
-		}
+		bSetModifyToFalse = saved == SaveClipResult::Saved;
 
 		nRet = SavedClipToDb;
 
@@ -202,26 +150,42 @@ void CDittoRulerRichEditCtrl::LoadFormatsToSave(CClip& Clip, int saveTypes)
 	}
 }
 
-bool CDittoRulerRichEditCtrl::AddNewClip(CClip& Clip, BOOL& bUpdateDesc)
+CDittoRulerRichEditCtrl::SaveClipResult CDittoRulerRichEditCtrl::SaveClip(CClip& Clip, BOOL& bUpdateDesc)
 {
-	bool bSetModifyToFalse = false;
+	if(m_lID >= 0)
+	{
+		// a failed save (shown by SaveFromEditWnd) keeps the edit marked as modified, so it is
+		// not lost; upstream marked it saved
+		return Clip.SaveFromEditWnd(bUpdateDesc) ? SaveClipResult::Saved : SaveClipResult::Failed;
+	}
+
+	return AddNewClip(Clip, bUpdateDesc);
+}
+
+CDittoRulerRichEditCtrl::SaveClipResult CDittoRulerRichEditCtrl::AddNewClip(CClip& Clip, BOOL& bUpdateDesc)
+{
 	if(Clip.MakeLatestOrder() == false)
 	{
-		return false;   // shown; the edit stays modified
+		return SaveClipResult::Failed;   // shown; the edit stays modified
 	}
 	CCopyProperties Prop(-1, this, &Clip);
 	Prop.SetHandleKillFocus(true);
 	Prop.SetToTopMost(false);
-	// a failed save (shown by AddToDB) keeps the edit modified and the clip new
-	if(Prop.DoModal() == IDOK && Clip.AddToDB())
+	if(Prop.DoModal() != IDOK)
 	{
-		m_csDescription = Clip.m_Desc;
-		m_lID = Clip.m_id;
-		bUpdateDesc = TRUE;
-		bSetModifyToFalse = true;
+		return SaveClipResult::Cancelled;
+	}
+	// a failed save (shown by AddToDB) keeps the edit modified and the clip new; upstream
+	// treated it like a cancelled dialog, so closing the tab lost the edit
+	if(Clip.AddToDB() == false)
+	{
+		return SaveClipResult::Failed;
 	}
 
-	return bSetModifyToFalse;
+	m_csDescription = Clip.m_Desc;
+	m_lID = Clip.m_id;
+	bUpdateDesc = TRUE;
+	return SaveClipResult::Saved;
 }
 
 int CDittoRulerRichEditCtrl::SaveTypesOf(CClipTypes& types)
@@ -339,6 +303,8 @@ bool CDittoRulerRichEditCtrl::CloseEdit(bool bPrompt, BOOL bUpdateDesc)
 				CString cs;
 				cs.Format(_T("%s '%s'"), theApp.Services().Language().GetString("ErrorSaving", "Error saving clip").GetString(), m_csDescription.GetString());
 				MessageBox(cs, _T("Ditto"), MB_OK);
+				// the tab stays open with the unsaved edit; upstream closed it and lost the edit
+				return false;
 			}
 		}
 		else if(nRet == IDCANCEL)

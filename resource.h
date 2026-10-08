@@ -9,7 +9,6 @@
 #define IDR_EDIT_WND                    129
 #define IDR_MENU                        130
 #define IDR_EDIT_WND_200                130
-#define IDD_SELECT_DB                   131
 #define IDR_EDIT_WND_125                131
 #define IDD_OPTIONS_STATS               132
 #define IDR_EDIT_WND_150                132
@@ -216,7 +215,6 @@
 #define IDR_MENU_DELETE_CLIP_DATA       390
 #define IDC_PATH                        1000
 #define IDC_GET_PATH                    1001
-#define IDC_SELECT                      1003
 #define IDC_TRIP_COPIES                 1004
 #define IDC_TRIP_PASTES                 1005
 #define IDC_RESET_COUNTS                1006
@@ -246,7 +244,6 @@
 #define IDC_BT_COMPACT_AND_REPAIR       1028
 #define IDC_LIST                        1032
 #define IDC_SHOW_TEXT_FOR_FIRST_TEN_HOT_KEYS 1034
-#define IDC_USE_DEFAULT                 1035
 #define IDC_HYPER_LINK                  1036
 #define IDC_BUTTON_FONT                 1040
 #define IDC_BUTTON_NEW_GROUP            1040
@@ -281,7 +278,6 @@
 #define IDC_TRANSPARENCY                2006
 #define IDD_OPTIONS_QUICK_PASTE         2006
 #define IDC_HOTKEY_ACTIVATE_3           2006
-#define IDD_OPTIONS_UTILITIES           2007
 #define IDC_TRANS_PERC                  2007
 #define IDC_HOTKEY_COPYSAVECLIPBOARD    2007
 #define IDC_MAXIMUM                     2008
@@ -293,8 +289,6 @@
 #define IDC_AT_CARET                    2015
 #define IDC_AT_CURSOR                   2016
 #define IDC_AT_PREVIOUS                 2017
-#define IDC_COMPACT_DB                  2018
-#define IDC_REPAIR                      2019
 #define IDC_DESC_SHOW_LEADING_WHITESPACE 2021
 #define IDC_NAME                        2022
 #define IDC_SHOW_THUMBNAILS             2022

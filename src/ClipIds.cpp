@@ -442,7 +442,8 @@ BOOL CClipIDs::Export(CClipContext& context, CString csFilePath)
 
 BOOL CClipIDs::ExportClips(CClipContext& context, CppSQLite3DB& db)
 {
-	BOOL bRet{FALSE};
+	INT_PTR exported{0};
+	CString skipped{};
 	INT_PTR count{GetSize()};
 	for(int i = 0; i < count; i++)
 	{
@@ -450,15 +451,27 @@ BOOL CClipIDs::ExportClips(CClipContext& context, CppSQLite3DB& db)
 
 		CClip_ImportExport clip{context};
 
-		if(clip.LoadMainTable(nID))
+		// a clip that does not load (a database error is shown by the load) or has no data (a
+		// group) is not exported; upstream skipped it silently and still returned success
+		if(clip.LoadMainTable(nID) == FALSE || clip.LoadFormats(nID) == false)
 		{
-			if(clip.LoadFormats(nID))
+			if(skipped.IsEmpty() == false)
 			{
-				clip.ExportToSqliteDB(db);
-				bRet = TRUE;
+				skipped += _T(", ");
 			}
+			skipped.AppendFormat(_T("%d"), nID);
+			continue;
 		}
+
+		clip.ExportToSqliteDB(db);
+		exported++;
 	}
 
-	return bRet;
+	if(skipped.IsEmpty() == false)
+	{
+		CErrorReport::Show(CStringUtil::Format(_T("%Id of %Id clips were exported. These clips could not be loaded or have no data and were not exported: %s"), exported, count, skipped.GetString()));
+		return FALSE;
+	}
+
+	return TRUE;
 }

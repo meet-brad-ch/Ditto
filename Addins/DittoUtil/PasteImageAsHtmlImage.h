@@ -19,13 +19,13 @@ public:
 	bool ConvertPathToHtmlImageTag(const CDittoInfo &DittoInfo, IClip *pClip);
 	/**
 	 * @brief Deletes the image folder and the images saved to it (when the add-in DLL exits).
-	 * @return true when the folder was removed; false when it could not be (it is missing, or a file
-	 *         in it is still in use).
+	 * @return true when the folder was removed; false when it could not be (it is missing, a file
+	 *         in it is still in use, or the temporary folder is not known).
 	 */
 	bool CleanupPastedImages();
 
 private:
-	/** @brief The folder pasted CF_DIB images are saved to (%TMP%\ditto); empty until first used. */
+	/** @brief The folder pasted CF_DIB images are saved to (see CreateLocalPath); empty until first used. */
 	CString m_dibImagePath{};
 	/** @brief The number of the next saved CF_DIB image file (1.bmp, 2.bmp, ... for the DLL's lifetime). */
 	int m_nextDibImageName{1};
@@ -67,8 +67,10 @@ private:
 	// malformed, returns false with errorMessage set when the file cannot be created.
 	static bool WriteDibToFile(const CString& csPath, std::span<const std::byte> dib, CString& errorMessage);
 	/**
-	 * @brief Sets the image folder to %TMP%\ditto.
+	 * @brief Sets the image folder to "ditto" in the temporary folder (GetTempPath: %TMP%, else
+	 *        %TEMP%, %USERPROFILE% or the Windows folder).
 	 * @param bCreateDir true to also create the folder.
+	 * @return false (the folder is left empty) when GetTempPath fails; GetLastError tells why.
 	 */
-	void CreateLocalPath(bool bCreateDir);
+	bool CreateLocalPath(bool bCreateDir);
 };

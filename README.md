@@ -436,6 +436,25 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
     conversions), an ambiguous ternary and `bind`, and a dead `CGdipButton::Test`. The untouched `ColourPopup.cpp` keeps `/permissive`
     and compiles without the shared precompiled header, which a different conformance mode
     cannot use.
+- 2026-10-07: The collected defects are fixed, failures are visible, dead code is gone (Phase R).
+  - **Owner decision:** every clear defect is fixed, with a regression test where the code can be
+    tested; behaviours that may be intended are left for the owner (listed in the session log).
+  - **Failures:** callers act on the failure results of Phase G3; moves, deletes and the clip
+    types run in transactions; a database that is only locked or in use is never renamed to
+    `_BAD` or deleted (`CppSQLite3Exception::isUnavailable`, `DittoCore::DatabasePath`); the
+    schema upgrade uses `IF [NOT] EXISTS` instead of swallowing every error.
+  - **Prepared statements are locked now:** `CDittoDb::connectionMutex()` gives every
+    `CppSQLite3Statement` the connection lock for prepare, step and reset, so they wait for
+    another thread's open transaction like `execDML`/`execQuery` (this replaces the 2026-10-06
+    note below; test `DittoDb.PreparedStatementWaitsForAnotherThreadsTransaction`). Binding,
+    later rows of a query and finalize are not locked.
+  - **Threads:** log writes are serialised; the app-running flag, the copy thread's config flag
+    and the last-added clip are thread-safe; the paste-time flag travels with the background
+    update.
+  - **Search:** the SQL lives in `DittoCore::SearchCondition` (tested).
+  - **Removed as dead:** `CSelectDB`, `COptionsUtilities` and the no-op compact/repair functions
+    (their only real implementation was DAO, before SQLite), the obsolete `DittoUtil.vcproj/.sln`,
+    and many unused members, handlers and commented-out blocks.
 - 2026-10-07: No globals in Ditto's own code: full OOD with one composition root (Phase L3).
   - **Macros (L3a):** every `#define` of the own code (448) became a class-scoped `enum`,
     `static constexpr` member or static member function; configuration macros moved to the

@@ -20,13 +20,10 @@ public:
 
 	bool LoadItem(long lID, CString csDesc);
 	int SaveToDB(BOOL bUpdateDesc);
-	long GetTypeFlags(long lID);
 	bool CloseEdit(bool bPrompt, BOOL bUpdateDesc);
 	long GetDBID()		{ return m_lID; }
 	CString GetDesc()	{ return m_csDescription; }
 
-	void d();
-	    
 protected:
 	long m_lID;
 	CString m_csDescription;
@@ -35,6 +32,23 @@ protected:
 	bool LoadTextData(CClip &Clip);
 
 private:
+	/** @brief Result of saving the loaded formats of the editor to the database. */
+	enum class SaveClipResult
+	{
+		/** @brief The clip was saved (updated or added). */
+		Saved,
+		/** @brief The properties dialog of a new clip was cancelled; nothing was saved. */
+		Cancelled,
+		/** @brief The save failed (already shown to the user); nothing was saved. */
+		Failed,
+	};
+
+	/** @brief Saves the clip: updates the edited clip, or adds a new one (see AddNewClip).
+	 *  @param Clip Clip with the formats to save.
+	 *  @param bUpdateDesc Whether to update the description; set to TRUE when a new clip was added.
+	 *  @return The result of the save. */
+	SaveClipResult SaveClip(CClip& Clip, BOOL& bUpdateDesc);
+
 	// The eSaveTypes flags of the saved clip types: stRTF for rtf, stCF_TEXT | stCF_UNICODETEXT for text
 	static int SaveTypesOf(CClipTypes& types);
 
@@ -52,6 +66,7 @@ private:
 	/** @brief Shows the properties dialog for a new clip and adds the clip to the database on OK.
 	 *  @param Clip The new clip.
 	 *  @param bUpdateDesc Set to TRUE when the clip was added.
-	 *  @return true if the clip was added (the edit is then no longer modified). */
-	bool AddNewClip(CClip& Clip, BOOL& bUpdateDesc);
+	 *  @return Saved if the clip was added (the edit is then no longer modified), Cancelled if the
+	 *          dialog was cancelled, Failed if the order or the add failed (shown to the user). */
+	SaveClipResult AddNewClip(CClip& Clip, BOOL& bUpdateDesc);
 };

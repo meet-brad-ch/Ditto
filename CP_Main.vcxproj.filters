@@ -304,9 +304,6 @@
     <ClCompile Include="src\OptionsTypes.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\OptionsUtilities.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\Path.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -359,9 +356,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\SearchEditBox.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\SelectDB.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\SendKeys.cpp">
@@ -778,9 +772,6 @@
     <ClInclude Include="src\OptionsTypes.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\OptionsUtilities.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\Path.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -833,9 +824,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\SearchEditBox.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\SelectDB.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\SendKeys.h">

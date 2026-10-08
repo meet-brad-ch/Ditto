@@ -915,8 +915,9 @@ private:
 	/** @brief Saves the file data of a clip with CF_HDROP data and reloads its list item.
 	@param row the list row.
 	@param id the clip ID.
-	@param errorMessage the errors, added to. */
-	void SaveClipFileData(int row, int id, CString &errorMessage);
+	@param errorMessage the errors, added to.
+	@return False when reloading the list item failed with a database error (shown to the user). */
+	bool SaveClipFileData(int row, int id, CString &errorMessage);
 
 	/** @brief The file path for the next exported clip: the chosen path, or the next free numbered path.
 	@param names the chosen file name; its next number is advanced.

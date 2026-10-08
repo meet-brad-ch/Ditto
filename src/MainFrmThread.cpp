@@ -4,6 +4,7 @@
 #include "Options.h"
 #include "Misc.h"
 #include "cp_main.h"
+#include "ErrorReport.h"
 
 CMainFrmThread::CMainFrmThread(CGetSetOptions& settings, CIdleTime& idleTime, CDittoDb& database, CClipboardMonitor& clipboard, CAppWindows& windows) :
 	m_settings(settings),
@@ -114,9 +115,13 @@ void CMainFrmThread::OnSaveClips()
 
 	CLogger::Log(CStringUtil::Format(_T("SaveCopyclips After AddToDb, Count: %d"), count));
 
-	if(count > 0)
+	// the newest clip that was saved (set when count > 0): upstream used the newest clip, also
+	// when its save failed
+	const CClip* const pLastSaved{localClips.LastSaved()};
+	if(pLastSaved != nullptr)
 	{
-		int Id = localClips.Last().m_id;
+		const CClip& lastClip{*pLastSaved};
+		int Id = lastClip.m_id;
 
 		CLogger::Log(CStringUtil::Format(_T("SaveCopyclips After AddToDb, Id: %d Before OnCopyCopyCompleted"), Id));
 
@@ -124,15 +129,23 @@ void CMainFrmThread::OnSaveClips()
 
 		CLogger::Log(CStringUtil::Format(_T("SaveCopyclips After AddToDb, Id: %d After OnCopyCopyCompleted"), Id));
 
-		const CClip& lastClip{localClips.Last()};
 		if (lastClip.m_copyReason == CopyReasonEnum::COPY_TO_GROUP &&
 			m_settings.GetShowMsgWndOnCopyToGroup())
 		{
 			CString groupName;
-			CppSQLite3Query q = m_database.execQueryEx(_T("SELECT mText FROM Main WHERE lID = %d"), lastClip.m_parentId);
-			if (q.eof() == false)
+			try
 			{
-				groupName = q.getStringField(0);
+				CppSQLite3Query q = m_database.execQueryEx(_T("SELECT mText FROM Main WHERE lID = %d"), lastClip.m_parentId);
+				if (q.eof() == false)
+				{
+					groupName = q.getStringField(0);
+				}
+			}
+			catch (CppSQLite3Exception& e)
+			{
+				// upstream let this escape the worker thread's event handler
+				CErrorReport::Show(CStringUtil::Format(_T("Reading the name of group %d for the copy message failed: %s"), lastClip.m_parentId, e.errorMessage()));
+				return;
 			}
 
 			auto message{std::make_unique<CString>()};

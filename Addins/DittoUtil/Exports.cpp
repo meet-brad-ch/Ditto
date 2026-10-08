@@ -56,13 +56,6 @@ bool SupportedFunctions(const CDittoInfo & /*DittoInfo*/, FunctionType type, std
 			func4.m_csDetailDescription = _T("Sets the read only flag on the types CF_HDROP, or files paths in text");
 
 			Functions.push_back(func4);
-
-			/*CFunction func5;
-			func5.m_csFunction = _T("RemoveLineFeeds");
-			func5.m_csDisplayName = _T("Paste Removing Line Feeds");
-			func5.m_csDetailDescription = _T("Removes all line feeds from text and rich text entries");
-
-			Functions.push_back(func5);*/
 		}
 		break;
 	}

@@ -298,7 +298,7 @@ bool COptionsGeneral::ApplyDatabasePath()
 		{
 			if(DatabaseSchemaUpgrader::ValidDB(resolvedPath) == FALSE)
 			{
-				MessageBox(_T("Invalid Database"), _T("Ditto"), MB_OK);
+				// ValidDB showed the error; upstream showed a second "Invalid Database" box
 				m_ePath.SetFocus();
 				return false;
 			}
@@ -325,12 +325,8 @@ bool COptionsGeneral::PromptCreateDatabase(const CString& resolvedPath, bool& bO
 	if(MessageBox(cs, _T("Ditto"), MB_OKCANCEL) == IDOK)
 	{
 		// -- create a new one
-		if(CDatabaseManager::CreateDB(resolvedPath))
-		{
-			bOpenNewDatabase = true;
-		}
-		else
-			MessageBox(_T("Error Creating Database"));
+		// a failed create is shown by CreateDB; upstream showed a second "Error Creating Database" box
+		bOpenNewDatabase = CDatabaseManager::CreateDB(resolvedPath) != FALSE;
 	}
 	else
 	{
@@ -346,7 +342,7 @@ bool COptionsGeneral::OpenNewDatabase(const CString& toSavePath, const CString& 
 
 	if(CDatabaseManager::OpenDatabase(Settings(), theApp.Services().Database(), theApp.Services().State(), resolvedPath) == FALSE)
 	{
-		MessageBox(_T("Error Opening new database"), _T("Ditto"), MB_OK);
+		// OpenDatabase showed the error; upstream showed a second "Error Opening new database" box
 		m_ePath.SetFocus();
 		return false;
 	}
@@ -413,7 +409,7 @@ void COptionsGeneral::OnGetPath()
 	{
 		if(DatabaseSchemaUpgrader::ValidDB(csPath) == FALSE)
 		{
-			MessageBox(_T("Invalid Database"), _T("Ditto"), MB_OK);
+			// ValidDB showed the error; upstream showed a second "Invalid Database" box
 			m_ePath.SetFocus();
 		}
 		else

@@ -1866,6 +1866,7 @@ CClipList CClipList::TakeAll()
 {
 	CClipList taken{};
 	taken.m_clips.swap(m_clips);
+	m_lastSaved = nullptr;
 	return taken;
 }
 
@@ -1883,6 +1884,7 @@ int CClipList::AddToDB(bool bLatestOrder)
 
 	int savedCount{0};
 	bool bResult{false};
+	m_lastSaved = nullptr;
 
 	INT_PTR remaining{static_cast<INT_PTR>(m_clips.size())};
 	for(const std::unique_ptr<CClip>& clip : m_clips)
@@ -1903,6 +1905,7 @@ int CClipList::AddToDB(bool bLatestOrder)
 		if(bResult)
 		{
 			savedCount++;
+			m_lastSaved = pClip;
 		}
 
 		CLogger::Log(CStringUtil::Format(_T("AddToDB - while(pos), End Remaining %d, save count: %d"), remaining, savedCount));

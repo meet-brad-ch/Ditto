@@ -451,7 +451,6 @@
     <ClCompile Include="src\OptionsSheet.cpp" />
     <ClCompile Include="src\OptionsStats.cpp" />
     <ClCompile Include="src\OptionsTypes.cpp" />
-    <ClCompile Include="src\OptionsUtilities.cpp" />
     <ClCompile Include="src\Path.cpp" />
     <ClCompile Include="src\Popup.cpp" />
     <ClCompile Include="src\PowerManager.cpp" />
@@ -518,7 +517,6 @@
     <ClCompile Include="src\SaveAnimation.cpp" />
     <ClCompile Include="src\ScrollHelper.cpp" />
     <ClCompile Include="src\SearchEditBox.cpp" />
-    <ClCompile Include="src\SelectDB.cpp" />
     <ClCompile Include="src\SendKeys.cpp" />
     <ClCompile Include="src\ShowTaskBarIcon.cpp" />
     <ClCompile Include="src\SnapWindow.cpp" />
@@ -678,7 +676,6 @@
     <ClInclude Include="src\OptionsSheet.h" />
     <ClInclude Include="src\OptionsStats.h" />
     <ClInclude Include="src\OptionsTypes.h" />
-    <ClInclude Include="src\OptionsUtilities.h" />
     <ClInclude Include="src\Path.h" />
     <ClInclude Include="src\Popup.h" />
     <ClInclude Include="src\PowerManager.h" />
@@ -706,7 +703,6 @@
     <ClInclude Include="src\SaveAnimation.h" />
     <ClInclude Include="src\ScrollHelper.h" />
     <ClInclude Include="src\SearchEditBox.h" />
-    <ClInclude Include="src\SelectDB.h" />
     <ClInclude Include="src\SendKeys.h" />
     <ClInclude Include="src\ShowTaskBarIcon.h" />
     <ClInclude Include="src\SnapWindow.h" />

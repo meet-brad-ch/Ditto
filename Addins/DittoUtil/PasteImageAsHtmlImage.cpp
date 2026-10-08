@@ -24,9 +24,12 @@ bool CPasteImageAsHtmlImage::ConvertPathToHtmlImageTag(const CDittoInfo &DittoIn
 	IClipFormats *pFormats = pClip->Clips();
 	if(pFormats)
 	{
-		if(m_dibImagePath.IsEmpty())
+		if(m_dibImagePath.IsEmpty() && CreateLocalPath(true) == false)
 		{
-			CreateLocalPath(true);
+			CString message;
+			message.Format(_T("The images were not pasted as HTML: the temporary folder could not be found (error %lu)."), ::GetLastError());
+			::MessageBox(DittoInfo.m_hWndDitto, message, _T("Ditto"), MB_OK | MB_ICONERROR);
+			return false;
 		}
 
 		CString csIMG = _T("");
@@ -163,9 +166,9 @@ bool CPasteImageAsHtmlImage::WriteDibToFile(const CString& csPath, std::span<con
 
 bool CPasteImageAsHtmlImage::CleanupPastedImages()
 {
-	if(m_dibImagePath.IsEmpty())
+	if(m_dibImagePath.IsEmpty() && CreateLocalPath(false) == false)
 	{
-		CreateLocalPath(false);
+		return false;
 	}
 
 	CFileFind find;
@@ -181,12 +184,24 @@ bool CPasteImageAsHtmlImage::CleanupPastedImages()
 	return RemoveDirectory(m_dibImagePath) != FALSE;
 }
 
-void CPasteImageAsHtmlImage::CreateLocalPath(bool bCreateDir)
+bool CPasteImageAsHtmlImage::CreateLocalPath(bool bCreateDir)
 {
-	m_dibImagePath = _wgetenv(_T("TMP"));;
-	m_dibImagePath += _T("\\ditto");
+	// GetTempPath reads %TMP% first, then %TEMP%, %USERPROFILE% and the Windows folder; upstream
+	// read %TMP% only, so without TMP the folder became "\ditto" (the root of the current drive)
+	TCHAR tempPath[MAX_PATH + 1]{};
+	const DWORD capacity{ static_cast<DWORD>(_countof(tempPath)) };
+	const DWORD length{ ::GetTempPath(capacity, tempPath) };
+	if(length == 0 || length > capacity)
+	{
+		return false;
+	}
+
+	// GetTempPath's path ends with a backslash
+	m_dibImagePath = tempPath;
+	m_dibImagePath += _T("ditto");
 	if(bCreateDir)
 	{
 		CreateDirectory(m_dibImagePath, NULL);
 	}
+	return true;
 }

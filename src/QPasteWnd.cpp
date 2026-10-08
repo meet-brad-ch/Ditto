@@ -3935,16 +3935,20 @@ bool CQPasteWnd::DoExportToTextFile()
 			{
 				CString savePath = NextExportFilePath(names, IDs.GetCount());
 
-				if (savePath != _T(""))
+				if (savePath == _T(""))
 				{
-					clip.WriteTextToFile(savePath, true, true, false);
+					// upstream only logged this; the rest have no free name either
+					CErrorReport::Show(CStringUtil::Format(_T("Exporting the clips failed: no free file name was found for %s."), startingFilePath.GetString()));
+					break;
+				}
+				// a clip without text also fails here, so the other clips are still exported
+				if (clip.WriteTextToFile(savePath, true, true, false) == FALSE)
+				{
+					CErrorReport::Show(CStringUtil::Format(_T("Exporting clip %d to %s failed: the clip has no text or the file could not be written."), id, savePath.GetString()));
+					continue;
+				}
 
-					ret = true;
-				}
-				else
-				{
-					CLogger::Log(CStringUtil::Format(_T("Failed to find a valid file name for starting path: %s"), startingFilePath.GetString()));
-				}
+				ret = true;
 			}
 		}
 	}
@@ -4785,7 +4789,11 @@ bool CQPasteWnd::DoActionSaveCF_HDROP_FileData()
 		{
 			int row = Indexs[i];
 			int id = IDs[i];
-			SaveClipFileData(row, id, errorMessage);
+			// a database error (shown) stops saving the rest
+			if (SaveClipFileData(row, id, errorMessage) == false)
+			{
+				break;
+			}
 		}
 	}
 
@@ -4800,7 +4808,7 @@ bool CQPasteWnd::DoActionSaveCF_HDROP_FileData()
 	return true;
 }
 
-void CQPasteWnd::SaveClipFileData(int row, int id, CString &errorMessage)
+bool CQPasteWnd::SaveClipFileData(int row, int id, CString &errorMessage)
 {
 	CClip clip(Services().ClipContext());
 	if (clip.LoadMainTable(id))
@@ -4813,10 +4821,19 @@ void CQPasteWnd::SaveClipFileData(int row, int id, CString &errorMessage)
 				if (row >= 0 &&
 					row < (int)m_listItems.size())
 				{
-					CppSQLite3Query q = Services().Database().execQueryEx(_T("SELECT * FROM Main WHERE lID = %d"), id);
-					if (!q.eof())
+					try
 					{
-						FillMainTable(m_listItems[row], q);
+						CppSQLite3Query q = Services().Database().execQueryEx(_T("SELECT * FROM Main WHERE lID = %d"), id);
+						if (!q.eof())
+						{
+							FillMainTable(m_listItems[row], q);
+						}
+					}
+					catch (CppSQLite3Exception& e)
+					{
+						// the file data was saved; only the list row was not refreshed
+						CErrorReport::Show(CStringUtil::Format(_T("Reloading clip %d after saving its file data failed: %s"), id, e.errorMessage()));
+						return false;
 					}
 				}
 			}
@@ -4824,6 +4841,8 @@ void CQPasteWnd::SaveClipFileData(int row, int id, CString &errorMessage)
 			errorMessage += localErrorMessage;
 		}
 	}
+
+	return true;
 }
 
 bool CQPasteWnd::DoActionToggleClipboardConnection()
@@ -4933,14 +4952,13 @@ bool CQPasteWnd::DoExportToBitMapFile()
 
 			CString savePath = NextExportFilePath(names, IDs.GetCount());
 
-			if (savePath != _T(""))
+			if (savePath == _T(""))
 			{
-				ret = toSave.WriteImageToFileOrReport(savePath, _T("export"));
+				// upstream only logged this; the rest have no free name either
+				CErrorReport::Show(CStringUtil::Format(_T("Exporting the images failed: no free file name was found for %s."), startingFilePath.GetString()));
+				break;
 			}
-			else
-			{
-				CLogger::Log(CStringUtil::Format(_T("Failed to find a valid file name for starting path: %s"), startingFilePath.GetString()));
-			}
+			ret = toSave.WriteImageToFileOrReport(savePath, _T("export"));
 		}
 	}
 

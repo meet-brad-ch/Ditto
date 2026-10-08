@@ -1238,21 +1238,28 @@ const CDeleteClipData::SaveFileType* CDeleteClipData::FindSaveFileType(const CSt
 
 void CDeleteClipData::WriteClipDataItem(CClip& selectedClip, const CDeleteData& item, const OPENFILENAME& ofn)
 {
+	const CString path{ CFileDialogPath::From(ofn) };
+	BOOL written{ TRUE };
 	if (item.m_clipboardFormat == _T("PNG") || item.m_clipboardFormat == _T("CF_DIB"))
 	{
-		selectedClip.WriteImageToFileOrReport(CFileDialogPath::From(ofn), _T("save"));
+		selectedClip.WriteImageToFileOrReport(path, _T("save"));
 	}
 	else if (item.m_clipboardFormat == _T("CF_UNICODETEXT"))
 	{
-		selectedClip.WriteTextToFile(CFileDialogPath::From(ofn), TRUE, FALSE, FALSE);
+		written = selectedClip.WriteTextToFile(path, TRUE, FALSE, FALSE);
 	}
 	else if (item.m_clipboardFormat == _T("CF_TEXT"))
 	{
-		selectedClip.WriteTextToFile(CFileDialogPath::From(ofn), FALSE, TRUE, FALSE);
+		written = selectedClip.WriteTextToFile(path, FALSE, TRUE, FALSE);
 	}
 	else if (item.m_clipboardFormat == _T("Rich Text Format"))
 	{
-		selectedClip.WriteTextToFile(CFileDialogPath::From(ofn), FALSE, FALSE, TRUE);
+		written = selectedClip.WriteTextToFile(path, FALSE, FALSE, TRUE);
+	}
+
+	if (written == FALSE)
+	{
+		CErrorReport::Show(CStringUtil::Format(_T("Saving the clip's %s data to %s failed."), item.m_clipboardFormat.GetString(), path.GetString()));
 	}
 }
 void CDeleteClipData::OnCancel()

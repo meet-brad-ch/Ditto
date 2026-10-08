@@ -275,31 +275,26 @@ void CDatabaseManager::ReOrderStickyClips(int parentID, CppSQLite3DB& db)
 
 void DatabaseSchemaUpgrader::UpgradeStickyOrderIndexes(CppSQLite3DB& db)
 {
-	try
+	// IF NOT EXISTS instead of a catch: upstream swallowed every error here, also a locked
+	// database (SQLITE_BUSY), to skip the "index already exists" of Data_ParentId_Format
+	CppSQLite3Query q{db.execQuery(_T("PRAGMA index_info(Main_NoGroup);"))};
+	int count{0};
+	while (q.eof() == false)
 	{
-		CppSQLite3Query q{db.execQuery(_T("PRAGMA index_info(Main_NoGroup);"))};
-		int count{0};
-		while (q.eof() == false)
-		{
-			count++;
-			q.nextRow();
-		}
-
-		if (count == 0)
-		{
-			db.execDML(_T("Update Main set stickyClipOrder = -(2147483647) where stickyClipOrder IS NULL;"));
-			db.execDML(_T("Update Main set stickyClipGroupOrder = -(2147483647) where stickyClipGroupOrder IS NULL;"));
-			db.execDML(_T("Update Main set stickyClipOrder = -(2147483647) where stickyClipOrder = 0;"));
-			db.execDML(_T("Update Main set stickyClipGroupOrder = -(2147483647) where stickyClipGroupOrder = 0;"));
-
-			db.execDML(_T("CREATE INDEX Main_NoGroup ON Main(bIsGroup ASC, stickyClipOrder DESC, clipOrder DESC);"));
-			db.execDML(_T("CREATE INDEX Main_InGroup ON Main(lParentId ASC, bIsGroup ASC, stickyClipGroupOrder DESC, clipGroupOrder DESC);"));
-			db.execDML(_T("CREATE INDEX Data_ParentId_Format ON Data(lParentID COLLATE BINARY ASC, strClipBoardFormat COLLATE NOCASE ASC);"));
-		}
+		count++;
+		q.nextRow();
 	}
-	catch (CppSQLite3Exception& e)
+
+	if (count == 0)
 	{
-		e.errorCode();
+		db.execDML(_T("Update Main set stickyClipOrder = -(2147483647) where stickyClipOrder IS NULL;"));
+		db.execDML(_T("Update Main set stickyClipGroupOrder = -(2147483647) where stickyClipGroupOrder IS NULL;"));
+		db.execDML(_T("Update Main set stickyClipOrder = -(2147483647) where stickyClipOrder = 0;"));
+		db.execDML(_T("Update Main set stickyClipGroupOrder = -(2147483647) where stickyClipGroupOrder = 0;"));
+
+		db.execDML(_T("CREATE INDEX IF NOT EXISTS Main_NoGroup ON Main(bIsGroup ASC, stickyClipOrder DESC, clipOrder DESC);"));
+		db.execDML(_T("CREATE INDEX IF NOT EXISTS Main_InGroup ON Main(lParentId ASC, bIsGroup ASC, stickyClipGroupOrder DESC, clipGroupOrder DESC);"));
+		db.execDML(_T("CREATE INDEX IF NOT EXISTS Data_ParentId_Format ON Data(lParentID COLLATE BINARY ASC, strClipBoardFormat COLLATE NOCASE ASC);"));
 	}
 }
 
@@ -354,42 +349,25 @@ void DatabaseSchemaUpgrader::CheckRequiredTables(CppSQLite3DB& db)
 
 void DatabaseSchemaUpgrader::DropDeleteDataTrigger(CppSQLite3DB& db)
 {
-	try
-	{
-		db.execDML(_T("DROP TRIGGER delete_data_trigger"));
-	}
-	catch (CppSQLite3Exception& e)
-	{
-		e.errorCode();
-	}
+	// IF EXISTS instead of a catch: upstream swallowed every error to skip "no such trigger", also
+	// a locked database (SQLITE_BUSY)
+	db.execDML(_T("DROP TRIGGER IF EXISTS delete_data_trigger"));
 }
 
 void DatabaseSchemaUpgrader::DropCopyBufferTrigger(CppSQLite3DB& db)
 {
-	try
-	{
-		db.execDML(_T("DROP TRIGGER delete_copy_buffer_trigger"));
-	}
-	catch (CppSQLite3Exception& e)
-	{
-		e.errorCode();
-	}
+	// IF EXISTS instead of a catch (see DropDeleteDataTrigger)
+	db.execDML(_T("DROP TRIGGER IF EXISTS delete_copy_buffer_trigger"));
 }
 
 void DatabaseSchemaUpgrader::CreateDeleteDataTrigger(CppSQLite3DB& db)
 {
-	//This was added later so try to add each time and catch the exception here
-	try
-	{
-		db.execDML(_T("CREATE TRIGGER delete_data_trigger BEFORE DELETE ON Main FOR EACH ROW\n")
-			_T("BEGIN\n")
-			_T("INSERT INTO MainDeletes VALUES(old.lID, datetime('now'));\n")
-			_T("END\n"));
-	}
-	catch (CppSQLite3Exception& e)
-	{
-		e.errorCode();
-	}
+	// added in a later version; IF NOT EXISTS instead of a catch: upstream swallowed every error
+	// to skip "trigger already exists", also a locked database (SQLITE_BUSY)
+	db.execDML(_T("CREATE TRIGGER IF NOT EXISTS delete_data_trigger BEFORE DELETE ON Main FOR EACH ROW\n")
+		_T("BEGIN\n")
+		_T("INSERT INTO MainDeletes VALUES(old.lID, datetime('now'));\n")
+		_T("END\n"));
 }
 
 void DatabaseSchemaUpgrader::AddCopyBuffersTable(CppSQLite3DB& db)
@@ -435,16 +413,11 @@ void DatabaseSchemaUpgrader::AddMainDeletesTable(CppSQLite3DB& db)
 
 void DatabaseSchemaUpgrader::CreateMainIndexes(CppSQLite3DB& db)
 {
-	try
-	{
-		db.execDML(_T("CREATE INDEX Main_ParentId on Main(lParentID DESC)"));
-		db.execDML(_T("CREATE INDEX Main_IsGroup on Main(bIsGroup DESC)"));
-		db.execDML(_T("CREATE INDEX Main_ShortCut on Main(lShortCut DESC)"));
-	}
-	catch (CppSQLite3Exception& e)
-	{
-		e.errorCode();
-	}
+	// IF NOT EXISTS instead of a catch: upstream swallowed every error to skip "index already
+	// exists", also a locked database (SQLITE_BUSY). Main_ShortCut is no longer created here:
+	// CreateCurrentIndexes drops it later in the same upgrade.
+	db.execDML(_T("CREATE INDEX IF NOT EXISTS Main_ParentId on Main(lParentID DESC)"));
+	db.execDML(_T("CREATE INDEX IF NOT EXISTS Main_IsGroup on Main(bIsGroup DESC)"));
 }
 
 void DatabaseSchemaUpgrader::AddClipOrderColumns(CppSQLite3DB& db)
@@ -751,16 +724,6 @@ BOOL CDatabaseManager::CreateDB(CString csFile)
 	}
 
 		return TRUE;
-}
-
-BOOL CDatabaseManager::CompactDatabase()
-{
-	return TRUE;
-}
-
-BOOL CDatabaseManager::RepairDatabase()
-{
-	return TRUE;
 }
 
 bool CClipRetentionPolicy::RemoveClipsOverMaxEntries(CGetSetOptions& settings, CAppWindows& windows, CDittoDb& db)

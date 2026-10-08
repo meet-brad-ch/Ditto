@@ -109,8 +109,14 @@ private:
 	// DeleteIDs' step for one clip: if it is still in Main, moves a group's children to the
 	// top level and appends the clip's id to the IN list
 	void AddExistingClipToDelete(CppSQLite3DB& db, int clipId, CString& sqlIn);
-	// Export's work: writes every clip whose Main row and formats load into db; TRUE when at
-	// least one clip was written
+	/**
+	 * @brief Export's work: writes every clip whose Main row and formats load into db.
+	 * @param context the clip context (database) to load the clips from.
+	 * @param db the open export database.
+	 * @return TRUE when every clip was written; FALSE (after showing which clips were skipped)
+	 *         when a clip could not be loaded or has no data.
+	 * @throws CppSQLite3Exception when writing to db fails.
+	 */
 	BOOL ExportClips(CClipContext& context, CppSQLite3DB& db);
 
 protected:

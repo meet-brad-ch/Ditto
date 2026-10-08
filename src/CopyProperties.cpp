@@ -560,7 +560,8 @@ void CCopyProperties::OnLbnSelchangeCopyData()
 	int selCount = m_lCopyData.GetSelCount();
 	if (selCount > 0)
 	{
-		m_bDeletedData = true;
+		// selecting a format deletes nothing: upstream set m_bDeletedData here, so OK ran
+		// DeleteFormats with no deleted formats
 
 		//Get the selected indexes
 		ARRAY items;

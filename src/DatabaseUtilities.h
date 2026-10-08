@@ -61,16 +61,6 @@ public:
 	 */
 	static BOOL CreateDB(CString csFile);
 	/**
-	 * @brief Former DAO compaction; does nothing now.
-	 * @return TRUE.
-	 */
-	static BOOL CompactDatabase();
-	/**
-	 * @brief Former DAO repair; does nothing now.
-	 * @return TRUE.
-	 */
-	static BOOL RepairDatabase();
-	/**
 	 * @brief Renumbers the sticky clip order of a level and, recursively, of every group in it.
 	 * @param parentID the group whose clips are renumbered; -1 for the top level.
 	 * @param db the open database.
@@ -234,18 +224,22 @@ private:
 	 */
 	static void CheckRequiredTables(CppSQLite3DB& db);
 	/**
-	 * @brief Drops the old delete_data_trigger; a failure is ignored.
+	 * @brief Drops the old delete_data_trigger if it exists.
 	 * @param db the open database.
+	 * @throws CppSQLite3Exception when the drop fails (e.g. the database is locked).
 	 */
 	static void DropDeleteDataTrigger(CppSQLite3DB& db);
 	/**
-	 * @brief Drops the old delete_copy_buffer_trigger; a failure is ignored.
+	 * @brief Drops the old delete_copy_buffer_trigger if it exists.
 	 * @param db the open database.
+	 * @throws CppSQLite3Exception when the drop fails (e.g. the database is locked).
 	 */
 	static void DropCopyBufferTrigger(CppSQLite3DB& db);
 	/**
-	 * @brief Creates the delete_data_trigger that records deleted clips in MainDeletes; a failure is ignored.
+	 * @brief Creates the delete_data_trigger that records deleted clips in MainDeletes, if it does
+	 * not exist.
 	 * @param db the open database.
+	 * @throws CppSQLite3Exception when the trigger cannot be created (e.g. the database is locked).
 	 */
 	static void CreateDeleteDataTrigger(CppSQLite3DB& db);
 	/**
@@ -261,9 +255,9 @@ private:
 	 */
 	static void AddMainDeletesTable(CppSQLite3DB& db);
 	/**
-	 * @brief Creates the Main_ParentId, Main_IsGroup and Main_ShortCut indexes; stops at the
-	 * first failure, which is ignored.
+	 * @brief Creates the Main_ParentId and Main_IsGroup indexes if they do not exist.
 	 * @param db the open database.
+	 * @throws CppSQLite3Exception when an index cannot be created (e.g. the database is locked).
 	 */
 	static void CreateMainIndexes(CppSQLite3DB& db);
 	/**
@@ -292,8 +286,9 @@ private:
 	static void AddStickyOrderColumns(CppSQLite3DB& db);
 	/**
 	 * @brief ValidDB's sticky-order step: when the Main_NoGroup index is missing, sets the unset sticky
-	 * orders and creates the sticky-order indexes; a failed step is ignored, as the index may exist already.
+	 * orders and creates the sticky-order indexes that do not exist.
 	 * @param db the open database.
+	 * @throws CppSQLite3Exception when a step fails (e.g. the database is locked).
 	 */
 	static void UpgradeStickyOrderIndexes(CppSQLite3DB& db);
 	/**

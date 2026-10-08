@@ -558,6 +558,11 @@ public:
 	int AddToDB( bool bLatestOrder = false);
 	// The clip added last; the list must not be empty
 	CClip& Last();
+	/**
+	 * @brief The clip saved last by AddToDB (the newest clip whose save succeeded).
+	 * @return The clip, owned by this list; nullptr when AddToDB saved no clip.
+	 */
+	CClip* LastSaved() const { return m_lastSaved; }
 	// The number of clips in the list
 	size_t Count() const { return m_clips.size(); }
 	// True when the list holds no clips
@@ -566,6 +571,8 @@ public:
 private:
 	// The clips, in the order they were added
 	std::vector<std::unique_ptr<CClip>> m_clips{};
+	/** @brief Non-owning: the clip saved last by AddToDB (one of m_clips), or nullptr. */
+	CClip* m_lastSaved{nullptr};
 };
 
 #endif // !defined(AFX_PROCESSCOPY_H__185CBB6F_4B63_4397_8FF9_E18D777DA506__INCLUDED_)
