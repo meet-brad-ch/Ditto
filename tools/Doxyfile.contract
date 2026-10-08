@@ -1,7 +1,7 @@
 # Doxygen documentation gate for code written to the contract (run from the repo root by
 # tools\verify.ps1). Every class, function and member must be documented; any warning fails.
 # Inputs are listed by file name; add each new contract file here.
-PROJECT_NAME           = "Ditto local-only"
+PROJECT_NAME           = "Ditto without network code"
 OUTPUT_DIRECTORY       = build/doxygen
 INPUT                  = lib/DittoCore/ByteCursor.h \
                          lib/DittoCore/ByteCursor.cpp \

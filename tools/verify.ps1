@@ -1,4 +1,4 @@
-# Quality gate for the local-only Ditto fork.
+# Quality gate for the Ditto fork without network code.
 #   1. installs vcpkg.json dependencies, then rebuilds Release|x64 with a build log
 #      - warnings: none (every project builds with /W4 /WX; the log is checked too)
 #      - analyze (-Analyze): no code analysis finding (the build log check fails on any)

@@ -965,7 +965,7 @@ CAPTION "About Ditto"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LISTBOX         IDC_LIST,7,16,323,132,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
-    LTEXT           "Local-only build: network code removed (fork of sabrogden/Ditto)",IDC_HYPER_LINK,7,153,250,8
+    LTEXT           "No-network build: network code removed (fork of sabrogden/Ditto)",IDC_HYPER_LINK,7,153,250,8
     LTEXT           "Upstream home page: ditto-cp.sf.net",IDC_STATIC_LINK,7,171,250,8
 END
 

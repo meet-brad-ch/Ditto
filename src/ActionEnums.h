@@ -172,7 +172,7 @@ public:
 	static int GetDefaultShortCutKeyB(ActionEnumValues value, int pos);
 	static bool UserConfigurable(ActionEnumValues value);
 	static bool ToolTipAction(ActionEnumValues value);
-	// Actions whose feature this local-only fork removed (network send, mail, browser, ChaiScript).
+	// Actions whose feature this fork removed (network send, mail, browser, ChaiScript).
 	// Their enum values stay so the numbers of later actions, and saved shortcuts, do not shift.
 	static bool Removed(ActionEnumValues value);
 

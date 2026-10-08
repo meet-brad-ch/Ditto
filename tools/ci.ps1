@@ -1,4 +1,4 @@
-# Local CI (the project's only CI; there is no GitHub workflow): run on this machine against a clean clone
+# CI (the project's only CI; there is no GitHub workflow): run on this machine against a clean clone
 # of one commit, so only committed files take part (no untracked or ignored leftovers).
 #   1. clone the commit into build\ci\<commit>\work
 #   2. tools\verify.ps1 -Analyze (rebuild with /analyze, all gates, every test alone under ASan)
@@ -130,7 +130,7 @@ finally {
     }
     $installers = @(Get-ChildItem (Join-Path $artifacts 'installer') -Filter *.exe -ErrorAction SilentlyContinue)
     $md = [Collections.Generic.List[string]]::new()
-    $md.Add("# Local CI: $short $(if ($failed) { 'FAILED' } else { 'passed' })")
+    $md.Add("# CI: $short $(if ($failed) { 'FAILED' } else { 'passed' })")
     $md.Add('')
     $md.Add("Commit ``$sha``: $subject  ")
     $md.Add(("Run {0:yyyy-MM-dd HH:mm}, {1:N1} min, on {2}" -f $start, ((Get-Date) - $start).TotalMinutes, $env:COMPUTERNAME))

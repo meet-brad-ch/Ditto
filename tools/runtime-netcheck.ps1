@@ -1,4 +1,4 @@
-# Runtime network check for the local-only fork. Runs the built Ditto as a portable copy, puts four
+# Runtime network check for the fork without network code. Runs the built Ditto as a portable copy, puts four
 # kinds of clipboard content on the clipboard (text, CF_HTML with a remote <img>, an image, a file
 # list), and watches the TCP/UDP endpoints the Ditto process owns. Any endpoint is a finding.
 # Prints one timestamped line per step and FAILED lines on findings; exits 1 on any finding.

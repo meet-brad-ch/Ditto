@@ -150,7 +150,7 @@ failure. It takes about 2 minutes, or about 4.5 minutes with `-Analyze`.
 
 `-SkipBuild` skips stage 1 (the warning checks are then not verified).
 
-### Local CI
+### CI
 
 `powershell -NoProfile -ExecutionPolicy Bypass -File tools\ci.ps1 [-Ref <commit>]` is the
 project's CI. Run it before every push.

@@ -1,8 +1,8 @@
 #define MyAppName               "Ditto"
 #define MyAppVersion            GetVersionNumbersString("..\Release64\Ditto.exe")
-#define MyAppVerName            MyAppName + " " + MyAppVersion + " (local-only build)"
-; local-only fork of sabrogden/Ditto: no network code, no firewall rule, no browser links
-#define MyAppPublisher          "Ditto local-only fork (meet-brad-ch)"
+#define MyAppVerName            MyAppName + " " + MyAppVersion + " (no-network build)"
+; fork of sabrogden/Ditto without network code: no firewall rule, no browser links
+#define MyAppPublisher          "Ditto without network code (meet-brad-ch)"
 #define MyAppAuthor             "Scott Brogden"
 #define MyAppSupportURL         "https://github.com/meet-brad-ch/Ditto"
 #define MyAppCopyrighEndYear    GetDateTimeString('yyyy','','')

@@ -1,5 +1,5 @@
 {
-  "name": "ditto-local",
+  "name": "ditto",
   "version-string": "0",
   "dependencies": [
     "zlib",
