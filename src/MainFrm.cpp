@@ -1457,12 +1457,14 @@ void CMainFrame::OnUpdateFirstShowstartupmessage(CCmdUI* pCmdUI)
 
 void CMainFrame::OnFirstBackupdatabase()
 {
-	CDatabaseBackupPrompt::BackupDbPrompt(Settings(), Services().Language(), m_hWnd);
+	CDatabaseBackupPrompt prompt(Settings(), Services().Language(), Services().Database(), Services().State(), Services().Windows());
+	prompt.BackupDbPrompt(m_hWnd);
 }
 
 void CMainFrame::OnFirstRestoredatabase()
 {
-	CDatabaseBackupPrompt::RestoreDbPrompt(Settings(), Services().Language(), Services().Database(), Services().State(), Services().Windows(), m_hWnd);
+	CDatabaseBackupPrompt prompt(Settings(), Services().Language(), Services().Database(), Services().State(), Services().Windows());
+	prompt.RestoreDbPrompt(m_hWnd);
 }
 
 LRESULT CMainFrame::OnBackupDb(WPARAM /*wParam*/, LPARAM /*lParam*/)

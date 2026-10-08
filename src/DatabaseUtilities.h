@@ -123,26 +123,46 @@ class CDatabaseBackupService
 {
 public:
 	/**
+	 * @brief Creates the service.
+	 * @param settings the application's settings (temp folder, default directory, database path);
+	 * must outlive this object.
+	 * @param language the UI texts (the progress texts); must outlive this object.
+	 * @param database the application's database connection (opened on a restored file); must
+	 * outlive this object.
+	 * @param state the application state (passed on to CDatabaseManager::OpenDatabase); must outlive
+	 * this object.
+	 * @param windows the application's windows (the view refreshed after a restore); must outlive
+	 * this object.
+	 */
+	CDatabaseBackupService(CGetSetOptions& settings, CMultiLanguage& language, CDittoDb& database, CAppState& state, CAppWindows& windows);
+
+	/**
 	 * @brief Writes a gzip-compressed copy of the database, showing the progress in a popup.
-	 * @param language the UI texts (the progress text).
 	 * @param dbPath the database path.
 	 * @param backupPath the backup file path.
 	 * @return TRUE on success; FALSE (after showing the error) on failure.
 	 */
-	static BOOL BackupDB(CMultiLanguage& language, CString dbPath, CString backupPath);
+	BOOL BackupDB(CString dbPath, CString backupPath);
 	/**
 	 * @brief Unpacks a backup next to the current database, checks it, makes it the configured
 	 * database, opens it and refreshes the view.
-	 * @param settings the application's settings (temp folder, default directory, database path).
-	 * @param language the UI texts (the progress text).
-	 * @param database the application's database connection (opened on the restored file).
-	 * @param state the application state (passed on to CDatabaseManager::OpenDatabase).
-	 * @param windows the application's windows (the view refreshed after the restore).
 	 * @param backupPath the backup file path.
 	 * @return TRUE on success; FALSE (after showing the error) on failure, also when the restored
 	 * database cannot be opened.
 	 */
-	static BOOL RestoreDB(CGetSetOptions& settings, CMultiLanguage& language, CDittoDb& database, CAppState& state, CAppWindows& windows, CString backupPath);
+	BOOL RestoreDB(CString backupPath);
+
+private:
+	/** @brief The application's settings (not owned). */
+	CGetSetOptions& m_settings;
+	/** @brief The UI texts (not owned). */
+	CMultiLanguage& m_language;
+	/** @brief The application's database connection (not owned). */
+	CDittoDb& m_database;
+	/** @brief The application state (not owned). */
+	CAppState& m_state;
+	/** @brief The application's windows (not owned). */
+	CAppWindows& m_windows;
 };
 
 namespace nsPath
@@ -157,17 +177,25 @@ class DatabaseLocator
 {
 public:
 	/**
+	 * @brief Creates the locator.
+	 * @param settings the application's settings (the database path is stored there when it
+	 * changes); must outlive this object.
+	 * @param language the UI texts (the message about a bad database file); must outlive this object.
+	 * @param database the application's database connection (opened on the database found); must
+	 * outlive this object.
+	 * @param state the application state (passed on to CDatabaseManager::OpenDatabase); must outlive
+	 * this object.
+	 */
+	DatabaseLocator(CGetSetOptions& settings, CMultiLanguage& language, CDittoDb& database, CAppState& state);
+
+	/**
 	 * @brief Makes sure a usable database exists and opens it.
-	 * @param settings the application's settings (the database path is stored there when it changes).
-	 * @param language the UI texts (the message about a bad database file).
-	 * @param database the application's database connection (opened on the database found).
-	 * @param state the application state (passed on to CDatabaseManager::OpenDatabase).
 	 * @param csDBPath the configured database path; empty for the default location.
 	 * @return TRUE if a database was found or created and opened; FALSE if it is on a network
 	 * share or another drive than C: and missing, if it is in use or cannot be read at the moment
 	 * (left unchanged and logged; the caller tries again later), or could not be created or opened.
 	 */
-	static BOOL CheckDBExists(CGetSetOptions& settings, CMultiLanguage& language, CDittoDb& database, CAppState& state, CString csDBPath);
+	BOOL CheckDBExists(CString csDBPath);
 	/**
 	 * @brief Tells whether a database path is on a network share or on a drive other than C:.
 	 * @param path the database path.
@@ -177,24 +205,31 @@ public:
 
 private:
 	/**
-	 * @brief CheckDBExists' step for a missing file: creates it there, else at a new default path.
-	 * @param settings the application's settings (default directory; the new path is stored there).
+	 * @brief CheckDBExists' step for a missing file: creates it there, else at a new default path
+	 * (stored in the settings).
 	 * @param csDBPath in: the missing database path; out: the path of the created database.
 	 * @return the result of the last CreateDB call.
 	 */
-	static BOOL CreateMissingDB(CGetSetOptions& settings, CString& csDBPath);
+	BOOL CreateMissingDB(CString& csDBPath);
 	/**
 	 * @brief CheckDBExists' step for an existing file: checks and upgrades it. A damaged file is
 	 * renamed to name_BAD.ext (after telling the user) and a new database is created at a new
 	 * default path. A file that is only in use or not readable now
-	 * (CppSQLite3Exception::isUnavailable) is left as it is.
-	 * @param settings the application's settings (default directory; the new path is stored there).
-	 * @param language the UI texts (the message about the bad file).
+	 * (CppSQLite3Exception::isUnavailable) is left as it is. The new path is stored in the settings.
 	 * @param csDBPath in: the existing database path; out: the path of the database to open.
 	 * @return TRUE for a valid database; FALSE for a database in use, or when the damaged file
 	 * cannot be renamed (shown); else the result of CreateDB.
 	 */
-	static BOOL CheckExistingDB(CGetSetOptions& settings, CMultiLanguage& language, CString& csDBPath);
+	BOOL CheckExistingDB(CString& csDBPath);
+
+	/** @brief The application's settings (not owned). */
+	CGetSetOptions& m_settings;
+	/** @brief The UI texts (not owned). */
+	CMultiLanguage& m_language;
+	/** @brief The application's database connection (not owned). */
+	CDittoDb& m_database;
+	/** @brief The application state (not owned). */
+	CAppState& m_state;
 };
 
 /**

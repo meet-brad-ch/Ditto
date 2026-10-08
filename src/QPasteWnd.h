@@ -975,12 +975,13 @@ private:
 	/** @brief Reads the sort key of a clip.
 	@param targetID the clip ID.
 	@param key the sort key to set.
-	@return true when the clip was found. */
+	@return true when the clip was found; false when it was not found or on a database error
+	(the error is reported). */
 	static bool LoadGoToEntryKey(long targetID, GoToEntryKey& key);
 	/** @brief The row of a clip in the main list.
 	@param filter the main list condition.
 	@param key the clip's sort key.
-	@return the row, or -1 on a database error. */
+	@return the row, or -1 on a database error (the error is reported). */
 	static int GoToEntryRank(const CString& filter, const GoToEntryKey& key);
 	/** @brief Waits up to 5 s for the list load, pumping messages. */
 	void WaitForListLoad();

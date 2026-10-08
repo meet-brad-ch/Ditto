@@ -294,7 +294,8 @@ BOOL CCP_MainApp::InitInstanceBody()
 
 	Services().IcuString().Load();
 
-	int nRet = DatabaseLocator::CheckDBExists(Services().Settings(), Services().Language(), Services().Database(), Services().State(), Services().Settings().GetDBPath());
+	DatabaseLocator locator(Services().Settings(), Services().Language(), Services().Database(), Services().State());
+	int nRet = locator.CheckDBExists(Services().Settings().GetDBPath());
 	if (nRet == FALSE)
 	{
 		CreateNoDbWnd();

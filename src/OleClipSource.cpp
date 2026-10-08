@@ -683,7 +683,11 @@ HGLOBAL COleClipSource::ConvertToFileDrop()
 	for (int i = 0; i < m_ClipIDs.GetCount(); i++)
 	{
 		CClip fileClip(Services().ClipContext());
-		fileClip.LoadFormats(m_ClipIDs[i]);
+		// a clip whose formats do not load is not dropped; LoadFormats reported a database error
+		if (!fileClip.LoadFormats(m_ClipIDs[i]))
+		{
+			continue;
+		}
 
 		AddDragFile(fileClip, drag);
 	}
@@ -740,7 +744,8 @@ void COleClipSource::AddDragFile(CClip& fileClip, DragFiles& drag)
 	{
 		CString file = NextDragFilePath(drag, _T("image"), _T("png"));
 
-		if (fileClip.WriteImageToFile(file))
+		// a failed write is reported (as for text) and the image is not dropped
+		if (fileClip.WriteImageToFileOrReport(file, _T("drag")))
 		{
 			drag.paths.push_back(file.GetString());
 		}

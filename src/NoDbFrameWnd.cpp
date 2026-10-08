@@ -118,8 +118,9 @@ CGetSetOptions& CNoDbFrameWnd::Settings() const
 
 void CNoDbFrameWnd::TryOpenDatabase()
 {
+	DatabaseLocator locator(Settings(), Services().Language(), Services().Database(), Services().State());
 	if (CDatabaseManager::IsDatabaseOpen(Services().Database()) ||
-		DatabaseLocator::CheckDBExists(Settings(), Services().Language(), Services().Database(), Services().State(), Settings().GetDBPath()))
+		locator.CheckDBExists(Settings().GetDBPath()))
 	{
 		// the registry owns the keys: Remove destroys them
 		CHotKeys& hotKeys{ Services().HotKeys() };

@@ -6455,6 +6455,11 @@ void CQPasteWnd::OnMenuGoToEntry()
 	CString filter = MainListFilter();
 
 	int targetIndex = GoToEntryRank(filter, key);
+	if (targetIndex < 0)
+	{
+		// the error is reported; the list is left unchanged
+		return;
+	}
 
 	Services().State().m_FocusID = targetID;
 
@@ -6473,7 +6478,7 @@ void CQPasteWnd::OnMenuGoToEntry()
 
 	int totalRows = m_lstHeader.GetItemCount();
 
-	if (targetIndex < 0 || targetIndex >= totalRows)
+	if (targetIndex >= totalRows)
 	{
 		MoveControls();
 		SelectFocusID();
@@ -6507,8 +6512,10 @@ bool CQPasteWnd::LoadGoToEntryKey(long targetID, GoToEntryKey& key)
 			gotKey = true;
 		}
 	}
-	catch (CppSQLite3Exception&)
+	catch (CppSQLite3Exception& e)
 	{
+		CErrorReport::Show(CStringUtil::Format(_T("Loading the position of clip %d failed: %s"), targetID, e.errorMessage()));
+		return false;
 	}
 
 	return gotKey;
@@ -6532,9 +6539,10 @@ int CQPasteWnd::GoToEntryRank(const CString& filter, const GoToEntryKey& key)
 
 		targetIndex = Services().Database().execScalar(rankSql);
 	}
-	catch (CppSQLite3Exception&)
+	catch (CppSQLite3Exception& e)
 	{
-		targetIndex = -1;
+		CErrorReport::Show(CStringUtil::Format(_T("Finding the row of the clip in the list failed: %s"), e.errorMessage()));
+		return -1;
 	}
 
 	return targetIndex;

@@ -120,10 +120,10 @@ private:
 	/**
 	 * @brief Asks whether to create a missing database and creates it.
 	 * @param resolvedPath The database path, environment variables resolved.
-	 * @param bOpenNewDatabase Set to true when the database was created.
-	 * @return False when the user declined.
+	 * @return True when the database was created; false when the user declined or the create
+	 * failed (CreateDB showed the error).
 	 */
-	bool PromptCreateDatabase(const CString& resolvedPath, bool& bOpenNewDatabase);
+	bool PromptCreateDatabase(const CString& resolvedPath);
 
 	/**
 	 * @brief Stores the database path and opens the database (reports a failure).

@@ -1633,11 +1633,16 @@ bool CClip::WriteImageToFileOrReport(const CString& path, const CString& operati
 {
 	try
 	{
-		return WriteImageToFile(path) != FALSE;
+		if (WriteImageToFile(path) == FALSE)
+		{
+			CErrorReport::Show(CStringUtil::Format(_T("Ditto cannot %s the clip's image to %s: the clip has no image, the image cannot be read or the file cannot be written."), operation.GetString(), path.GetString()));
+			return false;
+		}
+		return true;
 	}
 	catch (const DittoCore::ClipboardFormatError& error)
 	{
-		CErrorReport::Show(CStringUtil::Format(_T("Ditto cannot %s the clip's image: the image data is malformed (%s)."), operation.GetString(), CString(error.what()).GetString()));
+		CErrorReport::Show(CStringUtil::Format(_T("Ditto cannot %s the clip's image to %s: the image data is malformed (%s)."), operation.GetString(), path.GetString(), CString(error.what()).GetString()));
 		return false;
 	}
 }

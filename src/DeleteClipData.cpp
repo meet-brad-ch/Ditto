@@ -1241,6 +1241,7 @@ void CDeleteClipData::WriteClipDataItem(CClip& selectedClip, const CDeleteData& 
 	BOOL written{ TRUE };
 	if (item.m_clipboardFormat == _T("PNG") || item.m_clipboardFormat == _T("CF_DIB"))
 	{
+		// reports its own failure, naming the file
 		selectedClip.WriteImageToFileOrReport(path, _T("save"));
 	}
 	else if (item.m_clipboardFormat == _T("CF_UNICODETEXT"))

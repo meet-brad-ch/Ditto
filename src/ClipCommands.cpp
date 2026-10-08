@@ -69,11 +69,16 @@ bool CClipCommands::EditItem(int id, bool forceTextEdit, int& lastFileCheckId)
 
 	m_editThread.WatchFile(savePath);
 
-	// a file that could not be written is not opened in the editor (upstream opened it anyway)
-	const bool written = target.imageFile
-							 ? clip.WriteImageToFileOrReport(savePath, _T("edit"))
-							 : clip.WriteTextToFile(savePath, target.unicodeFile, target.asciFile, target.rtfFile, (id == -1)) != FALSE;
-	if (!written)
+	// a file that could not be written is not opened in the editor (upstream opened it anyway);
+	// WriteImageToFileOrReport reports its own failure
+	if (target.imageFile)
+	{
+		if (!clip.WriteImageToFileOrReport(savePath, _T("edit")))
+		{
+			return false;
+		}
+	}
+	else if (clip.WriteTextToFile(savePath, target.unicodeFile, target.asciFile, target.rtfFile, (id == -1)) == FALSE)
 	{
 		CErrorReport::Show(CStringUtil::Format(_T("Clip id %d was not opened for editing: it could not be written to %s"), id, savePath.GetString()));
 		return false;

@@ -42,15 +42,23 @@ CString CDatabaseManager::GetDefaultDBName(CGetSetOptions& settings)
 	return csDefaultPath;
 }
 
-BOOL DatabaseLocator::CheckDBExists(CGetSetOptions& settings, CMultiLanguage& language, CDittoDb& database, CAppState& state, CString csDBPath)
+DatabaseLocator::DatabaseLocator(CGetSetOptions& settings, CMultiLanguage& language, CDittoDb& database, CAppState& state) :
+	m_settings(settings),
+	m_language(language),
+	m_database(database),
+	m_state(state)
+{
+}
+
+BOOL DatabaseLocator::CheckDBExists(CString csDBPath)
 {
 	// No path set (first run, or the settings were removed by an uninstall): open Ditto.db in the
 	// default location, which may hold the existing history; it is created below only if missing
 	if (csDBPath.IsEmpty())
 	{
-		const std::filesystem::path defaultDirectory{ settings.GetDefaultDBDirectory().GetString() };
+		const std::filesystem::path defaultDirectory{ m_settings.GetDefaultDBDirectory().GetString() };
 		csDBPath = DittoCore::DatabasePath::Resolve({}, defaultDirectory).c_str();
-		settings.SetDBPath(csDBPath);
+		m_settings.SetDBPath(csDBPath);
 	}
 
 	CPath path(csDBPath);
@@ -65,16 +73,16 @@ BOOL DatabaseLocator::CheckDBExists(CGetSetOptions& settings, CMultiLanguage& la
 			return FALSE;
 		}
 
-		bRet = CreateMissingDB(settings, csDBPath);
+		bRet = CreateMissingDB(csDBPath);
 	}
 	else
 	{
-		bRet = CheckExistingDB(settings, language, csDBPath);
+		bRet = CheckExistingDB(csDBPath);
 	}
 
 	if (bRet)
 	{
-		bRet = CDatabaseManager::OpenDatabase(settings, database, state, csDBPath);
+		bRet = CDatabaseManager::OpenDatabase(m_settings, m_database, m_state, csDBPath);
 	}
 
 	return bRet;
@@ -90,7 +98,7 @@ bool DatabaseLocator::IsNetworkShareOrNonCDrive(CPath& path)
 		   ((rootType == ERootType::rtDriveCur || rootType == rtDriveRoot) && driveLetter >= 'A' && driveLetter != 'C');
 }
 
-BOOL DatabaseLocator::CreateMissingDB(CGetSetOptions& settings, CString& csDBPath)
+BOOL DatabaseLocator::CreateMissingDB(CString& csDBPath)
 {
 	//first try and create create a db at the same path that was selectd
 	BOOL bRet = CDatabaseManager::CreateDB(csDBPath);
@@ -98,7 +106,7 @@ BOOL DatabaseLocator::CreateMissingDB(CGetSetOptions& settings, CString& csDBPat
 	//if that didn't work then go back to the default location
 	if (CFileSystem::FileExists(csDBPath) == FALSE)
 	{
-		csDBPath = CDatabaseManager::GetDefaultDBName(settings);
+		csDBPath = CDatabaseManager::GetDefaultDBName(m_settings);
 
 		nsPath::CPath FullPath(csDBPath);
 		CString csPath = FullPath.GetPath().GetStr();
@@ -107,7 +115,7 @@ BOOL DatabaseLocator::CreateMissingDB(CGetSetOptions& settings, CString& csDBPat
 			CreateDirectory(csPath, NULL);
 		}
 
-		settings.SetDBPath(csDBPath);
+		m_settings.SetDBPath(csDBPath);
 
 		bRet = CDatabaseManager::CreateDB(csDBPath);
 	}
@@ -115,7 +123,7 @@ BOOL DatabaseLocator::CreateMissingDB(CGetSetOptions& settings, CString& csDBPat
 	return bRet;
 }
 
-BOOL DatabaseLocator::CheckExistingDB(CGetSetOptions& settings, CMultiLanguage& language, CString& csDBPath)
+BOOL DatabaseLocator::CheckExistingDB(CString& csDBPath)
 {
 	try
 	{
@@ -138,18 +146,18 @@ BOOL DatabaseLocator::CheckExistingDB(CGetSetOptions& settings, CMultiLanguage& 
 	// "_BAD" before the extension only; upstream replaced every '.', also in folder names
 	const CString csMarkAsBad = DittoCore::DatabasePath::MarkedAsBad(csDBPath.GetString()).c_str();
 
-	CString csPath = CDatabaseManager::GetDefaultDBName(settings);
+	CString csPath = CDatabaseManager::GetDefaultDBName(m_settings);
 
 	CString cs;
 	cs.Format(_T("%s \"%s\",\n")
 			  _T("%s \"%s\",\n")
 			  _T("%s,\n")
 			  _T("\"%s\""),
-			  language.GetString("Database_Format", "Unrecognized Database Format").GetString(),
+			  m_language.GetString("Database_Format", "Unrecognized Database Format").GetString(),
 			  csDBPath.GetString(),
-			  language.GetString("File_Renamed", "the file will be renamed").GetString(),
+			  m_language.GetString("File_Renamed", "the file will be renamed").GetString(),
 			  csMarkAsBad.GetString(),
-			  language.GetString("New_Database", "and a new database will be created").GetString(),
+			  m_language.GetString("New_Database", "and a new database will be created").GetString(),
 			  csPath.GetString());
 
 	AfxMessageBox(cs);
@@ -166,7 +174,7 @@ BOOL DatabaseLocator::CheckExistingDB(CGetSetOptions& settings, CMultiLanguage& 
 
 	BOOL bRet = CDatabaseManager::CreateDB(csDBPath);
 
-	settings.SetDBPath(csDBPath);
+	m_settings.SetDBPath(csDBPath);
 
 	return bRet;
 }
@@ -518,12 +526,21 @@ void DatabaseSchemaUpgrader::CreateCurrentIndexes(CppSQLite3DB& db)
 	db.execDML(_T("CREATE INDEX IF NOT EXISTS Main_CRC on Main(CRC ASC)"));
 }
 
-BOOL CDatabaseBackupService::BackupDB(CMultiLanguage& language, CString dbPath, CString backupPath)
+CDatabaseBackupService::CDatabaseBackupService(CGetSetOptions& settings, CMultiLanguage& language, CDittoDb& database, CAppState& state, CAppWindows& windows) :
+	m_settings(settings),
+	m_language(language),
+	m_database(database),
+	m_state(state),
+	m_windows(windows)
+{
+}
+
+BOOL CDatabaseBackupService::BackupDB(CString dbPath, CString backupPath)
 {
 	CRect r = CMonitorGeometry::DefaultMonitorRect();
 	CPopup status((r.right - 500), r.bottom - 100, ::GetForegroundWindow());
 
-	CString msg = language.GetString("BackupDbMsg", "Backing up database");
+	CString msg = m_language.GetString("BackupDbMsg", "Backing up database");
 
 	status.Show(CStringUtil::Format(_T("Ditto - %s - %s"), msg.GetString(), backupPath.GetString()));
 
@@ -569,19 +586,19 @@ BOOL CDatabaseBackupService::BackupDB(CMultiLanguage& language, CString dbPath, 
 	return TRUE;
 }
 
-BOOL CDatabaseBackupService::RestoreDB(CGetSetOptions& settings, CMultiLanguage& language, CDittoDb& database, CAppState& state, CAppWindows& windows, CString backupPath)
+BOOL CDatabaseBackupService::RestoreDB(CString backupPath)
 {
 	CRect r = CMonitorGeometry::DefaultMonitorRect();
 	CPopup status((r.right - 500), r.bottom - 100, ::GetForegroundWindow());
 
-	CString msg = language.GetString("RestoreDbMsg", "Restoring database");
+	CString msg = m_language.GetString("RestoreDbMsg", "Restoring database");
 	status.Show(CStringUtil::Format(_T("Ditto - %s - %s"), msg.GetString(), backupPath.GetString()));
 
 	CLogger::Log(CStringUtil::Format(_T("Start restoring db, from: %s"), backupPath.GetString()));
 
 	using namespace nsPath;
 	CPath backupPathPath(backupPath);
-	const CString tempPath = settings.GetPath(CGetSetOptions::PathRestoreTemp) + backupPathPath.GetName();
+	const CString tempPath = m_settings.GetPath(CGetSetOptions::PathRestoreTemp) + backupPathPath.GetName();
 
 	try
 	{
@@ -609,7 +626,7 @@ BOOL CDatabaseBackupService::RestoreDB(CGetSetOptions& settings, CMultiLanguage&
 			throw std::runtime_error("the unpacked database is not a valid Ditto database");
 		}
 
-		CPath defaultDbPathPath(CDatabaseManager::GetDefaultDBName(settings));
+		CPath defaultDbPathPath(CDatabaseManager::GetDefaultDBName(m_settings));
 		const CString path(defaultDbPathPath.GetPath());
 		backupPathPath.RenameExtension(_T("db"));
 		CString newFullPath = path + backupPathPath.GetName();
@@ -622,8 +639,8 @@ BOOL CDatabaseBackupService::RestoreDB(CGetSetOptions& settings, CMultiLanguage&
 		{
 			throw std::runtime_error("the unpacked database could not be moved next to the current one, error " + std::to_string(::GetLastError()));
 		}
-		settings.SetDBPath(newFullPath);
-		if (!CDatabaseManager::OpenDatabase(settings, database, state, newFullPath))
+		m_settings.SetDBPath(newFullPath);
+		if (!CDatabaseManager::OpenDatabase(m_settings, m_database, m_state, newFullPath))
 		{
 			return FALSE; // OpenDatabase showed the error
 		}
@@ -635,7 +652,7 @@ BOOL CDatabaseBackupService::RestoreDB(CGetSetOptions& settings, CMultiLanguage&
 	}
 
 	CLogger::Log(CStringUtil::Format(_T("Done restoring db, from: %s"), backupPath.GetString()));
-	windows.RefreshView();
+	m_windows.RefreshView();
 	return TRUE;
 }
 

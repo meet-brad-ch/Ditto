@@ -3,16 +3,20 @@
 #include "Misc.h"
 #include "FileDialogPath.h"
 
-BOOL CDatabaseBackupPrompt::RestoreDbPrompt(CGetSetOptions& settings, CMultiLanguage& language, CDittoDb& database, CAppState& state, CAppWindows& windows, HWND hwnd)
+CDatabaseBackupPrompt::CDatabaseBackupPrompt(CGetSetOptions& settings, CMultiLanguage& language, CDittoDb& database, CAppState& state, CAppWindows& windows) :
+	m_settings(settings),
+	m_backupService(settings, language, database, state, windows)
+{
+}
+
+BOOL CDatabaseBackupPrompt::RestoreDbPrompt(HWND hwnd)
 {
 	BOOL ret{ false };
 
 	OPENFILENAME ofn{};
 	TCHAR szFile[400]{};
-	TCHAR szDir[400]{};
 
 	memset(&szFile, 0, sizeof(szFile));
-	memset(szDir, 0, sizeof(szDir));
 	memset(&ofn, 0, sizeof(ofn));
 
 	ofn.lStructSize = sizeof(OPENFILENAME);
@@ -23,7 +27,6 @@ BOOL CDatabaseBackupPrompt::RestoreDbPrompt(CGetSetOptions& settings, CMultiLang
 	ofn.nFilterIndex = 1;
 	ofn.lpstrFileTitle = NULL;
 	ofn.nMaxFileTitle = 0;
-	//ofn.lpstrInitialDir = szDir;
 	ofn.lpstrDefExt = _T("zdb");
 	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
 
@@ -31,24 +34,21 @@ BOOL CDatabaseBackupPrompt::RestoreDbPrompt(CGetSetOptions& settings, CMultiLang
 	{
 		CWaitCursor wait;
 
-		CString dbPath{ settings.GetDBPath() };
 		CString backupPath(CFileDialogPath::From(ofn));
-		ret = CDatabaseBackupService::RestoreDB(settings, language, database, state, windows, backupPath);
+		ret = m_backupService.RestoreDB(backupPath);
 	}
 
 	return ret;
 }
 
-BOOL CDatabaseBackupPrompt::BackupDbPrompt(CGetSetOptions& settings, CMultiLanguage& language, HWND hwnd)
+BOOL CDatabaseBackupPrompt::BackupDbPrompt(HWND hwnd)
 {
 	BOOL ret{ FALSE };
 
 	OPENFILENAME ofn{};
 	TCHAR szFile[400]{};
-	TCHAR szDir[400]{};
 
 	memset(&szFile, 0, sizeof(szFile));
-	memset(szDir, 0, sizeof(szDir));
 	memset(&ofn, 0, sizeof(ofn));
 
 	ofn.lStructSize = sizeof(OPENFILENAME);
@@ -67,9 +67,9 @@ BOOL CDatabaseBackupPrompt::BackupDbPrompt(CGetSetOptions& settings, CMultiLangu
 	{
 		CWaitCursor wait;
 
-		CString dbPath{ settings.GetDBPath() };
+		CString dbPath{ m_settings.GetDBPath() };
 		CString backupPath(CFileDialogPath::From(ofn));
-		ret = CDatabaseBackupService::BackupDB(language, dbPath, backupPath);
+		ret = m_backupService.BackupDB(dbPath, backupPath);
 	}
 
 	return ret;

@@ -290,10 +290,11 @@ bool COptionsGeneral::ApplyDatabasePath()
 	{
 		if (CFileSystem::FileExists(resolvedPath) == FALSE)
 		{
-			if (!PromptCreateDatabase(resolvedPath, bOpenNewDatabase))
+			if (!PromptCreateDatabase(resolvedPath))
 			{
 				return false;
 			}
+			bOpenNewDatabase = true;
 		}
 		else
 		{
@@ -318,19 +319,21 @@ bool COptionsGeneral::ApplyDatabasePath()
 	return true;
 }
 
-bool COptionsGeneral::PromptCreateDatabase(const CString& resolvedPath, bool& bOpenNewDatabase)
+bool COptionsGeneral::PromptCreateDatabase(const CString& resolvedPath)
 {
 	CString cs;
 	cs.Format(_T("The database %s does not exist.\n\nCreate a new database?"), resolvedPath.GetString());
 
-	if (MessageBox(cs, _T("Ditto"), MB_OKCANCEL) == IDOK)
+	if (MessageBox(cs, _T("Ditto"), MB_OKCANCEL) != IDOK)
 	{
-		// -- create a new one
-		// a failed create is shown by CreateDB; upstream showed a second "Error Creating Database" box
-		bOpenNewDatabase = CDatabaseManager::CreateDB(resolvedPath) != FALSE;
+		return false;
 	}
-	else
+
+	// a failed create is shown by CreateDB; upstream showed a second "Error Creating Database" box
+	if (CDatabaseManager::CreateDB(resolvedPath) == FALSE)
 	{
+		// the apply stops: the page stays open and the old database path is kept
+		m_ePath.SetFocus();
 		return false;
 	}
 
