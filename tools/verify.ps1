@@ -12,7 +12,8 @@
 #      - complexity: every function of the own code below CC 10 (tools\gates\complexity.ps1)
 #      - formatting: every own C/C++ file matches .clang-format (tools\gates\format.ps1)
 #   7. runs every unit test on its own: DittoTests (AddressSanitizer build) and AppTests
-#      - coverage: line coverage of lib\DittoCore >= 90 % (Debug|x64 test build)
+#      - coverage: line coverage of lib\DittoCore >= 90 % (Debug|x64 test build); the app layer's
+#        coverage (the src\ files AppTests compiles) is reported without a minimum
 #   8. checks with Doxygen that the contract code is fully documented
 # Prints one timestamped line per check and exits 1 on the first failed stage.
 # Usage (repo root):  powershell -NoProfile -ExecutionPolicy Bypass -File tools\verify.ps1 [-SkipBuild] [-UpdateBaselines]
@@ -284,7 +285,8 @@ $report['Unit tests'] = "PASS ($($testNames.Count)/$($testNames.Count), each tes
 $gate = Invoke-Gate 'coverage.ps1' @{ Repo = $repo; VsPath = $vs }
 if ($gate.ExitCode -ne 0) { Fail 'line coverage of lib\DittoCore below 90 % or not measurable' 'Line coverage' }
 $lineRate = ($gate.Lines | Where-Object { "$_" -match '^COVERAGE_LINE=' } | Select-Object -First 1) -replace '^COVERAGE_LINE=', ''
-$report['Line coverage'] = "PASS ($lineRate of lib\DittoCore, minimum 90 %)"
+$appRate = ($gate.Lines | Where-Object { "$_" -match '^APP_COVERAGE_LINE=' } | Select-Object -First 1) -replace '^APP_COVERAGE_LINE=', ''
+$report['Line coverage'] = "PASS ($lineRate of lib\DittoCore, minimum 90 %; app layer (AppTests): $appRate, reported)"
 
 # ---- 8. documentation (Doxygen) -------------------------------------------------------
 # Every class, function and member of the contract code is documented; any Doxygen warning fails.

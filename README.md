@@ -108,8 +108,9 @@ Branch coverage), on failure too. Run time: about 2 min, or about 3.5 min with `
    - **Coverage:** Microsoft code coverage (it ships with Visual Studio) runs the Debug|x64 test
      build. The Release test build uses AddressSanitizer, which the instrumentation does not
      combine with. `lib\DittoCore` must have at least 90 % line coverage, and every uncovered
-     line is listed. The tool gives no branch data, so branch coverage is reported as NOT
-     VERIFIED.
+     line is listed. The app layer's line coverage (the `src\` files AppTests compiles, its
+     Debug|x64 build) is reported too, without a minimum. The tool gives no branch data, so
+     branch coverage is reported as NOT VERIFIED.
 8. It runs Doxygen (`tools\Doxyfile.contract`): every class, function and member of the contract
    code must be documented, and any Doxygen warning fails. The files are listed by name in that
    Doxyfile.
