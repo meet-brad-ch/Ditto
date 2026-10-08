@@ -1,17 +1,47 @@
 # Ditto, local-only fork
 
-**What:** A fork of the Ditto clipboard manager (sabrogden/Ditto) that is built locally, with all
-network code removed from the build.
+**What:** A fork of the Ditto clipboard manager that is built locally, with all network code
+removed from the build. For what Ditto is, its features and how to use it, see the main
+project: **https://github.com/sabrogden/Ditto** (its README and wiki). This README covers only
+what this fork changes and how to build it.
 
 **Why:** For safety. The owner has used Ditto for years. A clipboard history holds passwords and
 private text, so the copy the owner runs is compiled from source they can read, and it has no
 code that can send anything off the machine.
 
-**Status:** working. All network code listed below is removed, the build is clean, and
-`tools/verify.ps1` passes. At run time, `tools/runtime-netcheck.ps1` sees no TCP/UDP endpoint owned
-by Ditto. The owner runs an installed build of the fork.
+**Distribution:** none. This fork publishes no releases and links to no downloads; it is built
+from source with the steps below.
 
-What this fork removed (found by reading upstream a80fd35):
+**Status (2026-10-08):** the build is clean in every configuration, and `tools\verify.ps1` and the
+local CI `tools\ci.ps1` pass (273 tests, fuzzing, installer). At run time,
+`tools\runtime-netcheck.ps1` saw no TCP/UDP endpoint owned by Ditto. The large refactoring of
+Phases L and R (below) is not yet hand-tested in the running app.
+
+### What this fork changes
+
+- **No network code** (the list below).
+- **Engineering contract** (the owner's `sw-quality` rules), enforced by gates in
+  `tools\verify.ps1`:
+  - no raw `new`/`delete`, only smart pointers and containers;
+  - every function below cyclomatic complexity 10;
+  - no global state, free functions or macros: one composition root (`CAppServices`) owns every
+    service, and settings are an object over a tested settings store;
+  - failures are reported, never swallowed;
+  - zero compiler warnings at `/W4 /WX`, clean `/analyze`, clang-format formatting, Doxygen on
+    the contract code.
+- **Tests:** a contract library `lib\DittoCore` (clipboard formats, RTF/HTML, settings stores,
+  search SQL, …) with GoogleTest tests under AddressSanitizer and 97 % line coverage, app-layer
+  tests (AppTests), and libFuzzer targets.
+- **Fixes:** about 75 upstream defects found during the work (races, use after free, ignored
+  failures, wrong settings shown, …); see Decisions.
+- **Third-party updates:** SQLite3 Multiple Ciphers 2.5.1, tinyxml2, zlib CRC32, Windows CNG MD5.
+- **Installer:** per user (no admin), English only, built with Inno Setup.
+
+The full record, phase by phase, is under **Decisions** below.
+
+### What this fork removed
+
+Found by reading upstream a80fd35:
 
 - **Friends.** Winsock TCP send and receive of clips, with the server on port 23443. The server
   starts by default on a normal install.
@@ -737,35 +767,11 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   refactor, toolchain, libraries.
 - 2026-10-06: Kept Inno Setup for the installer: it is open source and was already upstream's
   tool. Only the firewall and browser-link parts of the script were removed.
-- 2026-10-06: Renamed `ReadMe.md` to `README.md`. The two names collide on Windows. The upstream
-  readme text is kept below.
+- 2026-10-06: Renamed `ReadMe.md` to `README.md`. The two names collide on Windows. (The upstream
+  readme text that was kept below was replaced by a link to the main project on 2026-10-08.)
 
 ---
 
-Below: the upstream readme's description and usage notes. This fork is built from source only
-and links to no downloads; the upstream project is at https://github.com/sabrogden/Ditto.
-
-# Ditto - Clipboard Manager
-
-Ditto is an extension to the standard windows clipboard. It saves each item placed on the clipboard allowing you access to any of those items at a later time. Ditto allows you to save any type of information that can be put on the clipboard, text, images, html, custom formats.
-
-
-## Basic Usage
-
-1. Run Ditto
-2. Copy things to the clipboard, e.g. using Ctrl-C with text selected in a text editor.
-3. Open Ditto by clicking its icon in the system tray or by pressing its Hot Key which defaults to Ctrl + ` – i.e. hold down Ctrl and press the back-quote (tilde ~) key.
-4. Double click or press enter on the item to paste it to the previous window.
-
-## Local First
-- No login
-- No cloud
-- No telemetry
-
-## Windows Code-Signing Policy
-Free code signing on Windows binaries provided by SignPath.io, certificate by SignPath Foundation.
-<br>
-<br>
-
-<img src="ditto.gif">
+For Ditto itself (features, usage, hot keys, help), see the main project:
+https://github.com/sabrogden/Ditto
 
