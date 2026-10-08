@@ -14,8 +14,8 @@ from source with the steps below.
 
 **Status (2026-10-08):** the build is clean in every configuration, and `tools\verify.ps1` and the
 local CI `tools\ci.ps1` pass (273 tests, fuzzing, installer). At run time,
-`tools\runtime-netcheck.ps1` saw no TCP/UDP endpoint owned by Ditto. The large refactoring of
-Phases L and R (below) is not yet hand-tested in the running app.
+`tools\runtime-netcheck.ps1` saw no TCP/UDP endpoint owned by Ditto. The owner installed the
+build of the refactoring (Phases L and R) and tested it by hand: everything worked (2026-10-08).
 
 ### What this fork changes
 
