@@ -1,7 +1,0 @@
-src\clip.h	static-member	m_lastaddedcrc	1
-src\clip.h	static-member	m_lastaddedid	1
-src\hotkeys.cpp	global-variable	g_hotkeys	1
-src\hotkeys.h	static-member	m_nextid	1
-src\misc.cpp	global-variable	g_funnygettickcountadjustment	1
-src\ntray.h	static-member	m_wndinvisible	1
-src\showtaskbaricon.h	static-member	m_refcount	1

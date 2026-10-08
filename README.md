@@ -436,6 +436,27 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
     conversions), an ambiguous ternary and `bind`, and a dead `CGdipButton::Test`. The untouched `ColourPopup.cpp` keeps `/permissive`
     and compiles without the shared precompiled header, which a different conformance mode
     cannot use.
+- 2026-10-07: No globals in Ditto's own code: full OOD with one composition root (Phase L3).
+  - **Macros (L3a):** every `#define` of the own code (448) became a class-scoped `enum`,
+    `static constexpr` member or static member function; configuration macros moved to the
+    projects' `PreprocessorDefinitions`; `UnicodeMacros.h` and the dead `DEBUG_NEW` blocks are gone.
+  - **Free functions and globals (L3b):** grouped into classes (`CStringUtil`, `CLogger`,
+    `CFileSystem`, `CMonitorGeometry`, `CDatabaseManager`, `nsPath::CPathUtil`, ...); Windows and
+    SQLite callbacks are static members; per-window state moved into its object.
+  - **Settings (L3c):** `CGetSetOptions` is an instance over `DittoCore::ISettingsStore`
+    (`RegistrySettingsStore`, `IniSettingsStore`, `InMemorySettingsStore`, tested in DittoTests).
+  - **Composition root (L3d):** `CAppServices`, the first member of `CCP_MainApp`, owns every
+    service and the application state (settings, language, database, registered clipboard formats,
+    hot-key registry, `CAppState`, windows, clipboard monitor, groups, ...). `theApp` keeps only
+    the MFC overrides, the frame lifecycle hooks and `Services()`.
+  - **Access rule (owner decision "Hybrid"):** classes derived from `CCmdTarget` (windows,
+    dialogs, threads, OLE sources) reach the services through `theApp.Services()`; every other
+    class gets them from its caller (constructor or parameter; `CClip` through `CClipContext`).
+    Two documented exceptions, cross-cutting and used from every class and thread: `CLogger` and
+    `CErrorReport` read `theApp.Services()`.
+  - **The accepted globals** (`tools\gates\globals-allow.txt`): `theApp`, focus.dll's
+    shared-segment hook state, DLL entry points, hook procedures and exports. The globals gate
+    finds nothing else.
 - 2026-10-07: The legacy app meets the smart-pointer and complexity rules (Phases L1, L2).
   - **Smart pointers only (L1):** no raw `new`/`delete`/`malloc`/`free` is left in own code
     (allocation gate 223 → 0). Self-deleting MFC windows are handed to the window before
