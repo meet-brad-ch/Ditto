@@ -38,7 +38,9 @@
 /////////////////////////////////////////////////////////////////////////////
 // CQPasteWnd
 
-CQPasteWnd::CQPasteWnd()
+CQPasteWnd::CQPasteWnd() :
+	m_thread(theApp.Services().Settings()),
+	m_extraDataThread(theApp.Services().Settings())
 {
 	m_Title = s_qpasteTitle;
 	m_bHideWnd = true;

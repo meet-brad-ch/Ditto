@@ -5,11 +5,16 @@
 class CQPasteWnd;
 class CMainTable;
 class CClipFormatQListCtrl;
+class CGetSetOptions;
 
 class CQPasteWndThread: public CEventThread
 {
 public:
-    CQPasteWndThread(void);
+    /**
+     * @brief Creates the quick paste window's loader thread (not started yet).
+     * @param settings The application settings (owned by the composition root; outlives the thread).
+     */
+    explicit CQPasteWndThread(CGetSetOptions& settings);
     ~CQPasteWndThread(void);
 
     enum eCQPasteWndThreadEvents
@@ -124,6 +129,8 @@ protected:
 	void MarkNoExtraData(CQPasteWnd *pasteWnd, const CClipFormatQListCtrl &format);
 
 	int m_rowHeight;
+	/** @brief The application settings (the image cache reads the thumbnail mode). */
+	CGetSetOptions& m_settings;
 
     CString m_sql;
     CString m_countSql;

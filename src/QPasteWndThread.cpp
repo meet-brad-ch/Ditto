@@ -10,7 +10,8 @@
 #include <stdexcept>
 #include <string>
 
-CQPasteWndThread::CQPasteWndThread(void)
+CQPasteWndThread::CQPasteWndThread(CGetSetOptions& settings) :
+	m_settings(settings)
 {
 	m_rowHeight = 0;
 	m_threadName = "CQPasteWndThread";
@@ -442,7 +443,7 @@ void CQPasteWndThread::CacheExtraData(CQPasteWnd *pasteWnd, CClipFormatQListCtrl
 
 		HDC dc = GetDC(NULL);
 
-		format.GetDibFittingToHeight(CDC::FromHandle(dc), m_rowHeight);
+		format.GetDibFittingToHeight(m_settings, CDC::FromHandle(dc), m_rowHeight);
 
 		ReleaseDC(NULL, dc);
 
