@@ -202,7 +202,7 @@ Build Release|x64 first, then run:
 & "C:\Program Files\Inno Setup 7\ISCC.exe" DittoSetup\DittoSetup_10.iss
 ```
 
-- **Output:** `DittoSetup\Output\DittoLocalSetup_<exe version>.exe`, unsigned. The version comes
+- **Output:** `DittoSetup\Output\DittoSetup_<exe version>.exe`, unsigned. The version comes
   from `Ditto.exe` (`CP_Main.rc`).
 - **Per user, no administrator rights:** Ditto installs into `%LOCALAPPDATA%\Programs\Ditto`. The
   start menu entry, the `.dto` file association and all registry writes go to the installing

@@ -6,7 +6,7 @@
 #define MyAppAuthor             "Scott Brogden"
 #define MyAppSupportURL         "https://github.com/meet-brad-ch/Ditto"
 #define MyAppCopyrighEndYear    GetDateTimeString('yyyy','','')
-#define MyOutputBaseFilename    "DittoLocalSetup_" + StringChange(MyAppVersion, '.', '_')
+#define MyOutputBaseFilename    "DittoSetup_" + StringChange(MyAppVersion, '.', '_')
 
 [Setup]
 AppName={#MyAppName}
