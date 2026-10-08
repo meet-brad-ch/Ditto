@@ -136,7 +136,7 @@ Branch coverage), on failure too. Run time: about 2 min, or about 3.5 min with `
   header hiding two warnings, and the installer check skipping the clone.
 
 **Local CI:** `powershell -NoProfile -ExecutionPolicy Bypass -File tools\ci.ps1 [-Ref <commit>]`
-runs the same job as `.github\workflows\build.yml` on this machine.
+is the project's only CI; it runs on this machine (there is no GitHub workflow).
 - **Clean clone:** it clones the commit into `build\ci\<commit>\work`, so only committed files take
   part. Uncommitted changes are not built; the script says so.
 - **Steps:** `verify.ps1 -Analyze`, `fuzz.ps1`, Debug|x64, Debug|Win32 and Release|Win32
@@ -146,9 +146,7 @@ runs the same job as `.github\workflows\build.yml` on this machine.
   installer's SHA256 and the per-test table. `build\ci\<commit>\artifacts\` holds the installer,
   the binaries, the test XML, the coverage report and the logs.
 - **Cleanup:** the clone is deleted afterwards. The exit code is 0 only if every step passed.
-- **Why it exists:** GitHub Actions do not run for this account while it is under a GitHub
-  restriction (2026-10-06). The workflow stays in the repo and runs again once Actions work.
-  Run `ci.ps1` before every push in the meantime.
+- **Before every push:** run `ci.ps1` on the commit to push.
 
 **Fuzzing:** `powershell -NoProfile -ExecutionPolicy Bypass -File tools\fuzz.ps1 [-Target <name>]
 [-Seconds 60]` runs the libFuzzer targets in `tests\fuzz\` after a Release|x64 build.
@@ -278,6 +276,12 @@ were verified 2026-10-06 with Inno Setup 7.0.2. Build Release|x64 first, then ru
   not only sockets.
 - 2026-10-06: Kept Ditto's MFC code and the upstream toolset (v145), and did not port to
   something else.
+- 2026-10-08: No GitHub CI and no download links (owner decision). `tools\ci.ps1` is the only
+  CI. Removed the fork's own `.github\workflows\build.yml` (it downloaded the Doxygen `.zip`
+  and the Inno Setup `.exe` from other projects' releases), the README's links to upstream's
+  installer, portable zip, packages and beta page, and a dead translation string that linked to
+  `dao_setup.exe` on sourceforge. GitHub restricted the account for a download link to zipped
+  content; this repository links to no downloads now.
 - 2026-10-06: Removed upstream's GitHub workflows, because they publish to Chocolatey,
   SignPath and GitHub Releases.
 - 2026-10-06: Kept the removed action enum values and marked them `Removed`, instead of
