@@ -591,7 +591,7 @@ BOOL COleClipSource::OnRenderGlobalData(LPFORMATETC lpFormatEtc, HGLOBAL* phGlob
 	}
 	else if (!RenderAndCache(lpFormatEtc->cfFormat, hData))
 	{
-		// refused (lockout), or FALSE tells the target the render failed
+		// FALSE tells the target the render failed
 		m_inRenderGlobalData = false;
 		return FALSE;
 	}
@@ -603,21 +603,8 @@ BOOL COleClipSource::OnRenderGlobalData(LPFORMATETC lpFormatEtc, HGLOBAL* phGlob
 	return bRet;
 }
 
-bool COleClipSource::IsDelayRenderLockedOut() const
-{
-	// m_delayRenderLockout holds a 32-bit tick value, so the difference uses 32-bit wrap-around arithmetic
-	const DWORD now = static_cast<DWORD>(GetTickCount64());
-	return m_pasteOptions.m_delayRenderLockout > 0 &&
-		(now - m_pasteOptions.m_delayRenderLockout) < (DWORD)Settings().GetDelayRenderLockout();
-}
-
 bool COleClipSource::RenderAndCache(CLIPFORMAT cfFormat, HGLOBAL& hData)
 {
-	if (IsDelayRenderLockedOut())
-	{
-		return false;
-	}
-
 	if(m_ClipIDs.GetCount() > 0)
 	{
 		const std::optional<HGLOBAL> rendered = RenderClipsOrReport(cfFormat);

@@ -25,6 +25,17 @@ protected:
 	bool PlaceCF_TEXT_AND_CF_UNICODETEXT_OnClipboard(CStringA &csCF_TEXT, CStringW &csCF_UNICODETEXT);
 
 private:
+	/** @brief What ImportRow did with one row of the export. */
+	enum class RowResult
+	{
+		/** @brief Not imported (another version, or not wanted). */
+		Skipped,
+		/** @brief Imported, and added to the database or kept for the clipboard. */
+		Imported,
+		/** @brief Adding it to the database failed (shown); the import stops. */
+		Failed
+	};
+
 	/** @brief The format version that ExportToSqliteDB writes into the export's Main table. */
 	static constexpr int s_currentExportVersion{1};
 
@@ -34,9 +45,10 @@ private:
 	 * @param q The query, on the row to import.
 	 * @param bAddToDB Add the imported clip to the database.
 	 * @param bPutOnClipboard The import is to be put on the clipboard.
-	 * @return True when the row was imported and is to be added or put on the clipboard.
+	 * @return Imported when the row was imported and added or is to be put on the clipboard;
+	 *         Failed when adding it to the database failed (the error was shown).
 	 */
-	bool ImportRow(CppSQLite3DB &db, CppSQLite3Query &q, bool bAddToDB, bool bPutOnClipboard);
+	RowResult ImportRow(CppSQLite3DB &db, CppSQLite3Query &q, bool bAddToDB, bool bPutOnClipboard);
 
 	/**
 	 * @brief ImportFromSqliteDB's last step after an import: refreshes the view, or puts the clips on the clipboard.

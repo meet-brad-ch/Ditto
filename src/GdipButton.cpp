@@ -392,8 +392,8 @@ void CGdipButton::CreateAltImageDCs(CDC* pDC, Gdiplus::Graphics& graphics, const
 		ImageAttributes ia;
 		ia.SetColorMatrix(&HotMat);
 
-		float width = (float)m_pStdImage->m_pBitmap->GetWidth();
-		float height = (float)m_pStdImage->m_pBitmap->GetHeight();
+		float width = (float)m_pAltImage->m_pBitmap->GetWidth();
+		float height = (float)m_pAltImage->m_pBitmap->GetHeight();
 
 		RectF grect; grect.X=0, grect.Y=0; grect.Width = width; grect.Height = height;
 

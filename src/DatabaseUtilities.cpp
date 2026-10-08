@@ -10,6 +10,7 @@
 #include "Path.h"
 #include "..\Shared\TextConvert.h"
 #include "DatabasePath.h"
+#include "DittoDb.h"
 #include "ErrorReport.h"
 #include "GzipStream.h"
 
@@ -19,31 +20,6 @@
 #include <stdexcept>
 #include <string>
 using namespace nsPath;
-
-//////////////////////////////////////////////////////////////////////
-// Construction/Destruction
-//////////////////////////////////////////////////////////////////////
-
-
-BOOL CDatabaseBackupService::CreateBackup(CString csPath)
-{
-	CString csOriginal;
-	int count = 0;
-	// create a backup of the existing database
-	do
-	{
-		count++;
-		csOriginal = csPath + CStringUtil::Format(_T(".%03d"), count);
-		// in case of some weird infinite loop
-		if (count > 50)
-		{
-			ASSERT(0);
-			return FALSE;
-		}
-	} while (!::CopyFile(csPath, csOriginal, TRUE));
-
-	return TRUE;
-}
 
 CString CDatabaseManager::GetDBName(CGetSetOptions& settings)
 {
@@ -141,16 +117,26 @@ BOOL DatabaseLocator::CreateMissingDB(CGetSetOptions& settings, CString& csDBPat
 
 BOOL DatabaseLocator::CheckExistingDB(CGetSetOptions& settings, CMultiLanguage& language, CString& csDBPath)
 {
-	if (DatabaseSchemaUpgrader::ValidDB(csDBPath) != FALSE)
+	try
 	{
+		DatabaseSchemaUpgrader::CheckAndUpgrade(csDBPath);
 		return TRUE;
+	}
+	catch (CppSQLite3Exception& e)
+	{
+		if (e.isUnavailable())
+		{
+			// locked or in use (another program, a backup), or not readable now: it is left as it is
+			// and opened later (upstream renamed it to _BAD and started a new, empty database)
+			CLogger::Log(CStringUtil::Format(_T("The clip database %s cannot be used now and was not changed: %s"), csDBPath.GetString(), e.errorMessage()));
+			return FALSE;
+		}
+		CErrorReport::Show(CStringUtil::Format(_T("Checking and upgrading the clip database %s failed: %s"), csDBPath.GetString(), e.errorMessage()));
 	}
 
 	//Db existed but was bad
-	CString csMarkAsBad;
-
-	csMarkAsBad = csDBPath;
-	csMarkAsBad.Replace(_T("."), _T("_BAD."));
+	// "_BAD" before the extension only; upstream replaced every '.', also in folder names
+	const CString csMarkAsBad = DittoCore::DatabasePath::MarkedAsBad(csDBPath.GetString()).c_str();
 
 	CString csPath = CDatabaseManager::GetDefaultDBName(settings);
 
@@ -168,7 +154,13 @@ BOOL DatabaseLocator::CheckExistingDB(CGetSetOptions& settings, CMultiLanguage& 
 
 	AfxMessageBox(cs);
 
-	CFile::Rename(csDBPath, csMarkAsBad);
+	// upstream's CFile::Rename threw a CFileException* that nothing caught
+	if (!::MoveFile(csDBPath, csMarkAsBad))
+	{
+		const DWORD error{ ::GetLastError() };
+		CErrorReport::Show(CStringUtil::Format(_T("The damaged clip database %s could not be renamed to %s, error %lu"), csDBPath.GetString(), csMarkAsBad.GetString(), error));
+		return FALSE;
+	}
 
 	csDBPath = csPath;
 
@@ -315,25 +307,7 @@ BOOL DatabaseSchemaUpgrader::ValidDB(CString csPath, BOOL /*bUpgrade*/)
 {
 	try
 	{
-		CppSQLite3DB db;
-		db.open(csPath);
-
-		CheckRequiredTables(db);
-		DropDeleteDataTrigger(db);
-		DropCopyBufferTrigger(db);
-		CreateDeleteDataTrigger(db);
-		AddCopyBuffersTable(db);
-		AddMainDeletesTable(db);
-		CreateMainIndexes(db);
-		AddClipOrderColumns(db);
-		AddGlobalShortCutColumn(db);
-		AddLastPasteDateColumn(db);
-		AddStickyOrderColumns(db);
-
-		UpgradeStickyOrderIndexes(db);
-
-		AddMoveToGroupColumns(db);
-		CreateCurrentIndexes(db);
+		CheckAndUpgrade(csPath);
 	}
 	catch (CppSQLite3Exception& e)
 	{
@@ -341,7 +315,30 @@ BOOL DatabaseSchemaUpgrader::ValidDB(CString csPath, BOOL /*bUpgrade*/)
 		return FALSE;
 	}
 
-		return TRUE;
+	return TRUE;
+}
+
+void DatabaseSchemaUpgrader::CheckAndUpgrade(CString csPath)
+{
+	CppSQLite3DB db;
+	db.open(csPath);
+
+	CheckRequiredTables(db);
+	DropDeleteDataTrigger(db);
+	DropCopyBufferTrigger(db);
+	CreateDeleteDataTrigger(db);
+	AddCopyBuffersTable(db);
+	AddMainDeletesTable(db);
+	CreateMainIndexes(db);
+	AddClipOrderColumns(db);
+	AddGlobalShortCutColumn(db);
+	AddLastPasteDateColumn(db);
+	AddStickyOrderColumns(db);
+
+	UpgradeStickyOrderIndexes(db);
+
+	AddMoveToGroupColumns(db);
+	CreateCurrentIndexes(db);
 }
 
 void DatabaseSchemaUpgrader::CheckRequiredTables(CppSQLite3DB& db)
@@ -654,7 +651,10 @@ BOOL CDatabaseBackupService::RestoreDB(CGetSetOptions& settings, CMultiLanguage&
 			throw std::runtime_error("the unpacked database could not be moved next to the current one, error " + std::to_string(::GetLastError()));
 		}
 		settings.SetDBPath(newFullPath);
-		CDatabaseManager::OpenDatabase(settings, database, state, newFullPath);
+		if (!CDatabaseManager::OpenDatabase(settings, database, state, newFullPath))
+		{
+			return FALSE;   // OpenDatabase showed the error
+		}
 	}
 	catch (const std::exception& e)
 	{
@@ -755,141 +755,82 @@ BOOL CDatabaseManager::CreateDB(CString csFile)
 
 BOOL CDatabaseManager::CompactDatabase()
 {
-	//	if(!theApp.CloseDB())
-	//		return FALSE;
-	//
-	//	CString csDBName = GetDBName();
-	//	CString csTempDBName = csDBName;
-	//	csTempDBName.Replace(".mdb", "TempDBName.mdb");
-	//	
-	//	//Compact the database			
-	//	try
-	//	{
-	//		CDaoWorkspace::CompactDatabase(csDBName, csTempDBName);//, dbLangGeneral, 0, "andrew");//DATABASE_PASSWORD);
-	//	}
-	//	catch(CDaoException* e)
-	//	{
-	//		AfxMessageBox(e->m_pErrorInfo->m_strDescription);
-	//		DeleteFile(csTempDBName);
-	//		e->Delete();
-	//		return FALSE;
-	//	}
-	//	catch(CMemoryException* e) 
-	//	{
-	//		AfxMessageBox("Memory Exception");
-	//		DeleteFile(csTempDBName);
-	//		e->Delete();
-	//		return FALSE;
-	//	}
-	//	
-	//	//Since compacting the database creates a new db delete the old one and replace it
-	//	//with the compacted db
-	//	if(DeleteFile(csDBName))
-	//	{
-	//		try
-	//		{
-	//			CFile::Rename(csTempDBName, csDBName);
-	//		}
-	//		catch(CFileException *e)
-	//		{
-	//			e->ReportError();
-	//			e->Delete();
-	//			return FALSE;
-	//		}
-	//	}
-	//	else
-	//		AfxMessageBox("Error Compacting Database");
-
 	return TRUE;
 }
 
 BOOL CDatabaseManager::RepairDatabase()
 {
-	//	if(!theApp.CloseDB())
-	//		return FALSE;
-
-	//	try
-	//	{
-	//		CDaoWorkspace::RepairDatabase(GetDBName());
-	//	}
-	//	catch(CDaoException *e)
-	//	{
-	//		AfxMessageBox(e->m_pErrorInfo->m_strDescription);
-	//		e->Delete();
-	//		return FALSE;
-	//	}
-
 	return TRUE;
 }
 
-void CClipRetentionPolicy::RemoveClipsOverMaxEntries(CGetSetOptions& settings, CAppWindows& windows, CppSQLite3DB& db)
+bool CClipRetentionPolicy::RemoveClipsOverMaxEntries(CGetSetOptions& settings, CAppWindows& windows, CDittoDb& db)
 {
 	long lMax{settings.GetMaxEntries()};
-	if (lMax >= 0)
+	if (lMax < 0)
 	{
-		CClipIDs IDs{};
-		int clipId{};
-
-		CppSQLite3Query q{db.execQueryEx(_T("SELECT lID, lShortCut, lParentID, lDontAutoDelete, stickyClipOrder, stickyClipGroupOrder FROM Main WHERE bIsGroup = 0 ORDER BY clipOrder DESC LIMIT -1 OFFSET %d"), lMax)};
-		while (q.eof() == false)
-		{
-			int shortcut{q.getIntField(_T("lShortCut"))};
-			int dontDelete{q.getIntField(_T("lDontAutoDelete"))};
-			int parentId{q.getIntField(_T("lParentID"))};
-			double stickyClipOrder{q.getFloatField(_T("stickyClipOrder"))};
-			double stickyClipGroupOrder{q.getFloatField(_T("stickyClipGroupOrder"))};
-
-			//Only delete entries that have no shortcut and don't have the flag set and aren't in groups and
-			if (shortcut == 0 &&
-				dontDelete == 0 &&
-				parentId <= 0 &&
-				stickyClipOrder == -(2147483647) &&
-				stickyClipGroupOrder == -(2147483647))
-			{
-				clipId = q.getIntField(_T("lID"));
-				IDs.Add(clipId);
-				CLogger::Log(CStringUtil::Format(_T("From MaxEntries - Deleting Id: %d"), clipId));
-			}
-
-			q.nextRow();
-		}
-
-		if (IDs.GetCount() > 0)
-		{
-			IDs.DeleteIDs(windows, false, db);
-		}
+		return true;
 	}
+
+	CClipIDs IDs{};
+	int clipId{};
+
+	CppSQLite3Query q{db.execQueryEx(_T("SELECT lID, lShortCut, lParentID, lDontAutoDelete, stickyClipOrder, stickyClipGroupOrder FROM Main WHERE bIsGroup = 0 ORDER BY clipOrder DESC LIMIT -1 OFFSET %d"), lMax)};
+	while (q.eof() == false)
+	{
+		int shortcut{q.getIntField(_T("lShortCut"))};
+		int dontDelete{q.getIntField(_T("lDontAutoDelete"))};
+		int parentId{q.getIntField(_T("lParentID"))};
+		double stickyClipOrder{q.getFloatField(_T("stickyClipOrder"))};
+		double stickyClipGroupOrder{q.getFloatField(_T("stickyClipGroupOrder"))};
+
+		//Only delete entries that have no shortcut and don't have the flag set and aren't in groups and
+		if (shortcut == 0 &&
+			dontDelete == 0 &&
+			parentId <= 0 &&
+			stickyClipOrder == -(2147483647) &&
+			stickyClipGroupOrder == -(2147483647))
+		{
+			clipId = q.getIntField(_T("lID"));
+			IDs.Add(clipId);
+			CLogger::Log(CStringUtil::Format(_T("From MaxEntries - Deleting Id: %d"), clipId));
+		}
+
+		q.nextRow();
+	}
+
+	// DeleteIDs shows its own error
+	return IDs.GetCount() == 0 || IDs.DeleteIDs(windows, false, db) != FALSE;
 }
 
-void CClipRetentionPolicy::RemoveExpiredClips(CGetSetOptions& settings, CAppWindows& windows, CppSQLite3DB& db)
+bool CClipRetentionPolicy::RemoveExpiredClips(CGetSetOptions& settings, CAppWindows& windows, CDittoDb& db)
 {
 	long lExpire{settings.GetExpiredEntries()};
 
-	if (lExpire)
+	if (lExpire == 0)
 	{
-		CTime now{CTime::GetCurrentTime()};
-		now -= CTimeSpan(lExpire, 0, 0, 0);
-
-		CClipIDs IDs{};
-
-		CppSQLite3Query q{db.execQueryEx(_T("SELECT lID FROM Main ")
-			_T("WHERE lastPasteDate < %d AND ")
-			_T("bIsGroup = 0 AND lShortCut = 0 AND lParentID <= 0 AND lDontAutoDelete = 0 AND stickyClipOrder = -(2147483647) AND stickyClipGroupOrder = -(2147483647)"), (int)now.GetTime())};
-
-		while (q.eof() == false)
-		{
-			IDs.Add(q.getIntField(_T("lID")));
-
-			CLogger::Log(CStringUtil::Format(_T("From Clips Expire - Deleting Id: %d"), q.getIntField(_T("lID"))));
-
-			q.nextRow();
-		}
-
-		if (IDs.GetCount() > 0)
-		{
-			IDs.DeleteIDs(windows, false, db);
-		}
+		return true;
 	}
+
+	CTime now{CTime::GetCurrentTime()};
+	now -= CTimeSpan(lExpire, 0, 0, 0);
+
+	CClipIDs IDs{};
+
+	CppSQLite3Query q{db.execQueryEx(_T("SELECT lID FROM Main ")
+		_T("WHERE lastPasteDate < %d AND ")
+		_T("bIsGroup = 0 AND lShortCut = 0 AND lParentID <= 0 AND lDontAutoDelete = 0 AND stickyClipOrder = -(2147483647) AND stickyClipGroupOrder = -(2147483647)"), (int)now.GetTime())};
+
+	while (q.eof() == false)
+	{
+		IDs.Add(q.getIntField(_T("lID")));
+
+		CLogger::Log(CStringUtil::Format(_T("From Clips Expire - Deleting Id: %d"), q.getIntField(_T("lID"))));
+
+		q.nextRow();
+	}
+
+	// DeleteIDs shows its own error
+	return IDs.GetCount() == 0 || IDs.DeleteIDs(windows, false, db) != FALSE;
 }
 
 BOOL CClipRetentionPolicy::RemoveOldEntries(CGetSetOptions& settings, CIdleTime& idleTime, CAppWindows& windows, bool checkIdleTime)
@@ -898,18 +839,20 @@ BOOL CClipRetentionPolicy::RemoveOldEntries(CGetSetOptions& settings, CIdleTime&
 
 	try
 	{
-		CppSQLite3DB db;
+		// its own connection (also from the background thread); a CDittoDb, so DeleteIDs can delete in one transaction
+		CDittoDb db([](const CString& text) { CLogger::Log(text); });
 		CString csDbPath = settings.GetDBPath();
 		db.open(csDbPath);
 
-		if (settings.GetCheckForMaxEntries())
+		// a failed delete stops here (DeleteIDs showed it); upstream went on to the next step
+		if (settings.GetCheckForMaxEntries() && RemoveClipsOverMaxEntries(settings, windows, db) == false)
 		{
-			RemoveClipsOverMaxEntries(settings, windows, db);
+			return FALSE;
 		}
 
-		if (settings.GetCheckForExpiredEntries())
+		if (settings.GetCheckForExpiredEntries() && RemoveExpiredClips(settings, windows, db) == false)
 		{
-			RemoveExpiredClips(settings, windows, db);
+			return FALSE;
 		}
 
 		int toDeleteCount = db.execScalar(_T("SELECT COUNT(clipID) FROM MainDeletes"));
@@ -932,7 +875,7 @@ BOOL CClipRetentionPolicy::RemoveOldEntries(CGetSetOptions& settings, CIdleTime&
 			}
 			else
 			{
-				CLogger::Log(CStringUtil::Format(_T("Computer has not been idle long enough to delete clips, Min Idle: %d, current Idle: %d"),
+				CLogger::Log(CStringUtil::Format(_T("Computer has not been idle long enough to delete clips, Min Idle: %d, current Idle: %f"),
 					settings.GetIdleSecondsBeforeDelete(), idleSeconds));
 
 				break;
@@ -959,180 +902,40 @@ BOOL CClipRetentionPolicy::DeleteNonUsedClips(CDittoDb& database, CAppWindows& w
 {
 	CLogger::Log(_T("Start of delete all non used clips"));
 	CClipIDs IDs;
-
-	CppSQLite3Query q = database.execQueryEx(_T("SELECT lID FROM Main WHERE bIsGroup = 0 AND lShortCut = 0 AND lParentID <= 0 AND lDontAutoDelete = 0 AND stickyClipOrder = -(2147483647) AND stickyClipGroupOrder = -(2147483647)"));
-
-	while (q.eof() == false)
-	{
-		IDs.Add(q.getIntField(_T("lID")));
-
-		CLogger::Log(CStringUtil::Format(_T("From Clips DeleteNonUsedClips - Deleting Id: %d"), q.getIntField(_T("lID"))));
-
-		q.nextRow();
-	}
-
-	int clipsDeleted = (int)IDs.GetCount();
 	int deletedTableCount = 0;
 
-	if (IDs.GetCount() > 0)
+	try
 	{
-		IDs.DeleteIDs(windows, fromAppWindow, database);
+		CppSQLite3Query q = database.execQueryEx(_T("SELECT lID FROM Main WHERE bIsGroup = 0 AND lShortCut = 0 AND lParentID <= 0 AND lDontAutoDelete = 0 AND stickyClipOrder = -(2147483647) AND stickyClipGroupOrder = -(2147483647)"));
 
-		deletedTableCount = database.execDMLEx(_T("DELETE FROM MainDeletes"));
+		while (q.eof() == false)
+		{
+			IDs.Add(q.getIntField(_T("lID")));
+
+			CLogger::Log(CStringUtil::Format(_T("From Clips DeleteNonUsedClips - Deleting Id: %d"), q.getIntField(_T("lID"))));
+
+			q.nextRow();
+		}
+
+		if (IDs.GetCount() > 0)
+		{
+			if (IDs.DeleteIDs(windows, fromAppWindow, database) == FALSE)
+			{
+				return FALSE;   // DeleteIDs showed the error and deleted nothing
+			}
+
+			deletedTableCount = database.execDMLEx(_T("DELETE FROM MainDeletes"));
+		}
+	}
+	catch (CppSQLite3Exception& e)
+	{
+		// upstream let this escape to the caller's message handler
+		CErrorReport::Show(CStringUtil::Format(_T("Deleting the unused clips failed: %s"), e.errorMessage()));
+		return FALSE;
 	}
 
-	CLogger::Log(CStringUtil::Format(_T("End of delete all non used clips, clips deleted: %d, delete table delted: %d"), clipsDeleted, deletedTableCount));
+	CLogger::Log(CStringUtil::Format(_T("End of delete all non used clips, clips deleted: %d, delete table delted: %d"), static_cast<int>(IDs.GetCount()), deletedTableCount));
 
 	return TRUE;
 }
 
-BOOL CDatabaseManager::EnsureDirectory(CString csPath)
-{
-	TCHAR drive[_MAX_DRIVE];
-	TCHAR dir[_MAX_DIR];
-	TCHAR fname[_MAX_FNAME];
-	TCHAR ext[_MAX_EXT];
-
-	_tsplitpath(csPath, drive, dir, fname, ext);
-
-	CString csDir(drive);
-	csDir += dir;
-
-	if (CFileSystem::FileExists(csDir) == FALSE)
-	{
-		if (CreateDirectory(csDir, NULL))
-			return TRUE;
-	}
-	else
-		return TRUE;
-
-	return FALSE;
-}
-
-// BOOL RunZippApp(CString csCommandLine)
-// {
-// 	CString csLocalPath = _tgetenv(_T("U3_HOST_EXEC_PATH"));
-// 	CFolderPath::AddTrailingSlash(csLocalPath);
-// 
-// 	CString csZippApp = _tgetenv(_T("U3_DEVICE_EXEC_PATH"));
-// 	CFolderPath::AddTrailingSlash(csZippApp);
-// 	csZippApp += "7za.exe";
-// 
-// 	csZippApp += " ";
-// 	csZippApp += csCommandLine;
-// 
-// 	CLogger::Log(csZippApp);
-// 
-// 	STARTUPINFO			StartupInfo;
-// 	PROCESS_INFORMATION	ProcessInformation;
-// 
-// 	ZeroMemory(&StartupInfo, sizeof(StartupInfo));
-// 	StartupInfo.cb = sizeof(StartupInfo);
-// 	ZeroMemory(&ProcessInformation, sizeof(ProcessInformation));
-// 
-// 	StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
-// 	StartupInfo.wShowWindow = SW_HIDE;
-// 
-// 	BOOL bRet = CreateProcess(NULL, csZippApp.GetBuffer(csZippApp.GetLength()), NULL, NULL, FALSE,
-// 			CREATE_DEFAULT_ERROR_MODE | NORMAL_PRIORITY_CLASS, NULL, csLocalPath,
-// 			&StartupInfo, &ProcessInformation);
-// 
-// 	if(bRet)
-// 	{
-// 		WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
-// 
-// 		DWORD dwExitCode;
-// 		GetExitCodeProcess(ProcessInformation.hProcess, &dwExitCode);
-// 
-// 		CString cs;
-// 		cs.Format(_T("Exit code from unzip = %d"), dwExitCode);
-// 		CLogger::Log(cs);
-// 
-// 		if(dwExitCode != 0)
-// 		{
-// 			bRet = FALSE;
-// 		}
-// 	}
-// 	else
-// 	{
-// 		bRet = FALSE;
-// 		CLogger::Log(_T("Create Process Failed"));
-// 	}
-// 
-// 	csZippApp.ReleaseBuffer();
-// 
-// 	return bRet;
-// }
-
-// BOOL CopyDownDatabase()
-// {
-// 	BOOL bRet = FALSE;
-// 
-// 	CString csZippedPath = _tgetenv(_T("U3_APP_DATA_PATH"));
-// 	CFolderPath::AddTrailingSlash(csZippedPath);
-// 	
-// 	CString csUnZippedPath = csZippedPath;
-// 	csUnZippedPath += "Ditto.db";
-// 
-// 	csZippedPath += "Ditto.7z";
-// 	
-// 	CString csLocalPath = _tgetenv(_T("U3_HOST_EXEC_PATH"));
-// 	CFolderPath::AddTrailingSlash(csLocalPath);
-// 
-// 	if(CFileSystem::FileExists(csZippedPath))
-// 	{
-// 		CString csCommandLine;
-// 
-// 		//e = extract
-// 		//surround command line arguments with quotes
-// 		//-aoa = overight files with extracted files
-// 
-// 		csCommandLine += "e ";
-// 		csCommandLine += "\"";
-// 		csCommandLine += csZippedPath;
-// 		csCommandLine += "\"";
-// 		csCommandLine += " -o";
-// 		csCommandLine += "\"";
-// 		csCommandLine += csLocalPath;
-// 		csCommandLine += "\"";
-// 		csCommandLine += " -aoa";
-// 
-// 		bRet = RunZippApp(csCommandLine);
-// 
-// 		csLocalPath += "Ditto.db";
-// 	}
-// 	else if(CFileSystem::FileExists(csUnZippedPath))
-// 	{
-// 		csLocalPath += "Ditto.db";
-// 		bRet = CopyFile(csUnZippedPath, csLocalPath, FALSE);
-// 	}
-// 
-// 	if(CFileSystem::FileExists(csLocalPath) == FALSE)
-// 	{
-// 		CLogger::Log(_T("Failed to copy files from device zip file"));
-// 	}
-// 
-// 	CGetSetOptions::nLastDbWriteTime = CFileSystem::GetLastWriteTime(csLocalPath);
-// 
-// 	return bRet;
-// }
-
-//BOOL CopyUpDatabase()
-//{
-//	CStringA csZippedPath = "C:\\";//getenv("U3_APP_DATA_PATH");
-//	CFolderPath::AddTrailingSlash(csZippedPath);
-//	csZippedPath += "Ditto.zip";
-
-//	CStringA csLocalPath = GetDBName();//getenv("U3_HOST_EXEC_PATH");
-//	//CFolderPath::AddTrailingSlash(csLocalPath);
-//	//csLocalPath += "Ditto.db";
-//
-//	CZipper Zip;
-//
-//	if(Zip.OpenZip(csZippedPath))
-//	{
-//		Zip.AddFileToZip(csLocalPath);
-//	}
-//
-//	return TRUE;
-//}

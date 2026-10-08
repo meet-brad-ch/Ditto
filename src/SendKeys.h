@@ -86,7 +86,7 @@ private:
    * @param pKey in: the '{'; out: the character that ends the group.
    * @param KeyString the group buffer shared by all groups of one SendKeys() call.
    * @param NumTimes repeat count of the last group key; kept between groups.
-   * @return false if the group is too long or has an invalid number.
+   * @return false if the group is too long, has no closing '}' or is invalid (see ParseKeyCommand).
    */
   bool SendKeyGroup(LPTSTR &pKey, std::span<TCHAR> KeyString, WORD &NumTimes);
 
@@ -95,15 +95,23 @@ private:
    * @param KeyString the group text without braces (BEEP edits it in place).
    * @param MKey in: INVALIDKEY; out: the key to send, if any.
    * @param NumTimes out: the repeat count of a key name with a count.
-   * @return false if a VKEY or count number is out of the WORD range.
+   * @return false if a VKEY or count number is out of the WORD range, or BEEP or APPACTIVATE has no argument.
    */
   bool ParseKeyCommand(LPTSTR KeyString, WORD &MKey, WORD &NumTimes);
 
   /**
    * @brief Runs a {BEEP frequency delay} group.
    * @param KeyString the group text starting with "BEEP" (the space between the numbers is cut).
+   * @return false if the group has nothing after "BEEP".
    */
-  void BeepCommand(LPTSTR KeyString);
+  bool BeepCommand(LPTSTR KeyString);
+
+  /**
+   * @brief Runs an {APPACTIVATE WindowTitle} group (a window that is not found is ignored).
+   * @param KeyString the group text starting with "APPACTIVATE".
+   * @return false if the group has nothing after "APPACTIVATE".
+   */
+  bool AppActivateCommand(LPCTSTR KeyString);
 
   /**
    * @brief Looks up a key name (with an optional repeat count) in KeyNames.

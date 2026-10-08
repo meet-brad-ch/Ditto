@@ -149,7 +149,6 @@ BEGIN_MESSAGE_MAP(CQPasteWnd, CWndEx)
 	//}}AFX_MSG_MAP
 	ON_MESSAGE(CQListCtrl::NmSearchEnterPressed, OnSearchEnterKeyPressed)
 	ON_MESSAGE(CQListCtrl::NmCopyClip, OnCopyClip)
-	ON_MESSAGE(CQListCtrl::NmEnd, OnListEnd)
 	ON_MESSAGE(CQListCtrl::CbSearch, OnSearch)
 	ON_MESSAGE(CQListCtrl::NmDelete, OnDelete)
 	ON_NOTIFY(CQListCtrl::NmGetToolTipText, IdListHeader, OnGetToolTipText)
@@ -618,11 +617,6 @@ void CQPasteWnd::MoveControls()
 
 	int searchRowStart = 33;
 
-	/*if(Settings().m_bShowPersistent)
-	{
-		searchRowStart = 41;
-	}*/
-
 	int listBoxBottomOffset = m_DittoWindow.m_dpi.Scale(searchRowStart);
 
 	int extraSize = 0;
@@ -675,16 +669,7 @@ void CQPasteWnd::MoveControls()
 
 	m_ShowGroupsFolderBottom.MoveWindow(m_DittoWindow.m_dpi.Scale(4), cy - m_DittoWindow.m_dpi.Scale(28), m_DittoWindow.m_dpi.Scale(24), m_DittoWindow.m_dpi.Scale(24));
 
-	/*if (Settings().m_bShowPersistent &&
-		Settings().m_bShowAlwaysOnTopWarning)
-	{
-		m_alwaysOnToWarningStatic.ShowWindow(SW_SHOW);
-		m_alwaysOnToWarningStatic.MoveWindow(m_DittoWindow.m_dpi.Scale(2), cy - m_DittoWindow.m_dpi.Scale(18), cx - m_DittoWindow.m_dpi.Scale(4), m_DittoWindow.m_dpi.Scale(17));
-	}
-	else*/
-	{
-		m_alwaysOnToWarningStatic.ShowWindow(SW_HIDE);
-	}
+	m_alwaysOnToWarningStatic.ShowWindow(SW_HIDE);
 }
 
 int CQPasteWnd::MoveGroupHeader(int cx)
@@ -761,7 +746,7 @@ void CQPasteWnd::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 		return;
 	}
 
-	CLogger::Log(CStringUtil::Format(_T("CQPasteWnd::OnActivate, nState: %d, Other: %d, Minimized: %d"), nState, pWndOther, bMinimized));
+	CLogger::Log(CStringUtil::Format(_T("CQPasteWnd::OnActivate, nState: %d, Other: %p, Minimized: %d"), nState, static_cast<void*>(pWndOther), bMinimized));
 
 	if (nState == WA_INACTIVE)
 	{
@@ -850,7 +835,7 @@ BOOL CQPasteWnd::HideQPasteWindow(bool releaseFocus, BOOL clearSearchData)
 
 	if (!Services().State().m_bShowingQuickPaste)
 	{
-		CLogger::Log(_T("End of HideQPasteWindow, !theApp.m_bShowingQuickPaste"));
+		CLogger::Log(_T("HideQPasteWindow, !m_bShowingQuickPaste: hiding anyway"));
 	}
 
 	{
@@ -892,7 +877,7 @@ BOOL CQPasteWnd::HideQPasteWindow(bool releaseFocus, BOOL clearSearchData)
 	if ((endTick - startTick) > 150)
 		CLogger::Log(CStringUtil::Format(_T("Paste Timing HideQPasteWindow: %llu"), endTick - startTick));
 
-	CLogger::Log(CStringUtil::Format(_T("End of HideQPasteWindow, ItemCount: %d"), m_listItems.size()));
+	CLogger::Log(CStringUtil::Format(_T("End of HideQPasteWindow, ItemCount: %zu"), m_listItems.size()));
 
 	return TRUE;
 }
@@ -978,7 +963,7 @@ BOOL CQPasteWnd::ShowQPasteWindow(BOOL bFillList)
 {
 	Services().State().m_bShowingQuickPaste = true;
 
-	CLogger::Log(CStringUtil::Format(_T("Start - ShowQPasteWindow - Fill List: %d, array count: %d"), bFillList, m_listItems.size()));
+	CLogger::Log(CStringUtil::Format(_T("Start - ShowQPasteWindow - Fill List: %d, array count: %zu"), bFillList, m_listItems.size()));
 
 	//Ensure we have the latest theme file, this checks the last write time so it doesn't read the file each time
 	Settings().m_Theme.Load(Settings(), Settings().GetTheme(), false, true);
@@ -1014,7 +999,7 @@ BOOL CQPasteWnd::ShowQPasteWindow(BOOL bFillList)
 
 	//SetKeyModiferState(true);
 
-	CLogger::Log(CStringUtil::Format(_T("END - ShowQPasteWindow - Fill List: %d, array count: %d"), bFillList, m_listItems.size()));
+	CLogger::Log(CStringUtil::Format(_T("END - ShowQPasteWindow - Fill List: %d, array count: %zu"), bFillList, m_listItems.size()));
 
 	return TRUE;
 }
@@ -1183,7 +1168,13 @@ BOOL CQPasteWnd::NewGroup(bool bGroupSelection, int parentId)
 
 	CClipIDs IDs;
 	m_lstHeader.GetSelectionItemData(IDs);
-	IDs.MoveTo(Services().ClipContext(), id);
+	if (IDs.MoveTo(Services().ClipContext(), id) == FALSE)
+	{
+		// MoveTo showed the error and moved nothing; the new, empty group is shown in the list
+		Services().State().m_FocusID = id;
+		FillList();
+		return FALSE;
+	}
 	Services().Groups().EnterGroupID(id);
 	return TRUE;
 }
@@ -1216,22 +1207,11 @@ LRESULT CQPasteWnd::OnCopyClip(WPARAM /*wParam*/, LPARAM /*lParam*/)
 
 LRESULT CQPasteWnd::OnSearchEnterKeyPressed(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
-	CString csText;
-	m_search.GetWindowText(csText);
-
-	MSG msg;
-	msg.lParam = 0;
+	MSG msg{};
 	msg.wParam = VK_RETURN;
 	msg.message = WM_KEYDOWN;
-	if (CheckActions(&msg) == false)
-	{
-	}
+	CheckActions(&msg);
 	return TRUE;
-}
-
-LRESULT CQPasteWnd::OnListEnd(WPARAM /*wParam*/, LPARAM /*lParam*/)
-{
-	return 0;
 }
 
 LRESULT CQPasteWnd::OnReloadClipInUI(WPARAM wParam, LPARAM lParam)
@@ -1373,7 +1353,7 @@ LRESULT CQPasteWnd::OnRefreshView(WPARAM wParam, LPARAM /*lParam*/)
 		action = _T("Cleared Items");
 	}
 
-	CLogger::Log(CStringUtil::Format(_T("OnRefreshView - End - Count: %d, Action: %s"), m_listItems.size(), action.GetString()));
+	CLogger::Log(CStringUtil::Format(_T("OnRefreshView - End - Count: %zu, Action: %s"), m_listItems.size(), action.GetString()));
 
 	return TRUE;
 }
@@ -2030,7 +2010,11 @@ void CQPasteWnd::OnMenuPositioningAtpreviousposition()
 
 void CQPasteWnd::OnMenuOptions()
 {
-	Services().Windows().MainFrame()->SendMessage(CDittoMessage::ShowOptions, 0, 0);
+	CMainFrame* const pMainFrame{ MainFrameOrReport() };
+	if (pMainFrame != nullptr)
+	{
+		pMainFrame->SendMessage(CDittoMessage::ShowOptions, 0, 0);
+	}
 }
 
 void CQPasteWnd::OnMenuExitprogram()
@@ -2427,14 +2411,13 @@ void CQPasteWnd::OnMenuExport()
 
 	OPENFILENAME ofn;
 	TCHAR szFile[400];
-	TCHAR szDir[400];
 
 	memset(&szFile, 0, sizeof(szFile));
-	memset(szDir, 0, sizeof(szDir));
 	memset(&ofn, 0, sizeof(ofn));
 
-	CString csInitialDir = Settings().GetLastImportDir();
-	_tcscpy(szDir, csInitialDir);
+	// the dialog reads the folder from the string itself: no copy into a fixed buffer (a longer
+	// path overflowed the 400 characters before)
+	const CString csInitialDir = Settings().GetLastExportDir();
 
 	ofn.lStructSize = sizeof(OPENFILENAME);
 	ofn.hwndOwner = m_hWnd;
@@ -2444,7 +2427,7 @@ void CQPasteWnd::OnMenuExport()
 	ofn.nFilterIndex = 1;
 	ofn.lpstrFileTitle = NULL;
 	ofn.nMaxFileTitle = 0;
-	ofn.lpstrInitialDir = szDir;
+	ofn.lpstrInitialDir = csInitialDir.GetString();
 	ofn.lpstrDefExt = _T("dto");
 	// a save dialog: the file may be new (no OFN_FILEMUSTEXIST)
 	ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
@@ -2591,7 +2574,10 @@ bool CQPasteWnd::DeleteClips(CClipIDs& IDs, ARRAY& Indexs)
 	POSITION pos = m_lstHeader.GetFirstSelectedItemPosition();
 	int nFirstSel = m_lstHeader.GetNextSelectedItem(pos);
 
-	IDs.DeleteIDs(Services().Windows(), true, Services().Database());
+	if (IDs.DeleteIDs(Services().Windows(), true, Services().Database()) == FALSE)
+	{
+		return false;   // DeleteIDs showed the error; nothing was deleted, so the list stays as it is
+	}
 
 	Indexs.SortDescending();
 	INT_PTR count = Indexs.GetSize();
@@ -2785,13 +2771,20 @@ BOOL CQPasteWnd::PreTranslateMessage(MSG* pMsg)
 
 void CQPasteWnd::CheckMiddleClickActions()
 {
-	MSG msg;
-	msg.lParam = 0;
+	MSG msg{};
 	msg.wParam = CMouseKey::MiddleClick;
 	msg.message = WM_KEYDOWN;
-	if (CheckActions(&msg) == false)
+	CheckActions(&msg);
+}
+
+CMainFrame* CQPasteWnd::MainFrameOrReport()
+{
+	CMainFrame* const pMainFrame{ Services().Windows().MainFrame() };
+	if (pMainFrame == nullptr)
 	{
+		CErrorReport::Show(_T("The command needs Ditto's main window, which does not exist."));
 	}
+	return pMainFrame;
 }
 
 void CQPasteWnd::TrackNonActiveMouseMove()
@@ -3809,7 +3802,7 @@ bool CQPasteWnd::DoClipCompare()
 	}
 	else
 	{
-		CLogger::Log(CStringUtil::Format(_T("DoClipCompare, at least 2 clips need to be selected, count: %d"), IDs.GetCount()));
+		CLogger::Log(CStringUtil::Format(_T("DoClipCompare, at least 2 clips need to be selected, count: %Id"), IDs.GetCount()));
 	}
 
 	return false;
@@ -3892,14 +3885,13 @@ bool CQPasteWnd::DoExportToTextFile()
 
 	OPENFILENAME ofn;
 	TCHAR szFile[400];
-	TCHAR szDir[400];
 
 	memset(&szFile, 0, sizeof(szFile));
-	memset(szDir, 0, sizeof(szDir));
 	memset(&ofn, 0, sizeof(ofn));
 
-	CString csInitialDir = Settings().GetLastImportDir();
-	_tcscpy(szDir, csInitialDir);
+	// the dialog reads the folder from the string itself: no copy into a fixed buffer (a longer
+	// path overflowed the 400 characters before)
+	const CString csInitialDir = Settings().GetLastExportDir();
 
 	ofn.lStructSize = sizeof(OPENFILENAME);
 	ofn.hwndOwner = m_hWnd;
@@ -3909,7 +3901,7 @@ bool CQPasteWnd::DoExportToTextFile()
 	ofn.nFilterIndex = 1;
 	ofn.lpstrFileTitle = NULL;
 	ofn.nMaxFileTitle = 0;
-	ofn.lpstrInitialDir = szDir;
+	ofn.lpstrInitialDir = csInitialDir.GetString();
 	ofn.lpstrDefExt = _T("txt");
 	// a save dialog: the file may be new (no OFN_FILEMUSTEXIST)
 	ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
@@ -4075,7 +4067,12 @@ bool CQPasteWnd::DoPasteAsImage()
 
 bool CQPasteWnd::DoSaveCurrentClipboard()
 {
-	Services().Windows().MainFrame()->PostMessage(CDittoMessage::SaveClipboard, 0, 0);
+	CMainFrame* const pMainFrame{ MainFrameOrReport() };
+	if (pMainFrame == nullptr)
+	{
+		return false;
+	}
+	pMainFrame->PostMessage(CDittoMessage::SaveClipboard, 0, 0);
 
 	return true;
 }
@@ -4096,10 +4093,13 @@ bool CQPasteWnd::DoMoveClipDown()
 			CClip clip(Services().ClipContext());
 			if (clip.LoadMainTable(id))
 			{
-				clip.MoveDown(Services().State().m_GroupID);
-				clip.ModifyMainTable();
+				// a failed step (shown) stops the moves; the clips moved before stay moved
+				if (clip.MoveDown(Services().State().m_GroupID) == false || clip.ModifyMainTable() == false)
+				{
+					break;
+				}
 
-				sort = SyncClipDataToArrayData(clip);
+				sort |= SyncClipDataToArrayData(clip);
 			}
 		}
 
@@ -4140,10 +4140,13 @@ bool CQPasteWnd::DoMoveClipUp()
 			CClip clip(Services().ClipContext());
 			if (clip.LoadMainTable(id))
 			{
-				clip.MoveUp(Services().State().m_GroupID);
-				clip.ModifyMainTable();
+				// a failed step (shown) stops the moves; the clips moved before stay moved
+				if (clip.MoveUp(Services().State().m_GroupID) == false || clip.ModifyMainTable() == false)
+				{
+					break;
+				}
 
-				sort = SyncClipDataToArrayData(clip);
+				sort |= SyncClipDataToArrayData(clip);
 			}
 		}
 
@@ -4182,21 +4185,17 @@ bool CQPasteWnd::DoMoveClipLast()
 			CClip clip(Services().ClipContext());
 			if (clip.LoadMainTable(id))
 			{
-				if (Services().State().m_GroupID > 0)
+				// a failed step (shown) stops the moves; the clips moved before stay moved
+				if (SaveClipAtListEdge(clip, false) == false)
 				{
-					clip.MakeLastGroupOrder();
+					break;
 				}
-				else
-				{
-					clip.MakeLastOrder();
-				}
-				clip.ModifyMainTable();
 
 				//have we loaded all clips, if so then sort and select
 				// a list control's item count is never negative
 				if (m_listItems.size() == static_cast<size_t>(m_lstHeader.GetItemCount()))
 				{
-					sort = SyncClipDataToArrayData(clip);
+					sort |= SyncClipDataToArrayData(clip);
 				}
 				else
 				{
@@ -4228,6 +4227,20 @@ bool CQPasteWnd::DoMoveClipLast()
 	return true;
 }
 
+bool CQPasteWnd::SaveClipAtListEdge(CClip& clip, bool latest)
+{
+	bool ordered{};
+	if (Services().State().m_GroupID > 0)
+	{
+		ordered = latest ? clip.MakeLatestGroupOrder() : clip.MakeLastGroupOrder();
+	}
+	else
+	{
+		ordered = latest ? clip.MakeLatestOrder() : clip.MakeLastOrder();
+	}
+	return ordered && clip.ModifyMainTable();
+}
+
 void CQPasteWnd::EraseListItem(int id)
 {
 	std::vector<CMainTable>::iterator iter = m_listItems.begin();
@@ -4256,17 +4269,13 @@ bool CQPasteWnd::DoMoveClipTOP()
 			CClip clip(Services().ClipContext());
 			if (clip.LoadMainTable(id))
 			{
-				if (Services().State().m_GroupID > 0)
+				// a failed step (shown) stops the moves; the clips moved before stay moved
+				if (SaveClipAtListEdge(clip, true) == false)
 				{
-					clip.MakeLatestGroupOrder();
+					break;
 				}
-				else
-				{
-					clip.MakeLatestOrder();
-				}
-				clip.ModifyMainTable();
 
-				sort = SyncClipDataToArrayData(clip);
+				sort |= SyncClipDataToArrayData(clip);
 			}
 		}
 
@@ -4559,10 +4568,13 @@ bool CQPasteWnd::OnMakeTopSticky(bool forceSort)
 			CClip clip(Services().ClipContext());
 			if (clip.LoadMainTable(id))
 			{
-				clip.MakeStickyTop(Services().State().m_GroupID);
-				clip.ModifyMainTable();
+				// a failed step (shown) stops; the clips changed before stay changed
+				if (clip.MakeStickyTop(Services().State().m_GroupID) == false || clip.ModifyMainTable() == false)
+				{
+					break;
+				}
 
-				sort = SyncClipDataToArrayData(clip);
+				sort |= SyncClipDataToArrayData(clip);
 			}
 		}
 
@@ -4601,10 +4613,13 @@ bool CQPasteWnd::OnMakeLastSticky()
 			CClip clip(Services().ClipContext());
 			if (clip.LoadMainTable(id))
 			{
-				clip.MakeStickyLast(Services().State().m_GroupID);
-				clip.ModifyMainTable();
+				// a failed step (shown) stops; the clips changed before stay changed
+				if (clip.MakeStickyLast(Services().State().m_GroupID) == false || clip.ModifyMainTable() == false)
+				{
+					break;
+				}
 
-				sort = SyncClipDataToArrayData(clip);
+				sort |= SyncClipDataToArrayData(clip);
 			}
 		}
 
@@ -4639,10 +4654,12 @@ bool CQPasteWnd::OnRemoveStickySetting()
 		bool sort = false;
 		for (int i = ((int)IDs.GetCount()) - 1; i >= 0; i--)
 		{
-			RemoveStickyInternal(IDs[i], sort);
+			// a failed save (shown) stops; the clips changed before stay changed
+			if (RemoveStickyInternal(IDs[i], sort) == false)
+			{
+				break;
+			}
 		}
-
-		//Services().State().m_FocusID = id;
 
 		if (sort)
 		{
@@ -4655,7 +4672,6 @@ bool CQPasteWnd::OnRemoveStickySetting()
 				std::sort(m_listItems.begin(), m_listItems.end(), CMainTable::SortDesc);
 			}
 
-			//SelectFocusID();
 
 			m_lstHeader.RefreshVisibleRows();
 			m_lstHeader.RedrawWindow();
@@ -4665,14 +4681,18 @@ bool CQPasteWnd::OnRemoveStickySetting()
 	return true;
 }
 
-void CQPasteWnd::RemoveStickyInternal(int id, bool& sort)
+bool CQPasteWnd::RemoveStickyInternal(int id, bool& sort)
 {
 	CClip clip(Services().ClipContext());
 	if (clip.LoadMainTable(id))
 	{
 		if (clip.RemoveStickySetting(Services().State().m_GroupID))
 		{
-			clip.ModifyMainTable();
+			// a failed save (shown) leaves the list item as it is
+			if (clip.ModifyMainTable() == false)
+			{
+				return false;
+			}
 
 			std::vector<CMainTable>::iterator iter = m_listItems.begin();
 			while (iter != m_listItems.end())
@@ -4694,6 +4714,7 @@ void CQPasteWnd::RemoveStickyInternal(int id, bool& sort)
 			}
 		}
 	}
+	return true;
 }
 
 bool CQPasteWnd::OnNewClip()
@@ -4726,12 +4747,17 @@ bool CQPasteWnd::DoActionReplaceTopStickyClip()
 	if (IDs.GetCount() > 0)
 	{
 		bool sort = false;
-		for (int i = ((int)IDs.GetCount()) - 1; i >= 0; i--)
+		bool removed = true;
+		for (int i = ((int)IDs.GetCount()) - 1; i >= 0 && removed; i--)
 		{
-			RemoveStickyInternal(IDs[i], sort);
+			removed = RemoveStickyInternal(IDs[i], sort);
 		}
 
-		OnMakeTopSticky(true);
+		// a failed save (shown) does not make the selection the top sticky clip
+		if (removed)
+		{
+			OnMakeTopSticky(true);
+		}
 	}
 
 	return true;
@@ -4850,14 +4876,13 @@ bool CQPasteWnd::DoExportToBitMapFile()
 
 	OPENFILENAME ofn;
 	TCHAR szFile[400];
-	TCHAR szDir[400];
 
 	memset(&szFile, 0, sizeof(szFile));
-	memset(szDir, 0, sizeof(szDir));
 	memset(&ofn, 0, sizeof(ofn));
 
-	CString csInitialDir = Settings().GetLastImportDir();
-	_tcscpy(szDir, csInitialDir);
+	// the dialog reads the folder from the string itself: no copy into a fixed buffer (a longer
+	// path overflowed the 400 characters before)
+	const CString csInitialDir = Settings().GetLastExportDir();
 
 	ofn.lStructSize = sizeof(OPENFILENAME);
 	ofn.hwndOwner = m_hWnd;
@@ -4868,7 +4893,7 @@ bool CQPasteWnd::DoExportToBitMapFile()
 	ofn.nFilterIndex = 1;
 	ofn.lpstrFileTitle = NULL;
 	ofn.nMaxFileTitle = 0;
-	ofn.lpstrInitialDir = szDir;
+	ofn.lpstrInitialDir = csInitialDir.GetString();
 	ofn.lpstrDefExt = _T("png");
 	// a save dialog: the file may be new (no OFN_FILEMUSTEXIST)
 	ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
@@ -5085,8 +5110,6 @@ void CQPasteWnd::GetDispInfoText(LV_ITEM* pItem)
 		CString cs = ListItemDisplayText(m_listItems[pItem->iItem]);
 
 		CControlTextBuffer::CopyCut(pItem->pszText, pItem->cchTextMax, cs);
-
-		//						CLogger::Log(CStringUtil::Format(_T("DrawItem index %d - "), pItem->iItem));//, pItem->pszText));
 	}
 	else
 	{
@@ -5166,7 +5189,6 @@ void CQPasteWnd::QueueListItemLoad(int item)
 	{
 		CPoint loadItem(item, (m_lstHeader.GetTopIndex() + (m_lstHeader.GetCountPerPage() * 2)));
 
-		//CLogger::Log(CStringUtil::Format(_T("DrawItem index %d, add: %d"), loadItem.x, loadItem.y));
 		m_loadItems.push_back(loadItem);
 	}
 
@@ -5628,7 +5650,7 @@ void CQPasteWnd::OnSearchEditChange()
 
 LRESULT CQPasteWnd::OnUpDown(WPARAM wParam, LPARAM lParam)
 {
-	MSG msg;
+	MSG msg{};
 	//Workaround for allow holding down arrow keys while in the search control
 	msg.lParam = lParam & (~0x40000000);
 	msg.wParam = wParam;
@@ -6723,26 +6745,20 @@ void CQPasteWnd::OnNMClickList1(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 		}
 	}
 
-	MSG msg;
-	msg.lParam = 0;
+	MSG msg{};
 	msg.wParam = CMouseKey::Click;
 	msg.message = WM_KEYDOWN;
-	if (CheckActions(&msg) == false)
-	{
-	}
+	CheckActions(&msg);
 	*pResult = 0;
 }
 
 
 void CQPasteWnd::OnNMDblclkList1(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
-	MSG msg;
-	msg.lParam = 0;
+	MSG msg{};
 	msg.wParam = CMouseKey::DoubleClick;
 	msg.message = WM_KEYDOWN;
-	if (CheckActions(&msg) == false)
-	{
-	}
+	CheckActions(&msg);
 
 	*pResult = 0;
 }
@@ -6750,25 +6766,15 @@ void CQPasteWnd::OnNMDblclkList1(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 
 void CQPasteWnd::OnNMRClickList1(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
-	MSG msg;
-	msg.lParam = 0;
+	MSG msg{};
 	msg.wParam = CMouseKey::RightClick;
 	msg.message = WM_KEYDOWN;
-	if (CheckActions(&msg) == false)
-	{
-	}
+	CheckActions(&msg);
 	*pResult = 0;
 }
 
 void CQPasteWnd::OnNMRDblclkList1(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
-	/*MSG msg;
-	msg.lParam = 0;
-	msg.wParam = CMouseKey::RightClick;
-	msg.message = WM_KEYDOWN;
-	if (CheckActions(&msg) == false)
-	{
-	}*/
 	*pResult = 0;
 }
 
@@ -7476,12 +7482,20 @@ void CQPasteWnd::OnFirstShowstartupmessage()
 
 void CQPasteWnd::OnFirstRestoreDb()
 {
-	Services().Windows().MainFrame()->PostMessage(CDittoMessage::RestoreDb, 0, 0);
+	CMainFrame* const pMainFrame{ MainFrameOrReport() };
+	if (pMainFrame != nullptr)
+	{
+		pMainFrame->PostMessage(CDittoMessage::RestoreDb, 0, 0);
+	}
 }
 
 void CQPasteWnd::OnFirstBackupDb()
 {
-	Services().Windows().MainFrame()->PostMessage(CDittoMessage::BackupDb, 0, 0);
+	CMainFrame* const pMainFrame{ MainFrameOrReport() };
+	if (pMainFrame != nullptr)
+	{
+		pMainFrame->PostMessage(CDittoMessage::BackupDb, 0, 0);
+	}
 }
 
 void CQPasteWnd::OnMenuDeleteallnonusedclips()

@@ -30,9 +30,10 @@ void CAppWindows::SetMainHwnd(HWND hWnd)
 
 CQPasteWnd* CAppWindows::QPasteWnd() const
 {
-	if(m_pMainFrame != NULL)
+	CMainFrame* const pMainFrame{m_pMainFrame.load()};
+	if(pMainFrame != NULL)
 	{
-		return m_pMainFrame->m_quickPaste.m_pwndPaste.get();
+		return pMainFrame->m_quickPaste.m_pwndPaste.get();
 	}
 
 	return NULL;
@@ -40,11 +41,12 @@ CQPasteWnd* CAppWindows::QPasteWnd() const
 
 HWND CAppWindows::QPastehWnd() const
 {
-	if(m_pMainFrame != NULL)
+	CMainFrame* const pMainFrame{m_pMainFrame.load()};
+	if(pMainFrame != NULL)
 	{
-		if(m_pMainFrame->m_quickPaste.m_pwndPaste != NULL)
+		if(pMainFrame->m_quickPaste.m_pwndPaste != NULL)
 		{
-			return m_pMainFrame->m_quickPaste.m_pwndPaste->GetSafeHwnd();
+			return pMainFrame->m_quickPaste.m_pwndPaste->GetSafeHwnd();
 		}
 	}
 
@@ -102,9 +104,10 @@ void CAppWindows::SetStatus(const TCHAR* status, bool bRepaintImmediately)
 
 void CAppWindows::RefreshShowInTaskBar()
 {
-	if(m_pMainFrame != NULL)
+	CMainFrame* const pMainFrame{m_pMainFrame.load()};
+	if(pMainFrame != NULL)
 	{
-		m_pMainFrame->RefreshShowInTaskBar();
+		pMainFrame->RefreshShowInTaskBar();
 	}
 }
 

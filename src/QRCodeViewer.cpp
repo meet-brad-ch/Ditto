@@ -267,7 +267,8 @@ void QRCodeViewer::OnTimer(UINT_PTR nIDEvent)
 	{
 		case TimerButtonUp:
 		{
-			if ((GetKeyState(VK_LBUTTON) & 0x100) == 0)
+			// the high bit (0x8000) is the "down" bit; upstream tested 0x100, which is never set
+			if ((GetKeyState(VK_LBUTTON) & 0x8000) == 0)
 			{
 				m_DittoWindow.DoNcLButtonUp(this, 0, CPoint(0, 0));
 				KillTimer(TimerButtonUp);

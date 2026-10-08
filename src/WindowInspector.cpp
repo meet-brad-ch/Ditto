@@ -71,24 +71,7 @@ CString CWindowInspector::GetProcessName(HWND hWnd, DWORD processId)
 	{
 		CLogger::Log(CStringUtil::Format(_T("failed to get process name from open process, LastError: %d, looping over process names to find process"), GetLastError()));
 
-		PROCESSENTRY32 processEntry = { 0 };
-
-		HANDLE hSnapShot{ CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0) };
-		processEntry.dwSize = sizeof(PROCESSENTRY32);
-
-		if (Process32First(hSnapShot, &processEntry))
-		{
-			do
-			{
-				if (processEntry.th32ProcessID == Id)
-				{
-					strProcessName = processEntry.szExeFile;
-					break;
-				}
-			} while (Process32Next(hSnapShot, &processEntry));
-		}
-
-		CloseHandle(hSnapShot);
+		strProcessName = ProcessNameFromSnapshot(Id);
 	}
 
 	//uwp apps are wrapped in another app called, if this has focus then try and find the child uwp process
@@ -105,4 +88,34 @@ CString CWindowInspector::GetProcessName(HWND hWnd, DWORD processId)
 	}
 
 	return strProcessName;
+}
+
+CString CWindowInspector::ProcessNameFromSnapshot(DWORD processId)
+{
+	CString processName{};
+
+	const HANDLE hSnapShot{ CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0) };
+	if (hSnapShot == INVALID_HANDLE_VALUE)
+	{
+		CLogger::Log(CStringUtil::Format(_T("CreateToolhelp32Snapshot failed, LastError: %d, the process name of pid %d is not known"), GetLastError(), processId));
+		return processName;
+	}
+
+	PROCESSENTRY32 processEntry{};
+	processEntry.dwSize = sizeof(PROCESSENTRY32);
+
+	if (Process32First(hSnapShot, &processEntry))
+	{
+		do
+		{
+			if (processEntry.th32ProcessID == processId)
+			{
+				processName = processEntry.szExeFile;
+				break;
+			}
+		} while (Process32Next(hSnapShot, &processEntry));
+	}
+
+	CloseHandle(hSnapShot);
+	return processName;
 }

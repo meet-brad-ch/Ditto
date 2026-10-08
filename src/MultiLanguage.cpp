@@ -47,6 +47,7 @@ void CMultiLanguage::ClearArrays()
 	ClearArray(m_OptionsSheet);
 	ClearArray(m_OptionsCopyBuffers);
 	ClearArray(m_GlobalHotKeys);
+	ClearArray(m_DeleteClipData);
 
 	ClearMap(m_StringMap);
 }

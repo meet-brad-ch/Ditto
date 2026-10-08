@@ -37,10 +37,6 @@
 
 // CppSQLite3Exception::DONT_DELETE_MSG: the value passed to CppSQLite3Exception for a string
 // that cannot be deleted.
-// CppSQLite3Binary::encode/decode: SQLite functions not included in SQLite DLL, but copied below
-// from SQLite encode.c
-
-////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -49,22 +45,21 @@ CppSQLite3Exception::CppSQLite3Exception(const int nErrCode,
 									bool /*bDeleteMsg=true*/) :
 									mnErrCode(nErrCode)
 {
-	swprintf(mpszErrMess, _T("%s[%d]: %s"),
+	CString message;
+	message.Format(_T("%s[%d]: %s"),
 								errorCodeAsString(nErrCode),
 								nErrCode,
 								szErrMess ? szErrMess : _T(""));
+	m_message = message.GetString();
+	m_what = CW2A(message, CP_UTF8).m_psz;
 }
 
-									
-CppSQLite3Exception::CppSQLite3Exception(const CppSQLite3Exception&  e) :
-									mnErrCode(e.mnErrCode)
+bool CppSQLite3Exception::isUnavailable() const
 {
-	mpszErrMess[0] = 0;
-
-	if(e.mpszErrMess)
-	{
-		swprintf(mpszErrMess, _T("%s"), e.mpszErrMess);
-	}
+	// an extended result code keeps its primary code in the low byte (CppSqliteError's low byte is
+	// no SQLite code)
+	const int primary{ mnErrCode & 0xFF };
+	return std::find(m_unavailableCodes.begin(), m_unavailableCodes.end(), primary) != m_unavailableCodes.end();
 }
 
 
@@ -78,12 +73,6 @@ const TCHAR* CppSQLite3Exception::errorCodeAsString(int nErrCode)
 		}
 	}
 	return _T("UNKNOWN_ERROR");
-}
-
-
-CppSQLite3Exception::~CppSQLite3Exception()
-{
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -411,7 +400,10 @@ void CppSQLite3Query::nextRow()
 	}
 	else
 	{
-		nRet = sqlite3_finalize(mpVM);
+		// a query from CppSQLite3Statement::execQuery does not own its VM: the statement finalizes
+		// it (upstream finalized it here as well, so the statement finalized a freed VM); such a
+		// VM is only reset, which keeps the statement usable
+		nRet = mbOwnVM ? sqlite3_finalize(mpVM) : sqlite3_reset(mpVM);
 		mpVM = 0;
 		const TCHAR* szError = static_cast<const TCHAR*>(sqlite3_errmsg16(mpDB));
 		throw CppSQLite3Exception(nRet, (TCHAR*)szError, CppSQLite3Exception::DONT_DELETE_MSG);
@@ -457,15 +449,17 @@ CppSQLite3Statement::CppSQLite3Statement(const CppSQLite3Statement& rStatement)
 {
 	mpDB = rStatement.mpDB;
 	mpVM = rStatement.mpVM;
+	mpConnectionMutex = rStatement.mpConnectionMutex;
 	// Only one object can own VM
 	const_cast<CppSQLite3Statement&>(rStatement).mpVM = 0;
 }
 
 
-CppSQLite3Statement::CppSQLite3Statement(sqlite3* pDB, sqlite3_stmt* pVM)
+CppSQLite3Statement::CppSQLite3Statement(sqlite3* pDB, sqlite3_stmt* pVM, std::recursive_mutex* pConnectionMutex)
 {
 	mpDB = pDB;
 	mpVM = pVM;
+	mpConnectionMutex = pConnectionMutex;
 }
 
 
@@ -486,9 +480,20 @@ CppSQLite3Statement& CppSQLite3Statement::operator=(const CppSQLite3Statement& r
 {
 	mpDB = rStatement.mpDB;
 	mpVM = rStatement.mpVM;
+	mpConnectionMutex = rStatement.mpConnectionMutex;
 	// Only one object can own VM
 	const_cast<CppSQLite3Statement&>(rStatement).mpVM = 0;
 	return *this;
+}
+
+
+std::unique_lock<std::recursive_mutex> CppSQLite3Statement::lockConnection() const
+{
+	if (mpConnectionMutex == nullptr)
+	{
+		return std::unique_lock<std::recursive_mutex>();
+	}
+	return std::unique_lock<std::recursive_mutex>(*mpConnectionMutex);
 }
 
 
@@ -497,6 +502,7 @@ int CppSQLite3Statement::execDML()
 	checkDB();
 	checkVM();
 
+	const std::unique_lock<std::recursive_mutex> lock = lockConnection();
 	int nRet = sqlite3_step(mpVM);
 
 	if (nRet == SQLITE_DONE)
@@ -527,6 +533,7 @@ CppSQLite3Query CppSQLite3Statement::execQuery()
 	checkDB();
 	checkVM();
 
+	const std::unique_lock<std::recursive_mutex> lock = lockConnection();
 	int nRet = sqlite3_step(mpVM);
 
 	if (nRet == SQLITE_DONE)
@@ -623,6 +630,7 @@ void CppSQLite3Statement::reset()
 {
 	if (mpVM)
 	{
+		const std::unique_lock<std::recursive_mutex> lock = lockConnection();
 		int nRet = sqlite3_reset(mpVM);
 
 		if (nRet != SQLITE_OK)
@@ -706,9 +714,8 @@ void CppSQLite3DB::sqlite_regexp(sqlite3_context* context, int argc, sqlite3_val
 	char* reg = (char*) sqlite3_value_text(values[0]);
 	char* text = (char*) sqlite3_value_text(values[1]);
 
-	if (argc != 2 || reg == 0 || text == 0) 
+	if (argc != 2 || reg == 0 || text == 0)
 	{
-		//sqlite3_result_error(context, "SQL function regexp() called with invalid arguments.\n", -1);
 		sqlite3_result_int(context, 0);
 		return;
 	}
@@ -724,11 +731,12 @@ void CppSQLite3DB::sqlite_regexp(sqlite3_context* context, int argc, sqlite3_val
 			sqlite3_result_int(context, 0);
 		}
 	}
-	catch (std::regex_error& e) 
+	catch (std::regex_error& e)
 	{
+		// an error result fails the statement; upstream set no result, so SQL saw NULL
 		CStringA r;
-		r.Format("regex_search exception %d, reg: %s, str: %s", e.code(), reg, text);
-		OutputDebugStringA(r);
+		r.Format("regexp(): invalid regular expression '%s' (std::regex_error %d)", reg, static_cast<int>(e.code()));
+		sqlite3_result_error(context, r.GetString(), -1);
 	}
 }
 
@@ -851,8 +859,14 @@ CppSQLite3Statement CppSQLite3DB::compileStatement(const TCHAR* szSQL)
 {
 	checkDB();
 
+	std::recursive_mutex* const mutex{ connectionMutex() };
+	std::unique_lock<std::recursive_mutex> lock{};
+	if (mutex != nullptr)
+	{
+		lock = std::unique_lock<std::recursive_mutex>(*mutex);
+	}
 	sqlite3_stmt* pVM = compile(szSQL);
-	return CppSQLite3Statement(mpDB, pVM);
+	return CppSQLite3Statement(mpDB, pVM, mutex);
 }
 
 
@@ -1011,199 +1025,6 @@ sqlite3_stmt* CppSQLite3DB::compile(const TCHAR* szSQL)
 	return pVM;
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-// SQLite encode.c reproduced here, containing implementation notes and source
-// for sqlite3_encode_binary() and sqlite3_decode_binary() 
-////////////////////////////////////////////////////////////////////////////////
-
-/*
-** 2002 April 25
-**
-** The author disclaims copyright to this source code.  In place of
-** a legal notice, here is a blessing:
-**
-**    May you do good and not evil.
-**    May you find forgiveness for yourself and forgive others.
-**    May you share freely, never taking more than you give.
-**
-*************************************************************************
-** This file contains helper routines used to translate binary data into
-** a null-terminated string (suitable for use in SQLite) and back again.
-** These are convenience routines for use by people who want to store binary
-** data in an SQLite database.  The code in this file is not used by any other
-** part of the SQLite library.
-**
-** $Id: CppSQLite3.cpp,v 1.2 2006-09-14 04:56:10 sabrogden Exp $
-*/
-
-/*
-** How This Encoder Works
-**
-** The output is allowed to contain any character except 0x27 (') and
-** 0x00.  This is accomplished by using an escape character to encode
-** 0x27 and 0x00 as a two-byte sequence.  The escape character is always
-** 0x01.  An 0x00 is encoded as the two byte sequence 0x01 0x01.  The
-** 0x27 character is encoded as the two byte sequence 0x01 0x03.  Finally,
-** the escape character itself is encoded as the two-character sequence
-** 0x01 0x02.
-**
-** To summarize, the encoder works by using an escape sequences as follows:
-**
-**       0x00  ->  0x01 0x01
-**       0x01  ->  0x01 0x02
-**       0x27  ->  0x01 0x03
-**
-** If that were all the encoder did, it would work, but in certain cases
-** it could double the size of the encoded string.  For example, to
-** encode a string of 100 0x27 characters would require 100 instances of
-** the 0x01 0x03 escape sequence resulting in a 200-character output.
-** We would prefer to keep the size of the encoded string smaller than
-** this.
-**
-** To minimize the encoding size, we first add a fixed offset value to each 
-** byte in the sequence.  The addition is modulo 256.  (That is to say, if
-** the sum of the original character value and the offset exceeds 256, then
-** the higher order bits are truncated.)  The offset is chosen to minimize
-** the number of characters in the string that need to be escaped.  For
-** example, in the case above where the string was composed of 100 0x27
-** characters, the offset might be 0x01.  Each of the 0x27 characters would
-** then be converted into an 0x28 character which would not need to be
-** escaped at all and so the 100 character input string would be converted
-** into just 100 characters of output.  Actually 101 characters of output - 
-** we have to record the offset used as the first byte in the sequence so
-** that the string can be decoded.  Since the offset value is stored as
-** part of the output string and the output string is not allowed to contain
-** characters 0x00 or 0x27, the offset cannot be 0x00 or 0x27.
-**
-** Here, then, are the encoding steps:
-**
-**     (1)   Choose an offset value and make it the first character of
-**           output.
-**
-**     (2)   Copy each input character into the output buffer, one by
-**           one, adding the offset value as you copy.
-**
-**     (3)   If the value of an input character plus offset is 0x00, replace
-**           that one character by the two-character sequence 0x01 0x01.
-**           If the sum is 0x01, replace it with 0x01 0x02.  If the sum
-**           is 0x27, replace it with 0x01 0x03.
-**
-**     (4)   Put a 0x00 terminator at the end of the output.
-**
-** Decoding is obvious:
-**
-**     (5)   Copy encoded characters except the first into the decode 
-**           buffer.  Set the first encoded character aside for use as
-**           the offset in step 7 below.
-**
-**     (6)   Convert each 0x01 0x01 sequence into a single character 0x00.
-**           Convert 0x01 0x02 into 0x01.  Convert 0x01 0x03 into 0x27.
-**
-**     (7)   Subtract the offset value that was the first character of
-**           the encoded buffer from all characters in the output buffer.
-**
-** The only tricky part is step (1) - how to compute an offset value to
-** minimize the size of the output buffer.  This is accomplished by testing
-** all offset values and picking the one that results in the fewest number
-** of escapes.  To do that, we first scan the entire input and count the
-** number of occurances of each character value in the input.  Suppose
-** the number of 0x00 characters is N(0), the number of occurances of 0x01
-** is N(1), and so forth up to the number of occurances of 0xff is N(255).
-** An offset of 0 is not allowed so we don't have to test it.  The number
-** of escapes required for an offset of 1 is N(1)+N(2)+N(40).  The number
-** of escapes required for an offset of 2 is N(2)+N(3)+N(41).  And so forth.
-** In this way we find the offset that gives the minimum number of escapes,
-** and thus minimizes the length of the output string.
-*/
-
-/*
-** Encode a binary buffer "in" of size n bytes so that it contains
-** no instances of characters '\'' or '\000'.  The output is 
-** null-terminated and can be used as a string value in an INSERT
-** or UPDATE statement.  Use sqlite3_decode_binary() to convert the
-** string back into its original binary.
-**
-** The result is written into a preallocated output buffer "out".
-** "out" must be able to hold at least 2 +(257*n)/254 bytes.
-** In other words, the output will be expanded by as much as 3
-** bytes for every 254 bytes of input plus 2 bytes of fixed overhead.
-** (This is approximately 2 + 1.0118*n or about a 1.2% size increase.)
-**
-** The return value is the number of characters in the encoded
-** string, excluding the "\000" terminator.
-*/
-int CppSQLite3Binary::encode(const unsigned char *in, int n, unsigned char *out){
-  // e: the loop below always picks an offset (its smallest sum is below n); 1 is a valid one
-  int i{}, j{}, e{1}, m{};
-  int cnt[256];
-  if( n<=0 ){
-    out[0] = 'x';
-    out[1] = 0;
-    return 1;
-  }
-  memset(cnt, 0, sizeof(cnt));
-  for(i=n-1; i>=0; i--){ cnt[in[i]]++; }
-  m = n;
-  for(i=1; i<256; i++){
-    int sum;
-    if( i=='\'' ) continue;
-    sum = cnt[i] + cnt[(i+1)&0xff] + cnt[(i+'\'')&0xff];
-    if( sum<m ){
-      m = sum;
-      e = i;
-      if( m==0 ) break;
-    }
-  }
-  out[0] = static_cast<unsigned char>(e); // e is an offset chosen from 1-255
-  j = 1;
-  // escaped values in escape-code order: 0x00 -> 0x01 0x01, 0x01 -> 0x01 0x02, 0x27 -> 0x01 0x03
-  const std::array<int, 3> escaped{ 0, 1, '\'' };
-  for(i=0; i<n; i++){
-    int c = (in[i] - e)&0xff;
-    const auto hit = std::find(escaped.begin(), escaped.end(), c);
-    if( hit!=escaped.end() ){
-      out[j++] = 1;
-      out[j++] = static_cast<unsigned char>(1 + (hit - escaped.begin())); // escape code 1-3
-    }else{
-      out[j++] = static_cast<unsigned char>(c); // c is masked to 0-255 above
-    }
-  }
-  out[j] = 0;
-  return j;
-}
-
-/*
-** Decode the string "in" into binary data and write it into "out".
-** This routine reverses the encoding created by sqlite3_encode_binary().
-** The output will always be a few bytes less than the input.  The number
-** of bytes of output is returned.  If the input is not a well-formed
-** encoding, -1 is returned.
-**
-** The "in" and "out" parameters may point to the same buffer in order
-** to decode a string in place.
-*/
-int CppSQLite3Binary::decode(const unsigned char *in, unsigned char *out){
-  int i, c, e;
-  e = *(in++);
-  i = 0;
-  while( (c = *(in++))!=0 ){
-    if( c==1 ){
-      c = *(in++);
-      if( c==1 ){
-        c = 0;
-      }else if( c==2 ){
-        c = 1;
-      }else if( c==3 ){
-        c = '\'';
-      }else{
-        return -1;
-      }
-    }
-    out[i++] = (c + e)&0xff;
-  }
-  return i;
-}
 
 void CppSQLite3Statement::bindInt64(int nParam, const sqlite_int64 nValue)
 {

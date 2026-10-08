@@ -21,6 +21,11 @@ public:
 	explicit CFormatSQL(CGetSetOptions& settings);
 	virtual ~CFormatSQL();
 
+	/**
+	 * @brief Builds the search condition of the column (SetVariable) for a search text, with the
+	 *        settings' search mode (DittoCore::SearchCondition); it replaces an earlier condition.
+	 * @param cs The search text as typed.
+	 */
 	void Parse(CString cs);
 
 	CString GetSQLString()				{ return _T("(") + m_csWhere + _T(")"); }
@@ -29,23 +34,8 @@ public:
 protected:
 	CString m_csWhere;
 	CString m_csVariable;
-	enum eSpecialTypes{eINVALID, eNOT, eAND, eOR};
-	
-
-	bool AddToSQL(CString cs, eSpecialTypes &eNOTValue, eSpecialTypes &eORValue);
-	CFormatSQL::eSpecialTypes ConvetToKey(CString cs);
-	CString GetKeyWordString(eSpecialTypes eKeyWord);
 
 private:
-	/**
-	 * @brief Parse's step for a finished word: a NOT/OR/AND keyword sets the operator for the
-	 * next term, any other word is added as a term.
-	 * @param csCurrentWord the word.
-	 * @param eNotValue the pending NOT operator (reset when a term is added).
-	 * @param eOrValue the pending AND/OR operator (reset when a term is added).
-	 */
-	void AddWord(const CString& csCurrentWord, eSpecialTypes &eNotValue, eSpecialTypes &eOrValue);
-
 	/// The application's settings (not owned).
 	CGetSetOptions& m_settings;
 };

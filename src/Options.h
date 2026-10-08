@@ -100,9 +100,15 @@ public:
 
 	void LoadSettings();
 	CString GetIniFileName(bool bLocalIniFile);
-	void ConverSettingsToIni();
 	CString GetAppDataPath();
 	CString GetTempFilePath();
+	/**
+	 * @brief Creates the ini file as UTF-16 (with a byte order mark) when it does not exist, so
+	 *        Unicode settings can be written to it.
+	 * @param path The ini file.
+	 * @throws std::runtime_error When the file cannot be created or written (the start-up boundary
+	 *         shows it).
+	 */
 	void CreateIniFile(CString path);
 
 	CString GetExeFileName();
@@ -549,8 +555,6 @@ public:
 	BOOL GetUseUISelectedGroupForLastTenCopies();
 	void SetUseUISelectedGroupForLastTenCopies(int val);
 
-	int GetDelayRenderLockout();
-	void SetDelayRenderLockout(int val);
 
 	BOOL GetAdjustClipsForCRC();
 	void SetAdjustClipsForCRC(int val);
@@ -712,19 +716,6 @@ public:
 	BOOL GetEnforceClipboardIgnoreFormats();
 
 private:
-	/**
-	 * @brief The store the settings are read from: the registry during ConverSettingsToIni,
-	 *        otherwise m_store.
-	 * @return The store.
-	 */
-	DittoCore::ISettingsStore& ReadStore() const;
-
-	/**
-	 * @brief Whether ConverSettingsToIni is running (reads then come from the registry).
-	 * @return True during the conversion.
-	 */
-	bool InConversion() const;
-
 	/** @brief The folder a GetPath folder starts from. */
 	enum class PathRoot
 	{
@@ -776,7 +767,4 @@ private:
 
 	/** @brief Where the settings are stored: the registry, or the ini file once LoadSettings found one. */
 	std::unique_ptr<DittoCore::ISettingsStore> m_store{};
-
-	/** @brief The registry store ConverSettingsToIni reads from while it runs; null otherwise. */
-	std::unique_ptr<DittoCore::ISettingsStore> m_conversionSource{};
 };

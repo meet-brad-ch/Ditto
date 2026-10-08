@@ -30,5 +30,14 @@ namespace DittoCore
 		 *         or not that file exists.
 		 */
 		static std::filesystem::path Resolve(const std::filesystem::path& configured, const std::filesystem::path& defaultDirectory);
+
+		/**
+		 * @brief The name a damaged database is renamed to: "_BAD" before the file's extension, in
+		 *        the same folder.
+		 * @param database The damaged database file.
+		 * @return E.g. C:\\a.b\\Ditto_BAD.db for C:\\a.b\\Ditto.db (dots in folder names stay);
+		 *         the file name with "_BAD" appended when it has no extension.
+		 */
+		static std::filesystem::path MarkedAsBad(const std::filesystem::path& database);
 	};
 }

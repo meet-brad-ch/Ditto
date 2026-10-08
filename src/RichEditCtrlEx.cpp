@@ -228,17 +228,17 @@ DWORD CALLBACK CRichEditCtrlEx::CBStreamIn(DWORD_PTR dwCookie, LPBYTE pbBuff, LO
 /*
 	Callback function to stream the RTF string out of the rich edit control.
 */
-DWORD CALLBACK CRichEditCtrlEx::CBStreamOut(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG * /*pcb*/)
+DWORD CALLBACK CRichEditCtrlEx::CBStreamOut(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
 {
 	// Address of our string var is in psEntry
 	CString *psEntry = (CString*) dwCookie;
-	
 
-	CString tmpEntry = "";
-	tmpEntry = (CString) pbBuff;
+	// the buffer holds cb bytes without a terminator: exactly these are converted (upstream read
+	// the buffer up to a null, past its end)
+	*psEntry += CString(CStringA(reinterpret_cast<const char*>(pbBuff), cb));
 
-	// And write it!!!
-	*psEntry += tmpEntry.Left(cb);
+	// all bytes taken
+	*pcb = cb;
 
 	return 0;
 }

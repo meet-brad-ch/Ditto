@@ -70,6 +70,7 @@ bool CClip_ImportExport::ExportToSqliteDB(CppSQLite3DB& db)
 bool CClip_ImportExport::ImportFromSqliteDB(CppSQLite3DB& db, bool bAddToDB, bool bPutOnClipboard)
 {
 	bool bRet = false;
+	bool failed = false;
 	CStringA csCF_TEXT;
 	CStringW csCF_UNICODETEXT;
 
@@ -78,7 +79,14 @@ bool CClip_ImportExport::ImportFromSqliteDB(CppSQLite3DB& db, bool bAddToDB, boo
 	{
 		Clear();
 
-		if (ImportRow(db, q, bAddToDB, bPutOnClipboard))
+		const RowResult row = ImportRow(db, q, bAddToDB, bPutOnClipboard);
+		if (row == RowResult::Failed)
+		{
+			// the save showed its error; upstream counted the clip as imported and went on
+			failed = true;
+			break;
+		}
+		if (row == RowResult::Imported)
 		{
 			bRet = true;
 		}
@@ -97,28 +105,27 @@ bool CClip_ImportExport::ImportFromSqliteDB(CppSQLite3DB& db, bool bAddToDB, boo
 
 	if (bRet)
 	{
+		// also after a failure: the clips added before it are shown
 		FinishImport(bAddToDB, bPutOnClipboard, csCF_TEXT, csCF_UNICODETEXT);
 	}
 
-	return bRet;
+	return bRet && failed == false;
 }
 
-bool CClip_ImportExport::ImportRow(CppSQLite3DB& db, CppSQLite3Query& q, bool bAddToDB, bool bPutOnClipboard)
+CClip_ImportExport::RowResult CClip_ImportExport::ImportRow(CppSQLite3DB& db, CppSQLite3Query& q, bool bAddToDB, bool bPutOnClipboard)
 {
 	int nVersion = q.getIntField(_T("lVersion"));
 	if (nVersion != 1 || !ImportFromSqliteV1(db, q))
 	{
-		return false;
+		return RowResult::Skipped;
 	}
 
 	if (bAddToDB)
 	{
-		MakeLatestOrder();
-		AddToDB(true);
-		return true;
+		return MakeLatestOrder() && AddToDB(true) ? RowResult::Imported : RowResult::Failed;
 	}
 
-	return bPutOnClipboard;
+	return bPutOnClipboard ? RowResult::Imported : RowResult::Skipped;
 }
 
 void CClip_ImportExport::FinishImport(bool bAddToDB, bool bPutOnClipboard, CStringA& csCF_TEXT, CStringW& csCF_UNICODETEXT)

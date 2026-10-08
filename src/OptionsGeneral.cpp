@@ -386,26 +386,7 @@ void COptionsGeneral::ApplyTheme()
 	}
 }
 
-BOOL COptionsGeneral::OnSetActive() 
-{	
-	return CPropertyPage::OnSetActive();
-}
-
-//void COptionsGeneral::OnSetDbPath() 
-//{
-//	if(m_btSetDatabasePath.GetCheck() == BST_CHECKED)
-//	{
-//		m_ePath.EnableWindow(TRUE);
-//		m_btGetPath.EnableWindow(TRUE);
-//	}
-//	else
-//	{
-//		m_ePath.EnableWindow(FALSE);
-//		m_btGetPath.EnableWindow(FALSE);
-//	}	
-//}
-
-void COptionsGeneral::OnGetPath() 
+void COptionsGeneral::OnGetPath()
 {
 	OPENFILENAME	FileName;
 	TCHAR			szFileName[400];
@@ -659,17 +640,6 @@ void COptionsGeneral::OnBnClickedButtonFont()
 		m_btFont.SetWindowText(cs);
 	}
 }
-
-
-//void COptionsGeneral::OnEnChangePath()
-//{
-//	// TODO:  If this is a RICHEDIT control, the control will not
-//	// send this notification unless you override the CPropertyPage::OnInitDialog()
-//	// function and call CRichEditCtrl().SetEventMask()
-//	// with the ENM_CHANGE flag ORed into the mask.
-//
-//	// TODO:  Add your control notification handler code here
-//}
 
 
 void COptionsGeneral::OnEnChangePath()

@@ -21,7 +21,8 @@ public:
 			return NULL;
 
 		std::shared_ptr<CImage> cImage = std::make_shared<CImage>();
-		cImage->Load(stream);
+		if (FAILED(cImage->Load(stream)))
+			return NULL;
 
 		return cImage;
 	};

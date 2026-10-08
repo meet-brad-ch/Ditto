@@ -123,6 +123,13 @@ class CSymbolEdit : public CEdit
 	 *  @param textRect Area of the text (widened for the prompt). */
 	void DrawPromptText(CDC& dc, CRect textRect);
 
+	/** @brief Draws the search history button (focused or not empty) and the clear button (not empty)
+	 *         and sets their hit rectangles (empty when not shown).
+	 *  @param dc Paint DC.
+	 *  @param rect Client rectangle.
+	 *  @param text Window text. */
+	void DrawButtons(CDC& dc, const CRect& rect, const CString& text);
+
 public:
 	CSymbolEdit();
 	virtual ~CSymbolEdit();
@@ -151,8 +158,17 @@ public:
 	CString SavePastSearches();
 	void LoadPastSearches(CString values);
 
+	/**
+	 * @brief Sets the window's DPI and loads the buttons' images for it; until then the edit paints itself.
+	 * @param dpi The DPI of the window (not owned; must outlive this control).
+	 * @throws std::invalid_argument when dpi is null.
+	 */
 	void SetDpiInfo(CDPI *dpi);
 
+	/**
+	 * @brief Reloads the buttons for the current DPI (SetDpiInfo must have been called).
+	 * @throws std::invalid_argument when SetDpiInfo was not called yet.
+	 */
 	void OnDpiChanged();
 
 	//void SetWindowTextEx(LPCSTR)

@@ -69,6 +69,7 @@
     <ClCompile Include="..\lib\DittoCore\RtfJoin.cpp" />
     <ClCompile Include="..\lib\DittoCore\RtfNormalizer.cpp" />
     <ClCompile Include="..\lib\DittoCore\RtfTransforms.cpp" />
+    <ClCompile Include="..\lib\DittoCore\SearchCondition.cpp" />
     <ClCompile Include="..\lib\DittoCore\Slugifier.cpp" />
     <ClCompile Include="..\lib\DittoCore\TextTransforms.cpp" />
     <ClCompile Include="..\lib\DittoCore\Typoglycemia.cpp" />
@@ -91,6 +92,7 @@
     <ClCompile Include="QrBitmapTests.cpp" />
     <ClCompile Include="RegistrySettingsStoreTests.cpp" />
     <ClCompile Include="RtfTests.cpp" />
+    <ClCompile Include="SearchConditionTests.cpp" />
     <ClCompile Include="TextJoinTests.cpp" />
     <ClCompile Include="TransformsTests.cpp" />
   </ItemGroup>

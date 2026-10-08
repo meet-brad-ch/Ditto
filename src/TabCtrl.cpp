@@ -104,9 +104,7 @@ int CTabCtrlEx::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 	
-	// Create the brushes, pens
-	m_brSelectedTab.CreateSolidBrush(m_SelectedColor);
-	m_brNonSelectedTab.CreateSolidBrush(m_NonSelectedColor);
+	// Create the pens
 	m_penGray.CreatePen(PS_SOLID, 1, RGB(172, 168, 153));
 	m_penBlack.CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
 
@@ -157,7 +155,6 @@ bool CTabCtrlEx::InsertItem(int nTab, const CString& csTabTitle, CWnd* pTabWnd)
 	tab.csTitle = csTabTitle;
 	tab.pWnd = pTabWnd;
 	tab.lWidth = GetTextWidth(csTabTitle);
-	tab.clrUnderline = CLR_INVALID; // no underline; same value the -1 checks below test for
 
 	m_Tabs.InsertAt(nTab, tab);
 	
@@ -228,15 +225,6 @@ bool CTabCtrlEx::DeleteAllItems()
 	RedrawWindow();
 
 	return true;
-}
-
-void CTabCtrlEx::UnderlineTabTitle(int nTab, COLORREF clr)
-{
-	if ((nTab >= 0) && (nTab < m_Tabs.GetSize()))
-	{
-		m_Tabs[nTab].clrUnderline = clr;
-		Invalidate();
-	}
 }
 
 int CTabCtrlEx::GetTextWidth(const CString& csText)

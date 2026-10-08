@@ -6,6 +6,7 @@
 class CPopup;
 class CAppWindows;
 class CClipContext;
+class CDittoDb;
 
 class CClipIDs : public CArrayEx<int>
 {
@@ -47,38 +48,20 @@ public:
 	 * @param lParentID the target group.
 	 * @param dFirst not used.
 	 * @param dIncrement not used.
-	 * @return TRUE on success.
+	 * @return TRUE on success; FALSE (after showing the error) when a statement failed: the move
+	 *         is one transaction, so then no clip was moved.
 	 */
 	BOOL MoveTo(CClipContext& context, long lParentID, double dFirst = 0, double dIncrement = -1);
 
-	// reorders the "lParentID" Group, inserting before the given id.
-	//  if the id cannot be found, this appends the IDs.
-//	BOOL ReorderGroupInsert( long lParentID, long lInsertBeforeID = 0 );
-
 	/**
-	 * @brief Empties this array and fills it with the elements of the given group ID.
-	 * @param context the clip services (the database).
-	 * @param groupId the group.
-	 * @return TRUE when the group has clips.
-	 */
-	BOOL LoadElementsOf(CClipContext& context, int groupId);
-
-	/**
-	 * @brief Copies the clips into a group as new clips.
-	 * @param context the clip services (the copies' save settings, the database).
-	 * @param parentId the target group.
-	 * @return TRUE on success.
-	 */
-	BOOL CopyTo(CClipContext& context, int parentId);
-
-	/**
-	 * @brief Deletes the clips (a group's children move to the top level).
-	 * @param windows the application's windows: told of each deleted clip unless fromClipWindow.
+	 * @brief Deletes the clips (a group's children move to the top level), in one transaction.
+	 * @param windows the application's windows: told of each deleted clip (after the commit) unless fromClipWindow.
 	 * @param fromClipWindow the quick paste window deletes the clips itself.
 	 * @param db the database to delete from.
-	 * @return TRUE on success.
+	 * @return TRUE on success; FALSE for no clips, or (after showing the error) when a statement
+	 *         failed, and then no clip was deleted.
 	 */
-	BOOL DeleteIDs(CAppWindows& windows, bool fromClipWindow, CppSQLite3DB& db);
+	BOOL DeleteIDs(CAppWindows& windows, bool fromClipWindow, CDittoDb& db);
 
 	/**
 	 * @brief Exports the clips to a new SQLite file (an existing file is replaced).

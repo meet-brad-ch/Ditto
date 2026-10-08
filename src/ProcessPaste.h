@@ -49,6 +49,8 @@ public:
 		CClipIDs ids;
 		bool pastedFromGroup{};
 		bool updateClipOrder{};
+		/** @brief The settings' m_bUpdateTimeOnPaste when the paste ran (callers override it only during the paste). */
+		bool updateTimeOnPaste{};
 	};
 
 	/**

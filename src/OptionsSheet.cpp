@@ -58,19 +58,12 @@ COptionsSheet::~COptionsSheet()
 BEGIN_MESSAGE_MAP(COptionsSheet, CPropertySheet)
 	//{{AFX_MSG_MAP(COptionsSheet)
 		// NOTE - the ClassWizard will add and remove mapping macros here.
-	ON_WM_DESTROY()
 	ON_WM_NCDESTROY()
-	//ON_WM_CLOSE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // COptionsSheet message handlers
-
-void COptionsSheet::OnDestroy()
-{
-	CPropertySheet::OnDestroy();
-}
 
 void COptionsSheet::SetNotifyWnd(HWND hWnd)
 {

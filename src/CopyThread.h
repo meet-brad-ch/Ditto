@@ -2,6 +2,7 @@
 
 #include "ClipboardViewer.h"
 #include <afxmt.h>
+#include <atomic>
 #include <memory>
 
 class CAppServices;
@@ -70,7 +71,8 @@ public:
 
 // Shared (use thread-safe access functions below)
 	CCopyConfig         m_SharedConfig; 
-	bool                m_bConfigChanged; // true if m_SharedConfig was changed.
+	/** @brief True from a change of m_SharedConfig until SyncConfig takes it (read without the lock). */
+	std::atomic<bool>   m_bConfigChanged;
 
 	// Called within Main thread:
 	bool IsClipboardViewerConnected();

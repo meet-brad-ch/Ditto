@@ -38,19 +38,22 @@ bool CReadOnlyFlag::ResetReadOnlyFlag(const CDittoInfo &DittoInfo, IClip *pClip,
 			return false;
 		}
 
+		CString failedFiles;
 		for(int i = 0; i < lines.GetSize(); i++)
 		{
 			CString file = SkipToFileStart(lines[i].TrimLeft(' ').TrimRight(' ').MakeLower());
 
-			BOOL success = FALSE;
-			if(resetFlag)
+			const DWORD attributes{ resetFlag ? FILE_ATTRIBUTE_NORMAL : FILE_ATTRIBUTE_READONLY };
+			if(::SetFileAttributes(file, attributes) == FALSE)
 			{
-				success = ::SetFileAttributes(file, FILE_ATTRIBUTE_NORMAL);
+				failedFiles.AppendFormat(_T("\n%s (error %u)"), file.GetString(), ::GetLastError());
 			}
-			else
-			{
-				success = ::SetFileAttributes(file, FILE_ATTRIBUTE_READONLY);
-			}
+		}
+
+		if(failedFiles.IsEmpty() == FALSE)
+		{
+			::MessageBox(DittoInfo.m_hWndDitto, _T("The read-only flag was not changed for:") + failedFiles, _T("Ditto"), MB_OK | MB_ICONERROR);
+			return false;
 		}
 	}
 

@@ -2,25 +2,22 @@
 #include "CP_Main.h" // the settings and Misc types in the order they need
 #include "AppState.h"
 
-DWORD CLastAddedClip::Crc() const
+CLastAddedClip::Entry CLastAddedClip::Get() const
 {
-	return m_crc;
-}
-
-int CLastAddedClip::Id() const
-{
-	return m_id;
+	const std::scoped_lock lock{m_lock};
+	return m_entry;
 }
 
 void CLastAddedClip::Record(DWORD crc, int id)
 {
-	m_crc = crc;
-	m_id = id;
+	const std::scoped_lock lock{m_lock};
+	m_entry = Entry{.crc = crc, .id = id};
 }
 
 void CLastAddedClip::ClearCrc()
 {
-	m_crc = 0;
+	const std::scoped_lock lock{m_lock};
+	m_entry.crc = 0;
 }
 
 CAppState::CAppState(CGetSetOptions& settings) :
@@ -109,4 +106,9 @@ long CAppState::AddTaskbarIconUser()
 long CAppState::ReleaseTaskbarIconUser()
 {
 	return --m_taskbarIconUsers;
+}
+
+std::mutex& CAppState::LogFileLock()
+{
+	return m_logFileLock;
 }

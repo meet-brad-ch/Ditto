@@ -573,23 +573,19 @@ CRect CToolTipEx::GetBoundsRect()
 	ULONGLONG d = GetTickCount64();
 
     CWindowDC dc(NULL);
-	int nLineWidth = 0;
 
 	CRect rect(0, 0, 0, 0);
 
-    if(nLineWidth == 0)
-    {
-        // Count the number of lines of text
-		const TextLines lines{MeasureTextLines()};
+	// Count the number of lines of text
+	const TextLines lines{MeasureTextLines()};
 
-		CFont *pOldFont = (CFont*)dc.SelectObject((CFont*)&m_Font);
-		CSize size = dc.GetTextExtent(lines.longest);
-		dc.SelectObject(pOldFont);
+	CFont *pOldFont = (CFont*)dc.SelectObject((CFont*)&m_Font);
+	CSize size = dc.GetTextExtent(lines.longest);
+	dc.SelectObject(pOldFont);
 
-		rect.right = size.cx;
-		rect.bottom = size.cy * lines.count;
-    }
-	
+	rect.right = size.cx;
+	rect.bottom = size.cy * lines.count;
+
     rect.bottom += m_rectMargin.top + m_rectMargin.bottom + GetSystemMetrics(SM_CYVSCROLL);
     rect.right += m_rectMargin.left + m_rectMargin.right + GetSystemMetrics(SM_CXVSCROLL);
 
@@ -972,7 +968,7 @@ void CToolTipEx::OnTimer(UINT_PTR nIDEvent)
 
 void CToolTipEx::OnButtonUpTimer()
 {
-	if ((GetKeyState(VK_LBUTTON) & 0x100) == 0)
+	if ((GetKeyState(VK_LBUTTON) & 0x8000) == 0)
 	{
 		m_DittoWindow.DoNcLButtonUp(this, 0, CPoint(0, 0));
 		KillTimer(TimerButtonUp);

@@ -40,16 +40,6 @@ CGetSetOptions::~CGetSetOptions()
 
 }
 
-DittoCore::ISettingsStore& CGetSetOptions::ReadStore() const
-{
-	return m_conversionSource ? *m_conversionSource : *m_store;
-}
-
-bool CGetSetOptions::InConversion() const
-{
-	return m_conversionSource != nullptr;
-}
-
 void CGetSetOptions::LocateIniFile(const CString& exeDir)
 {
 	CString windowsAppFile = exeDir + _T("WindowsApp");
@@ -202,97 +192,24 @@ void CGetSetOptions::CreateIniFile(CString path)
 	{
 		// UTF16-LE BOM(FFFE)
 		WORD wBOM = 0xFEFF;
-		DWORD NumberOfBytesWritten;
+		DWORD NumberOfBytesWritten{};
 
+		// checked: upstream wrote to INVALID_HANDLE_VALUE when the file could not be created, and
+		// the ini settings were then written as ANSI (no Unicode text) without a word
 		HANDLE hFile = ::CreateFile(path, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-		::WriteFile(hFile, &wBOM, sizeof(WORD), &NumberOfBytesWritten, NULL);
-	
-		//LPTSTR pszSectionB = _T("[StringTable]"); // section name with bracket 
-		//::WriteFile(hFile, pszSectionB, (_tcslen(pszSectionB) + 1)*(sizeof(TCHAR)), &NumberOfBytesWritten, NULL);
-
+		if (hFile == INVALID_HANDLE_VALUE)
+		{
+			const DWORD createError{ ::GetLastError() };
+			throw std::runtime_error("the settings file " + std::string(CW2A(path, CP_UTF8)) + " could not be created, error " + std::to_string(createError));
+		}
+		const BOOL written = ::WriteFile(hFile, &wBOM, sizeof(WORD), &NumberOfBytesWritten, NULL);
+		const DWORD writeError{ ::GetLastError() };
 		::CloseHandle(hFile);
+		if (!written || NumberOfBytesWritten != sizeof(WORD))
+		{
+			throw std::runtime_error("the settings file " + std::string(CW2A(path, CP_UTF8)) + " could not be written, error " + std::to_string(writeError));
+		}
 	}
-}
-
-void CGetSetOptions::ConverSettingsToIni()
-{
-	// reads come from the registry while the writes go to the current store
-	m_conversionSource = std::make_unique<DittoCore::RegistrySettingsStore>(RegPath);
-
-	CSize sz;
-	CPoint pt;
-
-	GetQuickPasteSize(sz);
-	SetQuickPasteSize(sz);
-	
-	GetQuickPastePoint(pt);
-	SetQuickPastePoint(pt);
-
-	SetShowIconInSysTray(GetShowIconInSysTray());
-	SetRunOnStartUp(GetRunOnStartUp());
-	SetEnableTransparency(GetEnableTransparency());
-	SetTransparencyPercent(GetTransparencyPercent());
-	SetLinesPerRow(GetLinesPerRow());
-	SetQuickPastePosition(GetQuickPastePosition());
-	SetCopyGap(GetCopyGap());
-	SetDBPath(GetDBPath());
-	SetCheckForMaxEntries(GetCheckForMaxEntries());
-	SetCheckForExpiredEntries(GetCheckForExpiredEntries());
-	SetMaxEntries(GetMaxEntries());
-	SetExpiredEntries(GetExpiredEntries());
-	SetTripCopyCount(GetTripCopyCount());
-	SetTripPasteCount(GetTripPasteCount());
-	SetTripDate(GetTripDate());
-	SetTotalCopyCount(GetTotalCopyCount());
-	SetTotalPasteCount(GetTotalPasteCount());
-	SetTotalDate(GetTotalDate());
-	SetUpdateFilePath(GetUpdateFilePath());
-	SetUpdateInstallPath(GetUpdateInstallPath());	
-	SetLastUpdate(GetLastUpdate());
-	SetCheckForUpdates(GetCheckForUpdates());
-	SetUseCtrlNumForFirstTenHotKeys(GetUseCtrlNumForFirstTenHotKeys());
-	SetAllowDuplicates(GetAllowDuplicates());
-	SetUpdateTimeOnPaste(GetUpdateTimeOnPaste());
-	SetSaveMultiPaste(GetSaveMultiPaste());
-	SetShowPersistent(GetShowPersistent());
-	SetShowTextForFirstTenHotKeys(GetShowTextForFirstTenHotKeys());
-	SetMainHWND(GetMainHWND());
-	SetCaptionPos(GetCaptionPos());
-	SetAutoHide(GetAutoHide());
-	SetDescTextSize(GetDescTextSize());
-	SetDescShowLeadingWhiteSpace(GetDescShowLeadingWhiteSpace());
-	SetAllwaysShowDescription(GetAllwaysShowDescription());
-	SetDoubleClickingOnCaptionDoes(GetDoubleClickingOnCaptionDoes());
-	SetPrompForNewGroupName(GetPrompForNewGroupName());
-	SetSendPasteOnFirstTenHotKeys(GetSendPasteOnFirstTenHotKeys());
-
-	SetHideDittoOnHotKeyIfAlreadyShown(GetHideDittoOnHotKeyIfAlreadyShown());
-
-	LOGFONT font;
-	GetFont(font);
-	SetFont(font);
-
-	SetDrawThumbnail(GetDrawThumbnail());
-
-	SetDrawRTF(GetDrawRTF());
-	SetMultiPasteReverse(GetMultiPasteReverse());
-	SetPlaySoundOnCopy(GetPlaySoundOnCopy());
-	SetSendPasteAfterSelection(GetSendPasteAfterSelection());
-	SetFindAsYouType(GetFindAsYouType());
-	SetEnsureEntireWindowCanBeSeen(GetEnsureEntireWindowCanBeSeen());
-	SetShowAllClipsInMainList(GetShowAllClipsInMainList());
-	SetMaxClipSizeInBytes(GetMaxClipSizeInBytes());
-	SetLanguageFile(GetLanguageFile());
-	SetSaveClipDelay(GetSaveClipDelay());
-	SetProcessDrawClipboardDelay(GetProcessDrawClipboardDelay());
-	SetEnableDebugLogging(GetEnableDebugLogging());
-	SetEnsureConnectToClipboard(GetEnsureConnectToClipboard());
-	SetPromptWhenDeletingClips(GetPromptWhenDeletingClips());
-	SetLastImportDir(GetLastImportDir());
-	SetLastExportDir(GetLastExportDir());
-	SetUpdateDescWhenSavingClip(GetUpdateDescWhenSavingClip());
-
-	m_conversionSource.reset();
 }
 
 CString CGetSetOptions::GetIniFileName(bool bLocalIniFile)
@@ -434,12 +351,12 @@ BOOL CGetSetOptions::SetResolutionProfileLong(CString csName, long lValue)
 
 long CGetSetOptions::GetProfileLong(CString csName, long lDefaultValue, CString csNewPath)
 {
-	return ReadStore().GetLong(std::wstring(csNewPath.GetString()), std::wstring(csName.GetString()), lDefaultValue);
+	return m_store->GetLong(std::wstring(csNewPath.GetString()), std::wstring(csName.GetString()), lDefaultValue);
 }
 
 CString CGetSetOptions::GetProfileString(CString csName, CString csDefault, CString csNewPath, int maxSize)
 {
-	const std::wstring value{ ReadStore().GetString(std::wstring(csNewPath.GetString()), std::wstring(csName.GetString()), std::wstring(csDefault.GetString()), maxSize) };
+	const std::wstring value{ m_store->GetString(std::wstring(csNewPath.GetString()), std::wstring(csName.GetString()), std::wstring(csDefault.GetString()), maxSize) };
 	return CString(value.c_str());
 }
 
@@ -522,13 +439,13 @@ BOOL CGetSetOptions::SetProfileFont(CString csSection, LOGFONT &font)
 
 std::vector<BYTE> CGetSetOptions::GetProfileData(CString csName)
 {
-	if(m_bFromIni && !InConversion())
+	if(m_bFromIni)
 	{
 		ASSERT(!"GetProfileData not supported in .ini settings");
 		return {};
 	}
 
-	const std::vector<std::byte> data{ ReadStore().GetData(std::wstring(), std::wstring(csName.GetString())) };
+	const std::vector<std::byte> data{ m_store->GetData(std::wstring(), std::wstring(csName.GetString())) };
 	const BYTE* const bytes{ reinterpret_cast<const BYTE*>(data.data()) };
 	return std::vector<BYTE>(bytes, bytes + data.size());
 }
@@ -1078,7 +995,7 @@ void CGetSetOptions::SetHideDittoOnHotKeyIfAlreadyShown(BOOL bVal)
 
 BOOL CGetSetOptions::GetFont(LOGFONT &font)
 {
-	if(m_bFromIni && !InConversion())
+	if(m_bFromIni)
 	{
 		try
 		{
@@ -2100,15 +2017,6 @@ void CGetSetOptions::SetUseUISelectedGroupForLastTenCopies(int val)
 }
 
 
-int CGetSetOptions::GetDelayRenderLockout()
-{
-	return GetProfileLong(_T("DelayRenderLockout"), 1000);
-}
-
-void CGetSetOptions::SetDelayRenderLockout(int val)
-{
-	SetProfileLong(_T("DelayRenderLockout"), val);
-}
 
 BOOL CGetSetOptions::GetAdjustClipsForCRC()
 {

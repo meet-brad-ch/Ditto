@@ -163,7 +163,6 @@ bool CPasteImageAsHtmlImage::WriteDibToFile(const CString& csPath, std::span<con
 
 bool CPasteImageAsHtmlImage::CleanupPastedImages()
 {
-	bool bRet = false;
 	if(m_dibImagePath.IsEmpty())
 	{
 		CreateLocalPath(false);
@@ -179,9 +178,7 @@ bool CPasteImageAsHtmlImage::CleanupPastedImages()
 	}
 	find.Close();
 
-	bRet = RemoveDirectory(m_dibImagePath) == TRUE;
-
-	return false;;
+	return RemoveDirectory(m_dibImagePath) != FALSE;
 }
 
 void CPasteImageAsHtmlImage::CreateLocalPath(bool bCreateDir)

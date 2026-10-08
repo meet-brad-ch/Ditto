@@ -176,16 +176,10 @@ private:
 	static PlainTextScan ScanForTextAndHDrop(CClip& clip);
 
 	/**
-	 * @brief Whether a delay render request comes within the lockout time after the paste started.
-	 * @return True when the request is to be refused.
-	 */
-	bool IsDelayRenderLockedOut() const;
-
-	/**
 	 * @brief OnRenderGlobalData's first render of a format: renders the clips and caches a copy.
 	 * @param cfFormat The requested format.
 	 * @param hData Receives the rendered data (null when there is none).
-	 * @return False when the request is refused (lockout) or the render failed (reported).
+	 * @return False when the render failed (reported).
 	 */
 	bool RenderAndCache(CLIPFORMAT cfFormat, HGLOBAL& hData);
 

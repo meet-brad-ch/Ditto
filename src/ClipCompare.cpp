@@ -3,6 +3,7 @@
 #include "Misc.h"
 #include "Options.h"
 #include "ClipContext.h"
+#include "ErrorReport.h"
 
 CClipCompare::CClipCompare(CClipContext& context) :
 	m_context(context),
@@ -79,6 +80,12 @@ void CClipCompare::LaunchCompare(int leftId, CClip& leftClip, int rightId, CClip
 {
 	CString leftFile = SaveToFile(leftId, &leftClip, formats.saveW, formats.saveA, formats.saveUtf8);
 	CString rightFile = SaveToFile(rightId, &rightClip, formats.saveW, formats.saveA, formats.saveUtf8);
+	if(leftFile == _T("") || rightFile == _T(""))
+	{
+		CErrorReport::Show(CStringUtil::Format(_T("Comparing clips %d and %d failed: the compare files could not be written to %s"),
+			leftId, rightId, m_settings.GetPath(CGetSetOptions::PathClipDiff).GetString()));
+		return;
+	}
 
 	CString params = _T("");
 	CString path = GetComparePath(params);
@@ -96,6 +103,7 @@ void CClipCompare::LaunchCompare(int leftId, CClip& leftClip, int rightId, CClip
 
 		if (!ShellExecuteEx(&sei))
 		{
+			CErrorReport::Show(CStringUtil::Format(_T("Starting the compare application %s failed, error %u"), path.GetString(), ::GetLastError()));
 		}
 	}
 	else
@@ -159,10 +167,11 @@ CString CClipCompare::SaveToFile(int id, CClip *pClip, bool saveW, bool saveA, b
 
 	if(CFileSystem::FileExists(cs))
 	{
-		for(int i = 0; i < 1000; i++)
-		{			
-			cs.Format(_T("%sditto_compare_%d.txt"), pathCompare.GetString(), id);
-			if(CFileSystem::FileExists(cs))
+		// the file of an earlier compare may still be open in the compare application: take a free name
+		for(int i = 1; i < 1000; i++)
+		{
+			cs.Format(_T("%sditto_compare_%d_%d.txt"), pathCompare.GetString(), id, i);
+			if(CFileSystem::FileExists(cs) == false)
 			{
 				path = cs;
 				break;
@@ -174,10 +183,9 @@ CString CClipCompare::SaveToFile(int id, CClip *pClip, bool saveW, bool saveA, b
 		path = cs;
 	}
 
-	if(path != _T("") && 
-		pClip != NULL)
+	if(path == _T("") || pClip == NULL || pClip->WriteTextToFile(path, saveW, saveA, FALSE, FALSE, saveUtf8) == FALSE)
 	{
-		pClip->WriteTextToFile(path, saveW, saveA, FALSE, FALSE, saveUtf8);
+		return _T("");
 	}
 
 	return path;

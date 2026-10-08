@@ -101,9 +101,6 @@ public:
 	// return FALSE if the message was not processed
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 
-	// Underline a tab title, use color -1 to remove underline
-	void UnderlineTabTitle(int nTab, COLORREF clr);
-
 	void SetFocusToNewlySelectedTab(bool bVal)	{ m_bSetFocusToNewlySelectedTab = bVal;	}
 	bool GetFocusToNewlySelectedTab()			{ return m_bSetFocusToNewlySelectedTab;	}
 
@@ -122,7 +119,6 @@ protected:
 		CString csTitle;
 		CWnd* pWnd{};
 		long lWidth{};
-		COLORREF clrUnderline{};
 		long lItemData;
 	};
 
@@ -158,8 +154,6 @@ protected:
 	CArray <CTab, CTab&> m_Tabs;
 	int m_nActiveTab;
 	int m_nTabHeight;
-	CBrush m_brSelectedTab;
-	CBrush m_brNonSelectedTab;
 	CPen m_penGray;
 	CPen m_penBlack;
 	/** @brief The font of the inactive tabs; empty until SetTabHeight. */

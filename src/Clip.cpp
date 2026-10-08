@@ -293,12 +293,6 @@ CClip::CClip(CClipContext& context) :
 	m_addToDbStickyEnum = AddToDbStickyEnum::INVALID;
 }
 
-CClip::CClip(CClipContext& context, DittoCore::ClipSavePolicy savePolicy) :
-	CClip(context)
-{
-	m_savePolicy.emplace(std::move(savePolicy));
-}
-
 const DittoCore::ClipSavePolicy& CClip::SavePolicy()
 {
 	if (!m_savePolicy.has_value())
@@ -788,6 +782,7 @@ bool CClip::AddToDB(bool bCheckForDuplicates)
 	// thread cannot get the same order in between
 	const std::unique_lock<std::recursive_mutex> lock = m_context.Database().Lock();
 	bool bResult;
+	int removeStickySettingClipId{ -1 };
 	try
 	{
 		m_Time = CTime::GetCurrentTime().GetTime();
@@ -800,14 +795,15 @@ bool CClip::AddToDB(bool bCheckForDuplicates)
 		{
 			return true;
 		}
+
+		// inside the try: a failed order read stops the save (upstream saved with a default order)
+		removeStickySettingClipId = ApplyAddToDbSticky();
 	}
 	catch (CppSQLite3Exception& e)
 	{
 		CErrorReport::Show(CStringUtil::Format(_T("Saving the copied clip failed: %s"), e.errorMessage()));
 		return false;
 	}
-
-	int removeStickySettingClipId = ApplyAddToDbSticky();
 
 	bResult = AddRowsInTransaction(removeStickySettingClipId);
 
@@ -853,8 +849,7 @@ bool CClip::MoveDuplicateToTop()
 		return false;
 	}
 
-	MakeLatestOrder();
-	MakeLatestGroupOrder();
+	SetLatestOrders();
 
 	// the duplicate moves to the top instead of a second copy being saved
 	CClipRepository repository{Repository(m_context)};
@@ -877,11 +872,12 @@ bool CClip::MoveDuplicateToTop()
 // returning -1 here would have saved a second copy of the clip
 int CClip::FindDuplicate()
 {
-	const CLastAddedClip& lastAdded{ m_context.LastAdded() };
-	switch (SavePolicy().DuplicateCheckFor(m_CRC, lastAdded.Crc()))
+	// one read: the CRC and the id belong to the same clip
+	const CLastAddedClip::Entry lastAdded{ m_context.LastAdded().Get() };
+	switch (SavePolicy().DuplicateCheckFor(m_CRC, lastAdded.crc))
 	{
 	case DittoCore::DuplicateCheck::LastAdded:
-		return lastAdded.Id();
+		return lastAdded.id;
 	case DittoCore::DuplicateCheck::AnyByCrc:
 		return Repository(m_context).FindByCrc(m_CRC).value_or(-1);
 	case DittoCore::DuplicateCheck::None:
@@ -1081,12 +1077,12 @@ CClip::OrderSlot CClip::SlotFor(int parentId)
 	return slot;
 }
 
-void CClip::Move(int parentId, bool up)
+bool CClip::Move(int parentId, bool up)
 {
 	// upstream had a copy of this for each list and kind of clip, and printed the orders into
 	// the SQL with %f (6 decimals), so after a few midpoint moves the query found the clip itself
 	const OrderSlot slot = SlotFor(parentId);
-	try
+	return TryOrderStep([this, &slot, up]()
 	{
 		CClipRepository repository = Repository(m_context);
 		const std::optional<double> neighbour = repository.NearestOrder(slot.column, slot.sticky, slot.parentId, *slot.order, up);
@@ -1095,47 +1091,44 @@ void CClip::Move(int parentId, bool up)
 			const std::optional<double> beyond = repository.NearestOrder(slot.column, slot.sticky, slot.parentId, *neighbour, up);
 			*slot.order = DittoCore::ClipOrder::MovedPast(*neighbour, beyond, up);
 		}
+	});
+}
+
+bool CClip::TryOrderStep(const std::function<void()>& step)
+{
+	try
+	{
+		step();
+		return true;
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		// the order stays unchanged, so the caller's save writes the clip's old position
-		CErrorReport::Show(CStringUtil::Format(_T("Moving clip %d %s failed: %s"), m_id, up ? _T("up") : _T("down"), e.errorMessage()));
-		return;
+		// the caller does not save the clip then; upstream saved it with an unchanged or default order
+		CErrorReport::Show(CStringUtil::Format(_T("Reading the clip order for clip %d failed: %s"), m_id, e.errorMessage()));
+		return false;
 	}
 }
 
-void CClip::MoveUp(int parentId)
+bool CClip::MoveUp(int parentId)
 {
-	Move(parentId, true);
+	return Move(parentId, true);
 }
 
-void CClip::MoveDown(int parentId)
+bool CClip::MoveDown(int parentId)
 {
-	Move(parentId, false);
+	return Move(parentId, false);
 }
 
-void CClip::MakeStickyTop(int parentId)
+bool CClip::MakeStickyTop(int parentId)
 {
-	if (parentId < 0)
-	{
-		m_stickyClipOrder = GetNewTopSticky(m_context, parentId, m_id);
-	}
-	else
-	{
-		m_stickyClipGroupOrder = GetNewTopSticky(m_context, parentId, m_id);
-	}
+	double& order = parentId < 0 ? m_stickyClipOrder : m_stickyClipGroupOrder;
+	return TryOrderStep([this, &order, parentId]() { order = GetNewTopSticky(m_context, parentId, m_id); });
 }
 
-void CClip::MakeStickyLast(int parentId)
+bool CClip::MakeStickyLast(int parentId)
 {
-	if (parentId < 0)
-	{
-		m_stickyClipOrder = GetNewLastSticky(m_context, parentId, m_id);
-	}
-	else
-	{
-		m_stickyClipGroupOrder = GetNewLastSticky(m_context, parentId, m_id);
-	}
+	double& order = parentId < 0 ? m_stickyClipOrder : m_stickyClipGroupOrder;
+	return TryOrderStep([this, &order, parentId]() { order = GetNewLastSticky(m_context, parentId, m_id); });
 }
 
 bool CClip::RemoveStickySetting(int parentId)
@@ -1170,31 +1163,16 @@ bool CClip::RemoveStickySetting(CClipContext& context, int clipId, int parentId)
 
 int CClip::GetExistingTopStickyClipId(CClipContext& context, int parentId)
 {
-	try
-	{
-		return Repository(context).TopStickyClipId(ParentFilter(parentId)).value_or(-1);
-	}
-	catch (CppSQLite3Exception& e)
-	{
-		// -1 is also the "no top sticky clip" answer: the caller cannot tell the failure apart
-		CErrorReport::Show(CStringUtil::Format(_T("Finding the top sticky clip failed: %s"), e.errorMessage()));
-		return -1;
-	}
+	// a failed query throws: -1 is the "no top sticky clip" answer, so returning it after an error
+	// (as before) let the save go on without clearing the old top sticky clip
+	return Repository(context).TopStickyClipId(ParentFilter(parentId)).value_or(-1);
 }
 
 std::optional<double> CClip::EdgeOrder(CClipContext& context, CClipRepository::OrderColumn column, bool sticky, int parentId, bool highest)
 {
-	try
-	{
-		return Repository(context).EdgeOrder(column, sticky, ParentFilter(parentId), highest);
-	}
-	catch (CppSQLite3Exception& e)
-	{
-		// kept from upstream for now (callers have no error path): a failed query is reported
-		// and treated as an empty list
-		CErrorReport::Show(CStringUtil::Format(_T("Reading the clip order failed: %s"), e.errorMessage()));
-		return std::nullopt;
-	}
+	// a failed query throws to the caller's boundary; before, it was reported and treated as an
+	// empty list, so the clip was saved with a default order
+	return Repository(context).EdgeOrder(column, sticky, ParentFilter(parentId), highest);
 }
 
 std::optional<int> CClip::ParentFilter(int parentId)
@@ -1267,30 +1245,41 @@ double CClip::GetNewLastSticky(CClipContext& context, int parentId, int clipId)
 	return newOrder;
 }
 
-void CClip::MakeLatestOrder()
+bool CClip::MakeLatestOrder()
 {
-	m_clipOrder = GetNewOrder(m_context, -1, m_id);
+	return TryOrderStep([this]() { m_clipOrder = GetNewOrder(m_context, -1, m_id); });
 }
 
-void CClip::MakeLatestGroupOrder()
+bool CClip::MakeLatestGroupOrder()
 {
+	if(m_parentId < 0)
+	{
+		return true;
+	}
+	return TryOrderStep([this]() { m_clipGroupOrder = GetNewOrder(m_context, m_parentId, m_id); });
+}
+
+void CClip::SetLatestOrders()
+{
+	m_clipOrder = GetNewOrder(m_context, -1, m_id);
 	if(m_parentId > -1)
 	{
 		m_clipGroupOrder = GetNewOrder(m_context, m_parentId, m_id);
 	}
 }
 
-void CClip::MakeLastOrder()
+bool CClip::MakeLastOrder()
 {
-	m_clipOrder = GetNewLastOrder(-1, m_id);
+	return TryOrderStep([this]() { m_clipOrder = GetNewLastOrder(-1, m_id); });
 }
 
-void CClip::MakeLastGroupOrder()
+bool CClip::MakeLastGroupOrder()
 {
-	if (m_parentId > -1)
+	if (m_parentId < 0)
 	{
-		m_clipGroupOrder = GetNewLastOrder(m_parentId, m_id);
+		return true;
 	}
+	return TryOrderStep([this]() { m_clipGroupOrder = GetNewLastOrder(m_parentId, m_id); });
 }
 
 double CClip::GetNewOrder(CClipContext& context, int parentId, int clipId)
@@ -1463,12 +1452,21 @@ BOOL CClip::WriteTextToFile(CString path, BOOL unicode, BOOL asci, BOOL rtf, BOO
 	CFile f;
 	if(f.Open(path, CFile::modeWrite|CFile::modeCreate))
 	{
-		if (WriteTextFormat(f, unicode, asci, rtf, forceUnicode, utf8))
+		try
 		{
-			ret = true;
+			ret = WriteTextFormat(f, unicode, asci, rtf, forceUnicode, utf8) ? TRUE : FALSE;
+			f.Close();
 		}
-
-		f.Close();
+		catch (CFileException* e)
+		{
+			// a failed write is a FALSE result; upstream let the MFC exception escape to the caller
+			TCHAR cause[255]{};
+			e->GetErrorMessage(cause, _countof(cause));
+			e->Delete();
+			f.Abort();
+			CLogger::Log(CStringUtil::Format(_T("Writing the clip text to %s failed: %s"), path.GetString(), cause));
+			return FALSE;
+		}
 	}
 
 	return ret;
@@ -1605,8 +1603,7 @@ bool CClip::SaveMainRow(BOOL updateDescription)
 {
 	if (m_id < 0)
 	{
-		MakeLatestOrder();
-		MakeLatestGroupOrder();
+		SetLatestOrders();
 		return AddToMainTable();
 	}
 	return updateDescription ? ModifyDescription() : true;
@@ -1742,9 +1739,8 @@ bool CClip::AddFileDataToData(CString &errorMessage)
 
 	this->m_Desc = newDesc;
 
-	SaveFileDataToDatabase(errorMessage);
-
-	return addedFileData;
+	// a failed save is not reported as added (the caller would refresh the clip as saved)
+	return addedFileData && SaveFileDataToDatabase();
 }
 
 CClip::FileDataIndexes CClip::FindFileDataIndexes(INT_PTR size)
@@ -1798,19 +1794,10 @@ bool CClip::AddFileDataRecord(const std::vector<CopiedFile>& copied, CString& er
 	return true;
 }
 
-void CClip::SaveFileDataToDatabase(CString& errorMessage)
+bool CClip::SaveFileDataToDatabase()
 {
-	if (this->ModifyDescription())
-	{
-		if (this->AddToDataTable() == FALSE)
-		{
-			errorMessage += _T("Error saving data to database.");
-		}
-	}
-	else
-	{
-		errorMessage += _T("Error saving main table to database.");
-	}
+	// each step shows its own error (upstream also added a second, vaguer message to the popup)
+	return this->ModifyDescription() && this->AddToDataTable();
 }
 
 std::unique_ptr<Gdiplus::Bitmap> CClip::CreateGdiplusBitmap()
@@ -1906,10 +1893,10 @@ int CClipList::AddToDB(bool bLatestOrder)
 		CClip* pClip{clip.get()};
 		ASSERT(pClip);
 
-		if(bLatestOrder)
+		// a failed order read stops the saving (shown); upstream saved the clip with a default order
+		if(bLatestOrder && (pClip->MakeLatestOrder() == false || pClip->MakeLatestGroupOrder() == false))
 		{
-			pClip->MakeLatestOrder();
-			pClip->MakeLatestGroupOrder();
+			break;
 		}
 
 		bResult = pClip->AddToDB();

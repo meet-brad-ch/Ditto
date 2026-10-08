@@ -16,6 +16,8 @@
 #include "AppWindows.h"
 #include "RegisteredClipboardFormats.h"
 
+#include <vector>
+
 // allocate an HGLOBAL of the given Format Type representing these Clip IDs.
 HGLOBAL CClipIDs::Render(CClipContext& context, UINT cfType)
 {
@@ -197,6 +199,9 @@ BOOL CClipIDs::MoveTo(CClipContext& context, long lParentID, double /*dFirst*/, 
 
 		CLogger::Log(CStringUtil::Format(_T("MoveTo, Start, Size: %d, ParentId: %d"), count, lParentID));
 
+		// all or none: upstream moved clip by clip, so a failure left part of them moved
+		CDittoDbTransaction transaction(context.Database());
+
 		for(int i = count-1; i >= 0; i--)
 		{
 			CString sql;
@@ -221,113 +226,40 @@ BOOL CClipIDs::MoveTo(CClipContext& context, long lParentID, double /*dFirst*/, 
 
 			CLogger::Log(CStringUtil::Format(_T("MoveTo, Sql Ret: %d, SQL: %s"), ret, sql.GetString()));
 		}
+
+		transaction.Commit();
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(CStringUtil::Format(_T("Moving the clips to group %d failed: %s"), lParentID, e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Moving the clips to group %d failed, none was moved: %s"), lParentID, e.errorMessage()));
 		return FALSE;
 	}
 
 	return (TRUE);
 }
 
-// Empties this array and fills it with the elements of the given group ID
-BOOL CClipIDs::LoadElementsOf(CClipContext& context, int groupId)
-{
-	SetSize(0);
-
-	try
-	{
-		CppSQLite3Query q = context.Database().execQueryEx(_T("SELECT lID FROM Main WHERE lParentID = %d"), groupId);
-		while(q.eof() == false)
-		{
-			Add(q.getIntField(_T("lID")));
-			q.nextRow();
-		}
-	}
-	catch (CppSQLite3Exception& e)
-	{
-		// a half-read group is not handed on
-		SetSize(0);
-		CErrorReport::Show(CStringUtil::Format(_T("Loading the clips of group %d failed: %s"), groupId, e.errorMessage()));
-		return FALSE;
-	}
-
-	return GetSize() > 0;
-}
-
-// Creates copies (duplicates) of all items in this array and assigns the
-// lParentID of the copies to the given "lParentID" group.
-// - if lParentID <= 0, then the copies have the same parent as the source
-// - pCopies is filled with the corresponding duplicate IDs.
-// - pAddNewTable and pSeekTable are used for more efficient recursion.
-// - the primary overhead for recursion is one ID array per level deep.
-//   an alternative design would be to have one CMainTable per level deep,
-//   but I thought that might be too costly, so I implemented it this way.
-
-BOOL CClipIDs::CopyTo(CClipContext& context, int parentId)
-{
-	INT_PTR count = GetSize();
-	if(count == 0)
-		return TRUE;
-
-	try
-	{
-		// rolled back if a statement throws; upstream's manual begin was left open then
-		CDittoDbTransaction transaction(context.Database());
-
-		for(int i = 0; i < count; i++)
-		{
-			int nID = ElementAt(i);
-
-			CClip clip(context);
-
-			if(clip.LoadMainTable(nID))
-			{
-				if(clip.LoadFormats(nID))
-				{
-					clip.MakeLatestOrder();
-
-					clip.m_shortCut = 0;
-					clip.m_parentId = parentId;
-					clip.m_csQuickPaste = "";
-
-					if(clip.AddToDB(false) == false)
-					{
-						CLogger::Log(_T("failed to add copy to database"));
-					}
-				}
-			}
-		}
-
-		transaction.Commit();
-	}
-	catch (CppSQLite3Exception& e)
-	{
-		CErrorReport::Show(CStringUtil::Format(_T("Copying the clips to group %d failed: %s"), parentId, e.errorMessage()));
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-BOOL CClipIDs::DeleteIDs(CAppWindows& windows, bool fromClipWindow, CppSQLite3DB& db)
+BOOL CClipIDs::DeleteIDs(CAppWindows& windows, bool fromClipWindow, CDittoDb& db)
 {
 	CPopup status(0, 0, ::GetForegroundWindow());
 	bool bAllowShow;
 	bAllowShow = CWindowInspector::IsAppWnd(::GetForegroundWindow());
-	
-	BOOL bRet = TRUE;
+
 	INT_PTR count = GetSize();
 	int batchCount = 25;
+	// the windows are told only after the commit, of clips that are really gone
+	std::vector<int> deletedIds{};
 
-	CLogger::Log(CStringUtil::Format(_T("Begin delete clips, Count: %d from Window: %d"), count, fromClipWindow));
-	
+	CLogger::Log(CStringUtil::Format(_T("Begin delete clips, Count: %zd from Window: %d"), count, fromClipWindow));
+
 	if(count <= 0)
 		return FALSE;
 
 	try
 	{
+		// one transaction: upstream deleted batch by batch without one, so a failure left part of
+		// the clips deleted, and the windows had been told of clips that were not
+		CDittoDbTransaction transaction(db);
+
 		CString sql = _T("DELETE FROM Main where lId in(");
 		CString sqlIn = _T("");
 		CString workingString = _T("Deleting clips, building query statement");
@@ -348,12 +280,11 @@ BOOL CClipIDs::DeleteIDs(CAppWindows& windows, bool fromClipWindow, CppSQLite3DB
 
 			if(IsDeleteBatchEnd(index, batchCount))
 			{
-				ShowDeleteStatus(status, bAllowShow, CStringUtil::Format(_T("Deleting %d - %d of %d..."), startIndex+1, index, count));
+				ShowDeleteStatus(status, bAllowShow, CStringUtil::Format(_T("Deleting %zd - %zd of %zd..."), startIndex+1, index, count));
 				startIndex = index;
 
 				db.execDMLEx(sql + sqlIn + _T(")"));
 				sqlIn = "";
-				bRet = TRUE;
 
 				ShowDeleteStatus(status, bAllowShow, workingString);
 			}
@@ -361,27 +292,33 @@ BOOL CClipIDs::DeleteIDs(CAppWindows& windows, bool fromClipWindow, CppSQLite3DB
 
 			if(fromClipWindow == false)
 			{
-				windows.OnDeleteID(clipId);
+				deletedIds.push_back(clipId);
 			}
 		}
 
 		if(sqlIn.GetLength() > 0)
 		{
-			ShowDeleteStatus(status, bAllowShow, CStringUtil::Format(_T("Deleting %d - %d of %d..."), startIndex+1, index, count));
+			ShowDeleteStatus(status, bAllowShow, CStringUtil::Format(_T("Deleting %zd - %zd of %zd..."), startIndex+1, index, count));
 
 			db.execDMLEx(sql + sqlIn + _T(")"));
-			bRet = TRUE;
 		}
+
+		transaction.Commit();
 	}
 	catch (CppSQLite3Exception& e)
 	{
-		CErrorReport::Show(CStringUtil::Format(_T("Deleting the selected clips failed: %s"), e.errorMessage()));
+		CErrorReport::Show(CStringUtil::Format(_T("Deleting the selected clips failed, none was deleted: %s"), e.errorMessage()));
 		return FALSE;
 	}
-	
-	CLogger::Log(CStringUtil::Format(_T("End delete clips, Count: %d"), count));
 
-	return bRet;
+	for(const int clipId : deletedIds)
+	{
+		windows.OnDeleteID(clipId);
+	}
+
+	CLogger::Log(CStringUtil::Format(_T("End delete clips, Count: %zd"), count));
+
+	return TRUE;
 }
 
 bool CClipIDs::IsDeleteBatchEnd(INT_PTR index, int batchCount)
@@ -472,7 +409,8 @@ BOOL CClipIDs::Export(CClipContext& context, CString csFilePath)
 
 	if(CFileSystem::FileExists(csFilePath) && DeleteFile(csFilePath) == FALSE)
 	{
-		CLogger::Log(CStringUtil::Format(_T("Export::Error deleting the file %s"), csFilePath.GetString()));
+		// shown: upstream only logged it, so the export silently did nothing
+		CErrorReport::Show(CStringUtil::Format(_T("Exporting the clips failed: the existing file %s could not be replaced, error %lu"), csFilePath.GetString(), ::GetLastError()));
 		return FALSE;
 	}
 

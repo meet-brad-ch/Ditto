@@ -69,6 +69,7 @@
     <ClInclude Include="RtfJoin.h" />
     <ClInclude Include="RtfNormalizer.h" />
     <ClInclude Include="RtfTransforms.h" />
+    <ClInclude Include="SearchCondition.h" />
     <ClInclude Include="Slugifier.h" />
     <ClInclude Include="TextJoin.h" />
     <ClInclude Include="TextTransforms.h" />
@@ -100,6 +101,7 @@
     <ClCompile Include="RtfJoin.cpp" />
     <ClCompile Include="RtfNormalizer.cpp" />
     <ClCompile Include="RtfTransforms.cpp" />
+    <ClCompile Include="SearchCondition.cpp" />
     <ClCompile Include="Slugifier.cpp" />
     <ClCompile Include="TextTransforms.cpp" />
     <ClCompile Include="Typoglycemia.cpp" />

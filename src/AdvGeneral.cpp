@@ -298,7 +298,7 @@ BOOL CAdvGeneral::OnInitDialog()
 	AddTrueFalse(pGroupTest, _T("Update clip Order on ctrl-c"), settings.GetUpdateClipOrderOnCtrlC(), SettingUpdateOrderOnCtrlC);
 
 	AddTrueFalse(pGroupTest, _T("Write debug to file"), settings.GetEnableDebugLogging(), SettingDebugToFile);
-	AddTrueFalse(pGroupTest, _T("Write debug to OutputDebugString"), settings.GetEnableDebugLogging(), SettingDebugToOutputString);
+	AddTrueFalse(pGroupTest, _T("Write debug to OutputDebugString"), settings.GetEnableOutputDebugStringLogging(), SettingDebugToOutputString);
 
 	CMFCPropertyGridProperty * regexFilterGroup = MakeGridProperty<CMFCPropertyGridProperty>(_T("Exclude clips by Regular Expressions"));
 	m_propertyGrid.AddProperty(regexFilterGroup);
@@ -474,7 +474,8 @@ void CAdvGeneral::OnSize(UINT nType, int cx, int cy)
 {
 	CDialogEx::OnSize(nType, cx, cy);
 
-	if (((GetKeyState(VK_LBUTTON) & 0x100) != 0) &&
+	// the high bit (0x8000) is the "down" bit; upstream tested 0x100, which is never set
+	if (((GetKeyState(VK_LBUTTON) & 0x8000) != 0) &&
 		m_mouseDownOnCaption == false)
 	{
 		m_Resize.MoveControls(CSize(cx, cy));
@@ -505,7 +506,11 @@ void CAdvGeneral::OnBnClickedBtCompactAndRepair()
 					if (toDeleteCount <= 0)
 						break;
 
-					CClipRetentionPolicy::RemoveOldEntries(Settings(), theApp.Services().IdleTime(), theApp.Services().Windows(), false);
+					// a failed purge (shown) stops before VACUUM; upstream retried it up to 100 times
+					if (CClipRetentionPolicy::RemoveOldEntries(Settings(), theApp.Services().IdleTime(), theApp.Services().Windows(), false) == FALSE)
+					{
+						return;
+					}
 				}
 			}
 			catch (CppSQLite3Exception& e)
@@ -569,14 +574,14 @@ void CAdvGeneral::Search(bool fromSelection)
 	for (int i = 0; i < m_propertyGrid.GetPropertyCount(); ++i)
 	{
 		CMFCPropertyGridProperty* pProp = m_propertyGrid.GetProperty(i);
-		if (pProp != nullptr)
+		if (pProp != nullptr && SearchGroup(pProp, filterText, fromSelection, selection, foundSelection))
 		{
-			SearchGroup(pProp, filterText, fromSelection, selection, foundSelection);
+			return;
 		}
 	}
 }
 
-void CAdvGeneral::SearchGroup(CMFCPropertyGridProperty* pProp, const CString& filterText, bool fromSelection, CMFCPropertyGridProperty* selection, bool& foundSelection)
+bool CAdvGeneral::SearchGroup(CMFCPropertyGridProperty* pProp, const CString& filterText, bool fromSelection, CMFCPropertyGridProperty* selection, bool& foundSelection)
 {
 	CString name = pProp->GetName();
 	name.MakeLower();
@@ -600,10 +605,11 @@ void CAdvGeneral::SearchGroup(CMFCPropertyGridProperty* pProp, const CString& fi
 			if (subName.Find(filterText) >= 0)
 			{
 				ShowSearchMatch(pProp, row, pSubItem);
-				break;
+				return true;
 			}
 		}
 	}
+	return false;
 }
 
 void CAdvGeneral::ShowSearchMatch(CMFCPropertyGridProperty* pProp, int row, CMFCPropertyGridProperty* pSubItem)

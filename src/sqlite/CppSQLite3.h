@@ -28,37 +28,19 @@
 #ifndef _CppSQLite3_H_
 #define _CppSQLite3_H_
 
-//#include "sqlite3.h"
 #include "sqlite3mc_amalgamation.h"
 #include <cstdio>
 #include <cstring>
 #include <array>
+#include <exception>
+#include <mutex>
+#include <string>
 
 /**
- * @brief SQLite's encode.c: turns binary data into a string without '\\'' and '\\0' and back.
+ * @brief A failed SQLite call or a misuse of the wrapper. A std::exception, so a boundary that
+ * catches std::exception (the application start) also catches it; what() is the message in UTF-8.
  */
-class CppSQLite3Binary
-{
-public:
-    /**
-     * @brief Encodes a binary buffer so that it contains no '\\'' or '\\0' (see the notes in CppSQLite3.cpp).
-     * @param in the binary data.
-     * @param n the size of \c in in bytes.
-     * @param out the output buffer, at least 2 + (257*n)/254 bytes; receives a null-terminated string.
-     * @return the number of characters in the encoded string, without the terminator.
-     */
-    static int encode(const unsigned char *in, int n, unsigned char *out);
-
-    /**
-     * @brief Decodes a string made by encode back into binary data; \c in and \c out may be the same buffer.
-     * @param in the encoded, null-terminated string.
-     * @param out the output buffer.
-     * @return the number of bytes written, or -1 if the input is not a well-formed encoding.
-     */
-    static int decode(const unsigned char *in, unsigned char *out);
-};
-
-class CppSQLite3Exception
+class CppSQLite3Exception : public std::exception
 {
 public:
     /** @brief The error code of errors CppSQLite3 itself finds (not SQLite's). */
@@ -67,17 +49,44 @@ public:
     /** @brief The bDeleteMsg value for a message string that cannot be deleted. */
     static constexpr bool DONT_DELETE_MSG{ false };
 
+    /**
+     * @brief Creates the exception; the message is copied as "NAME[code]: text".
+     * @param nErrCode the SQLite (or CppSqliteError) error code.
+     * @param szErrMess the error text; null for none.
+     * @param bDeleteMsg not used (the message is always copied).
+     */
     CppSQLite3Exception(const int nErrCode,
                     const TCHAR* szErrMess,
                     bool bDeleteMsg=true);
 
-    CppSQLite3Exception(const CppSQLite3Exception&  e);
+    /**
+     * @brief The error code.
+     * @return the SQLite (or CppSqliteError) error code.
+     */
+    int errorCode() const { return mnErrCode; }
 
-    virtual ~CppSQLite3Exception();
+    /**
+     * @brief The message.
+     * @return "NAME[code]: text"; valid while this exception exists.
+     */
+    const TCHAR* errorMessage() const { return m_message.c_str(); }
 
-    const int errorCode() { return mnErrCode; }
+    /**
+     * @brief The message for std::exception handlers.
+     * @return errorMessage() in UTF-8; valid while this exception exists.
+     */
+    const char* what() const noexcept override { return m_what.c_str(); }
 
-    const TCHAR* errorMessage() { return mpszErrMess; }
+    /**
+     * @brief Tells whether the database could not be used at the moment, as opposed to a damaged
+     * file or a schema problem: it is locked or busy (another connection or program holds it), it
+     * cannot be opened, read or written (permissions, I/O, a full disk), or SQLite ran out of memory
+     * or was interrupted. Such a database must not be treated as corrupt (renamed or deleted).
+     * @return true for SQLITE_BUSY, SQLITE_LOCKED, SQLITE_CANTOPEN, SQLITE_IOERR, SQLITE_PERM,
+     * SQLITE_READONLY, SQLITE_FULL, SQLITE_NOMEM, SQLITE_INTERRUPT and SQLITE_AUTH (extended codes by
+     * their primary code); false for every other code.
+     */
+    bool isUnavailable() const;
 
     static const TCHAR* errorCodeAsString(int nErrCode);
 
@@ -126,8 +135,19 @@ private:
         { CppSqliteError,    _T("CPPSQLITE_ERROR") },
     }};
 
-    int mnErrCode;
-    TCHAR mpszErrMess[1000];
+    /** @brief The primary codes isUnavailable() answers true for. */
+    static constexpr std::array<int, 10> m_unavailableCodes
+    {{
+        SQLITE_BUSY, SQLITE_LOCKED, SQLITE_CANTOPEN, SQLITE_IOERR, SQLITE_PERM,
+        SQLITE_READONLY, SQLITE_FULL, SQLITE_NOMEM, SQLITE_INTERRUPT, SQLITE_AUTH,
+    }};
+
+    /** @brief The error code. */
+    int mnErrCode{};
+    /** @brief "NAME[code]: text" (upstream wrote it into a fixed buffer of 1000 characters, unchecked). */
+    std::wstring m_message{};
+    /** @brief m_message in UTF-8, for what(). */
+    std::string m_what{};
 };
 
 class CppSQLite3Query
@@ -204,7 +224,14 @@ public:
 
     CppSQLite3Statement(const CppSQLite3Statement& rStatement);
 
-    CppSQLite3Statement(sqlite3* pDB, sqlite3_stmt* pVM);
+    /**
+     * @brief Takes ownership of a compiled statement.
+     * @param pDB the connection.
+     * @param pVM the compiled statement (finalized by this object).
+     * @param pConnectionMutex the connection's lock (CDittoDb), held while the statement steps or
+     * resets; null for a connection without one.
+     */
+    CppSQLite3Statement(sqlite3* pDB, sqlite3_stmt* pVM, std::recursive_mutex* pConnectionMutex);
 
     virtual ~CppSQLite3Statement();
 
@@ -230,8 +257,16 @@ private:
     void checkDB();
     void checkVM();
 
+    /**
+     * @brief Locks the connection for one step or reset, as CDittoDb's execDML/execQuery do.
+     * @return the held lock; an empty lock when the connection has none.
+     */
+    std::unique_lock<std::recursive_mutex> lockConnection() const;
+
     sqlite3* mpDB;
     sqlite3_stmt* mpVM;
+    /** @brief The connection's lock (not owned); null when the connection has none. */
+    std::recursive_mutex* mpConnectionMutex{};
 };
 
 
@@ -264,6 +299,14 @@ public:
 	int execScalarEx(LPCTSTR szSQL,...);
     virtual int execScalar(const TCHAR* szSQL);
 
+    /**
+     * @brief Compiles a statement (under connectionMutex() when there is one); the statement holds
+     * that lock while it steps or resets, so it waits for another thread's transaction like
+     * execDML/execQuery do.
+     * @param szSQL the SQL.
+     * @return the statement.
+     * @throws CppSQLite3Exception when the connection is closed or the SQL does not compile.
+     */
     CppSQLite3Statement compileStatement(const TCHAR* szSQL);
 
     sqlite_int64 lastRowId();
@@ -277,6 +320,13 @@ public:
     bool IsDatabaseOpen() { return mpDB != NULL; }
 
     bool DBEncrypted();
+
+protected:
+    /**
+     * @brief The lock that serializes the work on this connection across threads.
+     * @return null: a plain connection has none (CDittoDb overrides this).
+     */
+    virtual std::recursive_mutex* connectionMutex() { return nullptr; }
 
 private:
 
@@ -293,7 +343,7 @@ private:
     /**
      * @brief The SQL function regexp(pattern, text) that open() registers: 1 if the case-insensitive
      * std::regex pattern is found in the text, 0 otherwise or for invalid arguments; an invalid pattern
-     * sets no result (it is logged with OutputDebugString).
+     * is an SQL error (sqlite3_result_error), so the statement fails instead of seeing NULL.
      * @param context the SQLite function context.
      * @param argc the number of arguments.
      * @param values the arguments: pattern, text.

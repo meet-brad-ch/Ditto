@@ -7,6 +7,7 @@
 #include "QListCtrl.h"
 #include "..\Shared\TextConvert.h"
 #include <tinyxml2.h>
+#include <stdexcept>
 
 // CSymbolEdit
 
@@ -143,7 +144,8 @@ bool CSymbolEdit::SendKeyToParent(UINT message, const MSG* pMsg)
 
 bool CSymbolEdit::IsHistoryMenuKeyState()
 {
-	return ((GetKeyState(VK_CONTROL) & 0x8000) || ((GetKeyState(VK_CONTROL) & 0x8000) && (GetKeyState(VK_SHIFT) & 0x8000)));
+	// Ctrl, with or without Shift
+	return (GetKeyState(VK_CONTROL) & 0x8000) != 0;
 }
 
 bool CSymbolEdit::IsListNavigationKey(WPARAM key)
@@ -486,6 +488,13 @@ void CSymbolEdit::RecalcLayout()
 
 void CSymbolEdit::OnPaint()
 {
+	if (m_windowDpi == NULL)
+	{
+		// before SetDpiInfo there is no scale for the buttons: the edit control paints itself
+		CEdit::OnPaint();
+		return;
+	}
+
 	CPaintDC dc(this);
 
 	CRect rect;
@@ -504,16 +513,9 @@ void CSymbolEdit::OnPaint()
 	{
 		DrawSymbolIcon(dc, rect, margins);
 	}
-	else
-	{
-		//rect.left += (LOWORD(dwMargins) + 1);
-		//rect.right -= (HIWORD(dwMargins) + 1);
-	}
 
 	CString text;
 	GetWindowText(text);
-
-	//rect.top += 1;
 
 	DrawTextArea(dc, rect, textRect, text);
 
@@ -522,6 +524,19 @@ void CSymbolEdit::OnPaint()
 		DrawPromptText(dc, textRect);
 	}
 
+	DrawButtons(dc, rect, text);
+
+	if (text != m_lastTextOnPaint &&
+		text == _T(""))
+	{
+		::SetWindowPos(m_hWnd, NULL, 0, 0, 0, 0, SWP_DRAWFRAME | SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
+	}
+
+	m_lastTextOnPaint = text;
+}
+
+void CSymbolEdit::DrawButtons(CDC& dc, const CRect& rect, const CString& text)
+{
 	int right = rect.right;
 	if ((text.GetLength() > 0 || this == GetFocus()))
 	{
@@ -532,35 +547,17 @@ void CSymbolEdit::OnPaint()
 	else
 	{
 		m_searchesButtonRect.SetRect(0, 0, 0, 0);
-		//m_searchButton.Draw(&dc, this, rect.right - 22, 4, false, false);
 	}
 
 	if (text.GetLength() > 0)
 	{
-		//OutputDebugString(_T("showing close button\n"));
-
 		m_closeButtonRect.SetRect(right - m_windowDpi->Scale(16), 0, right, rect.bottom);
 		m_closeButton.Draw(&dc, *m_windowDpi, this, m_closeButtonRect.left, 4, m_mouseHoveringOverClose, m_mouseDownOnClose);
 	}
 	else
 	{
-		//OutputDebugString(_T("not showing close button\n"));
 		m_closeButtonRect.SetRect(0, 0, 0, 0);
-		//m_searchButton.Draw(&dc, this, rect.right - 22, 4, false, false);
 	}
-
-	//OutputDebugString(_T("OnPaint"));
-
-	if (text != m_lastTextOnPaint &&
-		text == _T(""))
-	{
-		::SetWindowPos(m_hWnd, NULL, 0, 0, 0, 0, SWP_DRAWFRAME | SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
-	}
-
-	m_lastTextOnPaint = text;
-
-	//OutputDebugString(_T("OnPaint \r\n"));
-
 }
 
 void CSymbolEdit::DrawSymbolIcon(CDC& dc, CRect& rect, DWORD margins)
@@ -871,8 +868,12 @@ void CSymbolEdit::OnDpiChanged()
 }
 
 void CSymbolEdit::SetDpiInfo(CDPI *dpi)
-{ 
-	m_windowDpi = dpi; 
+{
+	if (dpi == NULL)
+	{
+		throw std::invalid_argument("CSymbolEdit needs the window's DPI");
+	}
+	m_windowDpi = dpi;
 
 	m_closeButton.Reset();
 	m_closeButton.LoadStdImageDPI(m_windowDpi->GetDPI(), search_close_16, search_close_20, search_close_24, search_close_28, search_close_32, _T("PNG"));
@@ -971,6 +972,12 @@ void CSymbolEdit::OnNcCalcSize(BOOL /*bCalcValidRects*/,NCCALCSIZE_PARAMS* lpncs
 
 void CSymbolEdit::OnNcPaint()
 {
+	if (m_windowDpi == NULL)
+	{
+		// before SetDpiInfo there is no scale for the border: the edit control paints its frame
+		CEdit::OnNcPaint();
+		return;
+	}
 
 	CString text;
 	GetWindowText(text);

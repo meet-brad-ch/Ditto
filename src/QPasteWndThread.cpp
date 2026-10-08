@@ -160,12 +160,12 @@ void CQPasteWndThread::OnLoadItems(void *param)
 
 				CLogger::Log(CStringUtil::Format(_T("Load items End count = %d, Total Time = %llu, LoadItems: %llu, Count: %llu, Accel: %llu"), loadCount, GetTickCount64() - startTick, loadTime, countCount, acceleratorCount));
 			}
-			catch (CppSQLite3Exception& e)	\
-			{								\
-				CLogger::Log(CStringUtil::Format(_T("ONLoadItems - SQLITE Exception %d - %s"), e.errorCode(), e.errorMessage()));	\
-				ASSERT(FALSE);				\
+			catch (CppSQLite3Exception& e)
+			{
+				// the load stops; upstream only logged it, so the list stayed incomplete without a word
+				CErrorReport::Show(CStringUtil::Format(_T("Loading the clips for the clip list failed: %s"), e.errorMessage()));
 				break;
-			}	
+			}
 		}
 		else
 		{
@@ -245,14 +245,11 @@ int CQPasteWndThread::StoreLoadedItem(CQPasteWnd *pasteWnd, const CMainTable &ta
 		pasteWnd->m_listItems[pos] = table;
 
 		updateIndex = pos;
-
-		//CLogger::Log(CStringUtil::Format(_T("updating list pos = %d, id: %d, size: %d"), pos, table.m_lID, pasteWnd->m_listItems.size() - 1));
 	}
 	else if (listPos == pasteWnd->m_listItems.size())
 	{
 		pasteWnd->m_listItems.push_back(table);
 		updateIndex = (int)pasteWnd->m_listItems.size() - 1;
-		//CLogger::Log(CStringUtil::Format(_T("adding (same size) list pos = %d, id: %d, size: %d"), pasteWnd->m_listItems.size()-1, table.m_lID, pasteWnd->m_listItems.size() - 1));
 	}
 	else if (listPos > pasteWnd->m_listItems.size())
 	{
@@ -261,15 +258,11 @@ int CQPasteWndThread::StoreLoadedItem(CQPasteWnd *pasteWnd, const CMainTable &ta
 			CMainTable empty;
 			empty.m_lID = -1;
 			pasteWnd->m_listItems.push_back(empty);
-
-			//CLogger::Log(CStringUtil::Format(_T("adding dummy row size: %d"), pasteWnd->m_listItems.size()-1));
 		}
 
 		pasteWnd->m_listItems.push_back(table);
 
 		updateIndex = (int)pasteWnd->m_listItems.size() - 1;
-
-		//CLogger::Log(CStringUtil::Format(_T("adding list pos = %d, id: %d, size: %d"), pasteWnd->m_listItems.size()-1, table.m_lID, pasteWnd->m_listItems.size() - 1));
 	}
 
 	return updateIndex;
@@ -308,7 +301,7 @@ void CQPasteWndThread::ReduceMapItems(CF_DibTypeMap &mapItem, CCriticalSection &
 			}
 		}
 
-		CLogger::Log(CStringUtil::Format(_T("reduced size of %s cache, count: %d"), mapName.GetString(), mapItem.size()));
+		CLogger::Log(CStringUtil::Format(_T("reduced size of %s cache, count: %zu"), mapName.GetString(), mapItem.size()));
 	}
 }
 
@@ -464,7 +457,7 @@ void CQPasteWndThread::CacheExtraData(CQPasteWnd *pasteWnd, CClipFormatQListCtrl
 			//the cache now owns the format data, set it to delete the data in the destructor
 			pasteWnd->m_cf_dibCache[format.m_parentId].m_autoDeleteData = true;
 
-			CLogger::Log(CStringUtil::Format(_T("Loaded, extra data for clipId: %d, Row: %d image cache count: %d"), format.m_parentId, format.m_clipRow, pasteWnd->m_cf_dibCache.size()));
+			CLogger::Log(CStringUtil::Format(_T("Loaded, extra data for clipId: %d, Row: %d image cache count: %zu"), format.m_parentId, format.m_clipRow, pasteWnd->m_cf_dibCache.size()));
 		}
 	}
 	else if (format.m_cfType == m_clipboardFormats.Rtf())
@@ -476,7 +469,7 @@ void CQPasteWndThread::CacheExtraData(CQPasteWnd *pasteWnd, CClipFormatQListCtrl
 		//the cache now owns the format data, set it to delete the data in the destructor
 		pasteWnd->m_cf_rtfCache[format.m_parentId].m_autoDeleteData = true;
 
-		CLogger::Log(CStringUtil::Format(_T("Loaded, extra data for clip %d, rtf cache count: %d"), format.m_parentId, pasteWnd->m_cf_rtfCache.size()));
+		CLogger::Log(CStringUtil::Format(_T("Loaded, extra data for clip %d, rtf cache count: %zu"), format.m_parentId, pasteWnd->m_cf_rtfCache.size()));
 	}
 }
 

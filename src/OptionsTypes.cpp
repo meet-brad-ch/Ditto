@@ -8,6 +8,7 @@
 #include "DimWnd.h"
 #include "Misc.h"
 #include "ErrorReport.h"
+#include "DittoDbTransaction.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // COptionsTypes property page
@@ -56,16 +57,25 @@ BOOL COptionsTypes::OnApply()
 		try
 		{
 			CDittoDb& database = theApp.Services().Database();
+			// one transaction: upstream deleted the types first, so a failed insert left the list
+			// empty or partial
+			CDittoDbTransaction transaction(database);
 			database.execDML(_T("DELETE FROM Types;"));
 
+			// bound: a type name with a quote broke upstream's formatted INSERT
+			CppSQLite3Statement insert = database.compileStatement(_T("INSERT INTO Types VALUES(NULL, ?);"));
 			CString csText;
 			int nCount = m_List.GetCount();
 			for(int i = 0; i < nCount; i++)
 			{
 				m_List.GetText(i, csText);
 
-				database.execDMLEx(_T("INSERT INTO Types VALUES(NULL, '%s');"), csText.GetString());
+				insert.bind(1, csText.GetString());
+				insert.execDML();
+				insert.reset();
 			}
+
+			transaction.Commit();
 		}
 		catch (CppSQLite3Exception& e)
 		{

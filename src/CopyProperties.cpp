@@ -63,7 +63,6 @@ BEGIN_MESSAGE_MAP(CCopyProperties, CDialog)
 	ON_WM_ACTIVATE()
 	ON_WM_SIZE()
 	//}}AFX_MSG_MAP
-	ON_WM_CTLCOLOR()
 	ON_LBN_SELCHANGE(IDC_COPY_DATA, &CCopyProperties::OnLbnSelchangeCopyData)
 	ON_WM_NCLBUTTONDOWN()
 END_MESSAGE_MAP()
@@ -80,27 +79,9 @@ BOOL CCopyProperties::OnInitDialog()
 	SetWindowLong(m_hWnd, GWL_EXSTYLE, extendedStyle | WS_EX_DLGMODALFRAME);
 	SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
-	try
+	if(LoadDialogData() == false)
 	{
-		m_GroupCombo.FillCombo();
-
-		if(m_lCopyID == -1 && m_pMemoryClip != NULL)
-		{
-			LoadDataFromCClip(*m_pMemoryClip);
-		}
-		else
-		{
-			if(m_clip.LoadMainTable(m_lCopyID))
-			{
-				m_clip.LoadFormats(m_lCopyID);
-				LoadDataFromCClip(m_clip);
-			}
-		}
-	}
-	catch (CppSQLite3Exception& e)
-	{
-		// close the dialog: OK would save the partly loaded properties
-		CErrorReport::Show(CStringUtil::Format(_T("Loading the properties of clip id %ld failed: %s"), m_lCopyID, e.errorMessage()));
+		// close the dialog: OK would save empty or partly loaded properties
 		EndDialog(IDCANCEL);
 		return TRUE;
 	}
@@ -143,6 +124,33 @@ BOOL CCopyProperties::OnInitDialog()
 	}
 
 	return FALSE;
+}
+
+bool CCopyProperties::LoadDialogData()
+{
+	try
+	{
+		m_GroupCombo.FillCombo();
+
+		if(m_lCopyID == -1 && m_pMemoryClip != NULL)
+		{
+			LoadDataFromCClip(*m_pMemoryClip);
+			return true;
+		}
+
+		// LoadStoredMainTable and LoadFormats show their own errors
+		if(LoadStoredMainTable(m_clip) == false || m_clip.LoadFormats(m_lCopyID) == false)
+		{
+			return false;
+		}
+		LoadDataFromCClip(m_clip);
+		return true;
+	}
+	catch (CppSQLite3Exception& e)
+	{
+		CErrorReport::Show(CStringUtil::Format(_T("Loading the properties of clip id %ld failed: %s"), m_lCopyID, e.errorMessage()));
+		return false;
+	}
 }
 
 void CCopyProperties::LoadDataFromCClip(CClip &Clip)
@@ -217,25 +225,21 @@ void CCopyProperties::LoadHotKeys(CClip &Clip)
 void CCopyProperties::LoadFormatList(CClip &Clip)
 {
 	CString cs;
-	CClipFormat* pCF;
 	INT_PTR count = Clip.m_Formats.GetSize();
 	for(int i = 0; i < count; i++)
 	{
-		pCF = &Clip.m_Formats.GetData()[i];
-		if(pCF)
-		{
-			const int MAX_SIZE_BUFFER = 255;
-			TCHAR size[MAX_SIZE_BUFFER];
-			StrFormatByteSize(GlobalSize(pCF->m_hgData), size, MAX_SIZE_BUFFER);
+		const CClipFormat* pCF{ &Clip.m_Formats.GetData()[i] };
+		const int MAX_SIZE_BUFFER = 255;
+		TCHAR size[MAX_SIZE_BUFFER]{};
+		StrFormatByteSize(GlobalSize(pCF->m_hgData), size, MAX_SIZE_BUFFER);
 
-			cs.Format(_T("%s, %s"), CClipboardFormats::GetFormatName(pCF->m_cfType).GetString(), size);
-			int nIndex = m_lCopyData.AddString(cs);
+		cs.Format(_T("%s, %s"), CClipboardFormats::GetFormatName(pCF->m_cfType).GetString(), size);
+		int nIndex = m_lCopyData.AddString(cs);
 
-			if(m_lCopyID == -1 && pCF->m_dataId == -1)
-				m_lCopyData.SetItemData(nIndex, i);
-			else
-				m_lCopyData.SetItemData(nIndex, pCF->m_dataId);
-		}
+		if(m_lCopyID == -1 && pCF->m_dataId == -1)
+			m_lCopyData.SetItemData(nIndex, i);
+		else
+			m_lCopyData.SetItemData(nIndex, pCF->m_dataId);
 	}
 
 	SelectLastFormat();
@@ -358,36 +362,49 @@ void CCopyProperties::SaveToMemoryClip()
 bool CCopyProperties::SaveToStoredClip()
 {
 	CClip clip{ theApp.Services().ClipContext() };
-	if(clip.LoadMainTable(m_lCopyID))
+	if(LoadStoredMainTable(clip) == false)
 	{
-		LoadDataIntoCClip(clip);
+		return false;
+	}
 
-		if(CheckGlobalHotKey(clip) == FALSE)
-		{
-			if(MessageBox(_T("Error registering global hot key\n\nContinue?"), _T(""), MB_OKCANCEL |MB_ICONWARNING) != IDOK)
-			{
-				return false;
-			}
-		}
+	LoadDataIntoCClip(clip);
 
-		if(CheckMoveToGroupGlobalHotKey(clip) == FALSE)
+	if(CheckGlobalHotKey(clip) == FALSE)
+	{
+		if(MessageBox(_T("Error registering global hot key\n\nContinue?"), _T(""), MB_OKCANCEL |MB_ICONWARNING) != IDOK)
 		{
-			if(MessageBox(_T("Error registering global move to group hot key\n\nContinue?"), _T(""), MB_OKCANCEL |MB_ICONWARNING) != IDOK)
-			{
-				return false;
-			}
-		}
-
-		if(clip.ModifyMainTable())
-		{
-			if(m_bDeletedData)
-			{
-				CClipDatabase::DeleteFormats(theApp.Services().ClipContext(), m_lCopyID, m_DeletedData);
-			}
+			return false;
 		}
 	}
 
-	return true;
+	if(CheckMoveToGroupGlobalHotKey(clip) == FALSE)
+	{
+		if(MessageBox(_T("Error registering global move to group hot key\n\nContinue?"), _T(""), MB_OKCANCEL |MB_ICONWARNING) != IDOK)
+		{
+			return false;
+		}
+	}
+
+	// ModifyMainTable and DeleteFormats show their own errors; the dialog stays open
+	if(clip.ModifyMainTable() == false)
+	{
+		return false;
+	}
+
+	return m_bDeletedData == false || CClipDatabase::DeleteFormats(theApp.Services().ClipContext(), m_lCopyID, m_DeletedData) != FALSE;
+}
+
+bool CCopyProperties::LoadStoredMainTable(CClip& clip)
+{
+	// LoadMainTable shows a database error itself, but returns the same FALSE for a missing clip:
+	// the missing clip is checked first, so each failure is shown once
+	if(CClipRepository(theApp.Services().Database()).LoadClip(m_lCopyID).has_value() == false)
+	{
+		CErrorReport::Show(CStringUtil::Format(_T("Clip id %ld was not found, it may have been deleted"), m_lCopyID));
+		return false;
+	}
+
+	return clip.LoadMainTable(m_lCopyID) != FALSE;
 }
 
 BOOL CCopyProperties::CheckGlobalHotKey(CClip &clip)
@@ -525,7 +542,8 @@ void CCopyProperties::OnSize(UINT nType, int cx, int cy)
 {
 	CDialog::OnSize(nType, cx, cy);
 	
-	if (((GetKeyState(VK_LBUTTON) & 0x100) != 0) &&
+	// the high bit (0x8000) is the "down" bit; upstream tested 0x100, which is never set
+	if (((GetKeyState(VK_LBUTTON) & 0x8000) != 0) &&
 		m_mouseDownOnCaption == false)
 	{
 		m_Resize.MoveControls(CSize(cx, cy));
@@ -534,16 +552,6 @@ void CCopyProperties::OnSize(UINT nType, int cx, int cy)
 	{
 		m_Resize.SetParent(m_hWnd);
 	}
-}
-
-HBRUSH CCopyProperties::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
-{
-	HBRUSH hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
-
-	// TODO:  Change any attributes of the DC here
-
-	// TODO:  Return a different brush if the default is not desired
-	return hbr;
 }
 
 
@@ -576,30 +584,23 @@ void CCopyProperties::OnLbnSelchangeCopyData()
 				pClip = &m_clip;
 			}
 
-			if (pClip != NULL)
+			INT_PTR dataCount = pClip->m_Formats.GetSize();
+			for (int formatIndex = 0; formatIndex < dataCount; formatIndex++)
 			{
-				CClipFormat* pCF;
-				INT_PTR dataCount = pClip->m_Formats.GetSize();
-				for (int formatIndex = 0; formatIndex < dataCount; formatIndex++)
+				CClipFormat* pCF{ &pClip->m_Formats.GetData()[formatIndex] };
+				if (pCF->m_dataId == itemData)
 				{
-					pCF = &pClip->m_Formats.GetData()[formatIndex];
-					if (pCF)
+					try
 					{
-						if (pCF->m_dataId == itemData)
-						{
-							try
-							{
-								// GlobalBytes locks the block and unlocks it when it goes out of scope
-								const DittoCore::GlobalBytes data(pCF->Data());
-								const std::string md5String = DittoCore::Md5::Hex(data.Bytes());
-								this->SetDlgItemText(IDC_EDIT_MD5, CTextConvert::AnsiToUnicode(md5String.c_str()));
-							}
-							catch (const DittoCore::ClipboardFormatError& error)
-							{
-								// the box shows why there is no MD5 (the format has no readable data)
-								this->SetDlgItemText(IDC_EDIT_MD5, CString(error.what()));
-							}
-						}
+						// GlobalBytes locks the block and unlocks it when it goes out of scope
+						const DittoCore::GlobalBytes data(pCF->Data());
+						const std::string md5String = DittoCore::Md5::Hex(data.Bytes());
+						this->SetDlgItemText(IDC_EDIT_MD5, CTextConvert::AnsiToUnicode(md5String.c_str()));
+					}
+					catch (const DittoCore::ClipboardFormatError& error)
+					{
+						// the box shows why there is no MD5 (the format has no readable data)
+						this->SetDlgItemText(IDC_EDIT_MD5, CString(error.what()));
 					}
 				}
 			}

@@ -19,6 +19,16 @@ public:
 	void Compare(int leftId, int rightId);
 
 protected:
+	/**
+	 * @brief Writes a clip's text to a compare file in the compare folder (ditto_compare_<id>.txt, or
+	 *        ditto_compare_<id>_<n>.txt when that file exists already).
+	 * @param id The clip id.
+	 * @param clip The clip (formats loaded).
+	 * @param saveW Write the unicode text.
+	 * @param SaveA Write the CF_TEXT text.
+	 * @param saveUtf8 Write the unicode text as UTF-8.
+	 * @return The file; empty when no free name was found or the file could not be written.
+	 */
 	CString SaveToFile(int id, CClip *clip, bool saveW, bool SaveA, bool saveUtf8);
 	CString GetComparePath(CString &params);
 

@@ -158,6 +158,19 @@ TEST_F(RegistrySettingsStoreTest, KeyThatCannotBeCreatedFailsTheWrites)
 	EXPECT_EQ(store.GetLong(tooLong, L"Number", 9), 9);
 }
 
+// Regression: SetString/SetData returned true once the key was open, also when the write itself
+// failed. A value name over the registry's limit of 16,383 characters fails the write.
+TEST_F(RegistrySettingsStoreTest, FailedWriteOfAnOpenKeyFails)
+{
+	RegistrySettingsStore store{ m_rootPath };
+	const std::wstring tooLongName(20000, L'v');
+	const std::array<std::byte, 1> data{ std::byte{ 1 } };
+
+	EXPECT_FALSE(store.SetString(L"", tooLongName, L"x"));
+	EXPECT_FALSE(store.SetData(L"", tooLongName, data));
+	EXPECT_TRUE(store.SetString(L"", L"Text", L"x"));
+}
+
 // The text is stored without a terminating null, as Ditto always wrote it
 TEST_F(RegistrySettingsStoreTest, StringRoundTripsAsRegSzWithoutTerminator)
 {

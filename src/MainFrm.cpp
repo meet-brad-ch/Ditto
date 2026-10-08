@@ -69,8 +69,6 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_FIRST_DELETEALLNONUSEDCLIPS, &CMainFrame::OnFirstDeleteallnonusedclips)
 	ON_MESSAGE(CDittoMessage::PasteClip, OnPasteClip)
 	ON_MESSAGE(CDittoMessage::EditClip, OnEditClip)
-
-	ON_WM_SETFOCUS()
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -840,7 +838,7 @@ void CMainFrame::OnGroupDoubleClickTimer()
 	}
 	else
 	{
-		CLogger::Log(CStringUtil::Format(_T("Something happened and we didn't process the group timer in time, Id: %d, Diff ms: %d, maxDiff: %d"), m_doubleClickGroupId, diff, maxDiff));
+		CLogger::Log(CStringUtil::Format(_T("Something happened and we didn't process the group timer in time, Id: %d, Diff ms: %llu, maxDiff: %llu"), m_doubleClickGroupId, diff, maxDiff));
 	}
 
 	m_doubleClickGroupId = -1;
@@ -1146,6 +1144,18 @@ void CMainFrame::OnDestroy()
     CFrameWnd::OnDestroy();
 }
 
+void CMainFrame::PostNcDestroy()
+{
+	// the window and its children are gone; the frame deletes itself next
+	if (Services().Windows().MainFrame() == this)
+	{
+		Services().Windows().SetMainFrame(NULL);
+		Services().Windows().SetMainHwnd(NULL);
+	}
+
+	CFrameWnd::PostNcDestroy();
+}
+
 void CMainFrame::OnFirstNewclip()
 {
     CClipIDs IDs;
@@ -1346,7 +1356,10 @@ LRESULT CMainFrame::OnReOpenDatabase(WPARAM /*wParam*/, LPARAM /*lParam*/)
 		Sleep(Settings().GetWindowsResumeDelayReOpenDbMS());
 		m_quickPaste.CloseQPasteWnd();
 		Services().Database().close();
-		CDatabaseManager::OpenDatabase(Settings(), Services().Database(), Services().State(), Settings().GetDBPath());
+		if (CDatabaseManager::OpenDatabase(Settings(), Services().Database(), Services().State(), Settings().GetDBPath()) == FALSE)
+		{
+			return FALSE;   // OpenDatabase showed the error
+		}
 	}
 	catch (CppSQLite3Exception& e)
 	{
@@ -1497,13 +1510,4 @@ LRESULT CMainFrame::OnEditClip(WPARAM wParam, LPARAM /*lParam*/)
 
 	Services().ClipCommands().EditItems(IDs, true, textOnly);
 	return TRUE;
-}
-
-void CMainFrame::OnSetFocus(CWnd* pOldWnd)
-{
-	CFrameWnd::OnSetFocus(pOldWnd);
-
-	//int nRet = MessageBox(_T("focused"), _T("Ditto"), MB_YESNO | MB_TOPMOST);
-
-	// TODO: Add your message handler code here
 }

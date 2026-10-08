@@ -160,11 +160,18 @@ void CProcessPaste::MarkAsPasted(bool updateClipOrder)
 	}
 	pData->pastedFromGroup = m_pastedFromGroup;
 	pData->updateClipOrder = updateClipOrder;
+	// taken now: the thread runs after the caller restored its temporary value
+	pData->updateTimeOnPaste = m_settings.m_bUpdateTimeOnPaste != FALSE;
 
 	//Moved to a thread because when running from from U3 devices the write is time consuming
 	if (AfxBeginThread(CProcessPaste::MarkAsPastedThread, pData.get(), THREAD_PRIORITY_LOWEST) != nullptr)
 	{
 		pData.release(); // ownership: MarkAsPastedThread retakes it in a std::unique_ptr
+	}
+	else
+	{
+		// shown: upstream skipped the update silently
+		CErrorReport::Show(_T("The pasted clips' order and paste time were not updated: the update thread could not be started."));
 	}
 
 	CLogger::Log(_T("End of MarkAsPasted"));
@@ -217,7 +224,7 @@ void CProcessPaste::UpdatePastedClips(MarkAsPastedData& data, int& clipId)
 	const CGetSetOptions& settings{ data.context.Settings() };
 	CDittoDb& db{ data.context.Database() };
 
-	if(settings.m_bUpdateTimeOnPaste &&
+	if(data.updateTimeOnPaste &&
 		data.updateClipOrder)
 	{
 		if (settings.m_refreshViewAfterPasting)

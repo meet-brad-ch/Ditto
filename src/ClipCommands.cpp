@@ -6,6 +6,7 @@
 #include "RegisteredClipboardFormats.h"
 #include "Clip_ImportExport.h"
 #include "ClipboardFormatError.h"
+#include "ErrorReport.h"
 #include "FileDialogPath.h"
 #include "Path.h"
 #include "ShowTaskBarIcon.h"
@@ -59,16 +60,23 @@ bool CClipCommands::EditItem(int id, bool forceTextEdit, int& lastFileCheckId)
 	}
 
 	CString savePath = MakeEditFilePath(id, target.extension, lastFileCheckId);
+	if (savePath == _T(""))
+	{
+		CErrorReport::Show(CStringUtil::Format(_T("The new clip was not opened for editing: every NewClip_<n>.%s name in %s is taken"),
+			target.extension.GetString(), m_settings.GetPath(CGetSetOptions::PathEditClips).GetString()));
+		return false;
+	}
 
 	m_editThread.WatchFile(savePath);
 
-	if (target.imageFile)
+	// a file that could not be written is not opened in the editor (upstream opened it anyway)
+	const bool written = target.imageFile
+		? clip.WriteImageToFileOrReport(savePath, _T("edit"))
+		: clip.WriteTextToFile(savePath, target.unicodeFile, target.asciFile, target.rtfFile, (id == -1)) != FALSE;
+	if (!written)
 	{
-		clip.WriteImageToFileOrReport(savePath, _T("edit"));
-	}
-	else
-	{
-		clip.WriteTextToFile(savePath, target.unicodeFile, target.asciFile, target.rtfFile, (id == -1));
+		CErrorReport::Show(CStringUtil::Format(_T("Clip id %d was not opened for editing: it could not be written to %s"), id, savePath.GetString()));
+		return false;
 	}
 
 	return LaunchClipEditor(target.exePath, savePath, id);
@@ -216,17 +224,17 @@ bool CClipCommands::AskImportFile(CString& filePath)
 {
 	OPENFILENAME	FileName{};
 	TCHAR			szFileName[400]{};
-	TCHAR			szDir[400]{};
 
-	CString csInitialDir = m_settings.GetLastImportDir();
-	_tcscpy(szDir, csInitialDir);
+	// the dialog reads the folder from the string itself: no copy into a fixed buffer (a longer
+	// path overflowed the 400 characters before)
+	const CString csInitialDir = m_settings.GetLastImportDir();
 
 	FileName.lStructSize = sizeof(FileName);
 	FileName.lpstrTitle = _T("Import Clips");
 	FileName.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
 	FileName.nMaxFile = _countof(szFileName);
 	FileName.lpstrFile = szFileName;
-	FileName.lpstrInitialDir = szDir;
+	FileName.lpstrInitialDir = csInitialDir.GetString();
 	FileName.lpstrFilter = _T("Exported Ditto Clips (.dto)\0*.dto\0\0");
 	FileName.lpstrDefExt = _T("dto");
 

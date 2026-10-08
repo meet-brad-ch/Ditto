@@ -8,6 +8,7 @@ class CAppState;
 class CAppWindows;
 class CGetSetOptions;
 class CIdleTime;
+class CSendKeys;
 class CUAC_Thread;
 
 class ExternalWindowTracker
@@ -138,6 +139,14 @@ private:
 	 *  @param pasteAsAdmin true if the paste must be done as administrator.
 	 *  @return pasteAsAdmin, set to false if the helper app could not take the paste. */
 	bool PassPasteToUacApp(bool pasteAsAdmin);
+
+	/**
+	 * @brief Sends a configured key string and shows an error when it is malformed.
+	 * @param send The key sender.
+	 * @param keys The key string (from the paste, copy or cut options).
+	 * @param action What the keys do ("paste", "copy", "cut"), for the error.
+	 */
+	static void SendKeyString(CSendKeys& send, const CString& keys, LPCTSTR action);
 
 	/** @brief Tells if a caret position was found.
 	 *  @param pt Caret position, (-1, -1) when not found.

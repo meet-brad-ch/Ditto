@@ -17,8 +17,10 @@ CDittoAddins::~CDittoAddins(void)
 
 bool CDittoAddins::UnloadAll()
 {
-	CLogger::Log(CStringUtil::Format(_T("Ditto Addin - Unloading all addins Count: %d"), m_Addins.size()));
+	CLogger::Log(CStringUtil::Format(_T("Ditto Addin - Unloading all addins Count: %zu"), m_Addins.size()));
 
+	// the menu lookups point into m_Addins
+	m_FunctionMap.RemoveAll();
 	m_Addins.clear();
 
 	return true;

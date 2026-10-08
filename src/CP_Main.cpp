@@ -247,8 +247,6 @@ BOOL CCP_MainApp::InitInstanceBody()
 
 	setlocale(LC_TIME, ".OCP"); // defines the date/time formatting
 
-	//MessageBox(NULL, _T("ditto starting"), _T("d"), MB_OK);
-
 	DittoCommandLineInfo cmdInfo;
 	ParseCommandLine(cmdInfo);
 
@@ -300,20 +298,31 @@ BOOL CCP_MainApp::InitInstanceBody()
 	int nRet = DatabaseLocator::CheckDBExists(Services().Settings(), Services().Language(), Services().Database(), Services().State(), Services().Settings().GetDBPath());
 	if(nRet == FALSE)
 	{
-		m_pNoDbMainFrame = std::make_unique<CNoDbFrameWnd>().release(); // ownership: the frame window itself (CFrameWnd::PostNcDestroy deletes it)
-		m_pMainWnd = m_pNoDbMainFrame;
-				
-		m_pNoDbMainFrame->LoadFrame(IDR_MAINFRAME, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL, NULL);
-		m_pNoDbMainFrame->ShowWindow(SW_SHOW);
-		m_pNoDbMainFrame->UpdateWindow();
+		CreateNoDbWnd();
 	}
 	else
 	{
-		//Sleep(1000);
 		CreateMainWnd();
 	}
 
 	return TRUE;
+}
+
+void CCP_MainApp::CreateNoDbWnd()
+{
+	m_pNoDbMainFrame = std::make_unique<CNoDbFrameWnd>().release(); // ownership: the frame window itself (CFrameWnd::PostNcDestroy deletes it, also when LoadFrame fails)
+	m_pMainWnd = m_pNoDbMainFrame;
+
+	if (!m_pNoDbMainFrame->LoadFrame(IDR_MAINFRAME, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL, NULL))
+	{
+		// the failed frame destroyed itself (CFrameWnd::PostNcDestroy)
+		m_pNoDbMainFrame = NULL;
+		m_pMainWnd = NULL;
+		throw std::runtime_error("the window shown without a database could not be created");
+	}
+
+	m_pNoDbMainFrame->ShowWindow(SW_SHOW);
+	m_pNoDbMainFrame->UpdateWindow();
 }
 
 bool CCP_MainApp::HandleCommandLine(const DittoCommandLineInfo& cmdInfo)

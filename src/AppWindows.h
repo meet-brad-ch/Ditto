@@ -2,6 +2,8 @@
 
 #include "Misc.h"
 
+#include <atomic>
+
 class CAppState;
 class CMainFrame;
 class CQPasteWnd;
@@ -11,7 +13,8 @@ class CQPasteWnd;
  *        the quick paste window, and the updates the services send to the quick paste window.
  *
  * Owned by CAppServices (Windows()). CCP_MainApp sets the main frame and its handle when it
- * creates them; until then (and in the no-database mode) MainFrame() is null.
+ * creates them; until then (and in the no-database mode) MainFrame() is null. CMainFrame's
+ * PostNcDestroy clears both before the frame deletes itself, so they never dangle.
  */
 class CAppWindows
 {
@@ -33,7 +36,7 @@ public:
 
 	/**
 	 * @brief Sets the main frame window (CCP_MainApp::CreateMainWnd).
-	 * @param frame The frame, or null when it could not be created.
+	 * @param frame The frame, or null when it could not be created or is gone (CMainFrame::PostNcDestroy).
 	 */
 	void SetMainFrame(CMainFrame* frame);
 
@@ -100,8 +103,8 @@ public:
 private:
 	/** @brief The application state (not owned). */
 	CAppState& m_state;
-	/** @brief The main frame (not owned: it deletes itself). */
-	CMainFrame* m_pMainFrame{};
-	/** @brief The main frame's window handle. */
-	HWND m_mainHwnd{};
+	/** @brief The main frame (not owned: it deletes itself); atomic: worker threads read it. */
+	std::atomic<CMainFrame*> m_pMainFrame{};
+	/** @brief The main frame's window handle; atomic: worker threads read it. */
+	std::atomic<HWND> m_mainHwnd{};
 };

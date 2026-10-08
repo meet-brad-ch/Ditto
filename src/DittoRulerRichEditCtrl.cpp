@@ -159,7 +159,12 @@ int CDittoRulerRichEditCtrl::SaveToDB(BOOL bUpdateDesc)
 		// upstream's transaction here stayed open while the properties dialog was shown
 		if(m_lID >= 0)
 		{
-			Clip.SaveFromEditWnd(bUpdateDesc);
+			// a failed save (shown by SaveFromEditWnd) keeps the edit marked as modified, so it is
+			// not lost; upstream marked it saved
+			if(Clip.SaveFromEditWnd(bUpdateDesc) == false)
+			{
+				return FALSE;
+			}
 		}
 		else
 		{
@@ -200,13 +205,16 @@ void CDittoRulerRichEditCtrl::LoadFormatsToSave(CClip& Clip, int saveTypes)
 bool CDittoRulerRichEditCtrl::AddNewClip(CClip& Clip, BOOL& bUpdateDesc)
 {
 	bool bSetModifyToFalse = false;
-	Clip.MakeLatestOrder();
+	if(Clip.MakeLatestOrder() == false)
+	{
+		return false;   // shown; the edit stays modified
+	}
 	CCopyProperties Prop(-1, this, &Clip);
 	Prop.SetHandleKillFocus(true);
 	Prop.SetToTopMost(false);
-	if(Prop.DoModal() == IDOK)
+	// a failed save (shown by AddToDB) keeps the edit modified and the clip new
+	if(Prop.DoModal() == IDOK && Clip.AddToDB())
 	{
-		Clip.AddToDB();
 		m_csDescription = Clip.m_Desc;
 		m_lID = Clip.m_id;
 		bUpdateDesc = TRUE;

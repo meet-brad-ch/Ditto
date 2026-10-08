@@ -186,9 +186,16 @@ bool CDittoCopyBuffer::PastCopyBuffer(long lCopyBuffer)
 				CLogger::Log(CStringUtil::Format(_T("PastCopyBuffer sent paste, starting thread to restore clipboard, Delay = %d"), m_pClipboard->m_lRestoreDelay));
 
 				// the thread takes m_pClipboard over; this thread does not touch it until m_Pasting is set
-				AfxBeginThread(CDittoCopyBuffer::DelayRestoreClipboard, (LPVOID)this, THREAD_PRIORITY_LOWEST);
-
-				bRet = true;
+				if(AfxBeginThread(CDittoCopyBuffer::DelayRestoreClipboard, (LPVOID)this, THREAD_PRIORITY_LOWEST) == NULL)
+				{
+					// without the thread the saved clipboard is never restored and no later paste could start
+					m_pClipboard.reset();
+					CErrorReport::Show(CStringUtil::Format(_T("Ditto copy buffer %ld was pasted, but the clipboard it replaced cannot be restored: the restore thread did not start"), lCopyBuffer));
+				}
+				else
+				{
+					bRet = true;
+				}
 			}
 			else
 			{
@@ -226,32 +233,34 @@ UINT CDittoCopyBuffer::DelayRestoreClipboard(LPVOID pParam)
 		// owns the clipboard saved by PastCopyBuffer from now on
 		std::unique_ptr<CClipboardSaveRestoreCopyBuffer> pLocalClipboard{std::move(pBuffer->m_pClipboard)};
 
-		// signaled (EndRestoreThread) and timed out both mean: restore now
+		// signaled (EndRestoreThread) and timed out both mean: restore now. A failed wait is shown
+		// and the restore skipped; upstream threw out of the thread, which ended the process
+		BOOL restored{ FALSE };
 		if(WaitForSingleObject(pBuffer->m_RestoreTimer, pLocalClipboard->m_lRestoreDelay) == WAIT_FAILED)
 		{
-			throw std::runtime_error("waiting for the copy buffer restore delay failed, error " + std::to_string(::GetLastError()));
+			CErrorReport::Show(CStringUtil::Format(_T("The clipboard was not restored after the copy buffer paste: waiting for the restore delay failed, error %lu"), ::GetLastError()));
 		}
-
-		if(GetKeyState(VK_SHIFT) & 0x8000)
+		else if(GetKeyState(VK_SHIFT) & 0x8000)
 		{
 			CLogger::Log(_T("Shift key is down not restoring clipboard, custom Buffer on normal clipboard"));
+			restored = TRUE;
+		}
+		else if(pLocalClipboard->Restore())
+		{
+			CLogger::Log(_T("CDittoCopyBuffer::DelayRestoreClipboard Successfully"));
+			restored = TRUE;
 		}
 		else
 		{
-			if(pLocalClipboard->Restore())
-			{
-				CLogger::Log(_T("CDittoCopyBuffer::DelayRestoreClipboard Successfully"));
-			}
-			else
-			{
-				CLogger::Log(_T("CDittoCopyBuffer::DelayRestoreClipboard Failed to restore"));
-			}
+			// shown: upstream only logged it, so the copy buffer's clip silently stayed on the clipboard
+			CErrorReport::Show(_T("The clipboard could not be restored after the copy buffer paste; the copy buffer's clip is still on it."));
 		}
 
 		// freed before the next paste may start
 		pLocalClipboard.reset();
 
 		pBuffer->m_Pasting.SetEvent();
+		return restored;
 	}
 
 	return TRUE;

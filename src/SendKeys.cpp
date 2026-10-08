@@ -420,7 +420,12 @@ bool CSendKeys::SendKeys(LPCTSTR KeysString, bool Wait)
   while (*pKey)
   {
     if (!SendKeysChar(pKey, KeyString, NumTimes))
+    {
+      // a malformed group stops the string: modifiers pressed before it must not stay down
+      m_bUsingParens = false;
+      PopUpShiftKeys();
       return false;
+    }
     pKey++;
   }
 
@@ -515,6 +520,10 @@ bool CSendKeys::SendKeyGroup(LPTSTR &pKey, std::span<TCHAR> KeyString, WORD &Num
   while (*p && *p != _TXCHAR('}'))
     p++;
 
+  // no closing '}': SendKeys would step past the string's terminator
+  if (*p == _TXCHAR('\0'))
+    return false;
+
   t = p - pKey;
   // special key definition too big? (t characters are written, KeyString[t-1] included)
   if (t > KeyString.size())
@@ -552,13 +561,12 @@ bool CSendKeys::ParseKeyCommand(LPTSTR KeyString, WORD &MKey, WORD &NumTimes)
   }
   else if (_tcsnicmp(KeyString, _T("BEEP"), 4) == 0)
   {
-    BeepCommand(KeyString);
+    return BeepCommand(KeyString);
   }
   // Should activate a window?
   else if (_tcsnicmp(KeyString, _T("APPACTIVATE"), 11) == 0)
   {
-    p = KeyString + 11 + 1;
-    AppActivate(p);
+    return AppActivateCommand(KeyString);
   }
   // want to send/set delay?
   else if (_tcsnicmp(KeyString, _T("DELAY"), 5) == 0)
@@ -580,8 +588,22 @@ bool CSendKeys::ParseKeyCommand(LPTSTR KeyString, WORD &MKey, WORD &NumTimes)
   return true;
 }
 
-void CSendKeys::BeepCommand(LPTSTR KeyString)
+bool CSendKeys::AppActivateCommand(LPCTSTR KeyString)
 {
+  // the title starts after "APPACTIVATE" and one separator; without them it would be read past the text
+  if (KeyString[11] == _TXCHAR('\0'))
+    return false;
+
+  AppActivate(KeyString + 11 + 1);
+  return true;
+}
+
+bool CSendKeys::BeepCommand(LPTSTR KeyString)
+{
+  // the numbers start after "BEEP" and one separator; without them they would be read past the text
+  if (KeyString[4] == _TXCHAR('\0'))
+    return false;
+
   LPTSTR p = KeyString + 4 + 1;
   LPTSTR p1 = p;
   DWORD frequency{}, delay{};
@@ -593,6 +615,7 @@ void CSendKeys::BeepCommand(LPTSTR KeyString)
     delay = _ttoi(p1);
     ::Beep(frequency, delay);
   }
+  return true;
 }
 
 bool CSendKeys::ParseKeyName(LPCTSTR KeyString, WORD &MKey, WORD &NumTimes)

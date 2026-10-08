@@ -109,7 +109,7 @@ UINT CDittoWindow::DoNcHitTest(CWnd *pWnd, CPoint point)
 	//workaround for l button up not coming after a lbutton down
 	if (IsOnCaptionButton(myLocal))
 	{
-		return HTBORDER;;
+		return HTBORDER;
 	}
 
 	// UINT_MAX below: the point is not on that part of the frame
@@ -584,10 +584,6 @@ int CDittoWindow::DoNcLButtonDown(CWnd *pWnd, UINT nHitTest, CPoint point)
 		m_bMouseDownOnMaximize = true;
 		RedrawWindow(pWnd->m_hWnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE);
 		buttonPressed = ButtonMaximize;
-	}
-	else if(m_bMinimized)
-	{
-		//MinMaxWindow(ForceMax);
 	}
 
 	return buttonPressed;

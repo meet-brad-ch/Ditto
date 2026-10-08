@@ -166,11 +166,12 @@ void CCopyThread::HandOverClip(std::unique_ptr<CClip>& pClip)
 
 void CCopyThread::SyncConfig()
 {
-	// atomic read
 	if(m_bConfigChanged)
 	{
 		ATL::CCritSecLock csLock(m_cs.m_sect);
 
+		// taken: the next sync copies only after the next change
+		m_bConfigChanged = false;
 		m_LocalConfig.CopySettingsFrom(m_SharedConfig);
 
 		// null means that the types shouldn't be sync'ed: m_LocalConfig keeps its types
@@ -215,7 +216,8 @@ HWND CCopyThread::SetClipHandler(HWND hWnd)
 
 	HWND hRet = m_SharedConfig.m_hClipHandler;
 	m_SharedConfig.m_hClipHandler = hWnd;
-	m_bConfigChanged = (hRet != hWnd);
+	// an unchanged value keeps a change made before that SyncConfig has not taken yet
+	m_bConfigChanged = m_bConfigChanged || (hRet != hWnd);
 
 	return hRet;
 }
@@ -233,7 +235,7 @@ bool CCopyThread::SetCopyOnChange(bool bVal)
 
 	bool bRet = m_SharedConfig.m_bCopyOnChange;
 	m_SharedConfig.m_bCopyOnChange = bVal;
-	m_bConfigChanged = (bRet != bVal);
+	m_bConfigChanged = m_bConfigChanged || (bRet != bVal);
 
 	return bRet;
 }
@@ -251,7 +253,7 @@ bool CCopyThread::SetAsyncCopy(bool bVal)
 
 	bool bRet = m_SharedConfig.m_bAsyncCopy;
 	m_SharedConfig.m_bAsyncCopy = bVal;
-	m_bConfigChanged = (bRet != bVal);
+	m_bConfigChanged = m_bConfigChanged || (bRet != bVal);
 
 	return bRet;
 }

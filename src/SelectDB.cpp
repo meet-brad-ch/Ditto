@@ -5,6 +5,7 @@
 #include "FileDialogPath.h"
 #include "cp_main.h"
 #include "SelectDB.h"
+#include "ErrorReport.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CSelectDB dialog
@@ -100,8 +101,22 @@ void CSelectDB::OnUseDefault()
 	settings.SetDBPath("");
 	CString csPath = settings.GetDBPath();
 
-	if(DatabaseSchemaUpgrader::ValidDB(csPath) == FALSE)
+	try
+	{
+		DatabaseSchemaUpgrader::CheckAndUpgrade(csPath);
+	}
+	catch (CppSQLite3Exception& e)
+	{
+		if (e.isUnavailable())
+		{
+			// upstream deleted a database that was only locked or in use
+			CErrorReport::Show(CStringUtil::Format(_T("The default clip database %s is in use or cannot be read now; it was not changed: %s"), csPath.GetString(), e.errorMessage()));
+			return;
+		}
+		// a damaged default database is replaced by a new one
+		CErrorReport::Show(CStringUtil::Format(_T("Checking and upgrading the clip database %s failed: %s"), csPath.GetString(), e.errorMessage()));
 		DeleteFile(csPath);
+	}
 
 	if(DatabaseLocator::CheckDBExists(settings, theApp.Services().Language(), theApp.Services().Database(), theApp.Services().State(), settings.GetDBPath()))
 		EndDialog(IDOK);

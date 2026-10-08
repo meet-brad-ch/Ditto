@@ -67,3 +67,18 @@ TEST(DatabasePath, PortableEmptySettingUsesRelativeDittoDb)
 {
 	EXPECT_EQ(DatabasePath::Resolve({}, {}), std::filesystem::path(L"Ditto.db"));
 }
+
+// Regression: a damaged database was renamed by replacing every '.' with "_BAD.", also the dots
+// in folder names, so the rename failed (and threw) for a path like C:\Users\john.doe\...
+TEST(DatabasePath, MarkedAsBadChangesOnlyTheFileName)
+{
+	EXPECT_EQ(DatabasePath::MarkedAsBad(L"C:\\Users\\john.doe\\AppData\\Ditto.db"),
+		std::filesystem::path(L"C:\\Users\\john.doe\\AppData\\Ditto_BAD.db"));
+	EXPECT_EQ(DatabasePath::MarkedAsBad(L"D:\\clips\\my.work.db"), std::filesystem::path(L"D:\\clips\\my.work_BAD.db"));
+}
+
+TEST(DatabasePath, MarkedAsBadWithoutExtensionAppends)
+{
+	EXPECT_EQ(DatabasePath::MarkedAsBad(L"D:\\clips\\Ditto"), std::filesystem::path(L"D:\\clips\\Ditto_BAD"));
+	EXPECT_EQ(DatabasePath::MarkedAsBad(L"Ditto.db"), std::filesystem::path(L"Ditto_BAD.db"));
+}

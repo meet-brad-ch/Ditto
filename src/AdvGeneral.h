@@ -371,6 +371,7 @@ private:
 	 * @param fromSelection True: start after the selected property.
 	 * @param selection The selected property, or nullptr.
 	 * @param foundSelection In: the selection was passed already; out: updated while scanning.
+	 * @return True when a match was found and selected (the search stops there).
 	 */
-	void SearchGroup(CMFCPropertyGridProperty* pProp, const CString& filterText, bool fromSelection, CMFCPropertyGridProperty* selection, bool& foundSelection);
+	bool SearchGroup(CMFCPropertyGridProperty* pProp, const CString& filterText, bool fromSelection, CMFCPropertyGridProperty* selection, bool& foundSelection);
 };

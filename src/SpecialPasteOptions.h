@@ -21,7 +21,6 @@ public:
 	bool m_pasteTypoglycemia;
 	bool m_pasteAddingDateTime;
 	CClipFormats *m_pPasteFormats;
-	DWORD m_delayRenderLockout;
 	bool m_dragDropFilesOnly;
 	bool m_updateClipOrder;
 	bool m_trimWhiteSpace;

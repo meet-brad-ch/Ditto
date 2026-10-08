@@ -60,5 +60,7 @@ void CLogger::Write(const TCHAR* msg, CString csFile, long lLine)
 	CString csExeFile{ settings.GetPath(CGetSetOptions::PathLogFile) };
 	csExeFile += "Ditto.log";
 
+	// one writer at a time: each line is opened, appended and closed as a whole
+	const std::scoped_lock lock{ theApp.Services().State().LogFileLock() };
 	AppendToFile(csExeFile, csText);
 }

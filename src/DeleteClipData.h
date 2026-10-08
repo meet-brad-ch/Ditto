@@ -67,6 +67,15 @@ protected:
 
 	/** @brief The description window (non-owning: the window deletes itself in PostNcDestroy). */
 	CToolTipEx* m_pDescriptionWindow;
+	/** @brief The description window's handle, read instead of the object until the window is known to be alive. */
+	HWND m_descriptionWindowHwnd{};
+
+	/**
+	 * @brief Whether the description window exists: m_pDescriptionWindow is set and its window is alive
+	 *        (the user can close it, which deletes the object).
+	 * @return true when m_descriptionWindowHwnd is a window and that window is m_pDescriptionWindow.
+	 */
+	bool IsDescriptionWindowValid() const;
 
 
 	void InitListCtrlCols();
@@ -146,10 +155,10 @@ private:
 
 	/**
 	 * @brief MatchesFilter's title step: whether the title filter rejects an item.
-	 * @param pdata The item; its description is lower-cased in place (as m_clipTitle is).
+	 * @param pdata The item (unchanged: the search is case-insensitive on copies).
 	 * @return True when the title filter is on, both texts are set and the title is not found.
 	 */
-	bool IsRejectedByTitle(CDeleteData* pdata);
+	bool IsRejectedByTitle(const CDeleteData* pdata) const;
 
 	/**
 	 * @brief Whether a time lies within a range given as separate date and time controls (ends included).
@@ -165,7 +174,7 @@ private:
 	/**
 	 * @brief MatchesFilter's format step: whether an item has the format selected in the combo box.
 	 * @param pdata The item.
-	 * @return True when the item's clipboard format equals the selected one.
+	 * @return True when the item's clipboard format equals the selected one; false when no format is selected.
 	 */
 	bool MatchesSelectedFormat(const CDeleteData* pdata);
 

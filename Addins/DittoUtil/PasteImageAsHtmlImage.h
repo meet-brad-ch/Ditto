@@ -19,7 +19,8 @@ public:
 	bool ConvertPathToHtmlImageTag(const CDittoInfo &DittoInfo, IClip *pClip);
 	/**
 	 * @brief Deletes the image folder and the images saved to it (when the add-in DLL exits).
-	 * @return false (always; the result of removing the folder is ignored).
+	 * @return true when the folder was removed; false when it could not be (it is missing, or a file
+	 *         in it is still in use).
 	 */
 	bool CleanupPastedImages();
 

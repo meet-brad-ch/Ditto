@@ -45,7 +45,8 @@ public:
 	std::unique_ptr<CQPasteWnd> m_pwndPaste{}; // the quick paste window, owned; null until first shown
 
 protected:
-	bool m_forceResizeOnNextShow;
+	/** @brief True: the next show moves and sizes the window again (set when the screen resolution changed). */
+	bool m_forceResizeOnNextShow{};
 
 private:
 	/** @brief The application settings (owned by the application services). */

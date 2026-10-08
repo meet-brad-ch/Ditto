@@ -138,7 +138,10 @@ void CMainFrmThread::OnSaveClips()
 			auto message{std::make_unique<CString>()};
 			message->Format(_T("Saved new clip \"%s\"\r\ndirectly to the group \"%s\""), lastClip.m_Desc.Left(35).GetString(), groupName.GetString());
 
-			if (m_windows.MainFrame()->PostMessageW(CDittoMessage::ShowMsgWindow, reinterpret_cast<WPARAM>(message.get()), lastClip.m_parentId))
+			// posted to the handle: this thread must not touch the frame object, which can be gone
+			// (NULL before the frame exists and after it is destroyed; PostMessage(NULL) would post to this thread)
+			const HWND mainHwnd{ m_windows.MainHwnd() };
+			if (mainHwnd != NULL && ::PostMessage(mainHwnd, CDittoMessage::ShowMsgWindow, reinterpret_cast<WPARAM>(message.get()), lastClip.m_parentId))
 			{
 				message.release(); // ownership: CMainFrame::OnShowMsgWindow retakes it in a std::unique_ptr
 			}

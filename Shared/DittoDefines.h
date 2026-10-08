@@ -125,9 +125,13 @@ public:
 		//Not a default type get the name from the clipboard
 		if (cbType != 0)
 		{
-			TCHAR szFormat[256];
-			GetClipboardFormatName(cbType, szFormat, 256);
-			return szFormat;
+			// a failed call (no registered format with this id) takes the "ERROR" path below;
+			// upstream returned the uninitialized buffer then
+			TCHAR szFormat[256]{};
+			if (GetClipboardFormatName(cbType, szFormat, _countof(szFormat)) > 0)
+			{
+				return szFormat;
+			}
 		}
 
 		return _T("ERROR");

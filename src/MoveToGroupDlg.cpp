@@ -84,12 +84,9 @@ void CMoveToGroupDlg::OnOK()
 	CDialog::OnOK();
 }
 
-void CMoveToGroupDlg::OnSize(UINT nType, int cx, int cy) 
+void CMoveToGroupDlg::OnSize(UINT nType, int cx, int cy)
 {
 	CDialog::OnSize(nType, cx, cy);
-	
-	// TODO: Add your message handler code here
-	
 }
 
 void CMoveToGroupDlg::OnButtonNewGroup() 
@@ -100,8 +97,9 @@ void CMoveToGroupDlg::OnButtonNewGroup()
 		
 	CString csName = Name.m_csName;
 	
+	// NewGroupID returns 0 when the insert failed (and shows why); ids start at 1
 	long lID = CClipDatabase::NewGroupID(theApp.Services().Database(), m_Tree.GetSelectedTree(), csName);
-	if(lID >= 0)
+	if(lID > 0)
 	{
 		m_Tree.AddNode(csName, lID);
 	}

@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "Accels.h"
 #include "HotKeys.h"
-#include "Options.h"
 
 CAccels::CAccels()
 {
@@ -63,24 +62,24 @@ CString CAccels::GetCmdKeyText(DWORD cmd)
 
 bool CAccels::OnMsg(MSG *pMsg, CAccel &a, int doubleKeyStrokeTimeout)
 {
+	if (pMsg == NULL)
+	{
+		return false;
+	}
+
 	if((pMsg->message != WM_KEYDOWN && pMsg->message != WM_SYSKEYDOWN))
 	{
-		return NULL;
+		return false;
 	}
 
 	// bit 30 (0x40000000) is 1 if this is NOT the first msg of the key
 	//  i.e. auto-repeat may cause multiple msgs of the same key
 	if((pMsg->lParam &0x40000000) && m_handleRepeatKeys == false)
 	{
-		return NULL;
+		return false;
 	}
 
 	m_handleRepeatKeys = false;
-
-    if(!pMsg)
-    {
-        return NULL;
-    }
 
     const BYTE vkey = LOBYTE(pMsg->wParam);
 	BYTE mod = 0;
@@ -89,10 +88,6 @@ bool CAccels::OnMsg(MSG *pMsg, CAccel &a, int doubleKeyStrokeTimeout)
 		mod = GetKeyStateModifiers();
 	}
     const DWORD key = MakeKey(vkey, mod);
-
-    //CString cs;
-    //cs.Format(_T("Key: %d, Mod: %d, vkey: %d, diff: %d\r\n"), key, mod, vkey, (GetTickCount() - m_firstMapTick));
-    //OutputDebugString(cs);
 
 	if (IsSecondKeyPending(doubleKeyStrokeTimeout))
 	{

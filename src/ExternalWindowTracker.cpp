@@ -8,6 +8,7 @@
 #include "AppWindows.h"
 #include "UAC_Helper.h"
 #include "UAC_Thread.h"
+#include "ErrorReport.h"
 
 ExternalWindowTracker::ExternalWindowTracker(CGetSetOptions& settings, CIdleTime& idleTime, CAppState& state, CAppWindows& windows) :
 	m_settings(settings),
@@ -125,7 +126,7 @@ bool ExternalWindowTracker::TrackActiveWnd(bool force)
 	if(m_windows.QPasteWnd())
 		m_windows.QPasteWnd()->UpdateStatus(true);
 
-	CLogger::Log(CStringUtil::Format(_T("TargetActiveWindow Active: %s (%d), Focus: %s (%d), FromHook %d, IdleTime: %f"), WndName(m_activeWnd).GetString(), m_activeWnd, WndName(m_focusWnd).GetString(), m_focusWnd,fromHook, m_idleTime.IdleSeconds()));
+	CLogger::Log(CStringUtil::Format(_T("TargetActiveWindow Active: %s (%p), Focus: %s (%p), FromHook %d, IdleTime: %f"), WndName(m_activeWnd).GetString(), m_activeWnd, WndName(m_focusWnd).GetString(), m_focusWnd,fromHook, m_idleTime.IdleSeconds()));
 
 	return true;
 }
@@ -187,7 +188,7 @@ void ExternalWindowTracker::SetDittoHasFocus(BOOL fromHook)
 {
 	if(m_dittoHasFocus == false)
 	{
-		CLogger::Log(CStringUtil::Format(_T("Ditto has focus - Active: %s (%d), Focus: %s (%d), FromHook %d"), WndName(m_activeWnd).GetString(), m_activeWnd, WndName(m_focusWnd).GetString(), m_focusWnd, fromHook));
+		CLogger::Log(CStringUtil::Format(_T("Ditto has focus - Active: %s (%p), Focus: %s (%p), FromHook %d"), WndName(m_activeWnd).GetString(), m_activeWnd, WndName(m_focusWnd).GetString(), m_focusWnd, fromHook));
 	}
 
 	m_dittoHasFocus = true;
@@ -223,7 +224,7 @@ bool ExternalWindowTracker::WaitForActiveWnd(HWND activeWnd, int timeout)
 void ExternalWindowTracker::ActivateFocus(const HWND activeHwnd, const HWND focushWnd)
 {
 	CString csApp = CWindowInspector::GetProcessName(m_activeWnd);
-	CLogger::Log(CStringUtil::Format(_T("SetFocus - AppName: %s, Active: %d, Focus: %d"), csApp.GetString(), m_activeWnd, m_focusWnd));
+	CLogger::Log(CStringUtil::Format(_T("SetFocus - AppName: %s, Active: %p, Focus: %p"), csApp.GetString(), m_activeWnd, m_focusWnd));
 
 	if (focushWnd != NULL) 
 	{
@@ -271,7 +272,7 @@ bool ExternalWindowTracker::NotifyTrayhWnd(HWND hWnd)
 
 bool ExternalWindowTracker::ActivateTarget()
 {
-	CLogger::Log(CStringUtil::Format(_T("Activate Target - Active: %d, Focus: %d"), m_activeWnd, m_focusWnd));
+	CLogger::Log(CStringUtil::Format(_T("Activate Target - Active: %p, Focus: %p"), m_activeWnd, m_focusWnd));
 
 	if (IsIconic(m_activeWnd))
 	{
@@ -361,7 +362,7 @@ void ExternalWindowTracker::SendPaste(bool activateTarget)
 			Sleep(delay);
 		}
 		send.SetKeyDownDelay(sendKeysDelay);
-		send.SendKeys(csPasteString, true);
+		SendKeyString(send, csPasteString, _T("paste"));
 	}
 
 	CLogger::Log(_T("Post sending paste"));
@@ -442,7 +443,7 @@ void ExternalWindowTracker::SendCopy(CopyReasonEnum::CopyReason copyReason)
 
 		m_state.SetCopyReason(copyReason);
 
-		send.SendKeys(csString, true);
+		SendKeyString(send, csString, _T("copy"));
 	}	
 
 	CLogger::Log(_T("Post sending copy"));
@@ -491,10 +492,18 @@ void ExternalWindowTracker::SendCut()
 		Sleep(delay);
 		send.SetKeyDownDelay(sendKeysDelay);
 
-		send.SendKeys(csString, true);
-	}		
+		SendKeyString(send, csString, _T("cut"));
+	}
 
 	CLogger::Log(_T("Post sending cut"));
+}
+
+void ExternalWindowTracker::SendKeyString(CSendKeys& send, const CString& keys, LPCTSTR action)
+{
+	if (send.SendKeys(keys, true) == false)
+	{
+		CErrorReport::Show(CStringUtil::Format(_T("The %s keys \"%s\" were not sent completely: the key string is malformed (a '{' without '}', a group that is too long, a number out of range, or {BEEP}/{APPACTIVATE} without an argument)."), action, keys.GetString()));
+	}
 }
 
 CString ExternalWindowTracker::ActiveWndName() 

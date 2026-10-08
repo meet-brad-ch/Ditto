@@ -50,6 +50,8 @@ INPUT                  = lib/DittoCore/ByteCursor.h \
                          lib/DittoCore/RtfNormalizer.cpp \
                          lib/DittoCore/RtfTransforms.h \
                          lib/DittoCore/RtfTransforms.cpp \
+                         lib/DittoCore/SearchCondition.h \
+                         lib/DittoCore/SearchCondition.cpp \
                          lib/DittoCore/Slugifier.h \
                          lib/DittoCore/Slugifier.cpp \
                          lib/DittoCore/TextJoin.h \

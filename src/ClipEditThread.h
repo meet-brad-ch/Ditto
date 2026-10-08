@@ -112,8 +112,10 @@ private:
 	 * @param extenstion the lower-case file extension (bmp/png, txt or rtf; others save nothing).
 	 * @param data the file content (the converted text is written to data.unicodeText).
 	 * @param modifyDescription TRUE to update the clip description.
+	 * @return false when the save failed (CClip::SaveFormats showed the error); true otherwise,
+	 *         also for an extension that saves nothing.
 	 */
-	void SaveEditedFormats(CClip& clip, const CString& extenstion, EditedClipData& data, BOOL modifyDescription);
+	bool SaveEditedFormats(CClip& clip, const CString& extenstion, EditedClipData& data, BOOL modifyDescription);
 	/**
 	 * @brief SaveToClip's step: refreshes the saved clip in the UI and remembers a new clip's id.
 	 * @param filePath the edited file name.

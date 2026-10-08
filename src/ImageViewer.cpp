@@ -280,30 +280,24 @@ BOOL CImageViewer::OnEraseBkgnd(CDC* /*pDC*/)
 	return FALSE;
 }
 
-LRESULT CImageViewer::OnGesture(WPARAM /*wParam*/, LPARAM lParam)
+LRESULT CImageViewer::OnGesture(WPARAM wParam, LPARAM lParam)
 {
-	GESTUREINFO gi;
-
-	ZeroMemory(&gi, sizeof(GESTUREINFO));
-
+	GESTUREINFO gi{};
 	gi.cbSize = sizeof(GESTUREINFO);
 
-	BOOL bResult = GetGestureInfo((HGESTUREINFO)lParam, &gi);
-	BOOL bHandled = FALSE;
-
-	if (bResult) {
-		// now interpret the gesture
-		bHandled = HandleGesture(gi);
+	const HGESTUREINFO hGestureInfo{ reinterpret_cast<HGESTUREINFO>(lParam) };
+	if (GetGestureInfo(hGestureInfo, &gi) == FALSE)
+	{
+		CLogger::Log(CStringUtil::Format(_T("CImageViewer::OnGesture GetGestureInfo failed, GetLastError %u"), ::GetLastError()));
 	}
-	else {
-		DWORD dwErr = GetLastError();
-		if (dwErr > 0) {
-			OutputDebugString(_T("error\r\n"));
-			//MessageBoxW(hWnd, L"Error!", L"Could not retrieve a GESTUREINFO structure.", MB_OK);
-		}
+	else if (HandleGesture(gi))
+	{
+		// a handled gesture's handle is closed here; an unhandled one goes to DefWindowProc, which closes it
+		::CloseGestureInfoHandle(hGestureInfo);
+		return 0;
 	}
 
-	return FALSE;
+	return DefWindowProc(WM_GESTURE, wParam, lParam);
 }
 
 BOOL CImageViewer::HandleGesture(const GESTUREINFO& gi)
@@ -379,24 +373,20 @@ void CImageViewer::HandleZoomGesture(const GESTUREINFO& gi)
 
 		// The zoom factor is the ratio between the new and the old distance.
 		// The new distance between two fingers is stored in gi.ullArguments
-		// (lower DWORD) and the old distance is stored in _dwArguments.
-		k = (double)(LODWORD(gi.ullArguments)) / (double)(m_dwArguments);
+		// (lower DWORD) and the old distance is stored in m_dwArguments (0: no
+		// distance known yet, so there is no ratio).
+		if (m_dwArguments != 0)
+		{
+			k = (double)(LODWORD(gi.ullArguments)) / (double)(m_dwArguments);
 
-		// Now we process zooming in/out of the object
-		//ProcessZoom(k, ptZoomCenter.x, ptZoomCenter.y);
-
-		//m_scrollHelper.Update(ptZoomCenter);
-
-		CString cs;
-		cs.Format(_T("ZOOM k: %f, x: %d, y: %d\r\n"), k, ptZoomCenter.x, ptZoomCenter.y);
-		OutputDebugString(cs);
-
-		//InvalidateRect(hWnd, NULL, TRUE);
+			CString cs;
+			cs.Format(_T("ZOOM k: %f, x: %d, y: %d\r\n"), k, ptZoomCenter.x, ptZoomCenter.y);
+			OutputDebugString(cs);
+		}
 
 		// Now we have to store new information as a starting information
 		// for the next step in this gesture.
 		m_ptFirst = m_ptSecond;
-		//m_dwArguments = LODWORD(gi.ullArguments);
 		break;
 	}
 }

@@ -51,11 +51,6 @@ public:
 // Registered messages for ruler/toolbar/CRulerRichEditCtrl communication. Each is registered on the
 // first call; the getters return a reference because ON_REGISTERED_MESSAGE takes the id's address.
 	/**
-	 * @brief The registered message that asks the control for its horizontal scroll position.
-	 * @return The message id.
-	 */
-	static const UINT& GetScrollPosMessage();
-	/**
 	 * @brief The registered message the toolbar sends when the user picks a font name (WPARAM: the LPCTSTR name).
 	 * @return The message id.
 	 */
@@ -139,7 +134,6 @@ protected:
 	afx_msg LRESULT OnGetTextLength (WPARAM wParam, LPARAM lParam);
 	//}}AFX_MSG
 
-	LRESULT OnGetScrollPos(WPARAM, LPARAM);
 	LRESULT OnSetCurrentFontName(WPARAM font, LPARAM size);
 	LRESULT OnSetCurrentFontSize(WPARAM font, LPARAM size);
 	LRESULT OnSetCurrentFontColor(WPARAM font, LPARAM size);

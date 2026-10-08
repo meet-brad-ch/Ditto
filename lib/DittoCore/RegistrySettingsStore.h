@@ -67,8 +67,8 @@ namespace DittoCore
 		 * @param section The sub key; empty for the root key.
 		 * @param name The value name.
 		 * @param value The text.
-		 * @return True when the key was opened; the result of the write itself is not checked
-		 *         (as before).
+		 * @return True when the value was written; false when the key could not be opened or the
+		 *         write failed.
 		 * @throws std::length_error When the text is larger than a registry value can hold.
 		 */
 		bool SetString(const std::wstring& section, const std::wstring& name, const std::wstring& value) override;
@@ -86,8 +86,8 @@ namespace DittoCore
 		 * @param section The sub key; empty for the root key.
 		 * @param name The value name.
 		 * @param data The bytes.
-		 * @return True when the key was opened; the result of the write itself is not checked
-		 *         (as before).
+		 * @return True when the value was written; false when the key could not be opened or the
+		 *         write failed.
 		 * @throws std::length_error When the data is larger than a registry value can hold.
 		 */
 		bool SetData(const std::wstring& section, const std::wstring& name, std::span<const std::byte> data) override;

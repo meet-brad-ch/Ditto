@@ -37,6 +37,15 @@ public:
 	// Writes an error that cannot be thrown
 	void LogError(const CString& text) const;
 
+protected:
+	/**
+	 * @brief The lock of this connection, so prepared statements (compileStatement) step and reset
+	 * under it like execDML/execQuery (upstream ran them without it, so a statement from another
+	 * thread ran inside, and was rolled back with, a transaction it did not belong to).
+	 * @return the recursive mutex Lock() holds.
+	 */
+	std::recursive_mutex* connectionMutex() override;
+
 private:
 	std::recursive_mutex m_mutex;
 	std::function<void(const CString&)> m_log;

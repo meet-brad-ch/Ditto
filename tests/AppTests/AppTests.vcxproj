@@ -35,7 +35,7 @@
       <SDLCheck>true</SDLCheck>
       <!-- no /MP: src\stdafx.h has an #import, which /MP does not allow -->
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(SolutionDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)lib\DittoCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <!-- the configuration macros src\stdafx.h relies on (they are set here, not in the header) -->
       <PreprocessorDefinitions>WIN64;_WINDOWS;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;VC_EXTRALEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -56,9 +56,19 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <!-- DittoCore sources the tested app code needs (ImageHelper.h reads blocks through GlobalBytes) -->
+    <ClCompile Include="..\..\lib\DittoCore\GlobalBytes.cpp">
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\DittoCore\GlobalLockGuard.cpp">
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
     <ClCompile Include="..\..\src\ClipRepository.cpp" />
     <ClCompile Include="..\..\src\DittoDb.cpp" />
     <ClCompile Include="..\..\src\DittoDbTransaction.cpp" />
+    <ClCompile Include="..\..\src\SendKeys.cpp" />
     <ClCompile Include="..\..\src\sqlite\CppSQLite3.cpp" />
     <!-- vendored and untouched, as in CP_Main: no warnings, no code analysis (cl lets /analyze:ruleset override /analyze-, so the ruleset options are cleared too) -->
     <ClCompile Include="..\..\src\sqlite\sqlite3mc_amalgamation.c">
@@ -78,6 +88,14 @@
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <ClCompile Include="DittoDbTests.cpp">
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
+    <ClCompile Include="ImageHelperTests.cpp">
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
+    <ClCompile Include="SendKeysTests.cpp">
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>

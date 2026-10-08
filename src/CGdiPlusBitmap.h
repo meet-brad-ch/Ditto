@@ -10,25 +10,10 @@ public:
 
 public:
 	CGdiPlusBitmap()							{ }
-	CGdiPlusBitmap(LPCWSTR pFile)				{ Load(pFile); }
 	virtual ~CGdiPlusBitmap()					{ Empty(); }
 
 	/** @brief Frees the loaded bitmap. */
 	void Empty()								{ m_pBitmap.reset(); }
-
-	bool Load(LPCWSTR pFile)
-	{
-		Empty();
-		m_pBitmap.reset(Gdiplus::Bitmap::FromFile(pFile));
-		return m_pBitmap->GetLastStatus() == Gdiplus::Ok;
-	}
-
-	bool Loads(LPCWSTR pFile)
-	{
-		Empty();
-		m_pBitmap.reset(Gdiplus::Bitmap::FromFile(pFile));
-		return m_pBitmap->GetLastStatus() == Gdiplus::Ok;
-	}
 
 	/** @brief The loaded bitmap (non-owning), NULL when nothing is loaded. */
 	operator Gdiplus::Bitmap*() const			{ return m_pBitmap.get(); }
@@ -70,41 +55,6 @@ public:
 
 	bool LoadRaw(unsigned char* bitmapData, int imageSize) 
 	{
-		/*bool ret = false;
-
-		CString path;
-		wchar_t wchPath[MAX_PATH];
-		if (GetTempPathW(MAX_PATH, wchPath))
-		{
-		path = wchPath;
-		path += "qrcode.bmp";
-		}
-
-		FILE* f = _wfopen(path.GetBuffer(MAX_PATH), _T("wb"));
-		if (f != NULL)
-		{
-		fwrite(bitmapData, imageSize, 1, f);
-
-		fclose(f);
-		}
-
-		m_pBitmap = Gdiplus::Bitmap::FromFile(path);
-		if (m_pBitmap)
-		{ 
-		Status s = m_pBitmap->GetLastStatus();
-		if (m_pBitmap->GetLastStatus() != Gdiplus::Ok)
-		{
-		delete m_pBitmap;
-		m_pBitmap = NULL;
-		}
-		else
-		{
-		ret = true;
-		}
-		}
-
-		::DeleteFile(path);*/
-
 		Empty();
 
 		m_hBuffer  = ::GlobalAlloc(GMEM_MOVEABLE, imageSize);
@@ -134,8 +84,6 @@ public:
 			m_hBuffer = NULL;
 		}
 		return false;
-
-		//return ret;
 	}
 };
 

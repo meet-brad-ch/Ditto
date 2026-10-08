@@ -72,6 +72,12 @@ public:
 	void CloseNoDbWindow();
 
 private:
+	/**
+	 * @brief Creates and shows the no-database window (no database was found or chosen at start).
+	 * @throws std::runtime_error When the window could not be created.
+	 */
+	void CreateNoDbWnd();
+
 	/// The services; declared first so that they are created before and destroyed after every other member.
 	std::unique_ptr<CAppServices> m_services{};
 

@@ -16,7 +16,6 @@ CQuickPaste::CQuickPaste(CGetSetOptions &settings, CAppState &state, CDittoDb &d
 	m_database(database),
 	m_activeWindow(activeWindow)
 {
-	m_forceResizeOnNextShow = false;
 }
 
 CQuickPaste::~CQuickPaste()
@@ -27,12 +26,9 @@ CQuickPaste::~CQuickPaste()
 BOOL CQuickPaste::CloseQPasteWnd()
 {
 	if(m_pwndPaste)
-	{		
-		if(m_pwndPaste)
-		{
-			m_pwndPaste->CloseWindow();
-			m_pwndPaste->DestroyWindow();
-		}
+	{
+		m_pwndPaste->CloseWindow();
+		m_pwndPaste->DestroyWindow();
 
 		CLogger::Log(_T("CloseQPasteWnd called closing qpastewnd"));
 
@@ -141,7 +137,11 @@ void CQuickPaste::CloseWndAndReopenDatabase()
 	m_pwndPaste.reset();
 
 	m_database.close();
-	CDatabaseManager::OpenDatabase(m_settings, m_database, m_state, m_settings.GetDBPath());
+	if (CDatabaseManager::OpenDatabase(m_settings, m_database, m_state, m_settings.GetDBPath()) == FALSE)
+	{
+		// OpenDatabase showed why; the database stays closed, so the log says what was asked for
+		CLogger::Log(_T("Reopening the database from the clip window failed; it stays closed until Ditto opens it again"));
+	}
 }
 
 bool CQuickPaste::ShowPersistentWnd()

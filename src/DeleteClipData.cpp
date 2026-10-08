@@ -8,6 +8,7 @@
 #include "ClipboardFormatError.h"
 #include "ControlTextBuffer.h"
 #include "ErrorReport.h"
+#include "DittoDbTransaction.h"
 #include "afxdialogex.h"
 #include "Misc.h"
 #include "ProgressWnd.h"
@@ -216,13 +217,21 @@ void CDeleteClipData::OnClose()
 
 void CDeleteClipData::CloseDescriptionWindow()
 {
-	if (m_pDescriptionWindow != nullptr)
+	if (IsDescriptionWindowValid())
 	{
 		m_pDescriptionWindow->CloseWindow();
 		// DestroyWindow deletes the object too (CToolTipEx::PostNcDestroy)
 		m_pDescriptionWindow->DestroyWindow();
-		m_pDescriptionWindow = nullptr;
 	}
+	m_pDescriptionWindow = nullptr;
+	m_descriptionWindowHwnd = NULL;
+}
+
+bool CDeleteClipData::IsDescriptionWindowValid() const
+{
+	return m_pDescriptionWindow != nullptr &&
+		::IsWindow(m_descriptionWindowHwnd) &&
+		CWnd::FromHandlePermanent(m_descriptionWindowHwnd) == m_pDescriptionWindow;
 }
 
 void CDeleteClipData::OnSize(UINT nType, int cx, int cy)
@@ -248,7 +257,7 @@ void CDeleteClipData::OnBnClickedButtonSearch()
 
 void CDeleteClipData::FilterItems()
 {
-	if (m_pDescriptionWindow != nullptr)
+	if (IsDescriptionWindowValid())
 	{
 		m_pDescriptionWindow->Hide();
 	}
@@ -351,13 +360,16 @@ bool CDeleteClipData::MatchesFilter(CDeleteData *pdata)
 	return true;
 }
 
-bool CDeleteClipData::IsRejectedByTitle(CDeleteData* pdata)
+bool CDeleteClipData::IsRejectedByTitle(const CDeleteData* pdata) const
 {
 	if(m_filterByClipTitle &&
 		m_clipTitle != _T("") &&
 		pdata->m_Desc != _T(""))
 	{
-		if(pdata->m_Desc.MakeLower().Find(m_clipTitle.MakeLower()) == -1)
+		// compare lower-case copies: the item's description and the typed title keep their case
+		CString description{ pdata->m_Desc };
+		CString title{ m_clipTitle };
+		if(description.MakeLower().Find(title.MakeLower()) == -1)
 		{
 			return true;
 		}
@@ -376,12 +388,17 @@ bool CDeleteClipData::IsInDateRange(const CTime& value, const COleDateTime& star
 
 bool CDeleteClipData::MatchesSelectedFormat(const CDeleteData* pdata)
 {
-	CString str1;
-	int n = m_clipboardFomatCombo.GetLBTextLen(m_clipboardFomatCombo.GetCurSel());
-	m_clipboardFomatCombo.GetLBText(m_clipboardFomatCombo.GetCurSel(), str1.GetBuffer(n));
-	str1.ReleaseBuffer();
+	const int selection{ m_clipboardFomatCombo.GetCurSel() };
+	if (selection == CB_ERR)
+	{
+		// no format chosen yet: no item has the (empty) selected format
+		return false;
+	}
 
-	return pdata->m_clipboardFormat == str1;
+	CString selectedFormat;
+	m_clipboardFomatCombo.GetLBText(selection, selectedFormat);
+
+	return pdata->m_clipboardFormat == selectedFormat;
 }
 
 void CDeleteClipData::OnLvnKeydownList2(NMHDR *pNMHDR, LRESULT *pResult)
@@ -469,7 +486,7 @@ void CDeleteClipData::OnLvnItemchangedList2(NMHDR * /*pNMHDR*/, LRESULT *pResult
 
 				if (row == nCaretItem &&
 					setDescriptionWindowText == false &&
-					m_pDescriptionWindow != nullptr && 
+					IsDescriptionWindowValid() &&
 					m_pDescriptionWindow->IsWindowVisible())
 				{
 					SetDescriptionWindowText(row);
@@ -682,7 +699,9 @@ void CDeleteClipData::DeleteRows(const std::vector<int>& rowsToDelete, CProgress
 		CDeleteData data{m_data[row]};
 		try
 		{
-			//Sleep(100);
+			// one transaction per item: upstream ran the two deletes without one, so a failed second
+			// delete left the item half deleted (rolled back now, and the item stays in the list)
+			CDittoDbTransaction transaction(theApp.Services().Database());
 			theApp.Services().Database().execDMLEx(_T("DELETE FROM Data where lID = %d"), data.m_DatalID);
 
 			//If there are no more children for this clip then delete the parent
@@ -695,6 +714,7 @@ void CDeleteClipData::DeleteRows(const std::vector<int>& rowsToDelete, CProgress
 				_T("Group by Main.lID ")
 				_T("having Count(Data.lID) = 0 ")
 				_T(")"), data.m_lID);
+			transaction.Commit();
 
 			m_data.erase(m_data.begin() + row);
 		}
@@ -868,7 +888,7 @@ BOOL CDeleteClipData::PreTranslateMessage(MSG* pMsg)
 		}
 		else if (pMsg->wParam == VK_ESCAPE)
 		{
-			if (m_pDescriptionWindow != nullptr)
+			if (IsDescriptionWindowValid())
 			{
 				m_pDescriptionWindow->Hide();
 				return TRUE;
@@ -915,7 +935,7 @@ BOOL CDeleteClipData::SetSelection(int nRow, BOOL bSelect)
 
 void CDeleteClipData::CreateAndShowDescriptionWindow()
 {
-	if (m_pDescriptionWindow == nullptr)
+	if (IsDescriptionWindowValid() == false)
 	{
 		// a self-deleting window: CWnd::CreateEx calls PostNcDestroy on failure too, so the
 		// window owns the object from the Create call on
@@ -925,6 +945,7 @@ void CDeleteClipData::CreateAndShowDescriptionWindow()
 			AfxThrowResourceException();
 		}
 		m_pDescriptionWindow = pWindow;
+		m_descriptionWindowHwnd = m_pDescriptionWindow->GetSafeHwnd();
 		m_pDescriptionWindow->SetNotifyWnd(GetParent());
 	}
 
@@ -957,8 +978,13 @@ void CDeleteClipData::SetDescriptionWindowText(INT_PTR row)
 	m_pDescriptionWindow->SetToolTipText(m_data[row].m_Desc);
 
 	CClip selectedClip(theApp.Services().ClipContext());
-	selectedClip.LoadMainTable(m_data[row].m_lID);
-	selectedClip.LoadFormats(m_data[row].m_lID, false, false, m_data[row].m_DatalID);
+	// a clip that does not load (a database error is shown by the load) is not described;
+	// upstream described the empty clip as if it had loaded
+	if (selectedClip.LoadMainTable(m_data[row].m_lID) == FALSE ||
+		selectedClip.LoadFormats(m_data[row].m_lID, false, false, m_data[row].m_DatalID) == false)
+	{
+		return;
+	}
 
 	CString clipData = DescribeClip(selectedClip);
 
@@ -1033,24 +1059,26 @@ CString CDeleteClipData::DescribeClip(CClip& selectedClip)
 
 void CDeleteClipData::SetDescriptionWindowContent(CClip& selectedClip)
 {
+	// the first format found is shown: text, else RTF, else HTML, else the image
+	// (upstream declared a new format variable in the RTF and HTML steps, so every later step ran too)
 	IClipFormat* format = SetDescriptionWindowPlainText(selectedClip);
 
 	if (format == nullptr)
 	{
-		IClipFormat* rtfFormat = selectedClip.Clips()->FindFormatEx(CClipboardFormats::GetFormatID(CF_RTF));
-		if (rtfFormat != nullptr)
+		format = selectedClip.Clips()->FindFormatEx(CClipboardFormats::GetFormatID(CF_RTF));
+		if (format != nullptr)
 		{
-			m_pDescriptionWindow->SetRTFText(rtfFormat->GetAsCStringA());
+			m_pDescriptionWindow->SetRTFText(format->GetAsCStringA());
 		}
 	}
 
 	if (format == nullptr)
 	{
-		IClipFormat* htmlFormat = selectedClip.Clips()->FindFormatEx(CClipboardFormats::GetFormatID(_T("HTML Format")));
-		if (htmlFormat != nullptr)
+		format = selectedClip.Clips()->FindFormatEx(CClipboardFormats::GetFormatID(_T("HTML Format")));
+		if (format != nullptr)
 		{
 			// show the HTML source as plain text; this fork has no HTML renderer
-			CString html = CTextConvert::Utf8ToUnicode(htmlFormat->GetAsCStringA());
+			CString html = CTextConvert::Utf8ToUnicode(format->GetAsCStringA());
 			m_pDescriptionWindow->SetToolTipText(html);
 		}
 	}
@@ -1180,9 +1208,11 @@ void CDeleteClipData::SaveClipDataItemToFile(CDeleteData item)
 	if (GetSaveFileName(&ofn))
 	{
 		CClip selectedClip(theApp.Services().ClipContext());
-		selectedClip.LoadFormats(item.m_lID, false, false, item.m_DatalID);
-
-		WriteClipDataItem(selectedClip, item, ofn);
+		// nothing is written when the format does not load (a database error is shown by the load)
+		if (selectedClip.LoadFormats(item.m_lID, false, false, item.m_DatalID))
+		{
+			WriteClipDataItem(selectedClip, item, ofn);
+		}
 	}
 }
 
@@ -1249,7 +1279,11 @@ void CDeleteClipData::OnBnClickedBtCompactAndRepair()
 					if (toDeleteCount <= 0)
 						break;
 
-					CClipRetentionPolicy::RemoveOldEntries(theApp.Services().Settings(), theApp.Services().IdleTime(), theApp.Services().Windows(), false);
+					// a failed purge (shown) stops before VACUUM; upstream retried it up to 100 times
+					if (CClipRetentionPolicy::RemoveOldEntries(theApp.Services().Settings(), theApp.Services().IdleTime(), theApp.Services().Windows(), false) == FALSE)
+					{
+						return;
+					}
 				}
 			}
 			catch (CppSQLite3Exception& e)

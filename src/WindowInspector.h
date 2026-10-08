@@ -40,6 +40,13 @@ private:
 	static CString UwpAppName(HWND active_window, DWORD ownerpid);
 
 	/**
+	 * @brief GetProcessName's fallback: the executable name of a process from a snapshot of all processes.
+	 * @param processId The process id.
+	 * @return The executable name; empty when the process is not found or the snapshot fails (logged).
+	 */
+	static CString ProcessNameFromSnapshot(DWORD processId);
+
+	/**
 	 * @brief The EnumChildWindows callback of UwpAppName: records a child window's process when it
 	 * is not the owner's.
 	 * @param hWnd The child window.

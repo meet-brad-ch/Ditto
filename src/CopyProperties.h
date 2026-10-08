@@ -85,7 +85,6 @@ protected:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 public:
-	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	afx_msg void OnLbnSelchangeCopyData();
 	afx_msg void OnNcLButtonDown(UINT nHitTest, CPoint point);
 
@@ -93,8 +92,25 @@ private:
 	// OnOK's work for a clip not yet saved: writes the dialog into it and removes the deleted formats
 	void SaveToMemoryClip();
 	// OnOK's work for a saved clip: writes the dialog into its Main row, registers its hot keys and
-	// deletes the removed formats; false when the user cancels after a hot key error
+	// deletes the removed formats; false when the user cancels after a hot key error or the clip
+	// cannot be loaded or saved (the error was shown)
 	bool SaveToStoredClip();
+
+	/**
+	 * @brief Loads the Main row of the dialog's clip (m_lCopyID) into a clip.
+	 * @param clip The clip to load into.
+	 * @return True when loaded; false when the clip does not exist or a database error occurred
+	 *         (the error was shown, once).
+	 * @throws CppSQLite3Exception When the existence check fails (the caller reports it).
+	 */
+	bool LoadStoredMainTable(CClip& clip);
+
+	/**
+	 * @brief OnInitDialog's load step: fills the group list and loads the clip (the memory clip, or
+	 *        the stored clip m_lCopyID with its formats) into the dialog.
+	 * @return False when loading failed (the error was shown, once); the dialog must then close.
+	 */
+	bool LoadDialogData();
 
 	/** @brief The keys whose hot key control needs the extended-key flag (arrows, page keys, ...). */
 	static constexpr std::array<BYTE, 12> s_extendedHotKeys{

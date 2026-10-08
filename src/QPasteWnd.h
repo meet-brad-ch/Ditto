@@ -24,6 +24,8 @@
 #include <array>
 #include <span>
 
+class CMainFrame;
+
 class CMainTable
 {
 public:
@@ -230,7 +232,13 @@ public:
 	void SaveWindowSize();
 	void SelectFocusID();
 	void SetSearchImages();
-	void RemoveStickyInternal(int id, bool &sort);
+	/**
+	 * @brief Clears a clip's sticky setting in the shown list and saves it.
+	 * @param id The clip.
+	 * @param sort Set to true when the list item changed.
+	 * @return False when the clip could not be saved (the error is shown).
+	 */
+	bool RemoveStickyInternal(int id, bool &sort);
 
 	DROPEFFECT OnDragOver(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point);
 	DROPEFFECT OnDragEnter(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point);
@@ -422,7 +430,6 @@ protected:
     afx_msg void OnUpdateMenuProperties(CCmdUI *pCmdUI);
     afx_msg void OnDestroy();
     afx_msg LRESULT OnSearchEnterKeyPressed(WPARAM wParam, LPARAM lParam);
-    afx_msg LRESULT OnListEnd(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnSearch(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnDelete(WPARAM wParam, LPARAM lParam);
     afx_msg void OnGetToolTipText(NMHDR *pNMHDR, LRESULT *pResult);
@@ -626,7 +633,7 @@ private:
 		IdNoSearchResults = 0x211,
 	};
 
-	/** @brief The timer ids of the window (SetTimer / OnTimer); CWndEx uses 5 and 6 too. */
+	/** @brief The timer ids of the window (SetTimer / OnTimer); CWndEx uses 5 and 6 (OnTimer passes every id on to it). */
 	enum : UINT
 	{
 		/** @brief Fills the list cache. */
@@ -638,10 +645,18 @@ private:
 		/** @brief Hides the error message. */
 		TimerErrorMsg = 4,
 		/** @brief Hides the window while a clip is dragged out of it. */
-		TimerDragHideWindow = 6,
+		TimerDragHideWindow = 8,
 		/** @brief Ends the wait for the second key stroke of an action. */
 		TimerDoAction = 7,
 	};
+	// OnTimer passes every timer on to CWndEx: an id shared with CWndEx would run both handlers
+	// (UINT{} conversions: comparing two enumeration types is deprecated)
+	static_assert(UINT{TimerFillCache} != UINT{TimerAutoMax} && UINT{TimerFillCache} != UINT{TimerButtonUp}, "CWndEx uses this timer id");
+	static_assert(UINT{TimerDoSearch} != UINT{TimerAutoMax} && UINT{TimerDoSearch} != UINT{TimerButtonUp}, "CWndEx uses this timer id");
+	static_assert(UINT{TimerPasteFromModifier} != UINT{TimerAutoMax} && UINT{TimerPasteFromModifier} != UINT{TimerButtonUp}, "CWndEx uses this timer id");
+	static_assert(UINT{TimerErrorMsg} != UINT{TimerAutoMax} && UINT{TimerErrorMsg} != UINT{TimerButtonUp}, "CWndEx uses this timer id");
+	static_assert(UINT{TimerDragHideWindow} != UINT{TimerAutoMax} && UINT{TimerDragHideWindow} != UINT{TimerButtonUp}, "CWndEx uses this timer id");
+	static_assert(UINT{TimerDoAction} != UINT{TimerAutoMax} && UINT{TimerDoAction} != UINT{TimerButtonUp}, "CWndEx uses this timer id");
 
 	// OnGetToolTipText's clip text: the clip's lines, each ended with "\r\n", up to the max tool tip lines
 	CString ToolTipClipLines(const CString& clipText) const;
@@ -868,6 +883,9 @@ private:
 
 	/** @brief Runs the action of the middle mouse button. */
 	void CheckMiddleClickActions();
+	/** @brief The main frame, which runs the commands this window passes on (options, save, backup).
+	@return the frame, or null (reported to the user) when it does not exist. */
+	CMainFrame* MainFrameOrReport();
 	/** @brief Tracks the active window on mouse moves over the inactive always-on-top window. */
 	void TrackNonActiveMouseMove();
 	/** @brief Runs the action of a key message, or starts a search with a character typed in the list.
@@ -886,6 +904,14 @@ private:
 	/** @brief Removes the list item of a clip.
 	@param id the clip ID. */
 	void EraseListItem(int id);
+	/**
+	 * @brief Gives a clip the newest or the oldest order of the shown list (the open group's, or
+	 *        the main list's) and saves it.
+	 * @param clip The loaded clip.
+	 * @param latest True for the newest order, false for the oldest.
+	 * @return False when the order could not be read or the clip not saved (the error is shown).
+	 */
+	bool SaveClipAtListEdge(CClip& clip, bool latest);
 	/** @brief Saves the file data of a clip with CF_HDROP data and reloads its list item.
 	@param row the list row.
 	@param id the clip ID.

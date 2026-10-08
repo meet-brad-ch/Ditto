@@ -57,3 +57,8 @@ void CDittoDb::LogError(const CString& text) const
 {
 	m_log(text);
 }
+
+std::recursive_mutex* CDittoDb::connectionMutex()
+{
+	return &m_mutex;
+}

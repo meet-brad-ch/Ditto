@@ -237,9 +237,10 @@ bool CEditWnd::EditIds(CClipIDs &Ids)
 	INT_PTR count = min(Ids.GetSize(), 10);
 	for(int i = 0; i < count; i++)
 	{
-		if(IsIDAlreadyInEdit(Ids[i], true) < 0)
+		// a clip that cannot be opened (shown by AddItem) stops opening the rest
+		if(IsIDAlreadyInEdit(Ids[i], true) < 0 && AddItem(Ids[i]) == false)
 		{
-			AddItem(Ids[i]);
+			break;
 		}
 	}
 

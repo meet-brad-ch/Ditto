@@ -14,4 +14,11 @@ namespace DittoCore
 		}
 		return defaultDirectory / DefaultFileName;
 	}
+
+	std::filesystem::path DatabasePath::MarkedAsBad(const std::filesystem::path& database)
+	{
+		std::filesystem::path marked{ database };
+		marked.replace_filename(database.stem().native() + L"_BAD" + database.extension().native());
+		return marked;
+	}
 }

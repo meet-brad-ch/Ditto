@@ -11,6 +11,7 @@
 #include <afxole.h>
 #include <afxtempl.h>
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <span>
@@ -135,12 +136,6 @@ public:
 	 *        database, the registered formats and the main window; must outlive this clip.
 	 */
 	explicit CClip(CClipContext& context);
-	/**
-	 * @brief Creates an empty clip that saves with the given save settings.
-	 * @param context The services the clip works with; must outlive this clip.
-	 * @param savePolicy The save settings used instead of the settings' GetClipSaveSettings().
-	 */
-	CClip(CClipContext& context, DittoCore::ClipSavePolicy savePolicy);
 	~CClip();
 	// Copies the clip's data; the save settings and the last-added record stay this clip's own
 	const CClip& operator=(const CClip &clip);
@@ -194,18 +189,56 @@ public:
 	bool SetDescFromType();
 	bool AddToDB(bool bCheckForDuplicates = true);
 	bool ModifyMainTable();
-	bool ModifyDescription();	
-	void MakeLatestOrder();
-	void MakeLatestGroupOrder();
-	void MakeLastOrder();
-	void MakeLastGroupOrder();
-	void MakeStickyTop(int parentId);
-	void MakeStickyLast(int parentId);
+	bool ModifyDescription();
+	/**
+	 * @brief Gives the clip the order above the newest clip of the main list.
+	 * @return False when the order could not be read (shown to the user); the order is unchanged.
+	 */
+	bool MakeLatestOrder();
+	/**
+	 * @brief Gives a clip in a group the order above the newest clip of the group (nothing for a
+	 *        clip outside groups).
+	 * @return False when the order could not be read (shown); the order is unchanged.
+	 */
+	bool MakeLatestGroupOrder();
+	/**
+	 * @brief Gives the clip the order below the oldest clip of the main list.
+	 * @return False when the order could not be read (shown); the order is unchanged.
+	 */
+	bool MakeLastOrder();
+	/**
+	 * @brief Gives a clip in a group the order below the oldest clip of the group (nothing for a
+	 *        clip outside groups).
+	 * @return False when the order could not be read (shown); the order is unchanged.
+	 */
+	bool MakeLastGroupOrder();
+	/**
+	 * @brief Makes the clip the top sticky clip of the main list (parentId < 0) or of a group.
+	 * @param parentId The group; negative for the main list.
+	 * @return False when the order could not be read (shown); the order is unchanged.
+	 */
+	bool MakeStickyTop(int parentId);
+	/**
+	 * @brief Makes the clip the last sticky clip of the main list (parentId < 0) or of a group.
+	 * @param parentId The group; negative for the main list.
+	 * @return False when the order could not be read (shown); the order is unchanged.
+	 */
+	bool MakeStickyLast(int parentId);
 	bool RemoveStickySetting(int parentId);
 	BOOL LoadMainTable(int id);
 	DWORD GenerateCRC();
-	void MoveUp(int parentId);
-	void MoveDown(int parentId);
+	/**
+	 * @brief Moves the clip one place up in the main list (parentId < 0) or a group.
+	 * @param parentId The group; negative for the main list.
+	 * @return False when the neighbouring orders could not be read (shown); the order is unchanged.
+	 */
+	bool MoveUp(int parentId);
+	/**
+	 * @brief Moves the clip one place down in the main list (parentId < 0) or a group.
+	 * @param parentId The group; negative for the main list.
+	 * @return False when the neighbouring orders could not be read (shown); the order is unchanged.
+	 */
+	bool MoveDown(int parentId);
 	bool SaveFromEditWnd(BOOL bUpdateDesc);
 
 	CStringW GetUnicodeTextFormat();
@@ -229,14 +262,15 @@ public:
 	// Fills "types" with all Types in the db for the given Clip ID (context: the database)
 	static void LoadTypes(CClipContext& context, int id, CClipTypes& types);
 
-	// The order above the newest clip of the main list or a group (context: the database)
+	// The order above the newest clip of the main list or a group (context: the database); the
+	// order readers below throw CppSQLite3Exception when the query fails
 	static double GetNewOrder(CClipContext& context, int parentId, int clipId);
 	double GetNewLastOrder(int parentId, int clipId);
 	// The sticky order above the top sticky clip (context: the database)
 	static double GetNewTopSticky(CClipContext& context, int parentId, int clipId);
 	// The sticky order below the last sticky clip (context: the database)
 	static double GetNewLastSticky(CClipContext& context, int parentId, int clipId);
-	// The id of the top sticky clip; -1 for none (context: the database)
+	// The id of the top sticky clip; -1 for none (context: the database); throws CppSQLite3Exception
 	static int GetExistingTopStickyClipId(CClipContext& context, int parentId);
 	// Clears a saved clip's sticky setting in the database (context: the database)
 	static bool RemoveStickySetting(CClipContext& context, int clipId, int parentId);
@@ -283,15 +317,28 @@ private:
 
 	// The order slot of this clip in the main list (parentId < 0) or a group
 	OrderSlot SlotFor(int parentId);
-	// Moves the clip one place up or down in its list (midpoint of the two neighbours)
-	void Move(int parentId, bool up);
-	// The highest or lowest order of a column in the main list or a group; nullopt when empty
+	// Moves the clip one place up or down in its list (midpoint of the two neighbours); false
+	// (shown) when the neighbours could not be read
+	bool Move(int parentId, bool up);
+	/**
+	 * @brief Runs a step that reads clip orders, as the public order changes do.
+	 * @param step The step; it may throw CppSQLite3Exception.
+	 * @return False when the step threw (the error is shown to the user).
+	 */
+	bool TryOrderStep(const std::function<void()>& step);
+	/**
+	 * @brief Sets the newest main order and, for a clip in a group, the newest group order.
+	 * @throws CppSQLite3Exception When an order cannot be read (for callers inside a database boundary).
+	 */
+	void SetLatestOrders();
+	// The highest or lowest order of a column in the main list or a group; nullopt when empty;
+	// throws CppSQLite3Exception when the query fails
 	static std::optional<double> EdgeOrder(CClipContext& context, CClipRepository::OrderColumn column, bool sticky, int parentId, bool highest);
 	// The repository's parent filter: the group for parentId > -1, all clips otherwise
 	static std::optional<int> ParentFilter(int parentId);
 	// The repository over the context's database
 	static CClipRepository Repository(CClipContext& context);
-	// The save settings: the injected ones, or the options' (read once, when first needed)
+	// The save settings: the options' (read once, when first needed)
 	const DittoCore::ClipSavePolicy& SavePolicy();
 	std::optional<DittoCore::ClipSavePolicy> m_savePolicy{};
 	/// The services this clip works with (not owned): SavePolicy reads the save settings,
@@ -419,6 +466,7 @@ private:
 	/**
 	 * @brief AddToDB's sticky step: sets the new sticky order that m_addToDbStickyEnum asks for.
 	 * @return The clip whose top-sticky setting is to be removed; -1 for none.
+	 * @throws CppSQLite3Exception When an order cannot be read (AddToDB reports it and stops).
 	 */
 	int ApplyAddToDbSticky();
 
@@ -487,9 +535,9 @@ private:
 
 	/**
 	 * @brief Saves the description and the file data record to the database.
-	 * @param errorMessage Gets the reason appended when a step fails.
+	 * @return False when a step failed (that step showed the error); the next step is skipped.
 	 */
-	void SaveFileDataToDatabase(CString& errorMessage);
+	bool SaveFileDataToDatabase();
 };
 
 

@@ -99,20 +99,18 @@ BOOL CRRECToolbar::Create( CWnd* parent, CRect& rc, int resourceId)
 
 	result = CToolBarCtrl::Create(WS_VISIBLE|WS_CHILD, rc, parent, resourceId);
 
+	// the editor needs all of the toolbar: a missing combo or colour picker fails the creation
 	if(result)
 	{
-		if( !InitButtons( hInstance, hGlobal, pData, resourceId ) )
-			return FALSE;
-
-		if( CreateEmbeddedControls() )
-			result = TRUE;
+		if( !InitButtons( hInstance, pData, resourceId ) || !CreateEmbeddedControls() )
+			result = FALSE;
 	}
 
 	return result;
 
 }
 
-bool CRRECToolbar::InitButtons( HINSTANCE hInstance, HGLOBAL hGlobal, CToolBarData* pData, int resourceId )
+bool CRRECToolbar::InitButtons( HINSTANCE hInstance, CToolBarData* pData, int resourceId )
 {
 	TBBUTTON tb, tbSep;
 	memset(&tb, 0, sizeof(tb));
@@ -164,9 +162,7 @@ bool CRRECToolbar::InitButtons( HINSTANCE hInstance, HGLOBAL hGlobal, CToolBarDa
 	::GetObject(hBitmap, sizeof (bm), &bm);
 	AddBitmap(bm.bmWidth / pData->wWidth, CBitmap::FromHandle (hBitmap));
 
-	UnlockResource(hGlobal);
-	FreeResource(hGlobal);
-
+	// a loaded resource needs no unlock or free (UnlockResource and FreeResource are 16-bit leftovers)
 	return true;
 }
 

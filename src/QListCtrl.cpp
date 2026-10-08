@@ -330,8 +330,8 @@ bool CQListCtrl::PutSelectedItemOnDittoCopyBuffer(long lBuffer)
 	INT_PTR nCount = arr.GetSize();
 	if (nCount > 0 && arr[0])
 	{
-		CDittoCopyBuffer::PutClipOnDittoCopyBuffer(Settings(), theApp.Services().Database(), arr[0], lBuffer);
-		bRet = true;
+		// false (the error is shown) when the clip was not put on the buffer
+		bRet = CDittoCopyBuffer::PutClipOnDittoCopyBuffer(Settings(), theApp.Services().Database(), arr[0], lBuffer);
 	}
 
 	return bRet;
@@ -672,11 +672,6 @@ void CQListCtrl::DrawFirstTenHotKey(CDC* pDC, const CRect& rcItem, int firstTenN
 		cs = "0";
 	else
 		cs.Format(_T("%d"), firstTenNum);
-
-	CRect crClient;
-
-	GetWindowRect(crClient);
-	ScreenToClient(crClient);
 
 	CRect crHotKey = rcItem;
 
@@ -1174,10 +1169,14 @@ bool CQListCtrl::ParseSixDigitHex(const CString& parseText, RgbScan& scan, Copie
 	if ((parseText.GetLength() == 6 && IsHexString(parseText)) == false)
 		return false;
 
+	// %x stores an unsigned int; two hex digits always fit a byte.
 	// Use %n here as well for consistency, though length check is sufficient.
-	if (swscanf(parseText, _T("%2x%2x%2x%n"), &scan.r, &scan.g, &scan.b, &scan.charsConsumed) == 3 && scan.charsConsumed == 6)
+	unsigned int red{};
+	unsigned int green{};
+	unsigned int blue{};
+	if (swscanf(parseText, _T("%2x%2x%2x%n"), &red, &green, &blue, &scan.charsConsumed) == 3 && scan.charsConsumed == 6)
 	{
-		color = CopiedColor{RGB(scan.r, scan.g, scan.b), 255};
+		color = CopiedColor{RGB(red, green, blue), 255};
 		return true;
 	}
 	return false;
@@ -1712,18 +1711,12 @@ CPoint CQListCtrl::DescriptionPosition(int nItem, bool bFromAuto)
 
 void CQListCtrl::PrepareToolTipWindow(bool fromNextPrev, CPoint& pt)
 {
-	if (m_pToolTip == NULL ||
-		//fromNextPrev == false ||
-		::IsWindow(m_toolTipHwnd) == FALSE)
+	if (IsToolTipValid() == false)
 	{
-		if (m_pToolTip != NULL)
-		{
-			m_pToolTip->DestroyWindow();
-		}
-
+		// a tool tip whose window is gone has already deleted itself (PostNcDestroy)
 		CreateToolTip();
 	}
-	else if (IsToolTipValid())
+	else
 	{
 		if (fromNextPrev)
 		{
@@ -2459,7 +2452,11 @@ void CQListCtrl::SetDpiInfo(CDPI* dpi)
 
 bool CQListCtrl::IsToolTipValid() const
 {
-	return m_pToolTip && ::IsWindow(m_pToolTip->m_hWnd);
+	// the tool tip deletes itself when its window goes away: only the stored handle may be read
+	// until the window is known to be alive (and still the one m_pToolTip points to)
+	return m_pToolTip != NULL &&
+		::IsWindow(m_toolTipHwnd) &&
+		CWnd::FromHandlePermanent(m_toolTipHwnd) == m_pToolTip;
 }
 
 void CQListCtrl::CreateToolTip()

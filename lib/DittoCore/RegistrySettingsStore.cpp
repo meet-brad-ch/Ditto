@@ -93,9 +93,8 @@ namespace DittoCore
 			return false;
 		}
 
-		// todo (kept from CGetSetOptions): the write's own result is ignored
-		static_cast<void>(::RegSetValueExW(key.get(), name.c_str(), 0, REG_SZ, reinterpret_cast<const BYTE*>(value.c_str()), size));
-		return true;
+		// the write's own result counts (CGetSetOptions ignored it, so a failed write looked saved)
+		return ::RegSetValueExW(key.get(), name.c_str(), 0, REG_SZ, reinterpret_cast<const BYTE*>(value.c_str()), size) == ERROR_SUCCESS;
 	}
 
 	std::vector<std::byte> RegistrySettingsStore::GetData(const std::wstring& section, const std::wstring& name) const
@@ -130,9 +129,8 @@ namespace DittoCore
 			return false;
 		}
 
-		// todo (kept from CGetSetOptions): the write's own result is ignored
-		static_cast<void>(::RegSetValueExW(key.get(), name.c_str(), 0, REG_BINARY, reinterpret_cast<const BYTE*>(data.data()), size));
-		return true;
+		// the write's own result counts (CGetSetOptions ignored it, so a failed write looked saved)
+		return ::RegSetValueExW(key.get(), name.c_str(), 0, REG_BINARY, reinterpret_cast<const BYTE*>(data.data()), size) == ERROR_SUCCESS;
 	}
 
 	void RegistrySettingsStore::DeleteSection(const std::wstring& section)

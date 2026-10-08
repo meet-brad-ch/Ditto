@@ -159,17 +159,13 @@ void CClipEditThread::OnFileChanged()
 			}
 		}
 
-		if (pNotify->NextEntryOffset <= 0 || loopCount > 1000)
+		// NextEntryOffset is unsigned: 0 marks the last entry
+		if (pNotify->NextEntryOffset == 0 || loopCount > 1000)
 		{
 			break;
 		}
 
 		pNotify = (FILE_NOTIFY_INFORMATION*)((BYTE*)pNotify + pNotify->NextEntryOffset);
-
-		if (pNotify == nullptr)
-		{
-			break;
-		}
 
 		loopCount++;
 	}
@@ -242,7 +238,12 @@ bool CClipEditThread::SaveToClip(CString filePath, int id)
 			return false;
 		}
 
-		clip.LoadFormats(id);
+		// without its formats the save would keep the old Data rows next to the new ones
+		if (clip.LoadFormats(id) == false)
+		{
+			CLogger::Log(CStringUtil::Format(_T("Error loading the formats of clip id: %d, not saving"), id));
+			return false;
+		}
 	}
 
 	EditedClipData data{};
@@ -266,7 +267,11 @@ bool CClipEditThread::SaveToClip(CString filePath, int id)
 
 	BOOL modifyDescription = m_settings.GetUpdateDescWhenSavingClip();
 
-	SaveEditedFormats(clip, extenstion, data, modifyDescription);
+	// a failed save (shown by SaveFormats) is not refreshed as saved
+	if (SaveEditedFormats(clip, extenstion, data, modifyDescription) == false)
+	{
+		return false;
+	}
 
 	RefreshEditedClip(filePath, id, clip);
 
@@ -315,35 +320,29 @@ bool CClipEditThread::IsEmptyNewClip(int id, const EditedClipData& data)
 		data.pngBytes.size() <= 0;
 }
 
-void CClipEditThread::SaveEditedFormats(CClip& clip, const CString& extenstion, EditedClipData& data, BOOL modifyDescription)
+bool CClipEditThread::SaveEditedFormats(CClip& clip, const CString& extenstion, EditedClipData& data, BOOL modifyDescription)
 {
 	if (extenstion == _T("bmp") || extenstion == _T("png"))
 	{
-		clip.SaveFormats(nullptr, nullptr, nullptr, modifyDescription, &data.cf_dibBytes, &data.pngBytes);
+		return clip.SaveFormats(nullptr, nullptr, nullptr, modifyDescription, &data.cf_dibBytes, &data.pngBytes) != FALSE;
 	}
 	else if (extenstion == _T("txt"))
 	{
-		if (data.unicode)
-		{
-			clip.SaveFormats(&data.unicodeText, nullptr, nullptr, modifyDescription);
-		}
-		else
+		if (data.unicode == false)
 		{
 			data.unicodeText = CTextConvert::Utf8ToUnicode(data.utf8Text);
-			clip.SaveFormats(&data.unicodeText, nullptr, nullptr, modifyDescription);
 		}
+		return clip.SaveFormats(&data.unicodeText, nullptr, nullptr, modifyDescription) != FALSE;
 	}
 	else if (extenstion == _T("rtf"))
 	{
 		if (GetTextFromRTF(data.utf8Text, data.unicodeText))
 		{
-			clip.SaveFormats(&data.unicodeText, nullptr, &data.utf8Text, modifyDescription);
+			return clip.SaveFormats(&data.unicodeText, nullptr, &data.utf8Text, modifyDescription) != FALSE;
 		}
-		else
-		{
-			clip.SaveFormats(nullptr, nullptr, &data.utf8Text, modifyDescription);
-		}
+		return clip.SaveFormats(nullptr, nullptr, &data.utf8Text, modifyDescription) != FALSE;
 	}
+	return true;
 }
 
 void CClipEditThread::RefreshEditedClip(const CString& filePath, int id, const CClip& clip)
@@ -373,31 +372,52 @@ bool CClipEditThread::ReadFile(CString filePath, bool &unicode, CString &unicode
 		return false;
 	}
 
-	if (file.GetLength() >= 2)
+	try
 	{
-		wchar_t header;
-		file.Read(&header, sizeof(wchar_t));
-		if (header == 0xFEFF)
+		if (file.GetLength() >= 2)
 		{
-			unicode = true;
+			// initialized and checked: upstream compared an unread header when the read came short
+			wchar_t header{};
+			if (file.Read(&header, sizeof(wchar_t)) == sizeof(wchar_t) && header == 0xFEFF)
+			{
+				unicode = true;
+			}
+			else
+			{
+				file.SeekToBegin();
+			}
+		}
+
+		UINT expected{};
+		UINT read{};
+		if (unicode)
+		{
+			const UINT bufferSize = (UINT)((file.GetLength() - 2) / 2);
+			expected = bufferSize * 2;
+			read = file.Read(unicodeText.GetBufferSetLength(bufferSize), expected);
+			unicodeText.ReleaseBuffer();
 		}
 		else
 		{
-			file.SeekToBegin();
+			const UINT bufferSize = (UINT)(file.GetLength());
+			expected = bufferSize;
+			read = file.Read(utf8Text.GetBufferSetLength(bufferSize), bufferSize);
+			utf8Text.ReleaseBuffer();
+		}
+
+		if (read != expected)
+		{
+			CLogger::Log(CStringUtil::Format(_T("LoadFormatsFromFile - read %u of %u bytes of %s, not saving"), read, expected, filePath.GetString()));
+			return false;
 		}
 	}
-
-	if (unicode)
+	catch (CFileException* e)
 	{
-		const UINT bufferSize = (UINT)((file.GetLength() - 2) / 2);
-		file.Read(unicodeText.GetBufferSetLength(bufferSize), bufferSize * 2);
-		unicodeText.ReleaseBuffer();
-	}
-	else
-	{
-		const UINT bufferSize = (UINT)(file.GetLength());
-		file.Read(utf8Text.GetBufferSetLength(bufferSize), bufferSize);
-		utf8Text.ReleaseBuffer();
+		TCHAR cause[255]{};
+		e->GetErrorMessage(cause, _countof(cause));
+		e->Delete();
+		CLogger::Log(CStringUtil::Format(_T("LoadFormatsFromFile - Error reading file: %s, Error: %s"), filePath.GetString(), cause));
+		return false;
 	}
 
 	return true;

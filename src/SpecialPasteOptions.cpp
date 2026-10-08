@@ -15,7 +15,6 @@ CSpecialPasteOptions::CSpecialPasteOptions()
 	m_pasteSentenceCase = false;
 	m_pasteTypoglycemia = false;
 	m_pasteAddingDateTime = false;
-	m_delayRenderLockout = 0;
 	m_dragDropFilesOnly = false;
 	m_updateClipOrder = true;
 	m_trimWhiteSpace = false;

@@ -255,7 +255,7 @@ void CWndEx::OnTimer(UINT_PTR nIDEvent)
 	}
 	else if (nIDEvent == TimerButtonUp)
 	{
-		if ((GetKeyState(VK_LBUTTON) & 0x100) == 0)
+		if ((GetKeyState(VK_LBUTTON) & 0x8000) == 0)
 		{
 			m_DittoWindow.DoNcLButtonUp(this, 0, CPoint(0, 0));
 			KillTimer(TimerButtonUp);

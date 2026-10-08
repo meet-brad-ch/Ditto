@@ -52,8 +52,6 @@ public:
 	// ClassWizard generate virtual function overrides
 	//{{AFX_VIRTUAL(COptionsKeyBoard)
 	public:
-	virtual LRESULT OnWizardNext();
-	virtual BOOL OnWizardFinish();
 	virtual BOOL OnApply();
 	virtual void OnCancel();
 	protected:

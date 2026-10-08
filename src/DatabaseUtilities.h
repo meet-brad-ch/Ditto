@@ -71,12 +71,6 @@ public:
 	 */
 	static BOOL RepairDatabase();
 	/**
-	 * @brief Creates the directory part of a file path when it does not exist (one level only).
-	 * @param csPath the file path.
-	 * @return TRUE if the directory exists or was created, else FALSE.
-	 */
-	static BOOL EnsureDirectory(CString csPath);
-	/**
 	 * @brief Renumbers the sticky clip order of a level and, recursively, of every group in it.
 	 * @param parentID the group whose clips are renumbered; -1 for the top level.
 	 * @param db the open database.
@@ -105,7 +99,7 @@ public:
 	 * @param database the application's database connection.
 	 * @param windows the application's windows (passed on to CClipIDs::DeleteIDs).
 	 * @param fromAppWindow passed on to CClipIDs::DeleteIDs.
-	 * @return TRUE.
+	 * @return TRUE on success; FALSE (after showing the error) if a statement failed.
 	 */
 	static BOOL DeleteNonUsedClips(CDittoDb& database, CAppWindows& windows, bool fromAppWindow);
 
@@ -116,16 +110,20 @@ private:
 	 * @param settings the application's settings (GetMaxEntries).
 	 * @param windows the application's windows (told of each deleted clip).
 	 * @param db the open database.
+	 * @return false when the delete failed (CClipIDs::DeleteIDs showed the error).
+	 * @throws CppSQLite3Exception when the query fails.
 	 */
-	static void RemoveClipsOverMaxEntries(CGetSetOptions& settings, CAppWindows& windows, CppSQLite3DB& db);
+	static bool RemoveClipsOverMaxEntries(CGetSetOptions& settings, CAppWindows& windows, CDittoDb& db);
 	/**
 	 * @brief RemoveOldEntries' expiry step: deletes the plain clips (no shortcut, not kept, not in a
 	 * group, not sticky) last pasted more than GetExpiredEntries days ago.
 	 * @param settings the application's settings (GetExpiredEntries).
 	 * @param windows the application's windows (told of each deleted clip).
 	 * @param db the open database.
+	 * @return false when the delete failed (CClipIDs::DeleteIDs showed the error).
+	 * @throws CppSQLite3Exception when the query fails.
 	 */
-	static void RemoveExpiredClips(CGetSetOptions& settings, CAppWindows& windows, CppSQLite3DB& db);
+	static bool RemoveExpiredClips(CGetSetOptions& settings, CAppWindows& windows, CDittoDb& db);
 };
 
 /**
@@ -134,12 +132,6 @@ private:
 class CDatabaseBackupService
 {
 public:
-	/**
-	 * @brief Copies a file to the first free name path.001 ... path.050.
-	 * @param csPath the file to copy.
-	 * @return TRUE when a copy was made; FALSE after 50 tries.
-	 */
-	static BOOL CreateBackup(CString csPath);
 	/**
 	 * @brief Writes a gzip-compressed copy of the database, showing the progress in a popup.
 	 * @param language the UI texts (the progress text).
@@ -157,7 +149,8 @@ public:
 	 * @param state the application state (passed on to CDatabaseManager::OpenDatabase).
 	 * @param windows the application's windows (the view refreshed after the restore).
 	 * @param backupPath the backup file path.
-	 * @return TRUE on success; FALSE (after showing the error) on failure.
+	 * @return TRUE on success; FALSE (after showing the error) on failure, also when the restored
+	 * database cannot be opened.
 	 */
 	static BOOL RestoreDB(CGetSetOptions& settings, CMultiLanguage& language, CDittoDb& database, CAppState& state, CAppWindows& windows, CString backupPath);
 };
@@ -178,7 +171,8 @@ public:
 	 * @param state the application state (passed on to CDatabaseManager::OpenDatabase).
 	 * @param csDBPath the configured database path; empty for the default location.
 	 * @return TRUE if a database was found or created and opened; FALSE if it is on a network
-	 * share or another drive than C: and missing, or could not be created or opened.
+	 * share or another drive than C: and missing, if it is in use or cannot be read at the moment
+	 * (left unchanged and logged; the caller tries again later), or could not be created or opened.
 	 */
 	static BOOL CheckDBExists(CGetSetOptions& settings, CMultiLanguage& language, CDittoDb& database, CAppState& state, CString csDBPath);
 	/**
@@ -197,12 +191,15 @@ private:
 	 */
 	static BOOL CreateMissingDB(CGetSetOptions& settings, CString& csDBPath);
 	/**
-	 * @brief CheckDBExists' step for an existing file: checks and upgrades it; a bad file is renamed
-	 * to *_BAD.* (after telling the user) and a new database is created at a new default path.
+	 * @brief CheckDBExists' step for an existing file: checks and upgrades it. A damaged file is
+	 * renamed to name_BAD.ext (after telling the user) and a new database is created at a new
+	 * default path. A file that is only in use or not readable now
+	 * (CppSQLite3Exception::isUnavailable) is left as it is.
 	 * @param settings the application's settings (default directory; the new path is stored there).
 	 * @param language the UI texts (the message about the bad file).
 	 * @param csDBPath in: the existing database path; out: the path of the database to open.
-	 * @return TRUE for a valid database, else the result of CreateDB.
+	 * @return TRUE for a valid database; FALSE for a database in use, or when the damaged file
+	 * cannot be renamed (shown); else the result of CreateDB.
 	 */
 	static BOOL CheckExistingDB(CGetSetOptions& settings, CMultiLanguage& language, CString& csDBPath);
 };
@@ -220,6 +217,14 @@ public:
 	 * @return FALSE (after showing the error) if a required table is missing or an upgrade fails.
 	 */
 	static BOOL ValidDB(CString csPath, BOOL bUpgrade = TRUE);
+	/**
+	 * @brief ValidDB's work without the report: opens the database, checks Ditto's tables and runs
+	 * every schema upgrade step.
+	 * @param csPath the database path.
+	 * @throws CppSQLite3Exception when the database cannot be opened, a required table is missing or
+	 * an upgrade fails; isUnavailable() tells a locked or unreadable database from a damaged one.
+	 */
+	static void CheckAndUpgrade(CString csPath);
 
 private:
 	/**
@@ -304,8 +309,5 @@ private:
 	 */
 	static void CreateCurrentIndexes(CppSQLite3DB& db);
 };
-
-//BOOL CopyDownDatabase();
-//BOOL CopyUpDatabase();
 
 #endif // !defined(AFX_DATABASEUTILITES_H__039F53EB_228F_4640_8009_3D2B1FF435D4__INCLUDED_)

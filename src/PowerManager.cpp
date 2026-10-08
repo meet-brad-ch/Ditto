@@ -7,11 +7,8 @@
 
 ULONG CALLBACK CPowerManager::PowerChanged(PVOID Context, ULONG Type, PVOID /*Setting*/)
 {
-	const CPowerManager* manager{static_cast<const CPowerManager*>(Context)};
+	const HWND notifyHwnd{static_cast<HWND>(Context)};
 
-	//a
-	//b
-	//c
 	CString cs;
 	cs.Format(_T("PowerChanged Type %d"), Type);
 	CLogger::Log(cs);
@@ -21,7 +18,7 @@ ULONG CALLBACK CPowerManager::PowerChanged(PVOID Context, ULONG Type, PVOID /*Se
 		//had reports of the main window not showing clips after resuming (report was from a vmware vm), catch the resuming callback from windows
 		//and close and reopen the database
 		CLogger::Log(_T("windows is RESUMING, sending message to main window to close and reopen the database/qpastewnd"));
-		::PostMessage(manager->m_notifyHwnd, CDittoMessage::ReopenDatabase, 0, 0);
+		::PostMessage(notifyHwnd, CDittoMessage::ReopenDatabase, 0, 0);
 	}
 
 	return 0;
@@ -43,13 +40,11 @@ CPowerManager::~CPowerManager(void)
 
 void CPowerManager::Start(HWND hWnd)
 {
-	m_notifyHwnd = hWnd;
-
 	if (m_registrationHandle == 0)
 	{
-		m_subscribeParameters = DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS{ PowerChanged, this };
+		m_subscribeParameters = std::make_unique<DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS>(DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS{ PowerChanged, hWnd });
 
-		const DWORD result{ PowerRegisterSuspendResumeNotification(DEVICE_NOTIFY_CALLBACK, &m_subscribeParameters, &m_registrationHandle) };
+		const DWORD result{ PowerRegisterSuspendResumeNotification(DEVICE_NOTIFY_CALLBACK, m_subscribeParameters.get(), &m_registrationHandle) };
 		if (result != ERROR_SUCCESS)
 		{
 			CErrorReport::Show(CStringUtil::Format(_T("Ditto could not register for resume notifications (PowerRegisterSuspendResumeNotification failed, error %u). The database is not reopened after sleep."), result));
@@ -65,9 +60,12 @@ void CPowerManager::Close()
 		if (result != ERROR_SUCCESS)
 		{
 			CErrorReport::Show(CStringUtil::Format(_T("Ditto could not unregister from resume notifications (PowerUnregisterSuspendResumeNotification failed, error %u)."), result));
-			return;
+			// ownership: the registration stays active, so its parameters must stay valid until the process ends
+			static_cast<void>(m_subscribeParameters.release());
 		}
 
+		// reported once: the destructor does not try again
 		m_registrationHandle = 0;
+		m_subscribeParameters.reset();
 	}
 }

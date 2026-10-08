@@ -51,8 +51,6 @@ public:
 	{
 		/** @brief The search box got the Enter key. */
 		NmSearchEnterPressed = WM_USER + 0x100,
-		/** @brief The End key in the list. */
-		NmEnd = WM_USER + 0x103,
 		/** @brief The Delete key in the list or the search box. */
 		NmDelete = WM_USER + 0x104,
 		/** @brief The WM_NOTIFY code that asks the parent for a row's tool tip text. */
@@ -108,8 +106,10 @@ public:
 
 	/** @brief The LVITEM mask bit that asks the parent for a row's CF_DIB format (LVN_GETDISPINFO). */
 	static constexpr UINT s_lvifCfDib{0x10000000};
-	/** @brief The LVITEM mask bit that asks the parent for a row's RTF format (LVN_GETDISPINFO; same bit as s_lvifCfDib). */
-	static constexpr UINT s_lvifCfRichText{0x10000000};
+	/** @brief The LVITEM mask bit that asks the parent for a row's RTF format (LVN_GETDISPINFO; a bit of its own,
+	 *         so a CF_DIB request does not also fill the RTF answer). */
+	static constexpr UINT s_lvifCfRichText{0x20000000};
+	static_assert((s_lvifCfDib & s_lvifCfRichText) == 0, "the CF_DIB and RTF requests need bits of their own");
 
 // Construction
 public:
@@ -239,7 +239,8 @@ protected:
 
 	/**
 	 * @brief Whether the description tool tip exists and its window is alive.
-	 * @return true when m_pToolTip is set and its window handle is a window.
+	 * @return true when m_pToolTip is set, m_toolTipHwnd is a window and that window is m_pToolTip
+	 *         (the object is not read: it is deleted when its window goes away).
 	 */
 	bool IsToolTipValid() const;
 

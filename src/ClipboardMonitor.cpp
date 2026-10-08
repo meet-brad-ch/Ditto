@@ -86,6 +86,11 @@ void CClipboardMonitor::SetConnectCV(bool bConnect)
 	m_settings.SetConnectedToClipboard(bConnect == true);
 
 	CMainFrame* pMainFrame{m_windows.MainFrame()};
+	if(pMainFrame == nullptr)
+	{
+		// no frame yet (or the no-database mode): there is no tray icon or quick paste window to update
+		return;
+	}
 	if(bConnect)
 	{
 		pMainFrame->m_trayIcon.SetIcon(IDR_MAINFRAME);
@@ -145,10 +150,10 @@ void CClipboardMonitor::ShowPersistent(bool bVal)
 	m_settings.SetShowPersistent(bVal);
 
 	// give some visual indication
-	if(m_state.m_bShowingQuickPaste)
+	CQPasteWnd* const pasteWnd{m_windows.QPasteWnd()};
+	if(m_state.m_bShowingQuickPaste && pasteWnd != nullptr)
 	{
-		ASSERT(m_windows.QPasteWnd());
-		RefreshCaption(*m_windows.QPasteWnd());
+		RefreshCaption(*pasteWnd);
 	}
 }
 

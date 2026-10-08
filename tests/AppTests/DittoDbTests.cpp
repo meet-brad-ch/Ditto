@@ -155,3 +155,35 @@ TEST(DittoDb, StatementWaitsForAnotherThreadsTransaction)
 	EXPECT_EQ(test.Db().execScalar(_T("SELECT COUNT(*) FROM Main WHERE mText = 'other'")), 1);
 	EXPECT_EQ(test.Db().execScalar(_T("SELECT COUNT(*) FROM Main WHERE mText = 'rolled back'")), 0);
 }
+
+// Regression: a prepared statement (compileStatement) ran without the connection lock, so from
+// another thread it ran inside an open transaction and was rolled back with it.
+TEST(DittoDb, PreparedStatementWaitsForAnotherThreadsTransaction)
+{
+	TestDatabase test;
+	// compiled before the transaction: the test is about the step, not the compile
+	CppSQLite3Statement insert = test.Db().compileStatement(_T("INSERT INTO Main (mText) VALUES ('other');"));
+	std::promise<void> transactionOpen;
+	std::promise<void> finishTransaction;
+	std::future<void> finish = finishTransaction.get_future();
+
+	std::thread owner([&]() {
+		CDittoDbTransaction transaction(test.Db());
+		CClipRepository(test.Db()).InsertClip(Clip(_T("rolled back")));
+		transactionOpen.set_value();
+		finish.wait();
+		// not committed: rolled back here
+	});
+	transactionOpen.get_future().wait();
+
+	std::future<int> other = std::async(std::launch::async, [&]() {
+		return insert.execDML();
+	});
+	EXPECT_EQ(other.wait_for(std::chrono::milliseconds(200)), std::future_status::timeout);
+
+	finishTransaction.set_value();
+	owner.join();
+	EXPECT_EQ(other.get(), 1);
+	EXPECT_EQ(test.Db().execScalar(_T("SELECT COUNT(*) FROM Main WHERE mText = 'other'")), 1);
+	EXPECT_EQ(test.Db().execScalar(_T("SELECT COUNT(*) FROM Main WHERE mText = 'rolled back'")), 0);
+}

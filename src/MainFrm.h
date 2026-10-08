@@ -119,6 +119,11 @@ protected:
 	afx_msg LRESULT OnReAddTaskBarIcon(WPARAM wParam, LPARAM lParam);
 DECLARE_MESSAGE_MAP()public:
     virtual BOOL PreTranslateMessage(MSG *pMsg);
+    /**
+     * @brief Clears the services' main frame and handle (CAppWindows), then deletes the frame
+     *        (CFrameWnd::PostNcDestroy), so no service keeps a pointer to the deleted frame.
+     */
+    void PostNcDestroy() override;
     afx_msg void OnClose();
     afx_msg void OnFirstImport();
     afx_msg void OnDestroy();
@@ -143,7 +148,6 @@ DECLARE_MESSAGE_MAP()public:
 	afx_msg void OnFirstDeleteallnonusedclips();
     afx_msg LRESULT OnPasteClip(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnEditClip(WPARAM wParam, LPARAM lParam);
-    afx_msg void OnSetFocus(CWnd* pOldWnd);
 
 	/** @brief The window message the tray icon sends to the main frame. */
 	enum : UINT

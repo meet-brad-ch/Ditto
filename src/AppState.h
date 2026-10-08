@@ -3,26 +3,33 @@
 #include "Misc.h"
 
 #include <atomic>
+#include <mutex>
 
 class CGetSetOptions;
 
 /**
  * @brief The clip saved last (its CRC and id): CClip's duplicate check compares a new clip with it.
+ *
+ * Thread safe: the copy path and the UI thread (ClearCrc) use it at the same time, so the CRC and
+ * the id are read and written together under one lock.
  */
 class CLastAddedClip
 {
 public:
-	/**
-	 * @brief The CRC of the clip saved last.
-	 * @return The CRC; 0 before the first save or after ClearCrc.
-	 */
-	DWORD Crc() const;
+	/** @brief The CRC and id of the clip saved last, read together. */
+	struct Entry
+	{
+		/** @brief The CRC; 0 before the first save or after ClearCrc. */
+		DWORD crc{};
+		/** @brief The clip id; -1 before the first save. */
+		int id{-1};
+	};
 
 	/**
-	 * @brief The id of the clip saved last.
-	 * @return The clip id; -1 before the first save.
+	 * @brief The clip saved last.
+	 * @return Its CRC and id, from one consistent state.
 	 */
-	int Id() const;
+	Entry Get() const;
 
 	/**
 	 * @brief Records a clip that was just saved.
@@ -35,10 +42,10 @@ public:
 	void ClearCrc();
 
 private:
-	/** @brief The CRC of the clip saved last. */
-	DWORD m_crc{};
-	/** @brief The id of the clip saved last. */
-	int m_id{-1};
+	/** @brief Guards m_entry. */
+	mutable std::mutex m_lock{};
+	/** @brief The clip saved last. */
+	Entry m_entry{};
 };
 
 /**
@@ -88,8 +95,8 @@ public:
 	bool m_databaseOnNetworkShare{};
 	/** @brief When Ditto started. */
 	COleDateTime m_oldtStartUp{};
-	/** @brief True from the end of the main window's creation until BeforeMainClose. */
-	bool m_bAppRunning{};
+	/** @brief True from the end of the main window's creation until BeforeMainClose (read by worker threads through CErrorReport). */
+	std::atomic<bool> m_bAppRunning{};
 	/** @brief True from BeforeMainClose on. */
 	bool m_bAppExiting{};
 
@@ -147,6 +154,13 @@ public:
 	 */
 	long ReleaseTaskbarIconUser();
 
+	/**
+	 * @brief The lock CLogger holds while it appends a line to Ditto.log, so lines from several
+	 *        threads do not interleave.
+	 * @return The lock; valid as long as this object.
+	 */
+	std::mutex& LogFileLock();
+
 private:
 	/** @brief The application's settings (not owned). */
 	CGetSetOptions& m_settings;
@@ -162,4 +176,6 @@ private:
 	CLastAddedClip m_lastAddedClip{};
 	/** @brief The users of the main window's taskbar icon (dialogs that show it while they are open). */
 	std::atomic<long> m_taskbarIconUsers{0};
+	/** @brief See LogFileLock. */
+	std::mutex m_logFileLock{};
 };

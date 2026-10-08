@@ -102,16 +102,6 @@ BOOL COptionsKeyBoard::OnInitDialog()
 	return FALSE;
 }
 
-LRESULT COptionsKeyBoard::OnWizardNext() 
-{
-	return CPropertyPage::OnWizardNext();
-}
-
-BOOL COptionsKeyBoard::OnWizardFinish() 
-{
-	return CPropertyPage::OnWizardFinish();
-}
-
 BOOL COptionsKeyBoard::OnApply()
 {
 	CGetSetOptions& settings = theApp.Services().Settings();
