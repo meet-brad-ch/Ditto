@@ -6,7 +6,8 @@
 #include "ErrorReport.h"
 #include <memory>
 
-CProcessPaste::CProcessPaste()
+CProcessPaste::CProcessPaste(CGetSetOptions& settings) :
+	m_settings(settings)
 {
 	m_pOle = std::make_unique<COleClipSource>().release(); // ownership: COM reference count (one reference, held by this object until SetClipboard or InternalRelease)
 	m_bSendPaste = true;
@@ -76,8 +77,8 @@ BOOL CProcessPaste::DoPaste()
 		// 1) we are pasting a single element, since the element is already
 		//    in the db and its lDate was updated by MarkAsPasted().
 		// OR
-		// 2) we are pasting multiple, but CGetSetOptions::m_bSaveMultiPaste is false
-		if (GetClipIDs().GetSize() == 1 || !CGetSetOptions::m_bSaveMultiPaste)
+		// 2) we are pasting multiple, but the settings' m_bSaveMultiPaste is false
+		if (GetClipIDs().GetSize() == 1 || !m_settings.m_bSaveMultiPaste)
 		{
 			m_pOle->CacheGlobalData(theApp.m_cfIgnoreClipboard, CGlobalMemory::NewGlobalP("Ignore", sizeof("Ignore")));
 		}
@@ -146,10 +147,10 @@ void CProcessPaste::MarkAsPasted(bool updateClipOrder)
 
 	CClipIDs& clips = GetClipIDs();
 	
-	CGetSetOptions::SetTripPasteCount(-1);
-	CGetSetOptions::SetTotalPasteCount(-1);
+	m_settings.SetTripPasteCount(-1);
+	m_settings.SetTotalPasteCount(-1);
 
-	auto pData{std::make_unique<MarkAsPastedData>()};
+	auto pData{std::make_unique<MarkAsPastedData>(m_settings)};
 	for (int i = 0; i < clips.GetCount(); i++)
 	{
 		pData->ids.Add(clips.ElementAt(i));
@@ -211,10 +212,10 @@ void CProcessPaste::UpdatePastedClips(MarkAsPastedData& data, int& clipId)
 
 	int clipCount = (int)data.ids.GetCount();
 
-	if(CGetSetOptions::m_bUpdateTimeOnPaste &&
+	if(data.settings.m_bUpdateTimeOnPaste &&
 		data.updateClipOrder)
 	{
-		if (CGetSetOptions::m_refreshViewAfterPasting)
+		if (data.settings.m_refreshViewAfterPasting)
 		{
 			refreshFlags |= CClipRefreshFlags::AfterPasteSelectClip;
 		}

@@ -53,7 +53,7 @@ BOOL CAbout::OnInitDialog()
 
 	m_List.AddString(_T("Ditto"));
 
-	auto runningVersion = CAppVersion::GetRunningVersion();
+	auto runningVersion = CAppVersion::GetRunningVersion(theApp.Services().Settings().GetExeFileName());
 	CString cs = CAppVersion::GetVersionString(runningVersion);
 
 	CString csText;
@@ -70,11 +70,11 @@ BOOL CAbout::OnInitDialog()
 	csText += SqliteVersion;
 	m_List.AddString(csText);
 
-	cs = CGetSetOptions::GetExeFileName();;
+	cs = theApp.Services().Settings().GetExeFileName();;
 	csText = "    Exe Path " + cs;
 	m_List.AddString(csText);
 
-	cs = CGetSetOptions::GetDBPath();
+	cs = theApp.Services().Settings().GetDBPath();
 	csText = "    DB Path " + cs;
 	m_List.AddString(csText);
 

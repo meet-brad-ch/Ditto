@@ -61,8 +61,8 @@ CString CAccels::GetCmdKeyText(DWORD cmd)
 	return cmdShortcutText;
 }
 
-bool CAccels::OnMsg(MSG *pMsg, CAccel &a)
-{    
+bool CAccels::OnMsg(MSG *pMsg, CAccel &a, int doubleKeyStrokeTimeout)
+{
 	if((pMsg->message != WM_KEYDOWN && pMsg->message != WM_SYSKEYDOWN))
 	{
 		return NULL;
@@ -94,7 +94,7 @@ bool CAccels::OnMsg(MSG *pMsg, CAccel &a)
     //cs.Format(_T("Key: %d, Mod: %d, vkey: %d, diff: %d\r\n"), key, mod, vkey, (GetTickCount() - m_firstMapTick));
     //OutputDebugString(cs);
 
-	if (IsSecondKeyPending())
+	if (IsSecondKeyPending(doubleKeyStrokeTimeout))
 	{
 		return MatchSecondKey(key, a);
 	}
@@ -102,10 +102,10 @@ bool CAccels::OnMsg(MSG *pMsg, CAccel &a)
 	return MatchFirstKey(key, a);
 }
 
-bool CAccels::IsSecondKeyPending() const
+bool CAccels::IsSecondKeyPending(int doubleKeyStrokeTimeout) const
 {
 	return m_firstMapTick != 0 &&
-		(GetTickCount64() - m_firstMapTick) < CGetSetOptions::m_doubleKeyStrokeTimeout;
+		(GetTickCount64() - m_firstMapTick) < doubleKeyStrokeTimeout;
 }
 
 bool CAccels::MatchSecondKey(DWORD key, CAccel &a)

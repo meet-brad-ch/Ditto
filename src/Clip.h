@@ -25,6 +25,7 @@
 
 class CClip;
 class CCopyThread;
+class CGetSetOptions;
 
 typedef CArray<CLIPFORMAT, CLIPFORMAT> CClipTypes;
 
@@ -115,10 +116,18 @@ public:
 class CClip : public IClip
 {
 public:
-	// Takes the save settings from the options when they are first needed
-	CClip();
-	// Saves with the given settings instead of the options
-	explicit CClip(DittoCore::ClipSavePolicy savePolicy);
+	/**
+	 * @brief Creates an empty clip that takes its save settings from the settings when they are
+	 *        first needed.
+	 * @param settings The application's settings; must outlive this clip.
+	 */
+	explicit CClip(CGetSetOptions& settings);
+	/**
+	 * @brief Creates an empty clip that saves with the given save settings.
+	 * @param settings The application's settings; must outlive this clip.
+	 * @param savePolicy The save settings used instead of the settings' GetClipSaveSettings().
+	 */
+	CClip(CGetSetOptions& settings, DittoCore::ClipSavePolicy savePolicy);
 	~CClip();
 	// Copies the clip's data; the save settings stay this clip's own
 	const CClip& operator=(const CClip &clip);
@@ -264,6 +273,8 @@ private:
 	// The save settings: the injected ones, or the options' (read once, when first needed)
 	const DittoCore::ClipSavePolicy& SavePolicy();
 	std::optional<DittoCore::ClipSavePolicy> m_savePolicy{};
+	/// The application's settings (not owned); SavePolicy reads the save settings from them.
+	CGetSetOptions& m_settings;
 	// This clip's Main row, and back
 	ClipRecord ToRecord() const;
 	void FromRecord(const ClipRecord& record);

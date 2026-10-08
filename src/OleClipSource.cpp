@@ -41,6 +41,11 @@ COleClipSource::~COleClipSource()
 
 }
 
+CGetSetOptions& COleClipSource::Settings() const
+{
+	return theApp.Services().Settings();
+}
+
 BOOL COleClipSource::DoDelayRender()
 {
 	CClipTypes types;
@@ -95,7 +100,7 @@ BOOL COleClipSource::DoImmediateRender()
 	if(count <= 0)
 		return 0;
 
-	CClip clip;
+	CClip clip(Settings());
 
 	if(count > 1)
 	{
@@ -128,7 +133,7 @@ void COleClipSource::AggregateClips(CClip& clip)
 		m_pasteOptions.m_pasteImagesVertically)
 	{
 		CImageFormatAggregator bigImage(m_pasteOptions.m_pasteImagesHorizontal);
-		if (m_ClipIDs.AggregateData(bigImage, CF_DIB, CGetSetOptions::m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
+		if (m_ClipIDs.AggregateData(bigImage, CF_DIB, Settings().m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
 		{
 			CClipFormat cf(CF_DIB, bigImage.GetHGlobal());
 			clip.m_Formats.Add(cf);
@@ -212,9 +217,9 @@ bool COleClipSource::PutGuidOntoClipboardOrReport(CClip& clip)
 
 void COleClipSource::AggregateTextFormats(CClip& clip)
 {
-	CStringA SepA = CTextConvert::UnicodeToAnsi(CGetSetOptions::GetMultiPasteSeparator());
+	CStringA SepA = CTextConvert::UnicodeToAnsi(Settings().GetMultiPasteSeparator());
 	CCF_TextAggregator CFText(SepA);
-	if (m_ClipIDs.AggregateData(CFText, CF_TEXT, CGetSetOptions::m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
+	if (m_ClipIDs.AggregateData(CFText, CF_TEXT, Settings().m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
 	{
 		CClipFormat cf(CF_TEXT, CFText.GetHGlobal());
 		clip.m_Formats.Add(cf);
@@ -222,9 +227,9 @@ void COleClipSource::AggregateTextFormats(CClip& clip)
 		cf.m_autoDeleteData = false;
 	}
 
-	CStringW SepW = CGetSetOptions::GetMultiPasteSeparator();
+	CStringW SepW = Settings().GetMultiPasteSeparator();
 	CCF_UnicodeTextAggregator CFUnicodeText(SepW);
-	if (m_ClipIDs.AggregateData(CFUnicodeText, CF_UNICODETEXT, CGetSetOptions::m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
+	if (m_ClipIDs.AggregateData(CFUnicodeText, CF_UNICODETEXT, Settings().m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
 	{
 		CClipFormat cf(CF_UNICODETEXT, CFUnicodeText.GetHGlobal());
 		clip.m_Formats.Add(cf);
@@ -235,7 +240,7 @@ void COleClipSource::AggregateTextFormats(CClip& clip)
 	if (m_pasteOptions.LimitFormatsToText() == false)
 	{
 		CCF_HDropAggregator HDrop;
-		if (m_ClipIDs.AggregateData(HDrop, CF_HDROP, CGetSetOptions::m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
+		if (m_ClipIDs.AggregateData(HDrop, CF_HDROP, Settings().m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
 		{
 			CClipFormat cf(CF_HDROP, HDrop.GetHGlobal());
 			clip.m_Formats.Add(cf);
@@ -244,7 +249,7 @@ void COleClipSource::AggregateTextFormats(CClip& clip)
 		}
 
 		CRichTextAggregator RichText(SepW);
-		if (m_ClipIDs.AggregateData(RichText, theApp.m_RTFFormat, CGetSetOptions::m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
+		if (m_ClipIDs.AggregateData(RichText, theApp.m_RTFFormat, Settings().m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
 		{
 			CClipFormat cf(theApp.m_RTFFormat, RichText.GetHGlobal());
 			clip.m_Formats.Add(cf);
@@ -253,7 +258,7 @@ void COleClipSource::AggregateTextFormats(CClip& clip)
 		}
 
 		CHTMLFormatAggregator Html(SepW);
-		if (m_ClipIDs.AggregateData(Html, theApp.m_HTML_Format, CGetSetOptions::m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
+		if (m_ClipIDs.AggregateData(Html, theApp.m_HTML_Format, Settings().m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
 		{
 			CClipFormat cf(theApp.m_HTML_Format, Html.GetHGlobal());
 			clip.m_Formats.Add(cf);
@@ -376,7 +381,7 @@ void COleClipSource::PlainTextFilter(CClip &clip)
 		hDropIndex > -1)
 	{
 		CCF_HDropAggregator HDrop;
-		if (m_ClipIDs.AggregateData(HDrop, CF_HDROP, CGetSetOptions::m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
+		if (m_ClipIDs.AggregateData(HDrop, CF_HDROP, Settings().m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
 		{
 			clip.m_Formats.RemoveAt(hDropIndex);
 
@@ -421,7 +426,7 @@ bool COleClipSource::SaveFileDataRecord(HGLOBAL record, std::vector<std::wstring
 {
 	const DittoCore::GlobalBytes block(record);
 	const std::vector<DittoCore::FileDataEntry> files = DittoCore::FileDataRecord::Parse(block.Bytes());
-	const CString folder = CGetSetOptions::GetPath(CGetSetOptions::PathDragFiles);
+	const CString folder = theApp.Services().Settings().GetPath(CGetSetOptions::PathDragFiles);
 	std::set<CString> usedNames;
 	for (const DittoCore::FileDataEntry& file : files)
 	{
@@ -537,7 +542,7 @@ std::optional<HGLOBAL> COleClipSource::RenderClipsOrReport(CLIPFORMAT format)
 {
 	try
 	{
-		HGLOBAL hData = m_ClipIDs.Render(format);
+		HGLOBAL hData = m_ClipIDs.Render(Settings(), format);
 		// image and text clips are dropped as files written for the drop
 		if (m_convertToHDROPOnDelayRender &&
 			hData == NULL &&
@@ -598,7 +603,7 @@ bool COleClipSource::IsDelayRenderLockedOut() const
 	// m_delayRenderLockout holds a 32-bit tick value, so the difference uses 32-bit wrap-around arithmetic
 	const DWORD now = static_cast<DWORD>(GetTickCount64());
 	return m_pasteOptions.m_delayRenderLockout > 0 &&
-		(now - m_pasteOptions.m_delayRenderLockout) < (DWORD)CGetSetOptions::GetDelayRenderLockout();
+		(now - m_pasteOptions.m_delayRenderLockout) < (DWORD)Settings().GetDelayRenderLockout();
 }
 
 bool COleClipSource::RenderAndCache(CLIPFORMAT cfFormat, HGLOBAL& hData)
@@ -662,13 +667,13 @@ BOOL COleClipSource::HandOverRenderedData(HGLOBAL hData, HGLOBAL* phGlobal)
 HGLOBAL COleClipSource::ConvertToFileDrop()
 {
 	DragFiles drag{};
-	drag.folder = CGetSetOptions::GetPath(CGetSetOptions::PathDragFiles);
+	drag.folder = Settings().GetPath(CGetSetOptions::PathDragFiles);
 	CreateDirectory(drag.folder, NULL);
 
-	drag.nextId = CGetSetOptions::GetDragId();
+	drag.nextId = Settings().GetDragId();
 	int origDragId = drag.nextId;
 
-	drag.customName = CGetSetOptions::GetTempDragFileName();
+	drag.customName = Settings().GetTempDragFileName();
 	if (drag.customName != _T(""))
 	{
 		drag.nextId = 1;
@@ -676,7 +681,7 @@ HGLOBAL COleClipSource::ConvertToFileDrop()
 
 	for (int i = 0; i < m_ClipIDs.GetCount(); i++)
 	{
-		CClip fileClip;
+		CClip fileClip(Settings());
 		fileClip.LoadFormats(m_ClipIDs[i]);
 
 		AddDragFile(fileClip, drag);
@@ -685,7 +690,7 @@ HGLOBAL COleClipSource::ConvertToFileDrop()
 	if(drag.customName == _T("") &&
 		drag.nextId != origDragId)
 	{
-		CGetSetOptions::SetDragId(drag.nextId);
+		Settings().SetDragId(drag.nextId);
 	}
 
 	HGLOBAL hData = CCF_HDropAggregator::NewDropBlock(drag.paths);
@@ -747,7 +752,7 @@ void COleClipSource::AddDragFile(CClip& fileClip, DragFiles& drag)
 
 void COleClipSource::Slugify(CClip &clip)
 {
-	const CString separator = CGetSetOptions::GetSlugifySeparator();
+	const CString separator = Settings().GetSlugifySeparator();
 	const std::wstring_view separatorView(separator.GetString(), separator.GetLength());
 	TransformText(clip, [separatorView](std::wstring_view text) { return DittoCore::Slugifier::Slugify(text, separatorView); });
 }

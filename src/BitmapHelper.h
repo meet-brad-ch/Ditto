@@ -30,7 +30,17 @@ public:
 
 	static int		GetCBitmapWidth(const CBitmap& cbm);
 	static int		GetCBitmapHeight(const CBitmap& cbm);
-	static BOOL		GetCBitmap(void* pClip2, CDC* pDC, CBitmap* pBitMap, int nMaxHeight);
+	/**
+	 * @brief Draws a clip format's image (CF_DIB or PNG) into a new bitmap, scaled down to a
+	 *        maximum height.
+	 * @param settings The application's settings (the fast thumbnail mode).
+	 * @param pClip2 The CClipFormat that holds the image.
+	 * @param pDC The device context the bitmap is made compatible with.
+	 * @param pBitMap Receives the bitmap.
+	 * @param nMaxHeight The maximum height.
+	 * @return TRUE when the bitmap was made.
+	 */
+	static BOOL		GetCBitmap(CGetSetOptions& settings, void* pClip2, CDC* pDC, CBitmap* pBitMap, int nMaxHeight);
 	static BOOL		GetCBitmap(CClipFormats& clips, CDC* pDC, CBitmap* pBitMap, BOOL horizontal);
 	static HANDLE	hBitmapToDIB(HBITMAP hBitmap, DWORD dwCompression, HPALETTE hPal);
 	static WORD		PaletteSize(LPSTR lpDIB);

@@ -49,10 +49,14 @@ public:
 
 	CString GetCmdKeyText(DWORD cmd);
 
-    // handles a key's first WM_KEYDOWN or WM_SYSKEYDOWN message.
-    // it uses GetKeyState to test for modifiers.
-    // returns a pointer to the internal CAccel if it matches the given key or NULL
-    bool OnMsg(MSG *pMsg, CAccel &a);
+    /**
+     * @brief Handles a key's first WM_KEYDOWN or WM_SYSKEYDOWN message; uses GetKeyState to test for modifiers.
+     * @param pMsg The message.
+     * @param a Receives the matching accelerator.
+     * @param doubleKeyStrokeTimeout The settings' double keystroke timeout (ms): how long a two-key shortcut waits for its second key.
+     * @return True when a shortcut matched.
+     */
+    bool OnMsg(MSG *pMsg, CAccel &a, int doubleKeyStrokeTimeout);
 
 	bool ContainsKey(int vKey);
 
@@ -71,9 +75,10 @@ protected:
 private:
 	/**
 	 * @brief Tells whether the first key of a two-key shortcut was pressed within the double keystroke timeout.
+	 * @param doubleKeyStrokeTimeout The double keystroke timeout (ms).
 	 * @return True while OnMsg waits for the second key.
 	 */
-	bool IsSecondKeyPending() const;
+	bool IsSecondKeyPending(int doubleKeyStrokeTimeout) const;
 
 	/**
 	 * @brief OnMsg's second-key step: finds the shortcut whose second key is key after the pending first key.

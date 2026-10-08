@@ -146,6 +146,12 @@ private:
 
 	/** @brief Selects the "follow windows theme" entry (item data 0) of the theme list. */
 	void SelectFollowWindowsTheme();
+
+	/**
+	 * @brief The application's settings.
+	 * @return theApp.Services().Settings().
+	 */
+	CGetSetOptions& Settings() const;
 };
 
 //{{AFX_INSERT_LOCATION}}

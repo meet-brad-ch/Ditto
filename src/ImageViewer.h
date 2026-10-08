@@ -49,6 +49,12 @@ public:
 	afx_msg LRESULT OnGestureNotify(WPARAM wParam, LPARAM lParam);
 
 private:
+	/**
+	 * @brief The application's settings.
+	 * @return theApp.Services().Settings().
+	 */
+	CGetSetOptions& Settings() const;
+
 	/** @brief Interprets one gesture.
 	 *  @param gi Gesture information from GetGestureInfo.
 	 *  @return TRUE for a known gesture (zoom, pan, rotate, two-finger tap, press and tap). */

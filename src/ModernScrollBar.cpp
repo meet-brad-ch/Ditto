@@ -200,7 +200,7 @@ void CModernScrollBar::UpdateScrollBar()
 	}	
 
 	// Ensure visible
-	if (CGetSetOptions::m_showScrollBar && !IsWindowVisible())
+	if (theApp.Services().Settings().m_showScrollBar && !IsWindowVisible())
 	{
 		ShowWindow(SW_SHOWNA);
 	}
@@ -420,7 +420,7 @@ void CModernScrollBar::OnMouseLeave()
 
 		// If we leave the scrollbar area and we are in auto-hide mode, 
 		// restart the timer to hide it eventually
-		if (m_isVisible && !CGetSetOptions::m_showScrollBar && !m_isDragging)
+		if (m_isVisible && !theApp.Services().Settings().m_showScrollBar && !m_isDragging)
 		{
 			SetTimer(TIMER_AUTO_HIDE, 800, NULL);
 		}
@@ -598,7 +598,7 @@ void CModernScrollBar::Show(bool /*animate*/)
 	
 	// Start auto-hide timer (hide after 800ms of inactivity)
 	// Only if the option to always show scrollbar is NOT enabled
-	if (!CGetSetOptions::m_showScrollBar)
+	if (!theApp.Services().Settings().m_showScrollBar)
 	{
 		SetTimer(TIMER_AUTO_HIDE, 800, NULL);
 	}
@@ -621,7 +621,7 @@ void CModernScrollBar::OnTimer(UINT_PTR nIDEvent)
 		if (!m_isMouseOver && !m_isDragging)
 		{
 			// Don't auto-hide if the option to always show scrollbar is enabled
-			if (!CGetSetOptions::m_showScrollBar)
+			if (!theApp.Services().Settings().m_showScrollBar)
 			{
 				Hide(true);
 			}

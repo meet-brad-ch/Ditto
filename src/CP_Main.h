@@ -9,6 +9,7 @@
 #include "DatabaseUtilities.h"
 #include "Misc.h"
 #include "Options.h"
+#include "AppServices.h"
 #include "..\Shared\ArrayEx.h"
 #include "MainFrm.h"
 #include "ProcessPaste.h"
@@ -37,6 +38,19 @@ public:
 	CCP_MainApp();
 	~CCP_MainApp();
 
+	/**
+	 * @brief The application's services (the composition root): the settings and, later, the
+	 *        other services. For MFC windows, dialogs and threads the framework creates; other
+	 *        classes get what they need from their owner.
+	 * @return The services; they exist from the constructor until the destructor.
+	 */
+	CAppServices& Services();
+
+private:
+	/// The services; declared first so that they are created before and destroyed after every other member.
+	std::unique_ptr<CAppServices> m_services{};
+
+public:
 	CDittoDb m_db;
 	bool m_databaseOnNetworkShare;
 

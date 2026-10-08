@@ -115,7 +115,7 @@ bool CEditWithButton::HandleKeyDown(const MSG* pMsg)
 		CWnd *pWnd = GetParent();
 		if(pWnd)
 		{
-			if(CGetSetOptions::m_bFindAsYouType)
+			if(theApp.Services().Settings().m_bFindAsYouType)
 			{
 				pWnd->SendMessage(CQListCtrl::NmSearchEnterPressed, 0, 0);
 			}

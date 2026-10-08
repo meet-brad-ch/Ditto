@@ -41,7 +41,7 @@ BOOL CSelectDB::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 	
-	m_ePath.SetWindowText(CGetSetOptions::GetDBPath(FALSE));
+	m_ePath.SetWindowText(theApp.Services().Settings().GetDBPath(FALSE));
 	
 	m_ePath.SetFocus();
 	
@@ -53,8 +53,8 @@ void CSelectDB::OnOK()
 	CString csPath;
 	m_ePath.GetWindowText(csPath);
 
-	CGetSetOptions::SetDBPath(csPath);
-		
+	theApp.Services().Settings().SetDBPath(csPath);
+
 	CDialog::OnOK();
 }
 
@@ -96,12 +96,13 @@ void CSelectDB::OnSelect()
 
 void CSelectDB::OnUseDefault() 
 {
-	CGetSetOptions::SetDBPath("");
-	CString csPath = CGetSetOptions::GetDBPath();
+	CGetSetOptions& settings = theApp.Services().Settings();
+	settings.SetDBPath("");
+	CString csPath = settings.GetDBPath();
 
 	if(DatabaseSchemaUpgrader::ValidDB(csPath) == FALSE)
 		DeleteFile(csPath);
 
-	if(DatabaseLocator::CheckDBExists(CGetSetOptions::GetDBPath()))
+	if(DatabaseLocator::CheckDBExists(settings, settings.GetDBPath()))
 		EndDialog(IDOK);
 }

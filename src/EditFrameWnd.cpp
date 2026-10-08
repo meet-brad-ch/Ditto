@@ -63,8 +63,9 @@ int CEditFrameWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	m_DittoWindow.DoCreate(this);
 	m_DittoWindow.m_bDrawChevron = false;
-	m_DittoWindow.SetCaptionColors(g_Opt.m_Theme.CaptionLeft(), g_Opt.m_Theme.CaptionRight(), g_Opt.m_Theme.Border());
-	m_DittoWindow.SetCaptionOn(this, CGetSetOptions::CaptionOnTop, true, g_Opt.m_Theme.GetCaptionSize(), g_Opt.m_Theme.GetCaptionFontSize());
+	const CTheme& theme{ theApp.Services().Settings().m_Theme };
+	m_DittoWindow.SetCaptionColors(theme.CaptionLeft(), theme.CaptionRight(), theme.Border());
+	m_DittoWindow.SetCaptionOn(this, CGetSetOptions::CaptionOnTop, true, theme.GetCaptionSize(), theme.GetCaptionFontSize());
 
 	m_crIcon.SetRect(-2, -15, 15, 0);
 
@@ -79,8 +80,9 @@ void CEditFrameWnd::OnDestroy()
 
 	CRect rect;
 	GetWindowRect(&rect);
-	CGetSetOptions::SetEditWndSize(rect.Size());
-	CGetSetOptions::SetEditWndPoint(rect.TopLeft());
+	CGetSetOptions& settings{ theApp.Services().Settings() };
+	settings.SetEditWndSize(rect.Size());
+	settings.SetEditWndPoint(rect.TopLeft());
 
 	::SendMessage(m_hNotifyWnd, CDittoMessage::EditWndClosing, 0, 0);
 }

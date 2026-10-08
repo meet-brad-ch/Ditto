@@ -256,6 +256,11 @@ CQListCtrl::~CQListCtrl()
 	m_boldFont.DeleteObject();
 }
 
+CGetSetOptions& CQListCtrl::Settings() const
+{
+	return theApp.Services().Settings();
+}
+
 // returns the position 1-10 if the index is in the FirstTen block else -1
 int CQListCtrl::GetFirstTenNum(int index)
 {
@@ -264,7 +269,7 @@ int CQListCtrl::GetFirstTenNum(int index)
 
 	if (0 <= index && index <= 9)
 	{
-		firstTenNum = index + CGetSetOptions::m_firstTenHotKeysStart;
+		firstTenNum = index + Settings().m_firstTenHotKeysStart;
 		firstTenNum = firstTenNum % 10;
 	}
 
@@ -324,7 +329,7 @@ bool CQListCtrl::PutSelectedItemOnDittoCopyBuffer(long lBuffer)
 	INT_PTR nCount = arr.GetSize();
 	if (nCount > 0 && arr[0])
 	{
-		CDittoCopyBuffer::PutClipOnDittoCopyBuffer(arr[0], lBuffer);
+		CDittoCopyBuffer::PutClipOnDittoCopyBuffer(Settings(), arr[0], lBuffer);
 		bRet = true;
 	}
 
@@ -553,8 +558,8 @@ void CQListCtrl::DrawListItem(NMLVCUSTOMDRAW* pLVCD)
 
 void CQListCtrl::ReadItemText(int nItem, CString& csText, CString& strSymbols)
 {
-	LPTSTR lpszText = csText.GetBufferSetLength(CGetSetOptions::m_bDescTextSize);
-	GetItemText(nItem, 0, lpszText, CGetSetOptions::m_bDescTextSize);
+	LPTSTR lpszText = csText.GetBufferSetLength(Settings().m_bDescTextSize);
+	GetItemText(nItem, 0, lpszText, Settings().m_bDescTextSize);
 	csText.ReleaseBuffer();
 
 	// extract symbols
@@ -572,17 +577,17 @@ CQListCtrl::RowColors CQListCtrl::ChooseRowColors(int nItem, UINT state, BOOL bL
 	{
 		if (bListHasFocus)
 		{
-			return RowColors{CGetSetOptions::m_Theme.ListBoxSelectedBG(), CGetSetOptions::m_Theme.ListBoxSelectedText()};
+			return RowColors{Settings().m_Theme.ListBoxSelectedBG(), Settings().m_Theme.ListBoxSelectedText()};
 		}
-		return RowColors{CGetSetOptions::m_Theme.ListBoxSelectedNoFocusBG(), CGetSetOptions::m_Theme.ListBoxSelectedNoFocusText()};
+		return RowColors{Settings().m_Theme.ListBoxSelectedNoFocusBG(), Settings().m_Theme.ListBoxSelectedNoFocusText()};
 	}
 
 	//Shade alternating Rows
 	if ((nItem % 2) == 0)
 	{
-		return RowColors{CGetSetOptions::m_Theme.ListBoxOddRowsBG(), CGetSetOptions::m_Theme.ListBoxOddRowsText()};
+		return RowColors{Settings().m_Theme.ListBoxOddRowsBG(), Settings().m_Theme.ListBoxOddRowsText()};
 	}
-	return RowColors{CGetSetOptions::m_Theme.ListBoxEvenRowsBG(), CGetSetOptions::m_Theme.ListBoxEvenRowsText()};
+	return RowColors{Settings().m_Theme.ListBoxEvenRowsBG(), Settings().m_Theme.ListBoxEvenRowsText()};
 }
 
 bool CQListCtrl::IsPastedClip(const CString& strSymbols) const
@@ -598,7 +603,7 @@ void CQListCtrl::DrawPastedMarker(CDC* pDC, const CRect& rcItem)
 	pastedRect.left++;
 	pastedRect.right = pastedRect.left + m_windowDpi->Scale(2);
 
-	pDC->FillSolidRect(pastedRect, CGetSetOptions::m_Theme.ClipPastedColor());
+	pDC->FillSolidRect(pastedRect, Settings().m_Theme.ClipPastedColor());
 }
 
 bool CQListCtrl::ShowsFirstTenHotKey(int firstTenNum) const
@@ -653,7 +658,7 @@ void CQListCtrl::DrawItemText(int nItem, CString& csText, CRect& rcText, CDC* pD
 
 bool CQListCtrl::HighlightSearchMatches(CString& csText)
 {
-	auto highlightColor = CGetSetOptions::m_Theme.SearchTextHighlight();
+	auto highlightColor = Settings().m_Theme.SearchTextHighlight();
 	//use unprintable characters so it doesn't find copied html to convert
 	return m_searchText.GetLength() > 0 &&
 		CMarkerInserter::Insert(csText, m_searchText, CStringUtil::Format(_T("\x01\x04 color='#%02x%02x%02x'\x02"), GetRValue(highlightColor), GetGValue(highlightColor), GetBValue(highlightColor)), _T("\x01\x03\x04\x02"), m_linesPerRow) > 0;
@@ -683,9 +688,9 @@ void CQListCtrl::DrawFirstTenHotKey(CDC* pDC, const CRect& rcItem, int firstTenN
 	crHotKey.top += m_windowDpi->Scale(1 + extraFromClipWasPaste);
 
 	CFont* pOldFont{ pDC->SelectObject(&m_SmallFont) };
-	COLORREF localOldTextColor = pDC->SetTextColor(CGetSetOptions::m_Theme.ListSmallQuickPasteIndexColor());
+	COLORREF localOldTextColor = pDC->SetTextColor(Settings().m_Theme.ListSmallQuickPasteIndexColor());
 
-	CPen pen(PS_SOLID, 0, CGetSetOptions::m_Theme.ListSmallQuickPasteIndexColor());
+	CPen pen(PS_SOLID, 0, Settings().m_Theme.ListSmallQuickPasteIndexColor());
 	CPen* pOldPen = pDC->SelectObject(&pen);
 
 	pDC->DrawText(cs, crHotKey, DT_BOTTOM);
@@ -861,7 +866,7 @@ void CQListCtrl::DrawCheckerboard(CDC* pDC, CRect rect)
 
 void CQListCtrl::DrawCopiedColorCode(CString& csText, CRect& rcText, CDC* pDC)
 {
-	if (CGetSetOptions::m_bDrawCopiedColorCode == FALSE || csText.IsEmpty())
+	if (Settings().m_bDrawCopiedColorCode == FALSE || csText.IsEmpty())
 		return;
 
 	// 1. Initial Cleaning and Prep
@@ -1216,7 +1221,7 @@ void CQListCtrl::DrawColorBox(CDC* pDC, CRect& rcText, const CopiedColor& color)
 
 BOOL CQListCtrl::DrawRtfText(int nItem, CRect& crRect, CDC* pDC)
 {
-	if (CGetSetOptions::m_bDrawRTF == FALSE)
+	if (Settings().m_bDrawRTF == FALSE)
 		return FALSE;
 
 	BOOL bRet = FALSE;
@@ -1265,7 +1270,7 @@ BOOL CQListCtrl::DrawRtfText(int nItem, CRect& crRect, CDC* pDC)
 // ALL items are cached in m_ThumbNails (those without images are cached with NULL m_hgData)
 BOOL CQListCtrl::DrawBitMap(int nItem, CRect& crRect, CDC* pDC, const CString& csDescription)
 {
-	if (CGetSetOptions::m_bDrawThumbnail == FALSE)
+	if (Settings().m_bDrawThumbnail == FALSE)
 		return FALSE;
 
 	CClipFormatQListCtrl* format = GetItem_CF_DIB_ClipFormat(nItem);
@@ -1273,7 +1278,7 @@ BOOL CQListCtrl::DrawBitMap(int nItem, CRect& crRect, CDC* pDC, const CString& c
 	{
 		try
 		{
-			HGLOBAL smallImage = format->GetDibFittingToHeight(pDC, crRect.Height());
+			HGLOBAL smallImage = format->GetDibFittingToHeight(Settings(), pDC, crRect.Height());
 			if (smallImage != NULL)
 			{
 				//Will return the width of the bitmap in nWidth
@@ -1323,7 +1328,7 @@ BOOL CQListCtrl::OnEraseBkgnd(CDC* pDC)
 
 	CRect rect;
 	GetClientRect(&rect);
-	CBrush myBrush(CGetSetOptions::m_Theme.MainWindowBG());    // dialog background color
+	CBrush myBrush(Settings().m_Theme.MainWindowBG());    // dialog background color
 	CBrush* pOld = pDC->SelectObject(&myBrush);
 	BOOL bRes = pDC->PatBlt(0, 0, rect.Width(), rect.Height(), PATCOPY);
 	pDC->SelectObject(pOld);    // restore old brush
@@ -1356,9 +1361,9 @@ BOOL CQListCtrl::OnToolTipText(UINT /*id*/, NMHDR* pNMHDR, LRESULT* pResult)
 
 	::SendMessage(pNMHDR->hwndFrom, TTM_SETMAXTIPWIDTH, 0, 500);
 
-	if (CGetSetOptions::m_tooltipTimeout > 0)
+	if (Settings().m_tooltipTimeout > 0)
 	{
-		::SendMessage(pNMHDR->hwndFrom, TTM_SETDELAYTIME, TTDT_AUTOPOP, MAKELPARAM(CGetSetOptions::m_tooltipTimeout, 0));
+		::SendMessage(pNMHDR->hwndFrom, TTM_SETDELAYTIME, TTDT_AUTOPOP, MAKELPARAM(Settings().m_tooltipTimeout, 0));
 	}
 
 	// Use Item's name as the tool tip. Change this for something different.
@@ -1420,8 +1425,8 @@ int CQListCtrl::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CListCtrl::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
-	if (CGetSetOptions::m_tooltipTimeout > 0 ||
-		CGetSetOptions::m_tooltipTimeout == -1)
+	if (Settings().m_tooltipTimeout > 0 ||
+		Settings().m_tooltipTimeout == -1)
 	{
 		EnableToolTips();
 	}
@@ -1472,7 +1477,7 @@ BOOL CQListCtrl::PreTranslateMessage(MSG* pMsg)
 bool CQListCtrl::RunAccelerator(MSG* pMsg)
 {
 	CAccel a;
-	if (m_Accels.OnMsg(pMsg, a) == false)
+	if (m_Accels.OnMsg(pMsg, a, Settings().m_doubleKeyStrokeTimeout) == false)
 		return false;
 
 	RunAcceleratorCommand(a);
@@ -1688,9 +1693,9 @@ CPoint CQListCtrl::DescriptionPosition(int nItem, bool bFromAuto)
 
 	CPoint pt;
 
-	if (CGetSetOptions::GetRememberDescPos())
+	if (Settings().GetRememberDescPos())
 	{
-		CGetSetOptions::GetDescWndPoint(pt);
+		Settings().GetDescWndPoint(pt);
 	}
 	else if (bFromAuto == false)
 	{
@@ -1914,8 +1919,8 @@ void CQListCtrl::GetToolTipText(int nItem, CString& csText)
 		info.hdr.idFrom = GetDlgCtrlID();
 		info.lItem = nItem;
 		//plus 100 for extra info - shortcut and such
-		int maxCharacters = CGetSetOptions::GetMaxToolTipCharacters();
-		info.cchTextMax = min(maxCharacters, CGetSetOptions::m_bDescTextSize) + 200;
+		int maxCharacters = Settings().GetMaxToolTipCharacters();
+		info.cchTextMax = min(maxCharacters, Settings().m_bDescTextSize) + 200;
 		info.pszText = csText.GetBufferSetLength(info.cchTextMax);
 
 		pParent->SendMessage(WM_NOTIFY, (WPARAM)info.hdr.idFrom, (LPARAM)&info);
@@ -2034,7 +2039,7 @@ void CQListCtrl::LoadDittoCopyBufferHotkeys()
 	CAccel a;
 
 	// the copy buffer command ids are negative; CAccel::Cmd keeps their bit pattern
-	CGetSetOptions::GetCopyBufferItem(0, Item);
+	Settings().GetCopyBufferItem(0, Item);
 	if (Item.m_lCopyHotKey > 0)
 	{
 		a.Cmd = s_copyBufferHotKey1Cmd;
@@ -2042,7 +2047,7 @@ void CQListCtrl::LoadDittoCopyBufferHotkeys()
 		m_Accels.AddAccel(a);
 	}
 
-	CGetSetOptions::GetCopyBufferItem(1, Item);
+	Settings().GetCopyBufferItem(1, Item);
 	if (Item.m_lCopyHotKey > 0)
 	{
 		a.Cmd = s_copyBufferHotKey2Cmd;
@@ -2050,7 +2055,7 @@ void CQListCtrl::LoadDittoCopyBufferHotkeys()
 		m_Accels.AddAccel(a);
 	}
 
-	CGetSetOptions::GetCopyBufferItem(2, Item);
+	Settings().GetCopyBufferItem(2, Item);
 	if (Item.m_lCopyHotKey > 0)
 	{
 		a.Cmd = s_copyBufferHotKey3Cmd;
@@ -2107,7 +2112,7 @@ void CQListCtrl::NotifySelectionChanged()
 	{
 		this->ShowFullDescription(false, true);
 	}
-	if (CGetSetOptions::m_bAllwaysShowDescription)
+	if (Settings().m_bAllwaysShowDescription)
 	{
 		KillTimer(TimerShowProperties);
 		SetTimer(TimerShowProperties, 300, NULL);
@@ -2263,7 +2268,7 @@ BOOL CQListCtrl::OnItemDeleted(long lID)
 
 void CQListCtrl::OnMouseMove(UINT nFlags, CPoint point)
 {
-	if (CGetSetOptions::m_showScrollBar == FALSE)
+	if (Settings().m_showScrollBar == FALSE)
 	{
 		CRect crWindow;
 		this->GetWindowRect(&crWindow);
@@ -2280,7 +2285,7 @@ void CQListCtrl::OnMouseMove(UINT nFlags, CPoint point)
 				m_mouseOverScrollAreaStart = GetTickCount64();
 				
 				// For modern scrollbar, notify parent
-				if (CGetSetOptions::m_useModernScrollBar)
+				if (Settings().m_useModernScrollBar)
 				{
 					GetParent()->PostMessage(NmUpdateScrollBar, TRUE, 0);
 				}
@@ -2481,7 +2486,7 @@ void CQListCtrl::CreateSmallFont()
 
 	LOGFONT lf;
 
-	lf.lfHeight = -MulDiv(CGetSetOptions::GetFirstTenHotKeysFontSize(), m_windowDpi->GetDPI(), 72);
+	lf.lfHeight = -MulDiv(Settings().GetFirstTenHotKeysFontSize(), m_windowDpi->GetDPI(), 72);
 	lf.lfWidth = 0;
 	lf.lfEscapement = 0;
 	lf.lfOrientation = 0;

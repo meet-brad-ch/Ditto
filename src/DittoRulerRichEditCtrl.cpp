@@ -146,7 +146,7 @@ int CDittoRulerRichEditCtrl::SaveToDB(BOOL bUpdateDesc)
 
 		int saveTypes{SaveTypesOf(*pTypes)};
 
-		CClip Clip;
+		CClip Clip(theApp.Services().Settings());
 		Clip.m_id = m_lID;
 		LoadFormatsToSave(Clip, saveTypes);
 

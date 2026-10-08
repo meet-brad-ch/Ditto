@@ -96,7 +96,7 @@ bool CGroupTree::CheckActions(MSG * pMsg)
 	bool ret = false;
 	CAccel a;
 
-	if (m_actions.OnMsg(pMsg, a))
+	if (m_actions.OnMsg(pMsg, a, theApp.Services().Settings().m_doubleKeyStrokeTimeout))
 	{
 		ret = DoAction(a.Cmd);
 	}   
@@ -170,8 +170,8 @@ bool CGroupTree::DoActionClipProperties()
 
 void CGroupTree::FillTree()
 {	
-	this->SetBkColor(CGetSetOptions::m_Theme.GroupTreeBG());
-	this->SetTextColor(CGetSetOptions::m_Theme.GroupTreeText());
+	this->SetBkColor(theApp.Services().Settings().m_Theme.GroupTreeBG());
+	this->SetTextColor(theApp.Services().Settings().m_Theme.GroupTreeText());
 
 	DeleteAllItems();
 	m_bSendAllready = false;

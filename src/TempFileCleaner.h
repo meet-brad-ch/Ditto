@@ -1,14 +1,17 @@
 #pragma once
 
+class CGetSetOptions;
+
 /** @brief Empties Ditto's own temp folders (received files, drag files, clip compare and edit files). */
 class CTempFileCleaner
 {
 public:
 	/**
 	 * @brief Deletes the files in the received files, drag files and clip compare folders.
+	 * @param settings The application's settings (GetPath gives the folders).
 	 * @param checkFileLastAccess TRUE: only files not accessed for an hour; FALSE: all files.
 	 */
-	static void DeleteDittoTempFiles(BOOL checkFileLastAccess);
+	static void DeleteDittoTempFiles(CGetSetOptions& settings, BOOL checkFileLastAccess);
 
 	/**
 	 * @brief Deletes the files in a folder; does nothing unless the folder is one of Ditto's own

@@ -3,7 +3,8 @@
 #include "Misc.h"
 #include "Options.h"
 
-CClipCompare::CClipCompare(void)
+CClipCompare::CClipCompare(CGetSetOptions& settings) :
+	m_settings(settings)
 {
 }
 
@@ -15,10 +16,10 @@ CClipCompare::~CClipCompare(void)
 
 void CClipCompare::Compare(int leftId, int rightId)
 {
-	CClip leftClip;
+	CClip leftClip(m_settings);
 	if(leftClip.LoadFormats(leftId, true))
 	{
-		CClip rightClip;
+		CClip rightClip(m_settings);
 		if(rightClip.LoadFormats(rightId, true))
 		{
 			CompareClips(leftId, leftClip, rightId, rightClip);
@@ -38,7 +39,7 @@ CClipCompare::CompareFormats CClipCompare::GetCompareFormats(CClip& leftClip, CC
 {
 	CompareFormats formats{};
 
-	if (CGetSetOptions::GetPreferUtf8ForCompare() == FALSE)
+	if (m_settings.GetPreferUtf8ForCompare() == FALSE)
 	{
 		CLogger::Log(CStringUtil::Format(_T("CClipCompare::Compare, option is set to not use utf8")));
 		formats.saveUtf8 = false;
@@ -105,7 +106,7 @@ void CClipCompare::LaunchCompare(int leftId, CClip& leftClip, int rightId, CClip
 
 CString CClipCompare::GetComparePath(CString &params)
 {
-	CString path = CGetSetOptions::GetDiffApp().MakeLower();
+	CString path = m_settings.GetDiffApp().MakeLower();
 
 	if(path != _T(""))
 	{
@@ -118,7 +119,7 @@ CString CClipCompare::GetComparePath(CString &params)
 		path = app.path;
 		if (app.resolvePath)
 		{
-			path = CGetSetOptions::ResolvePath(app.path);
+			path = m_settings.ResolvePath(app.path);
 		}
 
 		if (CFileSystem::FileExists(path))
@@ -150,7 +151,7 @@ void CClipCompare::SetConfiguredAppParams(const CString& path, CString& params)
 CString CClipCompare::SaveToFile(int id, CClip *pClip, bool saveW, bool saveA, bool saveUtf8)
 {
 	CString path;
-	CString pathCompare = CGetSetOptions::GetPath(CGetSetOptions::PathClipDiff);
+	CString pathCompare = m_settings.GetPath(CGetSetOptions::PathClipDiff);
 	CString cs;
 	cs.Format(_T("%sditto_compare_%d.txt"), pathCompare.GetString(), id);
 

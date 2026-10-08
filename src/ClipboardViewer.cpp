@@ -12,6 +12,11 @@
 /////////////////////////////////////////////////////////////////////////////
 // CClipboardViewer
 
+CGetSetOptions& CClipboardViewer::Settings() const
+{
+	return theApp.Services().Settings();
+}
+
 CClipboardViewer::CClipboardViewer(CCopyThread* pHandler) :
 	m_pHandler(pHandler),
 	m_bPinging(false),
@@ -94,7 +99,7 @@ void CClipboardViewer::Disconnect(bool bSendPing)
 
 void CClipboardViewer::SendPing()
 {
-	if(CGetSetOptions::m_bEnsureConnectToClipboard)
+	if(Settings().m_bEnsureConnectToClipboard)
 	{
 		if(OpenClipboard())
 		{
@@ -168,7 +173,7 @@ bool CClipboardViewer::GetIgnoreClipboardChange()
 		return true;
 	}
 
-	if (CGetSetOptions::m_enforceClipboardIgnoreFormats == false)
+	if (Settings().m_enforceClipboardIgnoreFormats == false)
 	{
 		return false;
 	}
@@ -203,7 +208,7 @@ void CClipboardViewer::ProcessClipboardChange()
 					CLogger::Log(CStringUtil::Format(_T("OnDrawClipboard:: *** SetTimer *** %llu"), GetTickCount64()));
 
 					KillTimer(TimerDrawClipboard);
-					SetTimer(TimerDrawClipboard, CGetSetOptions::m_lProcessDrawClipboardDelay, NULL);		
+					SetTimer(TimerDrawClipboard, Settings().m_lProcessDrawClipboardDelay, NULL);		
 				}
 			}
 		}
@@ -218,7 +223,7 @@ bool CClipboardViewer::ValidActiveWnd()
 {
 	UpdateActiveWindowName();
 
-	CString includeApps = CGetSetOptions::GetCopyAppInclude().MakeLower();
+	CString includeApps = Settings().GetCopyAppInclude().MakeLower();
 
 	CLogger::Log(CStringUtil::Format(_T("INCLUDE app names: %s, Active App: %s"), includeApps.GetString(), m_activeWindow.GetString()));
 
@@ -231,7 +236,7 @@ bool CClipboardViewer::ValidActiveWnd()
 
 	CLogger::Log(CStringUtil::Format(_T("Inlclude app names Found Match %s - %s"), line.GetString(), m_activeWindow.GetString()));
 
-	CString excludeApps = CGetSetOptions::GetCopyAppExclude().MakeLower();
+	CString excludeApps = Settings().GetCopyAppExclude().MakeLower();
 
 	if(excludeApps != "")
 	{
@@ -251,7 +256,7 @@ bool CClipboardViewer::ValidActiveWnd()
 
 bool CClipboardViewer::FindAppMatch(const CString& apps, CString& line)
 {
-	CTokenizer token(apps, CGetSetOptions::GetCopyAppSeparator());
+	CTokenizer token(apps, Settings().GetCopyAppSeparator());
 
 	while(token.Next(line))
 	{
@@ -319,7 +324,7 @@ void CClipboardViewer::OnDrawClipboardTimer(UINT_PTR nIDEvent)
 
 	ULONGLONG dwNow = GetTickCount64();
 
-	if(dwNow - m_dwLastCopy > CGetSetOptions::m_dwSaveClipDelay || m_dwLastCopy > dwNow)
+	if(dwNow - m_dwLastCopy > Settings().m_dwSaveClipDelay || m_dwLastCopy > dwNow)
 	{
 		if (GetIgnoreClipboardChange() == false)
 		{

@@ -39,7 +39,7 @@ int CBitmapHelper::GetCBitmapHeight(const CBitmap& cbm)
 	return bm.bmHeight;
 }
 
-BOOL CBitmapHelper::GetCBitmap(void* pClip2, CDC* pDC, CBitmap* pBitMap, int nMaxHeight)
+BOOL CBitmapHelper::GetCBitmap(CGetSetOptions& settings, void* pClip2, CDC* pDC, CBitmap* pBitMap, int nMaxHeight)
 {
 	CClipFormat* pClip = (CClipFormat*)pClip2;
 
@@ -81,7 +81,7 @@ BOOL CBitmapHelper::GetCBitmap(void* pClip2, CDC* pDC, CBitmap* pBitMap, int nMa
 	Gdiplus::Graphics graphics(MemDc2);
 
 	Gdiplus::InterpolationMode interpolationMode = Gdiplus::InterpolationModeHighQualityBicubic;
-	if (CGetSetOptions::GetFastThumbnailMode())
+	if (settings.GetFastThumbnailMode())
 	{
 		interpolationMode = Gdiplus::InterpolationModeBicubic;
 	}

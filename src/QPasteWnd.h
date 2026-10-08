@@ -98,11 +98,18 @@ typedef std::map < int, char > CF_NoDibTypeMap;
 /////////////////////////////////////////////////////////////////////////////
 // CQPasteWnd window
 
+class CGetSetOptions;
+
 class CQPasteWnd: public CWndEx
 {
     // Construction
 public:
     CQPasteWnd();
+
+private:
+	/** @brief The application settings (theApp's services; this window is created by the framework).
+	@return the settings. */
+	CGetSetOptions& Settings() const;
 
     // Attributes
 public:
@@ -632,7 +639,7 @@ private:
 	};
 
 	// OnGetToolTipText's clip text: the clip's lines, each ended with "\r\n", up to the max tool tip lines
-	static CString ToolTipClipLines(const CString& clipText);
+	CString ToolTipClipLines(const CString& clipText) const;
 
 	/** @brief One action that DoAction runs through a member function without arguments. */
 	struct ActionHandler
@@ -815,7 +822,7 @@ private:
 	void SetGroupFilter(FillListQuery &query, const CString &strStarredFilter);
 	/** @brief The main list condition by the options.
 	@return the condition. */
-	static CString MainListFilter();
+	CString MainListFilter() const;
 	/** @brief Sets the filter of the list for a search text.
 	@param csSQLSearch the search text; a /q or /f prefix is removed.
 	@param query the query parts to set.
@@ -824,18 +831,18 @@ private:
 	/** @brief The description search condition.
 	@param csSQLSearch the search text.
 	@return the condition, or empty when the description is not searched. */
-	static CString SearchDescriptionSql(const CString &csSQLSearch);
+	CString SearchDescriptionSql(const CString &csSQLSearch) const;
 	/** @brief The quick paste text search condition.
 	@param csSQLSearch the search text; a /q prefix is removed.
 	@return the condition, or empty when the quick paste text is not searched. */
-	static CString SearchQuickPasteSql(CString &csSQLSearch);
+	CString SearchQuickPasteSql(CString &csSQLSearch) const;
 	/** @brief The full text search condition; sets the Data join and DISTINCT.
 	@param csSQLSearch the search text; a /f prefix is removed.
 	@param descriptionSql the description condition.
 	@param quickPasteSql the quick paste text condition.
 	@param query the query parts to set.
 	@return the condition, or empty when the full text is not searched. */
-	static CString SearchFullTextSql(CString &csSQLSearch, const CString &descriptionSql, const CString &quickPasteSql, FillListQuery &query);
+	CString SearchFullTextSql(CString &csSQLSearch, const CString &descriptionSql, const CString &quickPasteSql, FillListQuery &query) const;
 	/** @brief Joins the search conditions with OR, in parentheses.
 	@param descriptionSql the description condition.
 	@param quickPasteSql the quick paste text condition.
@@ -896,7 +903,7 @@ private:
 	/** @brief The list text of a clip: its symbol tags, "|" and its display text.
 	@param item the list item.
 	@return the text. */
-	static CString ListItemDisplayText(const CMainTable &item);
+	CString ListItemDisplayText(const CMainTable &item) const;
 	/** @brief Is a clip sticky in the current view (group or main list)?
 	@param item the list item.
 	@return true when sticky. */

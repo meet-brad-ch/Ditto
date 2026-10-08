@@ -49,6 +49,7 @@
 #include "RichEditStringSink.h"
 #include "RichEditUtf8Source.h"
 #include "..\Options.h"
+#include "..\CP_Main.h"
 #include "..\Misc.h"
 #include ".\rulerricheditctrl.h"
 #include "..\..\resource.h"
@@ -105,7 +106,7 @@ CRulerRichEditCtrl::CRulerRichEditCtrl()
 	m_movingtab = -1;
 	m_offset = 0;
 	m_readOnly = FALSE;
-	m_bInWrapMode = g_Opt.GetEditWordWrap();
+	m_bInWrapMode = theApp.Services().Settings().GetEditWordWrap();
 	ShowToolbar();
 }
 
@@ -255,7 +256,7 @@ BOOL CRulerRichEditCtrl::CreateRTFControl( BOOL autohscroll )
  		// Setting default character format
  		CharFormat	cf;
  		cf.dwMask = CFM_SIZE | CFM_FACE | CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE | CFM_LINK;
- 		cf.yHeight = CGetSetOptions::GetEditorDefaultFontSize() * 20;
+ 		cf.yHeight = theApp.Services().Settings().GetEditorDefaultFontSize() * 20;
  		cf.dwEffects = 0;
  		lstrcpy( cf.szFaceName, _T( "Segoe UI" ) );
  		m_rtf.SendMessage(EM_SETCHARFORMAT, 0, (LPARAM)&cf);
@@ -1380,7 +1381,7 @@ void CRulerRichEditCtrl::DoWrap()
 		m_bInWrapMode = true;
 	}
 
-	g_Opt.SetEditWordWrap(m_bInWrapMode);
+	theApp.Services().Settings().SetEditWordWrap(m_bInWrapMode);
 
 	m_toolbar.CheckButton(ID_BUTTONWRAP, m_bInWrapMode);
 }

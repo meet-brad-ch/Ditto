@@ -3,7 +3,9 @@
 #include "Theme.h"
 #include "RegExFilterHelper.h"
 #include "ClipSavePolicy.h"
+#include "ISettingsStore.h"
 #include <array>
+#include <memory>
 #include <set>
 #include <vector>
 
@@ -69,640 +71,659 @@ public:
 		PathEditClips = 13     ///< files written for editing clips
 	};
 
+	/**
+	 * @brief Creates the settings over the registry (HKCU\\Software\\Ditto); LoadSettings
+	 *        switches to the ini file when it finds one.
+	 */
 	CGetSetOptions();
+
+	/**
+	 * @brief Creates the settings over a given store (tests); LoadSettings still switches to the
+	 *        ini file when it finds one.
+	 * @param store The store; not null.
+	 * @throws std::invalid_argument When @p store is null.
+	 */
+	explicit CGetSetOptions(std::unique_ptr<DittoCore::ISettingsStore> store);
+
+	/** @brief Destroys the settings. */
 	virtual ~CGetSetOptions();
 
-	static bool m_bFromIni;
-	static CString m_csIniFileName;
-	static bool m_bInConversion;
-	static CTheme m_Theme;
-	static bool m_portable;
-	static bool m_windowsApp;
-	static bool m_chocolateyApp;
+	CGetSetOptions(const CGetSetOptions&) = delete;
+	CGetSetOptions& operator=(const CGetSetOptions&) = delete;
 
-	static void LoadSettings();
-	static CString GetIniFileName(bool bLocalIniFile);
-	static void ConverSettingsToIni();
-	static CString GetAppDataPath();
-	static CString GetTempFilePath();
-	static void CreateIniFile(CString path);
+	bool m_bFromIni{};
+	CString m_csIniFileName{};
+	CTheme m_Theme{};
+	bool m_portable{};
+	bool m_windowsApp{};
+	bool m_chocolateyApp{};
 
-	static CString GetExeFileName();
-	static CString GetAppName();
+	void LoadSettings();
+	CString GetIniFileName(bool bLocalIniFile);
+	void ConverSettingsToIni();
+	CString GetAppDataPath();
+	CString GetTempFilePath();
+	void CreateIniFile(CString path);
 
-	static BOOL GetShowIconInSysTray();
-	static BOOL SetShowIconInSysTray(BOOL bShow);
+	CString GetExeFileName();
+	CString GetAppName();
 
-	static BOOL GetRunOnStartUp();
-	static void SetRunOnStartUp(BOOL bRun);
+	BOOL GetShowIconInSysTray();
+	BOOL SetShowIconInSysTray(BOOL bShow);
 
-	static BOOL SetProfileFont(CString csSection, LOGFONT &font);
-	static BOOL GetProfileFont(CString csSection, LOGFONT &font);
+	BOOL GetRunOnStartUp();
+	void SetRunOnStartUp(BOOL bRun);
 
-	static long GetResolutionProfileLong(CString csName, long lDefaultValue, CString csNewPath = _T(""));
-	static BOOL SetResolutionProfileLong(CString csName, long lValue);
+	BOOL SetProfileFont(CString csSection, LOGFONT &font);
+	BOOL GetProfileFont(CString csSection, LOGFONT &font);
 
-	static BOOL SetProfileLong(CString csName, long lValue);
-	static long GetProfileLong(CString csName, long lDefaultValue = -1, CString csNewPath = _T(""));
+	long GetResolutionProfileLong(CString csName, long lDefaultValue, CString csNewPath = _T(""));
+	BOOL SetResolutionProfileLong(CString csName, long lValue);
 
-	static CString GetProfileString(CString csName, CString csDefault, CString csNewPath = _T(""), int maxSize = -1);
-	static BOOL	SetProfileString(CString csName, CString csValue);
+	BOOL SetProfileLong(CString csName, long lValue);
+	long GetProfileLong(CString csName, long lDefaultValue = -1, CString csNewPath = _T(""));
+
+	CString GetProfileString(CString csName, CString csDefault, CString csNewPath = _T(""), int maxSize = -1);
+	BOOL	SetProfileString(CString csName, CString csValue);
 
 	// The registry value's bytes; empty when the value does not exist or cannot be read
-	static std::vector<BYTE> GetProfileData(CString csName);
-	static BOOL	SetProfileData(CString csName, LPVOID lpData, DWORD dwLength);
+	std::vector<BYTE> GetProfileData(CString csName);
+	BOOL	SetProfileData(CString csName, LPVOID lpData, DWORD dwLength);
 
-	static BOOL SetQuickPasteSize(CSize size);
-	static void GetQuickPasteSize(CSize &size);
+	BOOL SetQuickPasteSize(CSize size);
+	void GetQuickPasteSize(CSize &size);
 
-	static BOOL SetQuickPastePoint(CPoint point);
-	static void GetQuickPastePoint(CPoint &point);
+	BOOL SetQuickPastePoint(CPoint point);
+	void GetQuickPastePoint(CPoint &point);
 
-	static BOOL SetEnableTransparency(BOOL bCheck);
-	static BOOL GetEnableTransparency();
+	BOOL SetEnableTransparency(BOOL bCheck);
+	BOOL GetEnableTransparency();
 
-	static BOOL SetTransparencyPercent(long lPercent);
-	static long GetTransparencyPercent();
+	BOOL SetTransparencyPercent(long lPercent);
+	long GetTransparencyPercent();
 
-	static long m_nLinesPerRow;
-	static BOOL SetLinesPerRow(long lLines);
-	static long GetLinesPerRow();
+	long m_nLinesPerRow{};
+	BOOL SetLinesPerRow(long lLines);
+	long GetLinesPerRow();
 
-	static BOOL SetQuickPastePosition(long lPosition);
-	static long GetQuickPastePosition();
+	BOOL SetQuickPastePosition(long lPosition);
+	long GetQuickPastePosition();
 
-	static long GetCopyGap();
-	static void SetCopyGap(long lGap);
+	long GetCopyGap();
+	void SetCopyGap(long lGap);
 
-	static BOOL SetDBPath(CString csPath);
-	static CString GetDBPath(bool resolvePath = true);
+	BOOL SetDBPath(CString csPath);
+	CString GetDBPath(bool resolvePath = true);
 	// Folder of the default database: the app data folder, or empty (the exe folder) when portable
-	static CString GetDefaultDBDirectory();
-	static CString ResolvePath(CString path);
+	CString GetDefaultDBDirectory();
+	CString ResolvePath(CString path);
 
 
-	static void SetCheckForMaxEntries(BOOL bVal);
-	static BOOL GetCheckForMaxEntries();
+	void SetCheckForMaxEntries(BOOL bVal);
+	BOOL GetCheckForMaxEntries();
 
-	static void SetCheckForExpiredEntries(BOOL bVal);
-	static BOOL GetCheckForExpiredEntries();
+	void SetCheckForExpiredEntries(BOOL bVal);
+	BOOL GetCheckForExpiredEntries();
 
-	static void SetMaxEntries(long lVal);
-	static long GetMaxEntries();
+	void SetMaxEntries(long lVal);
+	long GetMaxEntries();
 
-	static void SetExpiredEntries(long lVal);
-	static long GetExpiredEntries();
+	void SetExpiredEntries(long lVal);
+	long GetExpiredEntries();
 
-	static void SetTripCopyCount(long lVal);
-	static long GetTripCopyCount();
+	void SetTripCopyCount(long lVal);
+	long GetTripCopyCount();
 
-	static void SetTripPasteCount(long lVal);
-	static long GetTripPasteCount();
+	void SetTripPasteCount(long lVal);
+	long GetTripPasteCount();
 
-	static void SetTripDate(long lDate);
-	static long GetTripDate();
+	void SetTripDate(long lDate);
+	long GetTripDate();
 
-	static void SetTotalCopyCount(long lVal);
-	static long GetTotalCopyCount();
+	void SetTotalCopyCount(long lVal);
+	long GetTotalCopyCount();
 
-	static void SetTotalPasteCount(long lVal);
-	static long GetTotalPasteCount();
+	void SetTotalPasteCount(long lVal);
+	long GetTotalPasteCount();
 
-	static void SetTotalDate(long lDate);
-	static long GetTotalDate();
+	void SetTotalDate(long lDate);
+	long GetTotalDate();
 
-	static CString	GetUpdateFilePath();
-	static BOOL		SetUpdateFilePath(CString cs);
+	CString	GetUpdateFilePath();
+	BOOL		SetUpdateFilePath(CString cs);
 
-	static CString	GetUpdateInstallPath();
-	static BOOL		SetUpdateInstallPath(CString cs);
+	CString	GetUpdateInstallPath();
+	BOOL		SetUpdateInstallPath(CString cs);
 
-	static long		GetLastUpdate();
-	static long		SetLastUpdate(long lValue);
+	long		GetLastUpdate();
+	long		SetLastUpdate(long lValue);
 
-	static BOOL		GetCheckForUpdates();
-	static BOOL		SetCheckForUpdates(BOOL bCheck);
+	BOOL		GetCheckForUpdates();
+	BOOL		SetCheckForUpdates(BOOL bCheck);
 
-	static BOOL		m_bUseCtrlNumAccel;
-	static void		SetUseCtrlNumForFirstTenHotKeys(BOOL bVal);
-	static BOOL		GetUseCtrlNumForFirstTenHotKeys();
+	BOOL		m_bUseCtrlNumAccel{};
+	void		SetUseCtrlNumForFirstTenHotKeys(BOOL bVal);
+	BOOL		GetUseCtrlNumForFirstTenHotKeys();
 
-	static BOOL		m_bAllowDuplicates;
-	static void		SetAllowDuplicates(BOOL bVal);
-	static BOOL		GetAllowDuplicates();
+	BOOL		m_bAllowDuplicates{};
+	void		SetAllowDuplicates(BOOL bVal);
+	BOOL		GetAllowDuplicates();
 
-	static BOOL		m_bUpdateTimeOnPaste;
-	static void		SetUpdateTimeOnPaste(BOOL bVal);
-	static BOOL		GetUpdateTimeOnPaste();
+	BOOL		m_bUpdateTimeOnPaste{};
+	void		SetUpdateTimeOnPaste(BOOL bVal);
+	BOOL		GetUpdateTimeOnPaste();
 
-	static BOOL		m_bSaveMultiPaste;
-	static void		SetSaveMultiPaste(BOOL bVal);
-	static BOOL		GetSaveMultiPaste();
+	BOOL		m_bSaveMultiPaste{};
+	void		SetSaveMultiPaste(BOOL bVal);
+	BOOL		GetSaveMultiPaste();
 
-	static BOOL		m_bShowPersistent;
-	static void		SetShowPersistent(BOOL bVal);
-	static BOOL		GetShowPersistent();
+	BOOL		m_bShowPersistent{};
+	void		SetShowPersistent(BOOL bVal);
+	BOOL		GetShowPersistent();
 
-	static BOOL		m_bHideDittoOnPaste;
-	static void		SetHideDittoOnPaste(BOOL bVal);
-	static BOOL		GetHideDittoOnPaste();
+	BOOL		m_bHideDittoOnPaste{};
+	void		SetHideDittoOnPaste(BOOL bVal);
+	BOOL		GetHideDittoOnPaste();
 
-	static void		SetShowTextForFirstTenHotKeys(BOOL bVal);
-	static BOOL		GetShowTextForFirstTenHotKeys();
+	void		SetShowTextForFirstTenHotKeys(BOOL bVal);
+	BOOL		GetShowTextForFirstTenHotKeys();
 
-	static void		SetMainHWND(long lhWnd);
-	static long		GetMainHWND();
+	void		SetMainHWND(long lhWnd);
+	long		GetMainHWND();
 
-	static void		SetCaptionPos(long lPos);
-	static long		GetCaptionPos();
+	void		SetCaptionPos(long lPos);
+	long		GetCaptionPos();
 
-	static void		SetAutoHide(BOOL bAutoHide);
-	static BOOL		GetAutoHide();
+	void		SetAutoHide(BOOL bAutoHide);
+	BOOL		GetAutoHide();
 
-	static long		m_bDescTextSize;
-	static void		SetDescTextSize(long lSize);
-	static long		GetDescTextSize();
+	long		m_bDescTextSize{};
+	void		SetDescTextSize(long lSize);
+	long		GetDescTextSize();
 
-	static BOOL		m_bDescShowLeadingWhiteSpace;
-	static void		SetDescShowLeadingWhiteSpace(BOOL bVal);
-	static BOOL		GetDescShowLeadingWhiteSpace();
+	BOOL		m_bDescShowLeadingWhiteSpace{};
+	void		SetDescShowLeadingWhiteSpace(BOOL bVal);
+	BOOL		GetDescShowLeadingWhiteSpace();
 
-	static BOOL		m_bAllwaysShowDescription;
-	static void		SetAllwaysShowDescription(long bShow);
-	static BOOL		GetAllwaysShowDescription();
+	BOOL		m_bAllwaysShowDescription{};
+	void		SetAllwaysShowDescription(long bShow);
+	BOOL		GetAllwaysShowDescription();
 
-	static long		m_bDoubleClickingOnCaptionDoes;
-	static void		SetDoubleClickingOnCaptionDoes(long lOption);
-	static long		GetDoubleClickingOnCaptionDoes();
+	long		m_bDoubleClickingOnCaptionDoes{};
+	void		SetDoubleClickingOnCaptionDoes(long lOption);
+	long		GetDoubleClickingOnCaptionDoes();
 
-	static BOOL		m_bPrompForNewGroupName;
-	static void		SetPrompForNewGroupName(BOOL bOption);
-	static BOOL		GetPrompForNewGroupName();
+	BOOL		m_bPrompForNewGroupName{};
+	void		SetPrompForNewGroupName(BOOL bOption);
+	BOOL		GetPrompForNewGroupName();
 
-	static BOOL		m_bSendPasteOnFirstTenHotKeys;
-	static void		SetSendPasteOnFirstTenHotKeys(BOOL bOption);
-	static BOOL		GetSendPasteOnFirstTenHotKeys();
+	BOOL		m_bSendPasteOnFirstTenHotKeys{};
+	void		SetSendPasteOnFirstTenHotKeys(BOOL bOption);
+	BOOL		GetSendPasteOnFirstTenHotKeys();
 
 
-	static BOOL		m_HideDittoOnHotKeyIfAlreadyShown;
-	static BOOL		GetHideDittoOnHotKeyIfAlreadyShown();
-	static void		SetHideDittoOnHotKeyIfAlreadyShown(BOOL bVal);
+	BOOL		m_HideDittoOnHotKeyIfAlreadyShown{};
+	BOOL		GetHideDittoOnHotKeyIfAlreadyShown();
+	void		SetHideDittoOnHotKeyIfAlreadyShown(BOOL bVal);
 
-	static BOOL		GetFont(LOGFONT &font);
-	static void		SetFont(LOGFONT &font);
+	BOOL		GetFont(LOGFONT &font);
+	void		SetFont(LOGFONT &font);
 
-	static BOOL		m_bDrawThumbnail;
-	static void		SetDrawThumbnail(long bDraw);
-	static BOOL		GetDrawThumbnail();
+	BOOL		m_bDrawThumbnail{};
+	void		SetDrawThumbnail(long bDraw);
+	BOOL		GetDrawThumbnail();
 
-	static BOOL		m_bFastThumbnailMode;
-	static void		SetFastThumbnailMode(BOOL bval);
-	static BOOL		GetFastThumbnailMode();
+	BOOL		m_bFastThumbnailMode{};
+	void		SetFastThumbnailMode(BOOL bval);
+	BOOL		GetFastThumbnailMode();
 
-	static BOOL		m_bDrawRTF;
-	static void		SetDrawRTF(long bDraw);
-	static BOOL		GetDrawRTF();
+	BOOL		m_bDrawRTF{};
+	void		SetDrawRTF(long bDraw);
+	BOOL		GetDrawRTF();
 
-	static BOOL		m_bMultiPasteReverse;
-	static void		SetMultiPasteReverse(BOOL bVal);
-	static BOOL		GetMultiPasteReverse();
+	BOOL		m_bMultiPasteReverse{};
+	void		SetMultiPasteReverse(BOOL bVal);
+	BOOL		GetMultiPasteReverse();
 
-	static CString	m_csPlaySoundOnCopy;
-	static void		SetPlaySoundOnCopy(CString cs);
-	static CString	GetPlaySoundOnCopy();
+	CString	m_csPlaySoundOnCopy{};
+	void		SetPlaySoundOnCopy(CString cs);
+	CString	GetPlaySoundOnCopy();
 
-	static BOOL		m_bSendPasteMessageAfterSelection;
-	static void		SetSendPasteAfterSelection(BOOL bVal);
-	static BOOL		GetSendPasteAfterSelection();
+	BOOL		m_bSendPasteMessageAfterSelection{};
+	void		SetSendPasteAfterSelection(BOOL bVal);
+	BOOL		GetSendPasteAfterSelection();
 
-	static BOOL		m_bFindAsYouType;
-	static void		SetFindAsYouType(BOOL bVal);
-	static BOOL		GetFindAsYouType();
+	BOOL		m_bFindAsYouType{};
+	void		SetFindAsYouType(BOOL bVal);
+	BOOL		GetFindAsYouType();
 
-	static BOOL		m_bEnsureEntireWindowCanBeSeen;
-	static void		SetEnsureEntireWindowCanBeSeen(BOOL bVal);
-	static BOOL		GetEnsureEntireWindowCanBeSeen();
+	BOOL		m_bEnsureEntireWindowCanBeSeen{};
+	void		SetEnsureEntireWindowCanBeSeen(BOOL bVal);
+	BOOL		GetEnsureEntireWindowCanBeSeen();
 
-	static BOOL		m_bShowAllClipsInMainList;
-	static void		SetShowAllClipsInMainList(BOOL bVal);
-	static BOOL		GetShowAllClipsInMainList();
+	BOOL		m_bShowAllClipsInMainList{};
+	void		SetShowAllClipsInMainList(BOOL bVal);
+	BOOL		GetShowAllClipsInMainList();
 
 
-	static long		m_lMaxClipSizeInBytes;
-	static long		GetMaxClipSizeInBytes();
-	static void		SetMaxClipSizeInBytes(long lSize);
+	long		m_lMaxClipSizeInBytes{};
+	long		GetMaxClipSizeInBytes();
+	void		SetMaxClipSizeInBytes(long lSize);
 
-	static CString	GetLanguageFile();
-	static void		SetLanguageFile(CString csLanguage);
+	CString	GetLanguageFile();
+	void		SetLanguageFile(CString csLanguage);
 
-	static DWORD	m_dwSaveClipDelay;
-	static ULONG	GetSaveClipDelay();
-	static void		SetSaveClipDelay(DWORD dwDelay);
+	DWORD	m_dwSaveClipDelay{};
+	ULONG	GetSaveClipDelay();
+	void		SetSaveClipDelay(DWORD dwDelay);
 
-	static long		m_lProcessDrawClipboardDelay;
-	static long		GetProcessDrawClipboardDelay();
-	static void		SetProcessDrawClipboardDelay(long lDelay);
+	long		m_lProcessDrawClipboardDelay{};
+	long		GetProcessDrawClipboardDelay();
+	void		SetProcessDrawClipboardDelay(long lDelay);
 
-	static BOOL		m_bEnableDebugLogging;
-	static BOOL		GetEnableDebugLogging();
-	static void		SetEnableDebugLogging(BOOL bEnable);
+	BOOL		m_bEnableDebugLogging{};
+	BOOL		GetEnableDebugLogging();
+	void		SetEnableDebugLogging(BOOL bEnable);
 
-	static BOOL		m_bEnsureConnectToClipboard;
-	static BOOL		GetEnsureConnectToClipboard();
-	static void		SetEnsureConnectToClipboard(BOOL bSet);
+	BOOL		m_bEnsureConnectToClipboard{};
+	BOOL		GetEnsureConnectToClipboard();
+	void		SetEnsureConnectToClipboard(BOOL bSet);
 
-	static BOOL		GetPromptWhenDeletingClips();
-	static void		SetPromptWhenDeletingClips(BOOL bSet);
+	BOOL		GetPromptWhenDeletingClips();
+	void		SetPromptWhenDeletingClips(BOOL bSet);
 
-	static CString	GetLastImportDir();
-	static void		SetLastImportDir(CString csDir);
+	CString	GetLastImportDir();
+	void		SetLastImportDir(CString csDir);
 
-	static CString	GetLastExportDir();
-	static void		SetLastExportDir(CString csDir);
+	CString	GetLastExportDir();
+	void		SetLastExportDir(CString csDir);
 
-	static BOOL		GetUpdateDescWhenSavingClip();
-	static void		SetUpdateDescWhenSavingClip(BOOL bSet);
+	BOOL		GetUpdateDescWhenSavingClip();
+	void		SetUpdateDescWhenSavingClip(BOOL bSet);
 
-	static BOOL		m_outputDebugStringLogging;
-	static BOOL		GetEnableOutputDebugStringLogging();
-	static void		SetEnableOutputDebugStringLogging(BOOL bSet);
+	BOOL		m_outputDebugStringLogging{};
+	BOOL		GetEnableOutputDebugStringLogging();
+	void		SetEnableOutputDebugStringLogging(BOOL bSet);
 
 
-	static CString  GetPath(long lPathID);
+	CString  GetPath(long lPathID);
 
-	static __int64	nLastDbWriteTime;
+	__int64	nLastDbWriteTime{};
 
-	static long		GetDittoRestoreClipboardDelay();
-	static void		SetDittoRestoreClipboardDelay(long lDelay);
+	long		GetDittoRestoreClipboardDelay();
+	void		SetDittoRestoreClipboardDelay(long lDelay);
 
-	static void		GetCopyBufferItem(int nPos, CCopyBufferItem &Item);
-	static void		SetCopyBufferItem(int nPos, CCopyBufferItem &Item);
+	void		GetCopyBufferItem(int nPos, CCopyBufferItem &Item);
+	void		SetCopyBufferItem(int nPos, CCopyBufferItem &Item);
 
-	static CString  GetMultiPasteSeparator(bool bConvertToLineFeeds = true);
-	static void		SetMultiPasteSeparator(CString csSep);
+	CString  GetMultiPasteSeparator(bool bConvertToLineFeeds = true);
+	void		SetMultiPasteSeparator(CString csSep);
 
-	static BOOL		GetSetCurrentDirectory();
+	BOOL		GetSetCurrentDirectory();
 
-	static CString GetPasteString(CString csAppName);
+	CString GetPasteString(CString csAppName);
 
-	static CString GetDefaultPasteString();
-	static void SetDefaultPasteString(CString val);
+	CString GetDefaultPasteString();
+	void SetDefaultPasteString(CString val);
 
-	static CString GetCopyString(CString csAppName);
-	static CString GetDefaultCopyString();
-	static void SetDefaultCopyString(CString val);
+	CString GetCopyString(CString csAppName);
+	CString GetDefaultCopyString();
+	void SetDefaultCopyString(CString val);
 
-	static CString GetCutString(CString csAppName);
-	static CString GetDefaultCutString();
-	static void SetDefaultCutString(CString val);
+	CString GetCutString(CString csAppName);
+	CString GetDefaultCutString();
+	void SetDefaultCutString(CString val);
 
-	static BOOL	GetEditWordWrap();
-	static void	SetEditWordWrap(BOOL bSet);
+	BOOL	GetEditWordWrap();
+	void	SetEditWordWrap(BOOL bSet);
 
 
-	static bool		GetIsPortableDitto();
-	static bool		GetIsWindowsApp();
-	static bool		GetIsChocolateyApp();
+	bool		GetIsPortableDitto();
+	bool		GetIsWindowsApp();
+	bool		GetIsChocolateyApp();
 
-	static long		GetAutoMaxDelay();
-	static void		SetAutoMaxDelay(long lDelay);
+	long		GetAutoMaxDelay();
+	void		SetAutoMaxDelay(long lDelay);
 
-	static void SetTheme(CString csTheme);
-	static CString GetTheme();
+	void SetTheme(CString csTheme);
+	CString GetTheme();
 
-	static long		GetKeyStateWaitTimerCount();
-	static long		GetKeyStatePasteDelay();
+	long		GetKeyStateWaitTimerCount();
+	long		GetKeyStatePasteDelay();
 
-	static DWORD	GetDittoHotKey();
+	DWORD	GetDittoHotKey();
 	
-	static DWORD	SendKeysDelay();
-	static void		SetSendKeysDelay(DWORD val);
+	DWORD	SendKeysDelay();
+	void		SetSendKeysDelay(DWORD val);
 
-	static DWORD	RealSendKeysDelay();
-	static void		SetRealSendKeysDelay(DWORD val);
+	DWORD	RealSendKeysDelay();
+	void		SetRealSendKeysDelay(DWORD val);
 
-	static DWORD	WaitForActiveWndTimeout();
-	static DWORD	FocusChangedDelay();
-	static DWORD	FocusWndTimerTimeout();
+	DWORD	WaitForActiveWndTimeout();
+	DWORD	FocusChangedDelay();
+	DWORD	FocusWndTimerTimeout();
 
-	static BOOL		GetConnectedToClipboard();
-	static void		SetConnectedToClipboard(BOOL val);
+	BOOL		GetConnectedToClipboard();
+	void		SetConnectedToClipboard(BOOL val);
 
-	static DWORD	GetTextOnlyRestoreDelay();
-	static DWORD 	GetTextOnlyPasteDelay();
+	DWORD	GetTextOnlyRestoreDelay();
+	DWORD 	GetTextOnlyPasteDelay();
 
-	static BOOL		GetSetFocusToApp(CString csAppName);
+	BOOL		GetSetFocusToApp(CString csAppName);
 
-	static DWORD	SelectedIndex();
-	static void		SetSelectedIndex(int val);
+	DWORD	SelectedIndex();
+	void		SetSelectedIndex(int val);
 
-	static void		SetCopyAppInclude(CString csAppName);
-	static CString  GetCopyAppInclude();
+	void		SetCopyAppInclude(CString csAppName);
+	CString  GetCopyAppInclude();
 
-	static void		SetCopyAppExclude(CString csAppName);
-	static CString  GetCopyAppExclude();
+	void		SetCopyAppExclude(CString csAppName);
+	CString  GetCopyAppExclude();
 
-	static CString  GetCopyAppSeparator();
+	CString  GetCopyAppSeparator();
 
-	static DWORD	GetNoFormatsRetryDelay();
+	DWORD	GetNoFormatsRetryDelay();
 
-	static DWORD	GetMainDeletesDeleteCount();
+	DWORD	GetMainDeletesDeleteCount();
 
-	static DWORD	GetIdleSecondsBeforeDelete();
+	DWORD	GetIdleSecondsBeforeDelete();
 
-	static DWORD	GetDbTimeout();
+	DWORD	GetDbTimeout();
 
-	static DWORD	GetFunnyTickCountAdjustment();
+	DWORD	GetFunnyTickCountAdjustment();
 
-	static DWORD	GetMinIdleTimeBeforeTrackFocus();
+	DWORD	GetMinIdleTimeBeforeTrackFocus();
 
-	static DWORD	GetTimeBeforeExpandWindow();
+	DWORD	GetTimeBeforeExpandWindow();
 
-	static DWORD	GetUseGuiThreadInfoForFocus();
+	DWORD	GetUseGuiThreadInfoForFocus();
 
-	static void		SetSearchDescription(BOOL val);
-	static BOOL		GetSearchDescription();
+	void		SetSearchDescription(BOOL val);
+	BOOL		GetSearchDescription();
 
-	static void		SetSearchFullText(BOOL val);
-	static BOOL		GetSearchFullText();
+	void		SetSearchFullText(BOOL val);
+	BOOL		GetSearchFullText();
 
-	static void		SetSearchQuickPaste(BOOL val);
-	static BOOL		GetSearchQuickPaste();
+	void		SetSearchQuickPaste(BOOL val);
+	BOOL		GetSearchQuickPaste();
 
-	static void		SetSimpleTextSearch(BOOL val);
-	static BOOL		GetSimpleTextSearch();
+	void		SetSimpleTextSearch(BOOL val);
+	BOOL		GetSimpleTextSearch();
 
-	static void		SetMoveClipsOnGlobal10(BOOL val);
-	static BOOL		GetMoveClipsOnGlobal10();
+	void		SetMoveClipsOnGlobal10(BOOL val);
+	BOOL		GetMoveClipsOnGlobal10();
 
-	static void		SetShowScrollBar(BOOL val);
-	static BOOL		GetShowScrollBar();
-	static BOOL		m_showScrollBar;
+	void		SetShowScrollBar(BOOL val);
+	BOOL		GetShowScrollBar();
+	BOOL		m_showScrollBar{};
 
-	static void		SetUseModernScrollBar(BOOL val);
-	static BOOL		GetUseModernScrollBar();
-	static BOOL		m_useModernScrollBar;
+	void		SetUseModernScrollBar(BOOL val);
+	BOOL		GetUseModernScrollBar();
+	BOOL		m_useModernScrollBar{ TRUE };
 
-	static void		SetPasteAsAdmin(BOOL val);
-	static BOOL		GetPasteAsAdmin();
+	void		SetPasteAsAdmin(BOOL val);
+	BOOL		GetPasteAsAdmin();
 
-	static void		SetRememberDescPos(BOOL val);
-	static BOOL		GetRememberDescPos();
+	void		SetRememberDescPos(BOOL val);
+	BOOL		GetRememberDescPos();
 
-	static void		SetSizeDescWindowToContent(BOOL val);
-	static BOOL		GetSizeDescWindowToContent();
+	void		SetSizeDescWindowToContent(BOOL val);
+	BOOL		GetSizeDescWindowToContent();
 
-	static void		SetScaleImagesToDescWindow(BOOL val);
-	static BOOL		GetScaleImagesToDescWindow();
+	void		SetScaleImagesToDescWindow(BOOL val);
+	BOOL		GetScaleImagesToDescWindow();
 
-	static void		SetDescWndPoint(CPoint point);
-	static void		GetDescWndPoint(CPoint &point);
+	void		SetDescWndPoint(CPoint point);
+	void		GetDescWndPoint(CPoint &point);
 
-	static void		SetDescWndSize(CSize size);
-	static void		GetDescWndSize(CSize &size);
+	void		SetDescWndSize(CSize size);
+	void		GetDescWndSize(CSize &size);
 
-	static void		SetShowInTaskBar(BOOL val);
-	static BOOL		GetShowInTaskBar();
+	void		SetShowInTaskBar(BOOL val);
+	BOOL		GetShowInTaskBar();
 
-	static void		SetHideTaskbarIconOnClose(BOOL val);
-	static BOOL		GetHideTaskbarIconOnClose();
+	void		SetHideTaskbarIconOnClose(BOOL val);
+	BOOL		GetHideTaskbarIconOnClose();
 
-	static void		SetDiffApp(CString val);
-	static CString	GetDiffApp();
+	void		SetDiffApp(CString val);
+	CString	GetDiffApp();
 
-	static void		SetQRCodeBorderPixels(int val);
-	static int	GetQRCodeBorderPixels();
+	void		SetQRCodeBorderPixels(int val);
+	int	GetQRCodeBorderPixels();
 
-	static BOOL GetRegExTextSearch();
-	static void SetRegExTextSearch(BOOL val);
-
-
+	BOOL GetRegExTextSearch();
+	void SetRegExTextSearch(BOOL val);
 
 
-	static int ReadRandomFileInterval();
-	static int ReadRandomFileIdleMin();
 
-	static BOOL GetShowGroupsInMainList();
-	static void SetShowGroupsInMainList(BOOL val);
 
-	static void SetGroupDoubleClickTimeMS(int val);
-	static int GetGroupDoubleClickTimeMS();
+	int ReadRandomFileInterval();
+	int ReadRandomFileIdleMin();
 
-	static void SetSaveToGroupTimeoutMS(int val);
-	static int GetSaveToGroupTimeoutMS();
+	BOOL GetShowGroupsInMainList();
+	void SetShowGroupsInMainList(BOOL val);
 
-	static void SetCopyReasonTimeoutMS(int val);
-	static int GetCopyReasonTimeoutMS();
+	void SetGroupDoubleClickTimeMS(int val);
+	int GetGroupDoubleClickTimeMS();
 
-	static void SetWindowsResumeDelayReOpenDbMS(int val);
-	static int GetWindowsResumeDelayReOpenDbMS();
+	void SetSaveToGroupTimeoutMS(int val);
+	int GetSaveToGroupTimeoutMS();
 
-	static BOOL GetShowMsgWndOnCopyToGroup();
-	static void SetShowMsgWndOnCopyToGroup(BOOL val);
+	void SetCopyReasonTimeoutMS(int val);
+	int GetCopyReasonTimeoutMS();
 
-	static int GetActionShortCutA(DWORD action, int pos);
-	static void SetActionShortCutA(int action, DWORD shortcut, int pos);
+	void SetWindowsResumeDelayReOpenDbMS(int val);
+	int GetWindowsResumeDelayReOpenDbMS();
 
-	static int GetActionShortCutB(DWORD action, int pos);
-	static void SetActionShortCutB(int action, DWORD shortcut, int pos);
+	BOOL GetShowMsgWndOnCopyToGroup();
+	void SetShowMsgWndOnCopyToGroup(BOOL val);
 
-	static BOOL	m_bShowAlwaysOnTopWarning;
-	static BOOL GetShowAlwaysOnTopWarning();
-	static void SetShowAlwaysOnTopWarning(BOOL show);
+	int GetActionShortCutA(DWORD action, int pos);
+	void SetActionShortCutA(int action, DWORD shortcut, int pos);
+
+	int GetActionShortCutB(DWORD action, int pos);
+	void SetActionShortCutB(int action, DWORD shortcut, int pos);
+
+	BOOL	m_bShowAlwaysOnTopWarning{ TRUE };
+	BOOL GetShowAlwaysOnTopWarning();
+	void SetShowAlwaysOnTopWarning(BOOL show);
 	
-	static BOOL GetUseIPFromAccept();
-	static void SetUseIPFromAccept(BOOL useAccept);
+	BOOL GetUseIPFromAccept();
+	void SetUseIPFromAccept(BOOL useAccept);
 
-	static int GetDragId();
-	static void SetDragId(int id);
+	int GetDragId();
+	void SetDragId(int id);
 
-	static BOOL GetShowIfClipWasPasted();
-	static void SetShowIfClipWasPasted(BOOL val);
+	BOOL GetShowIfClipWasPasted();
+	void SetShowIfClipWasPasted(BOOL val);
 
-	static int GetLastGroupToggle();
-	static void SetLastGroupToggle(int val);
+	int GetLastGroupToggle();
+	void SetLastGroupToggle(int val);
 
-	static BOOL GetMouseClickHidesDescription();
-	static void SetMouseClickHidesDescription(int val);
+	BOOL GetMouseClickHidesDescription();
+	void SetMouseClickHidesDescription(int val);
 
-	static BOOL GetWrapDescriptionText();
-	static void SetWrapDescriptionText(int val);
+	BOOL GetWrapDescriptionText();
+	void SetWrapDescriptionText(int val);
 
-	static BOOL GetUseUISelectedGroupForLastTenCopies();
-	static void SetUseUISelectedGroupForLastTenCopies(int val);
+	BOOL GetUseUISelectedGroupForLastTenCopies();
+	void SetUseUISelectedGroupForLastTenCopies(int val);
 
-	static int GetDelayRenderLockout();
-	static void SetDelayRenderLockout(int val);
+	int GetDelayRenderLockout();
+	void SetDelayRenderLockout(int val);
 
-	static BOOL GetAdjustClipsForCRC();
-	static void SetAdjustClipsForCRC(int val);
-
-
-	static int GetBalloonTimeout();
-	static void SetBalloonTimeout(int val);
+	BOOL GetAdjustClipsForCRC();
+	void SetAdjustClipsForCRC(int val);
 
 
-	static int GetMaxFileContentsSize();
-	static void SetMaxFileContentsSize(int val);
-
-	static int GetErrorMsgPopupTimeout();
-	static void SetErrorMsgPopupTimeout(int val);
-
-	static CRegExFilterHelper m_regexHelper;
-	static void		SetRegexFilter(CString val, int pos);
-	static CString	GetRegexFilter(int pos);
-
-	static void SetRegexFilterByProcessName(CString val, int pos);
-	static CString GetRegexFilterByProcessName(int pos);
-
-	static BOOL GetOpenToGroupByActiveExe();
-	static void SetOpenToGroupByActiveExe(int val);
-
-	static BOOL GetShowStartupMessage();
-	static void SetShowStartupMessage(int val);
-
-	static long m_tooltipTimeout;
-	static long GetToolTipTimeout();
-	static void SetToolTipTimeout(int long);
-
-	static CString GetPastSearchXml();
-	static void SetPastSearchXml(CString val);
+	int GetBalloonTimeout();
+	void SetBalloonTimeout(int val);
 
 
-	static BOOL m_cleanRTFBeforeDrawing;
-	static BOOL GetCleanRTFBeforeDrawing();
-	static void SetCleanRTFBeforeDrawing(BOOL val);
+	int GetMaxFileContentsSize();
+	void SetMaxFileContentsSize(int val);
 
-	static BOOL GetDisableExpireClipsConfig();
-	static void SetDisableExpireClipsConfig(BOOL val);
+	int GetErrorMsgPopupTimeout();
+	void SetErrorMsgPopupTimeout(int val);
 
-	static BOOL GetRevertToTopLevelGroup();
-	static void SetRevertToTopLevelGroup(BOOL val);
+	CRegExFilterHelper m_regexHelper{};
+	void		SetRegexFilter(CString val, int pos);
+	CString	GetRegexFilter(int pos);
 
-	static BOOL GetUpdateClipOrderOnCtrlC();
-	static void SetUpdateClipOrderOnCtrlC(BOOL val);
+	void SetRegexFilterByProcessName(CString val, int pos);
+	CString GetRegexFilterByProcessName(int pos);
 
-	static int GetMaxToolTipLines();
-	static void SetMaxToolTipLines(int val);
+	BOOL GetOpenToGroupByActiveExe();
+	void SetOpenToGroupByActiveExe(int val);
 
-	static int GetMaxToolTipCharacters();
-	static void SetMaxToolTipCharacters(int val);
+	BOOL GetShowStartupMessage();
+	void SetShowStartupMessage(int val);
 
-	static int m_doubleKeyStrokeTimeout;
-	static int GetDoubleKeyStrokeTimeout();
-	static void SetDoubleKeyStrokeTimeout(int val);
+	long m_tooltipTimeout{};
+	long GetToolTipTimeout();
+	void SetToolTipTimeout(int long);
 
-	static int m_firstTenHotKeysStart;
-	static int GetFirstTenHotKeysStart();
-	static void SetFirstTenHotKeysStart(int val);
-
-	static int m_firstTenHotKeysFontSize;
-	static int GetFirstTenHotKeysFontSize();
-	static void SetFirstTenHotKeysFontSize(int val);
-
-	static BOOL GetAddCFHDROP_OnDrag();
-	static void SetAddCFHDROP_OnDrag(BOOL val);
-
-	static int GetCopyAndSveDelay();
-	static void SetCopyAndSveDelay(int val);
-
-	static int GetEditorDefaultFontSize();
-	static void SetEditorDefaultFontSize(int val);
-
-	static BOOL m_moveSelectionOnOpenHotkey;
-	static BOOL GetMoveSelectionOnOpenHotkey();
-	static void SetMoveSelectionOnOpenHotkey(BOOL val);
-
-	static BOOL m_allowBackToBackDuplicates;
-	static BOOL GetAllowBackToBackDuplicates();
-	static void SetAllowBackToBackDuplicates(BOOL val);
-
-	static BOOL m_maintainSearchView;
-	static BOOL GetMaintainSearchView();
-	static void SetMaintainSearchView(BOOL val);
+	CString GetPastSearchXml();
+	void SetPastSearchXml(CString val);
 
 
-	static CString m_tempDragFileName;
-	static CTime m_tempDragFileNameSetTime;
-	static CString GetTempDragFileName();
-	static void SetTempDragFileName(CString val);
+	BOOL m_cleanRTFBeforeDrawing{ TRUE };
+	BOOL GetCleanRTFBeforeDrawing();
+	void SetCleanRTFBeforeDrawing(BOOL val);
 
-	static BOOL m_refreshViewAfterPasting;
-	static BOOL GetRefreshViewAfterPasting();
-	static void SetRefreshViewAfterPasting(BOOL val);
+	BOOL GetDisableExpireClipsConfig();
+	void SetDisableExpireClipsConfig(BOOL val);
 
-	static CString GetSlugifySeparator();
-	static void SetSlugifySeparator(CString val);
+	BOOL GetRevertToTopLevelGroup();
+	void SetRevertToTopLevelGroup(BOOL val);
 
-	static BOOL m_supportAllTypes;
-	static BOOL GetSupportAllTypes();
-	static void SetSupportAllTypes(BOOL val);
+	BOOL GetUpdateClipOrderOnCtrlC();
+	void SetUpdateClipOrderOnCtrlC(BOOL val);
 
-	static CString GetIgnoreAnnoyingCFDIB(BOOL useCache = FALSE);
-	static CString m_ignoreAnnoyingCFDIB;
-	static void SetIgnoreAnnoyingCFDIB(CString val);
-	static std::set<CString> GetIgnoreAnnoyingCFDIBSet(BOOL useCache = FALSE);
+	int GetMaxToolTipLines();
+	void SetMaxToolTipLines(int val);
+
+	int GetMaxToolTipCharacters();
+	void SetMaxToolTipCharacters(int val);
+
+	int m_doubleKeyStrokeTimeout{ 350 };
+	int GetDoubleKeyStrokeTimeout();
+	void SetDoubleKeyStrokeTimeout(int val);
+
+	int m_firstTenHotKeysStart{ 1 };
+	int GetFirstTenHotKeysStart();
+	void SetFirstTenHotKeysStart(int val);
+
+	int m_firstTenHotKeysFontSize{ 5 };
+	int GetFirstTenHotKeysFontSize();
+	void SetFirstTenHotKeysFontSize(int val);
+
+	BOOL GetAddCFHDROP_OnDrag();
+	void SetAddCFHDROP_OnDrag(BOOL val);
+
+	int GetCopyAndSveDelay();
+	void SetCopyAndSveDelay(int val);
+
+	int GetEditorDefaultFontSize();
+	void SetEditorDefaultFontSize(int val);
+
+	BOOL m_moveSelectionOnOpenHotkey{ TRUE };
+	BOOL GetMoveSelectionOnOpenHotkey();
+	void SetMoveSelectionOnOpenHotkey(BOOL val);
+
+	BOOL m_allowBackToBackDuplicates{};
+	BOOL GetAllowBackToBackDuplicates();
+	void SetAllowBackToBackDuplicates(BOOL val);
+
+	BOOL m_maintainSearchView{};
+	BOOL GetMaintainSearchView();
+	void SetMaintainSearchView(BOOL val);
+
+
+	CString m_tempDragFileName{};
+	CTime m_tempDragFileNameSetTime{};
+	CString GetTempDragFileName();
+	void SetTempDragFileName(CString val);
+
+	BOOL m_refreshViewAfterPasting{ TRUE };
+	BOOL GetRefreshViewAfterPasting();
+	void SetRefreshViewAfterPasting(BOOL val);
+
+	CString GetSlugifySeparator();
+	void SetSlugifySeparator(CString val);
+
+	BOOL m_supportAllTypes{};
+	BOOL GetSupportAllTypes();
+	void SetSupportAllTypes(BOOL val);
+
+	CString GetIgnoreAnnoyingCFDIB(BOOL useCache = FALSE);
+	CString m_ignoreAnnoyingCFDIB{};
+	void SetIgnoreAnnoyingCFDIB(CString val);
+	std::set<CString> GetIgnoreAnnoyingCFDIBSet(BOOL useCache = FALSE);
 	// The options that decide how a copied clip is saved, for injection into CClip
-	static DittoCore::ClipSaveSettings GetClipSaveSettings();
+	DittoCore::ClipSaveSettings GetClipSaveSettings();
 
-	static BOOL GetRegexCaseInsensitive();
-	static void SetRegexCaseInsensitive(BOOL val);
+	BOOL GetRegexCaseInsensitive();
+	void SetRegexCaseInsensitive(BOOL val);
 
-	static BOOL		m_bDrawCopiedColorCode;
-	static void		SetDrawCopiedColorCode(long bDraw);
-	static BOOL		GetDrawCopiedColorCode();
-
-
-	static BOOL m_centerWindowBelowCursorOrCaret;
-	static void SetCenterWindowBelowCursorOrCaret(BOOL center);
-	static BOOL GetCenterWindowBelowCursorOrCaret();
-
-	static BOOL SetTextEditorPath(CString path);
-	static CString GetTextEditorPath();
-
-	static BOOL SetImageEditorPath(CString path);
-	static CString GetImageEditorPath();
-
-	static BOOL SetRTFEditorPath(CString path);
-	static CString GetRTFEditorPath();
+	BOOL		m_bDrawCopiedColorCode{};
+	void		SetDrawCopiedColorCode(long bDraw);
+	BOOL		GetDrawCopiedColorCode();
 
 
+	BOOL m_centerWindowBelowCursorOrCaret{};
+	void SetCenterWindowBelowCursorOrCaret(BOOL center);
+	BOOL GetCenterWindowBelowCursorOrCaret();
 
-	static void SetPreferUtf8ForCompare(BOOL val);
-	static BOOL GetPreferUtf8ForCompare();
+	BOOL SetTextEditorPath(CString path);
+	CString GetTextEditorPath();
 
-	static int	m_clipEditSaveDelayAfterLoadSeconds;
-	static void SetClipEditSaveDelayAfterLoadSeconds(int val);
-	static BOOL GetClipEditSaveDelayAfterLoadSeconds();
+	BOOL SetImageEditorPath(CString path);
+	CString GetImageEditorPath();
 
-	static int	m_clipEditSaveDelayAfterSaveSeconds;
-	static void SetClipEditSaveDelayAfterSaveSeconds(int val);
-	static BOOL GetClipEditSaveDelayAfterSaveSeconds();
+	BOOL SetRTFEditorPath(CString path);
+	CString GetRTFEditorPath();
 
-	static BOOL m_bDoNotHideOnDeactivate;
-	static void SetDoNotHideOnDeactivate(BOOL val);
-	static BOOL GetDoNotHideOnDeactivate();
 
-	static BOOL SetEditWndSize(CSize size);
-	static void GetEditWndSize(CSize& size);
 
-	static BOOL SetEditWndPoint(CPoint point);
-	static void GetEditWndPoint(CPoint& point);
+	void SetPreferUtf8ForCompare(BOOL val);
+	BOOL GetPreferUtf8ForCompare();
 
-	static BOOL m_enforceClipboardIgnoreFormats;
-	static void SetEnforceClipboardIgnoreFormats(BOOL val);
-	static BOOL GetEnforceClipboardIgnoreFormats();
+	int	m_clipEditSaveDelayAfterLoadSeconds{ 3 };
+	void SetClipEditSaveDelayAfterLoadSeconds(int val);
+	BOOL GetClipEditSaveDelayAfterLoadSeconds();
+
+	int	m_clipEditSaveDelayAfterSaveSeconds{ 3 };
+	void SetClipEditSaveDelayAfterSaveSeconds(int val);
+	BOOL GetClipEditSaveDelayAfterSaveSeconds();
+
+	BOOL m_bDoNotHideOnDeactivate{};
+	void SetDoNotHideOnDeactivate(BOOL val);
+	BOOL GetDoNotHideOnDeactivate();
+
+	BOOL SetEditWndSize(CSize size);
+	void GetEditWndSize(CSize& size);
+
+	BOOL SetEditWndPoint(CPoint point);
+	void GetEditWndPoint(CPoint& point);
+
+	BOOL m_enforceClipboardIgnoreFormats{ TRUE };
+	void SetEnforceClipboardIgnoreFormats(BOOL val);
+	BOOL GetEnforceClipboardIgnoreFormats();
 
 private:
 	/**
-	 * @brief Writes an integer to an ini file (WritePrivateProfileString with the decimal text).
-	 * @param lpAppName The section.
-	 * @param lpKeyName The key.
-	 * @param nValue The value.
-	 * @param lpFileName The ini file.
-	 * @return The WritePrivateProfileString result (nonzero on success).
+	 * @brief The store the settings are read from: the registry during ConverSettingsToIni,
+	 *        otherwise m_store.
+	 * @return The store.
 	 */
-	static UINT WritePrivateProfileInt(LPCTSTR lpAppName, LPCTSTR lpKeyName, INT nValue, LPCTSTR lpFileName);
+	DittoCore::ISettingsStore& ReadStore() const;
+
+	/**
+	 * @brief Whether ConverSettingsToIni is running (reads then come from the registry).
+	 * @return True during the conversion.
+	 */
+	bool InConversion() const;
 
 	/** @brief The folder a GetPath folder starts from. */
 	enum class PathRoot
@@ -742,37 +763,20 @@ private:
 	 * @param rule The id's rule.
 	 * @param csDir In: the exe's folder; out: the folder of the id.
 	 */
-	static void ApplyPathRule(const PathRule& rule, CString& csDir);
+	void ApplyPathRule(const PathRule& rule, CString& csDir);
 
 	/**
 	 * @brief LoadSettings' step: finds the ini file (Windows Store, Chocolatey, portable or app data) and sets m_csIniFileName, m_bFromIni and the app kind flags.
 	 * @param exeDir The exe's folder, with a trailing backslash.
 	 */
-	static void LocateIniFile(const CString& exeDir);
+	void LocateIniFile(const CString& exeDir);
 
 	/** @brief LocateIniFile's step for a plain install: the ini file next to the exe (portable) or in app data. */
-	static void LocatePortableOrAppDataIniFile();
+	void LocatePortableOrAppDataIniFile();
 
-	/**
-	 * @brief GetProfileString's ini file read; the buffer grows until the value fits (or maxSize is reached).
-	 * @param csName The value name.
-	 * @param csDefault The value when the ini file has none.
-	 * @param csNewPath The section; empty for "Ditto".
-	 * @param maxSize The most characters to read, -1 for no limit.
-	 * @return The value.
-	 */
-	static CString GetIniProfileString(const CString& csName, const CString& csDefault, const CString& csNewPath, int maxSize);
+	/** @brief Where the settings are stored: the registry, or the ini file once LoadSettings found one. */
+	std::unique_ptr<DittoCore::ISettingsStore> m_store{};
 
-	/**
-	 * @brief GetProfileString's registry read under HKCU\\Software\\Ditto.
-	 * @param csName The value name.
-	 * @param csDefault The value when the registry has none or the read fails.
-	 * @param csNewPath The sub key; empty for none.
-	 * @param maxSize The most characters to read, -1 for no limit.
-	 * @return The value.
-	 */
-	static CString GetRegistryProfileString(const CString& csName, const CString& csDefault, const CString& csNewPath, int maxSize);
+	/** @brief The registry store ConverSettingsToIni reads from while it runs; null otherwise. */
+	std::unique_ptr<DittoCore::ISettingsStore> m_conversionSource{};
 };
-
-// global for easy access and for initialization of fast access variables
-extern CGetSetOptions g_Opt; 

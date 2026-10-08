@@ -10,7 +10,8 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-CQuickPaste::CQuickPaste()
+CQuickPaste::CQuickPaste(CGetSetOptions &settings)
+	: m_settings(settings)
 {
 	m_forceResizeOnNextShow = false;
 }
@@ -56,7 +57,7 @@ void CQuickPaste::ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboa
 		return;
 	}
 
-	int nPosition = CGetSetOptions::GetQuickPastePosition();
+	int nPosition = m_settings.GetQuickPastePosition();
 
 	CPoint point;
 	CSize csSize;
@@ -137,12 +138,12 @@ void CQuickPaste::CloseWndAndReopenDatabase()
 	m_pwndPaste.reset();
 
 	theApp.m_db.close();
-	CDatabaseManager::OpenDatabase(CGetSetOptions::GetDBPath());
+	CDatabaseManager::OpenDatabase(m_settings, m_settings.GetDBPath());
 }
 
 bool CQuickPaste::ShowPersistentWnd()
 {
-	if(CGetSetOptions::m_bShowPersistent && m_pwndPaste != nullptr)
+	if(m_settings.m_bShowPersistent && m_pwndPaste != nullptr)
 	{
 		m_pwndPaste->ShowWindow(SW_SHOW);
 		m_pwndPaste->MinMaxWindow(CDittoWindow::ForceMax);
@@ -167,8 +168,8 @@ void CQuickPaste::GetInitialPointAndSize(CPoint &point, CSize &csSize)
 	}
 	else
 	{
-		CGetSetOptions::GetQuickPastePoint(point);
-		CGetSetOptions::GetQuickPasteSize(csSize);
+		m_settings.GetQuickPastePoint(point);
+		m_settings.GetQuickPasteSize(csSize);
 
 		if (IsWindow(m_pwndPaste->m_hWnd))
 		{
@@ -215,13 +216,13 @@ void CQuickPaste::ChooseWindowPoint(int nPosition, bool bAtPrevPos, const CPoint
 {
 	if(bAtPrevPos)
 	{
-		CGetSetOptions::GetQuickPastePoint(point);
-		CGetSetOptions::GetQuickPasteSize(csSize);
+		m_settings.GetQuickPastePoint(point);
+		m_settings.GetQuickPasteSize(csSize);
 	}
 	else if (nPosition == CGetSetOptions::PosAtCaret)
 	{
 		point = ptCaret;
-		if (CGetSetOptions::m_centerWindowBelowCursorOrCaret)
+		if (m_settings.m_centerWindowBelowCursorOrCaret)
 		{
 			point.x -= csSize.cx / 2;
 		}
@@ -233,20 +234,20 @@ void CQuickPaste::ChooseWindowPoint(int nPosition, bool bAtPrevPos, const CPoint
 		point.x += 2;
 		point.y += 2;
 
-		if (CGetSetOptions::m_centerWindowBelowCursorOrCaret)
+		if (m_settings.m_centerWindowBelowCursorOrCaret)
 		{
 			point.x -= csSize.cx / 2;
 		}
 	}
 	else if(nPosition == CGetSetOptions::PosAtPrevious)
-		CGetSetOptions::GetQuickPastePoint(point);
+		m_settings.GetQuickPastePoint(point);
 }
 
 bool CQuickPaste::FixInitialRect(CRect &crRect, const CPoint &ptCaret)
 {
 	bool forceMoveWindow = m_forceResizeOnNextShow;
 
-	if(CGetSetOptions::m_bEnsureEntireWindowCanBeSeen)
+	if(m_settings.m_bEnsureEntireWindowCanBeSeen)
 	{
 		if(CMonitorGeometry::EnsureWindowVisible(&crRect))
 		{
@@ -275,7 +276,7 @@ bool CQuickPaste::CreateWndIfNeeded(CWnd *pParent, const CRect &crRect)
 	{
 		CWnd *pLocalParent = pParent;
 
-		if(CGetSetOptions::GetShowInTaskBar())
+		if(m_settings.GetShowInTaskBar())
 		{
 			pLocalParent = NULL;
 		}
@@ -303,7 +304,7 @@ void CQuickPaste::MoveQPasteWnd(CRect &crRect, bool adjustRect)
 		crRect.right = crRect.left + m_pwndPaste->m_DittoWindow.m_dpi.Scale(crRect.Width());
 		crRect.bottom = crRect.top + m_pwndPaste->m_DittoWindow.m_dpi.Scale(crRect.Height());
 
-		if (CGetSetOptions::m_bEnsureEntireWindowCanBeSeen)
+		if (m_settings.m_bEnsureEntireWindowCanBeSeen)
 		{
 			CMonitorGeometry::EnsureWindowVisible(&crRect);
 		}
@@ -314,7 +315,7 @@ void CQuickPaste::MoveQPasteWnd(CRect &crRect, bool adjustRect)
 
 void CQuickPaste::MoveSelection(bool down)
 {
-	if(m_pwndPaste && CGetSetOptions::m_moveSelectionOnOpenHotkey)
+	if(m_pwndPaste && m_settings.m_moveSelectionOnOpenHotkey)
 	{
 		if (IsWindow(m_pwndPaste->m_hWnd))
 		{
@@ -325,7 +326,7 @@ void CQuickPaste::MoveSelection(bool down)
 
 void CQuickPaste::OnKeyStateUp()
 {
-	if(m_pwndPaste && CGetSetOptions::m_moveSelectionOnOpenHotkey)
+	if(m_pwndPaste && m_settings.m_moveSelectionOnOpenHotkey)
 	{
 		if (IsWindow(m_pwndPaste->m_hWnd))
 		{
@@ -336,7 +337,7 @@ void CQuickPaste::OnKeyStateUp()
 
 void CQuickPaste::SetKeyModiferState(bool bActive)
 {
-	if(m_pwndPaste && CGetSetOptions::m_moveSelectionOnOpenHotkey)
+	if(m_pwndPaste && m_settings.m_moveSelectionOnOpenHotkey)
 	{
 		if (IsWindow(m_pwndPaste->m_hWnd))
 		{
@@ -384,8 +385,8 @@ void CQuickPaste::OnScreenResolutionChange()
 		CPoint point;
 		CSize csSize;
 
-		CGetSetOptions::GetQuickPastePoint(point);
-		CGetSetOptions::GetQuickPasteSize(csSize);
+		m_settings.GetQuickPastePoint(point);
+		m_settings.GetQuickPasteSize(csSize);
 
 		csSize.cx = m_pwndPaste->m_DittoWindow.m_dpi.Scale(csSize.cx);
 		csSize.cy = m_pwndPaste->m_DittoWindow.m_dpi.Scale(csSize.cy);

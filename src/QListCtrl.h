@@ -33,8 +33,15 @@ public:
 
 typedef CMap<long, long, CClipFormat, CClipFormat&> CMapIDtoCF;
 
+class CGetSetOptions;
+
 class CQListCtrl : public CListCtrl
 {
+private:
+	/** @brief The application settings (theApp's services; this control is created by the framework).
+	@return the settings. */
+	CGetSetOptions& Settings() const;
+
 public:
 	/**
 	 * @brief The window messages and notification codes that the list, the search box, the group tree

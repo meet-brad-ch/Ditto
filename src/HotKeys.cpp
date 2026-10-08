@@ -9,16 +9,17 @@ CHotKeys g_HotKeys;
 
 int CHotKey::m_nextId = 0;
 
-CHotKey::CHotKey(CString name, DWORD defKey, bool bUnregOnShowDitto, HotKeyType hkType, CString description) 
-	: m_Name(name), 
+CHotKey::CHotKey(CGetSetOptions& settings, CString name, DWORD defKey, bool bUnregOnShowDitto, HotKeyType hkType, CString description)
+	: m_Name(name),
 	m_description(description),
 	m_bIsRegistered(false), 
 	m_bUnRegisterOnShowDitto(bUnregOnShowDitto),
-	m_clipId(0)
+	m_clipId(0),
+	m_settings(settings)
 {
 	m_Atom = ::GlobalAddAtom(CStringUtil::Format(_T("%s_%d"), m_Name.GetString(), hkType));
 	ASSERT(m_Atom);
-	m_Key = (DWORD)CGetSetOptions::GetProfileLong(m_Name, (long) defKey);
+	m_Key = (DWORD)m_settings.GetProfileLong(m_Name, (long) defKey);
 	m_globalId = m_nextId;
 	m_nextId++;
 	m_hkType = hkType;
@@ -168,14 +169,14 @@ void CHotKey::SetKey( DWORD key, bool bSave )
 
 void CHotKey::LoadKey()
 {
-	SetKey((DWORD) CGetSetOptions::GetProfileLong(m_Name, 0));
+	SetKey((DWORD) m_settings.GetProfileLong(m_Name, 0));
 }
 
 bool CHotKey::SaveKey()
 {
 	if(m_clipId <= 0)
 	{
-		return CGetSetOptions::SetProfileLong( m_Name, (long) m_Key ) != FALSE;
+		return m_settings.SetProfileLong( m_Name, (long) m_Key ) != FALSE;
 	}
 
 
@@ -302,9 +303,9 @@ CHotKeys::~CHotKeys()
 	}
 }
 
-CHotKey& CHotKeys::Create(CString name, DWORD defKey, bool bUnregOnShowDitto, CHotKey::HotKeyType hkType, CString description)
+CHotKey& CHotKeys::Create(CGetSetOptions& settings, CString name, DWORD defKey, bool bUnregOnShowDitto, CHotKey::HotKeyType hkType, CString description)
 {
-	m_keys.push_back(std::make_unique<CHotKey>(name, defKey, bUnregOnShowDitto, hkType, description));
+	m_keys.push_back(std::make_unique<CHotKey>(settings, name, defKey, bUnregOnShowDitto, hkType, description));
 	return *m_keys.back();
 }
 
@@ -349,7 +350,7 @@ bool CHotKeys::Remove(int clipId, CHotKey::HotKeyType hkType)
 	return false;
 }
 
-BOOL CHotKeys::ValidateClip(int clipId, DWORD key, CString desc, CHotKey::HotKeyType hkType)
+BOOL CHotKeys::ValidateClip(CGetSetOptions& settings, int clipId, DWORD key, CString desc, CHotKey::HotKeyType hkType)
 {
 	CHotKey *pKey = NULL;
 	INT_PTR count = GetSize();
@@ -366,7 +367,7 @@ BOOL CHotKeys::ValidateClip(int clipId, DWORD key, CString desc, CHotKey::HotKey
 
 	if(pKey == NULL)
 	{
-		pKey = &Create(desc, key, true, hkType);
+		pKey = &Create(settings, desc, key, true, hkType);
 	}
 
 	pKey->m_Key = key;

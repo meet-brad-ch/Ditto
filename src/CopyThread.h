@@ -4,6 +4,8 @@
 #include <afxmt.h>
 #include <memory>
 
+class CGetSetOptions;
+
 struct CCopyConfig
 {
 public:
@@ -105,4 +107,10 @@ private:
 	 * @param pClip The clip; released when the handler takes it (the handler then owns it).
 	 */
 	void HandOverClip(std::unique_ptr<CClip>& pClip);
+
+	/**
+	 * @brief The application's settings.
+	 * @return theApp.Services().Settings().
+	 */
+	CGetSetOptions& Settings() const;
 };

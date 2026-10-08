@@ -69,16 +69,17 @@ BOOL COptionsStats::OnInitDialog()
 {
 	CPropertyPage::OnInitDialog();
 
-	COleDateTime time((time_t) CGetSetOptions::GetTotalDate());
+	CGetSetOptions& settings = theApp.Services().Settings();
+	COleDateTime time((time_t) settings.GetTotalDate());
 	m_eAllDate = time.Format();
 
-	m_eAllCopies.Format(_T("%d"), CGetSetOptions::GetTotalCopyCount());
-	m_eAllPastes.Format(_T("%d"), CGetSetOptions::GetTotalPasteCount());
+	m_eAllCopies.Format(_T("%d"), settings.GetTotalCopyCount());
+	m_eAllPastes.Format(_T("%d"), settings.GetTotalPasteCount());
 
-	COleDateTime time2((time_t)CGetSetOptions::GetTripDate());
+	COleDateTime time2((time_t)settings.GetTripDate());
 	m_eTripDate = time2.Format();
-	m_eTripCopies.Format(_T("%d"), CGetSetOptions::GetTripCopyCount());
-	m_eTripPastes.Format(_T("%d"), CGetSetOptions::GetTripPasteCount());
+	m_eTripCopies.Format(_T("%d"), settings.GetTripCopyCount());
+	m_eTripPastes.Format(_T("%d"), settings.GetTripPasteCount());
 
 	m_eLastStarted = theApp.m_oldtStartUp.Format();	
 
@@ -99,7 +100,7 @@ BOOL COptionsStats::OnInitDialog()
 		return TRUE;
 	}
 	
-	__int64 size = CFileSystem::FileSize(CDatabaseManager::GetDBName());			
+	__int64 size = CFileSystem::FileSize(CDatabaseManager::GetDBName(theApp.Services().Settings()));
 
 	const int MAX_FILE_SIZE_BUFFER = 255;
 	TCHAR szFileSize[MAX_FILE_SIZE_BUFFER];
@@ -116,9 +117,10 @@ BOOL COptionsStats::OnInitDialog()
 
 void COptionsStats::OnResetCounts() 
 {
-	CGetSetOptions::SetTripCopyCount(0);
-	CGetSetOptions::SetTripPasteCount(0);
-	CGetSetOptions::SetTripDate(0);
+	CGetSetOptions& settings = theApp.Services().Settings();
+	settings.SetTripCopyCount(0);
+	settings.SetTripPasteCount(0);
+	settings.SetTripDate(0);
 
 	m_eTripDate.Empty();
 	m_eTripCopies.Empty();
@@ -138,7 +140,7 @@ void COptionsStats::OnRemoveAll()
 
 			struct _stat buf;
 			int nResult;
-			nResult = _tstat(CDatabaseManager::GetDBName(), &buf);
+			nResult = _tstat(CDatabaseManager::GetDBName(theApp.Services().Settings()), &buf);
 			if(nResult == 0)
 				m_eDatabaseSize.Format(_T("%d KB"), (buf.st_size/1024));
 

@@ -52,11 +52,12 @@ BOOL COptionsUtilities::OnApply()
 	CString csPath;
 	m_ePath.GetWindowText(csPath);
 
-	CString csOldPath = CGetSetOptions::GetDBPath(FALSE);
+	CGetSetOptions& settings = theApp.Services().Settings();
+	CString csOldPath = settings.GetDBPath(FALSE);
 
 	if(csOldPath != csPath)
 	{
-		CGetSetOptions::SetDBPath(csPath);
+		settings.SetDBPath(csPath);
 	}
 		
 	return CPropertyPage::OnApply();
@@ -66,7 +67,7 @@ BOOL COptionsUtilities::OnInitDialog()
 {
 	CPropertyPage::OnInitDialog();
 	
-	m_ePath.SetWindowText(CGetSetOptions::GetDBPath(FALSE));
+	m_ePath.SetWindowText(theApp.Services().Settings().GetDBPath(FALSE));
 		
 	return TRUE;
 }

@@ -18,7 +18,8 @@
 
 
 CCopyProperties::CCopyProperties(long lCopyID, CWnd* pParent, CClip *pMemoryClip)
-	: CDialog(CCopyProperties::IDD, pParent)
+	: CDialog(CCopyProperties::IDD, pParent),
+	m_clip(theApp.Services().Settings())
 {
 	m_lCopyID = lCopyID;
 	m_bDeletedData = false;
@@ -356,7 +357,7 @@ void CCopyProperties::SaveToMemoryClip()
 
 bool CCopyProperties::SaveToStoredClip()
 {
-	CClip clip{};
+	CClip clip{ theApp.Services().Settings() };
 	if(clip.LoadMainTable(m_lCopyID))
 	{
 		LoadDataIntoCClip(clip);
@@ -381,7 +382,7 @@ bool CCopyProperties::SaveToStoredClip()
 		{
 			if(m_bDeletedData)
 			{
-				CClipDatabase::DeleteFormats(m_lCopyID, m_DeletedData);
+				CClipDatabase::DeleteFormats(theApp.Services().Settings(), m_lCopyID, m_DeletedData);
 			}
 		}
 	}
@@ -395,7 +396,7 @@ BOOL CCopyProperties::CheckGlobalHotKey(CClip &clip)
 
 	if(clip.m_globalShortCut)
 	{
-		ret = g_HotKeys.ValidateClip(clip.m_id, clip.m_shortCut, clip.m_Desc, CHotKey::PASTE_OPEN_CLIP);
+		ret = g_HotKeys.ValidateClip(theApp.Services().Settings(), clip.m_id, clip.m_shortCut, clip.m_Desc, CHotKey::PASTE_OPEN_CLIP);
 	}
 	else
 	{
@@ -412,7 +413,7 @@ BOOL CCopyProperties::CheckMoveToGroupGlobalHotKey(CClip &clip)
 
 	if(clip.m_globalMoveToGroupShortCut)
 	{
-		ret = g_HotKeys.ValidateClip(clip.m_id, clip.m_moveToGroupShortCut, clip.m_Desc, CHotKey::MOVE_TO_GROUP);
+		ret = g_HotKeys.ValidateClip(theApp.Services().Settings(), clip.m_id, clip.m_moveToGroupShortCut, clip.m_Desc, CHotKey::MOVE_TO_GROUP);
 	}
 	else
 	{

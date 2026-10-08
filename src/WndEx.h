@@ -11,6 +11,8 @@
 #include "GdipButton.h"
 #include "SnapWindow.h"
 
+class CGetSetOptions;
+
 class CWndEx : public CWnd
 {
 // Construction
@@ -88,6 +90,13 @@ public:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnMoving(UINT fwSide, LPRECT pRect);
 	afx_msg void OnEnterSizeMove();
+
+private:
+	/**
+	 * @brief The application's settings.
+	 * @return theApp.Services().Settings().
+	 */
+	CGetSetOptions& Settings() const;
 };
 
 /////////////////////////////////////////////////////////////////////////////

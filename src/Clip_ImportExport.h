@@ -4,7 +4,11 @@
 class CClip_ImportExport :	public CClip
 {
 public:
-	CClip_ImportExport(void);
+	/**
+	 * @brief Creates an empty clip for importing or exporting.
+	 * @param settings The application's settings; must outlive this clip.
+	 */
+	explicit CClip_ImportExport(CGetSetOptions& settings);
 	~CClip_ImportExport(void);
 
 	bool ExportToSqliteDB(CppSQLite3DB &m_db);

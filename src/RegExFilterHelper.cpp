@@ -8,11 +8,11 @@
 #include <regex>
 #include <string>
 
-void CRegExFilterData::ParseFilters()
+void CRegExFilterData::ParseFilters(const CString& separator)
 {
 	m_parsedProcessFilters.RemoveAll();
 
-	CTokenizer token(m_processFilters, CGetSetOptions::GetCopyAppSeparator());
+	CTokenizer token(m_processFilters, separator);
 	CString line;
 
 	while (token.Next(line))
@@ -83,12 +83,13 @@ CRegExFilterHelper::~CRegExFilterHelper()
 {
 }
 
-void CRegExFilterHelper::Add(int pos, CRegExFilterData &data)
+void CRegExFilterHelper::Add(int pos, CRegExFilterData &data, const CString& separator)
 {
 	if (pos >= 0 && pos < CRegExFilterHelper::MaxRegexFilters)
 	{
 		ATL::CCritSecLock csLock(m_critSection.m_sect);
 		m_filters[pos] = data;
+		m_filters[pos].ParseFilters(separator);
 	}
 }
 
@@ -101,13 +102,13 @@ void CRegExFilterHelper::SetRegEx(int pos, std::wstring regEx)
 	}
 }
 
-void CRegExFilterHelper::SetProcessFilter(int pos, CString processName)
+void CRegExFilterHelper::SetProcessFilter(int pos, CString processName, const CString& separator)
 {
 	if (pos >= 0 && pos < CRegExFilterHelper::MaxRegexFilters)
 	{
 		ATL::CCritSecLock csLock(m_critSection.m_sect);
 		m_filters[pos].m_processFilters = processName;
-		m_filters[pos].ParseFilters();
+		m_filters[pos].ParseFilters(separator);
 	}
 }
 

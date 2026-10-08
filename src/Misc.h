@@ -108,17 +108,20 @@ public:
 #include "ClipDatabase.h"
 #include "DatabaseBackupPrompt.h"
 
+class CGetSetOptions;
+
 /** @brief How long the user has been idle (no keyboard or mouse input). */
 class CIdleTime
 {
 public:
 	/**
 	 * @brief The time since the last input (GetLastInputInfo). When the tick count was found below
-	 * the last input time on the first call, CGetSetOptions::GetFunnyTickCountAdjustment() is added
+	 * the last input time on the first call, settings.GetFunnyTickCountAdjustment() is added
 	 * to the tick count (logged once).
+	 * @param settings The application's settings (read only when the adjustment applies).
 	 * @return The idle time in seconds.
 	 */
-	static double IdleSeconds();
+	static double IdleSeconds(CGetSetOptions& settings);
 };
 
 

@@ -128,7 +128,7 @@ BOOL CDeleteClipData::OnInitDialog()
 
 void CDeleteClipData::SetDbSize()
 {
-	__int64 size = CFileSystem::FileSize(CDatabaseManager::GetDBName());
+	__int64 size = CFileSystem::FileSize(CDatabaseManager::GetDBName(theApp.Services().Settings()));
 
 	const int MAX_FILE_SIZE_BUFFER = 255;
 	TCHAR szFileSize[MAX_FILE_SIZE_BUFFER];
@@ -955,7 +955,7 @@ void CDeleteClipData::SetDescriptionWindowText(INT_PTR row)
 
 	m_pDescriptionWindow->SetToolTipText(m_data[row].m_Desc);
 
-	CClip selectedClip;
+	CClip selectedClip(theApp.Services().Settings());
 	selectedClip.LoadMainTable(m_data[row].m_lID);
 	selectedClip.LoadFormats(m_data[row].m_lID, false, false, m_data[row].m_DatalID);
 
@@ -1163,7 +1163,7 @@ void CDeleteClipData::SaveClipDataItemToFile(CDeleteData item)
 
 	OPENFILENAME ofn{};
 	TCHAR szFile[400]{};
-	const CString csInitialDir = CGetSetOptions::GetLastImportDir();
+	const CString csInitialDir = theApp.Services().Settings().GetLastImportDir();
 
 	ofn.lStructSize = sizeof(OPENFILENAME);
 	ofn.hwndOwner = m_hWnd;
@@ -1178,7 +1178,7 @@ void CDeleteClipData::SaveClipDataItemToFile(CDeleteData item)
 
 	if (GetSaveFileName(&ofn))
 	{
-		CClip selectedClip;
+		CClip selectedClip(theApp.Services().Settings());
 		selectedClip.LoadFormats(item.m_lID, false, false, item.m_DatalID);
 
 		WriteClipDataItem(selectedClip, item, ofn);
@@ -1248,7 +1248,7 @@ void CDeleteClipData::OnBnClickedBtCompactAndRepair()
 					if (toDeleteCount <= 0)
 						break;
 
-					CClipRetentionPolicy::RemoveOldEntries(false);
+					CClipRetentionPolicy::RemoveOldEntries(theApp.Services().Settings(), false);
 				}
 			}
 			catch (CppSQLite3Exception& e)

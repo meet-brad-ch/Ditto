@@ -3,7 +3,8 @@
 #include "misc.h"
 #include "CP_Main.h"
 
-CDittoAddins::CDittoAddins(void)
+CDittoAddins::CDittoAddins(CGetSetOptions& settings) :
+	m_settings(settings)
 {
 }
 
@@ -26,7 +27,7 @@ bool CDittoAddins::LoadAll()
 	CDittoInfo DittoInfo;
 	LoadDittoInfo(DittoInfo);
 
-	CString csDir = CGetSetOptions::GetPath(CGetSetOptions::PathAddins);
+	CString csDir = m_settings.GetPath(CGetSetOptions::PathAddins);
 
 	CFileFind find;
 	BOOL bCont = find.FindFile(csDir + _T("*.dll"));
@@ -129,7 +130,7 @@ bool CDittoAddins::CallPrePasteFunction(int Id, IClip *pClip)
 
 void CDittoAddins::LoadDittoInfo(CDittoInfo &DittoInfo)
 {
-	DittoInfo.m_csDatabasePath = CGetSetOptions::GetDBPath();
+	DittoInfo.m_csDatabasePath = m_settings.GetDBPath();
 	DittoInfo.m_csLanguageCode = theApp.m_Language.GetLangCode();	
 	DittoInfo.m_csSqliteVersion = sqlite3_libversion();
 	DittoInfo.m_hWndDitto = theApp.QPastehWnd();

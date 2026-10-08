@@ -4,12 +4,17 @@
 #include "Path.h"
 
 class CClip;
+class CGetSetOptions;
 namespace ATL { class CImage; }
 
 class CClipEditThread : public CEventThread
 {
 public:
-	CClipEditThread();
+	/**
+	 * @brief Creates the (not yet started) edit-file watcher.
+	 * @param settings The application's settings (edit folder, save delays); must outlive this object.
+	 */
+	explicit CClipEditThread(CGetSetOptions& settings);
 	virtual ~CClipEditThread();
 		
 	void Close();
@@ -110,6 +115,8 @@ private:
 	 */
 	void RefreshEditedClip(const CString& filePath, int id, const CClip& clip);
 
+	/// The application's settings (not owned).
+	CGetSetOptions& m_settings;
 	HANDLE m_folderHandle;
 	FILE_NOTIFY_INFORMATION m_fileChangeBuffer[10000]{};
 	OVERLAPPED m_overlapped{};

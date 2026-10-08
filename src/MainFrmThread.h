@@ -4,10 +4,17 @@
 #include <afxmt.h>
 #include <memory>
 
+class CGetSetOptions;
+
 class CMainFrmThread : public CEventThread
 {
 public:
-    CMainFrmThread(void);
+    /**
+     * @brief Creates the (not yet started) background thread of the main frame.
+     * @param settings The application's settings (retention, temp folders, database path);
+     *        must outlive this object.
+     */
+    explicit CMainFrmThread(CGetSetOptions& settings);
     ~CMainFrmThread(void);
 
     enum eCMainFrmThreadEvents
@@ -35,6 +42,8 @@ protected:
 	void OnSaveClips();
 	void OnReadDbFile();
 
+	/// The application's settings (not owned).
+	CGetSetOptions& m_settings;
 	CCriticalSection m_cs;
 	CClipList m_saveClips;
 };

@@ -47,6 +47,8 @@ BOOL QRCodeViewer::LoadQrBitmap(std::vector<std::byte> bitmap)
 
 BOOL QRCodeViewer::CreateEx(CWnd *pParentWnd, CString desc, int rowHeight, LOGFONT logFont)
 {
+	CGetSetOptions &settings = theApp.Services().Settings();
+
 	// Get the class name and create the window
 	CString szClassName = AfxRegisterWndClass(CS_CLASSDC | CS_SAVEBITS, LoadCursor(NULL, IDC_ARROW));
 
@@ -61,7 +63,7 @@ BOOL QRCodeViewer::CreateEx(CWnd *pParentWnd, CString desc, int rowHeight, LOGFO
 		m_font.CreateFontIndirect(&logFont);
 
 		// the QR code is still shown without its description; MoveControls skips a missing m_desc
-		if (m_desc.Create(CMainTableFunctions::GetDisplayText(CGetSetOptions::m_nLinesPerRow, desc), WS_CHILD|WS_VISIBLE, CRect(0,0,0,0), this, 2))
+		if (m_desc.Create(CMainTableFunctions::GetDisplayText(settings.m_nLinesPerRow, desc, settings.m_bDescShowLeadingWhiteSpace), WS_CHILD|WS_VISIBLE, CRect(0,0,0,0), this, 2))
 		{
 			m_desc.SetFont(&m_font);
 		}
@@ -71,8 +73,8 @@ BOOL QRCodeViewer::CreateEx(CWnd *pParentWnd, CString desc, int rowHeight, LOGFO
 		}
 
 		m_DittoWindow.DoCreate(this);
-		m_DittoWindow.SetCaptionColors(CGetSetOptions::m_Theme.CaptionLeft(), CGetSetOptions::m_Theme.CaptionRight(), CGetSetOptions::m_Theme.Border());
-		m_DittoWindow.SetCaptionOn(this, CGetSetOptions::GetCaptionPos(), true, CGetSetOptions::m_Theme.GetCaptionSize(), CGetSetOptions::m_Theme.GetCaptionFontSize());
+		m_DittoWindow.SetCaptionColors(settings.m_Theme.CaptionLeft(), settings.m_Theme.CaptionRight(), settings.m_Theme.Border());
+		m_DittoWindow.SetCaptionOn(this, settings.GetCaptionPos(), true, settings.m_Theme.GetCaptionSize(), settings.m_Theme.GetCaptionFontSize());
 		m_DittoWindow.m_bDrawMinimize = false;
 		m_DittoWindow.m_bDrawMaximize = true;
 		m_DittoWindow.m_bDrawChevron = false;
@@ -86,13 +88,13 @@ BOOL QRCodeViewer::CreateEx(CWnd *pParentWnd, CString desc, int rowHeight, LOGFO
 		rect.left = parentRect.left;
 		rect.top = parentRect.top;
 
-		rect.right = rect.left + m_DittoWindow.m_borderSize + m_DittoWindow.m_borderSize + m_qrCodeDrawer.ImageWidth() + (CGetSetOptions::GetQRCodeBorderPixels() * 2);
+		rect.right = rect.left + m_DittoWindow.m_borderSize + m_DittoWindow.m_borderSize + m_qrCodeDrawer.ImageWidth() + (settings.GetQRCodeBorderPixels() * 2);
 		if (m_DittoWindow.m_captionPosition == CGetSetOptions::CaptionOnLeft ||
 			m_DittoWindow.m_captionPosition == CGetSetOptions::CaptionOnRight)
 		{
 			rect.right += m_DittoWindow.m_captionBorderWidth;
 		}
-		rect.bottom = rect.top + m_DittoWindow.m_borderSize + m_DittoWindow.m_borderSize + rowHeight + 5 + m_qrCodeDrawer.ImageHeight() + (CGetSetOptions::GetQRCodeBorderPixels() * 2);
+		rect.bottom = rect.top + m_DittoWindow.m_borderSize + m_DittoWindow.m_borderSize + rowHeight + 5 + m_qrCodeDrawer.ImageHeight() + (settings.GetQRCodeBorderPixels() * 2);
 		
 		CRect center = CMonitorGeometry::CenterRect(rect);
 
@@ -142,8 +144,9 @@ void QRCodeViewer::OnPaint()
 	GetClientRect(thisRect);
 	thisRect.bottom -= m_DittoWindow.m_dpi.Scale(m_descRowHeight) - m_DittoWindow.m_dpi.Scale(5);
 	
-	int width = thisRect.Width() - (CGetSetOptions::GetQRCodeBorderPixels() * 2);
-	int height = min(width, (thisRect.Height() - (CGetSetOptions::GetQRCodeBorderPixels() * 2)));
+	CGetSetOptions &settings = theApp.Services().Settings();
+	int width = thisRect.Width() - (settings.GetQRCodeBorderPixels() * 2);
+	int height = min(width, (thisRect.Height() - (settings.GetQRCodeBorderPixels() * 2)));
 	width = min(width, height);
 		
 	CRect imageRect(0, 0, width, height);

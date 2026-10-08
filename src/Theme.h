@@ -2,13 +2,25 @@
 
 #include "XmlFile.h"
 
+class CGetSetOptions;
+
 class CTheme
 {
 public:
 	CTheme(void);
 	~CTheme(void);
 
-	bool Load(CString csTheme, bool bHeaderOnly = false, bool bCheckLastWriteTime = false);	
+	/**
+	 * @brief Loads a theme: the Windows-mode theme for an empty name, the built-in defaults for
+	 *        the default theme name, otherwise <themes folder>\\<name>.xml.
+	 * @param settings The settings; their GetPath(PathThemes) gives the themes folder (read only
+	 *        when a theme file is loaded).
+	 * @param csTheme The theme name; empty follows the Windows app mode.
+	 * @param bHeaderOnly true: read only the file header.
+	 * @param bCheckLastWriteTime true: skip loading when the same file is unchanged since the last load.
+	 * @return true when the theme is loaded (or unchanged).
+	 */
+	bool Load(CGetSetOptions& settings, CString csTheme, bool bHeaderOnly = false, bool bCheckLastWriteTime = false);
 
 	COLORREF CaptionLeft() const { return m_CaptionLeft; }
 	COLORREF CaptionRight() const { return m_CaptionRight; }

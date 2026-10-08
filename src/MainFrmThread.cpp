@@ -5,7 +5,8 @@
 #include "Misc.h"
 #include "cp_main.h"
 
-CMainFrmThread::CMainFrmThread(void)
+CMainFrmThread::CMainFrmThread(CGetSetOptions& settings) :
+	m_settings(settings)
 {
 	m_threadName = "CMainFrmThread";
     for(int eventEnum = 0; eventEnum < ECMAINFRMTHREADEVENTS_COUNT; eventEnum++)
@@ -51,11 +52,11 @@ void CMainFrmThread::OnEvent(int eventId, void * /*param*/)
 //not sure if this does what i think it does but looking into issues with slow access on large dbs
 void CMainFrmThread::OnReadDbFile()
 {
-	double idle = CIdleTime::IdleSeconds();
+	double idle = CIdleTime::IdleSeconds(m_settings);
 
-	if (idle < CGetSetOptions::ReadRandomFileIdleMin())
+	if (idle < m_settings.ReadRandomFileIdleMin())
 	{
-		CString dbFile = CGetSetOptions::GetDBPath();
+		CString dbFile = m_settings.GetDBPath();
 		__int64 dbSize = CFileSystem::FileSize(dbFile);
 
 		srand((UINT)time(NULL));
@@ -76,12 +77,12 @@ void CMainFrmThread::OnReadDbFile()
 
 void CMainFrmThread::OnDeleteEntries()
 {
-    CClipRetentionPolicy::RemoveOldEntries(true);
+    CClipRetentionPolicy::RemoveOldEntries(m_settings, true);
 }
 
 void CMainFrmThread::OnRemoveTempFiles()
 {
-	CTempFileCleaner::DeleteDittoTempFiles(TRUE);
+	CTempFileCleaner::DeleteDittoTempFiles(m_settings, TRUE);
 }
 
 void CMainFrmThread::OnSaveClips()
@@ -121,7 +122,7 @@ void CMainFrmThread::OnSaveClips()
 
 		const CClip& lastClip{localClips.Last()};
 		if (lastClip.m_copyReason == CopyReasonEnum::COPY_TO_GROUP &&
-			CGetSetOptions::GetShowMsgWndOnCopyToGroup())
+			m_settings.GetShowMsgWndOnCopyToGroup())
 		{
 			CString groupName;
 			CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT mText FROM Main WHERE lID = %d"), lastClip.m_parentId);

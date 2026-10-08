@@ -71,7 +71,7 @@ void CTheme::LoadDefaults()
 	m_captionFontSize = 19;
 }
 
-bool CTheme::Load(CString csTheme, bool bHeaderOnly, bool bCheckLastWriteTime)
+bool CTheme::Load(CGetSetOptions& settings, CString csTheme, bool bHeaderOnly, bool bCheckLastWriteTime)
 {
 	const bool followWindows10Theme = csTheme.IsEmpty();
 	if (followWindows10Theme)
@@ -84,7 +84,7 @@ bool CTheme::Load(CString csTheme, bool bHeaderOnly, bool bCheckLastWriteTime)
 		return LoadDefaultTheme(followWindows10Theme);
 	}
 
-	CString csPath = CGetSetOptions::GetPath(CGetSetOptions::PathThemes);
+	CString csPath = settings.GetPath(CGetSetOptions::PathThemes);
 	csPath += csTheme;
 	csPath += ".xml";
 

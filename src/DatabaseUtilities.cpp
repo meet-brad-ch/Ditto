@@ -45,14 +45,14 @@ BOOL CDatabaseBackupService::CreateBackup(CString csPath)
 	return TRUE;
 }
 
-CString CDatabaseManager::GetDBName()
+CString CDatabaseManager::GetDBName(CGetSetOptions& settings)
 {
-	return CGetSetOptions::GetDBPath();
+	return settings.GetDBPath();
 }
 
-CString CDatabaseManager::GetDefaultDBName()
+CString CDatabaseManager::GetDefaultDBName(CGetSetOptions& settings)
 {
-	CString csDefaultPath = CGetSetOptions::GetDefaultDBDirectory();
+	CString csDefaultPath = settings.GetDefaultDBDirectory();
 
 	CString csTempName = csDefaultPath + "Ditto.db";
 	int i = 1;
@@ -66,15 +66,15 @@ CString CDatabaseManager::GetDefaultDBName()
 	return csDefaultPath;
 }
 
-BOOL DatabaseLocator::CheckDBExists(CString csDBPath)
+BOOL DatabaseLocator::CheckDBExists(CGetSetOptions& settings, CString csDBPath)
 {
 	// No path set (first run, or the settings were removed by an uninstall): open Ditto.db in the
 	// default location, which may hold the existing history; it is created below only if missing
 	if (csDBPath.IsEmpty())
 	{
-		const std::filesystem::path defaultDirectory{ CGetSetOptions::GetDefaultDBDirectory().GetString() };
+		const std::filesystem::path defaultDirectory{ settings.GetDefaultDBDirectory().GetString() };
 		csDBPath = DittoCore::DatabasePath::Resolve({}, defaultDirectory).c_str();
-		CGetSetOptions::SetDBPath(csDBPath);
+		settings.SetDBPath(csDBPath);
 	}
 
 	CPath path(csDBPath);
@@ -89,16 +89,16 @@ BOOL DatabaseLocator::CheckDBExists(CString csDBPath)
 			return FALSE;
 		}
 
-		bRet = CreateMissingDB(csDBPath);
+		bRet = CreateMissingDB(settings, csDBPath);
 	}
 	else
 	{
-		bRet = CheckExistingDB(csDBPath);
+		bRet = CheckExistingDB(settings, csDBPath);
 	}
 
 	if (bRet)
 	{
-		bRet = CDatabaseManager::OpenDatabase(csDBPath);
+		bRet = CDatabaseManager::OpenDatabase(settings, csDBPath);
 	}
 
 	return bRet;
@@ -114,7 +114,7 @@ bool DatabaseLocator::IsNetworkShareOrNonCDrive(CPath& path)
 		((rootType == ERootType::rtDriveCur || rootType == rtDriveRoot) && driveLetter >= 'A' && driveLetter != 'C');
 }
 
-BOOL DatabaseLocator::CreateMissingDB(CString& csDBPath)
+BOOL DatabaseLocator::CreateMissingDB(CGetSetOptions& settings, CString& csDBPath)
 {
 	//first try and create create a db at the same path that was selectd
 	BOOL bRet = CDatabaseManager::CreateDB(csDBPath);
@@ -122,7 +122,7 @@ BOOL DatabaseLocator::CreateMissingDB(CString& csDBPath)
 	//if that didn't work then go back to the default location
 	if (CFileSystem::FileExists(csDBPath) == FALSE)
 	{
-		csDBPath = CDatabaseManager::GetDefaultDBName();
+		csDBPath = CDatabaseManager::GetDefaultDBName(settings);
 
 		nsPath::CPath FullPath(csDBPath);
 		CString csPath = FullPath.GetPath().GetStr();
@@ -131,7 +131,7 @@ BOOL DatabaseLocator::CreateMissingDB(CString& csDBPath)
 			CreateDirectory(csPath, NULL);
 		}
 
-		CGetSetOptions::SetDBPath(csDBPath);
+		settings.SetDBPath(csDBPath);
 
 		bRet = CDatabaseManager::CreateDB(csDBPath);
 	}
@@ -139,7 +139,7 @@ BOOL DatabaseLocator::CreateMissingDB(CString& csDBPath)
 	return bRet;
 }
 
-BOOL DatabaseLocator::CheckExistingDB(CString& csDBPath)
+BOOL DatabaseLocator::CheckExistingDB(CGetSetOptions& settings, CString& csDBPath)
 {
 	if (DatabaseSchemaUpgrader::ValidDB(csDBPath) != FALSE)
 	{
@@ -152,7 +152,7 @@ BOOL DatabaseLocator::CheckExistingDB(CString& csDBPath)
 	csMarkAsBad = csDBPath;
 	csMarkAsBad.Replace(_T("."), _T("_BAD."));
 
-	CString csPath = CDatabaseManager::GetDefaultDBName();
+	CString csPath = CDatabaseManager::GetDefaultDBName(settings);
 
 	CString cs;
 	cs.Format(_T("%s \"%s\",\n")
@@ -174,7 +174,7 @@ BOOL DatabaseLocator::CheckExistingDB(CString& csDBPath)
 
 	BOOL bRet = CDatabaseManager::CreateDB(csDBPath);
 
-	CGetSetOptions::SetDBPath(csDBPath);
+	settings.SetDBPath(csDBPath);
 
 	return bRet;
 }
@@ -184,7 +184,7 @@ BOOL CDatabaseManager::IsDatabaseOpen()
 	return theApp.m_db.IsDatabaseOpen();
 }
 
-BOOL CDatabaseManager::OpenDatabase(CString dbPath)
+BOOL CDatabaseManager::OpenDatabase(CGetSetOptions& settings, CString dbPath)
 {
 	try
 	{
@@ -204,7 +204,7 @@ BOOL CDatabaseManager::OpenDatabase(CString dbPath)
 		// ICU: Unicode case folding for LIKE, upper/lower and the regexp search
 		theApp.m_db.loadExtension("ICU_Loader.dll", "sqlite3_icu_init");
 
-		theApp.m_db.setBusyTimeout(CGetSetOptions::GetDbTimeout());
+		theApp.m_db.setBusyTimeout(settings.GetDbTimeout());
 
 		return TRUE;
 	}
@@ -600,7 +600,7 @@ BOOL CDatabaseBackupService::BackupDB(CString dbPath, CString backupPath)
 	return TRUE;
 }
 
-BOOL CDatabaseBackupService::RestoreDB(CString backupPath)
+BOOL CDatabaseBackupService::RestoreDB(CGetSetOptions& settings, CString backupPath)
 {
 	CRect r = CMonitorGeometry::DefaultMonitorRect();
 	CPopup status((r.right - 500), r.bottom - 100, ::GetForegroundWindow());
@@ -612,7 +612,7 @@ BOOL CDatabaseBackupService::RestoreDB(CString backupPath)
 
 	using namespace nsPath;
 	CPath backupPathPath(backupPath);
-	const CString tempPath = CGetSetOptions::GetPath(CGetSetOptions::PathRestoreTemp) + backupPathPath.GetName();
+	const CString tempPath = settings.GetPath(CGetSetOptions::PathRestoreTemp) + backupPathPath.GetName();
 
 	try
 	{
@@ -640,7 +640,7 @@ BOOL CDatabaseBackupService::RestoreDB(CString backupPath)
 			throw std::runtime_error("the unpacked database is not a valid Ditto database");
 		}
 
-		CPath defaultDbPathPath(CDatabaseManager::GetDefaultDBName());
+		CPath defaultDbPathPath(CDatabaseManager::GetDefaultDBName(settings));
 		const CString path(defaultDbPathPath.GetPath());
 		backupPathPath.RenameExtension(_T("db"));
 		CString newFullPath = path + backupPathPath.GetName();
@@ -653,8 +653,8 @@ BOOL CDatabaseBackupService::RestoreDB(CString backupPath)
 		{
 			throw std::runtime_error("the unpacked database could not be moved next to the current one, error " + std::to_string(::GetLastError()));
 		}
-		CGetSetOptions::SetDBPath(newFullPath);
-		CDatabaseManager::OpenDatabase(newFullPath);
+		settings.SetDBPath(newFullPath);
+		CDatabaseManager::OpenDatabase(settings, newFullPath);
 	}
 	catch (const std::exception& e)
 	{
@@ -822,9 +822,9 @@ BOOL CDatabaseManager::RepairDatabase()
 	return TRUE;
 }
 
-void CClipRetentionPolicy::RemoveClipsOverMaxEntries(CppSQLite3DB& db)
+void CClipRetentionPolicy::RemoveClipsOverMaxEntries(CGetSetOptions& settings, CppSQLite3DB& db)
 {
-	long lMax{CGetSetOptions::GetMaxEntries()};
+	long lMax{settings.GetMaxEntries()};
 	if (lMax >= 0)
 	{
 		CClipIDs IDs{};
@@ -861,9 +861,9 @@ void CClipRetentionPolicy::RemoveClipsOverMaxEntries(CppSQLite3DB& db)
 	}
 }
 
-void CClipRetentionPolicy::RemoveExpiredClips(CppSQLite3DB& db)
+void CClipRetentionPolicy::RemoveExpiredClips(CGetSetOptions& settings, CppSQLite3DB& db)
 {
-	long lExpire{CGetSetOptions::GetExpiredEntries()};
+	long lExpire{settings.GetExpiredEntries()};
 
 	if (lExpire)
 	{
@@ -892,39 +892,39 @@ void CClipRetentionPolicy::RemoveExpiredClips(CppSQLite3DB& db)
 	}
 }
 
-BOOL CClipRetentionPolicy::RemoveOldEntries(bool checkIdleTime)
+BOOL CClipRetentionPolicy::RemoveOldEntries(CGetSetOptions& settings, bool checkIdleTime)
 {
-	CLogger::Log(CStringUtil::Format(_T("Beginning of RemoveOldEntries MaxEntries: %d - Keep days: %d"), CGetSetOptions::GetMaxEntries(), CGetSetOptions::GetExpiredEntries()));
+	CLogger::Log(CStringUtil::Format(_T("Beginning of RemoveOldEntries MaxEntries: %d - Keep days: %d"), settings.GetMaxEntries(), settings.GetExpiredEntries()));
 
 	try
 	{
 		CppSQLite3DB db;
-		CString csDbPath = CGetSetOptions::GetDBPath();
+		CString csDbPath = settings.GetDBPath();
 		db.open(csDbPath);
 
-		if (CGetSetOptions::GetCheckForMaxEntries())
+		if (settings.GetCheckForMaxEntries())
 		{
-			RemoveClipsOverMaxEntries(db);
+			RemoveClipsOverMaxEntries(settings, db);
 		}
 
-		if (CGetSetOptions::GetCheckForExpiredEntries())
+		if (settings.GetCheckForExpiredEntries())
 		{
-			RemoveExpiredClips(db);
+			RemoveExpiredClips(settings, db);
 		}
 
 		int toDeleteCount = db.execScalar(_T("SELECT COUNT(clipID) FROM MainDeletes"));
 
-		CLogger::Log(CStringUtil::Format(_T("Before Deleting emptied out data, count: %d, Idle Seconds: %f"), toDeleteCount, CIdleTime::IdleSeconds()));
+		CLogger::Log(CStringUtil::Format(_T("Before Deleting emptied out data, count: %d, Idle Seconds: %f"), toDeleteCount, CIdleTime::IdleSeconds(settings)));
 
 		//Only delete 1 at a time, was finding that it was taking a long time to delete clips, locking the db and causing other queries
 		//to lock up
-		CppSQLite3Query q = db.execQueryEx(_T("SELECT * FROM MainDeletes LIMIT %d"), CGetSetOptions::GetMainDeletesDeleteCount());
+		CppSQLite3Query q = db.execQueryEx(_T("SELECT * FROM MainDeletes LIMIT %d"), settings.GetMainDeletesDeleteCount());
 		int deleteCount = 0;
 
 		while (q.eof() == false)
 		{
-			double idleSeconds = CIdleTime::IdleSeconds();
-			if (checkIdleTime == false || idleSeconds > CGetSetOptions::GetIdleSecondsBeforeDelete())
+			double idleSeconds = CIdleTime::IdleSeconds(settings);
+			if (checkIdleTime == false || idleSeconds > settings.GetIdleSecondsBeforeDelete())
 			{
 				//delete any data items sitting out there that the main table data was deleted
 				//this was done to speed up deleted from the main table
@@ -933,7 +933,7 @@ BOOL CClipRetentionPolicy::RemoveOldEntries(bool checkIdleTime)
 			else
 			{
 				CLogger::Log(CStringUtil::Format(_T("Computer has not been idle long enough to delete clips, Min Idle: %d, current Idle: %d"),
-					CGetSetOptions::GetIdleSecondsBeforeDelete(), idleSeconds));
+					settings.GetIdleSecondsBeforeDelete(), idleSeconds));
 
 				break;
 			}

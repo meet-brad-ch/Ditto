@@ -164,7 +164,12 @@ BEGIN_MESSAGE_MAP(CCP_MainApp, CWinApp)
 END_MESSAGE_MAP()
 
 CCP_MainApp::CCP_MainApp() :
-	m_db([](const CString& text) { CLogger::Log(text); })
+	m_services(std::make_unique<CAppServices>()),
+	m_db([](const CString& text) { CLogger::Log(text); }),
+	m_activeWnd(m_services->Settings()),
+	m_editThread(m_services->Settings()),
+	m_CopyBuffer(m_services->Settings()),
+	m_Addins(m_services->Settings())
 {
 	m_copyReason = CopyReasonEnum::COPY_TO_UNKOWN;
 	m_copyReasonStartTime = 0;
@@ -213,19 +218,24 @@ CCP_MainApp::CCP_MainApp() :
 
 CCP_MainApp::~CCP_MainApp()
 {
-	
+
+}
+
+CAppServices& CCP_MainApp::Services()
+{
+	return *m_services;
 }
 
 void CCP_MainApp::ImportFileFromCommandLine(const CString& fileName)
 {
 	try
 	{
-		CGetSetOptions::m_bEnableDebugLogging = CGetSetOptions::GetEnableDebugLogging();
+		Services().Settings().m_bEnableDebugLogging = Services().Settings().GetEnableDebugLogging();
 
 		CppSQLite3DB db;
 		db.open(fileName);
 
-		CClip_ImportExport clip;
+		CClip_ImportExport clip(Services().Settings());
 		if(clip.ImportFromSqliteDB(db, false, true))
 		{
 			ShowCommandLineError("Ditto", theApp.m_Language.GetString("Importing_Good", "Clip placed on clipboard"));
@@ -290,7 +300,7 @@ BOOL CCP_MainApp::InitInstanceBody()
 	DittoCommandLineInfo cmdInfo;
 	ParseCommandLine(cmdInfo);
 
-	CGetSetOptions::LoadSettings();
+	Services().Settings().LoadSettings();
 
 	theApp.m_activeWnd.TrackActiveWnd(false);
 
@@ -314,7 +324,7 @@ BOOL CCP_MainApp::InitInstanceBody()
 		return FALSE;
 	}
 
-	auto runningVersion = CAppVersion::GetRunningVersion();
+	auto runningVersion = CAppVersion::GetRunningVersion(Services().Settings().GetExeFileName());
 	CString cs = CAppVersion::GetVersionString(runningVersion);
 	cs.Insert(0, _T("InitInstance  -  Running Version - "));
 	CLogger::Log(cs);
@@ -324,19 +334,20 @@ BOOL CCP_MainApp::InitInstanceBody()
 		return TRUE;
 	}
 
-	CString csFile = CGetSetOptions::GetLanguageFile();
-	if(m_Language.LoadLanguageFile(csFile) == false)
+	CString csFile = Services().Settings().GetLanguageFile();
+	const CString languageDir = Services().Settings().GetPath(CGetSetOptions::PathLanguage);
+	if(m_Language.LoadLanguageFile(languageDir, csFile) == false)
 	{
 		CString csLanguageError;
 		csLanguageError.Format(_T("Error loading language file - %s - \n\n%s"), csFile.GetString(), m_Language.m_csLastError.GetString());
 		CLogger::Log(csLanguageError);
 
-		m_Language.LoadLanguageFile(_T("English.xml"));
+		m_Language.LoadLanguageFile(languageDir, _T("English.xml"));
 	}
 
 	m_icuString.Load();
 	
-	int nRet = DatabaseLocator::CheckDBExists(CGetSetOptions::GetDBPath());
+	int nRet = DatabaseLocator::CheckDBExists(Services().Settings(), Services().Settings().GetDBPath());
 	if(nRet == FALSE)
 	{
 		m_pNoDbMainFrame = std::make_unique<CNoDbFrameWnd>().release(); // ownership: the frame window itself (CFrameWnd::PostNcDestroy deletes it)
@@ -386,7 +397,7 @@ bool CCP_MainApp::HandleConnectSwitch(const DittoCommandLineInfo& cmdInfo)
 	//If it didn't handle the message(ditto is not running) then startup this processes of ditto
 	//disconnected from the clipboard
 	LRESULT ret = 0;
-	HWND hWnd = (HWND)(LONG_PTR)CGetSetOptions::GetMainHWND();
+	HWND hWnd = (HWND)(LONG_PTR)Services().Settings().GetMainHWND();
 	if(hWnd)
 	{
 		ret = ::SendMessage(hWnd, CDittoMessage::SetConnected, cmdInfo.m_bConnect, cmdInfo.m_bDisconnect);
@@ -426,7 +437,7 @@ bool CCP_MainApp::ForwardToRunningInstance(const DittoCommandLineInfo& cmdInfo)
 		if (request.requested)
 		{
 			//send the request to the running ditto (if it runs); this instance exits either way
-			HWND hWnd = (HWND)(LONG_PTR)CGetSetOptions::GetMainHWND();
+			HWND hWnd = (HWND)(LONG_PTR)Services().Settings().GetMainHWND();
 			if (hWnd)
 			{
 				::SendMessage(hWnd, request.message, request.wParam, request.lParam);
@@ -442,10 +453,10 @@ bool CCP_MainApp::ForwardToRunningInstance(const DittoCommandLineInfo& cmdInfo)
 bool CCP_MainApp::CreateSingleInstanceMutex()
 {
 	CString csMutex("Ditto Is Now Running");
-	if(CGetSetOptions::GetIsPortableDitto() || CGetSetOptions::GetIsWindowsApp() || CGetSetOptions::GetIsChocolateyApp())
+	if(Services().Settings().GetIsPortableDitto() || Services().Settings().GetIsWindowsApp() || Services().Settings().GetIsChocolateyApp())
 	{
 		csMutex += " ";
-		csMutex += CGetSetOptions::GetExeFileName();
+		csMutex += Services().Settings().GetExeFileName();
 	}
 
 	CWinApp::RegisterWithRestartManager(false, csMutex);
@@ -459,7 +470,7 @@ bool CCP_MainApp::CreateSingleInstanceMutex()
 		dwError == ERROR_ALREADY_EXISTS)
 	{
 		CLogger::Log(CStringUtil::Format(_T("Ditto is already running, closing, mutex: %s"), csMutex.GetString()));
-		HWND hWnd = (HWND)(LONG_PTR)CGetSetOptions::GetMainHWND();
+		HWND hWnd = (HWND)(LONG_PTR)Services().Settings().GetMainHWND();
 		if(hWnd)
 			::SendMessage(hWnd, CDittoMessage::ShowTrayIcon, TRUE, TRUE);
 
@@ -504,51 +515,51 @@ bool CCP_MainApp::AfterMainCreate()
 {
 	m_MainhWnd = m_pMainFrame->m_hWnd;
 	ASSERT( ::IsWindow(m_MainhWnd) );
-	CGetSetOptions::SetMainHWND((long)(LONG_PTR)m_MainhWnd);
+	Services().Settings().SetMainHWND((long)(LONG_PTR)m_MainhWnd);
 
 	g_HotKeys.Init(m_MainhWnd);
 
 	// create hotkeys here.  g_HotKeys owns them and destroys them on exit
-	m_pDittoHotKey = &g_HotKeys.Create(CString("DittoHotKey"), 704); //704 is ctrl-tilda
-	m_pDittoHotKey2 = &g_HotKeys.Create(CString("DittoHotKey2"));
-	m_pDittoHotKey3 = &g_HotKeys.Create(CString("DittoHotKey3"));
+	m_pDittoHotKey = &g_HotKeys.Create(Services().Settings(), CString("DittoHotKey"), 704); //704 is ctrl-tilda
+	m_pDittoHotKey2 = &g_HotKeys.Create(Services().Settings(), CString("DittoHotKey2"));
+	m_pDittoHotKey3 = &g_HotKeys.Create(Services().Settings(), CString("DittoHotKey3"));
 
-	m_pPosOne = &g_HotKeys.Create("Position1", 0, true);
-	m_pPosTwo = &g_HotKeys.Create("Position2", 0, true);
-	m_pPosThree = &g_HotKeys.Create("Position3", 0, true);
-	m_pPosFour = &g_HotKeys.Create("Position4", 0, true);
-	m_pPosFive = &g_HotKeys.Create("Position5", 0, true);
-	m_pPosSix = &g_HotKeys.Create("Position6", 0, true);
-	m_pPosSeven = &g_HotKeys.Create("Position7", 0, true);
-	m_pPosEight = &g_HotKeys.Create("Position8", 0, true);
-	m_pPosNine = &g_HotKeys.Create("Position9", 0, true);
-	m_pPosTen = &g_HotKeys.Create("Position10", 0, true);
+	m_pPosOne = &g_HotKeys.Create(Services().Settings(), "Position1", 0, true);
+	m_pPosTwo = &g_HotKeys.Create(Services().Settings(), "Position2", 0, true);
+	m_pPosThree = &g_HotKeys.Create(Services().Settings(), "Position3", 0, true);
+	m_pPosFour = &g_HotKeys.Create(Services().Settings(), "Position4", 0, true);
+	m_pPosFive = &g_HotKeys.Create(Services().Settings(), "Position5", 0, true);
+	m_pPosSix = &g_HotKeys.Create(Services().Settings(), "Position6", 0, true);
+	m_pPosSeven = &g_HotKeys.Create(Services().Settings(), "Position7", 0, true);
+	m_pPosEight = &g_HotKeys.Create(Services().Settings(), "Position8", 0, true);
+	m_pPosNine = &g_HotKeys.Create(Services().Settings(), "Position9", 0, true);
+	m_pPosTen = &g_HotKeys.Create(Services().Settings(), "Position10", 0, true);
 
-	m_pCopyBuffer1 = &g_HotKeys.Create("CopyBufferCopyHotKey_0", 0, true);
-	m_pPasteBuffer1 = &g_HotKeys.Create("CopyBufferPasteHotKey_0", 0, true);
-	m_pCutBuffer1 = &g_HotKeys.Create("CopyBufferCutHotKey_0", 0, true);
+	m_pCopyBuffer1 = &g_HotKeys.Create(Services().Settings(), "CopyBufferCopyHotKey_0", 0, true);
+	m_pPasteBuffer1 = &g_HotKeys.Create(Services().Settings(), "CopyBufferPasteHotKey_0", 0, true);
+	m_pCutBuffer1 = &g_HotKeys.Create(Services().Settings(), "CopyBufferCutHotKey_0", 0, true);
 
-	m_pCopyBuffer2 = &g_HotKeys.Create("CopyBufferCopyHotKey_1", 0, true);
-	m_pPasteBuffer2 = &g_HotKeys.Create("CopyBufferPasteHotKey_1", 0, true);
-	m_pCutBuffer2 = &g_HotKeys.Create("CopyBufferCutHotKey_1", 0, true);
+	m_pCopyBuffer2 = &g_HotKeys.Create(Services().Settings(), "CopyBufferCopyHotKey_1", 0, true);
+	m_pPasteBuffer2 = &g_HotKeys.Create(Services().Settings(), "CopyBufferPasteHotKey_1", 0, true);
+	m_pCutBuffer2 = &g_HotKeys.Create(Services().Settings(), "CopyBufferCutHotKey_1", 0, true);
 
-	m_pCopyBuffer3 = &g_HotKeys.Create("CopyBufferCopyHotKey_2", 0, true);
-	m_pPasteBuffer3 = &g_HotKeys.Create("CopyBufferPasteHotKey_2", 0, true);
-	m_pCutBuffer3 = &g_HotKeys.Create("CopyBufferCutHotKey_2", 0, true);
+	m_pCopyBuffer3 = &g_HotKeys.Create(Services().Settings(), "CopyBufferCopyHotKey_2", 0, true);
+	m_pPasteBuffer3 = &g_HotKeys.Create(Services().Settings(), "CopyBufferPasteHotKey_2", 0, true);
+	m_pCutBuffer3 = &g_HotKeys.Create(Services().Settings(), "CopyBufferCutHotKey_2", 0, true);
 
-	m_pCopyBuffer4 = &g_HotKeys.Create("CopyBufferCopyHotKey_3", 0, true);
-	m_pPasteBuffer4 = &g_HotKeys.Create("CopyBufferPasteHotKey_3", 0, true);
-	m_pCutBuffer4 = &g_HotKeys.Create("CopyBufferCutHotKey_3", 0, true);
+	m_pCopyBuffer4 = &g_HotKeys.Create(Services().Settings(), "CopyBufferCopyHotKey_3", 0, true);
+	m_pPasteBuffer4 = &g_HotKeys.Create(Services().Settings(), "CopyBufferPasteHotKey_3", 0, true);
+	m_pCutBuffer4 = &g_HotKeys.Create(Services().Settings(), "CopyBufferCutHotKey_3", 0, true);
 
-	m_pCopyBuffer5 = &g_HotKeys.Create("CopyBufferCopyHotKey_4", 0, true);
-	m_pPasteBuffer5 = &g_HotKeys.Create("CopyBufferPasteHotKey_4", 0, true);
-	m_pCutBuffer5 = &g_HotKeys.Create("CopyBufferCutHotKey_4", 0, true);
+	m_pCopyBuffer5 = &g_HotKeys.Create(Services().Settings(), "CopyBufferCopyHotKey_4", 0, true);
+	m_pPasteBuffer5 = &g_HotKeys.Create(Services().Settings(), "CopyBufferPasteHotKey_4", 0, true);
+	m_pCutBuffer5 = &g_HotKeys.Create(Services().Settings(), "CopyBufferCutHotKey_4", 0, true);
 
-	m_pTextOnlyPaste = &g_HotKeys.Create("TextOnlyPaste", 0, true);
+	m_pTextOnlyPaste = &g_HotKeys.Create(Services().Settings(), "TextOnlyPaste", 0, true);
 
-	m_pSaveClipboard = &g_HotKeys.Create("SaveClipboard", 0, false);
+	m_pSaveClipboard = &g_HotKeys.Create(Services().Settings(), "SaveClipboard", 0, false);
 
-	m_pCopyAndSaveClipboard = &g_HotKeys.Create("CopyAndSaveClipboard", 0, false);
+	m_pCopyAndSaveClipboard = &g_HotKeys.Create(Services().Settings(), "CopyAndSaveClipboard", 0, false);
 
 	m_editThread.StartWatchingFolderForChanges();
 
@@ -582,7 +593,7 @@ void CCP_MainApp::LoadGlobalClips()
 				CString desc = q.getStringField(_T("mText"));
 
 				// g_HotKeys owns the key and destroys it
-				CHotKey& globalHotKey{g_HotKeys.Create(CStringUtil::Format(_T("GlobalClip: %d"), id), shortcut, true, CHotKey::PASTE_OPEN_CLIP, desc)};
+				CHotKey& globalHotKey{g_HotKeys.Create(Services().Settings(), CStringUtil::Format(_T("GlobalClip: %d"), id), shortcut, true, CHotKey::PASTE_OPEN_CLIP, desc)};
 				globalHotKey.m_clipId = id;
 
 				q.nextRow();
@@ -599,7 +610,7 @@ void CCP_MainApp::LoadGlobalClips()
 				CString desc = q2.getStringField(_T("mText"));
 
 				// g_HotKeys owns the key and destroys it
-				CHotKey& globalHotKey{g_HotKeys.Create(CStringUtil::Format(_T("MoveToGroup: %d"), id), shortcut, true, CHotKey::MOVE_TO_GROUP, desc)};
+				CHotKey& globalHotKey{g_HotKeys.Create(Services().Settings(), CStringUtil::Format(_T("MoveToGroup: %d"), id), shortcut, true, CHotKey::MOVE_TO_GROUP, desc)};
 				globalHotKey.m_clipId = id;
 
 				q2.nextRow();
@@ -638,10 +649,10 @@ bool CCP_MainApp::StartCopyThread()
 	// - pTypes = the supported types to use
 	m_CopyThread.Init(CCopyConfig(m_MainhWnd, true, true, std::move(pTypes)));
 	
-	if(m_connectOnStartup == FALSE || CGetSetOptions::GetConnectedToClipboard() == FALSE)
+	if(m_connectOnStartup == FALSE || Services().Settings().GetConnectedToClipboard() == FALSE)
 	{
 		m_CopyThread.m_connectOnStartup = false;
-		CLogger::Log(CStringUtil::Format(_T("Starting Ditto up disconnected from the clipboard, commandLine: %d, saved value: %d"), m_connectOnStartup, CGetSetOptions::GetConnectedToClipboard()));
+		CLogger::Log(CStringUtil::Format(_T("Starting Ditto up disconnected from the clipboard, commandLine: %d, saved value: %d"), m_connectOnStartup, Services().Settings().GetConnectedToClipboard()));
 		SetConnectCV(false);
 	}
 	else if(m_connectOnStartup == TRUE)
@@ -788,8 +799,8 @@ void CCP_MainApp::OnCopyCompleted(long lLastID, int count, CopyReasonEnum::CopyR
 	}
 
 	// update copy statistics
-	CGetSetOptions::SetTripCopyCount(-count);
-	CGetSetOptions::SetTotalCopyCount(-count);
+	Services().Settings().SetTripCopyCount(-count);
+	Services().Settings().SetTotalCopyCount(-count);
 
 	if(m_CopyBuffer.Active())
 	{
@@ -967,13 +978,13 @@ void CCP_MainApp::SetStatus(const TCHAR* status, bool bRepaintImmediately)
 
 void CCP_MainApp::ShowPersistent(bool bVal)
 {
-	CGetSetOptions::SetShowPersistent(bVal);
+	Services().Settings().SetShowPersistent(bVal);
 
 	// give some visual indication
 	if(m_bShowingQuickPaste)
 	{
 		ASSERT(QPasteWnd());
-		QPasteWnd()->SetCaptionColorActive(CGetSetOptions::m_bShowPersistent, theApp.GetConnectCV());
+		QPasteWnd()->SetCaptionColorActive(Services().Settings().m_bShowPersistent, theApp.GetConnectCV());
 		QPasteWnd()->RefreshNc();
 	}
 }
@@ -985,7 +996,7 @@ int CCP_MainApp::ExitInstance()
 {
 	CLogger::Log(_T("ExitInstance"));
 
-	CTempFileCleaner::DeleteDittoTempFiles(FALSE);
+	CTempFileCleaner::DeleteDittoTempFiles(Services().Settings(), FALSE);
 
 	m_db.close();
 
@@ -1016,7 +1027,7 @@ BOOL CCP_MainApp::OnIdle(LONG lCount)
 void CCP_MainApp::SetConnectCV(bool bConnect)
 { 
 	m_CopyThread.SetConnectCV(bConnect); 
-	CGetSetOptions::SetConnectedToClipboard(bConnect == true);
+	Services().Settings().SetConnectedToClipboard(bConnect == true);
 
 	if(bConnect)
 	{
@@ -1034,7 +1045,7 @@ void CCP_MainApp::SetConnectCV(bool bConnect)
 
 	if(QPasteWnd())
 	{
-		QPasteWnd()->SetCaptionColorActive(CGetSetOptions::m_bShowPersistent, theApp.GetConnectCV());
+		QPasteWnd()->SetCaptionColorActive(Services().Settings().m_bShowPersistent, theApp.GetConnectCV());
 		QPasteWnd()->RefreshNc();
 	}
 }
@@ -1057,7 +1068,7 @@ bool CCP_MainApp::ImportClips(HWND hWnd)
 	memset(szFileName, 0, sizeof(szFileName));
 	memset(&szDir, 0, sizeof(szDir));
 
-	CString csInitialDir = CGetSetOptions::GetLastImportDir();
+	CString csInitialDir = Services().Settings().GetLastImportDir();
 	_tcscpy(szDir, csInitialDir);
 
 	FileName.lStructSize = sizeof(FileName);
@@ -1077,14 +1088,14 @@ bool CCP_MainApp::ImportClips(HWND hWnd)
 	using namespace nsPath;
 	CPath path(CFileDialogPath::From(FileName));
 	CString csPath(path.GetPath());
-	CGetSetOptions::SetLastImportDir(csPath);
+	Services().Settings().SetLastImportDir(csPath);
 	
 	try
 	{
 		CppSQLite3DB db;
 		db.open(CFileDialogPath::From(FileName));
 
-		CClip_ImportExport clip;
+		CClip_ImportExport clip(Services().Settings());
 		if(clip.ImportFromSqliteDB(db, true, false))
 		{
 			CShowTaskBarIcon show;
@@ -1204,7 +1215,7 @@ bool CCP_MainApp::EditItems(CClipIDs &Ids, bool /*bShowError*/, bool forceTextEd
 
 bool CCP_MainApp::EditItem(int id, bool forceTextEdit, int& lastFileCheckId)
 {
-	CClip clip;
+	CClip clip(Services().Settings());
 	if (id >= 0 && clip.LoadFormats(id) == false)
 	{
 		CLogger::Log(CStringUtil::Format(_T("Failed to load formats for clipId: %d"), id));
@@ -1244,37 +1255,37 @@ bool CCP_MainApp::ChooseClipEditTarget(CClip& clip, int id, bool forceTextEdit, 
 	{
 		target.extension = _T("rtf");
 		target.rtfFile = true;
-		target.exePath = CGetSetOptions::GetRTFEditorPath();
+		target.exePath = Services().Settings().GetRTFEditorPath();
 	}
 	else if (clip.ContainsClipFormat(CF_UNICODETEXT))
 	{
 		target.extension = _T("txt");
 		target.unicodeFile = true;
-		target.exePath = CGetSetOptions::GetTextEditorPath();
+		target.exePath = Services().Settings().GetTextEditorPath();
 	}
 	else if (clip.ContainsClipFormat(CF_TEXT))
 	{
 		target.extension = _T("txt");
 		target.asciFile = true;
-		target.exePath = CGetSetOptions::GetTextEditorPath();
+		target.exePath = Services().Settings().GetTextEditorPath();
 	}
 	else if (id == -1)
 	{
 		target.extension = _T("txt");
 		target.unicodeFile = true;
-		target.exePath = CGetSetOptions::GetTextEditorPath();
+		target.exePath = Services().Settings().GetTextEditorPath();
 	}
 	else if (clip.ContainsClipFormat(theApp.m_PNG_Format))
 	{
 		target.imageFile = true;
 		target.extension = _T("png");
-		target.exePath = CGetSetOptions::GetImageEditorPath();
+		target.exePath = Services().Settings().GetImageEditorPath();
 	}
 	else if (clip.ContainsClipFormat(CF_DIB))
 	{
 		target.imageFile = true;
 		target.extension = _T("bmp");
-		target.exePath = CGetSetOptions::GetImageEditorPath();
+		target.exePath = Services().Settings().GetImageEditorPath();
 	}
 	else
 	{
@@ -1301,11 +1312,11 @@ bool CCP_MainApp::EditInInternalEditor(const ClipEditTarget& target, int id)
 
 CString CCP_MainApp::MakeEditFilePath(int id, const CString& extension, int& lastFileCheckId)
 {
-	CString startingFilePath = CStringUtil::Format(_T("%sEditClip_%d.%s"), CGetSetOptions::GetPath(CGetSetOptions::PathEditClips).GetString(), id, extension.GetString());
+	CString startingFilePath = CStringUtil::Format(_T("%sEditClip_%d.%s"), Services().Settings().GetPath(CGetSetOptions::PathEditClips).GetString(), id, extension.GetString());
 
 	if (id == -1)
 	{
-		startingFilePath = CStringUtil::Format(_T("%sNewClip_1.%s"), CGetSetOptions::GetPath(CGetSetOptions::PathEditClips).GetString(), extension.GetString());
+		startingFilePath = CStringUtil::Format(_T("%sNewClip_1.%s"), Services().Settings().GetPath(CGetSetOptions::PathEditClips).GetString(), extension.GetString());
 	}
 
 	CString savePath = startingFilePath;
@@ -1318,7 +1329,7 @@ CString CCP_MainApp::MakeEditFilePath(int id, const CString& extension, int& las
 
 		for (int y = lastFileCheckId; y < 1000000; y++)
 		{
-			CString testFilePath = CStringUtil::Format(_T("%sNewClip_%d.%s"), CGetSetOptions::GetPath(CGetSetOptions::PathEditClips).GetString(), y, extension.GetString());
+			CString testFilePath = CStringUtil::Format(_T("%sNewClip_%d.%s"), Services().Settings().GetPath(CGetSetOptions::PathEditClips).GetString(), y, extension.GetString());
 
 			if (CFileSystem::FileExists(testFilePath) == FALSE)
 			{
@@ -1464,7 +1475,7 @@ void CCP_MainApp::SetActiveGroupId(int groupId)
 int CCP_MainApp::GetActiveGroupId()
 {
 	int ret = -1;
-	ULONGLONG maxDiff = CGetSetOptions::GetSaveToGroupTimeoutMS();
+	ULONGLONG maxDiff = Services().Settings().GetSaveToGroupTimeoutMS();
 	ULONGLONG diff = GetTickCount64() - m_activeGroupStartTime;
 
 	if(m_activeGroupId > -1 &&
@@ -1488,7 +1499,7 @@ void CCP_MainApp::SetCopyReason(CopyReasonEnum::CopyReason copyReason)
 CopyReasonEnum::CopyReason CCP_MainApp::GetCopyReason()
 {
 	CopyReasonEnum::CopyReason ret = CopyReasonEnum::COPY_TO_UNKOWN;
-	ULONGLONG maxDiff = CGetSetOptions::GetCopyReasonTimeoutMS();
+	ULONGLONG maxDiff = Services().Settings().GetCopyReasonTimeoutMS();
 	ULONGLONG diff = GetTickCount64() - m_copyReasonStartTime;
 
 	if(m_copyReason != CopyReasonEnum::COPY_TO_UNKOWN &&

@@ -150,8 +150,8 @@ void CQuickPasteKeyboard::LoadItems()
 			KeyboardArray ar;
 			for (int x = 0; x < 10; x++)
 			{
-				ar.Array[x].A = CGetSetOptions::GetActionShortCutA(action, x);
-				ar.Array[x].B = CGetSetOptions::GetActionShortCutB(action, x);
+				ar.Array[x].A = theApp.Services().Settings().GetActionShortCutA(action, x);
+				ar.Array[x].B = theApp.Services().Settings().GetActionShortCutB(action, x);
 			}
 
 			CString shortCutText = GetShortCutText(ar);
@@ -377,8 +377,8 @@ BOOL CQuickPasteKeyboard::OnApply()
 			if (it->second.Array[i].Dirty)
 			{
 				const int actionEnum{ static_cast<int>(it->first) };
-				CGetSetOptions::SetActionShortCutA(actionEnum, it->second.Array[i].A, i);
-				CGetSetOptions::SetActionShortCutB(actionEnum, it->second.Array[i].B, i);
+				theApp.Services().Settings().SetActionShortCutA(actionEnum, it->second.Array[i].A, i);
+				theApp.Services().Settings().SetActionShortCutB(actionEnum, it->second.Array[i].B, i);
 				it->second.Array[i].Dirty = false;
 			}
 		}

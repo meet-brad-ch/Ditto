@@ -359,6 +359,7 @@
     <ClCompile Include="src\AddType.cpp" />
     <ClCompile Include="src\AdvGeneral.cpp" />
     <ClCompile Include="src\AlphaBlend.cpp" />
+    <ClCompile Include="src\AppServices.cpp" />
     <ClCompile Include="src\BitmapHelper.cpp" />
     <ClCompile Include="src\CF_HDropAggregator.cpp" />
     <ClCompile Include="src\CF_TextAggregator.cpp" />
@@ -573,6 +574,7 @@
     <ClInclude Include="src\AddType.h" />
     <ClInclude Include="src\AdvGeneral.h" />
     <ClInclude Include="src\AlphaBlend.h" />
+    <ClInclude Include="src\AppServices.h" />
     <ClInclude Include="src\BitmapHelper.h" />
     <ClInclude Include="src\CF_HDropAggregator.h" />
     <ClInclude Include="src\CF_TextAggregator.h" />

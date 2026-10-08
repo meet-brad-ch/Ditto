@@ -18,8 +18,9 @@ public:
 
 	/**
 	 * @brief Writes a time-stamped log line "[date time - file line] msg" to the debugger output
-	 * (Release: when CGetSetOptions::m_outputDebugStringLogging is set) and appends it to Ditto.log
-	 * in the log folder (Release: when CGetSetOptions::m_bEnableDebugLogging is set).
+	 * (Release: when the settings' m_outputDebugStringLogging is set) and appends it to Ditto.log
+	 * in the log folder (Release: when the settings' m_bEnableDebugLogging is set). Reads the
+	 * settings through theApp.Services().Settings() (the documented exception to the access rule).
 	 * @param msg The message.
 	 * @param csFile The source file; only its file name is written.
 	 * @param lLine The source line.

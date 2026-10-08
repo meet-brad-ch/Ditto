@@ -2,10 +2,17 @@
 
 #include "Misc.h"
 
+class CGetSetOptions;
+
 class ExternalWindowTracker
 {
 public:
-	ExternalWindowTracker(void);
+	/**
+	 * @brief Creates the tracker and loads oleacc.dll for the caret lookup.
+	 * @param settings The application's settings (focus tracking and send-keys options); must
+	 *        outlive this object.
+	 */
+	explicit ExternalWindowTracker(CGetSetOptions& settings);
 	~ExternalWindowTracker(void);
 
 	HWND ActiveWnd() const { return m_activeWnd; }
@@ -27,6 +34,9 @@ public:
 	bool NotifyTrayhWnd(HWND hWnd);
 
 protected:
+	/// The application's settings (not owned).
+	CGetSetOptions& m_settings;
+
 	typedef HRESULT(__stdcall *AccessibleObjectFromWindow)(_In_ HWND hwnd, _In_ DWORD dwId, _In_ REFIID riid, _Outptr_ void** ppvObject);
 
 	HWND m_activeWnd;
@@ -44,7 +54,7 @@ private:
 	/** @brief Finds the focus window of the thread of the active window.
 	 *  @param newActive The foreground window.
 	 *  @return The focus window, or NULL if it cannot be read. */
-	static HWND GetFocusOfActiveWnd(HWND newActive);
+	HWND GetFocusOfActiveWnd(HWND newActive);
 
 	/** @brief If only one of the focus and active windows is known, uses it for both.
 	 *  @param newFocus Focus window (may be NULL).
@@ -85,7 +95,7 @@ private:
 	/** @brief Passes an elevated paste to the UAC aware helper app, when that is possible.
 	 *  @param pasteAsAdmin true if the paste must be done as administrator.
 	 *  @return pasteAsAdmin, set to false if the helper app could not take the paste. */
-	static bool PassPasteToUacApp(bool pasteAsAdmin);
+	bool PassPasteToUacApp(bool pasteAsAdmin);
 
 	/** @brief Tells if a caret position was found.
 	 *  @param pt Caret position, (-1, -1) when not found.

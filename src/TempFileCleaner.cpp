@@ -4,21 +4,21 @@
 #include <algorithm>
 #include <array>
 
-void CTempFileCleaner::DeleteDittoTempFiles(BOOL checkFileLastAccess)
+void CTempFileCleaner::DeleteDittoTempFiles(CGetSetOptions& settings, BOOL checkFileLastAccess)
 {
-	CString csDir{ CGetSetOptions::GetPath(CGetSetOptions::PathRemoteFiles) };
+	CString csDir{ settings.GetPath(CGetSetOptions::PathRemoteFiles) };
 	if (CFileSystem::FileExists(csDir))
 	{
 		DeleteFolderFiles(csDir, checkFileLastAccess, CTimeSpan(0, 1, 0, 0));
 	}
 
-	csDir = CGetSetOptions::GetPath(CGetSetOptions::PathDragFiles);
+	csDir = settings.GetPath(CGetSetOptions::PathDragFiles);
 	if (CFileSystem::FileExists(csDir))
 	{
 		DeleteFolderFiles(csDir, checkFileLastAccess, CTimeSpan(0, 1, 0, 0));
 	}
 
-	csDir = CGetSetOptions::GetPath(CGetSetOptions::PathClipDiff);
+	csDir = settings.GetPath(CGetSetOptions::PathClipDiff);
 	if (CFileSystem::FileExists(csDir))
 	{
 		DeleteFolderFiles(csDir, checkFileLastAccess, CTimeSpan(0, 1, 0, 0));

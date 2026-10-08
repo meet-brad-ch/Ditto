@@ -5,6 +5,7 @@
 #include <memory>
 
 class COptionsSheet;
+class CGetSetOptions;
 
 class CNoDbFrameWnd : public CFrameWnd
 {
@@ -49,5 +50,11 @@ private:
 		/** @brief Shows the "no database" message. */
 		TimerErrorMsg = 2,
 	};
+
+	/**
+	 * @brief The application's settings.
+	 * @return theApp.Services().Settings().
+	 */
+	CGetSetOptions& Settings() const;
 };
 

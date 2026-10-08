@@ -283,11 +283,11 @@ CMenu * CMultiLanguage::GetMenuPos(CMenu *pMenu, const CString &csLookingForMenu
 	return NULL;
 }
 
-bool CMultiLanguage::LoadLanguageFile(CString csFile)
+bool CMultiLanguage::LoadLanguageFile(const CString& languageDir, CString csFile)
 {
 	m_csLastError = "";
-	
-	CString csPath = CGetSetOptions::GetPath(CGetSetOptions::PathLanguage);
+
+	CString csPath = languageDir;
 	csPath += csFile;
 	csPath += ".xml";
 

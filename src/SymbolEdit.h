@@ -33,6 +33,8 @@
 #include "Accels.h"
 #include "DPI.h"
 
+class CGetSetOptions;
+
 // CSymbolEdit
 
 class CSymbolEdit : public CEdit
@@ -109,6 +111,12 @@ class CSymbolEdit : public CEdit
 	 *  @param textRect Area of the text.
 	 *  @param text Window text. */
 	void DrawTextArea(CDC& dc, const CRect& rect, const CRect& textRect, const CString& text);
+
+	/**
+	 * @brief The application's settings.
+	 * @return theApp.Services().Settings().
+	 */
+	CGetSetOptions& Settings() const;
 
 	/** @brief Draws the prompt text in an empty edit control.
 	 *  @param dc Paint DC.

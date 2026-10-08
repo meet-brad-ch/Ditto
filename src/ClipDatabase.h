@@ -2,6 +2,8 @@
 
 #include "..\Shared/ArrayEx.h"
 
+class CGetSetOptions;
+
 /**
  * @brief Group and clip edits on the app's database (theApp.m_db): new groups, deleting all clips
  * or some formats of a clip, and a group's path. A database error is shown to the user
@@ -26,11 +28,12 @@ public:
 
 	/**
 	 * @brief Deletes data formats of a clip and updates the clip's CRC.
+	 * @param settings The application's settings (the clip's save settings for the CRC).
 	 * @param parentID The clip.
 	 * @param formatIDs The ids of the Data rows to delete; nothing is done when empty.
 	 * @return TRUE on success; FALSE when the delete failed.
 	 */
-	static BOOL DeleteFormats(int parentID, ARRAY& formatIDs);
+	static BOOL DeleteFormats(CGetSetOptions& settings, int parentID, ARRAY& formatIDs);
 
 	/**
 	 * @brief The path of a group, "Group Path: \\\\top\\...\\group" (at most 100 levels).

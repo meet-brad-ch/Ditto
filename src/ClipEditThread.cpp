@@ -7,7 +7,8 @@
 #include "ConvertRTFToText.h"
 #include "..\Shared\TextConvert.h"
 
-CClipEditThread::CClipEditThread()
+CClipEditThread::CClipEditThread(CGetSetOptions& settings) :
+	m_settings(settings)
 {
 	m_folderHandle = INVALID_HANDLE_VALUE;
 	m_threadName = _T("ClipEditTrackingThread");
@@ -32,13 +33,13 @@ void CClipEditThread::Close()
 	RemoveEvent(EventFileChanged);
 	m_overlapped.hEvent = INVALID_HANDLE_VALUE;	
 
-	CString editClipFolder = CGetSetOptions::GetPath(CGetSetOptions::PathEditClips);
+	CString editClipFolder = m_settings.GetPath(CGetSetOptions::PathEditClips);
 	CTempFileCleaner::DeleteFolderFiles(editClipFolder, TRUE, CTimeSpan(7, 0, 0, 0));
 }
 
 void CClipEditThread::StartWatchingFolderForChanges()
 {
-	CString editClipFolder = CGetSetOptions::GetPath(CGetSetOptions::PathEditClips);
+	CString editClipFolder = m_settings.GetPath(CGetSetOptions::PathEditClips);
 
 	m_folderHandle = CreateFileW(editClipFolder, FILE_LIST_DIRECTORY, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, NULL);
 	
@@ -74,7 +75,7 @@ void CClipEditThread::OnTimeOut(void* /*param*/)
 {
 	if (m_waitTimeout == s_maxTimeout)
 	{
-		CString editClipFolder = CGetSetOptions::GetPath(CGetSetOptions::PathEditClips);
+		CString editClipFolder = m_settings.GetPath(CGetSetOptions::PathEditClips);
 		CTempFileCleaner::DeleteFolderFiles(editClipFolder, TRUE, CTimeSpan(7, 0, 0, 0));
 
 		//cleanup up the list of edits that we started, after 7 days just keeps the list from growing too large, hopefull they don't have millions of edits in 7 days
@@ -175,7 +176,7 @@ void CClipEditThread::OnFileChanged()
 
 	if (fileModified)
 	{
-		m_waitTimeout = CGetSetOptions::m_clipEditSaveDelayAfterSaveSeconds * 1000;
+		m_waitTimeout = m_settings.m_clipEditSaveDelayAfterSaveSeconds * 1000;
 	}
 }
 
@@ -197,9 +198,9 @@ bool CClipEditThread::ShouldSaveChangedFile(const CString& fileName)
 		{
 			auto startEdit = m_fileEditStarts[fileName];
 			auto diff = CTime::GetCurrentTime() - startEdit;
-			if (diff.GetTotalSeconds() < CGetSetOptions::m_clipEditSaveDelayAfterLoadSeconds)
+			if (diff.GetTotalSeconds() < m_settings.m_clipEditSaveDelayAfterLoadSeconds)
 			{
-				CLogger::Log(CStringUtil::Format(_T("%s has changed close to when we started editing the file, diff: %lld, limit: %d, not handling change"), fileName.GetString(), diff.GetTotalSeconds(), CGetSetOptions::m_clipEditSaveDelayAfterLoadSeconds));
+				CLogger::Log(CStringUtil::Format(_T("%s has changed close to when we started editing the file, diff: %lld, limit: %d, not handling change"), fileName.GetString(), diff.GetTotalSeconds(), m_settings.m_clipEditSaveDelayAfterLoadSeconds));
 				addToChanges = false;
 			}
 		}
@@ -230,7 +231,7 @@ bool CClipEditThread::SaveToClip(CString filePath, int id)
 
 	id = ResolveNewClipId(filePath, id);
 
-	CClip clip;
+	CClip clip(m_settings);
 	if (id >= 0)
 	{
 		if (clip.LoadMainTable(id) == FALSE)
@@ -244,7 +245,7 @@ bool CClipEditThread::SaveToClip(CString filePath, int id)
 
 	EditedClipData data{};
 
-	CString editClipFolder = CGetSetOptions::GetPath(CGetSetOptions::PathEditClips);
+	CString editClipFolder = m_settings.GetPath(CGetSetOptions::PathEditClips);
 	CString fullFilePath = editClipFolder + filePath;
 
 	nsPath::CPath path(filePath);
@@ -261,7 +262,7 @@ bool CClipEditThread::SaveToClip(CString filePath, int id)
 		return false;
 	}
 
-	BOOL modifyDescription = CGetSetOptions::GetUpdateDescWhenSavingClip();
+	BOOL modifyDescription = m_settings.GetUpdateDescWhenSavingClip();
 
 	SaveEditedFormats(clip, extenstion, data, modifyDescription);
 

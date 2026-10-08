@@ -5,7 +5,7 @@
 // app-wide state, read and set by CIdleTime::IdleSeconds only; left for the composition root (Phase L3d)
 int g_funnyGetTickCountAdjustment = -1;
 
-double CIdleTime::IdleSeconds()
+double CIdleTime::IdleSeconds(CGetSetOptions& settings)
 {
 	LASTINPUTINFO info{};
 	info.cbSize = sizeof(info);
@@ -30,10 +30,10 @@ double CIdleTime::IdleSeconds()
 		//Output message the first time
 		if(g_funnyGetTickCountAdjustment == 1)
 		{
-			CLogger::Log(CStringUtil::Format(_T("Adjusting time of get tickcount by: %d, on startup we found GetTickCount to be less than last input"), CGetSetOptions::GetFunnyTickCountAdjustment()));
+			CLogger::Log(CStringUtil::Format(_T("Adjusting time of get tickcount by: %d, on startup we found GetTickCount to be less than last input"), settings.GetFunnyTickCountAdjustment()));
 			g_funnyGetTickCountAdjustment = 2;
 		}
-		currentTick += CGetSetOptions::GetFunnyTickCountAdjustment();
+		currentTick += settings.GetFunnyTickCountAdjustment();
 	}
 
 	const double idleSeconds{ (currentTick - info.dwTime)/1000.0 };

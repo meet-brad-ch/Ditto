@@ -36,7 +36,14 @@ INPUT                  = lib/DittoCore/ByteCursor.h \
                          lib/DittoCore/GlobalLockGuard.h \
                          lib/DittoCore/GlobalLockGuard.cpp \
                          lib/DittoCore/ICaseMapper.h \
+                         lib/DittoCore/IniSettingsStore.h \
+                         lib/DittoCore/IniSettingsStore.cpp \
+                         lib/DittoCore/InMemorySettingsStore.h \
+                         lib/DittoCore/InMemorySettingsStore.cpp \
                          lib/DittoCore/IRandomRange.h \
+                         lib/DittoCore/ISettingsStore.h \
+                         lib/DittoCore/RegistrySettingsStore.h \
+                         lib/DittoCore/RegistrySettingsStore.cpp \
                          lib/DittoCore/RtfJoin.h \
                          lib/DittoCore/RtfJoin.cpp \
                          lib/DittoCore/RtfNormalizer.h \
@@ -50,6 +57,8 @@ INPUT                  = lib/DittoCore/ByteCursor.h \
                          lib/DittoCore/TextTransforms.cpp \
                          lib/DittoCore/Typoglycemia.h \
                          lib/DittoCore/Typoglycemia.cpp \
+                         src/AppServices.h \
+                         src/AppServices.cpp \
                          src/ErrorReport.h \
                          src/FileDialogPath.h \
                          src/FileDialogPath.cpp \

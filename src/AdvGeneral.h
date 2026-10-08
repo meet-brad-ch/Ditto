@@ -7,6 +7,8 @@
 #include <memory>
 #include <utility>
 
+class CGetSetOptions;
+
 class CAdvGeneral : public CDialogEx
 {
 	DECLARE_DYNAMIC(CAdvGeneral)
@@ -276,8 +278,8 @@ private:
 	{
 		/** @brief The property's data, a Setting* id. */
 		int id{};
-		/** @brief Stores the new value in the options. */
-		void (*write)(long value) = nullptr;
+		/** @brief Stores the new value in the options (the settings, the value). */
+		void (*write)(CGetSetOptions& settings, long value) = nullptr;
 	};
 
 	/** @brief A True/False grid setting: written when its text changed. */
@@ -285,8 +287,8 @@ private:
 	{
 		/** @brief The property's data, a Setting* id. */
 		int id{};
-		/** @brief Stores the new value (TRUE when the text is "True") in the options. */
-		void (*write)(BOOL value) = nullptr;
+		/** @brief Stores the new value (TRUE when the text is "True") in the options (the settings, the value). */
+		void (*write)(CGetSetOptions& settings, BOOL value) = nullptr;
 	};
 
 	/** @brief A text grid setting: written when its text changed. */
@@ -294,8 +296,8 @@ private:
 	{
 		/** @brief The property's data, a Setting* id. */
 		int id{};
-		/** @brief Stores the new text in the options. */
-		void (*write)(LPCTSTR value) = nullptr;
+		/** @brief Stores the new text in the options (the settings, the text). */
+		void (*write)(CGetSetOptions& settings, LPCTSTR value) = nullptr;
 	};
 
 	/** @brief The numeric settings OnBnClickedOk writes, by property id. */
@@ -333,18 +335,26 @@ private:
 	void WriteSetting(CMFCPropertyGridProperty* prop);
 
 	/**
+	 * @brief The application's settings.
+	 * @return theApp.Services().Settings().
+	 */
+	CGetSetOptions& Settings() const;
+
+	/**
 	 * @brief Writes a changed transparency percentage; a value outside 1..100 is stored as 100.
+	 * @param settings The settings written to.
 	 * @param newValue The property's new value.
 	 */
-	static void WriteTransparencyPercent(long newValue);
+	static void WriteTransparencyPercent(CGetSetOptions& settings, long newValue);
 
 	/**
 	 * @brief Writes a changed regex filter or regex process-name filter (the numbered settings).
+	 * @param settings The settings written to.
 	 * @param id The property's Setting* id; other ids are ignored.
 	 * @param newValue The property's value.
 	 * @param origValue The property's original value.
 	 */
-	static void WriteRegexSetting(int id, const VARIANT& newValue, const VARIANT& origValue);
+	static void WriteRegexSetting(CGetSetOptions& settings, int id, const VARIANT& newValue, const VARIANT& origValue);
 
 	/**
 	 * @brief Selects a search match in the grid and scrolls it into view.

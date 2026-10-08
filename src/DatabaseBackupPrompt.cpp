@@ -3,7 +3,7 @@
 #include "Misc.h"
 #include "FileDialogPath.h"
 
-BOOL CDatabaseBackupPrompt::RestoreDbPrompt(HWND hwnd)
+BOOL CDatabaseBackupPrompt::RestoreDbPrompt(CGetSetOptions& settings, HWND hwnd)
 {
 	BOOL ret{ false };
 
@@ -31,15 +31,15 @@ BOOL CDatabaseBackupPrompt::RestoreDbPrompt(HWND hwnd)
 	{
 		CWaitCursor wait;
 
-		CString dbPath{ CGetSetOptions::GetDBPath() };
+		CString dbPath{ settings.GetDBPath() };
 		CString backupPath(CFileDialogPath::From(ofn));
-		ret = CDatabaseBackupService::RestoreDB(backupPath);
+		ret = CDatabaseBackupService::RestoreDB(settings, backupPath);
 	}
 
 	return ret;
 }
 
-BOOL CDatabaseBackupPrompt::BackupDbPrompt(HWND hwnd)
+BOOL CDatabaseBackupPrompt::BackupDbPrompt(CGetSetOptions& settings, HWND hwnd)
 {
 	BOOL ret{ FALSE };
 
@@ -67,7 +67,7 @@ BOOL CDatabaseBackupPrompt::BackupDbPrompt(HWND hwnd)
 	{
 		CWaitCursor wait;
 
-		CString dbPath{ CGetSetOptions::GetDBPath() };
+		CString dbPath{ settings.GetDBPath() };
 		CString backupPath(CFileDialogPath::From(ofn));
 		ret = CDatabaseBackupService::BackupDB(dbPath, backupPath);
 	}

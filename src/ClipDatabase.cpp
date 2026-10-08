@@ -49,7 +49,7 @@ BOOL CClipDatabase::DeleteAllIDs()
 	return TRUE;
 }
 
-BOOL CClipDatabase::DeleteFormats(int parentID, ARRAY& formatIDs)
+BOOL CClipDatabase::DeleteFormats(CGetSetOptions& settings, int parentID, ARRAY& formatIDs)
 {
 	if(formatIDs.GetSize() <= 0)
 		return TRUE;
@@ -63,7 +63,7 @@ BOOL CClipDatabase::DeleteFormats(int parentID, ARRAY& formatIDs)
 			theApp.m_db.execDMLEx(_T("DELETE FROM Data WHERE lID = %d;"), formatIDs[i]);
 		}
 
-		CClip clip;
+		CClip clip(settings);
 		if(clip.LoadFormats(parentID))
 		{
 			const DWORD CRC{ clip.GenerateCRC() };

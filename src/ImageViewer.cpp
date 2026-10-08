@@ -12,6 +12,11 @@
 
 IMPLEMENT_DYNAMIC(CImageViewer, CWnd)
 
+CGetSetOptions& CImageViewer::Settings() const
+{
+	return theApp.Services().Settings();
+}
+
 CImageViewer::CImageViewer()
 {
 	m_scrollHelper.AttachWnd(this);
@@ -77,7 +82,7 @@ void CImageViewer::UpdateBitmapSize(bool setScale)
 	{
 		if (setScale)
 		{
-			BOOL newScaleImage = CGetSetOptions::GetScaleImagesToDescWindow();
+			BOOL newScaleImage = Settings().GetScaleImagesToDescWindow();
 			if (newScaleImage)
 			{
 				CRect rect;
@@ -123,7 +128,7 @@ void CImageViewer::OnPaint()
 	GetClientRect(rect);	
 
 	CBrush  Brush, *pOldBrush;
-	Brush.CreateSolidBrush(CGetSetOptions::m_Theme.DescriptionWindowBG());
+	Brush.CreateSolidBrush(Settings().m_Theme.DescriptionWindowBG());
 
 	pOldBrush = memDC.SelectObject(&Brush);
 
@@ -230,7 +235,7 @@ BOOL CImageViewer::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
 		pWnd->m_hWnd == this->m_hWnd &&
 		nHitTest == HTCLIENT)
 	{
-		if (CGetSetOptions::GetScaleImagesToDescWindow())
+		if (Settings().GetScaleImagesToDescWindow())
 		{
 			::SetCursor(AfxGetApp()->LoadCursor(IDC_CURSOR_ZOOM_IN));
 		}
@@ -255,7 +260,7 @@ void CImageViewer::OnLButtonUp(UINT nFlags, CPoint point)
 	if (this->m_pGdiplusBitmap &&
 		m_hoveringOverImage)
 	{
-		CGetSetOptions::SetScaleImagesToDescWindow(!CGetSetOptions::GetScaleImagesToDescWindow());
+		Settings().SetScaleImagesToDescWindow(!Settings().GetScaleImagesToDescWindow());
 		
 		UpdateBitmapSize(true);
 		

@@ -10,7 +10,8 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-CFormatSQL::CFormatSQL()
+CFormatSQL::CFormatSQL(CGetSetOptions& settings) :
+	m_settings(settings)
 {
 
 }
@@ -25,8 +26,8 @@ void CFormatSQL::Parse(CString cs)
 	//Replace all single ' with a double '
 	cs.Replace(_T("'"), _T("''"));
 
-	if(CGetSetOptions::GetSimpleTextSearch() ||
-		CGetSetOptions::GetRegExTextSearch())
+	if(m_settings.GetSimpleTextSearch() ||
+		m_settings.GetRegExTextSearch())
 	{
 		eSpecialTypes invalid = eINVALID;
 		AddToSQL(cs, invalid, invalid);
@@ -133,14 +134,14 @@ bool CFormatSQL::AddToSQL(CString cs, eSpecialTypes &eNOTValue, eSpecialTypes &e
 	cs.TrimLeft();
 	cs.TrimRight();
 
-	if (CGetSetOptions::GetRegExTextSearch())
+	if (m_settings.GetRegExTextSearch())
 	{
 		// SQLite's ICU regexp() matches the whole text: (?s:.*) on both sides finds the pattern
 		// anywhere, and (?i) makes the match case-insensitive when the option is set
-		const CString caseFlag = CGetSetOptions::GetRegexCaseInsensitive() ? _T("(?i)") : _T("");
+		const CString caseFlag = m_settings.GetRegexCaseInsensitive() ? _T("(?i)") : _T("");
 		csThisSQL.Format(_T("%s REGEXP \'%s(?s:.*)(?:%s)(?s:.*)\'"), m_csVariable.GetString(), caseFlag.GetString(), cs.GetString());
 	}
-	else if (CGetSetOptions::GetSimpleTextSearch())
+	else if (m_settings.GetSimpleTextSearch())
 	{
 		// the search text, not the column name: a % in it must match a literal %
 		if (cs.Find(_T("%")) >= 0)

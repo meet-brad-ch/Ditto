@@ -14,7 +14,7 @@
 #include "DittoDbTransaction.h"
 
 // allocate an HGLOBAL of the given Format Type representing these Clip IDs.
-HGLOBAL CClipIDs::Render(UINT cfType)
+HGLOBAL CClipIDs::Render(CGetSetOptions& settings, UINT cfType)
 {
 	INT_PTR count = GetSize();
 	if(count <= 0)
@@ -27,41 +27,42 @@ HGLOBAL CClipIDs::Render(UINT cfType)
 		return CClip::LoadFormat(ElementAt(0), cfType);
 	}
 
-	CStringA SepA = CTextConvert::UnicodeToAnsi(CGetSetOptions::GetMultiPasteSeparator());
-	CStringW SepW = CGetSetOptions::GetMultiPasteSeparator();
+	CStringA SepA = CTextConvert::UnicodeToAnsi(settings.GetMultiPasteSeparator());
+	CStringW SepW = settings.GetMultiPasteSeparator();
+	const BOOL bReverse{ settings.m_bMultiPasteReverse };
 
 	if(cfType == CF_TEXT)
 	{
 		CCF_TextAggregator CFText(SepA);
-		return RenderAggregated(CFText, CF_TEXT);
+		return RenderAggregated(CFText, CF_TEXT, bReverse);
 	}
 	else if(cfType == CF_UNICODETEXT)
 	{
 		CCF_UnicodeTextAggregator CFUnicodeText(SepW);
-		return RenderAggregated(CFUnicodeText, CF_UNICODETEXT);
+		return RenderAggregated(CFUnicodeText, CF_UNICODETEXT, bReverse);
 	}
 	else if(cfType == CF_HDROP)
 	{
 		CCF_HDropAggregator HDrop;
-		return RenderAggregated(HDrop, CF_HDROP);
+		return RenderAggregated(HDrop, CF_HDROP, bReverse);
 	}
 	else if(cfType == theApp.m_HTML_Format)
 	{
 		CHTMLFormatAggregator Html(SepW);
-		return RenderAggregated(Html, theApp.m_HTML_Format);
+		return RenderAggregated(Html, theApp.m_HTML_Format, bReverse);
 	}
 	else if(cfType == theApp.m_RTFFormat)
 	{
 		CRichTextAggregator RichText(SepW);
-		return RenderAggregated(RichText, theApp.m_RTFFormat);
+		return RenderAggregated(RichText, theApp.m_RTFFormat, bReverse);
 	}
 
 	return NULL;
 }
 
-HGLOBAL CClipIDs::RenderAggregated(IClipAggregator& Aggregator, UINT cfType)
+HGLOBAL CClipIDs::RenderAggregated(IClipAggregator& Aggregator, UINT cfType, BOOL bReverse)
 {
-	if(AggregateData(Aggregator, cfType, CGetSetOptions::m_bMultiPasteReverse, false))
+	if(AggregateData(Aggregator, cfType, bReverse, false))
 	{
 		return Aggregator.GetHGlobal();
 	}
@@ -259,7 +260,7 @@ BOOL CClipIDs::LoadElementsOf(int groupId)
 //   an alternative design would be to have one CMainTable per level deep,
 //   but I thought that might be too costly, so I implemented it this way.
 
-BOOL CClipIDs::CopyTo(int parentId)
+BOOL CClipIDs::CopyTo(CGetSetOptions& settings, int parentId)
 {
 	INT_PTR count = GetSize();
 	if(count == 0)
@@ -274,7 +275,7 @@ BOOL CClipIDs::CopyTo(int parentId)
 		{
 			int nID = ElementAt(i);
 
-			CClip clip;
+			CClip clip(settings);
 
 			if(clip.LoadMainTable(nID))
 			{
@@ -456,7 +457,7 @@ BOOL CClipIDs::CreateExportSqliteDB(CppSQLite3DB &db)
 	return bRet;
 }
 
-BOOL CClipIDs::Export(CString csFilePath)
+BOOL CClipIDs::Export(CGetSetOptions& settings, CString csFilePath)
 {    
 	INT_PTR count = GetSize();
 	if(count == 0)
@@ -478,7 +479,7 @@ BOOL CClipIDs::Export(CString csFilePath)
 		if(CreateExportSqliteDB(db) == FALSE)
 			return FALSE;
 
-		bRet = ExportClips(db);
+		bRet = ExportClips(settings, db);
 
 		db.close();
 	}
@@ -496,7 +497,7 @@ BOOL CClipIDs::Export(CString csFilePath)
 	return bRet;
 }
 
-BOOL CClipIDs::ExportClips(CppSQLite3DB& db)
+BOOL CClipIDs::ExportClips(CGetSetOptions& settings, CppSQLite3DB& db)
 {
 	BOOL bRet{FALSE};
 	INT_PTR count{GetSize()};
@@ -504,7 +505,7 @@ BOOL CClipIDs::ExportClips(CppSQLite3DB& db)
 	{
 		int nID{ElementAt(i)};
 
-		CClip_ImportExport clip{};
+		CClip_ImportExport clip{settings};
 
 		if(clip.LoadMainTable(nID))
 		{

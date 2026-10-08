@@ -51,33 +51,34 @@ BOOL COptionsCopyBuffers::OnInitDialog()
 {
 	CPropertyPage::OnInitDialog();
 
+	CGetSetOptions& settings = theApp.Services().Settings();
 	CCopyBufferItem Item;
-	
-	CGetSetOptions::GetCopyBufferItem(0, Item);
+
+	settings.GetCopyBufferItem(0, Item);
 	theApp.m_pCopyBuffer1->CopyToCtrl(m_CopyBuffer1, m_hWnd, IDC_WIN_COPY_1);
 	theApp.m_pPasteBuffer1->CopyToCtrl(m_PasteBuffer1, m_hWnd, IDC_WIN_PASTE_1);
 	theApp.m_pCutBuffer1->CopyToCtrl(m_CutBuffer1, m_hWnd, IDC_WIN_CUT_1);
 	CheckDlgButton(IDC_PLAY_SOUND_1, Item.m_bPlaySoundOnCopy);
 
-	CGetSetOptions::GetCopyBufferItem(1, Item);
+	settings.GetCopyBufferItem(1, Item);
 	theApp.m_pCopyBuffer2->CopyToCtrl(m_CopyBuffer2, m_hWnd, IDC_WIN_COPY_2);
 	theApp.m_pPasteBuffer2->CopyToCtrl(m_PasteBuffer2, m_hWnd, IDC_WIN_PASTE_2);
 	theApp.m_pCutBuffer2->CopyToCtrl(m_CutBuffer2, m_hWnd, IDC_WIN_CUT_2);
 	CheckDlgButton(IDC_PLAY_SOUND_2, Item.m_bPlaySoundOnCopy);
 
-	CGetSetOptions::GetCopyBufferItem(2, Item);
+	settings.GetCopyBufferItem(2, Item);
 	theApp.m_pCopyBuffer3->CopyToCtrl(m_CopyBuffer3, m_hWnd, IDC_WIN_COPY_3);
 	theApp.m_pPasteBuffer3->CopyToCtrl(m_PasteBuffer3, m_hWnd, IDC_WIN_PASTE_3);
 	theApp.m_pCutBuffer3->CopyToCtrl(m_CutBuffer3, m_hWnd, IDC_WIN_CUT_3);
 	CheckDlgButton(IDC_PLAY_SOUND_3, Item.m_bPlaySoundOnCopy);
 
-	CGetSetOptions::GetCopyBufferItem(3, Item);
+	settings.GetCopyBufferItem(3, Item);
 	theApp.m_pCopyBuffer4->CopyToCtrl(m_CopyBuffer4, m_hWnd, IDC_WIN_COPY_4);
 	theApp.m_pPasteBuffer4->CopyToCtrl(m_PasteBuffer4, m_hWnd, IDC_WIN_PASTE_4);
 	theApp.m_pCutBuffer4->CopyToCtrl(m_CutBuffer4, m_hWnd, IDC_WIN_CUT_4);
 	CheckDlgButton(IDC_PLAY_SOUND_4, Item.m_bPlaySoundOnCopy);
 
-	CGetSetOptions::GetCopyBufferItem(4, Item);
+	settings.GetCopyBufferItem(4, Item);
 	theApp.m_pCopyBuffer5->CopyToCtrl(m_CopyBuffer5, m_hWnd, IDC_WIN_COPY_5);
 	theApp.m_pPasteBuffer5->CopyToCtrl(m_PasteBuffer5, m_hWnd, IDC_WIN_PASTE_5);
 	theApp.m_pCutBuffer5->CopyToCtrl(m_CutBuffer5, m_hWnd, IDC_WIN_CUT_5);
@@ -113,26 +114,27 @@ BOOL COptionsCopyBuffers::OnApply()
 	theApp.m_pPasteBuffer5->CopyFromCtrl(m_PasteBuffer5, m_hWnd, IDC_WIN_PASTE_5);
 	theApp.m_pCutBuffer5->CopyFromCtrl(m_CutBuffer5, m_hWnd, IDC_WIN_CUT_5);
 
+	CGetSetOptions& settings = theApp.Services().Settings();
 	CCopyBufferItem Item;
-	CGetSetOptions::GetCopyBufferItem(0, Item);
+	settings.GetCopyBufferItem(0, Item);
 	Item.m_bPlaySoundOnCopy = IsDlgButtonChecked(IDC_PLAY_SOUND_1);
-	CGetSetOptions::SetCopyBufferItem(0, Item);
+	settings.SetCopyBufferItem(0, Item);
 
-	CGetSetOptions::GetCopyBufferItem(1, Item);
+	settings.GetCopyBufferItem(1, Item);
 	Item.m_bPlaySoundOnCopy = IsDlgButtonChecked(IDC_PLAY_SOUND_2);
-	CGetSetOptions::SetCopyBufferItem(1, Item);
+	settings.SetCopyBufferItem(1, Item);
 
-	CGetSetOptions::GetCopyBufferItem(2, Item);
+	settings.GetCopyBufferItem(2, Item);
 	Item.m_bPlaySoundOnCopy = IsDlgButtonChecked(IDC_PLAY_SOUND_3);
-	CGetSetOptions::SetCopyBufferItem(2, Item);
+	settings.SetCopyBufferItem(2, Item);
 
-	CGetSetOptions::GetCopyBufferItem(3, Item);
+	settings.GetCopyBufferItem(3, Item);
 	Item.m_bPlaySoundOnCopy = IsDlgButtonChecked(IDC_PLAY_SOUND_4);
-	CGetSetOptions::SetCopyBufferItem(3, Item);
+	settings.SetCopyBufferItem(3, Item);
 
-	CGetSetOptions::GetCopyBufferItem(4, Item);
+	settings.GetCopyBufferItem(4, Item);
 	Item.m_bPlaySoundOnCopy = IsDlgButtonChecked(IDC_PLAY_SOUND_5);
-	CGetSetOptions::SetCopyBufferItem(4, Item);
+	settings.SetCopyBufferItem(4, Item);
 
 	INT_PTR x;
 	INT_PTR y;

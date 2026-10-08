@@ -10,6 +10,8 @@
 #include "afxwin.h"
 //
 
+class CGetSetOptions;
+
 /////////////////////////////////////////////////////////////////////////////
 // COptionsQuickPaste dialog
 
@@ -86,6 +88,12 @@ private:
 	void ApplyQuickPastePosition();
 	/** @brief Saves the chosen theme and flags the parent when the theme changed. */
 	void ApplyTheme();
+
+	/**
+	 * @brief The application's settings.
+	 * @return theApp.Services().Settings().
+	 */
+	CGetSetOptions& Settings() const;
 };
 
 //{{AFX_INSERT_LOCATION}}

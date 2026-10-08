@@ -27,7 +27,7 @@ int CDittoPopupWindow::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;
 	}
 
-	CWndEx::SetCaptionOn(CGetSetOptions::CaptionOnTop, false, CGetSetOptions::m_Theme.GetCaptionSize(), CGetSetOptions::m_Theme.GetCaptionFontSize());
+	CWndEx::SetCaptionOn(CGetSetOptions::CaptionOnTop, false, theApp.Services().Settings().m_Theme.GetCaptionSize(), theApp.Services().Settings().m_Theme.GetCaptionFontSize());
 		
 	m_font.CreateFont(-m_DittoWindow.m_dpi.Scale(12), 0, 0, 0, 400, 0, 0, 0, DEFAULT_CHARSET, 3, 2, 1, 34, _T("MS Sans Serif"));
 	m_textLabel.Create(_T("test"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this);

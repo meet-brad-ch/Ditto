@@ -9,10 +9,16 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-class CFormatSQL  
+class CGetSetOptions;
+
+class CFormatSQL
 {
 public:
-	CFormatSQL();
+	/**
+	 * @brief Creates an empty search condition builder.
+	 * @param settings The application's settings (simple/regex search options); must outlive this object.
+	 */
+	explicit CFormatSQL(CGetSetOptions& settings);
 	virtual ~CFormatSQL();
 
 	void Parse(CString cs);
@@ -39,6 +45,9 @@ private:
 	 * @param eOrValue the pending AND/OR operator (reset when a term is added).
 	 */
 	void AddWord(const CString& csCurrentWord, eSpecialTypes &eNotValue, eSpecialTypes &eOrValue);
+
+	/// The application's settings (not owned).
+	CGetSetOptions& m_settings;
 };
 
 #endif // !defined(AFX_FORMATSQL_H__3D7AC79C_FDD8_4948_B7CD_601FB513F208__INCLUDED_)

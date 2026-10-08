@@ -2,10 +2,17 @@
 #include "Clip.h"
 #include <array>
 
+class CGetSetOptions;
+
 class CClipCompare
 {
 public:
-	CClipCompare(void);
+	/**
+	 * @brief Creates a clip comparer.
+	 * @param settings The application's settings (diff application, UTF-8 preference, compare
+	 *        folder); must outlive this object.
+	 */
+	explicit CClipCompare(CGetSetOptions& settings);
 	~CClipCompare(void);
 
 	void Compare(int leftId, int rightId);
@@ -33,7 +40,7 @@ private:
 		const TCHAR* path;
 		/** @brief Command line put before the two file names, nullptr for none. */
 		const TCHAR* params;
-		/** @brief true if path holds environment variables (resolved with CGetSetOptions::ResolvePath). */
+		/** @brief true if path holds environment variables (resolved with the settings' ResolvePath). */
 		bool resolvePath;
 	};
 
@@ -90,5 +97,8 @@ private:
 	 * @param params receives the command line; unchanged for other applications.
 	 */
 	static void SetConfiguredAppParams(const CString& path, CString& params);
+
+	/// The application's settings (not owned).
+	CGetSetOptions& m_settings;
 };
 

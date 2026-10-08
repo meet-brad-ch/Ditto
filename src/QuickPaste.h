@@ -12,10 +12,14 @@
 #include "QPasteWnd.h"
 #include <memory>
 
-class CQuickPaste  
+class CGetSetOptions;
+
+class CQuickPaste
 {
 public:
-	CQuickPaste();
+	/** @brief Creates the quick paste controller.
+	@param settings the application settings; must outlive this object. */
+	explicit CQuickPaste(CGetSetOptions &settings);
 	virtual ~CQuickPaste();
 
 	void ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboard, BOOL bReFillList);
@@ -38,6 +42,9 @@ protected:
 	bool m_forceResizeOnNextShow;
 
 private:
+	/** @brief The application settings (owned by the application services). */
+	CGetSetOptions &m_settings;
+
 	/** @brief Is the "close the window and reopen the database" key combination (shift + control, not from the keyboard hot key) down?
 	@param bFromKeyboard the window is shown from the keyboard hot key.
 	@return true for the combination. */
@@ -62,7 +69,7 @@ private:
 	@param ptCaret the caret point.
 	@param point the point to set.
 	@param csSize the size, set for the previous position. */
-	static void ChooseWindowPoint(int nPosition, bool bAtPrevPos, const CPoint &ptCaret, CPoint &point, CSize &csSize);
+	void ChooseWindowPoint(int nPosition, bool bAtPrevPos, const CPoint &ptCaret, CPoint &point, CSize &csSize);
 	/** @brief Keeps the window rect on the screen and replaces an invalid size by 300x300 at the caret.
 	@param crRect the window rect.
 	@param ptCaret the caret point.

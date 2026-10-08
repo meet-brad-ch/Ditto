@@ -52,7 +52,7 @@ int CEditWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_updateDescriptionButton.Create(theApp.m_Language.GetString("Update_Desc", "Update clip description on save?"), WS_CHILD|WS_VISIBLE|BS_AUTOCHECKBOX, CRect(0,0,0,0), this, 101);
 	m_updateDescriptionButton.SetFont(&m_font);
 
-	if(CGetSetOptions::GetUpdateDescWhenSavingClip())
+	if(theApp.Services().Settings().GetUpdateDescWhenSavingClip())
 	{
 		m_updateDescriptionButton.SetCheck(BST_CHECKED);
 	}
@@ -334,7 +334,7 @@ void CEditWnd::OnDestroy()
 
 	m_edits.erase(m_edits.begin(), m_edits.end());
 
-	CGetSetOptions::SetUpdateDescWhenSavingClip(m_updateDescriptionButton.GetCheck());
+	theApp.Services().Settings().SetUpdateDescWhenSavingClip(m_updateDescriptionButton.GetCheck());
 }
 
 void CEditWnd::OnSetFocus(CWnd* pOldWnd)
@@ -421,7 +421,7 @@ void CEditWnd::OnSaveCloseClipboard()
 	{
 		if(m_lastSaveID >= 0)
 		{
-			CProcessPaste Paste;
+			CProcessPaste Paste(theApp.Services().Settings());
 			Paste.GetClipIDs().Add(m_lastSaveID);
 			Paste.m_bSendPaste = false;
 			Paste.DoPaste();

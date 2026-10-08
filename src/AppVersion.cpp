@@ -17,10 +17,10 @@ CString CAppVersion::GetVersionString(VersionInfo version)
 	return csLine;
 }
 
-VersionInfo CAppVersion::GetRunningVersion()
+VersionInfo CAppVersion::GetRunningVersion(const CString& exeFileName)
 {
 	// Ditto.exe always carries a version resource: not finding it means a broken build
-	const CString csFileName{ CGetSetOptions::GetExeFileName() };
+	const CString csFileName{ exeFileName };
 
 	DWORD dwHandle{};
 	const DWORD dwSize{ GetFileVersionInfoSize(csFileName, &dwHandle) };

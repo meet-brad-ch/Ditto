@@ -44,6 +44,12 @@ protected:
 
 	std::optional<HGLOBAL> RenderClipsOrReport(CLIPFORMAT format);
 
+	/**
+	 * @brief The application's settings.
+	 * @return theApp.Services().Settings().
+	 */
+	CGetSetOptions& Settings() const;
+
 	// Case mapping for the special-paste transforms (ICU)
 	CIcuCaseMapper m_caseMapper;
 	DittoCore::CaseTransforms m_cases;

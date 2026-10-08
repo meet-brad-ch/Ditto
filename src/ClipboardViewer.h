@@ -5,6 +5,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+class CGetSetOptions;
 
 class CClipboardViewer : public CWnd
 {
@@ -68,6 +69,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
+	/**
+	 * @brief The application's settings.
+	 * @return theApp.Services().Settings().
+	 */
+	CGetSetOptions& Settings() const;
+
 	void ProcessClipboardChange();
 	/**
 	 * @brief ValidActiveWnd's step: sets m_activeWindow to the lower-case process name of the
@@ -76,7 +83,7 @@ private:
 	void UpdateActiveWindowName();
 	/**
 	 * @brief Looks for the first entry of an app name list that matches m_activeWindow.
-	 * @param apps the lower-case app name list (wildcards allowed, CGetSetOptions::GetCopyAppSeparator separated).
+	 * @param apps the lower-case app name list (wildcards allowed, separated by the settings' GetCopyAppSeparator()).
 	 * @param line receives the matching (trimmed) entry.
 	 * @return true if an entry matches.
 	 */

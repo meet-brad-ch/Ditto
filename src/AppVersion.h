@@ -20,10 +20,11 @@ class CAppVersion
 public:
 	/**
 	 * @brief The product version from Ditto.exe's version resource.
+	 * @param exeFileName The path of the running Ditto.exe (the settings' GetExeFileName()).
 	 * @return The version.
 	 * @throws std::runtime_error when the version resource is missing or unreadable.
 	 */
-	static VersionInfo GetRunningVersion();
+	static VersionInfo GetRunningVersion(const CString& exeFileName);
 
 	/**
 	 * @brief The text form of a version, "MM.mm.rr.bb" (two digits at least per part).

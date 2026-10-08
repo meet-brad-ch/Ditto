@@ -13,6 +13,7 @@
 #include <memory>
 
 class CHotKey;
+class CGetSetOptions;
 
 class CMainFrame: public CFrameWnd
 {
@@ -206,6 +207,12 @@ private:
 
 	/** @brief OnTimer's dispatch table: the handler of each timer id (CloseWindowTimer has none). */
 	static const std::array<TimerHandler, 11> s_timerHandlers;
+
+	/**
+	 * @brief The application's settings.
+	 * @return theApp.Services().Settings().
+	 */
+	CGetSetOptions& Settings() const;
 
 	/**
 	 * @brief Tells whether a WM_HOTKEY id belongs to a hot key.

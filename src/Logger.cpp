@@ -42,19 +42,22 @@ void CLogger::Write(const TCHAR* msg, CString csFile, long lLine)
 	csText += msg;
 	csText += "\n";
 
+	// The documented exception to the access rule: the log is used from every class and thread.
+	CGetSetOptions& settings{ theApp.Services().Settings() };
+
 #ifndef _DEBUG
-	if(CGetSetOptions::m_outputDebugStringLogging)
+	if(settings.m_outputDebugStringLogging)
 #endif
 	{
 		OutputDebugString(csText);
 	}
 
 #ifndef _DEBUG
-	if(!CGetSetOptions::m_bEnableDebugLogging)
+	if(!settings.m_bEnableDebugLogging)
 		return;
 #endif
 
-	CString csExeFile{ CGetSetOptions::GetPath(CGetSetOptions::PathLogFile) };
+	CString csExeFile{ settings.GetPath(CGetSetOptions::PathLogFile) };
 	csExeFile += "Ditto.log";
 
 	AppendToFile(csExeFile, csText);

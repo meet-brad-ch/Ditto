@@ -19,7 +19,8 @@
 #include <string>
 #include <vector>
 
-CClip_ImportExport::CClip_ImportExport(void) :
+CClip_ImportExport::CClip_ImportExport(CGetSetOptions& settings) :
+	CClip(settings),
 	m_importCount(0)
 {
 

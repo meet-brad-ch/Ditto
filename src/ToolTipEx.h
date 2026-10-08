@@ -12,11 +12,18 @@
 #include "Accels.h"
 #include "SnapWindow.h"
 
+class CGetSetOptions;
+
 class CToolTipEx : public CWnd
 {
 // Construction
 public:
 	CToolTipEx();
+
+private:
+	/** @brief The application settings (theApp's services; this window is created by the framework).
+	@return the settings. */
+	CGetSetOptions& Settings() const;
 
 // Attributes
 public:

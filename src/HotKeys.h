@@ -5,6 +5,8 @@
 #include <memory>
 #include <vector>
 
+class CGetSetOptions;
+
 class CHotKey
 {
 public:
@@ -25,8 +27,17 @@ public:
 	HotKeyType m_hkType;
 	static int m_nextId;
 	
-	// Create hot keys through CHotKeys::Create: the registry owns every hot key.
-	CHotKey( CString name, DWORD defKey = 0, bool bUnregOnShowDitto = false, HotKeyType hkType = PASTE_OPEN_CLIP, CString description = _T(""));
+	/**
+	 * @brief Creates a hot key and reads its key from the settings (create hot keys through
+	 *        CHotKeys::Create: the registry owns every hot key).
+	 * @param settings The application's settings (the stored key); must outlive the hot key.
+	 * @param name The profile name of the hot key.
+	 * @param defKey The key used when the profile holds none.
+	 * @param bUnregOnShowDitto True: the key is unregistered while Ditto's window shows.
+	 * @param hkType What the hot key does.
+	 * @param description The text shown for the hot key.
+	 */
+	CHotKey( CGetSetOptions& settings, CString name, DWORD defKey = 0, bool bUnregOnShowDitto = false, HotKeyType hkType = PASTE_OPEN_CLIP, CString description = _T(""));
 	~CHotKey();
 	CHotKey(const CHotKey&) = delete; // the hot key owns its global atom
 	CHotKey& operator=(const CHotKey&) = delete;
@@ -55,6 +66,9 @@ public:
 	static CString GetVirKeyName(unsigned int virtualKey);
 
 private:
+	/// The application's settings (not owned); LoadKey and SaveKey read and write the key there.
+	CGetSetOptions& m_settings;
+
 	/** @brief The display name of a key that GetKeyNameText does not name. */
 	struct NamedKey
 	{
@@ -123,6 +137,7 @@ public:
 
 	/**
 	 * @brief Creates a hot key and stores it in the registry, which owns it.
+	 * @param settings The application's settings (the stored key); must outlive the hot key.
 	 * @param name The profile name of the hot key.
 	 * @param defKey The key used when the profile holds none.
 	 * @param bUnregOnShowDitto True: the key is unregistered while Ditto's window shows.
@@ -130,7 +145,7 @@ public:
 	 * @param description The text shown for the hot key.
 	 * @return The new hot key; it stays valid until the registry removes it.
 	 */
-	CHotKey& Create(CString name, DWORD defKey = 0, bool bUnregOnShowDitto = false, CHotKey::HotKeyType hkType = CHotKey::PASTE_OPEN_CLIP, CString description = _T(""));
+	CHotKey& Create(CGetSetOptions& settings, CString name, DWORD defKey = 0, bool bUnregOnShowDitto = false, CHotKey::HotKeyType hkType = CHotKey::PASTE_OPEN_CLIP, CString description = _T(""));
 
 	/**
 	 * @brief The number of hot keys in the registry.
@@ -165,7 +180,17 @@ public:
 
 	bool Remove(int clipId, CHotKey::HotKeyType hkType);
 
-	BOOL ValidateClip(int clipId, DWORD key, CString desc, CHotKey::HotKeyType hkType);
+	/**
+	 * @brief Finds the clip's hot key of a type (creates it when missing) and sets its key, name
+	 *        and clip id.
+	 * @param settings The application's settings (for a hot key that is created).
+	 * @param clipId The clip.
+	 * @param key The clip's shortcut.
+	 * @param desc The name of the hot key.
+	 * @param hkType What the hot key does.
+	 * @return CHotKey::ValidateHotKey(key).
+	 */
+	BOOL ValidateClip(CGetSetOptions& settings, int clipId, DWORD key, CString desc, CHotKey::HotKeyType hkType);
 
 	// profile load / save
 	void LoadAllKeys();

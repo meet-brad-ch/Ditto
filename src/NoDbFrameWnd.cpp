@@ -47,9 +47,9 @@ int CNoDbFrameWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	g_HotKeys.Init(m_hWnd);
 
-	m_pDittoHotKey = &g_HotKeys.Create(CString("DittoHotKey"), 704); //704 is ctrl-tilda
-	m_pDittoHotKey2 = &g_HotKeys.Create(CString("DittoHotKey2"));
-	m_pDittoHotKey3 = &g_HotKeys.Create(CString("DittoHotKey3"));
+	m_pDittoHotKey = &g_HotKeys.Create(Settings(), CString("DittoHotKey"), 704); //704 is ctrl-tilda
+	m_pDittoHotKey2 = &g_HotKeys.Create(Settings(), CString("DittoHotKey2"));
+	m_pDittoHotKey3 = &g_HotKeys.Create(Settings(), CString("DittoHotKey3"));
 
 	g_HotKeys.RegisterAll();
 
@@ -101,14 +101,19 @@ void CNoDbFrameWnd::OnTimer(UINT_PTR nIDEvent)
 void CNoDbFrameWnd::ShowNoDbMessage()
 {
 	CString msg = theApp.m_Language.GetString(_T("StartupNoDbMsg"), _T("Ditto was unable to open its database, waiting until it can be opened. Update the path in Options if needed. Path: "));
-	msg += CStringUtil::Format(_T(" %s"), CGetSetOptions::GetDBPath().GetString());
-	m_trayIcon.SetBalloonDetails(msg, _T("Ditto"), CTrayNotifyIcon::BalloonStyle::Info, CGetSetOptions::GetBalloonTimeout());
+	msg += CStringUtil::Format(_T(" %s"), Settings().GetDBPath().GetString());
+	m_trayIcon.SetBalloonDetails(msg, _T("Ditto"), CTrayNotifyIcon::BalloonStyle::Info, Settings().GetBalloonTimeout());
+}
+
+CGetSetOptions& CNoDbFrameWnd::Settings() const
+{
+	return theApp.Services().Settings();
 }
 
 void CNoDbFrameWnd::TryOpenDatabase()
 {
 	if (CDatabaseManager::IsDatabaseOpen() ||
-		DatabaseLocator::CheckDBExists(CGetSetOptions::GetDBPath()))
+		DatabaseLocator::CheckDBExists(Settings(), Settings().GetDBPath()))
 	{
 		// the registry owns the keys: Remove destroys them
 		g_HotKeys.Remove(m_pDittoHotKey);

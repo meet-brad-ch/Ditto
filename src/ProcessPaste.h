@@ -31,14 +31,26 @@ public:
 	bool m_pastedFromGroup;
 	CString m_lastErrorMessage;
 
-	struct MarkAsPastedData 
+	struct MarkAsPastedData
 	{
+		/**
+		 * @brief Creates the data for MarkAsPastedThread.
+		 * @param appSettings The application's settings, read by the thread; must outlive the thread.
+		 */
+		explicit MarkAsPastedData(CGetSetOptions& appSettings) : settings(appSettings) {}
+
+		/** @brief The application's settings (not owned). */
+		CGetSetOptions& settings;
 		CClipIDs ids;
 		bool pastedFromGroup{};
 		bool updateClipOrder{};
 	};
-	
-	CProcessPaste();
+
+	/**
+	 * @brief Creates a paste with a new, empty data source.
+	 * @param settings The application's settings; must outlive this object.
+	 */
+	explicit CProcessPaste(CGetSetOptions& settings);
 	~CProcessPaste();
 
 	CClipIDs& GetClipIDs() { return m_pOle->m_ClipIDs; }
@@ -50,6 +62,9 @@ public:
 	static UINT MarkAsPastedThread(LPVOID pParam);
 
 private:
+	/// The application's settings (not owned).
+	CGetSetOptions& m_settings;
+
 	BOOL RunAtBoundary(LPCTSTR operation, const std::function<BOOL()>& body);
 	// MarkAsPastedThread's order step for one clip: gives it the newest group order (pastedFromGroup)
 	// or the newest main order, so it moves to the top of its list

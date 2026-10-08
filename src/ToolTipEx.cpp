@@ -28,6 +28,11 @@ CToolTipEx::~CToolTipEx()
 	m_clipDataFont.DeleteObject();
 }
 
+CGetSetOptions& CToolTipEx::Settings() const
+{
+	return theApp.Services().Settings();
+}
+
 BEGIN_MESSAGE_MAP(CToolTipEx, CWnd)
 	//{{AFX_MSG_MAP(CToolTipEx)
 	ON_WM_PAINT()
@@ -92,8 +97,8 @@ BOOL CToolTipEx::Create(CWnd *pParentWnd)
 	
 	
 	m_DittoWindow.DoCreate(this);
-	m_DittoWindow.SetCaptionColors(CGetSetOptions::m_Theme.CaptionLeft(), CGetSetOptions::m_Theme.CaptionRight(), CGetSetOptions::m_Theme.Border());
-	m_DittoWindow.SetCaptionOn(this, CGetSetOptions::GetCaptionPos(), true, CGetSetOptions::m_Theme.GetCaptionSize(), CGetSetOptions::m_Theme.GetCaptionFontSize());
+	m_DittoWindow.SetCaptionColors(Settings().m_Theme.CaptionLeft(), Settings().m_Theme.CaptionRight(), Settings().m_Theme.Border());
+	m_DittoWindow.SetCaptionOn(this, Settings().GetCaptionPos(), true, Settings().m_Theme.GetCaptionSize(), Settings().m_Theme.GetCaptionFontSize());
 	m_DittoWindow.m_bDrawMaximize = false;
 	m_DittoWindow.m_bDrawMinimize = false;
 	m_DittoWindow.m_bDrawChevron = true;
@@ -104,7 +109,7 @@ BOOL CToolTipEx::Create(CWnd *pParentWnd)
                       ES_AUTOHSCROLL, CRect(10, 10, 100, 200), this, 1);
 
     m_RichEdit.SetReadOnly();
-    m_RichEdit.SetBackgroundColor(FALSE, CGetSetOptions::m_Theme.DescriptionWindowBG());
+    m_RichEdit.SetBackgroundColor(FALSE, Settings().m_Theme.DescriptionWindowBG());
 
 	m_RichEdit.SetEventMask(m_RichEdit.GetEventMask() | ENM_SELCHANGE | ENM_MOUSEEVENTS | ENM_SCROLLEVENTS);
 	m_RichEdit.SetAutoURLDetect(TRUE);
@@ -125,12 +130,12 @@ BOOL CToolTipEx::Create(CWnd *pParentWnd)
 	m_fontHeight = -13;
 
 	m_clipDataStatic.SetFont(&m_clipDataFont);
-	m_clipDataStatic.SetBkColor(CGetSetOptions::m_Theme.DescriptionWindowBG());
-	m_clipDataStatic.SetTextColor(CGetSetOptions::m_Theme.DescriptionWindowText());
+	m_clipDataStatic.SetBkColor(Settings().m_Theme.DescriptionWindowBG());
+	m_clipDataStatic.SetTextColor(Settings().m_Theme.DescriptionWindowText());
 
 	m_folderPathStatic.SetFont(&m_clipDataFont);
-	m_folderPathStatic.SetBkColor(CGetSetOptions::m_Theme.DescriptionWindowBG());
-	m_folderPathStatic.SetTextColor(CGetSetOptions::m_Theme.DescriptionWindowText());
+	m_folderPathStatic.SetBkColor(Settings().m_Theme.DescriptionWindowBG());
+	m_folderPathStatic.SetTextColor(Settings().m_Theme.DescriptionWindowText());
 	
 	m_saveWindowLockout = false;
 
@@ -145,7 +150,7 @@ BOOL CToolTipEx::Show(CPoint point)
 
 	CRect rect;
 
-	if(CGetSetOptions::GetSizeDescWindowToContent() == FALSE)
+	if(Settings().GetSizeDescWindowToContent() == FALSE)
 	{
 		rect = RectFromSavedSize(point);
 	}
@@ -195,7 +200,7 @@ CRect CToolTipEx::RectFromSavedSize(CPoint point)
 	rect.left = point.x;
 	rect.top = point.y;
 	CSize size;
-	CGetSetOptions::GetDescWndSize(size);
+	Settings().GetDescWndSize(size);
 	rect.right = rect.left + m_DittoWindow.m_dpi.Scale(size.cx);
 	rect.bottom = rect.top + m_DittoWindow.m_dpi.Scale(size.cy);
 
@@ -356,8 +361,8 @@ void CToolTipEx::SaveWindowSize()
 		}
 
 		CSize s = rect.Size();
-		CGetSetOptions::SetDescWndSize(CSize(m_DittoWindow.m_dpi.UnScale(s.cx), m_DittoWindow.m_dpi.UnScale(s.cy)));
-		CGetSetOptions::SetDescWndPoint(rect.TopLeft());
+		Settings().SetDescWndSize(CSize(m_DittoWindow.m_dpi.UnScale(s.cx), m_DittoWindow.m_dpi.UnScale(s.cy)));
+		Settings().SetDescWndPoint(rect.TopLeft());
 
 		OutputDebugString(_T("Saving tooltip size"));
 	}
@@ -443,7 +448,7 @@ void CToolTipEx::CheckToolTipActions(MSG *pMsg)
 	if (m_pToolTipActions != NULL)
 	{
 		CAccel a;
-		if (m_pToolTipActions->OnMsg(pMsg, a))
+		if (m_pToolTipActions->OnMsg(pMsg, a, Settings().m_doubleKeyStrokeTimeout))
 		{
 			switch (a.Cmd)
 			{
@@ -498,7 +503,7 @@ void CToolTipEx::HideOnMouseClick()
 {
 	if (m_showPersistant == false)
 	{
-		if (CGetSetOptions::GetMouseClickHidesDescription())
+		if (Settings().GetMouseClickHidesDescription())
 		{
 			if (!IsCursorInToolTip())
 			{
@@ -812,7 +817,7 @@ void CToolTipEx::SetToolTipText(const CString &csText)
 	cfNew.dwMask = CFM_COLOR;
 	cfNew.dwEffects = CFM_COLOR;
 	cfNew.dwEffects &= ~CFE_AUTOCOLOR;
-	cfNew.crTextColor = CGetSetOptions::m_Theme.DescriptionWindowText();
+	cfNew.crTextColor = Settings().m_Theme.DescriptionWindowText();
 	m_RichEdit.SetDefaultCharFormat(cfNew);
 
 	HighlightSearchText();
@@ -1081,7 +1086,7 @@ void CToolTipEx::OnNcMouseMove(UINT nHitTest, CPoint point)
 		COleDateTimeSpan sp = COleDateTime::GetCurrentTime() - m_DittoWindow.m_TimeMinimized;
 		if (sp.GetTotalSeconds() >= m_lDelayMaxSeconds)
 		{
-			SetTimer(TimerAutoMax, CGetSetOptions::GetTimeBeforeExpandWindow(), NULL);
+			SetTimer(TimerAutoMax, Settings().GetTimeBeforeExpandWindow(), NULL);
 			m_bMaxSetTimer = true;
 		}
 	}
@@ -1115,7 +1120,7 @@ void CToolTipEx::OnOptions()
 		UpdateMenuShortCut(cmSubMenu, ID_FIRST_WRAPTEXT, ActionEnums::TOGGLE_DESCRIPTION_WORD_WRAP);
 		UpdateMenuShortCut(cmSubMenu, ID_FIRST_ALWAYSONTOP, ActionEnums::TOGGLESHOWPERSISTANT);
 
-		if (CGetSetOptions::GetWrapDescriptionText())
+		if (Settings().GetWrapDescriptionText())
 			cmSubMenu->CheckMenuItem(ID_FIRST_WRAPTEXT, MF_CHECKED);
 		
 		cmSubMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RIGHTBUTTON, pp.x, pp.y, this, NULL);
@@ -1124,16 +1129,16 @@ void CToolTipEx::OnOptions()
 
 void CToolTipEx::CheckOptionMenuItems(CMenu *cmSubMenu)
 {
-	if(CGetSetOptions::GetRememberDescPos())
+	if(Settings().GetRememberDescPos())
 		cmSubMenu->CheckMenuItem(ID_FIRST_REMEMBERWINDOWPOSITION, MF_CHECKED);
 
-	if(CGetSetOptions::GetSizeDescWindowToContent())
+	if(Settings().GetSizeDescWindowToContent())
 		cmSubMenu->CheckMenuItem(ID_FIRST_SIZEWINDOWTOCONTENT, MF_CHECKED);
 
-	if(CGetSetOptions::GetScaleImagesToDescWindow())
+	if(Settings().GetScaleImagesToDescWindow())
 		cmSubMenu->CheckMenuItem(ID_FIRST_SCALEIMAGESTOFITWINDOW, MF_CHECKED);
 
-	if (CGetSetOptions::GetMouseClickHidesDescription())
+	if (Settings().GetMouseClickHidesDescription())
 		cmSubMenu->CheckMenuItem(ID_FIRST_HIDEDESCRIPTIONWINDOWONM, MF_CHECKED);
 
 	if (m_showPersistant)
@@ -1189,12 +1194,12 @@ void CToolTipEx::UpdateMenuShortCut(CMenu *subMenu, int id, DWORD action)
 
 void CToolTipEx::OnRememberwindowposition()
 {
-	CGetSetOptions::SetRememberDescPos(!CGetSetOptions::GetRememberDescPos());
+	Settings().SetRememberDescPos(!Settings().GetRememberDescPos());
 }
 
 void CToolTipEx::OnSizewindowtocontent()
 {
-	CGetSetOptions::SetSizeDescWindowToContent(!CGetSetOptions::GetSizeDescWindowToContent());
+	Settings().SetSizeDescWindowToContent(!Settings().GetSizeDescWindowToContent());
 
 	CRect rect;
 	this->GetWindowRect(&rect);
@@ -1204,7 +1209,7 @@ void CToolTipEx::OnSizewindowtocontent()
 
 void CToolTipEx::OnScaleimagestofitwindow()
 {
-	CGetSetOptions::SetScaleImagesToDescWindow(!CGetSetOptions::GetScaleImagesToDescWindow());
+	Settings().SetScaleImagesToDescWindow(!Settings().GetScaleImagesToDescWindow());
 	m_imageViewer.UpdateBitmapSize(true);
 	Invalidate();
 }
@@ -1235,7 +1240,7 @@ void CToolTipEx::OnPaint()
 	GetClientRect(rect);
 	
 	CBrush  Brush, *pOldBrush;
-	Brush.CreateSolidBrush(CGetSetOptions::m_Theme.DescriptionWindowBG());
+	Brush.CreateSolidBrush(Settings().m_Theme.DescriptionWindowBG());
 
 	pOldBrush = dc.SelectObject(&Brush);
 
@@ -1247,7 +1252,7 @@ void CToolTipEx::OnPaint()
 
 void CToolTipEx::OnFirstHidedescriptionwindowonm()
 {
-	CGetSetOptions::SetMouseClickHidesDescription(!CGetSetOptions::GetMouseClickHidesDescription());
+	Settings().SetMouseClickHidesDescription(!Settings().GetMouseClickHidesDescription());
 }
 
 bool CToolTipEx::ToggleWordWrap()
@@ -1264,13 +1269,13 @@ bool CToolTipEx::ToggleWordWrap()
 
 void CToolTipEx::OnFirstWraptext()
 {
-	CGetSetOptions::SetWrapDescriptionText(!CGetSetOptions::GetWrapDescriptionText());	
+	Settings().SetWrapDescriptionText(!Settings().GetWrapDescriptionText());	
 	ApplyWordWrap();
 }
 
 void CToolTipEx::ApplyWordWrap()
 {
-	if (CGetSetOptions::GetWrapDescriptionText())
+	if (Settings().GetWrapDescriptionText())
 	{
 		m_RichEdit.SetTargetDevice(NULL, 0);
 	}
@@ -1364,11 +1369,11 @@ LRESULT CToolTipEx::OnDpiChanged(WPARAM wParam, LPARAM lParam)
 	m_clipDataFont.CreateFont(-m_DittoWindow.m_dpi.Scale(8), 0, 0, 0, 400, 0, 0, 0, DEFAULT_CHARSET, 3, 2, 1, 34, _T("Segoe UI"));
 	
 	m_clipDataStatic.SetFont(&m_clipDataFont);
-	m_clipDataStatic.SetBkColor(CGetSetOptions::m_Theme.DescriptionWindowBG());
+	m_clipDataStatic.SetBkColor(Settings().m_Theme.DescriptionWindowBG());
 	m_clipDataStatic.SetTextColor(RGB(80, 80, 80));
 
 	m_folderPathStatic.SetFont(&m_clipDataFont);
-	m_folderPathStatic.SetBkColor(CGetSetOptions::m_Theme.DescriptionWindowBG());
+	m_folderPathStatic.SetBkColor(Settings().m_Theme.DescriptionWindowBG());
 	m_folderPathStatic.SetTextColor(RGB(80, 80, 80));
 
 	LOGFONT lf;

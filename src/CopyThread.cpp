@@ -61,7 +61,7 @@ void CCopyThread::OnClipboardChange(CString activeWindow)
 		CLogger::Log(CStringUtil::Format(_T("LoadFromClipboard - loading clips into groupId: %d"), groupId));
 	}
 	
-	auto pClip = std::make_unique<CClip>();
+	auto pClip = std::make_unique<CClip>(Settings());
 	pClip->m_copyReason = theApp.GetCopyReason();
 
 	COleDataObjectEx oleData;
@@ -71,7 +71,7 @@ void CCopyThread::OnClipboardChange(CString activeWindow)
 	// then save all to the database, so when we paste this it will paste 
 	// just like you were using Ctrl-V
 	std::shared_ptr<CClipTypes> availableTypes;
-	if (theApp.m_CopyBuffer.Active() || CGetSetOptions::GetSupportAllTypes())
+	if (theApp.m_CopyBuffer.Active() || Settings().GetSupportAllTypes())
 	{
 		availableTypes = oleData.GetAvailableTypes();
 		pSupportedTypes = availableTypes.get();
@@ -110,19 +110,19 @@ void CCopyThread::OnClipboardChange(CString activeWindow)
 int CCopyThread::LoadClipWithRetry(CClip& clip, CClipTypes* pSupportedTypes, const CString& activeWindow)
 {
 	CLogger::Log(_T("LoadFromClipboard - Before"));
-	int bResult = clip.LoadFromClipboard(pSupportedTypes, CGetSetOptions::m_regexHelper, true, activeWindow);
+	int bResult = clip.LoadFromClipboard(pSupportedTypes, Settings().m_regexHelper, true, activeWindow);
 	CLogger::Log(_T("LoadFromClipboard - After"));
 
 	if(bResult == FALSE)
 	{
-		DWORD delay = CGetSetOptions::GetNoFormatsRetryDelay();
+		DWORD delay = Settings().GetNoFormatsRetryDelay();
 		if(delay > 0)
 		{
 			CLogger::Log(CStringUtil::Format(_T("LoadFromClipboard didn't find any clips to save, sleeping %dms, then trying again"), delay));
 			Sleep(delay);
 
 			CLogger::Log(_T("LoadFromClipboard #2 - Before"));
-			bResult = clip.LoadFromClipboard(pSupportedTypes, CGetSetOptions::m_regexHelper, true, activeWindow);
+			bResult = clip.LoadFromClipboard(pSupportedTypes, Settings().m_regexHelper, true, activeWindow);
 			CLogger::Log(_T("LoadFromClipboard #2 - After"));
 		}
 		else
@@ -132,6 +132,11 @@ int CCopyThread::LoadClipWithRetry(CClip& clip, CClipTypes* pSupportedTypes, con
 	}
 
 	return bResult;
+}
+
+CGetSetOptions& CCopyThread::Settings() const
+{
+	return theApp.Services().Settings();
 }
 
 void CCopyThread::HandOverClip(std::unique_ptr<CClip>& pClip)

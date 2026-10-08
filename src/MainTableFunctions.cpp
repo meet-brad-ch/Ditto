@@ -65,13 +65,13 @@ void CMainTableFunctions::LoadAcceleratorKeys(CAccels& accels, CppSQLite3DB &db)
 	}
 }
 
-CString CMainTableFunctions::GetDisplayText(int /*nMaxLines*/, const CString &OrigText)
+CString CMainTableFunctions::GetDisplayText(int /*nMaxLines*/, const CString &OrigText, BOOL showLeadingWhiteSpace)
 {
 	CString text = OrigText;
 	// assign tabs to 2 spaces (rather than the default 8)
 	text.Replace(_T("\t"), _T("  "));
 
-	if(CGetSetOptions::m_bDescShowLeadingWhiteSpace)
+	if(showLeadingWhiteSpace)
 		return text;
 	// else, remove the leading indent from every line.
 

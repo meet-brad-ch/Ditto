@@ -42,7 +42,13 @@ public:
 	CMultiLanguage();
 	virtual ~CMultiLanguage();
 
-	bool LoadLanguageFile(CString csFile);
+	/**
+	 * @brief Loads a language file.
+	 * @param languageDir The language files' folder (the settings' GetPath(PathLanguage)), with a trailing backslash.
+	 * @param csFile The language file's name without the .xml extension.
+	 * @return False when the file is blank or cannot be loaded or read (m_csLastError says why for the first two).
+	 */
+	bool LoadLanguageFile(const CString& languageDir, CString csFile);
 
 	bool UpdateRightClickMenu(CMenu *pMenu);
 	bool UpdateGroupsRightClickMenu(CMenu *pMenu);

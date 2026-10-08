@@ -34,6 +34,11 @@ COptionsGeneral::~COptionsGeneral()
 {
 }
 
+CGetSetOptions& COptionsGeneral::Settings() const
+{
+	return theApp.Services().Settings();
+}
+
 void COptionsGeneral::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);
@@ -88,31 +93,31 @@ BOOL COptionsGeneral::OnInitDialog()
 
 #ifndef _DEBUG
 
-	if (CGetSetOptions::GetIsWindowsApp())
+	if (Settings().GetIsWindowsApp())
 	{
 		m_btRunOnStartup.SetCheck(BST_CHECKED);
 		GetDlgItem(IDC_START_ON_STARTUP)->EnableWindow(FALSE);
 	}
 	else
 	{
-		m_btRunOnStartup.SetCheck(CGetSetOptions::GetRunOnStartUp());
+		m_btRunOnStartup.SetCheck(Settings().GetRunOnStartUp());
 	}
 #endif
 
-	m_btMaximumCheck.SetCheck(CGetSetOptions::GetCheckForMaxEntries());
-	if (CGetSetOptions::GetCheckForMaxEntries() == FALSE)
+	m_btMaximumCheck.SetCheck(Settings().GetCheckForMaxEntries());
+	if (Settings().GetCheckForMaxEntries() == FALSE)
 	{
 		m_eMaxSavedCopies.EnableWindow(FALSE);		
 	}
-	m_btExpire.SetCheck(CGetSetOptions::GetCheckForExpiredEntries());
-	if (CGetSetOptions::GetCheckForExpiredEntries() == FALSE)
+	m_btExpire.SetCheck(Settings().GetCheckForExpiredEntries());
+	if (Settings().GetCheckForExpiredEntries() == FALSE)
 	{
 		m_eExpireAfter.EnableWindow(FALSE);
 	}
-	m_eExpireAfter.SetNumber(CGetSetOptions::GetExpiredEntries());
-	m_eMaxSavedCopies.SetNumber(CGetSetOptions::GetMaxEntries());
+	m_eExpireAfter.SetNumber(Settings().GetExpiredEntries());
+	m_eMaxSavedCopies.SetNumber(Settings().GetMaxEntries());
 
-	if(CGetSetOptions::GetDisableExpireClipsConfig())
+	if(Settings().GetDisableExpireClipsConfig())
 	{
 		m_btMaximumCheck.EnableWindow(FALSE);
 		m_btExpire.EnableWindow(FALSE);
@@ -120,11 +125,11 @@ BOOL COptionsGeneral::OnInitDialog()
 		m_eMaxSavedCopies.EnableWindow(FALSE);
 	}
 
-	m_copyAppInclude.SetWindowText(CGetSetOptions::GetCopyAppInclude());
-	m_copyAppExclude.SetWindowText(CGetSetOptions::GetCopyAppExclude());
+	m_copyAppInclude.SetWindowText(Settings().GetCopyAppInclude());
+	m_copyAppExclude.SetWindowText(Settings().GetCopyAppExclude());
 
 	
-	CGetSetOptions::GetFont(m_LogFont);	
+	Settings().GetFont(m_LogFont);	
 
 	CString cs;
 	cs.Format(_T("Font - %s (%d)"), m_LogFont.lfFaceName, GetFontSize(m_hWnd, m_LogFont));
@@ -142,7 +147,7 @@ BOOL COptionsGeneral::OnInitDialog()
 	int prevPos = m_popupPositionCombo.AddString(theApp.m_Language.GetString("AtPreviousPosition", "At Previous Position"));
 	m_popupPositionCombo.SetItemData(prevPos, CGetSetOptions::PosAtPrevious);
 
-	switch (CGetSetOptions::GetQuickPastePosition())
+	switch (Settings().GetQuickPastePosition())
 	{
 	case CGetSetOptions::PosAtCaret:
 		m_popupPositionCombo.SetCurSel(caretPos);
@@ -162,7 +167,7 @@ BOOL COptionsGeneral::OnInitDialog()
 	theApp.m_Language.UpdateOptionGeneral(this);
 
 	//move after we translate so the en change gets called and we update with the correct translated value for environment variable
-	CString csPath = CGetSetOptions::GetDBPath(false);
+	CString csPath = Settings().GetDBPath(false);
 	m_ePath.SetWindowText(csPath);
 
 	return TRUE;
@@ -170,10 +175,10 @@ BOOL COptionsGeneral::OnInitDialog()
 
 void COptionsGeneral::FillLanguages()
 {
-	CString csFile = CGetSetOptions::GetPath(CGetSetOptions::PathLanguage);
+	CString csFile = Settings().GetPath(CGetSetOptions::PathLanguage);
 	csFile += "*.xml";
 
-	CString csLanguage = CGetSetOptions::GetLanguageFile();
+	CString csLanguage = Settings().GetLanguageFile();
 
 	CFileFind find;
 	BOOL bCont = find.FindFile(csFile);
@@ -208,23 +213,23 @@ BOOL COptionsGeneral::OnApply()
 
 #ifndef _DEBUG
 
-	if (CGetSetOptions::GetIsWindowsApp() == FALSE)
+	if (Settings().GetIsWindowsApp() == FALSE)
 	{
-		CGetSetOptions::SetRunOnStartUp(m_btRunOnStartup.GetCheck());
+		Settings().SetRunOnStartUp(m_btRunOnStartup.GetCheck());
 	}
 #endif
 
-	CGetSetOptions::SetCheckForMaxEntries(m_btMaximumCheck.GetCheck());
-	CGetSetOptions::SetCheckForExpiredEntries(m_btExpire.GetCheck());
-	CGetSetOptions::SetMaxEntries(m_eMaxSavedCopies.GetNumber());
-	CGetSetOptions::SetExpiredEntries(m_eExpireAfter.GetNumber());
+	Settings().SetCheckForMaxEntries(m_btMaximumCheck.GetCheck());
+	Settings().SetCheckForExpiredEntries(m_btExpire.GetCheck());
+	Settings().SetMaxEntries(m_eMaxSavedCopies.GetNumber());
+	Settings().SetExpiredEntries(m_eExpireAfter.GetNumber());
 	
 	CString stringVal;
 
 	m_copyAppInclude.GetWindowText(stringVal);
-	CGetSetOptions::SetCopyAppInclude(stringVal);
+	Settings().SetCopyAppInclude(stringVal);
 	m_copyAppExclude.GetWindowText(stringVal);
-	CGetSetOptions::SetCopyAppExclude(stringVal);
+	Settings().SetCopyAppExclude(stringVal);
 
 	ApplyLanguage();
 
@@ -233,11 +238,11 @@ BOOL COptionsGeneral::OnApply()
 		return FALSE;
 	}
 
-	CGetSetOptions::SetQuickPastePosition((int)m_popupPositionCombo.GetItemData(m_popupPositionCombo.GetCurSel()));
+	Settings().SetQuickPastePosition((int)m_popupPositionCombo.GetItemData(m_popupPositionCombo.GetCurSel()));
 
 	if (m_LogFont.lfWeight != 0)
 	{
-		CGetSetOptions::SetFont(m_LogFont);
+		Settings().SetFont(m_LogFont);
 	}
 
 	ApplyTheme();
@@ -251,12 +256,12 @@ void COptionsGeneral::ApplyLanguage()
 	if(m_cbLanguage.GetCurSel() >= 0)
 	{
 		m_cbLanguage.GetLBText(m_cbLanguage.GetCurSel(), csLanguage);
-		CGetSetOptions::SetLanguageFile(csLanguage);
+		Settings().SetLanguageFile(csLanguage);
 	}
 
 	if(csLanguage.IsEmpty() == FALSE)
 	{
-		if(!theApp.m_Language.LoadLanguageFile(csLanguage))
+		if(!theApp.m_Language.LoadLanguageFile(Settings().GetPath(CGetSetOptions::PathLanguage), csLanguage))
 		{
 			CString cs;
 			cs.Format(_T("Error loading language file - %s - \n\n%s"), csLanguage.GetString(), theApp.m_Language.m_csLastError.GetString());
@@ -270,7 +275,7 @@ bool COptionsGeneral::ApplyDatabasePath()
 {
 	CString toSavePath;
 	m_ePath.GetWindowText(toSavePath);
-	CString resolvedPath = CGetSetOptions::ResolvePath(toSavePath);
+	CString resolvedPath = Settings().ResolvePath(toSavePath);
 
 	bool bOpenNewDatabase = false;
 
@@ -331,9 +336,9 @@ bool COptionsGeneral::PromptCreateDatabase(const CString& resolvedPath, bool& bO
 
 bool COptionsGeneral::OpenNewDatabase(const CString& toSavePath, const CString& resolvedPath)
 {
-	CGetSetOptions::SetDBPath(toSavePath);
+	Settings().SetDBPath(toSavePath);
 
-	if(CDatabaseManager::OpenDatabase(resolvedPath) == FALSE)
+	if(CDatabaseManager::OpenDatabase(Settings(), resolvedPath) == FALSE)
 	{
 		MessageBox(_T("Error Opening new database"), _T("Ditto"), MB_OK);
 		m_ePath.SetFocus();
@@ -349,7 +354,7 @@ bool COptionsGeneral::OpenNewDatabase(const CString& toSavePath, const CString& 
 
 void COptionsGeneral::ApplyTheme()
 {
-	CString currentTheme = CGetSetOptions::GetTheme();
+	CString currentTheme = Settings().GetTheme();
 
 	CString csTheme = _T("");
 	if (m_cbTheme.GetCurSel() >= 0)
@@ -357,16 +362,16 @@ void COptionsGeneral::ApplyTheme()
 		if (m_cbTheme.GetItemData(m_cbTheme.GetCurSel()) == 1)
 		{
 			m_cbTheme.GetLBText(m_cbTheme.GetCurSel(), csTheme);			
-			CGetSetOptions::SetTheme(csTheme);
+			Settings().SetTheme(csTheme);
 		}
 		else
 		{
-			CGetSetOptions::SetTheme("");
+			Settings().SetTheme("");
 		}
 	}
 	else
 	{
-		CGetSetOptions::SetTheme("");
+		Settings().SetTheme("");
 	}
 
 	if (currentTheme != csTheme)
@@ -446,7 +451,7 @@ void COptionsGeneral::OnButtonAbout()
 
 	Lang.SetOnlyGetHeader(true);
 		
-	if(Lang.LoadLanguageFile(csLanguage))
+	if(Lang.LoadLanguageFile(Settings().GetPath(CGetSetOptions::PathLanguage), csLanguage))
 	{
 		CString csMessage;
 
@@ -497,10 +502,10 @@ HBRUSH COptionsGeneral::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 
 void COptionsGeneral::FillThemes()
 {
-	CString csFile = CGetSetOptions::GetPath(CGetSetOptions::PathThemes);
+	CString csFile = Settings().GetPath(CGetSetOptions::PathThemes);
 	csFile += "*.xml";
 
-	CString csTheme = CGetSetOptions::GetTheme();
+	CString csTheme = Settings().GetTheme();
 	
 	m_cbTheme.Clear();
 
@@ -536,7 +541,7 @@ bool COptionsGeneral::AddThemeFiles(const CString& csFile, const CString& csThem
 		bCont = find.FindNextFile();
 
 		CTheme theme;
-		if (theme.Load(find.GetFileTitle(), true, false))
+		if (theme.Load(Settings(), find.GetFileTitle(), true, false))
 		{
 			if (theme.FileVersion() >= 2 && theme.FileVersion() < 100)
 			{
@@ -582,7 +587,7 @@ void COptionsGeneral::OnBnClickedButtonTheme()
 	if (csTheme == s_defaultTheme)
 		return;
 
-	if (theme.Load(csTheme, true, false))
+	if (theme.Load(Settings(), csTheme, true, false))
 	{
 		CString csMessage;
 
@@ -673,7 +678,7 @@ void COptionsGeneral::OnEnChangePath()
 
 	if (toSavePath.Find(_T("%")) >= 0)
 	{
-		CString resolvedPath = CGetSetOptions::ResolvePath(toSavePath);
+		CString resolvedPath = Settings().ResolvePath(toSavePath);
 		m_envVarLink.SetWindowText(resolvedPath);		
 	}
 	else
@@ -760,5 +765,6 @@ void COptionsGeneral::ApplySelectedThemeToPreview()
 	}
 	
 	// Load the selected theme
-	CGetSetOptions::m_Theme.Load(csTheme, false, true);
+	CGetSetOptions& settings{ Settings() };
+	settings.m_Theme.Load(settings, csTheme, false, true);
 }

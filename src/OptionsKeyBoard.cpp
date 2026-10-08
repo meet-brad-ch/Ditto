@@ -86,10 +86,11 @@ BOOL COptionsKeyBoard::OnInitDialog()
 	//Unregister hotkeys and Reregister them on cancel or ok
 	g_HotKeys.UnregisterAll();
 
-	m_btSendPaste.SetCheck(CGetSetOptions::m_bSendPasteOnFirstTenHotKeys);
-	m_UseUiGroupForLastTen.SetCheck(CGetSetOptions::GetUseUISelectedGroupForLastTenCopies());
+	CGetSetOptions& settings = theApp.Services().Settings();
+	m_btSendPaste.SetCheck(settings.m_bSendPasteOnFirstTenHotKeys);
+	m_UseUiGroupForLastTen.SetCheck(settings.GetUseUISelectedGroupForLastTenCopies());
 
-	m_btMoveClipOnGlobal10.SetCheck(CGetSetOptions::GetMoveClipsOnGlobal10());
+	m_btMoveClipOnGlobal10.SetCheck(settings.GetMoveClipsOnGlobal10());
 
 	m_HotKey.SetFocus();
 
@@ -110,9 +111,10 @@ BOOL COptionsKeyBoard::OnWizardFinish()
 
 BOOL COptionsKeyBoard::OnApply()
 {
-	CGetSetOptions::SetSendPasteOnFirstTenHotKeys(m_btSendPaste.GetCheck());
-	CGetSetOptions::SetMoveClipsOnGlobal10(m_btMoveClipOnGlobal10.GetCheck());
-	CGetSetOptions::SetUseUISelectedGroupForLastTenCopies(m_UseUiGroupForLastTen.GetCheck());
+	CGetSetOptions& settings = theApp.Services().Settings();
+	settings.SetSendPasteOnFirstTenHotKeys(m_btSendPaste.GetCheck());
+	settings.SetMoveClipsOnGlobal10(m_btMoveClipOnGlobal10.GetCheck());
+	settings.SetUseUISelectedGroupForLastTenCopies(m_UseUiGroupForLastTen.GetCheck());
 					
 	INT_PTR x,y;
 	CString str;

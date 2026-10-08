@@ -46,7 +46,7 @@ bool CSearchEditBox::HandleKeyDown(const MSG* pMsg)
 	}
 	else if (IsListNavigationKey(pMsg->wParam))
 	{
-		if(CGetSetOptions::m_bFindAsYouType)
+		if(theApp.Services().Settings().m_bFindAsYouType)
 		{
 			return SendKeyToParent(pMsg);
 		}
@@ -68,7 +68,7 @@ void CSearchEditBox::HandleReturnKey()
 	CWnd *pWnd = GetParent();
 	if(pWnd)
 	{
-		if(CGetSetOptions::m_bFindAsYouType)
+		if(theApp.Services().Settings().m_bFindAsYouType)
 		{
 			pWnd->SendMessage(CQListCtrl::NmSearchEnterPressed, 0, 0);
 		}

@@ -30,6 +30,11 @@ COptionsQuickPaste::~COptionsQuickPaste()
 	m_Font.DeleteObject();
 }
 
+CGetSetOptions& COptionsQuickPaste::Settings() const
+{
+	return theApp.Services().Settings();
+}
+
 void COptionsQuickPaste::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);
@@ -74,32 +79,32 @@ BOOL COptionsQuickPaste::OnInitDialog()
 
 	m_pParent = (COptionsSheet *)GetParent();
 	
-	m_btEnableTransparency.SetCheck(CGetSetOptions::GetEnableTransparency());
-	m_eTransparencyPercent.SetNumber(CGetSetOptions::GetTransparencyPercent());
-	m_eLinesPerRow.SetNumber(CGetSetOptions::GetLinesPerRow());
-	m_alwaysShowScrollBar.SetCheck(CGetSetOptions::GetShowScrollBar());
-	m_btShowThumbnails.SetCheck(CGetSetOptions::m_bDrawThumbnail);
-	m_btDrawRTF.SetCheck(CGetSetOptions::m_bDrawRTF);
+	m_btEnableTransparency.SetCheck(Settings().GetEnableTransparency());
+	m_eTransparencyPercent.SetNumber(Settings().GetTransparencyPercent());
+	m_eLinesPerRow.SetNumber(Settings().GetLinesPerRow());
+	m_alwaysShowScrollBar.SetCheck(Settings().GetShowScrollBar());
+	m_btShowThumbnails.SetCheck(Settings().m_bDrawThumbnail);
+	m_btDrawRTF.SetCheck(Settings().m_bDrawRTF);
 
-	m_EnsureEntireWindowVisible.SetCheck(CGetSetOptions::m_bEnsureEntireWindowCanBeSeen);
-	m_ShowAllInMainList.SetCheck(CGetSetOptions::m_bShowAllClipsInMainList);
-	m_FindAsYouType.SetCheck(CGetSetOptions::m_bFindAsYouType);
+	m_EnsureEntireWindowVisible.SetCheck(Settings().m_bEnsureEntireWindowCanBeSeen);
+	m_ShowAllInMainList.SetCheck(Settings().m_bShowAllClipsInMainList);
+	m_FindAsYouType.SetCheck(Settings().m_bFindAsYouType);
 
-	if(CGetSetOptions::GetQuickPastePosition() == CGetSetOptions::PosAtCaret)
+	if(Settings().GetQuickPastePosition() == CGetSetOptions::PosAtCaret)
 		CheckDlgButton(IDC_AT_CARET, BST_CHECKED);
-	else if(CGetSetOptions::GetQuickPastePosition() == CGetSetOptions::PosAtCursor)
+	else if(Settings().GetQuickPastePosition() == CGetSetOptions::PosAtCursor)
 		CheckDlgButton(IDC_AT_CURSOR, BST_CHECKED);
-	else if(CGetSetOptions::GetQuickPastePosition() == CGetSetOptions::PosAtPrevious)
+	else if(Settings().GetQuickPastePosition() == CGetSetOptions::PosAtPrevious)
 		CheckDlgButton(IDC_AT_PREVIOUS, BST_CHECKED);
 
-	m_btDescShowLeadingWhiteSpace.SetCheck(CGetSetOptions::m_bDescShowLeadingWhiteSpace);
+	m_btDescShowLeadingWhiteSpace.SetCheck(Settings().m_bDescShowLeadingWhiteSpace);
 
-	m_btShowText.SetCheck(CGetSetOptions::GetShowTextForFirstTenHotKeys());
-	m_PromptForDelete.SetCheck(CGetSetOptions::GetPromptWhenDeletingClips());
-	m_elevatedPrivileges.SetCheck(CGetSetOptions::GetPasteAsAdmin());
-	m_showInTaskBar.SetCheck(CGetSetOptions::GetShowInTaskBar());
+	m_btShowText.SetCheck(Settings().GetShowTextForFirstTenHotKeys());
+	m_PromptForDelete.SetCheck(Settings().GetPromptWhenDeletingClips());
+	m_elevatedPrivileges.SetCheck(Settings().GetPasteAsAdmin());
+	m_showInTaskBar.SetCheck(Settings().GetShowInTaskBar());
 
-	if(CGetSetOptions::GetFont(m_LogFont))
+	if(Settings().GetFont(m_LogFont))
 	{		
 		m_Font.CreateFontIndirect(&m_LogFont);
 		m_btFont.SetFont(&m_Font);
@@ -110,13 +115,13 @@ BOOL COptionsQuickPaste::OnInitDialog()
 		ft->GetLogFont(&m_LogFont);
 	}
 
-	m_diffPathEditBox.SetWindowText(CGetSetOptions::GetDiffApp());
+	m_diffPathEditBox.SetWindowText(Settings().GetDiffApp());
 
 	CString cs;
 	cs.Format(_T("Font - %s"), m_LogFont.lfFaceName);
 	m_btFont.SetWindowText(cs);
 
-	if (CGetSetOptions::GetShowIfClipWasPasted())
+	if (Settings().GetShowIfClipWasPasted())
 		CheckDlgButton(IDC_CHECK_SHOW_CLIP_WAS_PASTED, BST_CHECKED);
 
 	FillThemes();
@@ -128,45 +133,45 @@ BOOL COptionsQuickPaste::OnInitDialog()
 
 BOOL COptionsQuickPaste::OnApply() 
 {
-	CGetSetOptions::SetEnableTransparency(m_btEnableTransparency.GetCheck());
-	CGetSetOptions::SetTransparencyPercent(m_eTransparencyPercent.GetNumber());
-	CGetSetOptions::SetLinesPerRow(m_eLinesPerRow.GetNumber());
-	CGetSetOptions::SetShowScrollBar(m_alwaysShowScrollBar.GetCheck());
+	Settings().SetEnableTransparency(m_btEnableTransparency.GetCheck());
+	Settings().SetTransparencyPercent(m_eTransparencyPercent.GetNumber());
+	Settings().SetLinesPerRow(m_eLinesPerRow.GetNumber());
+	Settings().SetShowScrollBar(m_alwaysShowScrollBar.GetCheck());
 
 	ApplyQuickPastePosition();
 
-	CGetSetOptions::SetDescShowLeadingWhiteSpace(m_btDescShowLeadingWhiteSpace.GetCheck());
-	CGetSetOptions::SetShowTextForFirstTenHotKeys(m_btShowText.GetCheck());
-	CGetSetOptions::SetDrawThumbnail(m_btShowThumbnails.GetCheck());
-	CGetSetOptions::SetDrawRTF(m_btDrawRTF.GetCheck());
-	CGetSetOptions::SetEnsureEntireWindowCanBeSeen(m_EnsureEntireWindowVisible.GetCheck());
-	CGetSetOptions::SetShowAllClipsInMainList(m_ShowAllInMainList.GetCheck());
-	CGetSetOptions::SetFindAsYouType(m_FindAsYouType.GetCheck());
-	CGetSetOptions::SetPromptWhenDeletingClips(m_PromptForDelete.GetCheck());
-	CGetSetOptions::SetPasteAsAdmin(m_elevatedPrivileges.GetCheck());
+	Settings().SetDescShowLeadingWhiteSpace(m_btDescShowLeadingWhiteSpace.GetCheck());
+	Settings().SetShowTextForFirstTenHotKeys(m_btShowText.GetCheck());
+	Settings().SetDrawThumbnail(m_btShowThumbnails.GetCheck());
+	Settings().SetDrawRTF(m_btDrawRTF.GetCheck());
+	Settings().SetEnsureEntireWindowCanBeSeen(m_EnsureEntireWindowVisible.GetCheck());
+	Settings().SetShowAllClipsInMainList(m_ShowAllInMainList.GetCheck());
+	Settings().SetFindAsYouType(m_FindAsYouType.GetCheck());
+	Settings().SetPromptWhenDeletingClips(m_PromptForDelete.GetCheck());
+	Settings().SetPasteAsAdmin(m_elevatedPrivileges.GetCheck());
 
-	BOOL prevValue = CGetSetOptions::GetShowInTaskBar();
-	CGetSetOptions::SetShowInTaskBar(m_showInTaskBar.GetCheck());
-	if(CGetSetOptions::GetShowInTaskBar() != prevValue)
+	BOOL prevValue = Settings().GetShowInTaskBar();
+	Settings().SetShowInTaskBar(m_showInTaskBar.GetCheck());
+	if(Settings().GetShowInTaskBar() != prevValue)
 	{
 		theApp.RefreshShowInTaskBar();
 	}
 	
 	if(m_LogFont.lfWeight != 0)
 	{
-		CGetSetOptions::SetFont(m_LogFont);
+		Settings().SetFont(m_LogFont);
 	}
 
 	ApplyTheme();
 
 	CString diffPath;
 	m_diffPathEditBox.GetWindowText(diffPath);
-	CGetSetOptions::SetDiffApp(diffPath);
+	Settings().SetDiffApp(diffPath);
 
 	if (IsDlgButtonChecked(IDC_CHECK_SHOW_CLIP_WAS_PASTED))
-		CGetSetOptions::SetShowIfClipWasPasted(TRUE);
+		Settings().SetShowIfClipWasPasted(TRUE);
 	else
-		CGetSetOptions::SetShowIfClipWasPasted(FALSE);
+		Settings().SetShowIfClipWasPasted(FALSE);
 
 	return CPropertyPage::OnApply();
 }
@@ -174,16 +179,16 @@ BOOL COptionsQuickPaste::OnApply()
 void COptionsQuickPaste::ApplyQuickPastePosition()
 {
 	if(IsDlgButtonChecked(IDC_AT_CARET))
-		CGetSetOptions::SetQuickPastePosition(CGetSetOptions::PosAtCaret);
+		Settings().SetQuickPastePosition(CGetSetOptions::PosAtCaret);
 	else if(IsDlgButtonChecked(IDC_AT_CURSOR))
-		CGetSetOptions::SetQuickPastePosition(CGetSetOptions::PosAtCursor);
+		Settings().SetQuickPastePosition(CGetSetOptions::PosAtCursor);
 	else if(IsDlgButtonChecked(IDC_AT_PREVIOUS))
-		CGetSetOptions::SetQuickPastePosition(CGetSetOptions::PosAtPrevious);
+		Settings().SetQuickPastePosition(CGetSetOptions::PosAtPrevious);
 }
 
 void COptionsQuickPaste::ApplyTheme()
 {
-	CString currentTheme = CGetSetOptions::GetTheme();
+	CString currentTheme = Settings().GetTheme();
 
 	CString csTheme;
 	if(m_cbTheme.GetCurSel() >= 0)
@@ -191,15 +196,15 @@ void COptionsQuickPaste::ApplyTheme()
 		m_cbTheme.GetLBText(m_cbTheme.GetCurSel(), csTheme);
 		if (csTheme == s_defaultTheme)
 		{
-			CGetSetOptions::SetTheme("");
+			Settings().SetTheme("");
 			csTheme = _T("");
 		}
 		else
-			CGetSetOptions::SetTheme(csTheme);
+			Settings().SetTheme(csTheme);
 	}
 	else
 	{
-		CGetSetOptions::SetTheme("");
+		Settings().SetTheme("");
 	}
 
 	if (currentTheme != csTheme)
@@ -251,10 +256,10 @@ void COptionsQuickPaste::OnButtonDefaultFault()
 
 void COptionsQuickPaste::FillThemes()
 {
-	CString csFile = CGetSetOptions::GetPath(CGetSetOptions::PathThemes);
+	CString csFile = Settings().GetPath(CGetSetOptions::PathThemes);
 	csFile += "*.xml";
 
-	CString csTheme = CGetSetOptions::GetTheme();
+	CString csTheme = Settings().GetTheme();
 
 	CFileFind find;
 	BOOL bCont = find.FindFile(csFile);
@@ -265,7 +270,7 @@ void COptionsQuickPaste::FillThemes()
 		bCont = find.FindNextFile();
 
 		CTheme theme;
-		if (theme.Load(find.GetFileTitle(), true, false))
+		if (theme.Load(Settings(), find.GetFileTitle(), true, false))
 		{
 			if (theme.FileVersion() >= 2 && theme.FileVersion() < 100)
 			{
@@ -297,7 +302,7 @@ void COptionsQuickPaste::OnBnClickedButtonTheme()
 	if(csTheme == s_defaultTheme)
 		return;
 	
-	if(theme.Load(csTheme, true, false))
+	if(theme.Load(Settings(), csTheme, true, false))
 	{
 		CString csMessage;
 

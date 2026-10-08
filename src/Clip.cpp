@@ -271,8 +271,8 @@ CClip - holds multiple CClipFormats and CopyClipboard() statistics
 DWORD CClip::m_LastAddedCRC = 0;
 int CClip::m_lastAddedID = -1;
 
-CClip::CClip() : 
-	m_id(-1), 
+CClip::CClip(CGetSetOptions& settings) :
+	m_id(-1),
 	m_CRC(0),
 	m_parentId(-1),
 	m_dontAutoDelete(FALSE),
@@ -285,14 +285,15 @@ CClip::CClip() :
 	m_clipGroupOrder(0),
 	m_globalShortCut(FALSE),
 	m_moveToGroupShortCut(0),
-	m_globalMoveToGroupShortCut(FALSE)
+	m_globalMoveToGroupShortCut(FALSE),
+	m_settings(settings)
 {
 	m_copyReason = CopyReasonEnum::COPY_TO_UNKOWN;
 	m_addToDbStickyEnum = AddToDbStickyEnum::INVALID;
 }
 
-CClip::CClip(DittoCore::ClipSavePolicy savePolicy) :
-	CClip()
+CClip::CClip(CGetSetOptions& settings, DittoCore::ClipSavePolicy savePolicy) :
+	CClip(settings)
 {
 	m_savePolicy.emplace(std::move(savePolicy));
 }
@@ -301,7 +302,7 @@ const DittoCore::ClipSavePolicy& CClip::SavePolicy()
 {
 	if (!m_savePolicy.has_value())
 	{
-		m_savePolicy.emplace(CGetSetOptions::GetClipSaveSettings());
+		m_savePolicy.emplace(m_settings.GetClipSaveSettings());
 	}
 	return *m_savePolicy;
 }

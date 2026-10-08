@@ -5,10 +5,16 @@
 #include <vector>
 #include <afxtempl.h>
 
+class CGetSetOptions;
+
 class CDittoAddins
 {
 public:
-	CDittoAddins(void);
+	/**
+	 * @brief Creates the (empty) add-in list.
+	 * @param settings The application's settings (add-in folder, database path); must outlive this object.
+	 */
+	explicit CDittoAddins(CGetSetOptions& settings);
 	~CDittoAddins(void);
 
 	bool LoadAll();
@@ -36,4 +42,7 @@ protected:
 
 protected:
 	void LoadDittoInfo(CDittoInfo &DittoInfo);
+
+	/// The application's settings (not owned).
+	CGetSetOptions& m_settings;
 };

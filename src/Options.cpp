@@ -9,168 +9,45 @@
 #include "ActionEnums.h"
 #include "ErrorReport.h"
 #include "..\Shared\Tokenizer.h"
+#include "IniSettingsStore.h"
+#include "RegistrySettingsStore.h"
+#include <memory>
 #include <set>
+#include <span>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
-#include <Wincrypt.h>
 
 using namespace nsPath;
 
-UINT CGetSetOptions::WritePrivateProfileInt(LPCTSTR lpAppName, LPCTSTR lpKeyName, INT nValue, LPCTSTR lpFileName)
+CGetSetOptions::CGetSetOptions()
+	: CGetSetOptions(std::make_unique<DittoCore::RegistrySettingsStore>(RegPath))
 {
-	// Locals
-	TCHAR	szBuff[25];
-
-	// Format
-	wsprintf(szBuff, _T("%d"), nValue);
-
-	// Write
-	return WritePrivateProfileString(lpAppName, lpKeyName, szBuff, lpFileName);
 }
 
-long CGetSetOptions::m_nLinesPerRow;
-BOOL CGetSetOptions::m_bUseCtrlNumAccel;
-BOOL CGetSetOptions::m_bAllowDuplicates;
-BOOL CGetSetOptions::m_bUpdateTimeOnPaste;
-BOOL CGetSetOptions::m_bSaveMultiPaste;
-BOOL CGetSetOptions::m_bShowPersistent;
-BOOL CGetSetOptions::m_bHideDittoOnPaste;
-long CGetSetOptions::m_bDescTextSize;
-BOOL CGetSetOptions::m_bDescShowLeadingWhiteSpace;
-BOOL CGetSetOptions::m_bAllwaysShowDescription;
-long CGetSetOptions::m_bDoubleClickingOnCaptionDoes;
-BOOL CGetSetOptions::m_bPrompForNewGroupName;
-BOOL CGetSetOptions::m_bSendPasteOnFirstTenHotKeys;
-BOOL CGetSetOptions::m_HideDittoOnHotKeyIfAlreadyShown;
-BOOL CGetSetOptions::m_bDrawThumbnail;
-BOOL CGetSetOptions::m_bDrawCopiedColorCode;
-BOOL CGetSetOptions::m_centerWindowBelowCursorOrCaret;
-BOOL CGetSetOptions::m_bFastThumbnailMode;
-BOOL CGetSetOptions::m_bDrawRTF;
-BOOL CGetSetOptions::m_bMultiPasteReverse;
-CString CGetSetOptions::m_csPlaySoundOnCopy;
-BOOL CGetSetOptions::m_bSendPasteMessageAfterSelection;
-BOOL CGetSetOptions::m_bFindAsYouType;
-BOOL CGetSetOptions::m_bEnsureEntireWindowCanBeSeen;
-BOOL CGetSetOptions::m_bShowAllClipsInMainList;
-long CGetSetOptions::m_lMaxClipSizeInBytes;
-DWORD CGetSetOptions::m_dwSaveClipDelay;
-long CGetSetOptions::m_lProcessDrawClipboardDelay;
-BOOL CGetSetOptions::m_bEnableDebugLogging;
-BOOL CGetSetOptions::m_bEnsureConnectToClipboard;
-BOOL CGetSetOptions::m_outputDebugStringLogging;
-bool CGetSetOptions::m_bInConversion = false;
-bool CGetSetOptions::m_bFromIni = false;
-bool CGetSetOptions::m_portable = false;
-bool CGetSetOptions::m_windowsApp = false;
-bool CGetSetOptions::m_chocolateyApp = false;
-CString CGetSetOptions::m_csIniFileName;
-__int64 CGetSetOptions::nLastDbWriteTime = 0;
-CTheme CGetSetOptions::m_Theme;
-BOOL CGetSetOptions::m_showScrollBar = false;
-BOOL CGetSetOptions::m_useModernScrollBar = TRUE;
-BOOL CGetSetOptions::m_bShowAlwaysOnTopWarning = TRUE;
-CRegExFilterHelper CGetSetOptions::m_regexHelper;
-CString CGetSetOptions::m_ignoreAnnoyingCFDIB = "";
-long CGetSetOptions::m_tooltipTimeout;
-BOOL CGetSetOptions::m_cleanRTFBeforeDrawing = TRUE;
-int CGetSetOptions::m_doubleKeyStrokeTimeout = 350;
-int CGetSetOptions::m_firstTenHotKeysStart = 1;
-int CGetSetOptions::m_firstTenHotKeysFontSize = 5;
-BOOL CGetSetOptions::m_moveSelectionOnOpenHotkey = TRUE;
-BOOL CGetSetOptions::m_allowBackToBackDuplicates = FALSE;
-BOOL CGetSetOptions::m_maintainSearchView = FALSE;
-CString CGetSetOptions::m_tempDragFileName = "";
-CTime CGetSetOptions::m_tempDragFileNameSetTime;
-BOOL CGetSetOptions::m_refreshViewAfterPasting = TRUE;
-BOOL CGetSetOptions::m_supportAllTypes = FALSE;
-int CGetSetOptions::m_clipEditSaveDelayAfterLoadSeconds = 3;
-int CGetSetOptions::m_clipEditSaveDelayAfterSaveSeconds = 3;
-BOOL CGetSetOptions::m_bDoNotHideOnDeactivate = FALSE;
-BOOL CGetSetOptions::m_enforceClipboardIgnoreFormats = TRUE;
-
-
-CGetSetOptions::CGetSetOptions()
+CGetSetOptions::CGetSetOptions(std::unique_ptr<DittoCore::ISettingsStore> store)
+	: m_store(std::move(store))
 {
-	//DATA_BLOB DataIn;
-	//DATA_BLOB DataOut;
-	//DATA_BLOB DataVerify;
-	//BYTE* pbDataInput = (BYTE*)"Hello world of data protection.";
-	//DWORD cbDataInput = strlen((char*)pbDataInput) + 1;
-	//DataIn.pbData = pbDataInput;
-	//DataIn.cbData = cbDataInput;
-	//CRYPTPROTECT_PROMPTSTRUCT PromptStruct;
-	//LPWSTR pDescrOut = NULL;
-
-	//CRYPTPROTECT_LOCAL_MACHINE
-
-	////-------------------------------------------------------------------
-	////  Begin processing.
-
-	//printf("The data to be encrypted is: %s\n", pbDataInput);
-
-	////-------------------------------------------------------------------
-	////  Initialize PromptStruct.
-
-	////ZeroMemory(&PromptStruct, sizeof(PromptStruct));
-	////PromptStruct.cbSize = sizeof(PromptStruct);
-	////PromptStruct.dwPromptFlags = CRYPTPROTECT_PROMPT_ON_PROTECT;
-	////PromptStruct.szPrompt = L"This is a user prompt.";
-
-	////-------------------------------------------------------------------
-	////  Begin protect phase.
-
-	//if (CryptProtectData(
-	//	&DataIn,
-	//	L"This is the description string.", // A description string. 
-	//	NULL,                               // Optional entropy
-	//	// not used.
-	//	NULL,                               // Reserved.
-	//	NULL,                      // Pass a PromptStruct.
-	//	0,
-	//	&DataOut))
-	//{
-	//	printf("The encryption phase worked. \n");
-	//}
-	//else
-	//{
-	//	//MyHandleError("Encryption error!");
-	//}
-
-	//if (CryptUnprotectData(
-	//	&DataOut,
-	//	&pDescrOut,
-	//	NULL,                 // Optional entropy
-	//	NULL,                 // Reserved
-	//	NULL,        // Optional PromptStruct
-	//	0,
-	//	&DataVerify))
-	//{
-	//	printf("The decrypted data is: %s\n", DataVerify.pbData);
-	//	printf("The description of the data was: %S\n", pDescrOut);
-	//}
-	//else
-	//{
-	//	//MyHandleError("Decryption error!");
-	//}
-	////-------------------------------------------------------------------
-	//// At this point, memcmp could be used to compare DataIn.pbData and 
-	//// DataVerify.pbDate for equality. If the two functions worked
-	//// correctly, the two byte strings are identical. 
-
-	////-------------------------------------------------------------------
-	////  Clean up.
-
-	//LocalFree(pDescrOut);
-	//LocalFree(DataOut.pbData);
-	//LocalFree(DataVerify.pbData);
- // End of main
+	if (!m_store)
+	{
+		throw std::invalid_argument("CGetSetOptions needs a settings store");
+	}
 }
 
 CGetSetOptions::~CGetSetOptions()
 {
 
+}
+
+DittoCore::ISettingsStore& CGetSetOptions::ReadStore() const
+{
+	return m_conversionSource ? *m_conversionSource : *m_store;
+}
+
+bool CGetSetOptions::InConversion() const
+{
+	return m_conversionSource != nullptr;
 }
 
 void CGetSetOptions::LocateIniFile(const CString& exeDir)
@@ -226,7 +103,7 @@ void CGetSetOptions::LocatePortableOrAppDataIniFile()
 
 void CGetSetOptions::LoadSettings()
 {
-	CString exeDir = CGetSetOptions::GetExeFileName();
+	CString exeDir = GetExeFileName();
 	exeDir = CFileSystem::GetFilePath(exeDir);
 	CFolderPath::AddTrailingSlash(exeDir);
 
@@ -241,6 +118,8 @@ void CGetSetOptions::LoadSettings()
 		//create the ini file as unicode, this way we can save unicode string to the ini file
 		//http://www.codeproject.com/Articles/9071/Using-Unicode-in-INI-files
 		CreateIniFile(m_csIniFileName);
+
+		m_store = std::make_unique<DittoCore::IniSettingsStore>(std::wstring(m_csIniFileName.GetString()));
 	}
 
 	/*CString cs = GetDBPath();
@@ -309,10 +188,10 @@ void CGetSetOptions::LoadSettings()
 		CRegExFilterData data;
 		data.m_regEx = GetRegexFilter(i);
 		data.m_processFilters = GetRegexFilterByProcessName(i);
-		m_regexHelper.Add(i, data);
+		m_regexHelper.Add(i, data, GetCopyAppSeparator());
 	}
 
-	m_Theme.Load(GetTheme());
+	m_Theme.Load(*this, GetTheme());
 
 	m_tooltipTimeout = GetToolTipTimeout();
 }
@@ -337,7 +216,8 @@ void CGetSetOptions::CreateIniFile(CString path)
 
 void CGetSetOptions::ConverSettingsToIni()
 {
-	m_bInConversion = true;
+	// reads come from the registry while the writes go to the current store
+	m_conversionSource = std::make_unique<DittoCore::RegistrySettingsStore>(RegPath);
 
 	CSize sz;
 	CPoint pt;
@@ -412,7 +292,7 @@ void CGetSetOptions::ConverSettingsToIni()
 	SetLastExportDir(GetLastExportDir());
 	SetUpdateDescWhenSavingClip(GetUpdateDescWhenSavingClip());
 
-	m_bInConversion = false;
+	m_conversionSource.reset();
 }
 
 CString CGetSetOptions::GetIniFileName(bool bLocalIniFile)
@@ -554,192 +434,23 @@ BOOL CGetSetOptions::SetResolutionProfileLong(CString csName, long lValue)
 
 long CGetSetOptions::GetProfileLong(CString csName, long lDefaultValue, CString csNewPath)
 {
-	if(m_bFromIni && !m_bInConversion)
-	{
-		CString csApp(_T("Ditto"));
-
-		if(csNewPath.IsEmpty() == FALSE)
-		{
-			csApp = csNewPath;
-		}
-
-		return GetPrivateProfileInt(csApp, csName, lDefaultValue, m_csIniFileName);
-	}
-
-	CString csPath(CGetSetOptions::RegPath);
-	if(csNewPath.IsEmpty() == FALSE)
-	{
-		csPath += "\\" + csNewPath;
-	}
-
-	HKEY hkKey;
-
-	long lResult = RegOpenKeyEx(HKEY_CURRENT_USER, csPath, NULL, KEY_READ, &hkKey);
-
-	if(lResult != ERROR_SUCCESS)
-		return lDefaultValue;
-
-	DWORD buffer;
-	DWORD len =  sizeof(buffer);
-	DWORD type;
-
-	lResult = ::RegQueryValueEx(hkKey, csName, 0, &type, (LPBYTE)&buffer, &len);
-
-	RegCloseKey(hkKey);
-
-	if(lResult == ERROR_SUCCESS)
-		return (long)buffer;
-
-	return lDefaultValue;
+	return ReadStore().GetLong(std::wstring(csNewPath.GetString()), std::wstring(csName.GetString()), lDefaultValue);
 }
 
 CString CGetSetOptions::GetProfileString(CString csName, CString csDefault, CString csNewPath, int maxSize)
 {
-	if(m_bFromIni && !m_bInConversion)
-	{
-		return GetIniProfileString(csName, csDefault, csNewPath, maxSize);
-	}
-
-	return GetRegistryProfileString(csName, csDefault, csNewPath, maxSize);
-}
-
-CString CGetSetOptions::GetIniProfileString(const CString& csName, const CString& csDefault, const CString& csNewPath, int maxSize)
-{
-	CString returnString;
-	DWORD dwBufLen = 0;
-
-	CString csApp(_T("Ditto"));
-
-	if(csNewPath.IsEmpty() == FALSE)
-	{
-		csApp = csNewPath;
-	}
-
-	bool doBreak = false;
-	dwBufLen = 10000;
-	bool setMaxSize = false;
-	while (true)
-	{
-		if (maxSize > -1 && static_cast<DWORD>(maxSize) < dwBufLen)
-		{
-			dwBufLen = maxSize;
-			setMaxSize = true;
-		}
-
-		// zero-filled: every TCHAR, not half the buffer (ZeroMemory took the count as bytes)
-		std::vector<TCHAR> buffer(dwBufLen);
-
-		DWORD readLength = GetPrivateProfileString(csApp, csName, csDefault, buffer.data(), dwBufLen, m_csIniFileName);
-
-		if (setMaxSize ||
-			readLength < (dwBufLen - 1))
-		{
-			returnString = buffer.data();
-			doBreak = true;
-		}
-
-		dwBufLen = dwBufLen * 2;
-
-		if (doBreak)
-		{
-			break;
-		}
-	}
-
-	return returnString;
-}
-
-CString CGetSetOptions::GetRegistryProfileString(const CString& csName, const CString& csDefault, const CString& csNewPath, int maxSize)
-{
-	CString returnString;
-	DWORD dwBufLen = 0;
-
-	CString csPath(CGetSetOptions::RegPath);
-	if(csNewPath.IsEmpty() == FALSE)
-	{
-		csPath += "\\" + csNewPath;
-	}
-
-	HKEY hkKey;
-	long lResult = RegOpenKeyEx(HKEY_CURRENT_USER, csPath, NULL, KEY_READ, &hkKey);
-
-	if (lResult == ERROR_SUCCESS)
-	{
-		lResult = ::RegQueryValueEx(hkKey, csName, NULL, NULL, NULL, &dwBufLen);
-
-		if (lResult == ERROR_SUCCESS &&
-			dwBufLen > 0)
-		{
-			if (maxSize > -1 && static_cast<DWORD>(maxSize) < dwBufLen)
-			{
-				dwBufLen = maxSize;
-			}
-
-			dwBufLen++;
-			// zero filled, so the text is always terminated
-			std::vector<TCHAR> buffer{};
-			buffer.resize(dwBufLen);
-
-			lResult = ::RegQueryValueEx(hkKey, csName, NULL, NULL, reinterpret_cast<LPBYTE>(buffer.data()), &dwBufLen);
-
-			returnString = buffer.data();
-		}
-
-		RegCloseKey(hkKey);
-	}
-
-	if(lResult != ERROR_SUCCESS)
-		return csDefault;
-
-	return returnString;
+	const std::wstring value{ ReadStore().GetString(std::wstring(csNewPath.GetString()), std::wstring(csName.GetString()), std::wstring(csDefault.GetString()), maxSize) };
+	return CString(value.c_str());
 }
 
 BOOL CGetSetOptions::SetProfileLong(CString csName, long lValue)
 {
-	if(m_bFromIni)
-	{
-		return WritePrivateProfileInt(_T("Ditto"), csName, lValue, m_csIniFileName);
-	}
-
-	HKEY hkKey;
-	DWORD dWord;
-	long lResult = RegCreateKeyEx(HKEY_CURRENT_USER, CGetSetOptions::RegPath, NULL, 
-		NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, 
-		NULL, &hkKey, &dWord);
-
-	if(lResult != ERROR_SUCCESS)
-		return FALSE;
-
-	DWORD val = (DWORD)lValue;
-	lResult = ::RegSetValueEx(hkKey, csName, 0, REG_DWORD, (LPBYTE)&val, sizeof(DWORD));
-
-	RegCloseKey(hkKey);
-
-	return lResult == ERROR_SUCCESS;
+	return m_store->SetLong(std::wstring(), std::wstring(csName.GetString()), lValue) ? TRUE : FALSE;
 }
 
 BOOL CGetSetOptions::SetProfileString(CString csName, CString csValue)
 {
-	if(m_bFromIni)
-	{
-		return WritePrivateProfileString(_T("Ditto"), csName, csValue, m_csIniFileName);
-	}
-
-	HKEY hkKey;
-	DWORD dWord;
-	long lResult = RegCreateKeyEx(HKEY_CURRENT_USER, CGetSetOptions::RegPath, NULL, 
-		NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, 
-		NULL, &hkKey, &dWord);
-
-	if(lResult != ERROR_SUCCESS)
-		return FALSE;
-
-	::RegSetValueEx(hkKey, csName, NULL, REG_SZ,
-		(BYTE*)(LPCTSTR)csValue, csValue.GetLength()*sizeof(TCHAR));
-
-	RegCloseKey(hkKey);
-
-	return lResult == ERROR_SUCCESS;
+	return m_store->SetString(std::wstring(), std::wstring(csName.GetString()), std::wstring(csValue.GetString())) ? TRUE : FALSE;
 }
 
 BOOL CGetSetOptions::SetProfileData(CString csName, LPVOID lpData, DWORD dwLength)
@@ -750,34 +461,23 @@ BOOL CGetSetOptions::SetProfileData(CString csName, LPVOID lpData, DWORD dwLengt
 		return FALSE;
 	}
 
-	HKEY hkKey;
-	DWORD dWord;
-	long lResult = RegCreateKeyEx(HKEY_CURRENT_USER, CGetSetOptions::RegPath, NULL, 
-		NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, 
-		NULL, &hkKey, &dWord);
-
-	if(lResult != ERROR_SUCCESS)
-		return FALSE;
-
-	::RegSetValueEx(hkKey, csName, NULL, REG_BINARY,
-		(BYTE*)lpData, dwLength);
-
-	RegCloseKey(hkKey);
-
-	return lResult == ERROR_SUCCESS;
+	const std::span<const std::byte> data{ static_cast<const std::byte*>(lpData), dwLength };
+	return m_store->SetData(std::wstring(), std::wstring(csName.GetString()), data) ? TRUE : FALSE;
 }
 
 BOOL CGetSetOptions::GetProfileFont(CString csSection, LOGFONT &font)
 {
-	font.lfHeight = GetPrivateProfileInt(csSection, _T("Height"), 0, m_csIniFileName);
-	font.lfWidth = GetPrivateProfileInt(csSection, _T("Width"), 0, m_csIniFileName);
-	font.lfEscapement = GetPrivateProfileInt(csSection, _T("Escapement"), 0, m_csIniFileName);
-	font.lfOrientation = GetPrivateProfileInt(csSection, _T("Orientation"), 0, m_csIniFileName);
-	font.lfWeight = GetPrivateProfileInt(csSection, _T("Weight"), 0, m_csIniFileName);
+	const std::wstring section{ csSection.GetString() };
+	font.lfHeight = m_store->GetLong(section, L"Height", 0);
+	font.lfWidth = m_store->GetLong(section, L"Width", 0);
+	font.lfEscapement = m_store->GetLong(section, L"Escapement", 0);
+	font.lfOrientation = m_store->GetLong(section, L"Orientation", 0);
+	font.lfWeight = m_store->GetLong(section, L"Weight", 0);
 	// The BYTE fields are written from BYTE values, so a larger value means a damaged ini file.
-	auto readByte = [&csSection](LPCTSTR key) -> BYTE
+	// The value is compared as GetPrivateProfileInt returned it (UINT): a negative one is too large.
+	auto readByte = [this, &section](const wchar_t* key) -> BYTE
 	{
-		const UINT value = GetPrivateProfileInt(csSection, key, 0, m_csIniFileName);
+		const UINT value = static_cast<UINT>(m_store->GetLong(section, key, 0));
 		if (value > MAXBYTE)
 		{
 			throw std::out_of_range(std::string("Font setting out of range in the ini file: ") + CStringA(key).GetString());
@@ -792,60 +492,45 @@ BOOL CGetSetOptions::GetProfileFont(CString csSection, LOGFONT &font)
 	font.lfClipPrecision = readByte(_T("ClipPrecision"));
 	font.lfQuality = readByte(_T("Quality"));
 	font.lfPitchAndFamily = readByte(_T("PitchAndFamily"));
-	GetPrivateProfileString(csSection, _T("FaceName"), _T(""), font.lfFaceName, _countof(font.lfFaceName), m_csIniFileName);
+	// a buffer of LF_FACESIZE characters, as GetPrivateProfileString read it: at most 31 of them
+	const std::wstring faceName{ m_store->GetString(section, L"FaceName", L"", static_cast<int>(_countof(font.lfFaceName))) };
+	_tcsncpy_s(font.lfFaceName, faceName.c_str(), _TRUNCATE);
 
 	return TRUE;
 }
 
 BOOL CGetSetOptions::SetProfileFont(CString csSection, LOGFONT &font)
 {
-	WritePrivateProfileInt(csSection, _T("Height"), font.lfHeight, m_csIniFileName);
-	WritePrivateProfileInt(csSection, _T("Width"), font.lfWidth, m_csIniFileName);
-	WritePrivateProfileInt(csSection, _T("Escapement"), font.lfEscapement, m_csIniFileName);
-	WritePrivateProfileInt(csSection, _T("Orientation"), font.lfOrientation, m_csIniFileName);
-	WritePrivateProfileInt(csSection, _T("Weight"), font.lfWeight, m_csIniFileName);
-	WritePrivateProfileInt(csSection, _T("Italic"), font.lfItalic, m_csIniFileName);
-	WritePrivateProfileInt(csSection, _T("Underline"), font.lfUnderline, m_csIniFileName);
-	WritePrivateProfileInt(csSection, _T("StrikeOut"), font.lfStrikeOut, m_csIniFileName);
-	WritePrivateProfileInt(csSection, _T("CharSet"), font.lfCharSet, m_csIniFileName);
-	WritePrivateProfileInt(csSection, _T("OutPrecision"), font.lfOutPrecision, m_csIniFileName);
-	WritePrivateProfileInt(csSection, _T("ClipPrecision"), font.lfClipPrecision, m_csIniFileName);
-	WritePrivateProfileInt(csSection, _T("Quality"), font.lfQuality, m_csIniFileName);
-	WritePrivateProfileInt(csSection, _T("PitchAndFamily"), font.lfPitchAndFamily, m_csIniFileName);
-	WritePrivateProfileString(csSection, _T("FaceName"), font.lfFaceName, m_csIniFileName);
+	const std::wstring section{ csSection.GetString() };
+	m_store->SetLong(section, L"Height", font.lfHeight);
+	m_store->SetLong(section, L"Width", font.lfWidth);
+	m_store->SetLong(section, L"Escapement", font.lfEscapement);
+	m_store->SetLong(section, L"Orientation", font.lfOrientation);
+	m_store->SetLong(section, L"Weight", font.lfWeight);
+	m_store->SetLong(section, L"Italic", font.lfItalic);
+	m_store->SetLong(section, L"Underline", font.lfUnderline);
+	m_store->SetLong(section, L"StrikeOut", font.lfStrikeOut);
+	m_store->SetLong(section, L"CharSet", font.lfCharSet);
+	m_store->SetLong(section, L"OutPrecision", font.lfOutPrecision);
+	m_store->SetLong(section, L"ClipPrecision", font.lfClipPrecision);
+	m_store->SetLong(section, L"Quality", font.lfQuality);
+	m_store->SetLong(section, L"PitchAndFamily", font.lfPitchAndFamily);
+	m_store->SetString(section, L"FaceName", font.lfFaceName);
 
 	return TRUE;
 }
 
 std::vector<BYTE> CGetSetOptions::GetProfileData(CString csName)
 {
-	if(m_bFromIni && !m_bInConversion)
+	if(m_bFromIni && !InConversion())
 	{
 		ASSERT(!"GetProfileData not supported in .ini settings");
 		return {};
 	}
 
-	// closes the key on every return
-	ATL::CRegKey key{};
-	if(key.Open(HKEY_CURRENT_USER, CGetSetOptions::RegPath, KEY_READ) != ERROR_SUCCESS)
-		return {};
-
-	DWORD dwLength{};
-	long lResult{::RegQueryValueEx(key.m_hKey, csName, NULL, NULL, NULL, &dwLength)};
-
-	if(lResult != ERROR_SUCCESS)
-		return {};
-
-	std::vector<BYTE> data{};
-	data.resize(dwLength);
-
-	lResult = ::RegQueryValueEx(key.m_hKey, csName, NULL, NULL, data.data(), &dwLength);
-
-	if(lResult != ERROR_SUCCESS)
-		return {};
-
-	data.resize(dwLength);
-	return data;
+	const std::vector<std::byte> data{ ReadStore().GetData(std::wstring(), std::wstring(csName.GetString())) };
+	const BYTE* const bytes{ reinterpret_cast<const BYTE*>(data.data()) };
+	return std::vector<BYTE>(bytes, bytes + data.size());
 }
 
 BOOL CGetSetOptions::GetShowIconInSysTray() 
@@ -1393,7 +1078,7 @@ void CGetSetOptions::SetHideDittoOnHotKeyIfAlreadyShown(BOOL bVal)
 
 BOOL CGetSetOptions::GetFont(LOGFONT &font)
 {
-	if(m_bFromIni && !m_bInConversion)
+	if(m_bFromIni && !InConversion())
 	{
 		try
 		{
@@ -1402,13 +1087,10 @@ BOOL CGetSetOptions::GetFont(LOGFONT &font)
 		catch (const std::out_of_range& e)
 		{
 			// A damaged font setting: report it and remove it, so the default font below is used
-			// and the report does not come back on every start
+			// and the report does not come back on every start; a failed removal throws
 			CErrorReport::Show(CStringUtil::Format(_T("The display font setting in %s is damaged (%s). Ditto removed it and uses its default font; choose a font again in Options."),
 				m_csIniFileName.GetString(), CString(e.what()).GetString()));
-			if (!WritePrivateProfileString(_T("DisplayFont6"), NULL, NULL, m_csIniFileName))
-			{
-				throw std::runtime_error("the damaged display font setting could not be removed from the ini file (error " + std::to_string(::GetLastError()) + ")");
-			}
+			m_store->DeleteSection(L"DisplayFont6");
 			font = LOGFONT{};
 		}
 
@@ -1677,7 +1359,7 @@ void CGetSetOptions::SetUpdateDescWhenSavingClip(BOOL bSet)
 
 CString CGetSetOptions::GetPath(long lPathID)
 {
-	CString csDir = CGetSetOptions::GetExeFileName();
+	CString csDir = GetExeFileName();
 	csDir = CFileSystem::GetFilePath(csDir);
 	CFolderPath::AddTrailingSlash(csDir);
 
@@ -1701,11 +1383,11 @@ CString CGetSetOptions::GetPath(long lPathID)
 
 void CGetSetOptions::ApplyPathRule(const PathRule& rule, CString& csDir)
 {
-	if (rule.root == PathRoot::AppDataUnlessPortable && CGetSetOptions::GetIsPortableDitto() == false)
+	if (rule.root == PathRoot::AppDataUnlessPortable && GetIsPortableDitto() == false)
 	{
 		csDir = GetAppDataPath();
 	}
-	else if (rule.root == PathRoot::TempUnlessPortable && CGetSetOptions::GetIsPortableDitto() == false)
+	else if (rule.root == PathRoot::TempUnlessPortable && GetIsPortableDitto() == false)
 	{
 		csDir = GetTempFilePath();
 	}
@@ -2490,7 +2172,7 @@ void CGetSetOptions::SetRegexFilterByProcessName(CString val, int pos)
 	CString cs;
 	cs.Format(_T("RegexFilterByProcessName_%d"), pos);
 
-	m_regexHelper.SetProcessFilter(pos, val);
+	m_regexHelper.SetProcessFilter(pos, val, GetCopyAppSeparator());
 
 	SetProfileString(cs, val);
 }
@@ -2769,7 +2451,7 @@ void CGetSetOptions::SetIgnoreAnnoyingCFDIB(CString val)
 
 std::set<CString> CGetSetOptions::GetIgnoreAnnoyingCFDIBSet(BOOL useCache)
 {
-	CString rawString = CGetSetOptions::GetIgnoreAnnoyingCFDIB(useCache);
+	CString rawString = GetIgnoreAnnoyingCFDIB(useCache);
 	std::set<CString> processSet;
 	CTokenizer token(rawString, _T(";"));
 	CString process;
