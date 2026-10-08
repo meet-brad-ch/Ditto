@@ -180,8 +180,10 @@ TEST(CppSQLite3Statement, FailedRowOfItsQueryLeavesTheStatementUsable)
 	db.open(_T(":memory:"));
 	db.execDML(_T("CREATE TABLE t(x INTEGER)"));
 	db.execDML(_T("INSERT INTO t VALUES (1), (2)"));
-	// the second row fails: abs() of the smallest 64-bit integer overflows
-	CppSQLite3Statement select = db.compileStatement(_T("SELECT CASE WHEN x = 2 THEN abs(-9223372036854775807 - 1) ELSE x END FROM t ORDER BY x"));
+	// the second row fails: abs() of the smallest 64-bit integer overflows. The operand depends on x:
+	// SQLite evaluates a constant expression once before the first row (measured: the first step
+	// failed), and ORDER BY rowid needs no sorter, so row 1 is returned before row 2 is computed.
+	CppSQLite3Statement select = db.compileStatement(_T("SELECT CASE WHEN x = 2 THEN abs(-9223372036854775806 - x) ELSE x END FROM t ORDER BY rowid"));
 	{
 		CppSQLite3Query rows = select.execQuery();
 		ASSERT_FALSE(rows.eof());
