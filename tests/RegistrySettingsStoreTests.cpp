@@ -44,9 +44,15 @@ namespace
 		{
 			HKEY key{};
 			const std::wstring path{ subKey.empty() ? m_rootPath : m_rootPath + L"\\" + subKey };
-			ASSERT_EQ(::RegCreateKeyExW(HKEY_CURRENT_USER, path.c_str(), 0, nullptr, 0, KEY_ALL_ACCESS, nullptr, &key, nullptr), ERROR_SUCCESS);
-			ASSERT_EQ(::RegSetValueExW(key, name.c_str(), 0, type, static_cast<const BYTE*>(data), size), ERROR_SUCCESS);
+			if (::RegCreateKeyExW(HKEY_CURRENT_USER, path.c_str(), 0, nullptr, 0, KEY_ALL_ACCESS, nullptr, &key, nullptr) != ERROR_SUCCESS)
+			{
+				ADD_FAILURE() << "the test key could not be created";
+				return;
+			}
+			// the key is closed before the result is checked, so a failed write does not leak it
+			const LSTATUS written{ ::RegSetValueExW(key, name.c_str(), 0, type, static_cast<const BYTE*>(data), size) };
 			static_cast<void>(::RegCloseKey(key));
+			ASSERT_EQ(written, ERROR_SUCCESS);
 		}
 
 		// The type and size of a value under the test key, as stored
