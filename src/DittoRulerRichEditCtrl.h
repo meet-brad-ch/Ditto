@@ -1,7 +1,7 @@
 #pragma once
 #include "rulerricheditctrl\rulerricheditctrl.h"
 
-class CDittoRulerRichEditCtrl :	public CRulerRichEditCtrl
+class CDittoRulerRichEditCtrl : public CRulerRichEditCtrl
 {
 public:
 	/** @brief SaveToDB's results besides FALSE (nothing saved). */
@@ -16,20 +16,26 @@ public:
 	CDittoRulerRichEditCtrl(void);
 	~CDittoRulerRichEditCtrl(void);
 
-	enum eSaveTypes{stNONE = 0x1, stCF_TEXT = 0x2, stCF_UNICODETEXT = 0x4, stRTF = 0x8};
+	enum eSaveTypes
+	{
+		stNONE = 0x1,
+		stCF_TEXT = 0x2,
+		stCF_UNICODETEXT = 0x4,
+		stRTF = 0x8
+	};
 
 	bool LoadItem(long lID, CString csDesc);
 	int SaveToDB(BOOL bUpdateDesc);
 	bool CloseEdit(bool bPrompt, BOOL bUpdateDesc);
-	long GetDBID()		{ return m_lID; }
-	CString GetDesc()	{ return m_csDescription; }
+	long GetDBID() { return m_lID; }
+	CString GetDesc() { return m_csDescription; }
 
 protected:
 	long m_lID;
 	CString m_csDescription;
 
-	bool LoadRTFData(CClip &Clip);
-	bool LoadTextData(CClip &Clip);
+	bool LoadRTFData(CClip& Clip);
+	bool LoadTextData(CClip& Clip);
 
 private:
 	/** @brief Result of saving the loaded formats of the editor to the database. */

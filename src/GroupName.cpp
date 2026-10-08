@@ -9,8 +9,8 @@
 // CGroupName dialog
 
 
-CGroupName::CGroupName(CWnd* pParent /*=NULL*/)
-	: CDialog(CGroupName::IDD, pParent)
+CGroupName::CGroupName(CWnd* pParent /*=NULL*/) :
+	CDialog(CGroupName::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CGroupName)
 	m_csName = _T("");
@@ -35,20 +35,20 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CGroupName message handlers
 
-void CGroupName::OnOK() 
+void CGroupName::OnOK()
 {
 	UpdateData(TRUE);
-	
+
 	CDialog::OnOK();
 }
 
-BOOL CGroupName::OnInitDialog() 
+BOOL CGroupName::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	CWnd *pWnd = GetDlgItem(IDC_NAME);
-	if(pWnd)
+	CWnd* pWnd = GetDlgItem(IDC_NAME);
+	if (pWnd)
 		pWnd->SetFocus();
-		
+
 	return FALSE;
 }

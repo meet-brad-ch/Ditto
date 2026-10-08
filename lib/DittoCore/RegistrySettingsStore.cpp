@@ -11,8 +11,8 @@
 
 namespace DittoCore
 {
-	RegistrySettingsStore::RegistrySettingsStore(std::wstring rootPath)
-		: m_rootPath(std::move(rootPath))
+	RegistrySettingsStore::RegistrySettingsStore(std::wstring rootPath) :
+		m_rootPath(std::move(rootPath))
 	{
 	}
 

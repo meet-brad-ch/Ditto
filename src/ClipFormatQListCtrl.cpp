@@ -15,15 +15,15 @@ CClipFormatQListCtrl::~CClipFormatQListCtrl(void)
 }
 
 
-HGLOBAL CClipFormatQListCtrl::GetDibFittingToHeight(CGetSetOptions& settings, CLIPFORMAT pngFormat, CDC *pDc, int height)
+HGLOBAL CClipFormatQListCtrl::GetDibFittingToHeight(CGetSetOptions& settings, CLIPFORMAT pngFormat, CDC* pDc, int height)
 {
-	if(m_cfType != CF_DIB &&
+	if (m_cfType != CF_DIB &&
 		m_cfType != pngFormat)
 	{
 		return NULL;
 	}
 
-	if(m_convertedToSmallImage)
+	if (m_convertedToSmallImage)
 	{
 		return m_hgData;
 	}
@@ -31,11 +31,11 @@ HGLOBAL CClipFormatQListCtrl::GetDibFittingToHeight(CGetSetOptions& settings, CL
 	m_convertedToSmallImage = true;
 
 	CBitmap Bitmap;
-	if( !CBitmapHelper::GetCBitmap(settings, pngFormat, this, pDc, &Bitmap, height) )
+	if (!CBitmapHelper::GetCBitmap(settings, pngFormat, this, pDc, &Bitmap, height))
 	{
 		Bitmap.DeleteObject();
 		// the data is useless, so free it.
-		this->Free(); 
+		this->Free();
 		return FALSE;
 	}
 

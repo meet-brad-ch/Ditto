@@ -19,12 +19,12 @@ void DibFuzzTarget::Run(std::span<const std::byte> input) const
 	}
 	catch (const DittoCore::ClipboardFormatError&)
 	{
-		return;   // malformed header or sizes: rejected, as it must be
+		return; // malformed header or sizes: rejected, as it must be
 	}
 
 	if (layout.imageSize == 0 || layout.bitsOffset + layout.imageSize > input.size())
 	{
-		std::abort();   // a finding: a layout the drawing code cannot use
+		std::abort(); // a finding: a layout the drawing code cannot use
 	}
 	// the drawing code reads imageSize bytes at bitsOffset; touch each one (volatile keeps the reads)
 	volatile std::byte sink{};
@@ -38,16 +38,16 @@ void DibFuzzTarget::Run(std::span<const std::byte> input) const
 	std::memcpy(&bitsOffset, header.data() + 10, sizeof(bitsOffset));
 	if (bitsOffset != DittoCore::DibHeader::FileHeaderSize + layout.bitsOffset)
 	{
-		std::abort();   // a finding: the .bmp header points somewhere else than the pixels
+		std::abort(); // a finding: the .bmp header points somewhere else than the pixels
 	}
 }
 
 std::vector<std::vector<std::byte>> DibFuzzTarget::Seeds() const
 {
 	return {
-		Dib(24, 0, 0, 16),           // 2 x 2, BI_RGB
-		Dib(8, 0, 256 * 4, 8),       // full palette
-		Dib(32, 3, 12, 16),          // BI_BITFIELDS with its three masks
+		Dib(24, 0, 0, 16),     // 2 x 2, BI_RGB
+		Dib(8, 0, 256 * 4, 8), // full palette
+		Dib(32, 3, 12, 16),    // BI_BITFIELDS with its three masks
 	};
 }
 

@@ -10,8 +10,8 @@
 // CSelectPasteFormat dialog
 
 IMPLEMENT_DYNAMIC(CSelectPasteFormat, CDialog)
-CSelectPasteFormat::CSelectPasteFormat(CWnd* pParent, IClipFormats *clipFormats)
-	: CDialog(CSelectPasteFormat::IDD, pParent)
+CSelectPasteFormat::CSelectPasteFormat(CWnd* pParent, IClipFormats* clipFormats) :
+	CDialog(CSelectPasteFormat::IDD, pParent)
 {
 	m_pClipFormats = clipFormats;
 	m_selectedFormat = 0;
@@ -35,14 +35,14 @@ BEGIN_MESSAGE_MAP(CSelectPasteFormat, CDialog)
 END_MESSAGE_MAP()
 
 
-BOOL CSelectPasteFormat::OnInitDialog() 
+BOOL CSelectPasteFormat::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	if(m_pClipFormats != NULL)
+	if (m_pClipFormats != NULL)
 	{
 		int count = m_pClipFormats->Size();
-		for(int i = 0; i < count; i++)
+		for (int i = 0; i < count; i++)
 		{
 			CString formatName = DittoAddinHelpers::GetFormatName(m_pClipFormats->GetAt(i)->Type());
 			int pos = m_Formats.AddString(formatName);
@@ -62,7 +62,7 @@ BOOL CSelectPasteFormat::OnInitDialog()
 void CSelectPasteFormat::OnOK()
 {
 	int pos = m_Formats.GetCurSel();
-	if(pos >= 0 && pos < m_Formats.GetCount())
+	if (pos >= 0 && pos < m_Formats.GetCount())
 	{
 		m_selectedFormat = (CLIPFORMAT)m_Formats.GetItemData(pos);
 	}
@@ -77,7 +77,7 @@ void CSelectPasteFormat::OnLbnDblclkList1()
 	OnOK();
 }
 
-void CSelectPasteFormat::OnSize(UINT nType, int cx, int cy) 
+void CSelectPasteFormat::OnSize(UINT nType, int cx, int cy)
 {
 	CDialog::OnSize(nType, cx, cy);
 	m_Resize.MoveControls(CSize(cx, cy));

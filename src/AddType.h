@@ -12,32 +12,34 @@
 
 class CAddType : public CDialog
 {
-// Construction
+	// Construction
 public:
-	CAddType(CWnd* pParent = NULL);   // standard constructor
+	CAddType(CWnd* pParent = NULL); // standard constructor
 
-// Dialog Data
+	// Dialog Data
 	//{{AFX_DATA(CAddType)
-	enum { IDD = IDD_ADD_TYPE };
-	CListBox	m_lbCandidateTypes;
-	CString	m_eCustomType;
+	enum
+	{
+		IDD = IDD_ADD_TYPE
+	};
+	CListBox m_lbCandidateTypes;
+	CString m_eCustomType;
 	//}}AFX_DATA
 
 	CStringArray m_csSelectedTypes;
 
-// Overrides
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CAddType)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+protected:
+	virtual void DoDataExchange(CDataExchange* pDX); // DDX/DDV support
 	//}}AFX_VIRTUAL
 
 	void AddCommonTypes();
 	void AddCurrentClipboardTypes();
 
-// Implementation
+	// Implementation
 protected:
-
 	// Generated message map functions
 	//{{AFX_MSG(CAddType)
 	virtual BOOL OnInitDialog();

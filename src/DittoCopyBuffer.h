@@ -44,7 +44,7 @@ public:
 	CDittoCopyBuffer(const CDittoCopyBuffer&) = delete;
 	CDittoCopyBuffer& operator=(const CDittoCopyBuffer&) = delete;
 
-	bool Active()	{ return m_bActive; }
+	bool Active() { return m_bActive; }
 	bool StartCopy(long lCopyBuffer, bool bCut = false);
 	bool EndCopy(long lID);
 	bool PastCopyBuffer(long lCopyBuffer);

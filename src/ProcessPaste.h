@@ -28,7 +28,7 @@ class CProcessPaste
 {
 public:
 	// One COM reference to the data source; null once SetClipboard or InternalRelease took it
-	COleClipSource*	m_pOle;
+	COleClipSource* m_pOle;
 	bool m_bSendPaste;
 	bool m_bActivateTarget;
 	CSpecialPasteOptions m_pasteOptions;
@@ -42,7 +42,10 @@ public:
 		 * @param clipContext The clip services (the settings, the database, the windows), used by
 		 *        the thread; must outlive the thread.
 		 */
-		explicit MarkAsPastedData(CClipContext& clipContext) : context(clipContext) {}
+		explicit MarkAsPastedData(CClipContext& clipContext) :
+			context(clipContext)
+		{
+		}
 
 		/** @brief The clip services (not owned). */
 		CClipContext& context;

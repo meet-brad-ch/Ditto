@@ -36,27 +36,27 @@ public:
 	CDittoWindow(void);
 	~CDittoWindow(void);
 
-	void DoNcPaint(CWnd *pWnd);
-	void DrawChevronBtn(CWindowDC &dc, CWnd *pWnd);
-	void DrawCloseBtn(CWindowDC &dc, CWnd *pWnd);
-	void DrawMaximizeBtn(CWindowDC &dc, CWnd *pWnd);
-	void DrawMinimizeBtn(CWindowDC &dc, CWnd *pWnd);
-	void DrawWindowIcon(CWindowDC &dc, CWnd *pWnd);
+	void DoNcPaint(CWnd* pWnd);
+	void DrawChevronBtn(CWindowDC& dc, CWnd* pWnd);
+	void DrawCloseBtn(CWindowDC& dc, CWnd* pWnd);
+	void DrawMaximizeBtn(CWindowDC& dc, CWnd* pWnd);
+	void DrawMinimizeBtn(CWindowDC& dc, CWnd* pWnd);
+	void DrawWindowIcon(CWindowDC& dc, CWnd* pWnd);
 
-	void DoCreate(CWnd *pWnd);
+	void DoCreate(CWnd* pWnd);
 	void DoNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp);
-	UINT DoNcHitTest(CWnd *pWnd, CPoint point);
-	long DoNcLButtonUp(CWnd *pWnd, UINT nHitTest, CPoint point);
-	int DoNcLButtonDown(CWnd *pWnd, UINT nHitTest, CPoint point);
+	UINT DoNcHitTest(CWnd* pWnd, CPoint point);
+	long DoNcLButtonUp(CWnd* pWnd, UINT nHitTest, CPoint point);
+	int DoNcLButtonDown(CWnd* pWnd, UINT nHitTest, CPoint point);
 	bool DoPreTranslateMessage(MSG* pMsg);
-	void SetCaptionOn(CWnd *pWnd, int nPos, bool bOnstartup, int captionSize, int captionFontSize);
+	void SetCaptionOn(CWnd* pWnd, int nPos, bool bOnstartup, int captionSize, int captionFontSize);
 	bool SetCaptionColors(COLORREF left, COLORREF right, COLORREF border);
 	void SetCaptionTextColor(COLORREF color);
-	void MinMaxWindow(CWnd *pWnd, long lOption);
-	void SetTitleTextHeight(CWnd *pWnd);
+	void MinMaxWindow(CWnd* pWnd, long lOption);
+	void SetTitleTextHeight(CWnd* pWnd);
 	int IndexToPos(int index, bool horizontal);
-	void OnDpiChanged(CWnd *pWnd, int dpi);
-	
+	void OnDpiChanged(CWnd* pWnd, int dpi);
+
 	bool m_bDrawClose;
 	bool m_sendWMClose;
 	bool m_bDrawChevron;
@@ -87,7 +87,7 @@ public:
 	COLORREF m_CaptionColorRight;
 	COLORREF m_CaptionTextColor;
 	COLORREF m_border;
-	
+
 	CGdiImageDrawer m_closeButton;
 	CGdiImageDrawer m_chevronRightButton;
 	CGdiImageDrawer m_chevronLeftButton;
@@ -150,7 +150,7 @@ private:
 		/** @brief The title text area. */
 		CRect textRect{};
 		/** @brief Whether the caption is vertical (left or right). */
-		BOOL vertical{FALSE};
+		BOOL vertical{ FALSE };
 	};
 
 	/** @brief A window position and size, as MoveWindow takes them. */

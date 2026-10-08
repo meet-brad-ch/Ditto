@@ -7,13 +7,13 @@
 
 ULONG CALLBACK CPowerManager::PowerChanged(PVOID Context, ULONG Type, PVOID /*Setting*/)
 {
-	const HWND notifyHwnd{static_cast<HWND>(Context)};
+	const HWND notifyHwnd{ static_cast<HWND>(Context) };
 
 	CString cs;
 	cs.Format(_T("PowerChanged Type %d"), Type);
 	CLogger::Log(cs);
 
-	if(Type == PBT_APMRESUMEAUTOMATIC)
+	if (Type == PBT_APMRESUMEAUTOMATIC)
 	{
 		//had reports of the main window not showing clips after resuming (report was from a vmware vm), catch the resuming callback from windows
 		//and close and reopen the database
@@ -23,7 +23,6 @@ ULONG CALLBACK CPowerManager::PowerChanged(PVOID Context, ULONG Type, PVOID /*Se
 
 	return 0;
 }
-
 
 
 CPowerManager::CPowerManager()

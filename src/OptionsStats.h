@@ -14,36 +14,38 @@ class COptionsStats : public CPropertyPage
 {
 	DECLARE_DYNCREATE(COptionsStats)
 
-// Construction
+	// Construction
 public:
-	COptionsStats();   // standard constructor
+	COptionsStats(); // standard constructor
 
-// Dialog Data
+	// Dialog Data
 	//{{AFX_DATA(COptionsStats)
-	enum { IDD = IDD_OPTIONS_STATS };
-	CString	m_eAllCopies;
-	CString	m_eAllPastes;
-	CString	m_eAllDate;
-	CString	m_eTripCopies;
-	CString	m_eTripDate;
-	CString	m_eTripPastes;
-	CString	m_eSavedCopies;
-	CString	m_eSavedCopyData;
-	CString	m_eDatabaseSize;
-	CString	m_eLastStarted;
+	enum
+	{
+		IDD = IDD_OPTIONS_STATS
+	};
+	CString m_eAllCopies;
+	CString m_eAllPastes;
+	CString m_eAllDate;
+	CString m_eTripCopies;
+	CString m_eTripDate;
+	CString m_eTripPastes;
+	CString m_eSavedCopies;
+	CString m_eSavedCopyData;
+	CString m_eDatabaseSize;
+	CString m_eLastStarted;
 	//}}AFX_DATA
 
 
-// Overrides
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(COptionsStats)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-	//}}AFX_VIRTUAL
-
-// Implementation
 protected:
+	virtual void DoDataExchange(CDataExchange* pDX); // DDX/DDV support
+													 //}}AFX_VIRTUAL
 
+	// Implementation
+protected:
 	CString m_csTitle;
 
 	// Generated message map functions

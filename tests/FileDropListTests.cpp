@@ -155,7 +155,7 @@ TEST(FileDropList, EmptyListGivesNoPaths)
 TEST(FileDropList, IgnoresBytesAfterTheTerminator)
 {
 	std::vector<std::uint8_t> block = DropBlockBuilder::Wide({ L"C:\\a.txt" });
-	block.insert(block.end(), 16, 0xCD);  // GlobalSize rounds allocations up
+	block.insert(block.end(), 16, 0xCD); // GlobalSize rounds allocations up
 
 	FileDropList list = ParseBlock(block);
 
@@ -196,7 +196,7 @@ TEST(FileDropList, RejectsPathListStartingOutsideBlock)
 TEST(FileDropList, RejectsWideListWithoutFinalTerminator)
 {
 	std::vector<std::uint8_t> block = DropBlockBuilder::Header(DropBlockBuilder::HeaderSize, true);
-	DropBlockBuilder::AppendWide(block, L"C:\\a.txt");  // path terminator, but no empty final entry
+	DropBlockBuilder::AppendWide(block, L"C:\\a.txt"); // path terminator, but no empty final entry
 
 	EXPECT_THROW(ParseBlock(block), ClipboardFormatError);
 }
@@ -226,7 +226,7 @@ TEST(FileDropList, RejectsAnsiListWithoutFinalTerminator)
 TEST(FileDropList, RejectsWideListWithOddTrailingByte)
 {
 	std::vector<std::uint8_t> block = DropBlockBuilder::Header(DropBlockBuilder::HeaderSize, true);
-	block.push_back(0);  // half a wide character: no complete terminator fits
+	block.push_back(0); // half a wide character: no complete terminator fits
 
 	EXPECT_THROW(ParseBlock(block), ClipboardFormatError);
 }

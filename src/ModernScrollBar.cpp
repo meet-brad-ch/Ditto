@@ -10,24 +10,24 @@ using namespace Gdiplus;
 
 IMPLEMENT_DYNAMIC(CModernScrollBar, CWnd)
 
-CModernScrollBar::CModernScrollBar()
-	: m_pListCtrl(NULL)
-	, m_pParentWnd(NULL)
-	, m_pDPI(NULL)
-	, m_orientation(ScrollBarOrientation::Vertical)
-	, m_trackColor(RGB(240, 240, 240))
-	, m_thumbColor(RGB(180, 180, 180))
-	, m_thumbHoverColor(RGB(140, 140, 140))
-	, m_scrollBarWidth(8)
-	, m_scrollBarHoverWidth(12)
-	, m_cornerRadius(4)
-	, m_minThumbSize(30)
-	, m_isMouseOver(false)
-	, m_isDragging(false)
-	, m_dragStartPos(0)
-	, m_dragStartScrollPos(0)
-	, m_isVisible(false)
-	, m_trackingMouse(false)
+CModernScrollBar::CModernScrollBar() :
+	m_pListCtrl(NULL),
+	m_pParentWnd(NULL),
+	m_pDPI(NULL),
+	m_orientation(ScrollBarOrientation::Vertical),
+	m_trackColor(RGB(240, 240, 240)),
+	m_thumbColor(RGB(180, 180, 180)),
+	m_thumbHoverColor(RGB(140, 140, 140)),
+	m_scrollBarWidth(8),
+	m_scrollBarHoverWidth(12),
+	m_cornerRadius(4),
+	m_minThumbSize(30),
+	m_isMouseOver(false),
+	m_isDragging(false),
+	m_dragStartPos(0),
+	m_dragStartScrollPos(0),
+	m_isVisible(false),
+	m_trackingMouse(false)
 {
 }
 
@@ -53,14 +53,14 @@ BOOL CModernScrollBar::Create(CWnd* pParentWnd, CListCtrl* pListCtrl, ScrollBarO
 	m_orientation = orientation;
 
 	// Create as a child window with no border
-	CString className = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, 
-		::LoadCursor(NULL, IDC_ARROW), NULL, NULL);
-	
+	CString className = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW,
+											::LoadCursor(NULL, IDC_ARROW), NULL, NULL);
+
 	DWORD dwStyle = WS_CHILD | WS_CLIPSIBLINGS;
 	DWORD dwExStyle = 0;
 
 	CRect rect(0, 0, 10, 100);
-	
+
 	if (!CWnd::CreateEx(dwExStyle, className, _T(""), dwStyle, rect, pParentWnd, 0))
 		return FALSE;
 
@@ -72,7 +72,7 @@ void CModernScrollBar::SetColors(COLORREF trackColor, COLORREF thumbColor, COLOR
 	m_trackColor = trackColor;
 	m_thumbColor = thumbColor;
 	m_thumbHoverColor = thumbHoverColor;
-	
+
 	if (m_hWnd && IsWindowVisible())
 		Invalidate();
 }
@@ -147,11 +147,11 @@ CRect CModernScrollBar::CalcScrollRect(const CRect& listRectInParent, const CRec
 	{
 		// Position the scrollbar on the bottom
 		// Leave space for the vertical scrollbar on the right
-		int vertScrollWidth = ScaleForDpi(m_scrollBarHoverWidth);  // Use hover width to ensure no overlap
+		int vertScrollWidth = ScaleForDpi(m_scrollBarHoverWidth); // Use hover width to ensure no overlap
 
 		scrollRect.left = listRectInParent.left;
 		scrollRect.top = visibleBottom - scrollSize;
-		scrollRect.right = parentClientRect.right - vertScrollWidth;  // Stop before vertical scrollbar
+		scrollRect.right = parentClientRect.right - vertScrollWidth; // Stop before vertical scrollbar
 		scrollRect.bottom = visibleBottom;
 	}
 
@@ -197,7 +197,7 @@ void CModernScrollBar::UpdateScrollBar()
 	if (currentRect != scrollRect)
 	{
 		MoveWindow(&scrollRect);
-	}	
+	}
 
 	// Ensure visible
 	if (theApp.Services().Settings().m_showScrollBar && !IsWindowVisible())
@@ -207,7 +207,7 @@ void CModernScrollBar::UpdateScrollBar()
 
 	// Redraw
 	Invalidate();
-	
+
 	// Bring to front
 	SetWindowPos(&CWnd::wndTop, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 }
@@ -250,9 +250,9 @@ int CModernScrollBar::CalcThumbPos(const SCROLLINFO& si, int totalRange, int tra
 	double scrollRatio = 0;
 	if (scrollableRange > 0)
 		scrollRatio = (double)si.nPos / scrollableRange;
-	
+
 	int thumbPos = (int)(scrollRatio * (trackSize - thumbSize));
-	
+
 	// Clamp to valid range
 	if (thumbPos < 0) thumbPos = 0;
 	if (thumbPos + thumbSize > trackSize)
@@ -288,16 +288,16 @@ void CModernScrollBar::DrawRoundedRect(CDC* pDC, CRect rect, int radius, COLORRE
 	// Use GDI+ for anti-aliased rounded rectangles
 	Graphics graphics(pDC->GetSafeHdc());
 	graphics.SetSmoothingMode(SmoothingModeAntiAlias);
-	
+
 	// Create solid color (no transparency)
 	Color gdipColor(255, GetRValue(color), GetGValue(color), GetBValue(color));
 	SolidBrush brush(gdipColor);
-	
+
 	// Draw rounded rectangle path
 	GraphicsPath path;
-	
+
 	int diameter = radius * 2;
-	
+
 	// Handle very small rectangles
 	if (rect.Width() < diameter || rect.Height() < diameter)
 	{
@@ -318,47 +318,47 @@ void CModernScrollBar::DrawRoundedRect(CDC* pDC, CRect rect, int radius, COLORRE
 		path.AddArc(rect.left, rect.bottom - diameter, diameter, diameter, 90, 90);
 		path.CloseFigure();
 	}
-	
+
 	graphics.FillPath(&brush, &path);
 }
 
 void CModernScrollBar::OnPaint()
 {
 	CPaintDC dc(this);
-	
+
 	CRect clientRect;
 	GetClientRect(&clientRect);
-	
+
 	// Create memory DC for double buffering
 	CDC memDC;
 	memDC.CreateCompatibleDC(&dc);
-	
+
 	CBitmap memBitmap;
 	memBitmap.CreateCompatibleBitmap(&dc, clientRect.Width(), clientRect.Height());
 	CBitmap* pOldBitmap = memDC.SelectObject(&memBitmap);
-	
+
 	// Fill with track color (solid background)
 	memDC.FillSolidRect(&clientRect, m_trackColor);
-	
+
 	// Get thumb rect
 	CRect thumbRect = GetThumbRect();
-	
+
 	if (!thumbRect.IsRectEmpty())
 	{
 		int radius = m_cornerRadius;
 		if (m_pDPI)
 			radius = m_pDPI->Scale(m_cornerRadius);
-		
+
 		// Determine thumb color based on state
 		COLORREF thumbColor = m_isMouseOver || m_isDragging ? m_thumbHoverColor : m_thumbColor;
-		
+
 		// Draw the thumb
 		DrawRoundedRect(&memDC, thumbRect, radius, thumbColor);
 	}
-	
+
 	// Copy to screen
 	dc.BitBlt(0, 0, clientRect.Width(), clientRect.Height(), &memDC, 0, 0, SRCCOPY);
-	
+
 	memDC.SelectObject(pOldBitmap);
 }
 
@@ -384,7 +384,7 @@ void CModernScrollBar::OnMouseMove(UINT nFlags, CPoint point)
 	GetClientRect(&clientRect);
 	bool wasMouseOver = m_isMouseOver;
 	m_isMouseOver = clientRect.PtInRect(point);
-	
+
 	if (wasMouseOver != m_isMouseOver)
 	{
 		// Update scrollbar size when hover state changes
@@ -411,14 +411,14 @@ void CModernScrollBar::OnMouseMove(UINT nFlags, CPoint point)
 void CModernScrollBar::OnMouseLeave()
 {
 	m_trackingMouse = false;
-	
+
 	if (m_isMouseOver)
 	{
 		m_isMouseOver = false;
 		// Update scrollbar size when hover state changes (shrink back)
 		UpdateScrollBar();
 
-		// If we leave the scrollbar area and we are in auto-hide mode, 
+		// If we leave the scrollbar area and we are in auto-hide mode,
 		// restart the timer to hide it eventually
 		if (m_isVisible && !theApp.Services().Settings().m_showScrollBar && !m_isDragging)
 		{
@@ -437,16 +437,16 @@ LRESULT CModernScrollBar::OnMouseHover(WPARAM /*wParam*/, LPARAM /*lParam*/)
 void CModernScrollBar::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	CRect thumbRect = GetThumbRect();
-	
+
 	if (thumbRect.PtInRect(point))
 	{
 		// Start dragging the thumb
 		m_isDragging = true;
 		m_dragStartPos = (m_orientation == ScrollBarOrientation::Vertical) ? point.y : point.x;
-		
+
 		// Get current scroll position in thumb coordinates
 		m_dragStartScrollPos = (m_orientation == ScrollBarOrientation::Vertical) ? thumbRect.top : thumbRect.left;
-		
+
 		SetCapture();
 		Invalidate();
 	}
@@ -470,7 +470,7 @@ void CModernScrollBar::OnLButtonDown(UINT nFlags, CPoint point)
 			CRect clientRect;
 			m_pListCtrl->GetClientRect(&clientRect);
 			int pageWidth = clientRect.Width();
-			
+
 			if (point.x < thumbRect.left)
 			{
 				m_pListCtrl->Scroll(CSize(-pageWidth, 0));
@@ -480,7 +480,7 @@ void CModernScrollBar::OnLButtonDown(UINT nFlags, CPoint point)
 				m_pListCtrl->Scroll(CSize(pageWidth, 0));
 			}
 		}
-		
+
 		UpdateScrollBar();
 	}
 
@@ -592,17 +592,17 @@ void CModernScrollBar::Show(bool /*animate*/)
 {
 	m_isVisible = true;
 	ShowWindow(SW_SHOWNA);
-	
+
 	// Kill any pending hide timer
 	KillTimer(TIMER_AUTO_HIDE);
-	
+
 	// Start auto-hide timer (hide after 800ms of inactivity)
 	// Only if the option to always show scrollbar is NOT enabled
 	if (!theApp.Services().Settings().m_showScrollBar)
 	{
 		SetTimer(TIMER_AUTO_HIDE, 800, NULL);
 	}
-	
+
 	UpdateScrollBar();
 }
 

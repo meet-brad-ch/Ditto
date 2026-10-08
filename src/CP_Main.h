@@ -4,7 +4,7 @@
 #error include 'stdafx.h' before including this file for PCH
 #endif
 
-#include "../resource.h"       // main symbols
+#include "../resource.h" // main symbols
 #include "Clip.h"
 #include "DatabaseUtilities.h"
 #include "Misc.h"
@@ -86,7 +86,7 @@ private:
 	/// The mutex of the elevated paste helper (only in the helper process).
 	HANDLE m_adminPasteMutex{};
 	/// TRUE or FALSE from /Connect or /Disconnect; -1 when the command line gives neither.
-	int m_connectOnStartup{-1};
+	int m_connectOnStartup{ -1 };
 	/// The window shown when there is no database (not owned: it deletes itself, CFrameWnd::PostNcDestroy).
 	CFrameWnd* m_pNoDbMainFrame{};
 	/// The GDI+ token of GdiplusStartup.

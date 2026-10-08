@@ -41,20 +41,20 @@ public:
 	static constexpr int OpacityMax = 255;
 
 	CAlphaBlend();
-	CAlphaBlend(HWND hWnd, int nOpacity=220);
-	CAlphaBlend(CWnd *pWnd, int nOpacity=220);
+	CAlphaBlend(HWND hWnd, int nOpacity = 220);
+	CAlphaBlend(CWnd* pWnd, int nOpacity = 220);
 	virtual ~CAlphaBlend();
 
 	//// SET DATA MEMBERS ////
 	BOOL SetWindowHandle(HWND hWnd);
-	BOOL SetWindowHandle(CWnd *pWnd);
-	BOOL SetOpacity(int nOpacity=220);
+	BOOL SetWindowHandle(CWnd* pWnd);
+	BOOL SetOpacity(int nOpacity = 220);
 
 	//// RUN IT ////
-	void SetTransparent(BOOL bTransparent=true);
+	void SetTransparent(BOOL bTransparent = true);
 
 	//// FOR THOSE OF US WHO ARE LAZY ////
-	BOOL SetTransparent(HWND hWnd, int nOpactiy=220, BOOL bTransparent=true);
+	BOOL SetTransparent(HWND hWnd, int nOpactiy = 220, BOOL bTransparent = true);
 
 	//// GET TRANSPARENT/OPACITY STATUS ////
 	int GetOpacity(void) { return m_nOpacity; }

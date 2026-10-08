@@ -19,12 +19,16 @@ namespace
 	class TempDatabaseFile
 	{
 	public:
-		explicit TempDatabaseFile(const std::wstring& name)
-			: m_path{ std::filesystem::temp_directory_path() / (L"DittoAppTests_" + std::to_wstring(::GetCurrentProcessId()) + L"_" + name + L".db") }
+		explicit TempDatabaseFile(const std::wstring& name) :
+			m_path{ std::filesystem::temp_directory_path() / (L"DittoAppTests_" + std::to_wstring(::GetCurrentProcessId()) + L"_" + name + L".db") }
 		{
 			std::filesystem::remove(m_path);
 		}
-		~TempDatabaseFile() { std::error_code ignored{}; std::filesystem::remove(m_path, ignored); }
+		~TempDatabaseFile()
+		{
+			std::error_code ignored{};
+			std::filesystem::remove(m_path, ignored);
+		}
 		TempDatabaseFile(const TempDatabaseFile&) = delete;
 		TempDatabaseFile& operator=(const TempDatabaseFile&) = delete;
 

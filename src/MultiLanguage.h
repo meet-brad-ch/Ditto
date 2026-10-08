@@ -36,7 +36,7 @@ typedef std::vector<CLangItem> LANGUAGE_ARRAY;
 // The string table items by their ID text
 typedef std::map<CString, CLangItem> LANGUAGE_MAP;
 
-class CMultiLanguage  
+class CMultiLanguage
 {
 public:
 	CMultiLanguage();
@@ -50,23 +50,23 @@ public:
 	 */
 	bool LoadLanguageFile(const CString& languageDir, CString csFile);
 
-	bool UpdateRightClickMenu(CMenu *pMenu);
-	bool UpdateGroupsRightClickMenu(CMenu *pMenu);
-	bool UpdateTrayIconRightClickMenu(CMenu *pMenu);
+	bool UpdateRightClickMenu(CMenu* pMenu);
+	bool UpdateGroupsRightClickMenu(CMenu* pMenu);
+	bool UpdateTrayIconRightClickMenu(CMenu* pMenu);
 
-	bool UpdateClipProperties(CWnd *pParent);
-	bool UpdateOptionGeneral(CWnd *pParent);
-	bool UpdateOptionSupportedTypes(CWnd *pParent);
-	bool UpdateOptionShortcuts(CWnd *pParent);
-	bool UpdateOptionQuickPaste(CWnd *pParent);
-	bool UpdateOptionQuickPasteKeyboard(CWnd *pParent);
-	bool UpdateOptionStats(CWnd *pParent);
-	bool UpdateOptionSupportedTypesAdd(CWnd *pParent);
-	bool UpdateMoveToGroups(CWnd *pParent);
-	bool UpdateOptionsSheet(CWnd *pParent);
-	bool UpdateOptionCopyBuffers(CWnd *pParent);
-	bool UpdateGlobalHotKeys(CWnd *pParent);
-	bool UpdateDeleteClipData(CWnd *pParent);
+	bool UpdateClipProperties(CWnd* pParent);
+	bool UpdateOptionGeneral(CWnd* pParent);
+	bool UpdateOptionSupportedTypes(CWnd* pParent);
+	bool UpdateOptionShortcuts(CWnd* pParent);
+	bool UpdateOptionQuickPaste(CWnd* pParent);
+	bool UpdateOptionQuickPasteKeyboard(CWnd* pParent);
+	bool UpdateOptionStats(CWnd* pParent);
+	bool UpdateOptionSupportedTypesAdd(CWnd* pParent);
+	bool UpdateMoveToGroups(CWnd* pParent);
+	bool UpdateOptionsSheet(CWnd* pParent);
+	bool UpdateOptionCopyBuffers(CWnd* pParent);
+	bool UpdateGlobalHotKeys(CWnd* pParent);
+	bool UpdateDeleteClipData(CWnd* pParent);
 
 	CString GetGlobalHotKeyString(CString csID, CString csDefault);
 	CString GetDeleteClipDataString(CString csID, CString csDefault);
@@ -74,13 +74,13 @@ public:
 
 	CString GetString(CString csID, CString csDefault);
 
-	CString GetAuthor()	{ return m_csAuthor;		}
-	long	GetVersion(){ return m_lFileVersion;	}
-	CString GetNotes()	{ return m_csNotes;			}
-	CString GetLangCode() { return m_csLangCode;	}
+	CString GetAuthor() { return m_csAuthor; }
+	long GetVersion() { return m_lFileVersion; }
+	CString GetNotes() { return m_csNotes; }
+	CString GetLangCode() { return m_csLangCode; }
 
-	void	SetOnlyGetHeader(bool bVal)	{ m_bOnlyGetHeader = bVal;	}
-	static CMenu* GetMenuPos(CMenu *pMenu, const CString &csLookingForMenuText, int &nMenuPos, bool returnChildIfOne = FALSE);
+	void SetOnlyGetHeader(bool bVal) { m_bOnlyGetHeader = bVal; }
+	static CMenu* GetMenuPos(CMenu* pMenu, const CString& csLookingForMenuText, int& nMenuPos, bool returnChildIfOne = FALSE);
 
 	CString m_csLastError;
 
@@ -102,26 +102,26 @@ protected:
 	LANGUAGE_ARRAY m_GlobalHotKeys;
 	LANGUAGE_ARRAY m_DeleteClipData;
 
-	LANGUAGE_MAP	m_StringMap;
+	LANGUAGE_MAP m_StringMap;
 
 	CString m_csAuthor;
 	CString m_csNotes;
-	long	m_lFileVersion;
+	long m_lFileVersion;
 	CString m_csLangCode;
 
-	bool	m_bOnlyGetHeader;
+	bool m_bOnlyGetHeader;
 
 protected:
-	bool LoadSection(const tinyxml2::XMLElement &doc, LANGUAGE_ARRAY &Array, CString csSection);
-	bool LoadStringTableSection(const tinyxml2::XMLElement &doc, LANGUAGE_MAP &Map, CString csSection);
+	bool LoadSection(const tinyxml2::XMLElement& doc, LANGUAGE_ARRAY& Array, CString csSection);
+	bool LoadStringTableSection(const tinyxml2::XMLElement& doc, LANGUAGE_MAP& Map, CString csSection);
 
-	bool UpdateMenuToLanguage(CMenu *pMenu, LANGUAGE_ARRAY &Array);
-	bool UpdateWindowToLanguage(CWnd *pParent, LANGUAGE_ARRAY &Array);
+	bool UpdateMenuToLanguage(CMenu* pMenu, LANGUAGE_ARRAY& Array);
+	bool UpdateWindowToLanguage(CWnd* pParent, LANGUAGE_ARRAY& Array);
 
 
 	void ClearArrays();
-	void ClearArray(LANGUAGE_ARRAY &Array);
-	void ClearMap(LANGUAGE_MAP &Map);
+	void ClearArray(LANGUAGE_ARRAY& Array);
+	void ClearMap(LANGUAGE_MAP& Map);
 };
 
 #endif // !defined(AFX_MULTILANGUAGE_H__DA57BA64_C421_4368_9498_1EFCE49A5C52__INCLUDED_)

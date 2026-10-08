@@ -25,8 +25,8 @@ namespace
 	class OwnedGlobal
 	{
 	public:
-		explicit OwnedGlobal(const std::vector<std::uint8_t>& bytes)
-			: m_block(::GlobalAlloc(GMEM_MOVEABLE, bytes.size()), &::GlobalFree)
+		explicit OwnedGlobal(const std::vector<std::uint8_t>& bytes) :
+			m_block(::GlobalAlloc(GMEM_MOVEABLE, bytes.size()), &::GlobalFree)
 		{
 			if (!m_block)
 			{
@@ -79,7 +79,7 @@ TEST(GlobalFileDrop, ReadsLongPathFromGlobalMemoryAndUnlocks)
 
 TEST(GlobalFileDrop, UnlocksWhenDataIsMalformed)
 {
-	OwnedGlobal block(std::vector<std::uint8_t>(10, 0));  // shorter than the DROPFILES header
+	OwnedGlobal block(std::vector<std::uint8_t>(10, 0)); // shorter than the DROPFILES header
 
 	EXPECT_THROW(GlobalFileDrop::Read(block.Get()), ClipboardFormatError);
 	EXPECT_TRUE(block.IsUnlocked());

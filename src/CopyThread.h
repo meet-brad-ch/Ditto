@@ -12,24 +12,24 @@ struct CCopyConfig
 {
 public:
 	// CDittoMessage::ClipboardCopied is sent to this window when a copy is made.
-	HWND        m_hClipHandler{};
+	HWND m_hClipHandler{};
 	// true to use PostMessage (asynchronous)
 	// false to use SendMessage (synchronous)
-	bool        m_bAsyncCopy{};
+	bool m_bAsyncCopy{};
 	// true to create a copy of the clipboard contents when it changes
 	// false to ignore changes in the clipboard
-	bool        m_bCopyOnChange{};
+	bool m_bCopyOnChange{};
 	// the supported types which are copied from the clipboard when it changes; this config owns them
 	std::unique_ptr<CClipTypes> m_pSupportedTypes{}; // ONLY accessed from CopyThread
 
-	CCopyConfig( HWND hClipHandler = NULL,
-	             bool bAsyncCopy = false,
-				 bool bCopyOnChange = false,
-				 std::unique_ptr<CClipTypes> pSupportedTypes = nullptr )
-		: m_hClipHandler(hClipHandler),
-		  m_bAsyncCopy(bAsyncCopy),
-		  m_bCopyOnChange(bCopyOnChange),
-		  m_pSupportedTypes(std::move(pSupportedTypes))
+	CCopyConfig(HWND hClipHandler = NULL,
+				bool bAsyncCopy = false,
+				bool bCopyOnChange = false,
+				std::unique_ptr<CClipTypes> pSupportedTypes = nullptr) :
+		m_hClipHandler(hClipHandler),
+		m_bAsyncCopy(bAsyncCopy),
+		m_bCopyOnChange(bCopyOnChange),
+		m_pSupportedTypes(std::move(pSupportedTypes))
 	{
 	}
 
@@ -49,12 +49,10 @@ public:
 	CCopyThread();
 	virtual ~CCopyThread();
 
-// Attributes
+	// Attributes
 public:
-
-// Operations
+	// Operations
 public:
-
 	bool m_bQuit;
 	bool m_connectOnStartup;
 
@@ -63,16 +61,16 @@ public:
 	// CopyThread Local (accessed from this CopyThread)
 	// window owned by this thread which handles clipboard viewer messages
 	std::unique_ptr<CClipboardViewer> m_pClipboardViewer{}; // permanent during lifetime of thread
-	CCopyConfig         m_LocalConfig;
+	CCopyConfig m_LocalConfig;
 
 	// Called within Copy Thread:
 	void OnClipboardChange(CString activeWindow); // called by ClipboardViewer
-	void SyncConfig(); // safely syncs m_LocalConfig with m_SharedConfig
+	void SyncConfig();                            // safely syncs m_LocalConfig with m_SharedConfig
 
-// Shared (use thread-safe access functions below)
-	CCopyConfig         m_SharedConfig; 
+	// Shared (use thread-safe access functions below)
+	CCopyConfig m_SharedConfig;
 	/** @brief True from a change of m_SharedConfig until SyncConfig takes it (read without the lock). */
-	std::atomic<bool>   m_bConfigChanged;
+	std::atomic<bool> m_bConfigChanged;
 
 	// Called within Main thread:
 	bool IsClipboardViewerConnected();
@@ -80,7 +78,7 @@ public:
 	void SetConnectCV(bool bConnect);
 
 	void SetSupportedTypes(std::unique_ptr<CClipTypes> pTypes); // CopyThread owns pTypes from now on
-	HWND SetClipHandler(HWND hWnd); // returns previous value
+	HWND SetClipHandler(HWND hWnd);                             // returns previous value
 	HWND GetClipHandler();
 	bool SetCopyOnChange(bool bVal); // returns previous value
 	bool GetCopyOnChange();

@@ -39,20 +39,20 @@ int CEditWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	m_dpi.SetHwnd(m_hWnd);
 
-	m_toolBarControl.CreateEx(this, TBSTYLE_FLAT, WS_CHILD|WS_VISIBLE|CBRS_TOP|CBRS_TOOLTIPS);
-	
+	m_toolBarControl.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP | CBRS_TOOLTIPS);
+
 	LoadToolbarDPI();
 
 	m_toolBarControl.EnableWindow();
-	
-	m_tabControl.Create(WS_CHILD|WS_VISIBLE|WS_TABSTOP|CTabCtrlEx::ScsTop, CRect(0, 0, 0, 0), this, 101);
-	
+
+	m_tabControl.Create(WS_CHILD | WS_VISIBLE | WS_TABSTOP | CTabCtrlEx::ScsTop, CRect(0, 0, 0, 0), this, 101);
+
 	//m_font.CreatePointFont(m_dpi.Scale(90), _T("Arial Unicode MS"), this->GetDC());
 	m_font.CreateFont(-m_dpi.Scale(13), 0, 0, 0, 400, 0, 0, 0, DEFAULT_CHARSET, 3, 2, 1, 34, _T("Segoe UI"));
-	m_updateDescriptionButton.Create(theApp.Services().Language().GetString("Update_Desc", "Update clip description on save?"), WS_CHILD|WS_VISIBLE|BS_AUTOCHECKBOX, CRect(0,0,0,0), this, 101);
+	m_updateDescriptionButton.Create(theApp.Services().Language().GetString("Update_Desc", "Update clip description on save?"), WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, CRect(0, 0, 0, 0), this, 101);
 	m_updateDescriptionButton.SetFont(&m_font);
 
-	if(theApp.Services().Settings().GetUpdateDescWhenSavingClip())
+	if (theApp.Services().Settings().GetUpdateDescWhenSavingClip())
 	{
 		m_updateDescriptionButton.SetCheck(BST_CHECKED);
 	}
@@ -109,7 +109,7 @@ void CEditWnd::LoadToolbarDPI()
 	else if (scale >= 125)
 	{
 		m_toolBarControl.LoadToolBar(IDR_EDIT_WND_125);
-	}	
+	}
 	else
 	{
 		m_toolBarControl.LoadToolBar(IDR_EDIT_WND);
@@ -122,9 +122,9 @@ void CEditWnd::OnDpiChanged(CWnd* pParent, int dpi)
 
 	m_font.DeleteObject();
 	m_font.CreateFont(-m_dpi.Scale(13), 0, 0, 0, 400, 0, 0, 0, DEFAULT_CHARSET, 3, 2, 1, 34, _T("Segoe UI"));
-	
+
 	m_updateDescriptionButton.SetFont(&m_font);
-	
+
 	m_tabControl.OnDpiChanged(pParent, dpi);
 
 	LoadToolbarDPI();
@@ -144,7 +144,7 @@ void CEditWnd::OnSize(UINT nType, int cx, int cy)
 {
 	CWnd::OnSize(nType, cx, cy);
 
-	if(::IsWindow(m_toolBarControl.GetSafeHwnd()))
+	if (::IsWindow(m_toolBarControl.GetSafeHwnd()))
 	{
 		MoveControls();
 	}
@@ -163,19 +163,19 @@ void CEditWnd::MoveControls()
 
 	m_tabControl.MoveWindow(0, toolbarHeight, rc.Width(), rc.Height() - toolbarHeight - descriptionHeight);
 
-	m_updateDescriptionButton.MoveWindow(2, rc.Height()- descriptionHeight, rc.Width()-m_dpi.Scale(2), descriptionHeight);
+	m_updateDescriptionButton.MoveWindow(2, rc.Height() - descriptionHeight, rc.Width() - m_dpi.Scale(2), descriptionHeight);
 }
 
-void CEditWnd::OnSaveAll() 
+void CEditWnd::OnSaveAll()
 {
 	INT_PTR size = m_edits.size();
-	for(int tab = 0; tab < size; tab++)
+	for (int tab = 0; tab < size; tab++)
 	{
 		DoSaveItem(tab);
 	}
 }
 
-void CEditWnd::OnSave() 
+void CEditWnd::OnSave()
 {
 	DoSave();
 }
@@ -184,7 +184,7 @@ bool CEditWnd::DoSave()
 {
 	bool bRet = false;
 	int nTab = m_tabControl.GetActiveTab();
-	if(nTab >= 0 && nTab < (int)m_edits.size())
+	if (nTab >= 0 && nTab < (int)m_edits.size())
 	{
 		bRet = DoSaveItem(nTab);
 	}
@@ -197,18 +197,18 @@ bool CEditWnd::DoSaveItem(int index)
 	bool bRet = false;
 	BOOL bUpdateDesc = m_updateDescriptionButton.GetCheck();
 
-	CDittoRulerRichEditCtrl *pEdit = m_edits[index].get();
-	if(pEdit)
+	CDittoRulerRichEditCtrl* pEdit = m_edits[index].get();
+	if (pEdit)
 	{
 		int nRet = pEdit->SaveToDB(bUpdateDesc);
-		if(nRet > 0)
+		if (nRet > 0)
 		{
-			if(bUpdateDesc)
+			if (bUpdateDesc)
 			{
 				m_tabControl.SetTabTitle(index, pEdit->GetDesc());
 			}
 
-			if(nRet == CDittoRulerRichEditCtrl::SavedClipToDb)
+			if (nRet == CDittoRulerRichEditCtrl::SavedClipToDb)
 			{
 				CSaveAnimation Ani;
 				CRect cr;
@@ -232,13 +232,13 @@ bool CEditWnd::DoSaveItem(int index)
 	return bRet;
 }
 
-bool CEditWnd::EditIds(CClipIDs &Ids)
+bool CEditWnd::EditIds(CClipIDs& Ids)
 {
 	INT_PTR count = min(Ids.GetSize(), 10);
-	for(int i = 0; i < count; i++)
+	for (int i = 0; i < count; i++)
 	{
 		// a clip that cannot be opened (shown by AddItem) stops opening the rest
-		if(IsIDAlreadyInEdit(Ids[i], true) < 0 && AddItem(Ids[i]) == false)
+		if (IsIDAlreadyInEdit(Ids[i], true) < 0 && AddItem(Ids[i]) == false)
 		{
 			break;
 		}
@@ -253,17 +253,17 @@ bool CEditWnd::AddItem(int id)
 {
 	bool bRet = false;
 	// owned here until m_edits takes it, so a failed load does not leak it
-	std::unique_ptr<CDittoRulerRichEditCtrl> pEdit{std::make_unique<CDittoRulerRichEditCtrl>()};
-	if(pEdit)
+	std::unique_ptr<CDittoRulerRichEditCtrl> pEdit{ std::make_unique<CDittoRulerRichEditCtrl>() };
+	if (pEdit)
 	{
 		CString csTitle;
 
-		if(id >= 0)
+		if (id >= 0)
 		{
 			try
 			{
 				CppSQLite3Query q = theApp.Services().Database().execQueryEx(_T("SELECT mText FROM Main where lID = %d"), id);
-				if(q.eof() == false)
+				if (q.eof() == false)
 				{
 					csTitle = q.getStringField(_T("mText"));
 					csTitle = csTitle.Left(15);
@@ -280,33 +280,32 @@ bool CEditWnd::AddItem(int id)
 			csTitle = theApp.Services().Language().GetString("New", "New");
 		}
 
-		pEdit->Create(WS_TABSTOP|WS_CHILD|WS_VISIBLE, CRect(100, 100, 105, 105), this, 100, TRUE);
+		pEdit->Create(WS_TABSTOP | WS_CHILD | WS_VISIBLE, CRect(100, 100, 105, 105), this, 100, TRUE);
 		pEdit->ShowToolbar();
-		pEdit->LoadItem(id, csTitle);		
+		pEdit->LoadItem(id, csTitle);
 
 		m_tabControl.AddItem(csTitle, pEdit.get());
 		int nTab = m_tabControl.GetTabCount();
-		m_tabControl.SetActiveTab(nTab-1);
+		m_tabControl.SetActiveTab(nTab - 1);
 
 		m_edits.push_back(std::move(pEdit));
 		bRet = true;
 	}
 
 	return bRet;
-
 }
 
 int CEditWnd::IsIDAlreadyInEdit(int id, bool bSetFocus)
 {
 	INT_PTR size = m_edits.size();
-	for(int i = 0; i < size; i++)
+	for (int i = 0; i < size; i++)
 	{
-		CDittoRulerRichEditCtrl *pEdit = m_edits[i].get();
-		if(pEdit)
+		CDittoRulerRichEditCtrl* pEdit = m_edits[i].get();
+		if (pEdit)
 		{
-			if(pEdit->GetDBID() == id)
+			if (pEdit->GetDBID() == id)
 			{
-				if(bSetFocus)
+				if (bSetFocus)
 				{
 					m_tabControl.SetActiveTab(i);
 				}
@@ -322,10 +321,10 @@ void CEditWnd::OnDestroy()
 	CWnd::OnDestroy();
 
 	INT_PTR size = m_edits.size();
-	for(int i = 0; i < size; i++)
+	for (int i = 0; i < size; i++)
 	{
-		CDittoRulerRichEditCtrl *pEdit = m_edits[i].get();
-		if(pEdit)
+		CDittoRulerRichEditCtrl* pEdit = m_edits[i].get();
+		if (pEdit)
 		{
 			pEdit->DestroyWindow();
 
@@ -343,10 +342,10 @@ void CEditWnd::OnSetFocus(CWnd* pOldWnd)
 	CWnd::OnSetFocus(pOldWnd);
 
 	int nTab = m_tabControl.GetActiveTab();
-	if(nTab >= 0 && nTab < (int)m_edits.size())
+	if (nTab >= 0 && nTab < (int)m_edits.size())
 	{
-		CDittoRulerRichEditCtrl *pEdit = m_edits[nTab].get();
-		if(pEdit)
+		CDittoRulerRichEditCtrl* pEdit = m_edits[nTab].get();
+		if (pEdit)
 		{
 			pEdit->SetFocus();
 		}
@@ -358,12 +357,12 @@ bool CEditWnd::CloseEdits(bool bPrompt)
 	BOOL bUpdateDesc = m_updateDescriptionButton.GetCheck();
 
 	int nTab = 0;
-	for(std::vector<std::unique_ptr<CDittoRulerRichEditCtrl>>::iterator it = m_edits.begin(); it != m_edits.end();)
+	for (std::vector<std::unique_ptr<CDittoRulerRichEditCtrl>>::iterator it = m_edits.begin(); it != m_edits.end();)
 	{
-		CDittoRulerRichEditCtrl *pEdit = it->get();
-		if(pEdit)
+		CDittoRulerRichEditCtrl* pEdit = it->get();
+		if (pEdit)
 		{
-			if(pEdit->CloseEdit(bPrompt, bUpdateDesc) == false)
+			if (pEdit->CloseEdit(bPrompt, bUpdateDesc) == false)
 				return false;
 
 			m_tabControl.DeleteItem(nTab);
@@ -383,25 +382,25 @@ bool CEditWnd::CloseEdits(bool bPrompt)
 }
 
 void CEditWnd::OnClose()
-{	
+{
 	BOOL bUpdateDesc = m_updateDescriptionButton.GetCheck();
 	int activeTab = m_tabControl.GetActiveTab();
-	if(activeTab >= 0 && activeTab < (int)m_edits.size())
+	if (activeTab >= 0 && activeTab < (int)m_edits.size())
 	{
-		CDittoRulerRichEditCtrl *pEdit = m_edits[activeTab].get();
-		if(pEdit)
+		CDittoRulerRichEditCtrl* pEdit = m_edits[activeTab].get();
+		if (pEdit)
 		{
-			if(pEdit->CloseEdit(true, bUpdateDesc))
+			if (pEdit->CloseEdit(true, bUpdateDesc))
 			{
 				m_tabControl.DeleteItem(activeTab);
 				pEdit->DestroyWindow();
 				// erasing the entry deletes the control
-				m_edits.erase(m_edits.begin()+ activeTab);
+				m_edits.erase(m_edits.begin() + activeTab);
 
-				if(m_edits.size() <= 0)
+				if (m_edits.size() <= 0)
 				{
-					CWnd *pParent = GetParent();
-					if(pParent)
+					CWnd* pParent = GetParent();
+					if (pParent)
 					{
 						pParent->SendMessage(WM_CLOSE, 0, 0);
 					}
@@ -418,9 +417,9 @@ void CEditWnd::OnNew()
 
 void CEditWnd::OnSaveCloseClipboard()
 {
-	if(DoSave())
+	if (DoSave())
 	{
-		if(m_lastSaveID >= 0)
+		if (m_lastSaveID >= 0)
 		{
 			CProcessPaste Paste(theApp.Services().ClipContext(), theApp.Services().ActiveWindow());
 			Paste.GetClipIDs().Add(m_lastSaveID);
@@ -436,20 +435,20 @@ BOOL CEditWnd::PreTranslateMessage(MSG* pMsg)
 {
 	m_toolTipControl.RelayEvent(pMsg);
 
-	if(pMsg->message == WM_KEYDOWN)
+	if (pMsg->message == WM_KEYDOWN)
 	{
-		if(HandleKeyDown(pMsg->wParam))
+		if (HandleKeyDown(pMsg->wParam))
 		{
 			return TRUE;
 		}
 	}
-	else if(pMsg->message == WM_SYSKEYDOWN) // ALT key is held down
+	else if (pMsg->message == WM_SYSKEYDOWN) // ALT key is held down
 	{
-		switch( pMsg->wParam )
+		switch (pMsg->wParam)
 		{
-			case VK_F4: 
-				OnClose();
-				return TRUE;
+		case VK_F4:
+			OnClose();
+			return TRUE;
 		}
 	}
 
@@ -458,9 +457,9 @@ BOOL CEditWnd::PreTranslateMessage(MSG* pMsg)
 
 bool CEditWnd::HandleKeyDown(WPARAM key)
 {
-	if(key == VK_ESCAPE)
+	if (key == VK_ESCAPE)
 	{
-		if(GetKeyState(VK_SHIFT) & 0x8000)
+		if (GetKeyState(VK_SHIFT) & 0x8000)
 		{
 			OnSaveCloseClipboard();
 		}
@@ -470,11 +469,11 @@ bool CEditWnd::HandleKeyDown(WPARAM key)
 		}
 		return true;
 	}
-	else if(key == 'S')
+	else if (key == 'S')
 	{
-		if(CKeyboard::IsControlPressed())
+		if (CKeyboard::IsControlPressed())
 		{
-			if(GetKeyState(VK_SHIFT) & 0x8000)
+			if (GetKeyState(VK_SHIFT) & 0x8000)
 			{
 				OnSaveAll();
 				return true;
@@ -486,9 +485,9 @@ bool CEditWnd::HandleKeyDown(WPARAM key)
 			}
 		}
 	}
-	else if(key == 'N')
+	else if (key == 'N')
 	{
-		if(CKeyboard::IsControlPressed())
+		if (CKeyboard::IsControlPressed())
 		{
 			OnNew();
 		}

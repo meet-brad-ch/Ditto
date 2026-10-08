@@ -14,17 +14,20 @@ class CAdvGeneral : public CDialogEx
 	DECLARE_DYNAMIC(CAdvGeneral)
 
 public:
-	CAdvGeneral(CWnd* pParent = NULL);   // standard constructor
+	CAdvGeneral(CWnd* pParent = NULL); // standard constructor
 	virtual ~CAdvGeneral();
 
-// Dialog Data
-	enum { IDD = IDD_ADV_OPTIONS };
+	// Dialog Data
+	enum
+	{
+		IDD = IDD_ADV_OPTIONS
+	};
 
 	CDialogResizer m_Resize;
 	bool m_mouseDownOnCaption{};
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	virtual void DoDataExchange(CDataExchange* pDX); // DDX/DDV support
 
 	/**
 	 * @brief Creates a property grid item for AddProperty/AddSubItem, which take ownership of it.
@@ -39,7 +42,7 @@ protected:
 		return std::make_unique<T>(std::forward<Args>(args)...).release(); // ownership: the property grid
 	}
 
-	void AddTrueFalse(CMFCPropertyGridProperty * pGroupTest, CString desc, BOOL value, int settingId);
+	void AddTrueFalse(CMFCPropertyGridProperty* pGroupTest, CString desc, BOOL value, int settingId);
 	void Search(bool fromSelection);
 
 	CEdit m_editFilter;

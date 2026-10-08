@@ -8,18 +8,18 @@ CClipDataReader::CClipDataReader(CDittoDb& database) :
 {
 }
 
-BOOL CClipDataReader::GetClipData(long parentId, CClipFormat &Clip)
+BOOL CClipDataReader::GetClipData(long parentId, CClipFormat& Clip)
 {
 	BOOL bRet = FALSE;
 
 	try
 	{
 		CppSQLite3Query q = m_database.execQueryEx(_T("SELECT ooData FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), parentId, CClipboardFormats::GetFormatName(Clip.m_cfType).GetString());
-		if(q.eof() == false)
+		if (q.eof() == false)
 		{
 			int nDataLen = 0;
-			const unsigned char *cData = q.getBlobField(_T("ooData"), nDataLen);
-			if(cData != NULL)
+			const unsigned char* cData = q.getBlobField(_T("ooData"), nDataLen);
+			if (cData != NULL)
 			{
 				Clip.m_hgData = CGlobalMemory::NewGlobal(nDataLen);
 
@@ -40,12 +40,12 @@ BOOL CClipDataReader::GetClipData(long parentId, CClipFormat &Clip)
 
 std::unique_ptr<CClipTypes> CClipDataReader::LoadTypesFromDB()
 {
-	std::unique_ptr<CClipTypes> pTypes{std::make_unique<CClipTypes>()};
+	std::unique_ptr<CClipTypes> pTypes{ std::make_unique<CClipTypes>() };
 
 	try
 	{
 		CppSQLite3Query q = m_database.execQuery(_T("SELECT TypeText FROM Types"));
-		while(q.eof() == false)
+		while (q.eof() == false)
 		{
 			pTypes->Add(CClipboardFormats::GetFormatID(q.getStringField(_T("TypeText"))));
 
@@ -58,7 +58,7 @@ std::unique_ptr<CClipTypes> CClipDataReader::LoadTypesFromDB()
 		return nullptr;
 	}
 
-	if(pTypes->GetSize() <= 0)
+	if (pTypes->GetSize() <= 0)
 	{
 		pTypes->Add(CF_TEXT);
 		pTypes->Add(CClipboardFormats::GetFormatID(CF_RTF));

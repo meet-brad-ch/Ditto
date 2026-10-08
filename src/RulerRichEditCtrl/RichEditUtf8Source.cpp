@@ -32,6 +32,6 @@ DWORD CALLBACK CRichEditUtf8Source::Read(DWORD_PTR cookie, LPBYTE buffer, LONG s
 
 	std::memcpy(buffer, source->m_utf8.data() + source->m_offset, count);
 	source->m_offset += count;
-	*written = static_cast<LONG>(count);  // 0 tells the control the stream has ended
+	*written = static_cast<LONG>(count); // 0 tells the control the stream has ended
 	return 0;
 }

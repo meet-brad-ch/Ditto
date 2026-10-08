@@ -18,44 +18,46 @@
 
 class CCopyProperties : public CDialog
 {
-// Construction
+	// Construction
 public:
-	CCopyProperties(long lCopyID, CWnd* pParent = NULL, CClip *pMemoryClip = NULL);   // standard constructor
+	CCopyProperties(long lCopyID, CWnd* pParent = NULL, CClip* pMemoryClip = NULL); // standard constructor
 
-// Dialog Data
+	// Dialog Data
 	//{{AFX_DATA(CCopyProperties)
-	enum { IDD = IDD_COPY_PROPERTIES };
-	CEdit	m_QuickPasteText;
+	enum
+	{
+		IDD = IDD_COPY_PROPERTIES
+	};
+	CEdit m_QuickPasteText;
 	CEdit m_description;
-	CGroupCombo	m_GroupCombo;
-	CHotKeyCtrl	m_HotKey;
-	CHotKeyCtrl	m_MoveToGrouHotKey;
-	CListBox	m_lCopyData;
-	CString	m_eDate;
+	CGroupCombo m_GroupCombo;
+	CHotKeyCtrl m_HotKey;
+	CHotKeyCtrl m_MoveToGrouHotKey;
+	CListBox m_lCopyData;
+	CString m_eDate;
 	CString m_lastPasteDate;
-	BOOL	m_bNeverAutoDelete;
+	BOOL m_bNeverAutoDelete;
 	BOOL m_hotKeyGlobal{};
 	BOOL m_moveToGroupHotKeyGlobal{};
 	//}}AFX_DATA
 
 
-// Overrides
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CCopyProperties)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-	//}}AFX_VIRTUAL
+protected:
+	virtual void DoDataExchange(CDataExchange* pDX); // DDX/DDV support
+													 //}}AFX_VIRTUAL
 
 public:
 	bool m_bChangedText;
 	long m_lGroupChangedTo;
-	void SetHideOnKillFocus(bool bVal)	{ m_bHideOnKillFocus = bVal; }
-	void SetHandleKillFocus(bool bVal)	{ m_bHandleKillFocus = bVal; }
-	void SetToTopMost(bool bVal)		{ m_bSetToTopMost = bVal; }
+	void SetHideOnKillFocus(bool bVal) { m_bHideOnKillFocus = bVal; }
+	void SetHandleKillFocus(bool bVal) { m_bHandleKillFocus = bVal; }
+	void SetToTopMost(bool bVal) { m_bSetToTopMost = bVal; }
 
-// Implementation
+	// Implementation
 protected:
-
 	long m_lCopyID;
 	ARRAY m_DeletedData;
 	bool m_bDeletedData;
@@ -64,15 +66,15 @@ protected:
 	bool m_bInGroup{};
 	bool m_bHandleKillFocus;
 	bool m_bSetToTopMost;
-	CClip *m_pMemoryClip;
+	CClip* m_pMemoryClip;
 	CBrush m_brush;
 	CClip m_clip;
 	bool m_mouseDownOnCaption{};
 
-	void LoadDataIntoCClip(CClip &Clip);
-	void LoadDataFromCClip(CClip &Clip);
-	BOOL CheckGlobalHotKey(CClip &clip);
-	BOOL CheckMoveToGroupGlobalHotKey(CClip &clip);
+	void LoadDataIntoCClip(CClip& Clip);
+	void LoadDataFromCClip(CClip& Clip);
+	BOOL CheckGlobalHotKey(CClip& clip);
+	BOOL CheckMoveToGroupGlobalHotKey(CClip& clip);
 
 	// Generated message map functions
 	//{{AFX_MSG(CCopyProperties)
@@ -114,9 +116,16 @@ private:
 
 	/** @brief The keys whose hot key control needs the extended-key flag (arrows, page keys, ...). */
 	static constexpr std::array<BYTE, 12> s_extendedHotKeys{
-		VK_LEFT, VK_UP, VK_RIGHT, VK_DOWN, // arrow keys
-		VK_PRIOR, VK_NEXT, // page up and page down
-		VK_END, VK_HOME, VK_INSERT, VK_DELETE,
+		VK_LEFT,
+		VK_UP,
+		VK_RIGHT,
+		VK_DOWN, // arrow keys
+		VK_PRIOR,
+		VK_NEXT, // page up and page down
+		VK_END,
+		VK_HOME,
+		VK_INSERT,
+		VK_DELETE,
 		VK_DIVIDE, // numpad slash
 		VK_NUMLOCK,
 	};
@@ -132,13 +141,13 @@ private:
 	 * @brief LoadDataFromCClip's hot key step: shows the clip's hot key and move-to-group hot key.
 	 * @param Clip The clip.
 	 */
-	void LoadHotKeys(CClip &Clip);
+	void LoadHotKeys(CClip& Clip);
 
 	/**
 	 * @brief LoadDataFromCClip's format step: lists the clip's formats with their sizes, selecting the last.
 	 * @param Clip The clip.
 	 */
-	void LoadFormatList(CClip &Clip);
+	void LoadFormatList(CClip& Clip);
 
 	/**
 	 * @brief Selects the last row of the format list, when it has one.

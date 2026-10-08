@@ -16,48 +16,47 @@ class CHotKey;
 class CGetSetOptions;
 class CAppServices;
 
-class CMainFrame: public CFrameWnd
+class CMainFrame : public CFrameWnd
 {
 public:
-    CMainFrame();
+	CMainFrame();
+
 protected:
-    DECLARE_DYNAMIC(CMainFrame)
+	DECLARE_DYNAMIC(CMainFrame)
 
-    // Attributes
+	// Attributes
 public:
-
-    // Operations
+	// Operations
 public:
+	BOOL ResetKillDBTimer();
 
-    BOOL ResetKillDBTimer();
-
-    // Overrides
-    // ClassWizard generated virtual function overrides
-    //{{AFX_VIRTUAL(CMainFrame)
+	// Overrides
+	// ClassWizard generated virtual function overrides
+	//{{AFX_VIRTUAL(CMainFrame)
 public:
-    virtual BOOL PreCreateWindow(CREATESTRUCT &cs);
-    //	virtual BOOL Create(LPCTSTR lpszClassName, LPCTSTR lpszWindowName, DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID, CCreateContext* pContext = NULL);
-    //}}AFX_VIRTUAL
+	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
+	//	virtual BOOL Create(LPCTSTR lpszClassName, LPCTSTR lpszWindowName, DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID, CCreateContext* pContext = NULL);
+	//}}AFX_VIRTUAL
 
-    // Implementation
+	// Implementation
 public:
-    virtual ~CMainFrame();
-    #ifdef _DEBUG
-        virtual void AssertValid()const;
-        virtual void Dump(CDumpContext &dc)const;
-    #endif 
+	virtual ~CMainFrame();
+#ifdef _DEBUG
+	virtual void AssertValid() const;
+	virtual void Dump(CDumpContext& dc) const;
+#endif
 
-    CQuickPaste m_quickPaste;
+	CQuickPaste m_quickPaste;
 	CTrayNotifyIcon m_trayIcon;
-    ULONG m_ulCopyGap{};
-    CString m_csKeyboardPaste;
-    CAlphaBlend m_Transparency;
-    BYTE m_keyStateModifiers;
-    ULONGLONG m_startKeyStateTime{};
-    bool m_bMovedSelectionMoveKeyState;
-    short m_keyModifiersTimerCount;
-    HWND m_tempFocusWnd{};
-    CMainFrmThread m_thread;
+	ULONG m_ulCopyGap{};
+	CString m_csKeyboardPaste;
+	CAlphaBlend m_Transparency;
+	BYTE m_keyStateModifiers;
+	ULONGLONG m_startKeyStateTime{};
+	bool m_bMovedSelectionMoveKeyState;
+	short m_keyModifiersTimerCount;
+	HWND m_tempFocusWnd{};
+	CMainFrmThread m_thread;
 	// The modeless dialogs while open; each is destroyed when its WM_*_CLOSED message arrives
 	std::unique_ptr<CDialog> m_pGlobalClips{};
 	std::unique_ptr<CDialog> m_pDeleteClips{};
@@ -67,40 +66,40 @@ public:
 	CPowerManager m_PowerManager;
 	int m_startupScreenWidth{};
 	int m_startupScreenHeight{};
-    CRichEditCtrlEx m_richEditTextConverter;
+	CRichEditCtrlEx m_richEditTextConverter;
 
-    void DoDittoCopyBufferPaste(int nCopyBuffer);
-    void DoFirstTenPositionsPaste(int nPos);
+	void DoDittoCopyBufferPaste(int nCopyBuffer);
+	void DoFirstTenPositionsPaste(int nPos);
 	void PasteOrShowGroup(int dbId, BOOL updateClipTime, BOOL activeTarget, BOOL sendPaste, bool pastedFromGroup);
 
 	void StartKeyModifierTimer();
 
 	bool PasteQuickPasteEntry(CString csQuickPaste);
-    void ShowErrorMessage(CString csTitle, CString csMessage);
-    bool CloseAllOpenDialogs();
+	void ShowErrorMessage(CString csTitle, CString csMessage);
+	bool CloseAllOpenDialogs();
 	void DoTextOnlyPaste();
 	void RefreshShowInTaskBar();
 
-    void ShowEditWnd(CClipIDs &Ids);
-    // The open edit frame (it deletes itself in PostNcDestroy); null when closed
-    CEditFrameWnd* m_pEditFrameWnd;
+	void ShowEditWnd(CClipIDs& Ids);
+	// The open edit frame (it deletes itself in PostNcDestroy); null when closed
+	CEditFrameWnd* m_pEditFrameWnd;
 
 
-    // Generated message map functions
+	// Generated message map functions
 protected:
-    //{{AFX_MSG(CMainFrame)
-    afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
-    afx_msg void OnFirstOption();
-    afx_msg void OnFirstExit();
-    afx_msg void OnTimer(UINT_PTR nIDEvent);
-    afx_msg void OnFirstShowquickpaste();
-    afx_msg void OnFirstToggleConnectCV();
-    afx_msg void OnUpdateFirstToggleConnectCV(CCmdUI *pCmdUI);
-    //}}AFX_MSG
-    afx_msg LRESULT OnHotKey(WPARAM wParam, LPARAM lParam);
+	//{{AFX_MSG(CMainFrame)
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnFirstOption();
+	afx_msg void OnFirstExit();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg void OnFirstShowquickpaste();
+	afx_msg void OnFirstToggleConnectCV();
+	afx_msg void OnUpdateFirstToggleConnectCV(CCmdUI* pCmdUI);
+	//}}AFX_MSG
+	afx_msg LRESULT OnHotKey(WPARAM wParam, LPARAM lParam);
 	void ShowQPasteWithActiveWindowCheck();
-    afx_msg LRESULT OnShowTrayIcon(WPARAM wParam, LPARAM lParam);
-    afx_msg LRESULT OnClipboardCopied(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnShowTrayIcon(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnClipboardCopied(WPARAM wParam, LPARAM lParam);
 	/**
 	 * @brief CDittoMessage::ShowOwnedErrorMsg handler: shows an error balloon posted by CErrorReport.
 	 * @param wParam A CString* allocated by the sender; this handler takes ownership and frees it.
@@ -108,8 +107,8 @@ protected:
 	 * @return TRUE.
 	 */
 	afx_msg LRESULT OnOwnedErrorMsg(WPARAM wParam, LPARAM lParam);
-    afx_msg LRESULT OnEditWndClose(WPARAM wParam, LPARAM lParam);
-    afx_msg LRESULT OnSetConnected(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnEditWndClose(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnSetConnected(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnOpenCloseWindow(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnGlobalClipsClosed(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnDeleteClipDataClosed(WPARAM wParam, LPARAM lParam);
@@ -117,17 +116,19 @@ protected:
 	afx_msg LRESULT OnShowOptions(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnSaveClipboardMessage(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnReAddTaskBarIcon(WPARAM wParam, LPARAM lParam);
-DECLARE_MESSAGE_MAP()public:
-    virtual BOOL PreTranslateMessage(MSG *pMsg);
-    /**
+	DECLARE_MESSAGE_MAP()
+
+public:
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
+	/**
      * @brief Clears the services' main frame and handle (CAppWindows), then deletes the frame
      *        (CFrameWnd::PostNcDestroy), so no service keeps a pointer to the deleted frame.
      */
-    void PostNcDestroy() override;
-    afx_msg void OnClose();
-    afx_msg void OnFirstImport();
-    afx_msg void OnDestroy();
-    afx_msg void OnFirstNewclip();
+	void PostNcDestroy() override;
+	afx_msg void OnClose();
+	afx_msg void OnFirstImport();
+	afx_msg void OnDestroy();
+	afx_msg void OnFirstNewclip();
 	afx_msg void OnFirstGlobalhotkeys();
 	afx_msg void OnFirstDeleteclipdata();
 	afx_msg void OnFirstSavecurrentclipboard();
@@ -140,14 +141,14 @@ DECLARE_MESSAGE_MAP()public:
 	afx_msg LRESULT OnPlainTextPaste(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnWinIniChange(LPCTSTR lpszSection);
 	afx_msg void OnFirstShowstartupmessage();
-	afx_msg void OnUpdateFirstShowstartupmessage(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateFirstShowstartupmessage(CCmdUI* pCmdUI);
 	afx_msg void OnFirstBackupdatabase();
 	afx_msg void OnFirstRestoredatabase();
 	afx_msg LRESULT OnRestoreDb(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnBackupDb(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnFirstDeleteallnonusedclips();
-    afx_msg LRESULT OnPasteClip(WPARAM wParam, LPARAM lParam);
-    afx_msg LRESULT OnEditClip(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnPasteClip(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnEditClip(WPARAM wParam, LPARAM lParam);
 
 	/** @brief The window message the tray icon sends to the main frame. */
 	enum : UINT

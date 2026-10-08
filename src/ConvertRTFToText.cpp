@@ -9,7 +9,7 @@ BOOL CConvertRTFToText::Create()
 	CString szClassName = AfxRegisterWndClass(CS_CLASSDC | CS_SAVEBITS, LoadCursor(NULL, IDC_ARROW));
 
 	// Create the window - just don't show it yet.
-	if (!CWnd::CreateEx(WS_EX_NOACTIVATE, szClassName, _T(""), WS_POPUP,0, 0, 0, 0, NULL, 0, NULL))
+	if (!CWnd::CreateEx(WS_EX_NOACTIVATE, szClassName, _T(""), WS_POPUP, 0, 0, 0, 0, NULL, 0, NULL))
 	{
 		return FALSE;
 	}

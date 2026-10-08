@@ -12,29 +12,31 @@
 
 class CMoveToGroupDlg : public CDialog
 {
-// Construction
+	// Construction
 public:
-	CMoveToGroupDlg(CWnd* pParent = NULL, CString windowTitle = _T(""));   // standard constructor
+	CMoveToGroupDlg(CWnd* pParent = NULL, CString windowTitle = _T("")); // standard constructor
 
-// Dialog Data
+	// Dialog Data
 	//{{AFX_DATA(CMoveToGroupDlg)
-	enum { IDD = IDD_MOVE_TO_GROUP };
-	CGroupTree	m_Tree;
+	enum
+	{
+		IDD = IDD_MOVE_TO_GROUP
+	};
+	CGroupTree m_Tree;
 	//}}AFX_DATA
 
-	int GetSelectedGroup()				{ return m_nSelectedGroup; }
-	void SetSlectedGroup(int nGroup)	{ m_nSelectedGroup = nGroup; }
+	int GetSelectedGroup() { return m_nSelectedGroup; }
+	void SetSlectedGroup(int nGroup) { m_nSelectedGroup = nGroup; }
 
-// Overrides
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CMoveToGroupDlg)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-	//}}AFX_VIRTUAL
-
-// Implementation
 protected:
+	virtual void DoDataExchange(CDataExchange* pDX); // DDX/DDV support
+													 //}}AFX_VIRTUAL
 
+	// Implementation
+protected:
 	int m_nSelectedGroup;
 	CString m_windowTitle;
 

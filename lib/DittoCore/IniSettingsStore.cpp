@@ -12,8 +12,8 @@
 
 namespace DittoCore
 {
-	IniSettingsStore::IniSettingsStore(std::wstring filePath)
-		: m_filePath(std::move(filePath))
+	IniSettingsStore::IniSettingsStore(std::wstring filePath) :
+		m_filePath(std::move(filePath))
 	{
 	}
 

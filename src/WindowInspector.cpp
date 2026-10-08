@@ -4,11 +4,11 @@
 #include "Path.h"
 #include "Tlhelp32.h"
 
-bool CWindowInspector::IsAppWnd( HWND hWnd )
+bool CWindowInspector::IsAppWnd(HWND hWnd)
 {
 	const DWORD dwMyPID{ ::GetCurrentProcessId() };
 	DWORD dwTestPID{};
-	::GetWindowThreadProcessId( hWnd, &dwTestPID );
+	::GetWindowThreadProcessId(hWnd, &dwTestPID);
 	return dwMyPID == dwTestPID;
 }
 
@@ -48,7 +48,7 @@ CString CWindowInspector::GetProcessName(HWND hWnd, DWORD processId)
 {
 	const ULONGLONG startTick{ GetTickCount64() };
 
-	CString	strProcessName{};
+	CString strProcessName{};
 	DWORD Id{ processId };
 	if (Id == 0)
 	{
@@ -82,7 +82,7 @@ CString CWindowInspector::GetProcessName(HWND hWnd, DWORD processId)
 
 	const ULONGLONG endTick{ GetTickCount64() };
 	const ULONGLONG diff{ endTick - startTick };
-	if(diff > 5)
+	if (diff > 5)
 	{
 		CLogger::Log(CStringUtil::Format(_T("GetProcessName Time (ms): %llu, pid: %d, name: %s"), diff, Id, strProcessName.GetString()));
 	}

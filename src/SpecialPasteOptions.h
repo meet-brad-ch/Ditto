@@ -20,7 +20,7 @@ public:
 	bool m_pasteAddTwoLineFeeds;
 	bool m_pasteTypoglycemia;
 	bool m_pasteAddingDateTime;
-	CClipFormats *m_pPasteFormats;
+	CClipFormats* m_pPasteFormats;
 	bool m_dragDropFilesOnly;
 	bool m_updateClipOrder;
 	bool m_trimWhiteSpace;
@@ -35,16 +35,16 @@ public:
 	bool LimitFormatsToText()
 	{
 		return IsPlainTextOrCaseChange() ||
-			IsLineFeedOrInsertChange() ||
-			IsTextRewrite();
+			   IsLineFeedOrInsertChange() ||
+			   IsTextRewrite();
 	}
 
 	bool IncludeRTFForTextOnly()
 	{
 		return m_pasteRemoveLineFeeds ||
-			m_pasteAddOneLineFeed ||
-			m_pasteAddTwoLineFeeds ||
-			m_pasteAddingDateTime;
+			   m_pasteAddOneLineFeed ||
+			   m_pasteAddTwoLineFeeds ||
+			   m_pasteAddingDateTime;
 	}
 
 	CString ToString();
@@ -57,10 +57,10 @@ private:
 	bool IsPlainTextOrCaseChange() const
 	{
 		return m_pasteAsPlainText ||
-			m_pasteUpperCase ||
-			m_pasteLowerCase ||
-			m_pasteCapitalize ||
-			m_pasteSentenceCase;
+			   m_pasteUpperCase ||
+			   m_pasteLowerCase ||
+			   m_pasteCapitalize ||
+			   m_pasteSentenceCase;
 	}
 
 	/**
@@ -70,10 +70,10 @@ private:
 	bool IsLineFeedOrInsertChange() const
 	{
 		return m_pasteRemoveLineFeeds ||
-			m_pasteAddOneLineFeed ||
-			m_pasteAddTwoLineFeeds ||
-			m_pasteTypoglycemia ||
-			m_pasteAddingDateTime;
+			   m_pasteAddOneLineFeed ||
+			   m_pasteAddTwoLineFeeds ||
+			   m_pasteTypoglycemia ||
+			   m_pasteAddingDateTime;
 	}
 
 	/**
@@ -83,11 +83,10 @@ private:
 	bool IsTextRewrite() const
 	{
 		return m_trimWhiteSpace ||
-			m_PosixifyPaths ||
-			m_pasteSlugify ||
-			m_invertCase ||
-			m_pasteCamelCase ||
-			m_pasteAsciiOnly;
+			   m_PosixifyPaths ||
+			   m_pasteSlugify ||
+			   m_invertCase ||
+			   m_pasteCamelCase ||
+			   m_pasteAsciiOnly;
 	}
 };
-

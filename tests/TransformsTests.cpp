@@ -50,7 +50,10 @@ namespace
 	class ScriptedRandom final : public DittoCore::IRandomRange
 	{
 	public:
-		explicit ScriptedRandom(std::vector<int> values) : m_values(std::move(values)) {}
+		explicit ScriptedRandom(std::vector<int> values) :
+			m_values(std::move(values))
+		{
+		}
 		int Next(int, int) override { return m_values.at(m_next++ % m_values.size()); }
 
 	private:
@@ -179,8 +182,14 @@ TEST(Typoglycemia, RejectsRandomValueOutsideTheWord)
 
 TEST(Slugifier, TransliteratesAndJoinsWords)
 {
-	EXPECT_EQ(Slugifier::Slugify(L"\x00DCn\x00EF" L"code Text!", L"-"), L"unicode-text");
-	EXPECT_EQ(Slugifier::Slugify(L"Stra\x00DF" L"e", L"-"), L"strasse");
+	EXPECT_EQ(Slugifier::Slugify(L"\x00DCn\x00EF"
+								 L"code Text!",
+								 L"-"),
+			  L"unicode-text");
+	EXPECT_EQ(Slugifier::Slugify(L"Stra\x00DF"
+								 L"e",
+								 L"-"),
+			  L"strasse");
 	EXPECT_EQ(Slugifier::Slugify(L"5\x20AC & 3\x00A3", L"-"), L"5euro-and-3pound");
 }
 

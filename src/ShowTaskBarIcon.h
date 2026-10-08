@@ -30,4 +30,3 @@ private:
 	/** @brief The application state (not owned). */
 	CAppState& m_state;
 };
-

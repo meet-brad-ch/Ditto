@@ -24,7 +24,7 @@ void CRegExFilterData::ParseFilters(const CString& separator)
 	}
 }
 
-bool CRegExFilterData::MatchesProcessFilters(CString &activeApp)
+bool CRegExFilterData::MatchesProcessFilters(CString& activeApp)
 {
 	if (activeApp == _T(""))
 	{
@@ -49,13 +49,13 @@ bool CRegExFilterData::MatchesProcessFilters(CString &activeApp)
 	return false;
 }
 
-bool CRegExFilterData::MatchesRegEx(std::wstring &copiedText)
+bool CRegExFilterData::MatchesRegEx(std::wstring& copiedText)
 {
 	//std::wregex integer(_T("(\\+|-)?[[:digit:]]+"));
 	//std::wstring input(copiedText);
 	if (m_regEx != _T(""))
 	{
-		try 
+		try
 		{
 			std::wregex integer(m_regEx);
 			if (regex_match(copiedText, integer))
@@ -63,7 +63,7 @@ bool CRegExFilterData::MatchesRegEx(std::wstring &copiedText)
 				return true;
 			}
 		}
-		catch (regex_error e) 
+		catch (regex_error e)
 		{
 			CString w(e.what());
 			CLogger::Log(CStringUtil::Format(_T("MatchesRegEx exception: %s, Code Is: %d"), w.GetString(), e.code()));
@@ -83,7 +83,7 @@ CRegExFilterHelper::~CRegExFilterHelper()
 {
 }
 
-void CRegExFilterHelper::Add(int pos, CRegExFilterData &data, const CString& separator)
+void CRegExFilterHelper::Add(int pos, CRegExFilterData& data, const CString& separator)
 {
 	if (pos >= 0 && pos < CRegExFilterHelper::MaxRegexFilters)
 	{
@@ -112,7 +112,7 @@ void CRegExFilterHelper::SetProcessFilter(int pos, CString processName, const CS
 	}
 }
 
-bool CRegExFilterHelper::TextMatchFilters(CString &activeApp, std::wstring &copiedText)
+bool CRegExFilterHelper::TextMatchFilters(CString& activeApp, std::wstring& copiedText)
 {
 	ATL::CCritSecLock csLock(m_critSection.m_sect);
 

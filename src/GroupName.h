@@ -12,27 +12,29 @@
 
 class CGroupName : public CDialog
 {
-// Construction
+	// Construction
 public:
-	CGroupName(CWnd* pParent = NULL);   // standard constructor
+	CGroupName(CWnd* pParent = NULL); // standard constructor
 
-// Dialog Data
+	// Dialog Data
 	//{{AFX_DATA(CGroupName)
-	enum { IDD = IDD_GROUP_NAME };
-	CString	m_csName;
+	enum
+	{
+		IDD = IDD_GROUP_NAME
+	};
+	CString m_csName;
 	//}}AFX_DATA
 
 
-// Overrides
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CGroupName)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-	//}}AFX_VIRTUAL
-
-// Implementation
 protected:
+	virtual void DoDataExchange(CDataExchange* pDX); // DDX/DDV support
+													 //}}AFX_VIRTUAL
 
+	// Implementation
+protected:
 	// Generated message map functions
 	//{{AFX_MSG(CGroupName)
 	virtual void OnOK();

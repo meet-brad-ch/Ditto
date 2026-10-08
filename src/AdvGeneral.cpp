@@ -12,10 +12,9 @@
 
 IMPLEMENT_DYNAMIC(CAdvGeneral, CDialogEx)
 
-CAdvGeneral::CAdvGeneral(CWnd* pParent /*=NULL*/)
-	: CDialogEx(CAdvGeneral::IDD, pParent)
+CAdvGeneral::CAdvGeneral(CWnd* pParent /*=NULL*/) :
+	CDialogEx(CAdvGeneral::IDD, pParent)
 {
-
 }
 
 CAdvGeneral::~CAdvGeneral()
@@ -50,86 +49,159 @@ END_MESSAGE_MAP()
 // CAdvGeneral message handlers
 
 const std::array<CAdvGeneral::LongSetting, 20> CAdvGeneral::s_longSettings{ {
-	{ SettingDescSize, [](CGetSetOptions& settings, long value) { settings.SetDescTextSize(value); } },
-	{ SettingSelectedIndex, [](CGetSetOptions& settings, long value) { settings.SetSelectedIndex(max((value - 1), 0)); } },
-	{ SettingClipboardSaveDelay, [](CGetSetOptions& settings, long value) { settings.SetProcessDrawClipboardDelay(max(value, 0)); } },
-	{ SettingMaxClipSize, [](CGetSetOptions& settings, long value) { settings.SetMaxClipSizeInBytes(value); } },
-	{ SettingLinesPerRow, [](CGetSetOptions& settings, long value) { settings.SetLinesPerRow(value); } },
+	{ SettingDescSize, [](CGetSetOptions& settings, long value)
+	  { settings.SetDescTextSize(value); } },
+	{ SettingSelectedIndex, [](CGetSetOptions& settings, long value)
+	  { settings.SetSelectedIndex(max((value - 1), 0)); } },
+	{ SettingClipboardSaveDelay, [](CGetSetOptions& settings, long value)
+	  { settings.SetProcessDrawClipboardDelay(max(value, 0)); } },
+	{ SettingMaxClipSize, [](CGetSetOptions& settings, long value)
+	  { settings.SetMaxClipSizeInBytes(value); } },
+	{ SettingLinesPerRow, [](CGetSetOptions& settings, long value)
+	  { settings.SetLinesPerRow(value); } },
 	{ SettingTransparency, &CAdvGeneral::WriteTransparencyPercent },
-	{ SettingTooltipTimeout, [](CGetSetOptions& settings, long value) { settings.SetToolTipTimeout(value); } },
-	{ SettingTooltipLines, [](CGetSetOptions& settings, long value) { settings.SetMaxToolTipLines(value); } },
-	{ SettingTooltipCharacters, [](CGetSetOptions& settings, long value) { settings.SetMaxToolTipCharacters(value); } },
-	{ SettingActivateWindowDelay, [](CGetSetOptions& settings, long value) { settings.SetSendKeysDelay(value); } },
-	{ SettingSendKeysDelay, [](CGetSetOptions& settings, long value) { settings.SetRealSendKeysDelay(value); } },
-	{ SettingClipboardRestoreAfterCopyBufferDelay, [](CGetSetOptions& settings, long value) { settings.SetDittoRestoreClipboardDelay(value); } },
-	{ SettingDoubleKeystrokeTimeout, [](CGetSetOptions& settings, long value) { settings.SetDoubleKeyStrokeTimeout(value); } },
-	{ SettingFirstTenHotkeysStart, [](CGetSetOptions& settings, long value) { settings.SetFirstTenHotKeysStart(value); } },
-	{ SettingFirstTenHotkeysFontSize, [](CGetSetOptions& settings, long value) { settings.SetFirstTenHotKeysFontSize(value); } },
-	{ SettingCopySaveDelay, [](CGetSetOptions& settings, long value) { settings.SetCopyAndSveDelay(value); } },
-	{ SettingEditorFontSize, [](CGetSetOptions& settings, long value) { settings.SetEditorDefaultFontSize(value); } },
-	{ SettingIgnoreFalseCopiesDelay, [](CGetSetOptions& settings, long value) { settings.SetSaveClipDelay(value); } },
-	{ SettingClipEditSaveDelayAfterLoad, [](CGetSetOptions& settings, long value) { settings.SetClipEditSaveDelayAfterLoadSeconds(value); } },
-	{ SettingClipEditSaveDelayAfterSave, [](CGetSetOptions& settings, long value) { settings.SetClipEditSaveDelayAfterSaveSeconds(value); } },
+	{ SettingTooltipTimeout, [](CGetSetOptions& settings, long value)
+	  { settings.SetToolTipTimeout(value); } },
+	{ SettingTooltipLines, [](CGetSetOptions& settings, long value)
+	  { settings.SetMaxToolTipLines(value); } },
+	{ SettingTooltipCharacters, [](CGetSetOptions& settings, long value)
+	  { settings.SetMaxToolTipCharacters(value); } },
+	{ SettingActivateWindowDelay, [](CGetSetOptions& settings, long value)
+	  { settings.SetSendKeysDelay(value); } },
+	{ SettingSendKeysDelay, [](CGetSetOptions& settings, long value)
+	  { settings.SetRealSendKeysDelay(value); } },
+	{ SettingClipboardRestoreAfterCopyBufferDelay, [](CGetSetOptions& settings, long value)
+	  { settings.SetDittoRestoreClipboardDelay(value); } },
+	{ SettingDoubleKeystrokeTimeout, [](CGetSetOptions& settings, long value)
+	  { settings.SetDoubleKeyStrokeTimeout(value); } },
+	{ SettingFirstTenHotkeysStart, [](CGetSetOptions& settings, long value)
+	  { settings.SetFirstTenHotKeysStart(value); } },
+	{ SettingFirstTenHotkeysFontSize, [](CGetSetOptions& settings, long value)
+	  { settings.SetFirstTenHotKeysFontSize(value); } },
+	{ SettingCopySaveDelay, [](CGetSetOptions& settings, long value)
+	  { settings.SetCopyAndSveDelay(value); } },
+	{ SettingEditorFontSize, [](CGetSetOptions& settings, long value)
+	  { settings.SetEditorDefaultFontSize(value); } },
+	{ SettingIgnoreFalseCopiesDelay, [](CGetSetOptions& settings, long value)
+	  { settings.SetSaveClipDelay(value); } },
+	{ SettingClipEditSaveDelayAfterLoad, [](CGetSetOptions& settings, long value)
+	  { settings.SetClipEditSaveDelayAfterLoadSeconds(value); } },
+	{ SettingClipEditSaveDelayAfterSave, [](CGetSetOptions& settings, long value)
+	  { settings.SetClipEditSaveDelayAfterSaveSeconds(value); } },
 } };
 
 const std::array<CAdvGeneral::BoolSetting, 43> CAdvGeneral::s_boolSettings{ {
-	{ SettingShowTaskbarIcon, [](CGetSetOptions& settings, BOOL value) { settings.SetShowIconInSysTray(value); } },
-	{ SettingSaveMultiPaste, [](CGetSetOptions& settings, BOOL value) { settings.SetSaveMultiPaste(value); } },
-	{ SettingHideOnHotkeyIfVisible, [](CGetSetOptions& settings, BOOL value) { settings.SetHideDittoOnHotKeyIfAlreadyShown(value); } },
-	{ SettingPasteInActiveWindow, [](CGetSetOptions& settings, BOOL value) { settings.SetSendPasteAfterSelection(value); } },
-	{ SettingEnsureConnected, [](CGetSetOptions& settings, BOOL value) { settings.SetEnsureConnectToClipboard(value); } },
-	{ SettingTextFirstTen, [](CGetSetOptions& settings, BOOL value) { settings.SetShowTextForFirstTenHotKeys(value); } },
-	{ SettingShowLeadingWhitespace, [](CGetSetOptions& settings, BOOL value) { settings.SetDescShowLeadingWhiteSpace(value); } },
-	{ SettingEnableTransparency, [](CGetSetOptions& settings, BOOL value) { settings.SetEnableTransparency(value); } },
-	{ SettingDrawThumbnails, [](CGetSetOptions& settings, BOOL value) { settings.SetDrawThumbnail(value); } },
-	{ SettingFastThumbnailMode, [](CGetSetOptions& settings, BOOL value) { settings.SetFastThumbnailMode(value); } },
-	{ SettingDrawRtf, [](CGetSetOptions& settings, BOOL value) { settings.SetDrawRTF(value); } },
-	{ SettingFindAsType, [](CGetSetOptions& settings, BOOL value) { settings.SetFindAsYouType(value); } },
-	{ SettingEnsureWindowIsVisible, [](CGetSetOptions& settings, BOOL value) { settings.SetEnsureEntireWindowCanBeSeen(value); } },
-	{ SettingShowGroupClipsInList, [](CGetSetOptions& settings, BOOL value) { settings.SetShowAllClipsInMainList(value); } },
-	{ SettingPromptOnDelete, [](CGetSetOptions& settings, BOOL value) { settings.SetPromptWhenDeletingClips(value); } },
-	{ SettingAlwaysShowScrollBar, [](CGetSetOptions& settings, BOOL value) { settings.SetShowScrollBar(value); } },
-	{ SettingUseModernScrollbar, [](CGetSetOptions& settings, BOOL value) { settings.SetUseModernScrollBar(value); } },
-	{ SettingPasteAsAdmin, [](CGetSetOptions& settings, BOOL value) { settings.SetPasteAsAdmin(value); } },
-	{ SettingShowInTaskbar, [](CGetSetOptions& settings, BOOL value) { settings.SetShowInTaskBar(value); } },
-	{ SettingShowClipPasted, [](CGetSetOptions& settings, BOOL value) { settings.SetShowIfClipWasPasted(value); } },
-	{ SettingUpdateOrderOnPaste, [](CGetSetOptions& settings, BOOL value) { settings.SetUpdateTimeOnPaste(value); } },
-	{ SettingUpdateOrderOnCtrlC, [](CGetSetOptions& settings, BOOL value) { settings.SetUpdateClipOrderOnCtrlC(value); } },
-	{ SettingMultipasteReverseOrder, [](CGetSetOptions& settings, BOOL value) { settings.SetMultiPasteReverse(value); } },
-	{ SettingAllowDuplicates, [](CGetSetOptions& settings, BOOL value) { settings.SetAllowDuplicates(value); } },
-	{ SettingAllowBackToBackDuplicates, [](CGetSetOptions& settings, BOOL value) { settings.SetAllowBackToBackDuplicates(value); } },
-	{ SettingShowStartupMessage, [](CGetSetOptions& settings, BOOL value) { settings.SetShowStartupMessage(value); } },
-	{ SettingRevertToTopLevelGroup, [](CGetSetOptions& settings, BOOL value) { settings.SetRevertToTopLevelGroup(value); } },
-	{ SettingOpenToGroupAsActiveExe, [](CGetSetOptions& settings, BOOL value) { settings.SetOpenToGroupByActiveExe(value); } },
-	{ SettingAddCfHdropOnDrag, [](CGetSetOptions& settings, BOOL value) { settings.SetAddCFHDROP_OnDrag(value); } },
-	{ SettingMoveSelectionOnOpenHotkey, [](CGetSetOptions& settings, BOOL value) { settings.SetMoveSelectionOnOpenHotkey(value); } },
-	{ SettingMaintainSearchView, [](CGetSetOptions& settings, BOOL value) { settings.SetMaintainSearchView(value); } },
-	{ SettingDebugToFile, [](CGetSetOptions& settings, BOOL value) { settings.SetEnableDebugLogging(value); } },
-	{ SettingDebugToOutputString, [](CGetSetOptions& settings, BOOL value) { settings.SetEnableOutputDebugStringLogging(value); } },
-	{ SettingRefreshViewAfterPaste, [](CGetSetOptions& settings, BOOL value) { settings.SetRefreshViewAfterPasting(value); } },
-	{ SettingSupportAllTypes, [](CGetSetOptions& settings, BOOL value) { settings.SetSupportAllTypes(value); } },
-	{ SettingRegexCaseInsensitive, [](CGetSetOptions& settings, BOOL value) { settings.SetRegexCaseInsensitive(value); } },
-	{ SettingDrawCopiedColorCode, [](CGetSetOptions& settings, BOOL value) { settings.SetDrawCopiedColorCode(value); } },
-	{ SettingCenterWindowBelowCursorCaret, [](CGetSetOptions& settings, BOOL value) { settings.SetCenterWindowBelowCursorOrCaret(value); } },
-	{ SettingUpdateDescOnClipEdit, [](CGetSetOptions& settings, BOOL value) { settings.SetUpdateDescWhenSavingClip(value); } },
-	{ SettingUseUtf8ForDiff, [](CGetSetOptions& settings, BOOL value) { settings.SetPreferUtf8ForCompare(value); } },
-	{ SettingDoNotHideOnDeactivate, [](CGetSetOptions& settings, BOOL value) { settings.SetDoNotHideOnDeactivate(value); } },
-	{ SettingHideTaskbarIconOnClose, [](CGetSetOptions& settings, BOOL value) { settings.SetHideTaskbarIconOnClose(value); } },
-	{ SettingEnforceClipboardIgnoreFormats, [](CGetSetOptions& settings, BOOL value) { settings.SetEnforceClipboardIgnoreFormats(value); } },
+	{ SettingShowTaskbarIcon, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetShowIconInSysTray(value); } },
+	{ SettingSaveMultiPaste, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetSaveMultiPaste(value); } },
+	{ SettingHideOnHotkeyIfVisible, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetHideDittoOnHotKeyIfAlreadyShown(value); } },
+	{ SettingPasteInActiveWindow, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetSendPasteAfterSelection(value); } },
+	{ SettingEnsureConnected, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetEnsureConnectToClipboard(value); } },
+	{ SettingTextFirstTen, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetShowTextForFirstTenHotKeys(value); } },
+	{ SettingShowLeadingWhitespace, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetDescShowLeadingWhiteSpace(value); } },
+	{ SettingEnableTransparency, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetEnableTransparency(value); } },
+	{ SettingDrawThumbnails, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetDrawThumbnail(value); } },
+	{ SettingFastThumbnailMode, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetFastThumbnailMode(value); } },
+	{ SettingDrawRtf, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetDrawRTF(value); } },
+	{ SettingFindAsType, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetFindAsYouType(value); } },
+	{ SettingEnsureWindowIsVisible, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetEnsureEntireWindowCanBeSeen(value); } },
+	{ SettingShowGroupClipsInList, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetShowAllClipsInMainList(value); } },
+	{ SettingPromptOnDelete, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetPromptWhenDeletingClips(value); } },
+	{ SettingAlwaysShowScrollBar, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetShowScrollBar(value); } },
+	{ SettingUseModernScrollbar, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetUseModernScrollBar(value); } },
+	{ SettingPasteAsAdmin, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetPasteAsAdmin(value); } },
+	{ SettingShowInTaskbar, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetShowInTaskBar(value); } },
+	{ SettingShowClipPasted, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetShowIfClipWasPasted(value); } },
+	{ SettingUpdateOrderOnPaste, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetUpdateTimeOnPaste(value); } },
+	{ SettingUpdateOrderOnCtrlC, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetUpdateClipOrderOnCtrlC(value); } },
+	{ SettingMultipasteReverseOrder, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetMultiPasteReverse(value); } },
+	{ SettingAllowDuplicates, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetAllowDuplicates(value); } },
+	{ SettingAllowBackToBackDuplicates, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetAllowBackToBackDuplicates(value); } },
+	{ SettingShowStartupMessage, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetShowStartupMessage(value); } },
+	{ SettingRevertToTopLevelGroup, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetRevertToTopLevelGroup(value); } },
+	{ SettingOpenToGroupAsActiveExe, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetOpenToGroupByActiveExe(value); } },
+	{ SettingAddCfHdropOnDrag, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetAddCFHDROP_OnDrag(value); } },
+	{ SettingMoveSelectionOnOpenHotkey, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetMoveSelectionOnOpenHotkey(value); } },
+	{ SettingMaintainSearchView, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetMaintainSearchView(value); } },
+	{ SettingDebugToFile, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetEnableDebugLogging(value); } },
+	{ SettingDebugToOutputString, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetEnableOutputDebugStringLogging(value); } },
+	{ SettingRefreshViewAfterPaste, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetRefreshViewAfterPasting(value); } },
+	{ SettingSupportAllTypes, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetSupportAllTypes(value); } },
+	{ SettingRegexCaseInsensitive, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetRegexCaseInsensitive(value); } },
+	{ SettingDrawCopiedColorCode, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetDrawCopiedColorCode(value); } },
+	{ SettingCenterWindowBelowCursorCaret, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetCenterWindowBelowCursorOrCaret(value); } },
+	{ SettingUpdateDescOnClipEdit, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetUpdateDescWhenSavingClip(value); } },
+	{ SettingUseUtf8ForDiff, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetPreferUtf8ForCompare(value); } },
+	{ SettingDoNotHideOnDeactivate, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetDoNotHideOnDeactivate(value); } },
+	{ SettingHideTaskbarIconOnClose, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetHideTaskbarIconOnClose(value); } },
+	{ SettingEnforceClipboardIgnoreFormats, [](CGetSetOptions& settings, BOOL value)
+	  { settings.SetEnforceClipboardIgnoreFormats(value); } },
 } };
 
 const std::array<CAdvGeneral::TextSetting, 11> CAdvGeneral::s_textSettings{ {
-	{ SettingClipSeparator, [](CGetSetOptions& settings, LPCTSTR value) { settings.SetMultiPasteSeparator(value); } },
-	{ SettingCopyPlaySound, [](CGetSetOptions& settings, LPCTSTR value) { settings.SetPlaySoundOnCopy(value); } },
-	{ SettingDiffApp, [](CGetSetOptions& settings, LPCTSTR value) { settings.SetDiffApp(value); } },
-	{ SettingDefaultPasteString, [](CGetSetOptions& settings, LPCTSTR value) { settings.SetDefaultPasteString(value); } },
-	{ SettingDefaultCopyString, [](CGetSetOptions& settings, LPCTSTR value) { settings.SetDefaultCopyString(value); } },
-	{ SettingDefaultCutString, [](CGetSetOptions& settings, LPCTSTR value) { settings.SetDefaultCutString(value); } },
-	{ SettingSlugifySeparator, [](CGetSetOptions& settings, LPCTSTR value) { settings.SetSlugifySeparator(value); } },
-	{ SettingIgnoreAnnoyingCfDib, [](CGetSetOptions& settings, LPCTSTR value) { settings.SetIgnoreAnnoyingCFDIB(value); } },
-	{ SettingTextEditorPath, [](CGetSetOptions& settings, LPCTSTR value) { settings.SetTextEditorPath(value); } },
-	{ SettingImageEditorPath, [](CGetSetOptions& settings, LPCTSTR value) { settings.SetImageEditorPath(value); } },
-	{ SettingRtfEditorPath, [](CGetSetOptions& settings, LPCTSTR value) { settings.SetRTFEditorPath(value); } },
+	{ SettingClipSeparator, [](CGetSetOptions& settings, LPCTSTR value)
+	  { settings.SetMultiPasteSeparator(value); } },
+	{ SettingCopyPlaySound, [](CGetSetOptions& settings, LPCTSTR value)
+	  { settings.SetPlaySoundOnCopy(value); } },
+	{ SettingDiffApp, [](CGetSetOptions& settings, LPCTSTR value)
+	  { settings.SetDiffApp(value); } },
+	{ SettingDefaultPasteString, [](CGetSetOptions& settings, LPCTSTR value)
+	  { settings.SetDefaultPasteString(value); } },
+	{ SettingDefaultCopyString, [](CGetSetOptions& settings, LPCTSTR value)
+	  { settings.SetDefaultCopyString(value); } },
+	{ SettingDefaultCutString, [](CGetSetOptions& settings, LPCTSTR value)
+	  { settings.SetDefaultCutString(value); } },
+	{ SettingSlugifySeparator, [](CGetSetOptions& settings, LPCTSTR value)
+	  { settings.SetSlugifySeparator(value); } },
+	{ SettingIgnoreAnnoyingCfDib, [](CGetSetOptions& settings, LPCTSTR value)
+	  { settings.SetIgnoreAnnoyingCFDIB(value); } },
+	{ SettingTextEditorPath, [](CGetSetOptions& settings, LPCTSTR value)
+	  { settings.SetTextEditorPath(value); } },
+	{ SettingImageEditorPath, [](CGetSetOptions& settings, LPCTSTR value)
+	  { settings.SetImageEditorPath(value); } },
+	{ SettingRtfEditorPath, [](CGetSetOptions& settings, LPCTSTR value)
+	  { settings.SetRTFEditorPath(value); } },
 } };
 
 BOOL CAdvGeneral::OnInitDialog()
@@ -143,7 +215,7 @@ BOOL CAdvGeneral::OnInitDialog()
 	HICON b = (HICON)LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME), IMAGE_ICON, 64, 64, LR_SHARED);
 	SetIcon(b, TRUE);
 
-	CMFCPropertyGridProperty * pGroupTest = MakeGridProperty<CMFCPropertyGridProperty>( _T( "Ditto" ) );
+	CMFCPropertyGridProperty* pGroupTest = MakeGridProperty<CMFCPropertyGridProperty>(_T( "Ditto" ));
 	m_propertyGrid.AddProperty(pGroupTest);
 
 	m_Resize.SetParent(m_hWnd);
@@ -160,7 +232,7 @@ BOOL CAdvGeneral::OnInitDialog()
 	hdItem.cxy = dpi.Scale(400); // whatever you want the property name column width to be
 	m_propertyGrid.GetHeaderCtrl().SetItem(0, &hdItem);
 
-	m_propertyGrid.SetFont(this->GetFont());	
+	m_propertyGrid.SetFont(this->GetFont());
 
 	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Activate window delay (100ms default)"), (long)settings.SendKeysDelay(), _T(""), SettingActivateWindowDelay));
 
@@ -186,7 +258,7 @@ BOOL CAdvGeneral::OnInitDialog()
 	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Default paste string"), defaultPasteString, _T(""), SettingDefaultPasteString));
 	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Default copy string"), defaultCopyString, _T(""), SettingDefaultCopyString));
 	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Default cut string"), defaultCutString, _T(""), SettingDefaultCutString));
-	
+
 	static const TCHAR BASED_CODE szDiffFilter[] = _T("Diff Applications(*.exe)|*.exe||");
 	CMFCPropertyGridFileProperty* pDiffProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("Diff application path"), TRUE, settings.GetDiffApp(), _T("exe"), 0, szDiffFilter, (LPCTSTR)0, SettingDiffApp);
 	pGroupTest->AddSubItem(pDiffProp);
@@ -225,14 +297,14 @@ BOOL CAdvGeneral::OnInitDialog()
 	CMFCPropertyGridFileProperty* pImageEditorProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("Image editor path (empty for system mapping)"), TRUE, settings.GetImageEditorPath(), _T("exe"), 0, szImageEditorFilter, (LPCTSTR)0, SettingImageEditorPath);
 	pGroupTest->AddSubItem(pImageEditorProp);
 
-	pGroupTest->AddSubItem( MakeGridProperty<CMFCPropertyGridProperty>(_T("Maximum clip size in bytes (0 for no limit)"), settings.m_lMaxClipSizeInBytes, _T(""), SettingMaxClipSize));
-		
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Maximum clip size in bytes (0 for no limit)"), settings.m_lMaxClipSizeInBytes, _T(""), SettingMaxClipSize));
+
 	AddTrueFalse(pGroupTest, _T("Maintain search view"), settings.GetMaintainSearchView(), SettingMaintainSearchView);
 
 	AddTrueFalse(pGroupTest, _T("Move selection on open hot key"), settings.GetMoveSelectionOnOpenHotkey(), SettingMoveSelectionOnOpenHotkey);
-	
+
 	CString multiPasteSeparator = settings.GetMultiPasteSeparator(false);
-	pGroupTest->AddSubItem( MakeGridProperty<CMFCPropertyGridProperty>(_T("Multi-paste clip separator ([LF] = line feed)"), multiPasteSeparator, _T(""), SettingClipSeparator));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Multi-paste clip separator ([LF] = line feed)"), multiPasteSeparator, _T(""), SettingClipSeparator));
 
 	AddTrueFalse(pGroupTest, _T("Multi-paste in reverse order"), settings.m_bMultiPasteReverse, SettingMultipasteReverseOrder);
 
@@ -246,7 +318,7 @@ BOOL CAdvGeneral::OnInitDialog()
 	CMFCPropertyGridFileProperty* pTextEditorProp = MakeGridProperty<CMFCPropertyGridFileProperty>(_T("Text editor path (empty for system mapping)"), TRUE, settings.GetTextEditorPath(), _T("exe"), 0, szTextEditorFilter, (LPCTSTR)0, SettingTextEditorPath);
 	pGroupTest->AddSubItem(pTextEditorProp);
 
-	AddTrueFalse(pGroupTest, _T("Paste clip in active window after selection"), settings.GetSendPasteAfterSelection(), SettingPasteInActiveWindow);	
+	AddTrueFalse(pGroupTest, _T("Paste clip in active window after selection"), settings.GetSendPasteAfterSelection(), SettingPasteInActiveWindow);
 
 	AddTrueFalse(pGroupTest, _T("Prompt when deleting clips"), settings.GetPromptWhenDeletingClips(), SettingPromptOnDelete);
 
@@ -264,7 +336,7 @@ BOOL CAdvGeneral::OnInitDialog()
 
 	AddTrueFalse(pGroupTest, _T("Save multi-pastes"), settings.GetSaveMultiPaste(), SettingSaveMultiPaste);
 
-	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Selected index"), (long)(settings.SelectedIndex()+1), _T(""), SettingSelectedIndex));
+	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Selected index"), (long)(settings.SelectedIndex() + 1), _T(""), SettingSelectedIndex));
 
 	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Send keys delay (ms)"), (long)settings.RealSendKeysDelay(), _T(""), SettingSendKeysDelay));
 
@@ -279,7 +351,7 @@ BOOL CAdvGeneral::OnInitDialog()
 
 	AddTrueFalse(pGroupTest, _T("Show text for first ten copy hot keys"), settings.GetShowTextForFirstTenHotKeys(), SettingTextFirstTen);
 	AddTrueFalse(pGroupTest, _T("Show thumbnails(for CF_DIB and PNG types) (could increase memory usage and display speed)"), settings.GetDrawThumbnail(), SettingDrawThumbnails);
-	
+
 	CString slugifySeparator = settings.GetSlugifySeparator();
 	pGroupTest->AddSubItem(MakeGridProperty<CMFCPropertyGridProperty>(_T("Slugify Separator (default: -)"), slugifySeparator, _T(""), SettingSlugifySeparator));
 
@@ -300,7 +372,7 @@ BOOL CAdvGeneral::OnInitDialog()
 	AddTrueFalse(pGroupTest, _T("Write debug to file"), settings.GetEnableDebugLogging(), SettingDebugToFile);
 	AddTrueFalse(pGroupTest, _T("Write debug to OutputDebugString"), settings.GetEnableOutputDebugStringLogging(), SettingDebugToOutputString);
 
-	CMFCPropertyGridProperty * regexFilterGroup = MakeGridProperty<CMFCPropertyGridProperty>(_T("Exclude clips by Regular Expressions"));
+	CMFCPropertyGridProperty* regexFilterGroup = MakeGridProperty<CMFCPropertyGridProperty>(_T("Exclude clips by Regular Expressions"));
 	m_propertyGrid.AddProperty(regexFilterGroup);
 
 	CString processFilterDesc = _T("Process making the copy first must match this before the Regex will be applied (empty or * for all processes) (separate multiples by ;)");
@@ -373,10 +445,10 @@ BOOL CAdvGeneral::OnInitDialog()
 	return TRUE;
 }
 
-void CAdvGeneral::AddTrueFalse(CMFCPropertyGridProperty * pGroupTest, CString desc, BOOL value, int settingId)
+void CAdvGeneral::AddTrueFalse(CMFCPropertyGridProperty* pGroupTest, CString desc, BOOL value, int settingId)
 {
 	CString stringValue = _T("False");
-	if(value)
+	if (value)
 	{
 		stringValue = _T("True");
 	}
@@ -452,7 +524,7 @@ void CAdvGeneral::WriteTransparencyPercent(CGetSetOptions& settings, long newVal
 	settings.SetTransparencyPercent(value);
 }
 
-void CAdvGeneral::WriteRegexSetting(CGetSetOptions& settings, int id,const VARIANT& newValue, const VARIANT& origValue)
+void CAdvGeneral::WriteRegexSetting(CGetSetOptions& settings, int id, const VARIANT& newValue, const VARIANT& origValue)
 {
 	if (id >= SettingRegexFiltering1 && id <= SettingRegexFiltering15)
 	{
@@ -655,7 +727,7 @@ BOOL CAdvGeneral::PreTranslateMessage(MSG* pMsg)
 
 void CAdvGeneral::OnBnClickedButtonNextMatch()
 {
-	Search(true);	
+	Search(true);
 }
 
 void CAdvGeneral::OnBnClickedButtonCopyScripts2()

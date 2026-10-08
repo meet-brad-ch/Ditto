@@ -18,8 +18,8 @@ namespace
 	class TempDirectory
 	{
 	public:
-		explicit TempDirectory(const std::string& name)
-			: m_path{ std::filesystem::temp_directory_path() / ("DittoTests_" + name) }
+		explicit TempDirectory(const std::string& name) :
+			m_path{ std::filesystem::temp_directory_path() / ("DittoTests_" + name) }
 		{
 			std::filesystem::remove_all(m_path);
 			std::filesystem::create_directories(m_path);
@@ -73,7 +73,7 @@ TEST(DatabasePath, PortableEmptySettingUsesRelativeDittoDb)
 TEST(DatabasePath, MarkedAsBadChangesOnlyTheFileName)
 {
 	EXPECT_EQ(DatabasePath::MarkedAsBad(L"C:\\Users\\john.doe\\AppData\\Ditto.db"),
-		std::filesystem::path(L"C:\\Users\\john.doe\\AppData\\Ditto_BAD.db"));
+			  std::filesystem::path(L"C:\\Users\\john.doe\\AppData\\Ditto_BAD.db"));
 	EXPECT_EQ(DatabasePath::MarkedAsBad(L"D:\\clips\\my.work.db"), std::filesystem::path(L"D:\\clips\\my.work_BAD.db"));
 }
 

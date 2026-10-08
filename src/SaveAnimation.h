@@ -6,10 +6,10 @@ public:
 	CSaveAnimation();
 	~CSaveAnimation(void);
 
-	void DoAnimation(CRect crStart, CRect crEnd, CWnd *pWnd);
+	void DoAnimation(CRect crStart, CRect crEnd, CWnd* pWnd);
 	void GetPercentages(long lMaxDist);
 	long GetMaxDistance();
-	
+
 	CRect m_crStart;
 	CRect m_crEnd;
 

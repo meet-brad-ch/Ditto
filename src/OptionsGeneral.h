@@ -19,57 +19,59 @@ class COptionsGeneral : public CPropertyPage
 {
 	DECLARE_DYNCREATE(COptionsGeneral)
 
-// Construction
+	// Construction
 public:
 	COptionsGeneral();
 	~COptionsGeneral();
 
-// Dialog Data
+	// Dialog Data
 	//{{AFX_DATA(COptionsGeneral)
-	enum { IDD = IDD_OPTIONS_GENERAL };
+	enum
+	{
+		IDD = IDD_OPTIONS_GENERAL
+	};
 	//CButton	m_EnsureConnected;
-	CNumberEdit	m_SaveDelay;
+	CNumberEdit m_SaveDelay;
 	CComboBox m_cbLanguage;
 	CEdit m_MaxClipSize;
-	CButton	m_btSendPasteMessage;
-	CButton	m_btHideDittoOnHotKey;
-	CNumberEdit	m_DescTextSize;
+	CButton m_btSendPasteMessage;
+	CButton m_btHideDittoOnHotKey;
+	CNumberEdit m_DescTextSize;
 	CEdit m_ePath;
-	CNumberEdit	m_eExpireAfter;
-	CNumberEdit	m_eMaxSavedCopies;
-	CButton	m_btMaximumCheck;
-	CButton	m_btExpire;
+	CNumberEdit m_eExpireAfter;
+	CNumberEdit m_eMaxSavedCopies;
+	CButton m_btMaximumCheck;
+	CButton m_btExpire;
 	CButton m_btShowIconInSysTray;
-	CButton	m_btRunOnStartup;
+	CButton m_btRunOnStartup;
 	CButton m_btSaveMultiPaste;
-	CString	m_csPlaySound;
+	CString m_csPlaySound;
 	CEdit m_ClipSeparator;
 	CEdit m_copyAppInclude;
 	CEdit m_copyAppExclude;
 	CStatic m_envVarLink;
-	 
+
 	//}}AFX_DATA
 
 
-// Overrides
+	// Overrides
 	// ClassWizard generate virtual function overrides
 	//{{AFX_VIRTUAL(COptionsGeneral)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+protected:
+	virtual void DoDataExchange(CDataExchange* pDX); // DDX/DDV support
 	virtual BOOL OnApply();
 	//}}AFX_VIRTUAL
 
-// Implementation
+	// Implementation
 protected:
-	
-	COptionsSheet *m_pParent{};
+	COptionsSheet* m_pParent{};
 	CString m_csTitle;
 	CBrush m_brush;
 	LOGFONT m_LogFont;
 	CFont m_envVarFont;
 	CString m_originalEnvVariables;
-	
-	void FillThemes();	
+
+	void FillThemes();
 	void FillLanguages();
 	int GetFontSize(HWND hWnd, const LOGFONT& lf);
 
@@ -102,9 +104,9 @@ public:
 
 private:
 	/** @brief The theme list's entry for the built-in theme. */
-	static constexpr const TCHAR* s_defaultTheme{_T("(Ditto)")};
+	static constexpr const TCHAR* s_defaultTheme{ _T("(Ditto)") };
 	/** @brief FillLanguages' index of the English entry while it is not found yet. */
-	static constexpr int s_noMatch{-2};
+	static constexpr int s_noMatch{ -2 };
 
 	/** @brief OnApply's language step: stores the selected language file and loads it (reports a load error). */
 	void ApplyLanguage();

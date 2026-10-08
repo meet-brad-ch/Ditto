@@ -18,8 +18,8 @@ namespace DittoCore
 		return block;
 	}
 
-	GlobalBytes::GlobalBytes(HGLOBAL block)
-		: m_lock(NotNull(block))
+	GlobalBytes::GlobalBytes(HGLOBAL block) :
+		m_lock(NotNull(block))
 	{
 		void* data = m_lock.MutableData();
 		if (data == nullptr)

@@ -30,8 +30,8 @@ void CAppWindows::SetMainHwnd(HWND hWnd)
 
 CQPasteWnd* CAppWindows::QPasteWnd() const
 {
-	CMainFrame* const pMainFrame{m_pMainFrame.load()};
-	if(pMainFrame != NULL)
+	CMainFrame* const pMainFrame{ m_pMainFrame.load() };
+	if (pMainFrame != NULL)
 	{
 		return pMainFrame->m_quickPaste.m_pwndPaste.get();
 	}
@@ -41,10 +41,10 @@ CQPasteWnd* CAppWindows::QPasteWnd() const
 
 HWND CAppWindows::QPastehWnd() const
 {
-	CMainFrame* const pMainFrame{m_pMainFrame.load()};
-	if(pMainFrame != NULL)
+	CMainFrame* const pMainFrame{ m_pMainFrame.load() };
+	if (pMainFrame != NULL)
 	{
-		if(pMainFrame->m_quickPaste.m_pwndPaste != NULL)
+		if (pMainFrame->m_quickPaste.m_pwndPaste != NULL)
 		{
 			return pMainFrame->m_quickPaste.m_pwndPaste->GetSafeHwnd();
 		}
@@ -55,10 +55,10 @@ HWND CAppWindows::QPastehWnd() const
 
 void CAppWindows::RefreshView(CopyReasonEnum::CopyReason copyReason)
 {
-	CQPasteWnd *pWnd = QPasteWnd();
-	if(pWnd)
+	CQPasteWnd* pWnd = QPasteWnd();
+	if (pWnd)
 	{
-		if(m_state.m_bAsynchronousRefreshView)
+		if (m_state.m_bAsynchronousRefreshView)
 		{
 			pWnd->PostMessage(CDittoMessage::RefreshView, copyReason, 0);
 		}
@@ -71,10 +71,10 @@ void CAppWindows::RefreshView(CopyReasonEnum::CopyReason copyReason)
 
 void CAppWindows::RefreshClipInUI(int clipId, int updateFlags)
 {
-	CQPasteWnd *pWnd = QPasteWnd();
-	if(pWnd)
+	CQPasteWnd* pWnd = QPasteWnd();
+	if (pWnd)
 	{
-		if(m_state.m_bAsynchronousRefreshView)
+		if (m_state.m_bAsynchronousRefreshView)
 		{
 			pWnd->PostMessage(CDittoMessage::ReloadClipInUi, clipId, updateFlags);
 		}
@@ -87,7 +87,7 @@ void CAppWindows::RefreshClipInUI(int clipId, int updateFlags)
 
 void CAppWindows::OnDeleteID(long lID)
 {
-	if(QPasteWnd())
+	if (QPasteWnd())
 	{
 		QPasteWnd()->PostMessage(CQListCtrl::NmItemDeleted, lID, 0);
 	}
@@ -96,7 +96,7 @@ void CAppWindows::OnDeleteID(long lID)
 void CAppWindows::SetStatus(const TCHAR* status, bool bRepaintImmediately)
 {
 	m_state.m_Status = status;
-	if(QPasteWnd())
+	if (QPasteWnd())
 	{
 		QPasteWnd()->UpdateStatus(bRepaintImmediately);
 	}
@@ -104,8 +104,8 @@ void CAppWindows::SetStatus(const TCHAR* status, bool bRepaintImmediately)
 
 void CAppWindows::RefreshShowInTaskBar()
 {
-	CMainFrame* const pMainFrame{m_pMainFrame.load()};
-	if(pMainFrame != NULL)
+	CMainFrame* const pMainFrame{ m_pMainFrame.load() };
+	if (pMainFrame != NULL)
 	{
 		pMainFrame->RefreshShowInTaskBar();
 	}

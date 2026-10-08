@@ -18,9 +18,9 @@ CClipboardMonitor::CClipboardMonitor(CGetSetOptions& settings, CDittoDb& databas
 
 bool CClipboardMonitor::Start(int connectOnStartup)
 {
-	const HWND mainHwnd{m_windows.MainHwnd()};
-	ASSERT( mainHwnd );
-	std::unique_ptr<CClipTypes> pTypes{CClipDataReader(m_database).LoadTypesFromDB()};
+	const HWND mainHwnd{ m_windows.MainHwnd() };
+	ASSERT(mainHwnd);
+	std::unique_ptr<CClipTypes> pTypes{ CClipDataReader(m_database).LoadTypesFromDB() };
 	if (!pTypes)
 	{
 		// LoadTypesFromDB reported why; without the clip types the copy thread cannot work
@@ -33,13 +33,13 @@ bool CClipboardMonitor::Start(int connectOnStartup)
 	// - pTypes = the supported types to use
 	m_CopyThread.Init(CCopyConfig(mainHwnd, true, true, std::move(pTypes)));
 
-	if(connectOnStartup == FALSE || m_settings.GetConnectedToClipboard() == FALSE)
+	if (connectOnStartup == FALSE || m_settings.GetConnectedToClipboard() == FALSE)
 	{
 		m_CopyThread.m_connectOnStartup = false;
 		CLogger::Log(CStringUtil::Format(_T("Starting Ditto up disconnected from the clipboard, commandLine: %d, saved value: %d"), connectOnStartup, m_settings.GetConnectedToClipboard()));
 		SetConnectCV(false);
 	}
-	else if(connectOnStartup == TRUE)
+	else if (connectOnStartup == TRUE)
 	{
 		SetConnectCV(true);
 		CLogger::Log(_T("Starting Ditto up connected from the clipboard, passed in true from command line to start connected"));
@@ -85,13 +85,13 @@ void CClipboardMonitor::SetConnectCV(bool bConnect)
 	m_CopyThread.SetConnectCV(bConnect);
 	m_settings.SetConnectedToClipboard(bConnect == true);
 
-	CMainFrame* pMainFrame{m_windows.MainFrame()};
-	if(pMainFrame == nullptr)
+	CMainFrame* pMainFrame{ m_windows.MainFrame() };
+	if (pMainFrame == nullptr)
 	{
 		// no frame yet (or the no-database mode): there is no tray icon or quick paste window to update
 		return;
 	}
-	if(bConnect)
+	if (bConnect)
 	{
 		pMainFrame->m_trayIcon.SetIcon(IDR_MAINFRAME);
 		pMainFrame->m_trayIcon.SetTooltipText(_T("Ditto"));
@@ -105,7 +105,7 @@ void CClipboardMonitor::SetConnectCV(bool bConnect)
 		pMainFrame->m_trayIcon.SetTooltipText(cs);
 	}
 
-	if(m_windows.QPasteWnd())
+	if (m_windows.QPasteWnd())
 	{
 		RefreshCaption(*m_windows.QPasteWnd());
 	}
@@ -127,13 +127,13 @@ bool CClipboardMonitor::ToggleConnectCV()
 //   lose that connection, "Disconnect from Clipboard" will have a check next to it.
 void CClipboardMonitor::UpdateMenuConnectCV(CMenu* pMenu, UINT nMenuID)
 {
-	if(pMenu == NULL)
+	if (pMenu == NULL)
 		return;
 
 	bool bConnect = GetConnectCV();
 	CString cs{};
 
-	if(bConnect)
+	if (bConnect)
 	{
 		cs = m_language.GetString("Disconnect_Clipboard", "Disconnect from Clipboard.");
 		pMenu->ModifyMenu(nMenuID, MF_BYCOMMAND, nMenuID, cs);
@@ -150,8 +150,8 @@ void CClipboardMonitor::ShowPersistent(bool bVal)
 	m_settings.SetShowPersistent(bVal);
 
 	// give some visual indication
-	CQPasteWnd* const pasteWnd{m_windows.QPasteWnd()};
-	if(m_state.m_bShowingQuickPaste && pasteWnd != nullptr)
+	CQPasteWnd* const pasteWnd{ m_windows.QPasteWnd() };
+	if (m_state.m_bShowingQuickPaste && pasteWnd != nullptr)
 	{
 		RefreshCaption(*pasteWnd);
 	}
@@ -165,9 +165,9 @@ void CClipboardMonitor::RefreshCaption(CQPasteWnd& pasteWnd)
 
 void CClipboardMonitor::ReloadTypes()
 {
-	std::unique_ptr<CClipTypes> pTypes{CClipDataReader(m_database).LoadTypesFromDB()};
+	std::unique_ptr<CClipTypes> pTypes{ CClipDataReader(m_database).LoadTypesFromDB() };
 
-	if(pTypes)
+	if (pTypes)
 	{
 		m_CopyThread.SetSupportedTypes(std::move(pTypes));
 	}
@@ -175,7 +175,7 @@ void CClipboardMonitor::ReloadTypes()
 
 void CClipboardMonitor::OnCopyCompleted(long lLastID, int count, CopyReasonEnum::CopyReason copyReason)
 {
-	if(count <= 0)
+	if (count <= 0)
 	{
 		return;
 	}
@@ -184,7 +184,7 @@ void CClipboardMonitor::OnCopyCompleted(long lLastID, int count, CopyReasonEnum:
 	m_settings.SetTripCopyCount(-count);
 	m_settings.SetTotalCopyCount(-count);
 
-	if(m_copyBuffer.Active())
+	if (m_copyBuffer.Active())
 	{
 		m_copyBuffer.EndCopy(lLastID);
 	}

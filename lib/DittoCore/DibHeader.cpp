@@ -44,7 +44,7 @@ namespace DittoCore
 		{
 			throw ClipboardFormatError("DIB of " + std::to_string(dibSize) + " bytes is too large for a .bmp file");
 		}
-		const std::uint16_t type{ 0x4D42 };   // "BM"
+		const std::uint16_t type{ 0x4D42 }; // "BM"
 		const std::uint32_t fileSize{ static_cast<std::uint32_t>(FileHeaderSize + dibSize) };
 		const std::uint32_t reserved{};
 		const std::uint32_t bitsOffset{ static_cast<std::uint32_t>(FileHeaderSize + layout.bitsOffset) };

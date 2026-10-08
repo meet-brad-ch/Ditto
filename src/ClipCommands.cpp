@@ -22,7 +22,7 @@ CClipCommands::CClipCommands(CGetSetOptions& settings, CMultiLanguage& language,
 {
 }
 
-bool CClipCommands::EditItems(CClipIDs &Ids, bool /*bShowError*/, bool forceTextEdit)
+bool CClipCommands::EditItems(CClipIDs& Ids, bool /*bShowError*/, bool forceTextEdit)
 {
 	bool ret = false;
 
@@ -63,7 +63,7 @@ bool CClipCommands::EditItem(int id, bool forceTextEdit, int& lastFileCheckId)
 	if (savePath == _T(""))
 	{
 		CErrorReport::Show(CStringUtil::Format(_T("The new clip was not opened for editing: every NewClip_<n>.%s name in %s is taken"),
-			target.extension.GetString(), m_settings.GetPath(CGetSetOptions::PathEditClips).GetString()));
+											   target.extension.GetString(), m_settings.GetPath(CGetSetOptions::PathEditClips).GetString()));
 		return false;
 	}
 
@@ -71,8 +71,8 @@ bool CClipCommands::EditItem(int id, bool forceTextEdit, int& lastFileCheckId)
 
 	// a file that could not be written is not opened in the editor (upstream opened it anyway)
 	const bool written = target.imageFile
-		? clip.WriteImageToFileOrReport(savePath, _T("edit"))
-		: clip.WriteTextToFile(savePath, target.unicodeFile, target.asciFile, target.rtfFile, (id == -1)) != FALSE;
+							 ? clip.WriteImageToFileOrReport(savePath, _T("edit"))
+							 : clip.WriteTextToFile(savePath, target.unicodeFile, target.asciFile, target.rtfFile, (id == -1)) != FALSE;
 	if (!written)
 	{
 		CErrorReport::Show(CStringUtil::Format(_T("Clip id %d was not opened for editing: it could not be written to %s"), id, savePath.GetString()));
@@ -130,7 +130,7 @@ bool CClipCommands::ChooseClipEditTarget(CClip& clip, int id, bool forceTextEdit
 
 bool CClipCommands::EditInInternalEditor(const ClipEditTarget& target, int id)
 {
-	if((target.unicodeFile || target.asciFile || target.rtfFile) && target.exePath == _T(""))
+	if ((target.unicodeFile || target.asciFile || target.rtfFile) && target.exePath == _T(""))
 	{
 		CLogger::Log(CStringUtil::Format(_T("Clip id %d is a text or rtf file without a specific editor set, using internal editor"), id));
 
@@ -222,8 +222,8 @@ bool CClipCommands::ImportClips(HWND hWnd)
 
 bool CClipCommands::AskImportFile(CString& filePath)
 {
-	OPENFILENAME	FileName{};
-	TCHAR			szFileName[400]{};
+	OPENFILENAME FileName{};
+	TCHAR szFileName[400]{};
 
 	// the dialog reads the folder from the string itself: no copy into a fixed buffer (a longer
 	// path overflowed the 400 characters before)
@@ -238,7 +238,7 @@ bool CClipCommands::AskImportFile(CString& filePath)
 	FileName.lpstrFilter = _T("Exported Ditto Clips (.dto)\0*.dto\0\0");
 	FileName.lpstrDefExt = _T("dto");
 
-	if(GetOpenFileName(&FileName) == 0)
+	if (GetOpenFileName(&FileName) == 0)
 	{
 		return false;
 	}
@@ -261,14 +261,14 @@ void CClipCommands::ImportFile(HWND hWnd, const CString& filePath)
 		db.open(filePath);
 
 		CClip_ImportExport clip(m_clipContext);
-		if(clip.ImportFromSqliteDB(db, true, false))
+		if (clip.ImportFromSqliteDB(db, true, false))
 		{
 			CShowTaskBarIcon show(m_windows, m_state);
 
 			CString cs{};
 
 			cs.Format(_T("%s %d "), m_language.GetString("Import_Successfully", "Successfully imported").GetString(), clip.m_importCount);
-			if(clip.m_importCount == 1)
+			if (clip.m_importCount == 1)
 				cs += m_language.GetString("Clip", "clip");
 			else
 				cs += m_language.GetString("Clips", "clips");

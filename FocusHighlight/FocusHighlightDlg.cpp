@@ -8,9 +8,8 @@
 #include "afxdialogex.h"
 
 
-
-CFocusHighlightDlg::CFocusHighlightDlg(CWnd* pParent /*=NULL*/)
-	: CDialogEx(CFocusHighlightDlg::IDD, pParent)
+CFocusHighlightDlg::CFocusHighlightDlg(CWnd* pParent /*=NULL*/) :
+	CDialogEx(CFocusHighlightDlg::IDD, pParent)
 {
 }
 
@@ -35,18 +34,18 @@ BOOL CFocusHighlightDlg::OnInitDialog()
 	StayOnTop();
 
 	::CheckDlgButton(m_hWnd, IDC_CHECK_TRACK_FOCUS_CHANGES, BST_CHECKED);
-	SetTimer(1, 2000, NULL);	
+	SetTimer(1, 2000, NULL);
 
-	return TRUE;  // return TRUE  unless you set the focus to a control
+	return TRUE; // return TRUE  unless you set the focus to a control
 }
 
 void CFocusHighlightDlg::OnTimer(UINT_PTR nIDEvent)
 {
-	switch(nIDEvent)
+	switch (nIDEvent)
 	{
 	case 1:
 
-		if(::IsDlgButtonChecked(m_hWnd, IDC_CHECK_TRACK_FOCUS_CHANGES) != 0)
+		if (::IsDlgButtonChecked(m_hWnd, IDC_CHECK_TRACK_FOCUS_CHANGES) != 0)
 		{
 			m_tracker.TrackActiveWnd();
 
@@ -65,21 +64,21 @@ void CFocusHighlightDlg::OnTimer(UINT_PTR nIDEvent)
 }
 
 void CFocusHighlightDlg::StayOnTop()
-{	
+{
 	CRect rect;
 
 	// get the current window size and position
-	GetWindowRect( rect );
+	GetWindowRect(rect);
 
-	// now change the size, position, and Z order 
+	// now change the size, position, and Z order
 	// of the window.
-	::SetWindowPos(m_hWnd ,       // handle to window
-		HWND_TOPMOST,  // placement-order handle
-		rect.left,     // horizontal position
-		rect.top,      // vertical position
-		rect.Width(),  // width
-		rect.Height(), // height
-		SWP_SHOWWINDOW); // window-positioning options);
+	::SetWindowPos(m_hWnd,          // handle to window
+				   HWND_TOPMOST,    // placement-order handle
+				   rect.left,       // horizontal position
+				   rect.top,        // vertical position
+				   rect.Width(),    // width
+				   rect.Height(),   // height
+				   SWP_SHOWWINDOW); // window-positioning options);
 }
 
 void CFocusHighlightDlg::OnBnClickedButtonHighlightActive()
@@ -93,10 +92,10 @@ void CFocusHighlightDlg::OnBnClickedButtonHighlightActive()
 
 	HDC hdc = ::GetWindowDC(activeWnd);
 
-	for(int i = 0; i < 10; i++)
+	for (int i = 0; i < 10; i++)
 	{
 		::DrawFocusRect(hdc, cr);
-		
+
 		Sleep(200);
 	}
 
@@ -115,13 +114,12 @@ void CFocusHighlightDlg::OnBnClickedButtonHighlightFocus()
 
 	HDC hdc = ::GetWindowDC(focusWnd);
 
-	for(int i = 0; i < 10; i++)
+	for (int i = 0; i < 10; i++)
 	{
 		::DrawFocusRect(hdc, cr);
-		
+
 		Sleep(200);
 	}
 
 	::ReleaseDC(focusWnd, hdc);
-
 }

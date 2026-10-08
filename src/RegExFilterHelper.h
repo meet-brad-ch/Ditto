@@ -17,15 +17,15 @@ public:
 	 */
 	void ParseFilters(const CString& separator);
 
-	bool MatchesProcessFilters(CString &activeApp);
-	bool MatchesRegEx(std::wstring &copiedText);
+	bool MatchesProcessFilters(CString& activeApp);
+	bool MatchesRegEx(std::wstring& copiedText);
 
 	/**
 	 * @brief Copies the regex, the process filters and the parsed process filters.
 	 * @param clip The filter to copy.
 	 * @return This filter.
 	 */
-	const CRegExFilterData& operator=(const CRegExFilterData &clip)
+	const CRegExFilterData& operator=(const CRegExFilterData& clip)
 	{
 		m_regEx = clip.m_regEx;
 		m_processFilters = clip.m_processFilters;
@@ -50,7 +50,7 @@ public:
 	 * @param data The filter (regex and unparsed process filters).
 	 * @param separator The process filter separator (the settings' CopyAppSeparator).
 	 */
-	void Add(int pos, CRegExFilterData &data, const CString& separator);
+	void Add(int pos, CRegExFilterData& data, const CString& separator);
 	void SetRegEx(int pos, std::wstring regEx);
 	/**
 	 * @brief Sets and parses the process filters of a slot; an invalid slot is ignored.
@@ -62,9 +62,8 @@ public:
 
 	CRegExFilterData m_filters[MaxRegexFilters];
 
-	bool TextMatchFilters(CString &activeApp, std::wstring &copiedText);
+	bool TextMatchFilters(CString& activeApp, std::wstring& copiedText);
 
 private:
 	CCriticalSection m_critSection;
 };
-

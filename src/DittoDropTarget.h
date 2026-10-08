@@ -22,10 +22,10 @@ public:
 	CDittoDropTarget();
 	virtual ~CDittoDropTarget();
 
-	void SetDropTarget(IDittoDropTarget *pTarget) { m_pTarget = pTarget; }
+	void SetDropTarget(IDittoDropTarget* pTarget) { m_pTarget = pTarget; }
 
 protected:
-	IDittoDropTarget *m_pTarget;
+	IDittoDropTarget* m_pTarget;
 
 protected:
 	DECLARE_MESSAGE_MAP()
@@ -36,5 +36,3 @@ public:
 	virtual DROPEFFECT OnDragOver(CWnd* pWnd, COleDataObject* pDataObject, DWORD dwKeyState, CPoint point);
 	virtual BOOL OnDrop(CWnd* pWnd, COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoint point);
 };
-
-

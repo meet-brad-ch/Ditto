@@ -5,20 +5,20 @@
 void CLogger::AppendToFile(const TCHAR* fn, const TCHAR* msg)
 {
 #ifdef _UNICODE
-	FILE *file{ _wfopen(fn, _T("a")) };
+	FILE* file{ _wfopen(fn, _T("a")) };
 #else
-	FILE *file{ fopen(fn, _T("a")) };
+	FILE* file{ fopen(fn, _T("a")) };
 #endif
 
-	ASSERT( file );
+	ASSERT(file);
 
-	if(file != NULL)
+	if (file != NULL)
 	{
-		#ifdef _UNICODE
-			fwprintf(file, _T("%s"), msg);
-		#else
-			fprintf(file, _T("%s"),msg);
-		#endif
+#ifdef _UNICODE
+		fwprintf(file, _T("%s"), msg);
+#else
+		fprintf(file, _T("%s"), msg);
+#endif
 
 		fclose(file);
 	}
@@ -31,7 +31,7 @@ void CLogger::Write(const TCHAR* msg, CString csFile, long lLine)
 	SYSTEMTIME st{};
 	GetLocalTime(&st);
 
-	CString	csText{};
+	CString csText{};
 	csText.Format(_T("[%d/%d/%d %02d:%02d:%02d.%03d - "), st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
 
 	CString csFileLine{};
@@ -46,14 +46,14 @@ void CLogger::Write(const TCHAR* msg, CString csFile, long lLine)
 	CGetSetOptions& settings{ theApp.Services().Settings() };
 
 #ifndef _DEBUG
-	if(settings.m_outputDebugStringLogging)
+	if (settings.m_outputDebugStringLogging)
 #endif
 	{
 		OutputDebugString(csText);
 	}
 
 #ifndef _DEBUG
-	if(!settings.m_bEnableDebugLogging)
+	if (!settings.m_bEnableDebugLogging)
 		return;
 #endif
 

@@ -70,7 +70,7 @@ class CopyReasonEnum
 {
 public:
 	enum CopyReason
-	{ 
+	{
 		COPY_TO_UNKOWN,
 		COPY_TO_GROUP,
 		COPY_TO_BUFFER,
@@ -89,7 +89,7 @@ public:
 	 */
 	static void AddTrailingSlash(CString& csPath)
 	{
-		if(csPath.IsEmpty() == FALSE && csPath.GetAt(csPath.GetLength()-1) != '\\' && csPath.GetAt(csPath.GetLength()-1) != '/')
+		if (csPath.IsEmpty() == FALSE && csPath.GetAt(csPath.GetLength() - 1) != '\\' && csPath.GetAt(csPath.GetLength() - 1) != '/')
 			csPath += "\\";
 	}
 };
@@ -139,10 +139,10 @@ private:
 	/** @brief The states of the tick-count check (m_adjustment). */
 	enum AdjustmentState : int
 	{
-		NotChecked = -1,      ///< no IdleSeconds call yet
-		NoAdjustment = 0,     ///< the tick count was not below the last input time
-		AdjustAndLog = 1,     ///< adjust; the first adjusting call logs it
-		Adjust = 2            ///< adjust (already logged)
+		NotChecked = -1,  ///< no IdleSeconds call yet
+		NoAdjustment = 0, ///< the tick count was not below the last input time
+		AdjustAndLog = 1, ///< adjust; the first adjusting call logs it
+		Adjust = 2        ///< adjust (already logged)
 	};
 
 	/**
@@ -155,7 +155,7 @@ private:
 	/** @brief The application's settings (not owned). */
 	CGetSetOptions& m_settings;
 	/** @brief The AdjustmentState of the tick-count check; atomic: IdleSeconds runs on several threads. */
-	std::atomic<int> m_adjustment{NotChecked};
+	std::atomic<int> m_adjustment{ NotChecked };
 };
 
 
@@ -200,7 +200,7 @@ public:
 
 
 #if !defined(_BITSET_)
-#	include <bitset>
+#include <bitset>
 #endif // !defined(_BITSET_)
 
 class CICU_String;
@@ -243,7 +243,7 @@ private:
 	 * @param postInsert The marker inserted after each match.
 	 * @return The number of matches and where the first one now is.
 	 */
-	static InsertResult InsertMarkers(CICU_String& icuString, CString& mainStr,CString& findStr, const CString& preInsert, const CString& postInsert);
+	static InsertResult InsertMarkers(CICU_String& icuString, CString& mainStr, CString& findStr, const CString& preInsert, const CString& postInsert);
 
 	/**
 	 * @brief Insert's second step: when the first match is past the row's lines, drops the lines
@@ -267,7 +267,7 @@ public:
 	 * @param pPopupMenu The popup menu that is about to open.
 	 * @param pWnd The window whose handlers update the items.
 	 */
-	static void Update(CMenu *pPopupMenu, CWnd *pWnd);
+	static void Update(CMenu* pPopupMenu, CWnd* pWnd);
 
 private:
 	/**
@@ -276,7 +276,7 @@ private:
 	 * @param pPopupMenu The popup menu.
 	 * @param pWnd The window.
 	 */
-	static void FindParentMenu(CCmdUI& state, CMenu *pPopupMenu, CWnd *pWnd);
+	static void FindParentMenu(CCmdUI& state, CMenu* pPopupMenu, CWnd* pWnd);
 
 	/**
 	 * @brief Update's item step: runs the handler of the item at state.m_nIndex (a sub-popup is
@@ -285,14 +285,14 @@ private:
 	 * @param pPopupMenu The popup menu.
 	 * @param pWnd The window.
 	 */
-	static void UpdateItem(CCmdUI& state, CMenu *pPopupMenu, CWnd *pWnd);
+	static void UpdateItem(CCmdUI& state, CMenu* pPopupMenu, CWnd* pWnd);
 
 	/**
 	 * @brief Adjusts state.m_nIndex and state.m_nIndexMax when the handler deleted or added items.
 	 * @param state The command UI state, after the item's handler ran.
 	 * @param pPopupMenu The popup menu.
 	 */
-	static void AdjustForMenuChanges(CCmdUI& state, CMenu *pPopupMenu);
+	static void AdjustForMenuChanges(CCmdUI& state, CMenu* pPopupMenu);
 };
 
 #endif // !defined(AFX_CP_GUI_GLOBALS__FBCDED09_A6F2_47EB_873F_50A746EBC86B__INCLUDED_)

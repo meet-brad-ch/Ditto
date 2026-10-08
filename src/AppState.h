@@ -22,7 +22,7 @@ public:
 		/** @brief The CRC; 0 before the first save or after ClearCrc. */
 		DWORD crc{};
 		/** @brief The clip id; -1 before the first save. */
-		int id{-1};
+		int id{ -1 };
 	};
 
 	/**
@@ -68,29 +68,29 @@ public:
 	CAppState& operator=(const CAppState&) = delete;
 
 	/** @brief The group new clips are saved to (0: none). */
-	long m_GroupDefaultID{0};
+	long m_GroupDefaultID{ 0 };
 	/** @brief The current group (-1: the history). */
-	long m_GroupID{-1};
+	long m_GroupID{ -1 };
 	/** @brief The current group's parent. */
-	long m_GroupParentID{0};
+	long m_GroupParentID{ 0 };
 	/** @brief The current group's description. */
-	CString m_GroupText{_T("History")};
+	CString m_GroupText{ _T("History") };
 
 	/** @brief The group saved by SaveCurrentGroupState (-2: none). */
-	long m_oldGroupID{-2};
+	long m_oldGroupID{ -2 };
 	/** @brief The saved group's parent (-2: none). */
-	long m_oldGroupParentID{-2};
+	long m_oldGroupParentID{ -2 };
 	/** @brief The saved group's description. */
 	CString m_oldGroupText{};
 
 	/** @brief The clip id given the focus by CQPasteWnd::FillList (-1: none). */
-	long m_FocusID{-1};
+	long m_FocusID{ -1 };
 	/** @brief True while the quick paste window shows. */
 	bool m_bShowingQuickPaste{};
 	/** @brief The status text shown in the quick paste window's caption. */
 	CString m_Status{};
 	/** @brief True: RefreshView and RefreshClipInUI post their message; false: they send it. */
-	bool m_bAsynchronousRefreshView{true};
+	bool m_bAsynchronousRefreshView{ true };
 	/** @brief True when the clip database lies on a network share (set when the database is opened). */
 	bool m_databaseOnNetworkShare{};
 	/** @brief When Ditto started. */
@@ -165,17 +165,17 @@ private:
 	/** @brief The application's settings (not owned). */
 	CGetSetOptions& m_settings;
 	/** @brief The group set by SetActiveGroupId (-1: none). */
-	int m_activeGroupId{-1};
+	int m_activeGroupId{ -1 };
 	/** @brief GetTickCount64 when SetActiveGroupId ran. */
 	ULONGLONG m_activeGroupStartTime{};
 	/** @brief The reason set by SetCopyReason. */
-	CopyReasonEnum::CopyReason m_copyReason{CopyReasonEnum::COPY_TO_UNKOWN};
+	CopyReasonEnum::CopyReason m_copyReason{ CopyReasonEnum::COPY_TO_UNKOWN };
 	/** @brief GetTickCount64 when SetCopyReason ran. */
 	ULONGLONG m_copyReasonStartTime{};
 	/** @brief The clip saved last. */
 	CLastAddedClip m_lastAddedClip{};
 	/** @brief The users of the main window's taskbar icon (dialogs that show it while they are open). */
-	std::atomic<long> m_taskbarIconUsers{0};
+	std::atomic<long> m_taskbarIconUsers{ 0 };
 	/** @brief See LogFileLock. */
 	std::mutex m_logFileLock{};
 };

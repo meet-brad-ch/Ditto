@@ -18,23 +18,23 @@ BEGIN_MESSAGE_MAP(CMagneticWnd, CWnd)
 	ON_WM_WINDOWPOSCHANGING()
 END_MESSAGE_MAP()
 
-void CMagneticWnd::OnMove(int x, int y) 
+void CMagneticWnd::OnMove(int x, int y)
 {
 	CWnd::OnMove(x, y);
 
-	if(m_bMovedAttachedWnd)
+	if (m_bMovedAttachedWnd)
 	{
 		CRect crThis;
 		CRect crAttached;
 
 		GetWindowRect(crThis);
 
-		for(std::vector<CMagneticWnd*>::iterator Iter = m_AttachedWnd.begin(); Iter != m_AttachedWnd.end(); Iter++)
+		for (std::vector<CMagneticWnd*>::iterator Iter = m_AttachedWnd.begin(); Iter != m_AttachedWnd.end(); Iter++)
 		{
-			CMagneticWnd *pAttachedWnd = *Iter;
-			if(pAttachedWnd)
+			CMagneticWnd* pAttachedWnd = *Iter;
+			if (pAttachedWnd)
 			{
-				if(m_crLastMove.IsRectEmpty() == FALSE)
+				if (m_crLastMove.IsRectEmpty() == FALSE)
 				{
 					pAttachedWnd->GetWindowRect(crAttached);
 
@@ -67,16 +67,16 @@ void CMagneticWnd::OnWindowPosChanging(WINDOWPOS* lpwndpos)
 {
 	CWnd::OnWindowPosChanging(lpwndpos);
 
-	if(m_bHandleWindowPosChanging == false)
+	if (m_bHandleWindowPosChanging == false)
 		return;
 
-	for(std::vector<CMagneticWnd*>::iterator Iter = m_SnapToWnds.begin(); Iter != m_SnapToWnds.end(); Iter++)
+	for (std::vector<CMagneticWnd*>::iterator Iter = m_SnapToWnds.begin(); Iter != m_SnapToWnds.end(); Iter++)
 	{
-		CMagneticWnd *pOtherWnd = *Iter;
+		CMagneticWnd* pOtherWnd = *Iter;
 
-		if(CanSnapTo(pOtherWnd, lpwndpos))
+		if (CanSnapTo(pOtherWnd, lpwndpos))
 		{
-			if(m_bMovedAttachedWnd && (IsWindowAttached(pOtherWnd)))
+			if (m_bMovedAttachedWnd && (IsWindowAttached(pOtherWnd)))
 				continue;
 
 			SnapToWindow(pOtherWnd, lpwndpos);
@@ -84,15 +84,15 @@ void CMagneticWnd::OnWindowPosChanging(WINDOWPOS* lpwndpos)
 	}
 }
 
-bool CMagneticWnd::CanSnapTo(CMagneticWnd *pOtherWnd, const WINDOWPOS* lpwndpos)
+bool CMagneticWnd::CanSnapTo(CMagneticWnd* pOtherWnd, const WINDOWPOS* lpwndpos)
 {
 	return pOtherWnd != NULL &&
-		this->IsWindowVisible() &&
-		pOtherWnd->IsWindowVisible() &&
-		lpwndpos->x != 0 && lpwndpos->y != 0 && lpwndpos->cx != 0 && lpwndpos->cy != 0;
+		   this->IsWindowVisible() &&
+		   pOtherWnd->IsWindowVisible() &&
+		   lpwndpos->x != 0 && lpwndpos->y != 0 && lpwndpos->cx != 0 && lpwndpos->cy != 0;
 }
 
-void CMagneticWnd::SnapToWindow(CMagneticWnd *pOtherWnd, WINDOWPOS* lpwndpos)
+void CMagneticWnd::SnapToWindow(CMagneticWnd* pOtherWnd, WINDOWPOS* lpwndpos)
 {
 	CRect rectParent;
 	pOtherWnd->GetWindowRect(rectParent);
@@ -101,7 +101,7 @@ void CMagneticWnd::SnapToWindow(CMagneticWnd *pOtherWnd, WINDOWPOS* lpwndpos)
 	pOtherWnd->SetWindowAttached(this, bAttached);
 	SetWindowAttached(pOtherWnd, bAttached);
 
-	if(m_bMovedAttachedWnd)
+	if (m_bMovedAttachedWnd)
 	{
 		m_crLastMove.left = lpwndpos->x;
 		m_crLastMove.top = lpwndpos->y;
@@ -115,7 +115,7 @@ bool CMagneticWnd::SnapEdges(WINDOWPOS* lpwndpos, const CRect& rectParent)
 	bool bAttached = false;
 
 	// Snap left edge
-	if(abs(lpwndpos->x - rectParent.right) <= 15)
+	if (abs(lpwndpos->x - rectParent.right) <= 15)
 	{
 		lpwndpos->x = rectParent.right;
 		bAttached = true;
@@ -145,35 +145,35 @@ bool CMagneticWnd::SnapEdges(WINDOWPOS* lpwndpos, const CRect& rectParent)
 	return bAttached;
 }
 
-void CMagneticWnd::SetWindowAttached(CMagneticWnd *pOtherWnd, bool bAttach)
+void CMagneticWnd::SetWindowAttached(CMagneticWnd* pOtherWnd, bool bAttach)
 {
 	bool bFound = false;
-	for(std::vector<CMagneticWnd*>::iterator Iter = m_AttachedWnd.begin(); Iter != m_AttachedWnd.end(); Iter++)
+	for (std::vector<CMagneticWnd*>::iterator Iter = m_AttachedWnd.begin(); Iter != m_AttachedWnd.end(); Iter++)
 	{
-		CMagneticWnd *pAttachedWnd = *Iter;
-		if(pAttachedWnd == pOtherWnd)
+		CMagneticWnd* pAttachedWnd = *Iter;
+		if (pAttachedWnd == pOtherWnd)
 		{
 			bFound = true;
-			if(bAttach == false)
+			if (bAttach == false)
 			{
 				m_AttachedWnd.erase(Iter);
 			}
 			break;
 		}
 	}
-	
-	if(bAttach && bFound == false)
+
+	if (bAttach && bFound == false)
 	{
 		m_AttachedWnd.push_back(pOtherWnd);
 	}
 }
 
-bool CMagneticWnd::IsWindowAttached(CMagneticWnd *pWnd)
+bool CMagneticWnd::IsWindowAttached(CMagneticWnd* pWnd)
 {
-	for(std::vector<CMagneticWnd*>::iterator Iter = m_AttachedWnd.begin(); Iter != m_AttachedWnd.end(); Iter++)
+	for (std::vector<CMagneticWnd*>::iterator Iter = m_AttachedWnd.begin(); Iter != m_AttachedWnd.end(); Iter++)
 	{
-		CMagneticWnd *pAttachedWnd = *Iter;
-		if(pAttachedWnd == pWnd)
+		CMagneticWnd* pAttachedWnd = *Iter;
+		if (pAttachedWnd == pWnd)
 		{
 			return true;
 		}

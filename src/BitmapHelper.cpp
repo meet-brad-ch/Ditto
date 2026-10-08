@@ -17,12 +17,10 @@
 
 CBitmapHelper::CBitmapHelper()
 {
-
 }
 
 CBitmapHelper::~CBitmapHelper()
 {
-
 }
 
 int CBitmapHelper::GetCBitmapWidth(const CBitmap& cbm)
@@ -187,7 +185,7 @@ WORD CBitmapHelper::PaletteSize(LPSTR lpDIB)
 
 WORD CBitmapHelper::DIBNumColors(LPSTR lpDIB)
 {
-	WORD wBitCount;  // DIB bit count
+	WORD wBitCount; // DIB bit count
 
 	// If this is a Windows-style DIB, the number of colors in the
 	// color table can be less than the number of bits per pixel
@@ -234,13 +232,13 @@ WORD CBitmapHelper::DIBNumColors(LPSTR lpDIB)
 
 HANDLE CBitmapHelper::hBitmapToDIB(HBITMAP hBitmap, DWORD dwCompression, HPALETTE hPal)
 {
-	BITMAP                  bm;
-	BITMAPINFOHEADER        bi;
-	LPBITMAPINFOHEADER      lpbi;
-	DWORD                   dwLen;
-	HANDLE                  hDIB{};
-	HANDLE                  handle;
-	HDC                     hDC;
+	BITMAP bm;
+	BITMAPINFOHEADER bi;
+	LPBITMAPINFOHEADER lpbi;
+	DWORD dwLen;
+	HANDLE hDIB{};
+	HANDLE handle;
+	HDC hDC;
 
 	// The function has no arg for bitfields
 	if (dwCompression == BI_BITFIELDS)
@@ -287,10 +285,10 @@ HANDLE CBitmapHelper::hBitmapToDIB(HBITMAP hBitmap, DWORD dwCompression, HPALETT
 
 	*lpbi = bi;
 
-	// Call GetDIBits with a NULL lpBits param, so the device driver 
-	// will calculate the biSizeImage field 
+	// Call GetDIBits with a NULL lpBits param, so the device driver
+	// will calculate the biSizeImage field
 	(void)GetDIBits(hDC, hBitmap, 0L, (DWORD)bi.biHeight,
-		(LPBYTE)NULL, (LPBITMAPINFO)lpbi, (DWORD)DIB_RGB_COLORS);
+					(LPBYTE)NULL, (LPBITMAPINFO)lpbi, (DWORD)DIB_RGB_COLORS);
 
 	bi = *lpbi;
 
@@ -298,8 +296,7 @@ HANDLE CBitmapHelper::hBitmapToDIB(HBITMAP hBitmap, DWORD dwCompression, HPALETT
 	// Each scan line of the image is aligned on a DWORD (32bit) boundary
 	if (bi.biSizeImage == 0)
 	{
-		bi.biSizeImage = ((((bi.biWidth * bi.biBitCount) + 31) & ~31) / 8)
-			* bi.biHeight;
+		bi.biSizeImage = ((((bi.biWidth * bi.biBitCount) + 31) & ~31) / 8) * bi.biHeight;
 
 		// If a compression scheme is used the result may infact be larger
 		// Increase the size to account for this.
@@ -314,7 +311,7 @@ HANDLE CBitmapHelper::hBitmapToDIB(HBITMAP hBitmap, DWORD dwCompression, HPALETT
 	{
 		// GlobalReAlloc is annotated _Frees_ptr_, but a failed call leaves the original block
 		// allocated and the handle valid (GlobalReAlloc docs), so it is freed here.
-#pragma warning(suppress: 6001)
+#pragma warning(suppress : 6001)
 		GlobalFree(hDIB);
 
 		// Reselect the original palette
@@ -330,12 +327,12 @@ HANDLE CBitmapHelper::hBitmapToDIB(HBITMAP hBitmap, DWORD dwCompression, HPALETT
 
 	// FINALLY get the DIB
 	BOOL bGotBits = GetDIBits(hDC, hBitmap,
-		0L,                             // Start scan line
-		(DWORD)bi.biHeight,             // # of scan lines
-		(LPBYTE)lpbi                    // address for bitmap bits
-		+ (bi.biSize + PaletteSize((LPSTR)&bi)),
-		(LPBITMAPINFO)lpbi,             // address of bitmapinfo
-		(DWORD)DIB_RGB_COLORS);         // Use RGB for color table
+							  0L,                 // Start scan line
+							  (DWORD)bi.biHeight, // # of scan lines
+							  (LPBYTE)lpbi        // address for bitmap bits
+								  + (bi.biSize + PaletteSize((LPSTR)&bi)),
+							  (LPBITMAPINFO)lpbi,     // address of bitmapinfo
+							  (DWORD)DIB_RGB_COLORS); // Use RGB for color table
 
 	if (!bGotBits)
 	{
@@ -362,10 +359,10 @@ bool CBitmapHelper::DrawDIB(CDC* pDC, HANDLE hData, int nLeft, int nRight, int& 
 
 	// the color table holds RGB values, not palette indexes
 	const int lines = ::StretchDIBits(pDC->m_hDC,
-		nLeft, nRight,
-		layout.width, height,
-		0, 0, layout.width, height,
-		dib.data() + layout.bitsOffset, reinterpret_cast<const BITMAPINFO*>(dib.data()), DIB_RGB_COLORS, SRCCOPY);
+									  nLeft, nRight,
+									  layout.width, height,
+									  0, 0, layout.width, height,
+									  dib.data() + layout.bitsOffset, reinterpret_cast<const BITMAPINFO*>(dib.data()), DIB_RGB_COLORS, SRCCOPY);
 	if (lines == 0)
 		return false;
 

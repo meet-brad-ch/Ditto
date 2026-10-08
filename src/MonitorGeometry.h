@@ -24,7 +24,7 @@ public:
 	 * @param pcrRect The rect; changed in place.
 	 * @return TRUE when the rect was moved.
 	 */
-	static BOOL EnsureWindowVisible(CRect *pcrRect);
+	static BOOL EnsureWindowVisible(CRect* pcrRect);
 
 	/**
 	 * @brief The work area of the primary monitor.

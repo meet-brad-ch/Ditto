@@ -12,11 +12,14 @@ public:
 	COptionsCopyBuffers();
 	~COptionsCopyBuffers();
 
-// Dialog Data
-	enum { IDD = IDD_OPTIONS_COPY_BUFFERS };
+	// Dialog Data
+	enum
+	{
+		IDD = IDD_OPTIONS_COPY_BUFFERS
+	};
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	virtual void DoDataExchange(CDataExchange* pDX); // DDX/DDV support
 
 	CString m_csTitle;
 

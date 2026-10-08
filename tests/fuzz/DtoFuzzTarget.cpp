@@ -29,13 +29,13 @@ void DtoFuzzTarget::Run(std::span<const std::byte> input) const
 	}
 	catch (const DittoCore::ClipboardFormatError&)
 	{
-		return;   // a lying size or a broken stream: rejected, as it must be
+		return; // a lying size or a broken stream: rejected, as it must be
 	}
 
 	const std::vector<std::byte> again = DittoCore::DtoCodec::Uncompress(DittoCore::DtoCodec::Compress(data), declared);
 	if (static_cast<std::int64_t>(data.size()) != declared || again != data)
 	{
-		std::abort();   // a finding: the size check or the round trip failed
+		std::abort(); // a finding: the size check or the round trip failed
 	}
 }
 

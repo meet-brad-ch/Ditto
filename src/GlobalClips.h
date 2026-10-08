@@ -9,20 +9,23 @@ class GlobalClips : public CDialogEx
 	DECLARE_DYNAMIC(GlobalClips)
 
 public:
-	GlobalClips(CWnd* pParent = NULL);   // standard constructor
+	GlobalClips(CWnd* pParent = NULL); // standard constructor
 	virtual ~GlobalClips();
 
-// Dialog Data
-	enum { IDD = IDD_GLOBAL_CLIPS };
+	// Dialog Data
+	enum
+	{
+		IDD = IDD_GLOBAL_CLIPS
+	};
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	virtual void DoDataExchange(CDataExchange* pDX); // DDX/DDV support
 	void InitListCtrlCols();
 	virtual void OnCancel();
 	void LoadItems();
 
 	CDialogResizer m_Resize;
-	CListCtrl	m_List;
+	CListCtrl m_List;
 	HWND m_hWndParent{};
 	CShowTaskBarIcon m_showTaskbar;
 	DECLARE_MESSAGE_MAP()

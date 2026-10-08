@@ -3,7 +3,8 @@
 #include "AppServices.h"
 
 CAppServices::CAppServices() :
-	m_database([](const CString& text) { CLogger::Log(text); }),
+	m_database([](const CString& text)
+			   { CLogger::Log(text); }),
 	m_state(m_settings),
 	m_idleTime(m_settings),
 	m_windows(m_state),

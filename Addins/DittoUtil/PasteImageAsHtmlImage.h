@@ -16,7 +16,7 @@ public:
 	CPasteImageAsHtmlImage(const CPasteImageAsHtmlImage&) = delete;
 	CPasteImageAsHtmlImage& operator=(const CPasteImageAsHtmlImage&) = delete;
 
-	bool ConvertPathToHtmlImageTag(const CDittoInfo &DittoInfo, IClip *pClip);
+	bool ConvertPathToHtmlImageTag(const CDittoInfo& DittoInfo, IClip* pClip);
 	/**
 	 * @brief Deletes the image folder and the images saved to it (when the add-in DLL exits).
 	 * @return true when the folder was removed; false when it could not be (it is missing, a file
@@ -28,11 +28,10 @@ private:
 	/** @brief The folder pasted CF_DIB images are saved to (see CreateLocalPath); empty until first used. */
 	CString m_dibImagePath{};
 	/** @brief The number of the next saved CF_DIB image file (1.bmp, 2.bmp, ... for the DLL's lifetime). */
-	int m_nextDibImageName{1};
+	int m_nextDibImageName{ 1 };
 
 	/** @brief File name parts that mark an image file (searched anywhere in the lower-case path). */
-	static constexpr std::array<const TCHAR*, 10> m_imageExtensions
-	{
+	static constexpr std::array<const TCHAR*, 10> m_imageExtensions{
 		_T(".bmp"), _T(".dib"), _T(".jpg"), _T(".jpeg"), _T(".jpe"),
 		_T(".jfif"), _T(".gif"), _T(".tif"), _T(".tiff"), _T(".png")
 	};
@@ -45,7 +44,7 @@ private:
 	 * @param csIMG receives the tags (unchanged when the clip has neither format).
 	 * @return false if the image or file list is malformed or not saved (a message box was shown).
 	 */
-	bool GetImageTags(HWND owner, IClipFormats *pFormats, CString& csIMG);
+	bool GetImageTags(HWND owner, IClipFormats* pFormats, CString& csIMG);
 	/**
 	 * @brief Appends an <IMG> tag (with <br> between them) for every image file of a CF_HDROP.
 	 * @param owner the Ditto window, owner of the error message box.

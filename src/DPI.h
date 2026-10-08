@@ -4,24 +4,47 @@
 class CDPI
 {
 public:
-	CDPI(HWND hwnd = NULL) : m_Initialized(false), m_dpi(96)
+	CDPI(HWND hwnd = NULL) :
+		m_Initialized(false),
+		m_dpi(96)
 	{
 		m_hWnd = hwnd;
 	}
 
-	void Update(int dpi) { m_dpi = dpi;  m_Initialized = true; }
+	void Update(int dpi)
+	{
+		m_dpi = dpi;
+		m_Initialized = true;
+	}
 
 	// Get screen DPI.
-	int GetDPI() { Init(); return m_dpi; }
+	int GetDPI()
+	{
+		Init();
+		return m_dpi;
+	}
 
 	// Convert between raw pixels and relative pixels.
-	int Scale(int x) { Init(); return MulDiv(x, m_dpi, 96); }
-	int UnScale(int x) { Init(); return MulDiv(x, 96, m_dpi); }
-	
+	int Scale(int x)
+	{
+		Init();
+		return MulDiv(x, m_dpi, 96);
+	}
+	int UnScale(int x)
+	{
+		Init();
+		return MulDiv(x, 96, m_dpi);
+	}
+
 	// Invalidate any cached metrics.
 	void Invalidate() { m_Initialized = false; }
 
-	void SetHwnd(HWND hwnd) { m_hWnd = hwnd; m_Initialized = false; Init(); }
+	void SetHwnd(HWND hwnd)
+	{
+		m_hWnd = hwnd;
+		m_Initialized = false;
+		Init();
+	}
 
 private:
 	void Init()
@@ -41,7 +64,7 @@ private:
 					m_dpi = GetDeviceCaps(hdc, LOGPIXELSX);
 					ReleaseDC(NULL, hdc);
 					m_Initialized = true;
-				}				
+				}
 			}
 		}
 	}

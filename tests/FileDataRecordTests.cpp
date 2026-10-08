@@ -115,7 +115,7 @@ TEST(FileDataRecord, BuildRejectsWrongMd5Length)
 TEST(FileDataRecord, RejectsVersion2CountLargerThanBlock)
 {
 	std::vector<std::byte> block = FileDataRecord::Build({});
-	block[4] = std::byte{ 0xFF };   // file count 255, no files follow
+	block[4] = std::byte{ 0xFF }; // file count 255, no files follow
 
 	EXPECT_THROW(FileDataRecord::Parse(block), ClipboardFormatError);
 }
@@ -141,7 +141,7 @@ TEST(FileDataRecord, RejectsBytesAfterLastFile)
 TEST(ByteCursor, ReadsLittleEndianValues)
 {
 	const std::vector<std::byte> block{ std::byte{ 0x01 }, std::byte{ 0x02 }, std::byte{ 0x03 }, std::byte{ 0x04 },
-		std::byte{ 0x05 }, std::byte{ 0 }, std::byte{ 0 }, std::byte{ 0 }, std::byte{ 0x01 }, std::byte{ 0 }, std::byte{ 0 }, std::byte{ 0 } };
+										std::byte{ 0x05 }, std::byte{ 0 }, std::byte{ 0 }, std::byte{ 0 }, std::byte{ 0x01 }, std::byte{ 0 }, std::byte{ 0 }, std::byte{ 0 } };
 	ByteCursor cursor(block);
 
 	EXPECT_EQ(cursor.ReadUInt32(), 0x04030201u);

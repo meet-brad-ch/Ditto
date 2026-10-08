@@ -13,7 +13,7 @@ public:
 	CString FocusWndName() { return WndName(m_focusWnd); }
 
 	bool IHaveFocus() const { return m_iHaveFocus; }
-	
+
 	CString WndName(HWND hWnd);
 	bool TrackActiveWnd();
 
@@ -21,7 +21,7 @@ protected:
 	HWND m_activeWnd;
 	HWND m_focusWnd;
 	bool m_iHaveFocus;
-	
+
 protected:
 	bool IsAppWnd(HWND hWnd);
 };

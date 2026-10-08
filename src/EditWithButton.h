@@ -16,13 +16,13 @@ class CEditWithButton : public CEdit
 protected:
 	CBitmap m_bmpEmptyEdit;
 	CBitmap m_bmpFilledEdit;
-	CSize   m_sizeEmptyBitmap;
-	CSize   m_sizeFilledBitmap;
-	CRect	m_rcEditArea;
-	CRect	m_rcBorder;
-	CRect	m_rcButtonArea;
-	BOOL	m_bButtonExistsAlways;
-	UINT	m_iButtonClickedMessageId;
+	CSize m_sizeEmptyBitmap;
+	CSize m_sizeFilledBitmap;
+	CRect m_rcEditArea;
+	CRect m_rcBorder;
+	CRect m_rcButtonArea;
+	BOOL m_bButtonExistsAlways;
+	UINT m_iButtonClickedMessageId;
 
 public:
 	BOOL SetBitmaps(UINT iEmptyEdit, UINT iFilledEdit);
@@ -32,11 +32,10 @@ public:
 
 	CEditWithButton();
 	virtual ~CEditWithButton();
-	virtual void PreSubclassWindow( );
+	virtual void PreSubclassWindow();
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 
 protected:
-
 	void ResizeWindow();
 
 	/** @brief Handles Ctrl + Z, X, C, V and A before the edit control gets them.
@@ -57,7 +56,6 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 public:
-	
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);

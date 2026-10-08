@@ -34,12 +34,12 @@ namespace DittoCore
 			}
 			AppendWide(block, path);
 		}
-		AppendWide(block, L"");   // the empty path that ends the list
+		AppendWide(block, L""); // the empty path that ends the list
 		return block;
 	}
 
-	FileDropList::FileDropList(std::vector<std::wstring> paths)
-		: m_paths(std::move(paths))
+	FileDropList::FileDropList(std::vector<std::wstring> paths) :
+		m_paths(std::move(paths))
 	{
 	}
 

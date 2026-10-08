@@ -7,7 +7,7 @@
 #ifndef __FORMATTEDTEXTDRAW_H_
 #define __FORMATTEDTEXTDRAW_H_
 
-#include "../resource.h"       // main symbols
+#include "../resource.h" // main symbols
 
 // be sure to link this project with riched20.lib
 #include <richedit.h>
@@ -42,32 +42,31 @@ typedef COOKIE* PCOOKIE;
 interface IFormattedTextDraw
 {
 public:
-	virtual ~IFormattedTextDraw() {};
-	virtual HRESULT get_NaturalHeight(long Width, /*[out, retval]*/ long *pVal) = 0;
-	virtual HRESULT get_NaturalWidth(long Height, /*[out, retval]*/ long *pVal) = 0;
+	virtual ~IFormattedTextDraw(){};
+	virtual HRESULT get_NaturalHeight(long Width, /*[out, retval]*/ long* pVal) = 0;
+	virtual HRESULT get_NaturalWidth(long Height, /*[out, retval]*/ long* pVal) = 0;
 	virtual HRESULT Create() = 0;
-	virtual HRESULT Draw(void *hdcDraw, RECT *prc) = 0;
-	virtual HRESULT get_RTFText(/*[out, retval]*/ BSTR *pVal) = 0;
+	virtual HRESULT Draw(void* hdcDraw, RECT* prc) = 0;
+	virtual HRESULT get_RTFText(/*[out, retval]*/ BSTR * pVal) = 0;
 	virtual HRESULT put_RTFText(/*[in]*/ BSTR newVal) = 0;
 
-// COM-like functions
-    virtual ULONG STDMETHODCALLTYPE AddRef(void) = 0;
-    virtual ULONG STDMETHODCALLTYPE Release(void) = 0;
+	// COM-like functions
+	virtual ULONG STDMETHODCALLTYPE AddRef(void) = 0;
+	virtual ULONG STDMETHODCALLTYPE Release(void) = 0;
 };
 
 
 /////////////////////////////////////////////////////////////////////////////
 // CFormattedTextDraw
-class CFormattedTextDraw : 
-	public ITextHost,
-	public IFormattedTextDraw
+class CFormattedTextDraw : public ITextHost,
+						   public IFormattedTextDraw
 {
 public:
 	/** @brief Twips (the rich edit font height unit) per inch. */
 	static constexpr int LyPerInch = 1440;
 
 	/** @brief The ITextServices interface id (8d33f740-cf58-11ce-a89d-00aa006cadc5), queried from the text services object. */
-	static constexpr IID IID_ITextServicesEx{0x8d33f740, 0xcf58, 0x11ce, {0xa8, 0x9d, 0x00, 0xaa, 0x00, 0x6c, 0xad, 0xc5}};
+	static constexpr IID IID_ITextServicesEx{ 0x8d33f740, 0xcf58, 0x11ce, { 0xa8, 0x9d, 0x00, 0xaa, 0x00, 0x6c, 0xad, 0xc5 } };
 
 	CFormattedTextDraw()
 	{
@@ -104,35 +103,35 @@ public:
 			m_spTextDocument->Release();
 	}
 
-// Minimal COM functionality
-    HRESULT STDMETHODCALLTYPE QueryInterface( 
-        /* [in] */ REFIID /*riid*/,
-        /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvObject)
+	// Minimal COM functionality
+	HRESULT STDMETHODCALLTYPE QueryInterface(
+		/* [in] */ REFIID /*riid*/,
+		/* [iid_is][out] */ void __RPC_FAR * __RPC_FAR * ppvObject)
 	{
 		*ppvObject = NULL;
 		return S_FALSE;
 	}
-    
-    ULONG STDMETHODCALLTYPE AddRef(void)
-	{
-		return 0;
-	}
-    
-    ULONG STDMETHODCALLTYPE Release(void)
+
+	ULONG STDMETHODCALLTYPE AddRef(void)
 	{
 		return 0;
 	}
 
-// IFormattedTextDraw
+	ULONG STDMETHODCALLTYPE Release(void)
+	{
+		return 0;
+	}
+
+	// IFormattedTextDraw
 public:
-	HRESULT get_NaturalHeight(long Width, /*[out, retval]*/ long *pVal);
-	HRESULT get_NaturalWidth(long Height, /*[out, retval]*/ long *pVal);
+	HRESULT get_NaturalHeight(long Width, /*[out, retval]*/ long* pVal);
+	HRESULT get_NaturalWidth(long Height, /*[out, retval]*/ long* pVal);
 	HRESULT Create();
-	HRESULT Draw(void *hdcDraw, RECT *prc);
-	HRESULT get_RTFText(/*[out, retval]*/ BSTR *pVal);
+	HRESULT Draw(void* hdcDraw, RECT* prc);
+	HRESULT get_RTFText(/*[out, retval]*/ BSTR* pVal);
 	HRESULT put_RTFText(/*[in]*/ BSTR newVal);
 
-// ITextHost
+	// ITextHost
 	HDC TxGetDC();
 	INT TxReleaseDC(HDC hdc);
 	BOOL TxShowScrollBar(INT fnBar, BOOL fShow);
@@ -152,28 +151,28 @@ public:
 	void TxSetCursor(HCURSOR hcur, BOOL fText);
 	BOOL TxScreenToClient(LPPOINT lppt);
 	BOOL TxClientToScreen(LPPOINT lppt);
-	HRESULT	TxActivate(LONG * plOldState);
-	HRESULT	TxDeactivate(LONG lNewState);
-	HRESULT	TxGetClientRect(LPRECT prc);
-	HRESULT	TxGetViewInset(LPRECT prc);
-	HRESULT TxGetCharFormat(const CHARFORMATW **ppCF);
-	HRESULT	TxGetParaFormat(const PARAFORMAT **ppPF);
+	HRESULT TxActivate(LONG* plOldState);
+	HRESULT TxDeactivate(LONG lNewState);
+	HRESULT TxGetClientRect(LPRECT prc);
+	HRESULT TxGetViewInset(LPRECT prc);
+	HRESULT TxGetCharFormat(const CHARFORMATW** ppCF);
+	HRESULT TxGetParaFormat(const PARAFORMAT** ppPF);
 	COLORREF TxGetSysColor(int nIndex);
-	HRESULT	TxGetBackStyle(TXTBACKSTYLE *pstyle);
-	HRESULT	TxGetMaxLength(DWORD *plength);
-	HRESULT	TxGetScrollBars(DWORD *pdwScrollBar);
-	HRESULT	TxGetPasswordChar(TCHAR *pch);
-	HRESULT	TxGetAcceleratorPos(LONG *pcp);
-	HRESULT	TxGetExtent(LPSIZEL lpExtent);
-	HRESULT OnTxCharFormatChange(const CHARFORMATW * pcf);
-	HRESULT	OnTxParaFormatChange(const PARAFORMAT * ppf);
-	HRESULT	TxGetPropertyBits(DWORD dwMask, DWORD *pdwBits);
-	HRESULT	TxNotify(DWORD iNotify, void *pv);
+	HRESULT TxGetBackStyle(TXTBACKSTYLE* pstyle);
+	HRESULT TxGetMaxLength(DWORD* plength);
+	HRESULT TxGetScrollBars(DWORD* pdwScrollBar);
+	HRESULT TxGetPasswordChar(TCHAR* pch);
+	HRESULT TxGetAcceleratorPos(LONG* pcp);
+	HRESULT TxGetExtent(LPSIZEL lpExtent);
+	HRESULT OnTxCharFormatChange(const CHARFORMATW* pcf);
+	HRESULT OnTxParaFormatChange(const PARAFORMAT* ppf);
+	HRESULT TxGetPropertyBits(DWORD dwMask, DWORD* pdwBits);
+	HRESULT TxNotify(DWORD iNotify, void* pv);
 	HIMC TxImmGetContext();
 	void TxImmReleaseContext(HIMC himc);
-	HRESULT	TxGetSelectionBarWidth(LONG *lSelBarWidth);
+	HRESULT TxGetSelectionBarWidth(LONG* lSelBarWidth);
 
-// Custom functions
+	// Custom functions
 	HRESULT CharFormatFromHFONT(CHARFORMAT2W* pCF, HFONT hFont);
 	HRESULT InitDefaultCharFormat();
 	HRESULT InitDefaultParaFormat();
@@ -185,7 +184,7 @@ public:
 	 * @param ppUnk Receives the text services object's IUnknown.
 	 * @return S_OK on success; E_FAIL when msftedit.dll or CreateTextServices is missing; else the CreateTextServices result.
 	 */
-	static HRESULT CreateRichEdit(ITextHost *pTextHost, IUnknown **ppUnk);
+	static HRESULT CreateRichEdit(ITextHost* pTextHost, IUnknown** ppUnk);
 
 	/**
 	 * @brief The EM_STREAMIN callback: copies the next chunk of the RTF bytes the COOKIE points at.
@@ -195,27 +194,27 @@ public:
 	 * @param pcb Receives the number of bytes copied.
 	 * @return 0 (no error).
 	 */
-	static DWORD CALLBACK EditStreamInCallback(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb);
+	static DWORD CALLBACK EditStreamInCallback(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb);
 
-// Variables
-	RECT			m_rcClient;			// Client Rect
-	RECT			m_rcViewInset;		// view rect inset
-	SIZEL			m_sizelExtent;		// Extent array
+	// Variables
+	RECT m_rcClient;     // Client Rect
+	RECT m_rcViewInset;  // view rect inset
+	SIZEL m_sizelExtent; // Extent array
 
-	int				nPixelsPerInchX;    // Pixels per logical inch along width
-	int				nPixelsPerInchY;    // Pixels per logical inch along height
+	int nPixelsPerInchX; // Pixels per logical inch along width
+	int nPixelsPerInchY; // Pixels per logical inch along height
 
 	/** @brief The default character format the text services read through TxGetCharFormat. */
-	CHARFORMAT2W	m_CF{};
-	PARAFORMAT2		m_PF;
-	DWORD			m_dwScrollbar;		// Scroll bar style
-	DWORD			m_dwPropertyBits;	// Property bits
-	DWORD			m_dwMaxLength;
-	COOKIE			m_editCookie;
+	CHARFORMAT2W m_CF{};
+	PARAFORMAT2 m_PF;
+	DWORD m_dwScrollbar;    // Scroll bar style
+	DWORD m_dwPropertyBits; // Property bits
+	DWORD m_dwMaxLength;
+	COOKIE m_editCookie;
 
-	ITextServices	*m_spTextServices;
-	ITextDocument	*m_spTextDocument;
-	BSTR			m_RTFText;
+	ITextServices* m_spTextServices;
+	ITextDocument* m_spTextDocument;
+	BSTR m_RTFText;
 };
 
 #endif //__FORMATTEDTEXTDRAW_H_

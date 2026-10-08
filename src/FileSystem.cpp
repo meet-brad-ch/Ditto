@@ -3,7 +3,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-__int64 CFileSystem::FileSize(const TCHAR *fileName)
+__int64 CFileSystem::FileSize(const TCHAR* fileName)
 {
 	struct _stat64 buf{};
 	if (_wstat64((wchar_t const*)fileName, &buf) != 0)
@@ -12,7 +12,7 @@ __int64 CFileSystem::FileSize(const TCHAR *fileName)
 	return buf.st_size;
 }
 
-__int64 CFileSystem::GetLastWriteTime(const CString &csFile)
+__int64 CFileSystem::GetLastWriteTime(const CString& csFile)
 {
 	__int64 nLastWrite{};
 	CFileFind finder;
@@ -35,7 +35,7 @@ CString CFileSystem::GetFilePath(CString csFileName)
 {
 	const long lSlash{ csFileName.ReverseFind('\\') };
 
-	if(lSlash > -1)
+	if (lSlash > -1)
 	{
 		csFileName = csFileName.Left(lSlash + 1);
 	}
@@ -46,7 +46,7 @@ CString CFileSystem::GetFilePath(CString csFileName)
 CString CFileSystem::GetFileName(CString csFileName)
 {
 	const long lSlash{ csFileName.ReverseFind('\\') };
-	if(lSlash > -1)
+	if (lSlash > -1)
 	{
 		csFileName = csFileName.Right(csFileName.GetLength() - lSlash - 1);
 	}

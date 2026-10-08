@@ -15,7 +15,13 @@ class CClipRepository
 {
 public:
 	// A clip's position in a list; the column names are fixed here, never taken from outside
-	enum class OrderColumn { Clip, ClipGroup, StickyClip, StickyClipGroup };
+	enum class OrderColumn
+	{
+		Clip,
+		ClipGroup,
+		StickyClip,
+		StickyClipGroup
+	};
 
 	// Which formats LoadFormats returns
 	struct FormatFilter

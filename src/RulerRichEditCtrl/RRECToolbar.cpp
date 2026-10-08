@@ -62,7 +62,7 @@ CRRECToolbar::~CRRECToolbar()
 {
 }
 
-BOOL CRRECToolbar::Create( CWnd* parent, CRect& rc, int resourceId)
+BOOL CRRECToolbar::Create(CWnd* parent, CRect& rc, int resourceId)
 /* ============================================================
 	Function :		CRRECToolbar::Create
 	Description :	Creates the toolbar control
@@ -80,37 +80,36 @@ BOOL CRRECToolbar::Create( CWnd* parent, CRect& rc, int resourceId)
 	BOOL result = FALSE;
 
 	HINSTANCE hInstance = AfxFindResourceHandle(MAKEINTRESOURCE(resourceId), RT_TOOLBAR);
-	if(!hInstance)
+	if (!hInstance)
 		return FALSE;
 
 	HRSRC hRsrc = ::FindResource(hInstance, MAKEINTRESOURCE(resourceId), RT_TOOLBAR);
-	if(!hRsrc)
+	if (!hRsrc)
 		return FALSE;
 
 	HGLOBAL hGlobal = LoadResource(hInstance, hRsrc);
 	if (hGlobal == NULL)
 		return FALSE;
 
-	CToolBarData* pData = (CToolBarData*) LockResource(hGlobal);
+	CToolBarData* pData = (CToolBarData*)LockResource(hGlobal);
 	if (pData == NULL)
 		return FALSE;
 
 	ASSERT(pData->wVersion == 1);
 
-	result = CToolBarCtrl::Create(WS_VISIBLE|WS_CHILD, rc, parent, resourceId);
+	result = CToolBarCtrl::Create(WS_VISIBLE | WS_CHILD, rc, parent, resourceId);
 
 	// the editor needs all of the toolbar: a missing combo or colour picker fails the creation
-	if(result)
+	if (result)
 	{
-		if( !InitButtons( hInstance, pData, resourceId ) || !CreateEmbeddedControls() )
+		if (!InitButtons(hInstance, pData, resourceId) || !CreateEmbeddedControls())
 			result = FALSE;
 	}
 
 	return result;
-
 }
 
-bool CRRECToolbar::InitButtons( HINSTANCE hInstance, CToolBarData* pData, int resourceId )
+bool CRRECToolbar::InitButtons(HINSTANCE hInstance, CToolBarData* pData, int resourceId)
 {
 	TBBUTTON tb, tbSep;
 	memset(&tb, 0, sizeof(tb));
@@ -139,7 +138,7 @@ bool CRRECToolbar::InitButtons( HINSTANCE hInstance, CToolBarData* pData, int re
 	tbSep.iString = -1;
 	tbSep.fsStyle = TBSTYLE_SEP;
 
-	for(WORD w = 0; w < pData->wItemCount; w++)
+	for (WORD w = 0; w < pData->wItemCount; w++)
 	{
 		if (pData->items()[w] == 0)
 		{
@@ -153,14 +152,14 @@ bool CRRECToolbar::InitButtons( HINSTANCE hInstance, CToolBarData* pData, int re
 		}
 	}
 
-	HBITMAP	hBitmap = (HBITMAP)::LoadImage( hInstance, MAKEINTRESOURCE(resourceId), IMAGE_BITMAP, 0,0, LR_LOADMAP3DCOLORS );
-	if( !hBitmap )
+	HBITMAP hBitmap = (HBITMAP)::LoadImage(hInstance, MAKEINTRESOURCE(resourceId), IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS);
+	if (!hBitmap)
 		return false;
 
 	BITMAP bm;
-	memset(&bm, 0, sizeof (bm));
-	::GetObject(hBitmap, sizeof (bm), &bm);
-	AddBitmap(bm.bmWidth / pData->wWidth, CBitmap::FromHandle (hBitmap));
+	memset(&bm, 0, sizeof(bm));
+	::GetObject(hBitmap, sizeof(bm), &bm);
+	AddBitmap(bm.bmWidth / pData->wWidth, CBitmap::FromHandle(hBitmap));
 
 	// a loaded resource needs no unlock or free (UnlockResource and FreeResource are 16-bit leftovers)
 	return true;
@@ -171,26 +170,26 @@ bool CRRECToolbar::CreateEmbeddedControls()
 	CRect rect;
 
 	TBBUTTONINFO tbi{};
-	tbi.cbSize = sizeof( TBBUTTONINFO );
+	tbi.cbSize = sizeof(TBBUTTONINFO);
 	// DPI-scaled button widths are a few hundred pixels, well inside the WORD range
 	tbi.cx = static_cast<WORD>(m_dpi.Scale(100));
-	tbi.dwMask = TBIF_SIZE | 0x80000000;  // By index
+	tbi.dwMask = TBIF_SIZE | 0x80000000; // By index
 
 	SetButtonInfo(2, &tbi);
 	GetItemRect(2, &rect);
 
 	// The font name combo
-	if(m_fontCombo.Create(WS_CHILD | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN | CBS_SORT | CBS_HASSTRINGS, rect, this, 31))
+	if (m_fontCombo.Create(WS_CHILD | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN | CBS_SORT | CBS_HASSTRINGS, rect, this, 31))
 	{
 		m_fontCombo.SetFont(&m_font);
 		m_fontCombo.FillCombo();
-		
+
 		tbi.cx = static_cast<WORD>(m_dpi.Scale(48));
 		SetButtonInfo(4, &tbi);
 		GetItemRect(4, &rect);
 
 		//The font size combo
-		if( m_size.Create( WS_CHILD | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | CBS_HASSTRINGS, rect, this, 32))
+		if (m_size.Create(WS_CHILD | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | CBS_HASSTRINGS, rect, this, 32))
 		{
 			m_size.SetFont(&m_font);
 			m_size.FillCombo();
@@ -204,12 +203,12 @@ bool CRRECToolbar::CreateEmbeddedControls()
 			GetItemRect(6, &rect);
 
 			// The color picker
-			if(m_color.Create(color, WS_VISIBLE | WS_CHILD, rect, this, BUTTON_COLOR))
+			if (m_color.Create(color, WS_VISIBLE | WS_CHILD, rect, this, BUTTON_COLOR))
 			{
 				m_color.SetDefaultText(defaultText);
 				m_color.SetCustomText(customText);
 				m_color.SetSelectionMode(CP_MODE_TEXT);
-				m_color.SetBkColour(RGB(255, 255, 255 ));
+				m_color.SetBkColour(RGB(255, 255, 255));
 				m_color.SetFont(&m_font);
 
 				return true;
@@ -222,7 +221,7 @@ bool CRRECToolbar::CreateEmbeddedControls()
 
 BEGIN_MESSAGE_MAP(CRRECToolbar, CToolBarCtrl)
 	//{{AFX_MSG_MAP(CRRECToolbar)
-		// NOTE - the ClassWizard will add and remove mapping macros here.
+	// NOTE - the ClassWizard will add and remove mapping macros here.
 	ON_CBN_SELCHANGE(31, OnSelchangeFont)
 	ON_CBN_SELCHANGE(32, OnSelchangeSize)
 	ON_MESSAGE(CPN_SELENDOK, OnColorButton)
@@ -232,7 +231,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CRRECToolbar message handlers
 
-void CRRECToolbar::OnSelchangeFont() 
+void CRRECToolbar::OnSelchangeFont()
 /* ============================================================
 	Function :		CRRECToolbar::OnSelchangeFont
 	Description :	Changes the font of the selected text in 
@@ -250,15 +249,14 @@ void CRRECToolbar::OnSelchangeFont()
 
 	CString font;
 	int index = m_fontCombo.GetCurSel();
-	if( index != CB_ERR )
+	if (index != CB_ERR)
 	{
-		m_fontCombo.GetLBText( index, font );
-		GetParent()->SendMessage( CRulerRichEditCtrl::SetCurrentFontNameMessage(), ( WPARAM ) ( LPCTSTR ) font, 0 );
-
-	}	
+		m_fontCombo.GetLBText(index, font);
+		GetParent()->SendMessage(CRulerRichEditCtrl::SetCurrentFontNameMessage(), (WPARAM)(LPCTSTR)font, 0);
+	}
 }
 
-void CRRECToolbar::OnSelchangeSize() 
+void CRRECToolbar::OnSelchangeSize()
 /* ============================================================
 	Function :		CRRECToolbar::OnSelchangeSize
 	Description :	Changes the size of the selected text in 
@@ -275,20 +273,18 @@ void CRRECToolbar::OnSelchangeSize()
 {
 	int size = 0;
 	int index = m_size.GetCurSel();
-	if( index != CB_ERR )
+	if (index != CB_ERR)
 	{
 
 		CString sz;
-		m_size.GetLBText( index, sz );
-		size = _ttoi( ( LPCTSTR ) sz );
+		m_size.GetLBText(index, sz);
+		size = _ttoi((LPCTSTR)sz);
 
-		GetParent()->SendMessage( CRulerRichEditCtrl::SetCurrentFontSizeMessage(), 0, ( LPARAM ) size );
-
+		GetParent()->SendMessage(CRulerRichEditCtrl::SetCurrentFontSizeMessage(), 0, (LPARAM)size);
 	}
-	
 }
 
-LRESULT CRRECToolbar::OnColorButton( WPARAM w, LPARAM /*l*/)
+LRESULT CRRECToolbar::OnColorButton(WPARAM w, LPARAM /*l*/)
 /* ============================================================
 	Function :		CRRECToolbar::OnColorButton
 	Description :	Mapped to the color picker defined 
@@ -304,15 +300,15 @@ LRESULT CRRECToolbar::OnColorButton( WPARAM w, LPARAM /*l*/)
 
    ============================================================*/
 {
-	GetParent()->SendMessage( CRulerRichEditCtrl::SetCurrentFontColorMessage(), 0, ( LPARAM ) w );
-	
+	GetParent()->SendMessage(CRulerRichEditCtrl::SetCurrentFontColorMessage(), 0, (LPARAM)w);
+
 	return 0;
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // CRRECToolbar UI updaters
 
-void CRRECToolbar::SetFontName( const CString& font )
+void CRRECToolbar::SetFontName(const CString& font)
 /* ============================================================
 	Function :		CRRECToolbar::SetFontName
 	Description :	Selects the font name "font" in the font 
@@ -327,12 +323,11 @@ void CRRECToolbar::SetFontName( const CString& font )
    ============================================================*/
 {
 
-	if(m_fontCombo.m_hWnd )
-		m_fontCombo.SelectFontName( font );
-
+	if (m_fontCombo.m_hWnd)
+		m_fontCombo.SelectFontName(font);
 }
 
-void CRRECToolbar::SetFontSize( int size )
+void CRRECToolbar::SetFontSize(int size)
 /* ============================================================
 	Function :		CRRECToolbar::SetFontSize
 	Description :	Selects the font size "size" in the font 
@@ -347,11 +342,11 @@ void CRRECToolbar::SetFontSize( int size )
    ============================================================*/
 {
 
-	if( m_size.m_hWnd )
-		m_size.SelectSize( size );
+	if (m_size.m_hWnd)
+		m_size.SelectSize(size);
 }
 
-void CRRECToolbar::SetFontColor( COLORREF color )
+void CRRECToolbar::SetFontColor(COLORREF color)
 /* ============================================================
 	Function :		CRRECToolbar::SetFontColor
 	Description :	Selects the font color "color" in the font 
@@ -366,7 +361,6 @@ void CRRECToolbar::SetFontColor( COLORREF color )
    ============================================================*/
 {
 
-	if( m_color.m_hWnd )
-		m_color.SetColour( color );
-
+	if (m_color.m_hWnd)
+		m_color.SetColour(color);
 }

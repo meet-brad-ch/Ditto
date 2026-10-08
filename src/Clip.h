@@ -59,9 +59,9 @@ class CClipFormat : public IClipFormat
 {
 public:
 	CLIPFORMAT m_cfType;
-    HGLOBAL m_hgData;
+	HGLOBAL m_hgData;
 	bool m_autoDeleteData;
-	int m_dataId{-1};
+	int m_dataId{ -1 };
 	int m_parentId;
 
 	CClipFormat(CLIPFORMAT cfType = 0, HGLOBAL hgData = 0, int parentId = -1);
@@ -75,7 +75,7 @@ public:
 	virtual void Type(CLIPFORMAT type) { m_cfType = type; }
 	virtual void Data(HGLOBAL data) { m_hgData = data; }
 	virtual void AutoDeleteData(bool autoDeleteData) { m_autoDeleteData = autoDeleteData; }
-	virtual bool AutoDeleteData()	{ return m_autoDeleteData; }
+	virtual bool AutoDeleteData() { return m_autoDeleteData; }
 
 	// The format's 8-bit text up to the first null or the end of the block; empty without data
 	CStringA GetAsCStringA();
@@ -104,19 +104,24 @@ public:
 /*----------------------------------------------------------------------------*\
 	CClipFormats - holds an array of CClipFormat
 \*----------------------------------------------------------------------------*/
-class CClipFormats : public CArray<CClipFormat,CClipFormat&>, public IClipFormats
+class CClipFormats : public CArray<CClipFormat, CClipFormat&>, public IClipFormats
 {
 public:
 	// returns a pointer to the CClipFormat in this array which matches the given type
 	//  or NULL if that type doesn't exist in this array.
-	CClipFormat* FindFormat(UINT cfType); 
+	CClipFormat* FindFormat(UINT cfType);
 
 	virtual int Size() { return (int)this->GetCount(); }
-	virtual IClipFormat *GetAt(int nPos) { return &this->ElementAt(nPos); }
+	virtual IClipFormat* GetAt(int nPos) { return &this->ElementAt(nPos); }
 	virtual void DeleteAt(int nPos) { this->RemoveAt(nPos); }
 	virtual void DeleteAll() { this->RemoveAll(); }
-	virtual INT_PTR AddNew(CLIPFORMAT type, HGLOBAL data) {CClipFormat ft(type, data, -1); ft.m_autoDeleteData = false; return this->Add(ft); }
-	virtual IClipFormat *FindFormatEx(CLIPFORMAT type)	{ return FindFormat((UINT)type); }
+	virtual INT_PTR AddNew(CLIPFORMAT type, HGLOBAL data)
+	{
+		CClipFormat ft(type, data, -1);
+		ft.m_autoDeleteData = false;
+		return this->Add(ft);
+	}
+	virtual IClipFormat* FindFormatEx(CLIPFORMAT type) { return FindFormat((UINT)type); }
 	virtual bool RemoveFormat(CLIPFORMAT type);
 };
 
@@ -138,7 +143,7 @@ public:
 	explicit CClip(CClipContext& context);
 	~CClip();
 	// Copies the clip's data; the save settings and the last-added record stay this clip's own
-	const CClip& operator=(const CClip &clip);
+	const CClip& operator=(const CClip& clip);
 
 	/** @brief The sticky order of a clip that is not sticky (stored in the database's sticky columns). */
 	static constexpr int InvalidSticky = -(2147483647);
@@ -178,7 +183,7 @@ public:
 
 	virtual void SetSaveToDbSticky(AddToDbStickyEnum::AddToDbSticky option) { m_addToDbStickyEnum = option; }
 
-	virtual IClipFormats *Clips() { return (IClipFormats*)&m_Formats; }
+	virtual IClipFormats* Clips() { return (IClipFormats*)&m_Formats; }
 
 	void Clear();
 	void EmptyFormats();
@@ -275,10 +280,10 @@ public:
 	// Clears a saved clip's sticky setting in the database (context: the database)
 	static bool RemoveStickySetting(CClipContext& context, int clipId, int parentId);
 
-	bool AddFileDataToData(CString &errorMessage);
+	bool AddFileDataToData(CString& errorMessage);
 
 	std::unique_ptr<Gdiplus::Bitmap> CreateGdiplusBitmap();
-	
+
 protected:
 	// Adds the Main row and the Data rows, and clears another clip's top-sticky setting, in one
 	// transaction; returns false (rolled back) when a step fails
@@ -555,7 +560,7 @@ public:
 	CClipList TakeAll();
 	// returns the number of clips actually saved
 	// while this does empty the Format Data, it does not delete the Clips.
-	int AddToDB( bool bLatestOrder = false);
+	int AddToDB(bool bLatestOrder = false);
 	// The clip added last; the list must not be empty
 	CClip& Last();
 	/**
@@ -572,7 +577,7 @@ private:
 	// The clips, in the order they were added
 	std::vector<std::unique_ptr<CClip>> m_clips{};
 	/** @brief Non-owning: the clip saved last by AddToDB (one of m_clips), or nullptr. */
-	CClip* m_lastSaved{nullptr};
+	CClip* m_lastSaved{ nullptr };
 };
 
 #endif // !defined(AFX_PROCESSCOPY_H__185CBB6F_4B63_4397_8FF9_E18D777DA506__INCLUDED_)

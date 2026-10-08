@@ -12,7 +12,7 @@
 typedef enum
 {
 	eFuncType_PRE_PASTE
-}FunctionType;
+} FunctionType;
 
 class CFunction
 {
@@ -37,8 +37,8 @@ public:
 		m_AddinVersion = 0;
 		m_nSizeOfThis = sizeof(CDittoAddinInfo);
 	}
-	
-	bool ValidateSize() const  { return m_nSizeOfThis == sizeof(CDittoAddinInfo); }
+
+	bool ValidateSize() const { return m_nSizeOfThis == sizeof(CDittoAddinInfo); }
 	int PrivateVersion() const { return m_nPrivateVersion; }
 
 	int m_nSizeOfThis;
@@ -60,7 +60,7 @@ public:
 		m_nSizeOfThis = sizeof(CDittoInfo);
 	}
 
-	bool ValidateSize() const  { return m_nSizeOfThis == sizeof(CDittoInfo); }
+	bool ValidateSize() const { return m_nSizeOfThis == sizeof(CDittoInfo); }
 	int PrivateVersion() const { return m_nPrivateVersion; }
 
 	int m_nSizeOfThis;

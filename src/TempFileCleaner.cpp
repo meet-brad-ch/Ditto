@@ -29,7 +29,8 @@ void CTempFileCleaner::DeleteFolderFiles(CString csDir, BOOL checkFileLastAccess
 {
 	// only Ditto's own temp folders are emptied
 	static constexpr std::array<const TCHAR*, 4> tempFolderMarkers{ _T("\\ReceivedFiles\\"), _T("\\DragFiles\\"), _T("ClipCompare"), _T("EditClips") };
-	if (std::none_of(tempFolderMarkers.begin(), tempFolderMarkers.end(), [&csDir](const TCHAR* marker) { return csDir.Find(marker) != -1; }))
+	if (std::none_of(tempFolderMarkers.begin(), tempFolderMarkers.end(), [&csDir](const TCHAR* marker)
+					 { return csDir.Find(marker) != -1; }))
 		return;
 
 	CLogger::Log(CStringUtil::Format(_T("Deleting files in Folder %s Check Last Access %d"), csDir.GetString(), checkFileLastAccess));
@@ -46,18 +47,18 @@ void CTempFileCleaner::DeleteFolderFiles(CString csDir, BOOL checkFileLastAccess
 	csFindString.Format(_T("%s*.*"), csDir.GetString());
 
 	BOOL bFound{ Find.FindFile(csFindString) };
-	while(bFound)
+	while (bFound)
 	{
 		bFound = Find.FindNextFile();
 
-		if(Find.IsDots())
+		if (Find.IsDots())
 			continue;
 
-		if(checkFileLastAccess &&
+		if (checkFileLastAccess &&
 			Find.GetLastAccessTime(ctFile))
 		{
 			//Delete the remote copied file if it hasn't been used for the last day
-			if(ctFile < ctOld)
+			if (ctFile < ctOld)
 			{
 				CLogger::Log(CStringUtil::Format(_T("Deleting temp file %s"), Find.GetFilePath().GetString()));
 				DeleteFile(Find.GetFilePath());

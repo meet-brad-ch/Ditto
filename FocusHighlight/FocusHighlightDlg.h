@@ -11,18 +11,21 @@
 // CFocusHighlightDlg dialog
 class CFocusHighlightDlg : public CDialogEx
 {
-// Construction
+	// Construction
 public:
-	CFocusHighlightDlg(CWnd* pParent = NULL);	// standard constructor
+	CFocusHighlightDlg(CWnd* pParent = NULL); // standard constructor
 
-// Dialog Data
-	enum { IDD = IDD_FOCUSHIGHLIGHT_DIALOG };
+	// Dialog Data
+	enum
+	{
+		IDD = IDD_FOCUSHIGHLIGHT_DIALOG
+	};
 
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
+protected:
+	virtual void DoDataExchange(CDataExchange* pDX); // DDX/DDV support
 
 
-// Implementation
+	// Implementation
 protected:
 	ExternalWindowTracker m_tracker;
 

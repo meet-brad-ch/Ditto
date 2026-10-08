@@ -23,8 +23,8 @@ namespace DittoCore
 		 * @brief Creates the error.
 		 * @param message What is wrong with the data, for the user-visible report.
 		 */
-		explicit ClipboardFormatError(const std::string& message)
-			: std::runtime_error(message)
+		explicit ClipboardFormatError(const std::string& message) :
+			std::runtime_error(message)
 		{
 		}
 	};

@@ -20,7 +20,7 @@ CTrayWnd::~CTrayWnd()
 
 const UINT& CTrayWnd::TaskbarCreatedMessage()
 {
-	static const UINT message{::RegisterWindowMessage(_T("TaskbarCreated"))};
+	static const UINT message{ ::RegisterWindowMessage(_T("TaskbarCreated")) };
 	return message;
 }
 
@@ -31,13 +31,11 @@ END_MESSAGE_MAP()
 
 LRESULT CTrayWnd::OnTaskBarCreated(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
-	CMainFrame* const mainFrame{theApp.Services().Windows().MainFrame()};
-	if(mainFrame != NULL)
+	CMainFrame* const mainFrame{ theApp.Services().Windows().MainFrame() };
+	if (mainFrame != NULL)
 	{
 		mainFrame->PostMessage(CDittoMessage::ReaddTaskbarIcon, 0, 0);
 	}
-	
+
 	return TRUE;
 }
-
-

@@ -27,11 +27,11 @@ class IClipFormats
 {
 public:
 	virtual int Size() = 0;
-	virtual IClipFormat *GetAt(int nPos) = 0;
+	virtual IClipFormat* GetAt(int nPos) = 0;
 	virtual void DeleteAt(int nPos) = 0;
 	virtual void DeleteAll() = 0;
 	virtual INT_PTR AddNew(CLIPFORMAT type, HGLOBAL data) = 0;
-	virtual IClipFormat *FindFormatEx(CLIPFORMAT type) = 0;
+	virtual IClipFormat* FindFormatEx(CLIPFORMAT type) = 0;
 	virtual bool RemoveFormat(CLIPFORMAT type) = 0;
 };
 
@@ -50,5 +50,5 @@ public:
 	virtual void QuickPaste(CString csValue) = 0;
 	virtual void SetSaveToDbSticky(AddToDbStickyEnum::AddToDbSticky option) = 0;
 
-	virtual IClipFormats *Clips() = 0;
+	virtual IClipFormats* Clips() = 0;
 };

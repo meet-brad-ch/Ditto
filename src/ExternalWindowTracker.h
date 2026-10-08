@@ -68,7 +68,7 @@ protected:
 	/// The elevated helper thread; created on the first paste, copy or cut as administrator (or by RunUacHelper).
 	std::unique_ptr<CUAC_Thread> m_pUacPasteThread{};
 
-	typedef HRESULT(__stdcall *AccessibleObjectFromWindow)(_In_ HWND hwnd, _In_ DWORD dwId, _In_ REFIID riid, _Outptr_ void** ppvObject);
+	typedef HRESULT(__stdcall* AccessibleObjectFromWindow)(_In_ HWND hwnd, _In_ DWORD dwId, _In_ REFIID riid, _Outptr_ void** ppvObject);
 
 	HWND m_activeWnd;
 	HWND m_focusWnd;
@@ -76,7 +76,7 @@ protected:
 	bool m_desktopHasFocus;
 	HMODULE m_hOleacc;
 	AccessibleObjectFromWindow m_AccessibleObjectFromWindow;
-	
+
 protected:
 	bool WaitForActiveWnd(HWND hwndToHaveFocus, int timeout);
 	void ActivateFocus(const HWND active_wnd, const HWND focus_wnd);

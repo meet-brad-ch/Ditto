@@ -35,15 +35,15 @@ public:
 		m_restartFromRestartManager = FALSE;
 	}
 
- 	virtual void ParseParam(const TCHAR* pszParam, BOOL bFlag, BOOL bLast)
- 	{
-  		if(bFlag)
-  		{
+	virtual void ParseParam(const TCHAR* pszParam, BOOL bFlag, BOOL bLast)
+	{
+		if (bFlag)
+		{
 			ParseFlag(pszParam);
-  		}
+		}
 
 		CCommandLineInfo::ParseParam(pszParam, bFlag, bLast);
- 	}
+	}
 
 	BOOL m_bDisconnect;
 	BOOL m_bConnect;
@@ -78,7 +78,7 @@ private:
 			return;
 		}
 
-		if(wcsncmp(pszParam, _T("uacpaste"), 8) == 0)
+		if (wcsncmp(pszParam, _T("uacpaste"), 8) == 0)
 		{
 			ReadNumberAfterColon(pszParam, m_uacPID);
 		}
@@ -155,8 +155,8 @@ CCP_MainApp theApp;
 
 BEGIN_MESSAGE_MAP(CCP_MainApp, CWinApp)
 	//{{AFX_MSG_MAP(CCP_MainApp)
-		// NOTE - the ClassWizard will add and remove mapping macros here.
-		//    DO NOT EDIT what you see in these blocks of generated code!
+	// NOTE - the ClassWizard will add and remove mapping macros here.
+	//    DO NOT EDIT what you see in these blocks of generated code!
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -170,7 +170,6 @@ CCP_MainApp::CCP_MainApp() :
 
 CCP_MainApp::~CCP_MainApp()
 {
-
 }
 
 CAppServices& CCP_MainApp::Services()
@@ -188,7 +187,7 @@ void CCP_MainApp::ImportFileFromCommandLine(const CString& fileName)
 		db.open(fileName);
 
 		CClip_ImportExport clip(Services().ClipContext());
-		if(clip.ImportFromSqliteDB(db, false, true))
+		if (clip.ImportFromSqliteDB(db, false, true))
 		{
 			ShowCommandLineError("Ditto", Services().Language().GetString("Importing_Good", "Clip placed on clipboard"));
 		}
@@ -254,7 +253,7 @@ BOOL CCP_MainApp::InitInstanceBody()
 
 	Services().ActiveWindow().TrackActiveWnd(false);
 
-	if(cmdInfo.m_uacPID > 0)
+	if (cmdInfo.m_uacPID > 0)
 	{
 		CLogger::Log(CStringUtil::Format(_T("Startup up ditto as admin to paste to admin windows, parent process id: %d"), cmdInfo.m_uacPID));
 
@@ -284,7 +283,7 @@ BOOL CCP_MainApp::InitInstanceBody()
 
 	CString csFile = Services().Settings().GetLanguageFile();
 	const CString languageDir = Services().Settings().GetPath(CGetSetOptions::PathLanguage);
-	if(Services().Language().LoadLanguageFile(languageDir, csFile) == false)
+	if (Services().Language().LoadLanguageFile(languageDir, csFile) == false)
 	{
 		CString csLanguageError;
 		csLanguageError.Format(_T("Error loading language file - %s - \n\n%s"), csFile.GetString(), Services().Language().m_csLastError.GetString());
@@ -294,9 +293,9 @@ BOOL CCP_MainApp::InitInstanceBody()
 	}
 
 	Services().IcuString().Load();
-	
+
 	int nRet = DatabaseLocator::CheckDBExists(Services().Settings(), Services().Language(), Services().Database(), Services().State(), Services().Settings().GetDBPath());
-	if(nRet == FALSE)
+	if (nRet == FALSE)
 	{
 		CreateNoDbWnd();
 	}
@@ -331,12 +330,12 @@ bool CCP_MainApp::HandleCommandLine(const DittoCommandLineInfo& cmdInfo)
 	{
 		CLogger::Log(CStringUtil::Format(_T("Ditto was restarted from restart manager")));
 	}
-	else if(cmdInfo.m_strFileName.IsEmpty() == FALSE)
+	else if (cmdInfo.m_strFileName.IsEmpty() == FALSE)
 	{
 		ImportFileFromCommandLine(cmdInfo.m_strFileName);
 		return false;
 	}
-	else if(cmdInfo.m_bConnect || cmdInfo.m_bDisconnect)
+	else if (cmdInfo.m_bConnect || cmdInfo.m_bDisconnect)
 	{
 		return HandleConnectSwitch(cmdInfo);
 	}
@@ -357,22 +356,22 @@ bool CCP_MainApp::HandleConnectSwitch(const DittoCommandLineInfo& cmdInfo)
 	//disconnected from the clipboard
 	LRESULT ret = 0;
 	HWND hWnd = (HWND)(LONG_PTR)Services().Settings().GetMainHWND();
-	if(hWnd)
+	if (hWnd)
 	{
 		ret = ::SendMessage(hWnd, CDittoMessage::SetConnected, cmdInfo.m_bConnect, cmdInfo.m_bDisconnect);
 	}
 
 	//passed off to the running instance of ditto, exit this instance
-	if(ret == 1)
+	if (ret == 1)
 	{
 		return false;
 	}
 
-	if(cmdInfo.m_bConnect)
+	if (cmdInfo.m_bConnect)
 	{
 		m_connectOnStartup = TRUE;
 	}
-	else if(cmdInfo.m_bDisconnect)
+	else if (cmdInfo.m_bDisconnect)
 	{
 		m_connectOnStartup = FALSE;
 	}
@@ -412,7 +411,7 @@ bool CCP_MainApp::ForwardToRunningInstance(const DittoCommandLineInfo& cmdInfo)
 bool CCP_MainApp::CreateSingleInstanceMutex()
 {
 	CString csMutex("Ditto Is Now Running");
-	if(Services().Settings().GetIsPortableDitto() || Services().Settings().GetIsWindowsApp() || Services().Settings().GetIsChocolateyApp())
+	if (Services().Settings().GetIsPortableDitto() || Services().Settings().GetIsWindowsApp() || Services().Settings().GetIsChocolateyApp())
 	{
 		csMutex += " ";
 		csMutex += Services().Settings().GetExeFileName();
@@ -425,12 +424,12 @@ bool CCP_MainApp::CreateSingleInstanceMutex()
 
 	m_hMutex = CreateMutex(NULL, TRUE, csMutex);
 	DWORD dwError = GetLastError();
-	if(m_hMutex == NULL ||
+	if (m_hMutex == NULL ||
 		dwError == ERROR_ALREADY_EXISTS)
 	{
 		CLogger::Log(CStringUtil::Format(_T("Ditto is already running, closing, mutex: %s"), csMutex.GetString()));
 		HWND hWnd = (HWND)(LONG_PTR)Services().Settings().GetMainHWND();
-		if(hWnd)
+		if (hWnd)
 			::SendMessage(hWnd, CDittoMessage::ShowTrayIcon, TRUE, TRUE);
 
 		return false;
@@ -443,7 +442,7 @@ bool CCP_MainApp::CreateSingleInstanceMutex()
 
 void CCP_MainApp::CreateMainWnd()
 {
-	CMainFrame* pFrame{std::make_unique<CMainFrame>().release()}; // ownership: the frame window itself (CFrameWnd::PostNcDestroy deletes it, also when LoadFrame fails)
+	CMainFrame* pFrame{ std::make_unique<CMainFrame>().release() }; // ownership: the frame window itself (CFrameWnd::PostNcDestroy deletes it, also when LoadFrame fails)
 	m_pMainWnd = pFrame;
 	Services().Windows().SetMainFrame(pFrame);
 
@@ -459,7 +458,6 @@ void CCP_MainApp::CreateMainWnd()
 	//removed to keep ditto from taking focus on startup
 	//pFrame->ShowWindow(SW_SHOW);
 	//pFrame->UpdateWindow();
-
 }
 
 void CCP_MainApp::CloseNoDbWindow()
@@ -474,9 +472,9 @@ void CCP_MainApp::CloseNoDbWindow()
 
 bool CCP_MainApp::AfterMainCreate()
 {
-	const HWND mainHwnd{Services().Windows().MainFrame()->m_hWnd};
+	const HWND mainHwnd{ Services().Windows().MainFrame()->m_hWnd };
 	Services().Windows().SetMainHwnd(mainHwnd);
-	ASSERT( ::IsWindow(mainHwnd) );
+	ASSERT(::IsWindow(mainHwnd));
 	Services().Settings().SetMainHWND((long)(LONG_PTR)mainHwnd);
 
 	Services().HotKeys().Init(mainHwnd);
@@ -509,14 +507,14 @@ void CCP_MainApp::LoadGlobalClips()
 		{
 			CppSQLite3Query q = Services().Database().execQuery(_T("SELECT lID, lShortCut, mText FROM Main WHERE lShortCut > 0 AND globalShortCut = 1"));
 
-			while(q.eof() == false)
+			while (q.eof() == false)
 			{
 				int id = q.getIntField(_T("lID"));
 				int shortcut = q.getIntField(_T("lShortCut"));
 				CString desc = q.getStringField(_T("mText"));
 
 				// the registry owns the key and destroys it
-				CHotKey& globalHotKey{Services().HotKeys().Create(CStringUtil::Format(_T("GlobalClip: %d"), id), shortcut, true, CHotKey::PASTE_OPEN_CLIP, desc)};
+				CHotKey& globalHotKey{ Services().HotKeys().Create(CStringUtil::Format(_T("GlobalClip: %d"), id), shortcut, true, CHotKey::PASTE_OPEN_CLIP, desc) };
 				globalHotKey.m_clipId = id;
 
 				q.nextRow();
@@ -526,14 +524,14 @@ void CCP_MainApp::LoadGlobalClips()
 		{
 			CppSQLite3Query q2 = Services().Database().execQuery(_T("SELECT lID, MoveToGroupShortCut, mText FROM Main WHERE MoveToGroupShortCut > 0 AND GlobalMoveToGroupShortCut = 1"));
 
-			while(q2.eof() == false)
+			while (q2.eof() == false)
 			{
 				int id = q2.getIntField(_T("lID"));
 				int shortcut = q2.getIntField(_T("MoveToGroupShortCut"));
 				CString desc = q2.getStringField(_T("mText"));
 
 				// the registry owns the key and destroys it
-				CHotKey& globalHotKey{Services().HotKeys().Create(CStringUtil::Format(_T("MoveToGroup: %d"), id), shortcut, true, CHotKey::MOVE_TO_GROUP, desc)};
+				CHotKey& globalHotKey{ Services().HotKeys().Create(CStringUtil::Format(_T("MoveToGroup: %d"), id), shortcut, true, CHotKey::MOVE_TO_GROUP, desc) };
 				globalHotKey.m_clipId = id;
 
 				q2.nextRow();
@@ -549,8 +547,8 @@ void CCP_MainApp::LoadGlobalClips()
 
 void CCP_MainApp::BeforeMainClose()
 {
-	CAppState& state{Services().State()};
-	ASSERT( state.m_bAppRunning && !state.m_bAppExiting );
+	CAppState& state{ Services().State() };
+	ASSERT(state.m_bAppRunning && !state.m_bAppExiting);
 	state.m_bAppRunning = false;
 	state.m_bAppExiting = true;
 	Services().HotKeys().UnregisterAll();
@@ -579,7 +577,7 @@ int CCP_MainApp::ExitInstance()
 BOOL CCP_MainApp::OnIdle(LONG lCount)
 {
 	// let winapp handle its idle processing
-	if(CWinApp::OnIdle(lCount))
+	if (CWinApp::OnIdle(lCount))
 		return TRUE;
 
 	return FALSE;
@@ -591,7 +589,7 @@ void CCP_MainApp::ShowCommandLineError(CString csTitle, CString csMessage)
 
 	// handed off before Create: MFC's CWnd::CreateEx calls PostNcDestroy on every failure path,
 	// so a failed Create has already deleted the window object
-	CToolTipEx* pErrorWnd{std::make_unique<CToolTipEx>().release()}; // ownership: the window itself (CToolTipEx::PostNcDestroy deletes it)
+	CToolTipEx* pErrorWnd{ std::make_unique<CToolTipEx>().release() }; // ownership: the window itself (CToolTipEx::PostNcDestroy deletes it)
 	if (!pErrorWnd->Create(NULL))
 	{
 		AfxMessageBox(csTitle + "\n\n" + csMessage, MB_OK | MB_ICONERROR);
@@ -605,15 +603,14 @@ void CCP_MainApp::ShowCommandLineError(CString csTitle, CString csMessage)
 
 	CRect cr = pErrorWnd->GetBoundsRect();
 
-	pt.x -= max(cr.Width()+50, 150);
-	pt.y -= max(cr.Height()+50, 150);
+	pt.x -= max(cr.Width() + 50, 150);
+	pt.y -= max(cr.Height() + 50, 150);
 
 	pErrorWnd->Show(pt);
 
 	CAppWindows::PumpMessages(pErrorWnd->m_hWnd);
-	
+
 	Sleep(4000);
 
 	pErrorWnd->DestroyWindow();
 }
-

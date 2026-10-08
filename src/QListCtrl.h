@@ -1,4 +1,4 @@
- #if !defined(AFX_QLISTCTRL_H__30BEB04A_4B97_4943_BB73_C5128E66B4ED__INCLUDED_)
+#if !defined(AFX_QLISTCTRL_H__30BEB04A_4B97_4943_BB73_C5128E66B4ED__INCLUDED_)
 #define AFX_QLISTCTRL_H__30BEB04A_4B97_4943_BB73_C5128E66B4ED__INCLUDED_
 
 #if _MSC_VER > 1000
@@ -25,10 +25,9 @@ class CQListToolTipText
 public:
 	NMHDR hdr;
 	long lItem;
-	LPTSTR pszText; 
-	int cchTextMax; 
+	LPTSTR pszText;
+	int cchTextMax;
 };
-
 
 
 typedef CMap<long, long, CClipFormat, CClipFormat&> CMapIDtoCF;
@@ -98,55 +97,53 @@ public:
 	};
 
 	/** @brief The accelerator command of copy buffer 1's copy hot key (-100; CAccel::Cmd keeps its bit pattern). */
-	static constexpr DWORD s_copyBufferHotKey1Cmd{static_cast<DWORD>(-100)};
+	static constexpr DWORD s_copyBufferHotKey1Cmd{ static_cast<DWORD>(-100) };
 	/** @brief The accelerator command of copy buffer 2's copy hot key (-101; CAccel::Cmd keeps its bit pattern). */
-	static constexpr DWORD s_copyBufferHotKey2Cmd{static_cast<DWORD>(-101)};
+	static constexpr DWORD s_copyBufferHotKey2Cmd{ static_cast<DWORD>(-101) };
 	/** @brief The accelerator command of copy buffer 3's copy hot key (-102; CAccel::Cmd keeps its bit pattern). */
-	static constexpr DWORD s_copyBufferHotKey3Cmd{static_cast<DWORD>(-102)};
+	static constexpr DWORD s_copyBufferHotKey3Cmd{ static_cast<DWORD>(-102) };
 
 	/** @brief The LVITEM mask bit that asks the parent for a row's CF_DIB format (LVN_GETDISPINFO). */
-	static constexpr UINT s_lvifCfDib{0x10000000};
+	static constexpr UINT s_lvifCfDib{ 0x10000000 };
 	/** @brief The LVITEM mask bit that asks the parent for a row's RTF format (LVN_GETDISPINFO; a bit of its own,
 	 *         so a CF_DIB request does not also fill the RTF answer). */
-	static constexpr UINT s_lvifCfRichText{0x20000000};
+	static constexpr UINT s_lvifCfRichText{ 0x20000000 };
 	static_assert((s_lvifCfDib & s_lvifCfRichText) == 0, "the CF_DIB and RTF requests need bits of their own");
 
-// Construction
+	// Construction
 public:
 	CQListCtrl();
 
-// Attributes
+	// Attributes
 public:
-
-// Operations
+	// Operations
 public:
-
-// Overrides
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CQListCtrl)
-	public:
-	virtual INT_PTR OnToolHitTest(CPoint point, TOOLINFO * pTI) const;
+public:
+	virtual INT_PTR OnToolHitTest(CPoint point, TOOLINFO* pTI) const;
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	virtual BOOL OnChildNotify(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pLResult);
 	//}}AFX_VIRTUAL
 
-// Implementation
+	// Implementation
 public:
 	virtual ~CQListCtrl();
 
-	BOOL	m_bShowTextForFirstTenHotKeys;
+	BOOL m_bShowTextForFirstTenHotKeys;
 	// returns the position 1-10 if the index is in the FirstTen block else -1
-	int GetFirstTenNum( int index );
+	int GetFirstTenNum(int index);
 
 	void SetNumberOfLinesPerRow(int nLines, bool force);
-	void GetSelectionIndexes(ARRAY &arr);
-	void GetSelectionItemData(ARRAY &arr);
+	void GetSelectionIndexes(ARRAY& arr);
+	void GetSelectionItemData(ARRAY& arr);
 	void RefreshVisibleRows();
 	void RefreshRow(int row);
 	void RemoveAllSelection();
 	BOOL SetSelection(int nRow, BOOL bSelect = TRUE);
 	BOOL SetText(int nRow, int nCol, CString cs);
-	BOOL SetFormattedText(int nRow, int nCol, LPCTSTR lpszFormat,...);
+	BOOL SetFormattedText(int nRow, int nCol, LPCTSTR lpszFormat, ...);
 	BOOL SetCaret(int nRow, BOOL bFocus = TRUE);
 	long GetCaret();
 	// moves the caret to the given index, selects it, and ensures it is visible.
@@ -158,12 +155,12 @@ public:
 	DWORD GetItemData(int nItem);
 	CClipFormatQListCtrl* GetItem_CF_DIB_ClipFormat(int nItem);
 	CClipFormatQListCtrl* GetItem_CF_RTF_ClipFormat(int nItem);
-	void GetToolTipText(int nItem, CString &csText);
+	void GetToolTipText(int nItem, CString& csText);
 
-	void SetShowTextForFirstTenHotKeys(BOOL bVal)	{ m_bShowTextForFirstTenHotKeys = bVal;	}
+	void SetShowTextForFirstTenHotKeys(BOOL bVal) { m_bShowTextForFirstTenHotKeys = bVal; }
 	void SetShowIfClipWasPasted(BOOL val) { m_showIfClipWasPasted = val; }
 
-	void DestroyAndCreateAccelerator(BOOL bCreate, CppSQLite3DB &db);
+	void DestroyAndCreateAccelerator(BOOL bCreate, CppSQLite3DB& db);
 
 	bool PostEventLoadedCheckDescription(int updatedRow);
 	bool ShowFullDescription(bool bFromAuto = false, bool fromNextPrev = false);
@@ -172,12 +169,12 @@ public:
 	void HidePopup(bool checkShowPersistant);
 	void ToggleToolTipShowPersistant();
 	bool ToggleToolTipWordWrap();
-	void SetTooltipActions(CAccels *pToolTipActions) { m_pToolTipActions = pToolTipActions; }
+	void SetTooltipActions(CAccels* pToolTipActions) { m_pToolTipActions = pToolTipActions; }
 	bool IsToolTipShowPersistant();
 	void DoToolTipSearch();
 	void HideToolTip();
 
-	void SetLogFont(LOGFONT &font);
+	void SetLogFont(LOGFONT& font);
 
 	HWND GetToolTipHWnd();
 
@@ -192,12 +189,12 @@ public:
 
 	void SetSearchText(CString text);
 
-	void SetDpiInfo(CDPI *dpi);
+	void SetDpiInfo(CDPI* dpi);
 
 	void CreateSmallFont();
 
 	void OnDpiChanged();
-	
+
 	void LoadCopyOrCutToClipboard();
 
 protected:
@@ -209,17 +206,17 @@ protected:
 	 * @throws CResourceException when the window cannot be created.
 	 */
 	void CreateToolTip();
-	BOOL GetClipData(int nItem, CClipFormat &Clip);
+	BOOL GetClipData(int nItem, CClipFormat& Clip);
 	// Puts the item's image (DIB, else PNG) into the tooltip; reports a malformed image.
 	void SetToolTipImage(int nItem, CClipFormat& Clip);
-	BOOL DrawBitMap(int nItem, CRect &crRect, CDC *pDC, const CString &csDescription);
+	BOOL DrawBitMap(int nItem, CRect& crRect, CDC* pDC, const CString& csDescription);
 	void LoadDittoCopyBufferHotkeys();
 	bool MouseInScrollBarArea(CRect crWindow, CPoint point);
-	BOOL DrawRtfText(int nItem, CRect &crRect, CDC *pDC);
+	BOOL DrawRtfText(int nItem, CRect& crRect, CDC* pDC);
 	void StopHideScrollBarTimer();
 	bool IsHexString(const CString& str);
-    COLORREF HslToRgb(double h, double s, double l);
-		
+	COLORREF HslToRgb(double h, double s, double l);
+
 	void DrawCheckerboard(CDC* pDC, CRect rect);
 
 	/** @brief The timer ids of the list (SetTimer / OnTimer). */
@@ -233,9 +230,9 @@ protected:
 		TimerShowScroll = 3,
 	};
 	/** @brief The space below a row's text, in unscaled pixels. */
-	static constexpr int s_rowBottomBorder{4};
+	static constexpr int s_rowBottomBorder{ 4 };
 	/** @brief The space left of a row's text, in unscaled pixels. */
-	static constexpr int s_rowLeftBorder{3};
+	static constexpr int s_rowLeftBorder{ 3 };
 
 	/**
 	 * @brief Whether the description tool tip exists and its window is alive.
@@ -249,10 +246,10 @@ protected:
 	CStringA m_toolTipTextA{};
 	/** @brief The font of the first-ten hot key numbers; empty until CreateSmallFont. */
 	CFont m_SmallFont{};
-	CAccels	m_Accels;
+	CAccels m_Accels;
 	CMapIDtoCF m_RTFData;
 	/** @brief The description tool tip (non-owning: the window deletes itself in PostNcDestroy). */
-	CToolTipEx *m_pToolTip;
+	CToolTipEx* m_pToolTip;
 	HWND m_toolTipHwnd{};
 	CFont m_Font;
 	CFont m_boldFont;
@@ -270,9 +267,9 @@ protected:
 	int m_rowHeight;
 	CString m_searchText;
 	BOOL m_showIfClipWasPasted;
-	CAccels *m_pToolTipActions;
+	CAccels* m_pToolTipActions;
 	CRichEditCtrlEx m_rtfFormater;
-	CDPI *m_windowDpi;
+	CDPI* m_windowDpi;
 	/** @brief Draws the row texts with highlighted search matches; keeps its colour stack between rows. */
 	HtmlTextDrawer m_htmlTextDrawer{};
 
@@ -291,7 +288,7 @@ protected:
 	afx_msg void OnSelectionChange(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	//}}AFX_MSG
-	afx_msg BOOL OnToolTipText(UINT id, NMHDR * pNMHDR, LRESULT * pResult);
+	afx_msg BOOL OnToolTipText(UINT id, NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void MeasureItem(LPMEASUREITEMSTRUCT lpMeasureItemStruct);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	DECLARE_MESSAGE_MAP()
@@ -310,7 +307,7 @@ private:
 		/** @brief The colour. */
 		COLORREF color{};
 		/** @brief The opacity, 0 (transparent) to 255 (opaque). */
-		int alpha{255};
+		int alpha{ 255 };
 	};
 
 	/** @brief The scan state that the plain RGB parsers share, in the order they run. */

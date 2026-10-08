@@ -9,7 +9,8 @@
 namespace DittoCore
 {
 	CaseTransforms::CaseTransforms(const ICaseMapper& cases) noexcept
-		: m_cases(cases)
+		:
+		m_cases(cases)
 	{
 	}
 
@@ -55,14 +56,16 @@ namespace DittoCore
 
 	std::wstring CaseTransforms::Capitalize(std::wstring_view text) const
 	{
-		return RaiseAfter(text, [](wchar_t c) { return c == L' '; }, [](wchar_t c) { return c == L' '; });
+		return RaiseAfter(text, [](wchar_t c)
+						  { return c == L' '; }, [](wchar_t c)
+						  { return c == L' '; });
 	}
 
 	std::wstring CaseTransforms::SentenceCase(std::wstring_view text) const
 	{
-		return RaiseAfter(text,
-			[](wchar_t c) { return c == L'.' || c == L'!' || c == L'?'; },
-			[](wchar_t c) { return std::iswspace(c) != 0; });
+		return RaiseAfter(text, [](wchar_t c)
+						  { return c == L'.' || c == L'!' || c == L'?'; }, [](wchar_t c)
+						  { return std::iswspace(c) != 0; });
 	}
 
 	template <typename Separator, typename Skipped>

@@ -38,7 +38,6 @@ COleClipSource::COleClipSource() :
 
 COleClipSource::~COleClipSource()
 {
-
 }
 
 CGetSetOptions& COleClipSource::Settings() const
@@ -59,7 +58,7 @@ BOOL COleClipSource::DoDelayRender()
 	bool foundHDrop = false;
 
 	INT_PTR count = types.GetSize();
-	for(int i=0; i < count; i++)
+	for (int i = 0; i < count; i++)
 	{
 		if (m_pasteOptions.m_dragDropFilesOnly)
 		{
@@ -91,23 +90,23 @@ BOOL COleClipSource::DoDelayRender()
 
 BOOL COleClipSource::DoImmediateRender()
 {
-	if(m_bLoadedFormats)
+	if (m_bLoadedFormats)
 		return TRUE;
 
 	m_bLoadedFormats = true;
 
-	if(m_pasteOptions.m_pPasteFormats != NULL)
+	if (m_pasteOptions.m_pPasteFormats != NULL)
 	{
 		return PutFormatOnClipboard(m_pasteOptions.m_pPasteFormats) > 0;
 	}
 
 	INT_PTR count = m_ClipIDs.GetSize();
-	if(count <= 0)
+	if (count <= 0)
 		return 0;
 
 	CClip clip(Services().ClipContext());
 
-	if(count > 1)
+	if (count > 1)
 	{
 		AggregateClips(clip);
 	}
@@ -273,10 +272,10 @@ void COleClipSource::AggregateTextFormats(CClip& clip)
 	}
 }
 
-void COleClipSource::TransformText(CClip &clip, const std::function<std::wstring(std::wstring_view)>& transform)
+void COleClipSource::TransformText(CClip& clip, const std::function<std::wstring(std::wstring_view)>& transform)
 {
-	IClipFormat *unicodeText = clip.m_Formats.FindFormatEx(CF_UNICODETEXT);
-	IClipFormat *ansiText = clip.m_Formats.FindFormatEx(CF_TEXT);
+	IClipFormat* unicodeText = clip.m_Formats.FindFormatEx(CF_UNICODETEXT);
+	IClipFormat* ansiText = clip.m_Formats.FindFormatEx(CF_TEXT);
 	CString source;
 	if (unicodeText != NULL)
 	{
@@ -307,9 +306,9 @@ void COleClipSource::TransformText(CClip &clip, const std::function<std::wstring
 	}
 }
 
-void COleClipSource::TransformRtf(CClip &clip, const std::function<std::string(std::string_view)>& transform)
+void COleClipSource::TransformRtf(CClip& clip, const std::function<std::string(std::string_view)>& transform)
 {
-	IClipFormat *rtf = clip.m_Formats.FindFormatEx(Services().ClipboardFormats().Rtf());
+	IClipFormat* rtf = clip.m_Formats.FindFormatEx(Services().ClipboardFormats().Rtf());
 	if (rtf == NULL)
 	{
 		return;
@@ -320,29 +319,34 @@ void COleClipSource::TransformRtf(CClip &clip, const std::function<std::string(s
 	rtf->Data(CGlobalMemory::NewGlobalP(const_cast<char*>(result.c_str()), result.size() + 1));
 }
 
-void COleClipSource::DoUpperLowerCase(CClip &clip, bool upper)
+void COleClipSource::DoUpperLowerCase(CClip& clip, bool upper)
 {
-	TransformText(clip, [this, upper](std::wstring_view text) { return upper ? m_cases.Upper(text) : m_cases.Lower(text); });
+	TransformText(clip, [this, upper](std::wstring_view text)
+				  { return upper ? m_cases.Upper(text) : m_cases.Lower(text); });
 }
 
-void COleClipSource::InvertCase(CClip &clip)
+void COleClipSource::InvertCase(CClip& clip)
 {
-	TransformText(clip, [this](std::wstring_view text) { return m_cases.InvertCase(text); });
+	TransformText(clip, [this](std::wstring_view text)
+				  { return m_cases.InvertCase(text); });
 }
 
 void COleClipSource::CamelCase(CClip& clip)
 {
-	TransformText(clip, [this](std::wstring_view text) { return m_cases.CamelCase(text); });
+	TransformText(clip, [this](std::wstring_view text)
+				  { return m_cases.CamelCase(text); });
 }
 
-void COleClipSource::Capitalize(CClip &clip)
+void COleClipSource::Capitalize(CClip& clip)
 {
-	TransformText(clip, [this](std::wstring_view text) { return m_cases.Capitalize(text); });
+	TransformText(clip, [this](std::wstring_view text)
+				  { return m_cases.Capitalize(text); });
 }
 
-void COleClipSource::SentenceCase(CClip &clip)
+void COleClipSource::SentenceCase(CClip& clip)
 {
-	TransformText(clip, [this](std::wstring_view text) { return m_cases.SentenceCase(text); });
+	TransformText(clip, [this](std::wstring_view text)
+				  { return m_cases.SentenceCase(text); });
 }
 
 void COleClipSource::AsciiOnly(CClip& clip)
@@ -353,10 +357,10 @@ void COleClipSource::AsciiOnly(CClip& clip)
 COleClipSource::PlainTextScan COleClipSource::ScanForTextAndHDrop(CClip& clip)
 {
 	PlainTextScan scan{};
-	INT_PTR	count = clip.m_Formats.GetCount();
+	INT_PTR count = clip.m_Formats.GetCount();
 	for (INT_PTR i = 0; i < count; i++)
 	{
-		CClipFormat *pCF = &clip.m_Formats.ElementAt(i);
+		CClipFormat* pCF = &clip.m_Formats.ElementAt(i);
 
 		if (pCF->m_cfType == CF_TEXT ||
 			pCF->m_cfType == CF_UNICODETEXT)
@@ -371,7 +375,7 @@ COleClipSource::PlainTextScan COleClipSource::ScanForTextAndHDrop(CClip& clip)
 	return scan;
 }
 
-void COleClipSource::PlainTextFilter(CClip &clip)
+void COleClipSource::PlainTextFilter(CClip& clip)
 {
 	const PlainTextScan scan{ ScanForTextAndHDrop(clip) };
 	const bool foundText{ scan.foundText };
@@ -383,7 +387,7 @@ void COleClipSource::PlainTextFilter(CClip &clip)
 		clip.m_Formats.RemoveAt(hDropIndex);
 	}
 	else if (foundText == false &&
-		hDropIndex > -1)
+			 hDropIndex > -1)
 	{
 		CCF_HDropAggregator HDrop;
 		if (m_ClipIDs.AggregateData(Services().ClipContext(), HDrop, CF_HDROP, Settings().m_bMultiPasteReverse, m_pasteOptions.LimitFormatsToText()))
@@ -392,32 +396,36 @@ void COleClipSource::PlainTextFilter(CClip &clip)
 
 			CClipFormat format(CF_UNICODETEXT, HDrop.GetHGlobalAsString());
 			clip.m_Formats.Add(format);
-			format.m_autoDeleteData = false; //owned by m_DelayRenderedFormats			
+			format.m_autoDeleteData = false; //owned by m_DelayRenderedFormats
 		}
 	}
 }
 
-void COleClipSource::RemoveLineFeeds(CClip &clip)
+void COleClipSource::RemoveLineFeeds(CClip& clip)
 {
 	TransformText(clip, &DittoCore::TextTransforms::RemoveLineFeeds);
 	TransformRtf(clip, &DittoCore::RtfTransforms::RemoveLineFeeds);
 }
 
-void COleClipSource::AddLineFeeds(CClip &clip, int count)
+void COleClipSource::AddLineFeeds(CClip& clip, int count)
 {
-	TransformText(clip, [count](std::wstring_view text) { return DittoCore::TextTransforms::AddLineFeeds(text, count); });
-	TransformRtf(clip, [count](std::string_view rtf) { return DittoCore::RtfTransforms::AddLineFeeds(rtf, count); });
+	TransformText(clip, [count](std::wstring_view text)
+				  { return DittoCore::TextTransforms::AddLineFeeds(text, count); });
+	TransformRtf(clip, [count](std::string_view rtf)
+				 { return DittoCore::RtfTransforms::AddLineFeeds(rtf, count); });
 }
 
-void COleClipSource::AddDateTime(CClip &clip)
+void COleClipSource::AddDateTime(CClip& clip)
 {
 	const CString now = COleDateTime::GetCurrentTime().Format();
 	const std::wstring_view time(now.GetString(), now.GetLength());
-	TransformText(clip, [time](std::wstring_view text) { return DittoCore::TextTransforms::AddDateTime(text, time); });
-	TransformRtf(clip, [time](std::string_view rtf) { return DittoCore::RtfTransforms::AddDateTime(rtf, time); });
+	TransformText(clip, [time](std::wstring_view text)
+				  { return DittoCore::TextTransforms::AddDateTime(text, time); });
+	TransformRtf(clip, [time](std::string_view rtf)
+				 { return DittoCore::RtfTransforms::AddDateTime(rtf, time); });
 }
 
-void COleClipSource::TrimWhiteSpace(CClip &clip)
+void COleClipSource::TrimWhiteSpace(CClip& clip)
 {
 	TransformText(clip, &DittoCore::TextTransforms::Trim);
 }
@@ -472,13 +480,13 @@ CString COleClipSource::UniqueFileName(const CString& originalPath, std::set<CSt
 	return candidate;
 }
 
-void COleClipSource::SaveDittoFileDataToFile(CClip &clip)
+void COleClipSource::SaveDittoFileDataToFile(CClip& clip)
 {
 	std::vector<std::wstring> hDrpData;
 	CClipFormat* pCF;
 	int hDropIndex = -1;
 	bool savedFile = false;
-	INT_PTR	count = clip.m_Formats.GetSize();
+	INT_PTR count = clip.m_Formats.GetSize();
 	for (int i = 0; i < count; i++)
 	{
 		pCF = &clip.m_Formats.ElementAt(i);
@@ -508,21 +516,22 @@ void COleClipSource::SaveDittoFileDataToFile(CClip &clip)
 	}
 }
 
-void COleClipSource::Typoglycemia(CClip &clip)
+void COleClipSource::Typoglycemia(CClip& clip)
 {
 	CRandomRange random;
-	TransformText(clip, [&random](std::wstring_view text) { return DittoCore::Typoglycemia::Scramble(text, random); });
+	TransformText(clip, [&random](std::wstring_view text)
+				  { return DittoCore::Typoglycemia::Scramble(text, random); });
 }
 
-INT_PTR COleClipSource::PutFormatOnClipboard(CClipFormats *pFormats)
+INT_PTR COleClipSource::PutFormatOnClipboard(CClipFormats* pFormats)
 {
 	CLogger::Log(_T("Start of put format on clipboard"));
 
 	CClipFormat* pCF;
-	INT_PTR	count = pFormats->GetSize();
+	INT_PTR count = pFormats->GetSize();
 	INT_PTR i = 0;
 
-	for(i = 0; i < count; i++)
+	for (i = 0; i < count; i++)
 	{
 		pCF = &pFormats->ElementAt(i);
 
@@ -560,19 +569,19 @@ std::optional<HGLOBAL> COleClipSource::RenderClipsOrReport(CLIPFORMAT format)
 	catch (const DittoCore::ClipboardFormatError& error)
 	{
 		CErrorReport::Show(CStringUtil::Format(_T("Ditto could not provide %s for the paste: the clip's data is malformed (%s)."),
-			CClipboardFormats::GetFormatName(format).GetString(), CString(error.what()).GetString()));
+											   CClipboardFormats::GetFormatName(format).GetString(), CString(error.what()).GetString()));
 	}
 	catch (CppSQLite3Exception& error)
 	{
 		CErrorReport::Show(CStringUtil::Format(_T("Ditto could not provide %s for the paste: database error %d (%s)."),
-			CClipboardFormats::GetFormatName(format).GetString(), error.errorCode(), error.errorMessage()));
+											   CClipboardFormats::GetFormatName(format).GetString(), error.errorCode(), error.errorMessage()));
 	}
 	return std::nullopt;
 }
 
 BOOL COleClipSource::OnRenderGlobalData(LPFORMATETC lpFormatEtc, HGLOBAL* phGlobal)
 {
-	if(m_inRenderGlobalData)
+	if (m_inRenderGlobalData)
 	{
 		return FALSE;
 	}
@@ -580,11 +589,11 @@ BOOL COleClipSource::OnRenderGlobalData(LPFORMATETC lpFormatEtc, HGLOBAL* phGlob
 
 	HGLOBAL hData = NULL;
 
-	CClipFormat *pFind = m_DelayRenderedFormats.FindFormat(lpFormatEtc->cfFormat);
+	CClipFormat* pFind = m_DelayRenderedFormats.FindFormat(lpFormatEtc->cfFormat);
 
-	if(pFind)
+	if (pFind)
 	{
-		if(pFind->m_hgData)
+		if (pFind->m_hgData)
 		{
 			hData = CGlobalMemory::NewGlobalH(pFind->m_hgData, GlobalSize(pFind->m_hgData));
 		}
@@ -605,7 +614,7 @@ BOOL COleClipSource::OnRenderGlobalData(LPFORMATETC lpFormatEtc, HGLOBAL* phGlob
 
 bool COleClipSource::RenderAndCache(CLIPFORMAT cfFormat, HGLOBAL& hData)
 {
-	if(m_ClipIDs.GetCount() > 0)
+	if (m_ClipIDs.GetCount() > 0)
 	{
 		const std::optional<HGLOBAL> rendered = RenderClipsOrReport(cfFormat);
 		if (!rendered)
@@ -619,7 +628,7 @@ bool COleClipSource::RenderAndCache(CLIPFORMAT cfFormat, HGLOBAL& hData)
 	//Windows seems to call this function multiple times
 	//so only the first time do we need to go get the data
 	HGLOBAL hCopy = NULL;
-	if(hData)
+	if (hData)
 	{
 		hCopy = CGlobalMemory::NewGlobalH(hData, GlobalSize(hData));
 	}
@@ -634,18 +643,18 @@ bool COleClipSource::RenderAndCache(CLIPFORMAT cfFormat, HGLOBAL& hData)
 BOOL COleClipSource::HandOverRenderedData(HGLOBAL hData, HGLOBAL* phGlobal)
 {
 	BOOL bRet = FALSE;
-	if(hData)
+	if (hData)
 	{
 		// if phGlobal is null, we can just give the allocated mem
 		// else, our data must fit within the GlobalSize(*phGlobal)
-		if(*phGlobal == 0)
+		if (*phGlobal == 0)
 		{
 			*phGlobal = hData;
 		}
 		else
 		{
 			SIZE_T len = min(::GlobalSize(*phGlobal), ::GlobalSize(hData));
-			if(len)
+			if (len)
 			{
 				CGlobalMemory::CopyToGlobalHH(*phGlobal, hData, len);
 			}
@@ -679,7 +688,7 @@ HGLOBAL COleClipSource::ConvertToFileDrop()
 		AddDragFile(fileClip, drag);
 	}
 
-	if(drag.customName == _T("") &&
+	if (drag.customName == _T("") &&
 		drag.nextId != origDragId)
 	{
 		Settings().SetDragId(drag.nextId);
@@ -708,8 +717,8 @@ CString COleClipSource::NextDragFilePath(DragFiles& drag, const TCHAR* defaultNa
 
 void COleClipSource::AddDragFile(CClip& fileClip, DragFiles& drag)
 {
-	CClipFormat *unicodeText = fileClip.m_Formats.FindFormat(CF_UNICODETEXT);
-	CClipFormat *asciiText = fileClip.m_Formats.FindFormat(CF_TEXT);
+	CClipFormat* unicodeText = fileClip.m_Formats.FindFormat(CF_UNICODETEXT);
+	CClipFormat* asciiText = fileClip.m_Formats.FindFormat(CF_TEXT);
 	if (unicodeText || asciiText)
 	{
 		CString file = NextDragFilePath(drag, _T("text"), _T("txt"));
@@ -724,8 +733,8 @@ void COleClipSource::AddDragFile(CClip& fileClip, DragFiles& drag)
 		return;
 	}
 
-	CClipFormat *png = fileClip.m_Formats.FindFormat(Services().ClipboardFormats().Png());
-	CClipFormat *bitmap = fileClip.m_Formats.FindFormat(CF_DIB);
+	CClipFormat* png = fileClip.m_Formats.FindFormat(Services().ClipboardFormats().Png());
+	CClipFormat* bitmap = fileClip.m_Formats.FindFormat(CF_DIB);
 	if (bitmap != NULL ||
 		png != NULL)
 	{
@@ -738,11 +747,12 @@ void COleClipSource::AddDragFile(CClip& fileClip, DragFiles& drag)
 	}
 }
 
-void COleClipSource::Slugify(CClip &clip)
+void COleClipSource::Slugify(CClip& clip)
 {
 	const CString separator = Settings().GetSlugifySeparator();
 	const std::wstring_view separatorView(separator.GetString(), separator.GetLength());
-	TransformText(clip, [separatorView](std::wstring_view text) { return DittoCore::Slugifier::Slugify(text, separatorView); });
+	TransformText(clip, [separatorView](std::wstring_view text)
+				  { return DittoCore::Slugifier::Slugify(text, separatorView); });
 }
 
 void COleClipSource::PutGuidOntoClipboard(CClip& clip)

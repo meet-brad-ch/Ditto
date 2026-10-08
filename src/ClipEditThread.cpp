@@ -25,7 +25,7 @@ CClipEditThread::~CClipEditThread()
 void CClipEditThread::Close()
 {
 	Stop();
-		
+
 	if (m_folderHandle != INVALID_HANDLE_VALUE)
 	{
 		CloseHandle(m_folderHandle);
@@ -33,7 +33,7 @@ void CClipEditThread::Close()
 	}
 
 	RemoveEvent(EventFileChanged);
-	m_overlapped.hEvent = INVALID_HANDLE_VALUE;	
+	m_overlapped.hEvent = INVALID_HANDLE_VALUE;
 
 	CString editClipFolder = m_settings.GetPath(CGetSetOptions::PathEditClips);
 	CTempFileCleaner::DeleteFolderFiles(editClipFolder, TRUE, CTimeSpan(7, 0, 0, 0));
@@ -44,11 +44,11 @@ void CClipEditThread::StartWatchingFolderForChanges()
 	CString editClipFolder = m_settings.GetPath(CGetSetOptions::PathEditClips);
 
 	m_folderHandle = CreateFileW(editClipFolder, FILE_LIST_DIRECTORY, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, NULL);
-	
-	m_overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-	AddEvent(EventFileChanged, m_overlapped.hEvent);	
 
-	RefreshWatch();		
+	m_overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+	AddEvent(EventFileChanged, m_overlapped.hEvent);
+
+	RefreshWatch();
 
 	Start();
 }
@@ -68,9 +68,9 @@ void CClipEditThread::RefreshWatch()
 	memset(m_fileChangeBuffer, 0, sizeof(m_fileChangeBuffer));
 
 	DWORD bytesReturned = 0;
-	ReadDirectoryChangesW(m_folderHandle, m_fileChangeBuffer, sizeof(m_fileChangeBuffer), FALSE, 
-		FILE_NOTIFY_CHANGE_CREATION | FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_SIZE, 
-		&bytesReturned, &m_overlapped, NULL);
+	ReadDirectoryChangesW(m_folderHandle, m_fileChangeBuffer, sizeof(m_fileChangeBuffer), FALSE,
+						  FILE_NOTIFY_CHANGE_CREATION | FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_SIZE,
+						  &bytesReturned, &m_overlapped, NULL);
 }
 
 void CClipEditThread::OnTimeOut(void* /*param*/)
@@ -92,7 +92,7 @@ void CClipEditThread::OnTimeOut(void* /*param*/)
 			{
 				it++;
 			}
-		}		
+		}
 	}
 	else
 	{
@@ -128,11 +128,11 @@ void CClipEditThread::OnEvent(int eventId, void* /*param*/)
 {
 	switch (eventId)
 	{
-		case EventFileChanged:
-		{
-			OnFileChanged();
-			break;
-		}
+	case EventFileChanged:
+	{
+		OnFileChanged();
+		break;
+	}
 	}
 }
 
@@ -314,10 +314,10 @@ bool CClipEditThread::ReadEditedFile(const CString& fullFilePath, const CString&
 bool CClipEditThread::IsEmptyNewClip(int id, const EditedClipData& data)
 {
 	return id < 0 &&
-		data.unicodeText == _T("") &&
-		data.utf8Text == "" &&
-		data.cf_dibBytes.size() <= 0 &&
-		data.pngBytes.size() <= 0;
+		   data.unicodeText == _T("") &&
+		   data.utf8Text == "" &&
+		   data.cf_dibBytes.size() <= 0 &&
+		   data.pngBytes.size() <= 0;
 }
 
 bool CClipEditThread::SaveEditedFormats(CClip& clip, const CString& extenstion, EditedClipData& data, BOOL modifyDescription)
@@ -359,7 +359,7 @@ void CClipEditThread::RefreshEditedClip(const CString& filePath, int id, const C
 	}
 }
 
-bool CClipEditThread::ReadFile(CString filePath, bool &unicode, CString &unicodeText, CStringA &utf8Text)
+bool CClipEditThread::ReadFile(CString filePath, bool& unicode, CString& unicodeText, CStringA& utf8Text)
 {
 	CFile file;
 	CFileException ex;
@@ -427,27 +427,31 @@ std::vector<BYTE> CClipEditThread::CImageToPNGBytes(const CImage& image, REFGUID
 {
 	IStream* pStream = nullptr;
 	HRESULT hr = CreateStreamOnHGlobal(nullptr, TRUE, &pStream);
-	if (FAILED(hr)) {
+	if (FAILED(hr))
+	{
 		return {};
 	}
 
 	ULARGE_INTEGER ulSize;
 
 	hr = image.Save(pStream, guidFileType);
-	if (FAILED(hr)) {
+	if (FAILED(hr))
+	{
 		pStream->Release();
 		return {};
 	}
 
 	LARGE_INTEGER liZero = { 0 };
 	hr = pStream->Seek(liZero, STREAM_SEEK_SET, nullptr);
-	if (FAILED(hr)) {
+	if (FAILED(hr))
+	{
 		pStream->Release();
 		return {};
 	}
 
 	hr = pStream->Seek({ 0 }, STREAM_SEEK_END, &ulSize);
-	if (FAILED(hr)) {
+	if (FAILED(hr))
+	{
 		pStream->Release();
 		return {};
 	}
@@ -455,7 +459,8 @@ std::vector<BYTE> CClipEditThread::CImageToPNGBytes(const CImage& image, REFGUID
 	std::vector<BYTE> pngBytes((UINT)ulSize.QuadPart);
 
 	hr = pStream->Seek(liZero, STREAM_SEEK_SET, nullptr);
-	if (FAILED(hr)) {
+	if (FAILED(hr))
+	{
 		pStream->Release();
 		return {};
 	}
@@ -463,13 +468,14 @@ std::vector<BYTE> CClipEditThread::CImageToPNGBytes(const CImage& image, REFGUID
 	hr = pStream->Read(pngBytes.data(), (UINT)ulSize.QuadPart, nullptr);
 	pStream->Release();
 
-	if (FAILED(hr)) {
+	if (FAILED(hr))
+	{
 		return {};
 	}
 	return pngBytes;
 }
 
-bool CClipEditThread::ReadImageFile(CString path, std::vector<BYTE> &/*cf_dibBytes*/, std::vector<BYTE> & pngBytes)
+bool CClipEditThread::ReadImageFile(CString path, std::vector<BYTE>& /*cf_dibBytes*/, std::vector<BYTE>& pngBytes)
 {
 	CImage image;
 	HRESULT hr = image.Load(path);
@@ -479,12 +485,12 @@ bool CClipEditThread::ReadImageFile(CString path, std::vector<BYTE> &/*cf_dibByt
 		return false;
 	}
 
-	pngBytes = CImageToPNGBytes(image, Gdiplus::ImageFormatPNG);	
+	pngBytes = CImageToPNGBytes(image, Gdiplus::ImageFormatPNG);
 
 	return true;
 }
 
-BOOL CClipEditThread::GetTextFromRTF(CStringA rtf, CString &unicodeText)
+BOOL CClipEditThread::GetTextFromRTF(CStringA rtf, CString& unicodeText)
 {
 	CConvertRTFToText cc;
 	if (cc.Create())
@@ -502,7 +508,7 @@ BOOL CClipEditThread::GetTextFromRTF(CStringA rtf, CString &unicodeText)
 	else
 	{
 		CLogger::Write(CStringUtil::Format(_T("Failed to create rtf to text window")));
-	}	
+	}
 
 	return false;
 }

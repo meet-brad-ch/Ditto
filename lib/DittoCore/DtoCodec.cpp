@@ -21,7 +21,7 @@ namespace DittoCore
 		uLongf compressedSize = compressBound(static_cast<uLong>(data.size()));
 		std::vector<std::byte> compressed(compressedSize);
 		const int result = compress(reinterpret_cast<Bytef*>(compressed.data()), &compressedSize,
-			reinterpret_cast<const Bytef*>(data.data()), static_cast<uLong>(data.size()));
+									reinterpret_cast<const Bytef*>(data.data()), static_cast<uLong>(data.size()));
 		if (result != Z_OK)
 		{
 			throw ClipboardFormatError("zlib could not compress the format (error " + std::to_string(result) + ")");

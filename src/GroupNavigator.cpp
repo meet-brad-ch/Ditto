@@ -16,7 +16,7 @@ BOOL CGroupNavigator::TryEnterOldGroupState()
 {
 	BOOL enteredGroup = FALSE;
 
-	if(m_state.m_oldGroupID > -2)
+	if (m_state.m_oldGroupID > -2)
 	{
 		m_state.m_GroupID = m_state.m_oldGroupID;
 		m_state.m_GroupParentID = m_state.m_oldGroupParentID;
@@ -32,27 +32,27 @@ BOOL CGroupNavigator::TryEnterOldGroupState()
 	return enteredGroup;
 }
 
-BOOL CGroupNavigator::EnterGroupID(long lID, BOOL clearOldGroupState/* = TRUE*/, BOOL saveCurrentGroupState/* = FALSE*/)
+BOOL CGroupNavigator::EnterGroupID(long lID, BOOL clearOldGroupState /* = TRUE*/, BOOL saveCurrentGroupState /* = FALSE*/)
 {
 	BOOL bResult = FALSE;
 
-	if(m_state.m_GroupID == lID)
+	if (m_state.m_GroupID == lID)
 		return TRUE;
 
 	ULONGLONG startTick = GetTickCount64();
 
-	if(clearOldGroupState)
+	if (clearOldGroupState)
 	{
 		m_state.ClearOldGroupState();
 	}
 
-	if(saveCurrentGroupState)
+	if (saveCurrentGroupState)
 	{
 		m_state.SaveCurrentGroupState();
 	}
 
 	// if we are switching to the parent, focus on the previous group
-	if(m_state.m_GroupParentID == lID && m_state.m_GroupID > 0)
+	if (m_state.m_GroupParentID == lID && m_state.m_GroupID > 0)
 		m_state.m_FocusID = m_state.m_GroupID;
 
 	if (!OpenGroup(lID, bResult))
@@ -67,7 +67,7 @@ BOOL CGroupNavigator::EnterGroupID(long lID, BOOL clearOldGroupState/* = TRUE*/,
 
 bool CGroupNavigator::OpenGroup(long lID, BOOL& bResult)
 {
-	switch(lID)
+	switch (lID)
 	{
 	case -1:
 		m_state.m_FocusID = -1;
@@ -94,30 +94,30 @@ bool CGroupNavigator::OpenGroup(long lID, BOOL& bResult)
 
 void CGroupNavigator::FinishEnterGroup(BOOL bResult, ULONGLONG startTick)
 {
-	if(bResult)
+	if (bResult)
 	{
 		RefreshAfterGroupChange();
 	}
 
 	ULONGLONG endTick = GetTickCount64();
-	if((endTick-startTick) > 150)
-		CLogger::Log(CStringUtil::Format(_T("Paste Timing EnterParentId: %llu"), endTick-startTick));
+	if ((endTick - startTick) > 150)
+		CLogger::Log(CStringUtil::Format(_T("Paste Timing EnterParentId: %llu"), endTick - startTick));
 }
 
 void CGroupNavigator::RefreshAfterGroupChange()
 {
 	m_windows.RefreshView();
-	if(m_windows.QPasteWnd())
+	if (m_windows.QPasteWnd())
 		m_windows.QPasteWnd()->UpdateStatus(true);
 }
 
 BOOL CGroupNavigator::EnterStoredGroup(long lID)
 {
-	BOOL bResult{FALSE};
-	CppSQLite3Query q{m_database.execQueryEx(_T("SELECT lParentID, mText, bIsGroup FROM Main WHERE lID = %d"), lID)};
-	if(q.eof() == false)
+	BOOL bResult{ FALSE };
+	CppSQLite3Query q{ m_database.execQueryEx(_T("SELECT lParentID, mText, bIsGroup FROM Main WHERE lID = %d"), lID) };
+	if (q.eof() == false)
 	{
-		if(q.getIntField(_T("bIsGroup")) > 0)
+		if (q.getIntField(_T("bIsGroup")) > 0)
 		{
 			m_state.m_GroupID = lID;
 			m_state.m_GroupParentID = q.getIntField(_T("lParentID"));
@@ -131,12 +131,12 @@ BOOL CGroupNavigator::EnterStoredGroup(long lID)
 
 void CGroupNavigator::SetGroupDefaultID(long lID)
 {
-	if(m_state.m_GroupDefaultID == lID)
+	if (m_state.m_GroupDefaultID == lID)
 	{
 		return;
 	}
 
-	if(lID <= 0)
+	if (lID <= 0)
 	{
 		m_state.m_GroupDefaultID = 0;
 	}
@@ -145,7 +145,7 @@ void CGroupNavigator::SetGroupDefaultID(long lID)
 		m_state.m_GroupDefaultID = lID;
 	}
 
-	if(m_windows.QPasteWnd())
+	if (m_windows.QPasteWnd())
 	{
 		m_windows.QPasteWnd()->UpdateStatus();
 	}

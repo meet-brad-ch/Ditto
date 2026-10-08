@@ -15,7 +15,7 @@ CSaveAnimation::~CSaveAnimation(void)
 {
 }
 
-void CSaveAnimation::DoAnimation(CRect crStart, CRect crEnd, CWnd *pWnd)
+void CSaveAnimation::DoAnimation(CRect crStart, CRect crEnd, CWnd* pWnd)
 {
 	m_crStart = crStart;
 	m_crEnd = crEnd;
@@ -33,13 +33,13 @@ void CSaveAnimation::DoAnimation(CRect crStart, CRect crEnd, CWnd *pWnd)
 	double dCurBottom = crCur.bottom;
 	std::chrono::steady_clock::time_point frameStart{};
 
-	for(int i = 0; i < lMaxDist/m_dSpeed; i++)
+	for (int i = 0; i < lMaxDist / m_dSpeed; i++)
 	{
 		//don't do the first time
-		if(i > 0)
+		if (i > 0)
 		{
 			//wait 10ms between paints
-			while(std::chrono::steady_clock::now() - frameStart < std::chrono::milliseconds(10))
+			while (std::chrono::steady_clock::now() - frameStart < std::chrono::milliseconds(10))
 			{
 				Sleep(1);
 			}
@@ -85,16 +85,16 @@ long CSaveAnimation::GetMaxDistance()
 {
 	long lMax = 0;
 
-	if(abs(m_crStart.left - m_crEnd.left) > lMax)
+	if (abs(m_crStart.left - m_crEnd.left) > lMax)
 		lMax = abs(m_crStart.left - m_crEnd.left);
 
-	if(abs(m_crStart.top - m_crEnd.top) > lMax)
+	if (abs(m_crStart.top - m_crEnd.top) > lMax)
 		lMax = abs(m_crStart.top - m_crEnd.top);
 
-	if(abs(m_crStart.right - m_crEnd.right) > lMax)
+	if (abs(m_crStart.right - m_crEnd.right) > lMax)
 		lMax = abs(m_crStart.right - m_crEnd.right);
 
-	if(abs(m_crStart.bottom - m_crEnd.bottom) > lMax)
+	if (abs(m_crStart.bottom - m_crEnd.bottom) > lMax)
 		lMax = abs(m_crStart.bottom - m_crEnd.bottom);
 
 	return lMax;
@@ -102,7 +102,7 @@ long CSaveAnimation::GetMaxDistance()
 
 void CSaveAnimation::GetPercentages(long lMaxDist)
 {
-	if(lMaxDist > 0)
+	if (lMaxDist > 0)
 	{
 		m_dLeftPercent = (m_crStart.left - m_crEnd.left) / (double)lMaxDist;
 		m_dTopPercent = (m_crStart.top - m_crEnd.top) / (double)lMaxDist;

@@ -36,9 +36,9 @@ int CClipRepository::InsertClip(const ClipRecord& clip)
 void CClipRepository::UpdateClip(const ClipRecord& clip)
 {
 	CppSQLite3Statement update = m_db.compileStatement(_T("UPDATE Main SET lShortCut = ?, mText = ?, lParentID = ?, ")
-		_T("lDontAutoDelete = ?, QuickPasteText = ?, clipOrder = ?, clipGroupOrder = ?, globalShortCut = ?, ")
-		_T("stickyClipOrder = ?, stickyClipGroupOrder = ?, MoveToGroupShortCut = ?, GlobalMoveToGroupShortCut = ? ")
-		_T("WHERE lID = ?;"));
+													   _T("lDontAutoDelete = ?, QuickPasteText = ?, clipOrder = ?, clipGroupOrder = ?, globalShortCut = ?, ")
+													   _T("stickyClipOrder = ?, stickyClipGroupOrder = ?, MoveToGroupShortCut = ?, GlobalMoveToGroupShortCut = ? ")
+													   _T("WHERE lID = ?;"));
 	update.bind(1, clip.shortCut);
 	update.bind(2, clip.description);
 	update.bind(3, clip.parentId);
@@ -226,12 +226,12 @@ std::optional<double> CClipRepository::EdgeOrder(OrderColumn column, bool sticky
 	const CString name = ColumnName(column);
 	CString sql;
 	sql.Format(_T("SELECT %s FROM Main WHERE %s %s %s ORDER BY %s %s LIMIT 1"),
-		name.GetString(),
-		parentId ? _T("lParentID = ? AND") : _T(""),
-		name.GetString(),
-		sticky ? _T("<> -(2147483647)") : _T("notnull"),
-		name.GetString(),
-		highest ? _T("DESC") : _T("ASC"));
+			   name.GetString(),
+			   parentId ? _T("lParentID = ? AND") : _T(""),
+			   name.GetString(),
+			   sticky ? _T("<> -(2147483647)") : _T("notnull"),
+			   name.GetString(),
+			   highest ? _T("DESC") : _T("ASC"));
 	CppSQLite3Statement select = m_db.compileStatement(sql);
 	if (parentId)
 	{
@@ -250,14 +250,14 @@ std::optional<double> CClipRepository::NearestOrder(OrderColumn column, bool sti
 	const CString name = ColumnName(column);
 	CString sql;
 	sql.Format(_T("SELECT %s FROM Main WHERE %s%s %s -(2147483647) AND %s %s ? ORDER BY %s %s LIMIT 1"),
-		name.GetString(),
-		parentId ? _T("lParentID = ? AND ") : _T(""),
-		ColumnName(StickyColumnOf(column)),
-		sticky ? _T("<>") : _T("="),
-		name.GetString(),
-		above ? _T(">") : _T("<"),
-		name.GetString(),
-		above ? _T("ASC") : _T("DESC"));
+			   name.GetString(),
+			   parentId ? _T("lParentID = ? AND ") : _T(""),
+			   ColumnName(StickyColumnOf(column)),
+			   sticky ? _T("<>") : _T("="),
+			   name.GetString(),
+			   above ? _T(">") : _T("<"),
+			   name.GetString(),
+			   above ? _T("ASC") : _T("DESC"));
 	CppSQLite3Statement select = m_db.compileStatement(sql);
 	int param = 1;
 	if (parentId)
@@ -276,8 +276,8 @@ std::optional<double> CClipRepository::NearestOrder(OrderColumn column, bool sti
 std::optional<int> CClipRepository::TopStickyClipId(std::optional<int> parentId)
 {
 	const TCHAR* sql = parentId
-		? _T("SELECT lID FROM Main WHERE lParentID = ? AND stickyClipGroupOrder <> -(2147483647) ORDER BY stickyClipGroupOrder DESC LIMIT 1")
-		: _T("SELECT lID FROM Main WHERE stickyClipOrder <> -(2147483647) ORDER BY stickyClipOrder DESC LIMIT 1");
+						   ? _T("SELECT lID FROM Main WHERE lParentID = ? AND stickyClipGroupOrder <> -(2147483647) ORDER BY stickyClipGroupOrder DESC LIMIT 1")
+						   : _T("SELECT lID FROM Main WHERE stickyClipOrder <> -(2147483647) ORDER BY stickyClipOrder DESC LIMIT 1");
 	CppSQLite3Statement select = m_db.compileStatement(sql);
 	if (parentId)
 	{

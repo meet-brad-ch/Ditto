@@ -12,22 +12,20 @@
 
 class CGroupCombo : public CComboBox
 {
-// Construction
+	// Construction
 public:
 	CGroupCombo();
 
-// Attributes
+	// Attributes
 public:
-
-// Operations
+	// Operations
 public:
-
-// Overrides
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CGroupCombo)
 	//}}AFX_VIRTUAL
 
-// Implementation
+	// Implementation
 public:
 	virtual ~CGroupCombo();
 
@@ -41,7 +39,7 @@ public:
 	// Generated message map functions
 protected:
 	//{{AFX_MSG(CGroupCombo)
-		// NOTE - the ClassWizard will add and remove member functions here.
+	// NOTE - the ClassWizard will add and remove member functions here.
 	//}}AFX_MSG
 
 	DECLARE_MESSAGE_MAP()

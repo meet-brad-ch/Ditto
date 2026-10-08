@@ -5,10 +5,12 @@ class CTokenizer
 {
 public:
 	CString m_cs;
-	CArrayEx < TCHAR > m_delim;
+	CArrayEx<TCHAR> m_delim;
 	int m_nCurPos;
 
-	CTokenizer(const CString& cs, const CString& csDelim) : m_cs(cs), m_nCurPos(0)
+	CTokenizer(const CString& cs, const CString& csDelim) :
+		m_cs(cs),
+		m_nCurPos(0)
 	{
 		SetDelimiters(csDelim);
 	}

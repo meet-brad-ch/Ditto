@@ -20,7 +20,7 @@ void CfHtmlFuzzTarget::Run(std::span<const std::byte> input) const
 	}
 	catch (const DittoCore::ClipboardFormatError&)
 	{
-		return;   // malformed header or offsets: rejected, as it must be
+		return; // malformed header or offsets: rejected, as it must be
 	}
 
 	// Build must always produce a block that parses back to the same fragment
@@ -28,7 +28,7 @@ void CfHtmlFuzzTarget::Run(std::span<const std::byte> input) const
 	const DittoCore::CfHtmlFragment again = DittoCore::CfHtml::Parse(std::as_bytes(std::span(built)));
 	if (again.fragment != parsed.fragment)
 	{
-		std::abort();   // a finding: Build and Parse disagree
+		std::abort(); // a finding: Build and Parse disagree
 	}
 }
 

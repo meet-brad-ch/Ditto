@@ -10,12 +10,13 @@
 
 IMPLEMENT_DYNCREATE(COptionsKeyBoard, CPropertyPage)
 
-COptionsKeyBoard::COptionsKeyBoard() : CPropertyPage(COptionsKeyBoard::IDD)
+COptionsKeyBoard::COptionsKeyBoard() :
+	CPropertyPage(COptionsKeyBoard::IDD)
 {
 	m_csTitle = theApp.Services().Language().GetString("KeyboardShortcutsTitle", "Keyboard Shortcuts");
 	m_psp.pszTitle = m_csTitle;
 	m_psp.dwFlags |= PSP_USETITLE;
-	
+
 	//{{AFX_DATA_INIT(COptionsKeyBoard)
 	//}}AFX_DATA_INIT
 }
@@ -58,11 +59,11 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // COptionsKeyBoard message handlers
 
-BOOL COptionsKeyBoard::OnInitDialog() 
+BOOL COptionsKeyBoard::OnInitDialog()
 {
 	CPropertyPage::OnInitDialog();
 
-	m_pParent = (COptionsSheet *)GetParent();
+	m_pParent = (COptionsSheet*)GetParent();
 
 	CHotKeys& hotKeys = theApp.Services().HotKeys();
 	using Id = CHotKeys::Id;
@@ -98,7 +99,7 @@ BOOL COptionsKeyBoard::OnInitDialog()
 	m_HotKey.SetFocus();
 
 	theApp.Services().Language().UpdateOptionShortcuts(this);
-		
+
 	return FALSE;
 }
 
@@ -108,15 +109,15 @@ BOOL COptionsKeyBoard::OnApply()
 	settings.SetSendPasteOnFirstTenHotKeys(m_btSendPaste.GetCheck());
 	settings.SetMoveClipsOnGlobal10(m_btMoveClipOnGlobal10.GetCheck());
 	settings.SetUseUISelectedGroupForLastTenCopies(m_UseUiGroupForLastTen.GetCheck());
-					
-	INT_PTR x,y;
+
+	INT_PTR x, y;
 	CString str;
 	ARRAY keys;
-	
+
 	CHotKeys& hotKeys = theApp.Services().HotKeys();
 	using Id = CHotKeys::Id;
 
-	hotKeys.GetKeys( keys ); // save old keys just in case new ones are invalid
+	hotKeys.GetKeys(keys); // save old keys just in case new ones are invalid
 
 	hotKeys.Named(Id::DittoHotKey)->CopyFromCtrl(m_HotKey, m_hWnd, IDC_CHECK_WIN_DITTO);
 	hotKeys.Named(Id::DittoHotKey2)->CopyFromCtrl(m_HotKey2, m_hWnd, IDC_CHECK_WIN_DITTO2);
@@ -139,9 +140,9 @@ BOOL COptionsKeyBoard::OnApply()
 	ARRAY NewKeys;
 	hotKeys.GetKeys(NewKeys);
 
-	if(hotKeys.FindFirstConflict(NewKeys, &x, &y))
+	if (hotKeys.FindFirstConflict(NewKeys, &x, &y))
 	{
-		str =  hotKeys.ElementAt(x)->GetName();
+		str = hotKeys.ElementAt(x)->GetName();
 		str += " and ";
 		str += hotKeys.ElementAt(y)->GetName();
 		str += " cannot be the same.";
@@ -158,6 +159,6 @@ BOOL COptionsKeyBoard::OnApply()
 
 void COptionsKeyBoard::OnCancel()
 {
-	theApp.Services().HotKeys().RegisterAll( true );
+	theApp.Services().HotKeys().RegisterAll(true);
 	CPropertyPage::OnCancel();
 }

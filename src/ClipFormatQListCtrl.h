@@ -20,6 +20,5 @@ public:
 	 * @param height The maximum height.
 	 * @return The (scaled) DIB data; NULL for another format or when scaling failed.
 	 */
-	HGLOBAL GetDibFittingToHeight(CGetSetOptions& settings, CLIPFORMAT pngFormat, CDC *pDc, int height);
+	HGLOBAL GetDibFittingToHeight(CGetSetOptions& settings, CLIPFORMAT pngFormat, CDC* pDc, int height);
 };
-

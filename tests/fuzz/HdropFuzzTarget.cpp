@@ -27,7 +27,7 @@ void HdropFuzzTarget::Run(std::span<const std::byte> input) const
 		const std::vector<std::byte> built = DittoCore::FileDropList::Build(paths);
 		if (DittoCore::FileDropList::Parse(built.data(), built.size()).Paths() != paths)
 		{
-			std::abort();   // a finding: Build and Parse disagree
+			std::abort(); // a finding: Build and Parse disagree
 		}
 	}
 	catch (const DittoCore::ClipboardFormatError&)

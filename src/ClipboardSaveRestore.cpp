@@ -23,12 +23,12 @@ bool CClipboardSaveRestore::Save(BOOL textOnly)
 	COleDataObjectEx oleData;
 	CClipFormat cf;
 
-	if(::OpenClipboard(m_windows.MainHwnd()))
+	if (::OpenClipboard(m_windows.MainHwnd()))
 	{
 		UINT nFormat = EnumClipboardFormats(0);
-		while(nFormat != 0)
+		while (nFormat != 0)
 		{
-			if(IsFormatToSave(textOnly, nFormat))
+			if (IsFormatToSave(textOnly, nFormat))
 			{
 				SaveFormat(nFormat, cf);
 			}
@@ -50,13 +50,13 @@ bool CClipboardSaveRestore::IsFormatToSave(BOOL textOnly, UINT nFormat)
 void CClipboardSaveRestore::SaveFormat(UINT nFormat, CClipFormat& cf)
 {
 	HGLOBAL hGlobal = ::GetClipboardData(nFormat);
-	if(hGlobal && ::GlobalSize(hGlobal) > 0) // Ensure clipboard data is valid
+	if (hGlobal && ::GlobalSize(hGlobal) > 0) // Ensure clipboard data is valid
 	{
 		LPVOID pvData = GlobalLock(hGlobal);
-		if(pvData)
+		if (pvData)
 		{
 			INT_PTR size = GlobalSize(hGlobal);
-			if(size > 0)
+			if (size > 0)
 			{
 				//Copy the data locally
 				cf.m_hgData = CGlobalMemory::NewGlobalP(pvData, size);
@@ -78,20 +78,20 @@ bool CClipboardSaveRestore::Restore()
 {
 	bool bRet = false;
 
-	if(::OpenClipboard(m_windows.MainHwnd()))
+	if (::OpenClipboard(m_windows.MainHwnd()))
 	{
 		::EmptyClipboard();
 
 		SetClipboardData(m_formats.IgnoreClipboard(), CGlobalMemory::NewGlobalP("Ignore", sizeof("Ignore")));
 
 		INT_PTR size = m_Clipboard.GetSize();
-		for(int nPos = 0; nPos < size; nPos++)
+		for (int nPos = 0; nPos < size; nPos++)
 		{
-			CClipFormat *pCF = &m_Clipboard.ElementAt(nPos);
-			if(pCF && pCF->m_hgData && ::GlobalSize(pCF->m_hgData) > 0) // Ensure clipboard data is valid
+			CClipFormat* pCF = &m_Clipboard.ElementAt(nPos);
+			if (pCF && pCF->m_hgData && ::GlobalSize(pCF->m_hgData) > 0) // Ensure clipboard data is valid
 			{
 				::SetClipboardData(pCF->m_cfType, pCF->m_hgData);
-				pCF->m_hgData = NULL;//clipboard now owns the data
+				pCF->m_hgData = NULL; //clipboard now owns the data
 			}
 		}
 
@@ -101,7 +101,7 @@ bool CClipboardSaveRestore::Restore()
 
 	m_Clipboard.RemoveAll();
 
-	if(bRet == FALSE)
+	if (bRet == FALSE)
 	{
 		CLogger::Log(_T("CClipboardSaveRestore::Restore failed to restore clipboard"));
 	}
@@ -121,12 +121,12 @@ bool CClipboardSaveRestore::RestoreTextOnly()
 	//if there is no text but a hdrop, the hdrop is converted to text with the paths it lists
 	const bool convertHDrop = (foundText == false && hDropIndex > -1);
 	CString hDropString;
-	if(convertHDrop)
+	if (convertHDrop)
 	{
 		hDropString = GetHDropFilePaths(hDropIndex);
 	}
 
-	if(::OpenClipboard(m_windows.MainHwnd()))
+	if (::OpenClipboard(m_windows.MainHwnd()))
 	{
 		::EmptyClipboard();
 
@@ -134,7 +134,7 @@ bool CClipboardSaveRestore::RestoreTextOnly()
 
 		SetTextFormatCopies();
 
-		if(convertHDrop)
+		if (convertHDrop)
 		{
 			HGLOBAL newData = CGlobalMemory::NewGlobalP(hDropString.GetBuffer(), ((hDropString.GetLength() + 1) * sizeof(TCHAR)));
 			::SetClipboardData(CF_UNICODETEXT, newData);
@@ -144,7 +144,7 @@ bool CClipboardSaveRestore::RestoreTextOnly()
 		::CloseClipboard();
 	}
 
-	if(bRet == FALSE)
+	if (bRet == FALSE)
 	{
 		CLogger::Log(_T("CClipboardSaveRestore::Restore failed to restore clipboard"));
 	}
@@ -152,7 +152,7 @@ bool CClipboardSaveRestore::RestoreTextOnly()
 	return bRet;
 }
 
-bool CClipboardSaveRestore::HasValidData(const CClipFormat *pCF)
+bool CClipboardSaveRestore::HasValidData(const CClipFormat* pCF)
 {
 	return pCF && pCF->m_hgData && ::GlobalSize(pCF->m_hgData) > 0; // Ensure clipboard data is valid
 }
@@ -167,16 +167,16 @@ bool CClipboardSaveRestore::FindTextFormats(int& hDropIndex)
 	bool foundText = false;
 
 	INT_PTR size = m_Clipboard.GetSize();
-	for(int pos = 0; pos < size; pos++)
+	for (int pos = 0; pos < size; pos++)
 	{
-		CClipFormat *pCF = &m_Clipboard.ElementAt(pos);
-		if(HasValidData(pCF))
+		CClipFormat* pCF = &m_Clipboard.ElementAt(pos);
+		if (HasValidData(pCF))
 		{
-			if(IsTextFormat(pCF->m_cfType))
+			if (IsTextFormat(pCF->m_cfType))
 			{
 				foundText = true;
 			}
-			else if(pCF->m_cfType == CF_HDROP)
+			else if (pCF->m_cfType == CF_HDROP)
 			{
 				hDropIndex = pos;
 			}
@@ -203,10 +203,10 @@ CString CClipboardSaveRestore::GetHDropFilePaths(int hDropIndex)
 void CClipboardSaveRestore::SetTextFormatCopies()
 {
 	INT_PTR size = m_Clipboard.GetSize();
-	for(int pos = 0; pos < size; pos++)
+	for (int pos = 0; pos < size; pos++)
 	{
-		CClipFormat *pCF = &m_Clipboard.ElementAt(pos);
-		if(HasValidData(pCF) && IsTextFormat(pCF->m_cfType))
+		CClipFormat* pCF = &m_Clipboard.ElementAt(pos);
+		if (HasValidData(pCF) && IsTextFormat(pCF->m_cfType))
 		{
 			//Make a copy of the data we are putting on the clipboard so we can still
 			//restore all clips later in Restore()

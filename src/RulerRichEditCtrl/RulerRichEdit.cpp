@@ -66,7 +66,7 @@ BEGIN_MESSAGE_MAP(CRulerRichEdit, CRichEditCtrlEx)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
-BOOL CRulerRichEdit::Create( DWORD style, CRect rect, CWnd* parent )
+BOOL CRulerRichEdit::Create(DWORD style, CRect rect, CWnd* parent)
 /* ============================================================
 	Function :		CRulerRichEdit::~CRulerRichEdit
 	Description :	Creates the control
@@ -82,14 +82,13 @@ BOOL CRulerRichEdit::Create( DWORD style, CRect rect, CWnd* parent )
    ============================================================*/
 {
 
-	return CWnd::Create (L"RICHEDIT50W", NULL, style, rect, parent, s_controlId );
-
+	return CWnd::Create(L"RICHEDIT50W", NULL, style, rect, parent, s_controlId);
 };
 
 /////////////////////////////////////////////////////////////////////////////
 // CRulerRichEdit message handlers
 
-void CRulerRichEdit::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
+void CRulerRichEdit::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 /* ============================================================
 	Function :		CRulerRichEdit::OnHScroll
 	Description :	Handles the "WM_HSCROLL" message.
@@ -105,26 +104,24 @@ void CRulerRichEdit::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
    ============================================================*/
 {
 
-	CWnd::OnHScroll( nSBCode, nPos, pScrollBar );
+	CWnd::OnHScroll(nSBCode, nPos, pScrollBar);
 
-	SCROLLINFO	si;
-	ZeroMemory( &si, sizeof( SCROLLINFO ) );
-	si.cbSize = sizeof( SCROLLINFO );
-	GetScrollInfo( SB_HORZ, &si );
+	SCROLLINFO si;
+	ZeroMemory(&si, sizeof(SCROLLINFO));
+	si.cbSize = sizeof(SCROLLINFO);
+	GetScrollInfo(SB_HORZ, &si);
 
-	if ( nSBCode == SB_THUMBTRACK )
+	if (nSBCode == SB_THUMBTRACK)
 	{
 
 		si.nPos = nPos;
-		SetScrollInfo( SB_HORZ, &si );
-
+		SetScrollInfo(SB_HORZ, &si);
 	}
 
 	//UpdateRuler();
-
 }
 
-void CRulerRichEdit::OnChange() 
+void CRulerRichEdit::OnChange()
 /* ============================================================
 	Function :		CRulerRichEdit::OnChange
 	Description :	Handles change-notifications.
@@ -140,10 +137,9 @@ void CRulerRichEdit::OnChange()
 {
 
 	//UpdateRuler();
-
 }
 
-UINT CRulerRichEdit::OnGetDlgCode() 
+UINT CRulerRichEdit::OnGetDlgCode()
 /* ============================================================
 	Function :		CRulerRichEdit::OnGetDlgCode
 	Description :	Handles the "WM_GETDLGCODE" message.
@@ -159,7 +155,6 @@ UINT CRulerRichEdit::OnGetDlgCode()
 {
 
 	return DLGC_WANTALLKEYS;
-	
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -170,7 +165,7 @@ UINT CRulerRichEdit::OnGetDlgCode()
 //	Function :		CRulerRichEdit::UpdateRuler
 //	Description :	Updates the ruler.
 //	Access :		Private
-//					
+//
 //	Return :		void
 //	Parameters :	none
 //
@@ -186,4 +181,3 @@ UINT CRulerRichEdit::OnGetDlgCode()
 //	GetParent()->RedrawWindow( rect );
 //
 //}
-

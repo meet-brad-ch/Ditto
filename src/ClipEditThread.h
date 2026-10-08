@@ -7,7 +7,10 @@ class CAppWindows;
 class CClip;
 class CClipContext;
 class CGetSetOptions;
-namespace ATL { class CImage; }
+namespace ATL
+{
+	class CImage;
+}
 
 class CClipEditThread : public CEventThread
 {
@@ -23,7 +26,7 @@ public:
 
 	CClipEditThread(const CClipEditThread&) = delete;
 	CClipEditThread& operator=(const CClipEditThread&) = delete;
-		
+
 	void Close();
 	void StartWatchingFolderForChanges();
 
@@ -53,7 +56,7 @@ private:
 		EventFileChanged = 1,
 	};
 	/** @brief The wait timeout while no edited file waits to be saved (CEventThread::m_waitTimeout). */
-	static constexpr int s_maxTimeout{86400};
+	static constexpr int s_maxTimeout{ 86400 };
 
 	/** @brief The content read back from an edited clip file. */
 	struct EditedClipData
@@ -139,4 +142,3 @@ private:
 	CCriticalSection m_fileEditsLock;
 	std::map<CString, CTime> m_fileEditStarts;
 };
-

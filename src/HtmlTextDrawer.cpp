@@ -8,10 +8,10 @@
 
 //use unprintable characters so it doesn't find copied html to convert
 
-const std::array<HtmlTextDrawer::TagInfo, 3> HtmlTextDrawer::s_tags{{
-	{ nullptr,      tNONE, 0, 0 },
-	{ _T("\x04"),   tFONT, 1, 0 },
-	{ _T("\x05"),   tBR,   0, 1 },
+const std::array<HtmlTextDrawer::TagInfo, 3> HtmlTextDrawer::s_tags{ {
+	{ nullptr, tNONE, 0, 0 },
+	{ _T("\x04"), tFONT, 1, 0 },
+	{ _T("\x05"), tBR, 0, 1 },
 	/*{ _T("b"),      tB,    0, 0},
 	{ _T("br"),     tBR,   0, 1},
 	{ _T("em"),     tI,    0, 0},
@@ -22,7 +22,7 @@ const std::array<HtmlTextDrawer::TagInfo, 3> HtmlTextDrawer::s_tags{{
 	{ _T("sub"),    tSUB,  0, 0},
 	{ _T("sup"),    tSUP,  0, 0},
 	{ _T("u"),      tU,    0, 0},*/
-}};
+} };
 
 const std::array<int, HtmlTextDrawer::tNUMTAGS> HtmlTextDrawer::s_styleFlags{
 	0,             // tNONE
@@ -36,26 +36,26 @@ const std::array<int, HtmlTextDrawer::tNUMTAGS> HtmlTextDrawer::s_styleFlags{
 	s_underline,   // tU
 };
 
-int HtmlTextDrawer::GetToken(LPCTSTR *String, int *Size, int *TokenLength, BOOL *WhiteSpace)
+int HtmlTextDrawer::GetToken(LPCTSTR* String, int* Size, int* TokenLength, BOOL* WhiteSpace)
 {
 	ASSERT(String != NULL && *String != NULL);
 	ASSERT(Size != NULL);
 
 	/* check for leading white space, then skip it */
-	const BOOL EntryWhiteSpace{ReadEntryWhiteSpace(*String, WhiteSpace)};
-	TokenCursor cursor{*String, *String, 0, *Size};
+	const BOOL EntryWhiteSpace{ ReadEntryWhiteSpace(*String, WhiteSpace) };
+	TokenCursor cursor{ *String, *String, 0, *Size };
 	SkipLeadingWhiteSpace(cursor);
 	*Size = cursor.size;
 	if (cursor.size <= 0)
-		return -1;  /* no printable text left */
+		return -1; /* no printable text left */
 
 	cursor.end = cursor.start;
-	int Index{0};
-	int IsEndTag{0};
+	int Index{ 0 };
+	int IsEndTag{ 0 };
 	if (*cursor.end == _T('\x01'))
 		Index = ScanTag(cursor, WhiteSpace, EntryWhiteSpace, IsEndTag);
 	else
-		ScanWord(cursor);  /* normal word (no tag) */
+		ScanWord(cursor); /* normal word (no tag) */
 
 	if (TokenLength != NULL)
 		*TokenLength = cursor.length;
@@ -64,17 +64,17 @@ int HtmlTextDrawer::GetToken(LPCTSTR *String, int *Size, int *TokenLength, BOOL 
 	return s_tags[Index].token | IsEndTag;
 }
 
-BOOL HtmlTextDrawer::ReadEntryWhiteSpace(LPCTSTR Start, BOOL *WhiteSpace)
+BOOL HtmlTextDrawer::ReadEntryWhiteSpace(LPCTSTR Start, BOOL* WhiteSpace)
 {
 	if (WhiteSpace == NULL)
 		return FALSE;
 
-	const BOOL EntryWhiteSpace{*WhiteSpace};
+	const BOOL EntryWhiteSpace{ *WhiteSpace };
 	*WhiteSpace = EntryWhiteSpace || _istspace(*Start);
 	return EntryWhiteSpace;
 }
 
-void HtmlTextDrawer::SkipLeadingWhiteSpace(TokenCursor &cursor)
+void HtmlTextDrawer::SkipLeadingWhiteSpace(TokenCursor& cursor)
 {
 	while (cursor.size > 0 && _istspace(*cursor.start))
 	{
@@ -83,17 +83,17 @@ void HtmlTextDrawer::SkipLeadingWhiteSpace(TokenCursor &cursor)
 	} /* while */
 }
 
-void HtmlTextDrawer::Advance(TokenCursor &cursor)
+void HtmlTextDrawer::Advance(TokenCursor& cursor)
 {
 	cursor.end++;
 	cursor.length++;
 }
 
-int HtmlTextDrawer::ScanTag(TokenCursor &cursor, BOOL *WhiteSpace, BOOL EntryWhiteSpace, int &IsEndTag)
+int HtmlTextDrawer::ScanTag(TokenCursor& cursor, BOOL* WhiteSpace, BOOL EntryWhiteSpace, int& IsEndTag)
 {
 	/* might be a HTML tag, check */
 	ScanTagName(cursor, IsEndTag);
-	int Index{FindTag(cursor.start + (IsEndTag ? 2 : 1))};
+	int Index{ FindTag(cursor.start + (IsEndTag ? 2 : 1)) };
 	if (Index > 0)
 		Index = AcceptTagParameters(cursor, Index, IsEndTag, WhiteSpace);
 	if (*cursor.end == _T('\x02'))
@@ -103,7 +103,7 @@ int HtmlTextDrawer::ScanTag(TokenCursor &cursor, BOOL *WhiteSpace, BOOL EntryWhi
 	return Index;
 }
 
-void HtmlTextDrawer::ScanTagName(TokenCursor &cursor, int &IsEndTag)
+void HtmlTextDrawer::ScanTagName(TokenCursor& cursor, int& IsEndTag)
 {
 	Advance(cursor);
 	if (cursor.length < cursor.size && *cursor.end == _T('\x03'))
@@ -111,8 +111,7 @@ void HtmlTextDrawer::ScanTagName(TokenCursor &cursor, int &IsEndTag)
 		IsEndTag = s_endFlag;
 		Advance(cursor);
 	} /* if */
-	while (cursor.length < cursor.size && !_istspace(*cursor.end)
-		&& *cursor.end != _T('\x01') && *cursor.end != _T('\x02'))
+	while (cursor.length < cursor.size && !_istspace(*cursor.end) && *cursor.end != _T('\x01') && *cursor.end != _T('\x02'))
 	{
 		Advance(cursor);
 	} /* while */
@@ -120,14 +119,14 @@ void HtmlTextDrawer::ScanTagName(TokenCursor &cursor, int &IsEndTag)
 
 int HtmlTextDrawer::FindTag(LPCTSTR name)
 {
-	int Index{static_cast<int>(s_tags.size()) - 1};
+	int Index{ static_cast<int>(s_tags.size()) - 1 };
 	for (; Index > 0; Index--)
 		if (!_tcsnicmp(name, s_tags[Index].mnemonic, _tcslen(s_tags[Index].mnemonic)))
 			break;
 	return Index;
 }
 
-int HtmlTextDrawer::AcceptTagParameters(TokenCursor &cursor, int Index, int IsEndTag, BOOL *WhiteSpace)
+int HtmlTextDrawer::AcceptTagParameters(TokenCursor& cursor, int Index, int IsEndTag, BOOL* WhiteSpace)
 {
 	/* so it is a tag, see whether to accept parameters */
 	if (s_tags[Index].param && !IsEndTag)
@@ -144,16 +143,15 @@ int HtmlTextDrawer::AcceptTagParameters(TokenCursor &cursor, int Index, int IsEn
 	return Index;
 }
 
-void HtmlTextDrawer::SkipTagParameters(TokenCursor &cursor)
+void HtmlTextDrawer::SkipTagParameters(TokenCursor& cursor)
 {
-	while (cursor.length < cursor.size
-		&& *cursor.end != _T('\x01') && *cursor.end != _T('\x02'))
+	while (cursor.length < cursor.size && *cursor.end != _T('\x01') && *cursor.end != _T('\x02'))
 	{
 		Advance(cursor);
 	} /* while */
 }
 
-void HtmlTextDrawer::SkipTrailingWhiteSpace(TokenCursor &cursor, int Index, BOOL EntryWhiteSpace)
+void HtmlTextDrawer::SkipTrailingWhiteSpace(TokenCursor& cursor, int Index, BOOL EntryWhiteSpace)
 {
 	if (Index > 0 && (s_tags[Index].block || EntryWhiteSpace))
 	{
@@ -164,7 +162,7 @@ void HtmlTextDrawer::SkipTrailingWhiteSpace(TokenCursor &cursor, int Index, BOOL
 	} /* if */
 }
 
-void HtmlTextDrawer::ScanWord(TokenCursor &cursor)
+void HtmlTextDrawer::ScanWord(TokenCursor& cursor)
 {
 	while (cursor.length < cursor.size && !_istspace(*cursor.end) && *cursor.end != _T('\x01'))
 	{
@@ -189,9 +187,9 @@ COLORREF HtmlTextDrawer::ParseColor(LPCTSTR String)
 		String++;
 	if (*String == _T('#'))
 		String++;
-	const int Red{(HexDigit(String[0]) << 4) | HexDigit(String[1])};
-	const int Green{(HexDigit(String[2]) << 4) | HexDigit(String[3])};
-	const int Blue{(HexDigit(String[4]) << 4) | HexDigit(String[5])};
+	const int Red{ (HexDigit(String[0]) << 4) | HexDigit(String[1]) };
+	const int Green{ (HexDigit(String[2]) << 4) | HexDigit(String[3]) };
+	const int Blue{ (HexDigit(String[4]) << 4) | HexDigit(String[5]) };
 	return RGB(Red, Green, Blue);
 }
 
@@ -212,8 +210,8 @@ BOOL HtmlTextDrawer::PushColor(COLORREF clr)
 
 BOOL HtmlTextDrawer::PopColor()
 {
-	const BOOL okay{m_colorStackTop > 0};
-	const COLORREF clr{okay ? m_colorStack[static_cast<size_t>(--m_colorStackTop)] : m_colorStack[0]};
+	const BOOL okay{ m_colorStackTop > 0 };
+	const COLORREF clr{ okay ? m_colorStack[static_cast<size_t>(--m_colorStackTop)] : m_colorStack[0] };
 	::SetTextColor(m_hdc, clr);
 	return okay;
 }
@@ -236,11 +234,11 @@ HFONT HtmlTextDrawer::GetFontVariant(HFONT hfontSource, int Styles)
 }
 
 int HtmlTextDrawer::Draw(
-	HDC     hdc,        // handle of device context
-	LPCTSTR lpString,   // address of string to draw
-	int     nCount,     // string length, in characters
-	LPRECT  lpRect,     // address of structure with formatting dimensions
-	UINT    uFormat     // text-drawing flags
+	HDC hdc,          // handle of device context
+	LPCTSTR lpString, // address of string to draw
+	int nCount,       // string length, in characters
+	LPRECT lpRect,    // address of structure with formatting dimensions
+	UINT uFormat      // text-drawing flags
 )
 {
 	if (hdc == NULL || lpString == NULL)
@@ -257,7 +255,7 @@ int HtmlTextDrawer::Draw(
 	m_format = uFormat;
 
 	/* get the "default" font from the DC */
-	const int SavedDC{::SaveDC(hdc)};
+	const int SavedDC{ ::SaveDC(hdc) };
 	BeginText();
 
 	/* run through the string, word for word */
@@ -323,11 +321,11 @@ void HtmlTextDrawer::BeginText()
 
 void HtmlTextDrawer::DrawTokens(LPCTSTR lpString, int nCount)
 {
-	LPCTSTR Start{lpString};
-	for (;; )
+	LPCTSTR Start{ lpString };
+	for (;;)
 	{
 		int TokenLength{};
-		const int Tag{GetToken(&Start, &nCount, &TokenLength, &m_whiteSpace)};
+		const int Tag{ GetToken(&Start, &nCount, &TokenLength, &m_whiteSpace) };
 		if (Tag < 0)
 			break;
 		ApplyToken(Tag, Start, Start == lpString, TokenLength);
@@ -341,9 +339,9 @@ void HtmlTextDrawer::DrawTokens(LPCTSTR lpString, int nCount)
 
 void HtmlTextDrawer::ApplyToken(int Tag, LPCTSTR Start, bool atTextStart, int TokenLength)
 {
-	const bool endTag{(Tag & s_endFlag) != 0};
-	const int token{Tag & ~s_endFlag};
-	const int styleFlag{StyleFlagOf(token)};
+	const bool endTag{ (Tag & s_endFlag) != 0 };
+	const int token{ Tag & ~s_endFlag };
+	const int styleFlag{ StyleFlagOf(token) };
 	if (styleFlag != 0)
 		m_styles = endTag ? m_styles & ~styleFlag : m_styles | styleFlag;
 	else if (token == tP)
@@ -395,7 +393,7 @@ void HtmlTextDrawer::DrawWord(LPCTSTR Start, int TokenLength)
 	SIZE size{};
 	::GetTextExtentPoint32(m_hdc, Start, TokenLength, &size);
 	if (size.cx > m_maxWidth)
-		m_maxWidth = size.cx;   /* must increase width: long non-breakable word */
+		m_maxWidth = size.cx; /* must increase width: long non-breakable word */
 	if (m_whiteSpace)
 		m_xPos += m_spaceWidth;
 	if (m_xPos + size.cx > m_maxWidth && m_whiteSpace)
@@ -415,7 +413,7 @@ void HtmlTextDrawer::SelectStyleFont()
 	if (m_curStyles == m_styles)
 		return;
 
-	const size_t variant{static_cast<size_t>(m_styles)};
+	const size_t variant{ static_cast<size_t>(m_styles) };
 	if (m_fonts[variant] == NULL)
 		m_fonts[variant] = GetFontVariant(m_baseFont, m_styles);
 	m_curStyles = m_styles;
@@ -449,7 +447,7 @@ void HtmlTextDrawer::OutputWord(LPCTSTR Start, int TokenLength)
 
 	/* reposition subscript text to align below the baseline */
 	::DrawText(m_hdc, Start, TokenLength, &rc,
-		m_format | ((m_styles & s_subscript) ? DT_BOTTOM | DT_SINGLELINE : 0));
+			   m_format | ((m_styles & s_subscript) ? DT_BOTTOM | DT_SINGLELINE : 0));
 
 	/* for the underline style, the spaces between words should be
 	 * underlined as well
@@ -463,7 +461,7 @@ void HtmlTextDrawer::OutputWord(LPCTSTR Start, int TokenLength)
 	} /* if */
 }
 
-void HtmlTextDrawer::SetLineRect(RECT &rc, int left, int right) const
+void HtmlTextDrawer::SetLineRect(RECT& rc, int left, int right) const
 {
 	if (m_top < 0)
 		::SetRect(&rc, left, m_top - m_height, right, m_top - (m_height + m_lineHeight));

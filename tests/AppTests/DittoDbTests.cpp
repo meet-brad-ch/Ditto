@@ -104,7 +104,8 @@ TEST(DittoDb, InsertsFromThreadsGetTheirOwnIds)
 	std::vector<std::future<bool>> results;
 	for (int t = 0; t < Threads; t++)
 	{
-		results.push_back(std::async(std::launch::async, [&repository, t]() {
+		results.push_back(std::async(std::launch::async, [&repository, t]()
+									 {
 			for (int i = 0; i < PerThread; i++)
 			{
 				CString description;
@@ -115,8 +116,7 @@ TEST(DittoDb, InsertsFromThreadsGetTheirOwnIds)
 					return false;
 				}
 			}
-			return true;
-		}));
+			return true; }));
 	}
 
 	for (std::future<bool>& result : results)
@@ -135,18 +135,18 @@ TEST(DittoDb, StatementWaitsForAnotherThreadsTransaction)
 	std::promise<void> finishTransaction;
 	std::future<void> finish = finishTransaction.get_future();
 
-	std::thread owner([&]() {
-		CDittoDbTransaction transaction(test.Db());
-		CClipRepository(test.Db()).InsertClip(Clip(_T("rolled back")));
-		transactionOpen.set_value();
-		finish.wait();
-		// not committed: rolled back here
-	});
+	std::thread owner([&]()
+					  {
+						  CDittoDbTransaction transaction(test.Db());
+						  CClipRepository(test.Db()).InsertClip(Clip(_T("rolled back")));
+						  transactionOpen.set_value();
+						  finish.wait();
+						  // not committed: rolled back here
+					  });
 	transactionOpen.get_future().wait();
 
-	std::future<int> other = std::async(std::launch::async, [&]() {
-		return test.Db().execDML(_T("INSERT INTO Main (mText) VALUES ('other');"));
-	});
+	std::future<int> other = std::async(std::launch::async, [&]()
+										{ return test.Db().execDML(_T("INSERT INTO Main (mText) VALUES ('other');")); });
 	EXPECT_EQ(other.wait_for(std::chrono::milliseconds(200)), std::future_status::timeout);
 
 	finishTransaction.set_value();
@@ -167,18 +167,18 @@ TEST(DittoDb, PreparedStatementWaitsForAnotherThreadsTransaction)
 	std::promise<void> finishTransaction;
 	std::future<void> finish = finishTransaction.get_future();
 
-	std::thread owner([&]() {
-		CDittoDbTransaction transaction(test.Db());
-		CClipRepository(test.Db()).InsertClip(Clip(_T("rolled back")));
-		transactionOpen.set_value();
-		finish.wait();
-		// not committed: rolled back here
-	});
+	std::thread owner([&]()
+					  {
+						  CDittoDbTransaction transaction(test.Db());
+						  CClipRepository(test.Db()).InsertClip(Clip(_T("rolled back")));
+						  transactionOpen.set_value();
+						  finish.wait();
+						  // not committed: rolled back here
+					  });
 	transactionOpen.get_future().wait();
 
-	std::future<int> other = std::async(std::launch::async, [&]() {
-		return insert.execDML();
-	});
+	std::future<int> other = std::async(std::launch::async, [&]()
+										{ return insert.execDML(); });
 	EXPECT_EQ(other.wait_for(std::chrono::milliseconds(200)), std::future_status::timeout);
 
 	finishTransaction.set_value();

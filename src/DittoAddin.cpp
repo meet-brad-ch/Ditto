@@ -19,20 +19,20 @@ bool CDittoAddin::DoLoad(LPCTSTR lpszDllName, CDittoInfo DittoInfo)
 	m_csLastError.Empty();
 	Cleanup();
 
-	if(lpszDllName)
+	if (lpszDllName)
 	{
 		m_hModule = ::LoadLibrary(lpszDllName);
 
-		if( m_hModule )
+		if (m_hModule)
 		{
-			bool (__cdecl *DittoAddin)(const CDittoInfo&, CDittoAddinInfo&);
+			bool(__cdecl * DittoAddin)(const CDittoInfo&, CDittoAddinInfo&);
 			DittoAddin = (bool(__cdecl*)(const CDittoInfo&, CDittoAddinInfo&))GetProcAddress(m_hModule, "DittoAddin");
-			if(DittoAddin)
+			if (DittoAddin)
 			{
 				bLoaded = DittoAddin(DittoInfo, m_DittoAddinInfo);
-				if(bLoaded)
+				if (bLoaded)
 				{
-					m_SupportedFunctions = (bool(__cdecl*)(const CDittoInfo&, FunctionType,std::vector<CFunction>&))GetProcAddress(m_hModule, "SupportedFunctions");
+					m_SupportedFunctions = (bool(__cdecl*)(const CDittoInfo&, FunctionType, std::vector<CFunction>&))GetProcAddress(m_hModule, "SupportedFunctions");
 					SupportedFunctions(DittoInfo, eFuncType_PRE_PASTE, m_PrePasteFunctions);
 				}
 				else
@@ -56,7 +56,7 @@ bool CDittoAddin::DoLoad(LPCTSTR lpszDllName, CDittoInfo DittoInfo)
 
 void CDittoAddin::Cleanup()
 {
-	if(m_hModule)
+	if (m_hModule)
 	{
 		// release resources to the dll
 		::FreeLibrary(m_hModule);
@@ -64,18 +64,18 @@ void CDittoAddin::Cleanup()
 	}
 }
 
-bool CDittoAddin::SupportedFunctions(const CDittoInfo &DittoInfo, FunctionType type, std::vector<CFunction> &Functions)
+bool CDittoAddin::SupportedFunctions(const CDittoInfo& DittoInfo, FunctionType type, std::vector<CFunction>& Functions)
 {
 	bool bRet = false;
 	m_csLastError.Empty();
 
-	if(m_SupportedFunctions != NULL)
+	if (m_SupportedFunctions != NULL)
 	{
 		bRet = m_SupportedFunctions(DittoInfo, type, Functions);
-		if(bRet)
+		if (bRet)
 		{
 			INT_PTR nCount = Functions.size();
-			for(int i = 0; i < nCount; i++)
+			for (int i = 0; i < nCount; i++)
 			{
 				CFunction func = Functions[i];
 				CLogger::Log(CStringUtil::Format(_T("Ditto Addin - Supported Function Display: %s, Function: %s, Desc: %s"), func.m_csDisplayName.GetString(), CTextConvert::AnsiToUnicode(func.m_csFunction).GetString(), func.m_csDetailDescription.GetString()));
@@ -94,12 +94,12 @@ bool CDittoAddin::SupportedFunctions(const CDittoInfo &DittoInfo, FunctionType t
 	return bRet;
 }
 
-bool CDittoAddin::PrePasteFunction(const CDittoInfo &DittoInfo, CStringA Function, IClip *pClip)
+bool CDittoAddin::PrePasteFunction(const CDittoInfo& DittoInfo, CStringA Function, IClip* pClip)
 {
-	bool (__cdecl *PrePasteFunc)(const CDittoInfo &, IClip*);
+	bool(__cdecl * PrePasteFunc)(const CDittoInfo&, IClip*);
 
-	PrePasteFunc = (bool(__cdecl*)(const CDittoInfo &, IClip*))GetProcAddress(m_hModule, Function);
-	if(PrePasteFunc)
+	PrePasteFunc = (bool(__cdecl*)(const CDittoInfo&, IClip*))GetProcAddress(m_hModule, Function);
+	if (PrePasteFunc)
 	{
 		return PrePasteFunc(DittoInfo, pClip);
 	}

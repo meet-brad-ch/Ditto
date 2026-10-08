@@ -14,32 +14,36 @@ class COptionsTypes : public CPropertyPage
 {
 	DECLARE_DYNCREATE(COptionsTypes)
 
-// Construction
+	// Construction
 public:
 	COptionsTypes();
 	~COptionsTypes();
 
-// Dialog Data
+	// Dialog Data
 	//{{AFX_DATA(COptionsTypes)
-	enum { IDD = IDD_OPTIONS_TYPES };
-	CListBox	m_List;
+	enum
+	{
+		IDD = IDD_OPTIONS_TYPES
+	};
+	CListBox m_List;
 	//}}AFX_DATA
 
 
-// Overrides
+	// Overrides
 	// ClassWizard generate virtual function overrides
 	//{{AFX_VIRTUAL(COptionsTypes)
-	public:
+public:
 	virtual BOOL OnApply();
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-	//}}AFX_VIRTUAL
 
-// Implementation
+protected:
+	virtual void DoDataExchange(CDataExchange* pDX); // DDX/DDV support
+													 //}}AFX_VIRTUAL
+
+	// Implementation
 protected:
 	bool m_bSave;
 	CString m_csTitle;
-	BOOL TextAllReadyThere(const CString &cs);
+	BOOL TextAllReadyThere(const CString& cs);
 
 
 	// Generated message map functions
@@ -49,7 +53,6 @@ protected:
 	afx_msg void OnAdd();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
-
 };
 
 //{{AFX_INSERT_LOCATION}}

@@ -36,16 +36,16 @@ public:
 	 * @param font the description font.
 	 * @return FALSE when the window cannot be created.
 	 */
-	BOOL CreateEx(CWnd *pParentWnd, CString desc, int rowHeight, LOGFONT font);
+	BOOL CreateEx(CWnd* pParentWnd, CString desc, int rowHeight, LOGFONT font);
 
 	CStatic m_desc;
 
 protected:
 	afx_msg LRESULT OnNcHitTest(CPoint point);
 	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
-	afx_msg void OnNcLButtonUp(UINT nHitTest, CPoint point); 
-	afx_msg void OnNcLButtonDown(UINT nHitTest, CPoint point); 
-	afx_msg void OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp); 
+	afx_msg void OnNcLButtonUp(UINT nHitTest, CPoint point);
+	afx_msg void OnNcLButtonDown(UINT nHitTest, CPoint point);
+	afx_msg void OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp);
 	afx_msg void OnNcPaint();
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnPaint();
@@ -77,5 +77,3 @@ protected:
 
 	void MoveControls();
 };
-
-

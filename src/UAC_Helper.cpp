@@ -71,13 +71,13 @@ bool CUAC_Helper::RunningElevated(HANDLE hProcess, bool defaultValue)
 			CLogger::Log(CStringUtil::Format(_T("RunningElevated, OpenProcessToken failed, Last Error: %d"), dwError));
 		}
 		else
-		{			
+		{
 			DWORD dwSize;
 			if (!GetTokenInformation(hToken, TokenElevation, &elevation, sizeof(elevation), &dwSize))
 			{
-				// When the process is run on operating systems prior to Windows 
-				// Vista, GetTokenInformation returns FALSE with the 
-				// ERROR_INVALID_PARAMETER error code because TokenElevation is 
+				// When the process is run on operating systems prior to Windows
+				// Vista, GetTokenInformation returns FALSE with the
+				// ERROR_INVALID_PARAMETER error code because TokenElevation is
 				// not supported on those operating systems.
 				dwError = GetLastError();
 

@@ -7,7 +7,7 @@ public:
 
 	int snap_Margin;
 	int snap_ModifierKey;
-	
+
 	LRESULT OnSnapMoving(HWND hWnd, LPRECT snap_prc);
 	LRESULT OnSnapEnterSizeMove(HWND hWnd);
 
@@ -18,4 +18,3 @@ private:
 
 	BOOL isSnapClose(int a, int b);
 };
-

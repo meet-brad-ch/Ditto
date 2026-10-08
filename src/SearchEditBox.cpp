@@ -19,16 +19,16 @@ CSearchEditBox::~CSearchEditBox()
 
 BEGIN_MESSAGE_MAP(CSearchEditBox, CEdit)
 	//{{AFX_MSG_MAP(CSearchEditBox)
-		// NOTE - the ClassWizard will add and remove mapping macros here.
+	// NOTE - the ClassWizard will add and remove mapping macros here.
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CSearchEditBox message handlers
 
-BOOL CSearchEditBox::PreTranslateMessage(MSG* pMsg) 
+BOOL CSearchEditBox::PreTranslateMessage(MSG* pMsg)
 {
-	if(pMsg->message == WM_KEYDOWN &&
+	if (pMsg->message == WM_KEYDOWN &&
 		HandleKeyDown(pMsg))
 	{
 		return TRUE;
@@ -39,22 +39,22 @@ BOOL CSearchEditBox::PreTranslateMessage(MSG* pMsg)
 
 bool CSearchEditBox::HandleKeyDown(const MSG* pMsg)
 {
-	if(pMsg->wParam == VK_RETURN)
+	if (pMsg->wParam == VK_RETURN)
 	{
 		HandleReturnKey();
 		return true;
 	}
 	else if (IsListNavigationKey(pMsg->wParam))
 	{
-		if(theApp.Services().Settings().m_bFindAsYouType)
+		if (theApp.Services().Settings().m_bFindAsYouType)
 		{
 			return SendKeyToParent(pMsg);
 		}
 	}
-	else if(IsCutCopyDeleteKey(pMsg->wParam))
+	else if (IsCutCopyDeleteKey(pMsg->wParam))
 	{
 		LONG lEditSel = GetSel();
-		if(LOWORD(lEditSel) == HIWORD(lEditSel))
+		if (LOWORD(lEditSel) == HIWORD(lEditSel))
 		{
 			return SendKeyToParent(pMsg);
 		}
@@ -65,10 +65,10 @@ bool CSearchEditBox::HandleKeyDown(const MSG* pMsg)
 
 void CSearchEditBox::HandleReturnKey()
 {
-	CWnd *pWnd = GetParent();
-	if(pWnd)
+	CWnd* pWnd = GetParent();
+	if (pWnd)
 	{
-		if(theApp.Services().Settings().m_bFindAsYouType)
+		if (theApp.Services().Settings().m_bFindAsYouType)
 		{
 			pWnd->SendMessage(CQListCtrl::NmSearchEnterPressed, 0, 0);
 		}
@@ -83,21 +83,21 @@ void CSearchEditBox::HandleReturnKey()
 bool CSearchEditBox::IsListNavigationKey(WPARAM key)
 {
 	return key == VK_DOWN ||
-		key == VK_UP ||
-		key == VK_F3;
+		   key == VK_UP ||
+		   key == VK_F3;
 }
 
 bool CSearchEditBox::IsCutCopyDeleteKey(WPARAM key)
 {
 	return key == 'C' && CKeyboard::IsControlPressed() ||
-		key == 'X' && CKeyboard::IsControlPressed() ||
-		key == VK_DELETE;
+		   key == 'X' && CKeyboard::IsControlPressed() ||
+		   key == VK_DELETE;
 }
 
 bool CSearchEditBox::SendKeyToParent(const MSG* pMsg)
 {
-	CWnd *pWnd = GetParent();
-	if(pWnd)
+	CWnd* pWnd = GetParent();
+	if (pWnd)
 	{
 		pWnd->SendMessage(CQListCtrl::CbUpDown, pMsg->wParam, pMsg->lParam);
 		return true;

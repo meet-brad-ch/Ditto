@@ -13,21 +13,21 @@ public:
 	bool DoLoad(LPCTSTR lpszDllName, CDittoInfo DittoInfo);
 
 	std::vector<CFunction> m_PrePasteFunctions;
-	bool PrePasteFunction(const CDittoInfo &DittoInfo, CStringA Function, IClip *pClip);
+	bool PrePasteFunction(const CDittoInfo& DittoInfo, CStringA Function, IClip* pClip);
 
 	CString DisplayName() { return m_DittoAddinInfo.m_Name; }
 	int Version() { return m_DittoAddinInfo.m_AddinVersion; }
 	int PrivateVersion() { return m_DittoAddinInfo.PrivateVersion(); }
-	CString LastError()	{ return m_csLastError; }
+	CString LastError() { return m_csLastError; }
 
 protected:
 	HMODULE m_hModule;
 	CDittoAddinInfo m_DittoAddinInfo;
 	CString m_csLastError;
-	
+
 protected:
 	void Cleanup();
 
-	bool (__cdecl *m_SupportedFunctions)(const CDittoInfo&, FunctionType,std::vector<CFunction>&){};
-	bool SupportedFunctions(const CDittoInfo &DittoInfo, FunctionType type, std::vector<CFunction> &Functions);	
+	bool(__cdecl* m_SupportedFunctions)(const CDittoInfo&, FunctionType, std::vector<CFunction>&){};
+	bool SupportedFunctions(const CDittoInfo& DittoInfo, FunctionType type, std::vector<CFunction>& Functions);
 };

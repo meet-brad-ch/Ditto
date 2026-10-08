@@ -18,7 +18,7 @@ void RtfFuzzTarget::Run(std::span<const std::byte> input) const
 
 	if (DittoCore::RtfNormalizer::Normalize(rtf).size() > rtf.size())
 	{
-		std::abort();   // a finding: normalizing must only remove text
+		std::abort(); // a finding: normalizing must only remove text
 	}
 
 	DittoCore::RtfJoin join(L"-\r\n");
@@ -29,12 +29,12 @@ void RtfFuzzTarget::Run(std::span<const std::byte> input) const
 	}
 	catch (const DittoCore::ClipboardFormatError&)
 	{
-		return;   // not an RTF document: rejected, as it must be
+		return; // not an RTF document: rejected, as it must be
 	}
 	const std::string joined = join.Result();
 	if (!joined.starts_with("{\\rtf1") || !joined.ends_with('}'))
 	{
-		std::abort();   // a finding: the join lost its outer group
+		std::abort(); // a finding: the join lost its outer group
 	}
 }
 

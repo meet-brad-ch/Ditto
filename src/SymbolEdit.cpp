@@ -18,19 +18,19 @@ CSymbolEdit::CSymbolEdit() :
 	m_centerTextDiff(0)
 {
 	m_fontPrompt.CreateFont(
-		16,                        // nHeight
-		0,                         // nWidth
-		0,                         // nEscapement
-		0,                         // nOrientation
-		FW_NORMAL,                 // nWeight
-		TRUE,                      // bItalic
-		FALSE,                     // bUnderline
-		0,                         // cStrikeOut
-		DEFAULT_CHARSET,           // nCharSet
-		OUT_DEFAULT_PRECIS,        // nOutPrecision
-		CLIP_DEFAULT_PRECIS,       // nClipPrecision
-		DEFAULT_QUALITY,           // nQuality
-		DEFAULT_PITCH | FF_SWISS,  // nPitchAndFamily
+		16,                       // nHeight
+		0,                        // nWidth
+		0,                        // nEscapement
+		0,                        // nOrientation
+		FW_NORMAL,                // nWeight
+		TRUE,                     // bItalic
+		FALSE,                    // bUnderline
+		0,                        // cStrikeOut
+		DEFAULT_CHARSET,          // nCharSet
+		OUT_DEFAULT_PRECIS,       // nOutPrecision
+		CLIP_DEFAULT_PRECIS,      // nClipPrecision
+		DEFAULT_QUALITY,          // nQuality
+		DEFAULT_PITCH | FF_SWISS, // nPitchAndFamily
 		_T("Calibri"));
 
 	m_mouseDownOnSearches = false;
@@ -40,7 +40,6 @@ CSymbolEdit::CSymbolEdit() :
 	m_windowDpi = NULL;
 
 	//m_searchButton.LoadStdImageDPI(Search_16, Search_20, Search_24, Search_32, _T("PNG"));
-	
 }
 
 CSymbolEdit::~CSymbolEdit()
@@ -132,7 +131,7 @@ void CSymbolEdit::CopySelectionOrClip(const MSG* pMsg)
 
 bool CSymbolEdit::SendKeyToParent(UINT message, const MSG* pMsg)
 {
-	CWnd *pWnd = GetParent();
+	CWnd* pWnd = GetParent();
 	if (pWnd)
 	{
 		pWnd->SendMessage(message, pMsg->wParam, pMsg->lParam);
@@ -151,9 +150,9 @@ bool CSymbolEdit::IsHistoryMenuKeyState()
 bool CSymbolEdit::IsListNavigationKey(WPARAM key)
 {
 	return key == VK_DOWN ||
-		key == VK_UP ||
-		key == VK_PRIOR ||
-		key == VK_NEXT;
+		   key == VK_UP ||
+		   key == VK_PRIOR ||
+		   key == VK_NEXT;
 }
 
 bool CSymbolEdit::HandleKeyDown(MSG* pMsg)
@@ -164,7 +163,7 @@ bool CSymbolEdit::HandleKeyDown(MSG* pMsg)
 		return true;
 	}
 	else if (pMsg->wParam == VK_DOWN &&
-		IsHistoryMenuKeyState())
+			 IsHistoryMenuKeyState())
 	{
 		if (ShowSearchHistoryMenu())
 		{
@@ -190,7 +189,7 @@ CGetSetOptions& CSymbolEdit::Settings() const
 
 void CSymbolEdit::HandleReturnKey()
 {
-	CWnd *pWnd = GetParent();
+	CWnd* pWnd = GetParent();
 	if (pWnd)
 	{
 		if (Settings().m_bFindAsYouType)
@@ -215,7 +214,7 @@ bool CSymbolEdit::HandleDeleteKey(const MSG* pMsg)
 	CString cs;
 	this->GetWindowText(cs);
 	//if selection is at the end then forward this on to the parent to delete the selected clip
-	if(startChar == cs.GetLength() &&
+	if (startChar == cs.GetLength() &&
 		endChar == cs.GetLength())
 	{
 		return SendKeyToParent(CQListCtrl::NmDelete, pMsg);
@@ -257,11 +256,11 @@ void CSymbolEdit::LoadPastSearches(CString values)
 	CStringA xmlA = CTextConvert::UnicodeToUTF8(values);
 	doc.Parse(xmlA);
 
-	const tinyxml2::XMLElement *ItemHeader = doc.FirstChildElement("PastSearches");
+	const tinyxml2::XMLElement* ItemHeader = doc.FirstChildElement("PastSearches");
 
 	if (ItemHeader != NULL)
 	{
-		const tinyxml2::XMLElement *ItemElement = ItemHeader->FirstChildElement();
+		const tinyxml2::XMLElement* ItemElement = ItemHeader->FirstChildElement();
 
 		int count = 0;
 
@@ -336,7 +335,7 @@ bool CSymbolEdit::ShowSearchHistoryMenu()
 	cmPopUp.CreatePopupMenu();
 
 	int count = min((int)m_searches.GetCount(), s_listMaxCount);
-	for (int i = count-1; i >= 0; i--)
+	for (int i = count - 1; i >= 0; i--)
 	{
 		CString text = m_searches[i];
 
@@ -374,9 +373,9 @@ bool CSymbolEdit::ShowSearchHistoryMenu()
 	x.y += windowRect.Height();
 
 	cmPopUp.TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RIGHTBUTTON, x.x, x.y, this, NULL);
-	
+
 	Invalidate();
-	
+
 	return true;
 }
 
@@ -501,13 +500,13 @@ void CSymbolEdit::OnPaint()
 	GetClientRect(&rect);
 
 	DWORD margins = GetMargins();
-	
+
 	CRect textRect(rect);
 	textRect.left += LOWORD(margins);
 	textRect.right -= HIWORD(margins);
 
 	// Clearing the background
-	dc.FillSolidRect(rect, GetSysColor(COLOR_WINDOW));	
+	dc.FillSolidRect(rect, GetSysColor(COLOR_WINDOW));
 
 	if (m_hSymbolIcon)
 	{
@@ -583,7 +582,7 @@ void CSymbolEdit::DrawSymbolIcon(CDC& dc, CRect& rect, DWORD margins)
 
 void CSymbolEdit::DrawTextArea(CDC& dc, const CRect& rect, const CRect& textRect, const CString& text)
 {
-	if(this == GetFocus() || text.GetLength() > 0)
+	if (this == GetFocus() || text.GetLength() > 0)
 	{
 		dc.FillSolidRect(rect, Settings().m_Theme.SearchTextBoxFocusBG());
 
@@ -673,8 +672,8 @@ void CSymbolEdit::OnSetFocus(CWnd* pOldWnd)
 
 	//was seeing issues when refreshing non client area inline, do it delayed
 	SetTimer(1, 500, NULL);
-	
-	CWnd *pWnd = GetParent();
+
+	CWnd* pWnd = GetParent();
 	if (pWnd)
 	{
 		if (Settings().m_bFindAsYouType)
@@ -693,7 +692,7 @@ void CSymbolEdit::OnKillFocus(CWnd* pNewWnd)
 
 	//was seeing issues when refreshing non client area inline, do it delayed
 	SetTimer(1, 500, NULL);
-	
+
 	CEdit::OnKillFocus(pNewWnd);
 }
 
@@ -703,7 +702,7 @@ BOOL CSymbolEdit::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
 	GetCursorPos(&pntCursor);
 	ScreenToClient(&pntCursor);
 
-	if(m_closeButtonRect.PtInRect(pntCursor))
+	if (m_closeButtonRect.PtInRect(pntCursor))
 	{
 		HCURSOR h = ::LoadCursor(NULL, IDC_ARROW);
 		::SetCursor(h);
@@ -741,13 +740,13 @@ void CSymbolEdit::OnLButtonUp(UINT nFlags, CPoint point)
 	{
 		if ((GetWindowTextLength() > 0))
 		{
-			CWnd *pOwner = GetOwner();
+			CWnd* pOwner = GetOwner();
 			if (pOwner)
 			{
 				pOwner->SendMessage(CQListCtrl::NmCancelSearch, 0, 0);
 			}
-		}		
-	}	
+		}
+	}
 
 	if (m_searchesButtonRect.PtInRect(point))
 	{
@@ -796,7 +795,7 @@ void CSymbolEdit::OnMouseMove(UINT nFlags, CPoint point)
 			InvalidateRect(m_closeButtonRect);
 		}
 	}
-	else if(m_mouseHoveringOverClose)
+	else if (m_mouseHoveringOverClose)
 	{
 		m_mouseHoveringOverClose = false;
 		InvalidateRect(m_closeButtonRect);
@@ -828,7 +827,7 @@ void CSymbolEdit::OnSelectSearchString(UINT idIn)
 		m_searches.RemoveAll();
 	}
 	else if (index >= 0 &&
-		index < m_searches.GetCount())
+			 index < m_searches.GetCount())
 	{
 		CString cs = m_searches[index];
 		this->SetWindowTextW(cs);
@@ -848,7 +847,7 @@ bool CSymbolEdit::ApplyLastSearch()
 	bool ret = false;
 	if (m_searches.GetCount() > 0)
 	{
-		CString cs = m_searches[m_searches.GetCount()-1];
+		CString cs = m_searches[m_searches.GetCount() - 1];
 		this->SetWindowTextW(cs);
 
 		this->SetFocus();
@@ -867,7 +866,7 @@ void CSymbolEdit::OnDpiChanged()
 	SetDpiInfo(m_windowDpi);
 }
 
-void CSymbolEdit::SetDpiInfo(CDPI *dpi)
+void CSymbolEdit::SetDpiInfo(CDPI* dpi)
 {
 	if (dpi == NULL)
 	{
@@ -895,7 +894,7 @@ BOOL CSymbolEdit::OnEraseBkgnd(CDC* /*pDC*/)
 }
 
 
-void CSymbolEdit::OnNcCalcSize(BOOL /*bCalcValidRects*/,NCCALCSIZE_PARAMS* lpncsp)
+void CSymbolEdit::OnNcCalcSize(BOOL /*bCalcValidRects*/, NCCALCSIZE_PARAMS* lpncsp)
 {
 	CString text;
 	GetWindowText(text);
@@ -912,19 +911,18 @@ void CSymbolEdit::OnNcCalcSize(BOOL /*bCalcValidRects*/,NCCALCSIZE_PARAMS* lpncs
 		CRect rectWnd, rectClient;
 
 		////calculate client area height needed for a font
-		CFont *pFont = GetFont();
+		CFont* pFont = GetFont();
 		CRect rectText;
 
 
-		CDC *pDC = GetDC();
+		CDC* pDC = GetDC();
 
-		CFont *pOld = pDC->SelectObject(pFont);
+		CFont* pOld = pDC->SelectObject(pFont);
 		pDC->DrawText("Ky", rectText, DT_CALCRECT | DT_LEFT);
 		int uiVClientHeight = rectText.Height();
 
 		pDC->SelectObject(pOld);
 		ReleaseDC(pDC);
-
 
 
 		////calculate NC area to center text.
@@ -953,7 +951,7 @@ void CSymbolEdit::OnNcCalcSize(BOOL /*bCalcValidRects*/,NCCALCSIZE_PARAMS* lpncs
 
 	//rectWnd.OffsetRect(-rectWnd.left, -rectWnd.top);
 	//m_rectNCTop = rectWnd;
-		
+
 	//m_rectNCTop.DeflateRect(uiCX, uiCY, uiCX, uiCenterOffset + uiVClientHeight + uiCY);
 
 	//m_rectNCBottom = rectWnd;
@@ -983,19 +981,19 @@ void CSymbolEdit::OnNcPaint()
 	GetWindowText(text);
 
 	CWindowDC dc(this);
-	
+
 	CRect r;
 	this->GetWindowRect(r);
 	this->ScreenToClient(r);
 
-	CRect t(0, 0, r.Width(), m_centerTextDiff+ m_windowDpi->Scale(1));
+	CRect t(0, 0, r.Width(), m_centerTextDiff + m_windowDpi->Scale(1));
 
-	CRect b(0, r.Height() - m_centerTextDiff- m_windowDpi->Scale(1), r.Width(), r.Height());
+	CRect b(0, r.Height() - m_centerTextDiff - m_windowDpi->Scale(1), r.Width(), r.Height());
 
 	COLORREF c = Settings().m_Theme.MainWindowBG();
 
 	if (this == GetFocus() || text.GetLength() > 0)
-	{		
+	{
 		dc.FillSolidRect(t, Settings().m_Theme.SearchTextBoxFocusBG());
 		dc.FillSolidRect(b, Settings().m_Theme.SearchTextBoxFocusBG());
 
@@ -1005,7 +1003,7 @@ void CSymbolEdit::OnNcPaint()
 	{
 		dc.FillSolidRect(t, Settings().m_Theme.MainWindowBG());
 		dc.FillSolidRect(b, Settings().m_Theme.MainWindowBG());
-	}	
+	}
 
 	//if ((text.GetLength() > 0 || this == GetFocus()) && m_windowDpi)
 	{
@@ -1035,10 +1033,10 @@ void CSymbolEdit::OnTimer(UINT_PTR nIDEvent)
 	switch (nIDEvent)
 	{
 	case 1:
-			KillTimer(1);
-			//Invalidate();
-			::SetWindowPos(m_hWnd, NULL, 0, 0, 0, 0, SWP_DRAWFRAME | SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
-			break;
+		KillTimer(1);
+		//Invalidate();
+		::SetWindowPos(m_hWnd, NULL, 0, 0, 0, 0, SWP_DRAWFRAME | SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
+		break;
 	}
 
 	CEdit::OnTimer(nIDEvent);

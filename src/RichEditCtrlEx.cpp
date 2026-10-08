@@ -13,7 +13,7 @@
 CRichEditCtrlEx::CRichEditLibrary::CRichEditLibrary()
 {
 #ifdef _UNICODE
-    m_hInstRichEdit20 = LoadLibraryW(_T("MSFTEDIT.DLL"));
+	m_hInstRichEdit20 = LoadLibraryW(_T("MSFTEDIT.DLL"));
 #else
 	m_hInstRichEdit20 = LoadLibraryA(_T("RICHED20.DLL"));
 #endif
@@ -21,7 +21,7 @@ CRichEditCtrlEx::CRichEditLibrary::CRichEditLibrary()
 
 CRichEditCtrlEx::CRichEditLibrary::~CRichEditLibrary()
 {
-	if(m_hInstRichEdit20 != NULL)
+	if (m_hInstRichEdit20 != NULL)
 	{
 		::FreeLibrary(m_hInstRichEdit20);
 	}
@@ -34,15 +34,15 @@ bool CRichEditCtrlEx::CRichEditLibrary::IsLoaded() const
 
 BOOL CRichEditCtrlEx::InitRichEditEx()
 {
-    if( ! ::AfxInitRichEdit() )
-    {
-        return FALSE ;
-    }
+	if (!::AfxInitRichEdit())
+	{
+		return FALSE;
+	}
 
-    // loaded on the first call that gets here, freed when the process exits
-    static const CRichEditLibrary library{};
+	// loaded on the first call that gets here, freed when the process exits
+	static const CRichEditLibrary library{};
 
-    return library.IsLoaded() ? TRUE : FALSE;
+	return library.IsLoaded() ? TRUE : FALSE;
 }
 
 
@@ -67,24 +67,23 @@ END_MESSAGE_MAP()
 CString CRichEditCtrlEx::GetRTF()
 {
 	// Return the RTF string of the text in the control.
-	
+
 	// Stream out here.
 	EDITSTREAM es;
 	es.dwError = 0;
-	es.pfnCallback = CBStreamOut;		// Set the callback
+	es.pfnCallback = CBStreamOut; // Set the callback
 
 	CString sRTF = "";
 
-	es.dwCookie = (DWORD_PTR) &sRTF;	// so sRTF receives the string
-	
-	StreamOut(SF_RTF, es);			// Call CRichEditCtrl::StreamOut to get the string.
+	es.dwCookie = (DWORD_PTR)&sRTF; // so sRTF receives the string
+
+	StreamOut(SF_RTF, es); // Call CRichEditCtrl::StreamOut to get the string.
 	///
 
 	return sRTF;
-
 }
 
-void CRichEditCtrlEx::SetRTF(const char *pRTF)
+void CRichEditCtrlEx::SetRTF(const char* pRTF)
 {
 	// Put the RTF string sRTF into the rich edit control.
 
@@ -95,20 +94,19 @@ void CRichEditCtrlEx::SetRTF(const char *pRTF)
 
 #ifdef _UNICODE
 	CString cs;
-	es.dwCookie = (DWORD_PTR) &cs;
+	es.dwCookie = (DWORD_PTR)&cs;
 #else
 	CString cs(pRTF);
-	es.dwCookie = (DWORD_PTR) &cs;
+	es.dwCookie = (DWORD_PTR)&cs;
 #endif
 
-	StreamIn(SF_RTF, es);	// Do it.
+	StreamIn(SF_RTF, es); // Do it.
 
 #ifdef _UNICODE
 	SETTEXTEX stex;
 	stex.flags = ST_SELECTION | ST_KEEPUNDO;
-	SendMessage(EM_SETTEXTEX, (WPARAM)&stex, (LPARAM)pRTF); 
+	SendMessage(EM_SETTEXTEX, (WPARAM)&stex, (LPARAM)pRTF);
 #endif
-
 }
 
 void CRichEditCtrlEx::SetRTF(CStringA sRTF)
@@ -122,29 +120,28 @@ void CRichEditCtrlEx::SetRTF(CStringA sRTF)
 
 #ifdef _UNICODE
 	CString cs;
-	es.dwCookie = (DWORD_PTR) &cs;
+	es.dwCookie = (DWORD_PTR)&cs;
 #else
-	es.dwCookie = (DWORD_PTR) &sRTF;
+	es.dwCookie = (DWORD_PTR)&sRTF;
 #endif
 
-	StreamIn(SF_RTF, es);	// Do it.
+	StreamIn(SF_RTF, es); // Do it.
 
 #ifdef _UNICODE
 	SETTEXTEX stex;
-    stex.flags = ST_SELECTION | ST_KEEPUNDO;
+	stex.flags = ST_SELECTION | ST_KEEPUNDO;
 
-    SendMessage(EM_SETTEXTEX, (WPARAM)&stex, (LPARAM)sRTF.GetBuffer(sRTF.GetLength())); 
+	SendMessage(EM_SETTEXTEX, (WPARAM)&stex, (LPARAM)sRTF.GetBuffer(sRTF.GetLength()));
 #endif
-
 }
 
 CString CRichEditCtrlEx::GetText()
 {
 	CString sText;
-	
+
 #ifdef _UNICODE
 	GETTEXTEX stex;
-	stex.codepage = 1200;  // Unicode code page(set SETTEXTEX documentation)
+	stex.codepage = 1200; // Unicode code page(set SETTEXTEX documentation)
 
 	int nSize = GetTextLength();
 	//increase the size incase of unicode text
@@ -160,9 +157,9 @@ CString CRichEditCtrlEx::GetText()
 	// Stream out here.
 	EDITSTREAM es;
 	es.dwError = 0;
-	es.pfnCallback = CBStreamOut;		// Set the callback
-	es.dwCookie = (DWORD_PTR) &sText;	// so sRTF receives the string
-	StreamOut(SF_TEXT, es);			// Call CRichEditCtrl::StreamOut to get the string.
+	es.pfnCallback = CBStreamOut;    // Set the callback
+	es.dwCookie = (DWORD_PTR)&sText; // so sRTF receives the string
+	StreamOut(SF_TEXT, es);          // Call CRichEditCtrl::StreamOut to get the string.
 #endif
 
 	return sText;
@@ -178,17 +175,17 @@ void CRichEditCtrlEx::SetText(CString sText)
 	es.pfnCallback = CBStreamIn;
 #ifdef _UNICODE
 	CString cs;
-	es.dwCookie = (DWORD_PTR) &cs;
+	es.dwCookie = (DWORD_PTR)&cs;
 #else
-	es.dwCookie = (DWORD_PTR) &sText;
+	es.dwCookie = (DWORD_PTR)&sText;
 #endif
-	StreamIn(SF_TEXT, es);	// Do it.
+	StreamIn(SF_TEXT, es); // Do it.
 
 #ifdef _UNICODE
 	SETTEXTEX stex;
-    stex.flags = ST_SELECTION | ST_KEEPUNDO;
-    stex.codepage = 1200;  // Unicode code page(set SETTEXTEX documentation)
-    SendMessage(EM_SETTEXTEX, (WPARAM)&stex, (LPARAM)sText.GetBuffer(sText.GetLength())); 
+	stex.flags = ST_SELECTION | ST_KEEPUNDO;
+	stex.codepage = 1200; // Unicode code page(set SETTEXTEX documentation)
+	SendMessage(EM_SETTEXTEX, (WPARAM)&stex, (LPARAM)sText.GetBuffer(sText.GetLength()));
 	sText.ReleaseBuffer();
 #endif
 }
@@ -196,28 +193,28 @@ void CRichEditCtrlEx::SetText(CString sText)
 /*
 	Callback function to stream an RTF string into the rich edit control.
 */
-DWORD CALLBACK CRichEditCtrlEx::CBStreamIn(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
+DWORD CALLBACK CRichEditCtrlEx::CBStreamIn(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb)
 {
 	// We insert the rich text here.
 
-/*	
+	/*	
 	This function taken from CodeGuru.com
 	http://www.codeguru.com/richedit/rtf_string_streamin.shtml
 	Zafir Anjum
 */
 
-	CString *pstr = (CString *) dwCookie;
+	CString* pstr = (CString*)dwCookie;
 
 	if (pstr->GetLength() < cb)
 	{
 		*pcb = pstr->GetLength();
-		memcpy(pbBuff, (LPCTSTR) *pstr, *pcb);
+		memcpy(pbBuff, (LPCTSTR)*pstr, *pcb);
 		pstr->Empty();
 	}
 	else
 	{
 		*pcb = cb;
-		memcpy(pbBuff, (LPCTSTR) *pstr, *pcb);
+		memcpy(pbBuff, (LPCTSTR)*pstr, *pcb);
 		*pstr = pstr->Right(pstr->GetLength() - cb);
 	}
 	///
@@ -228,10 +225,10 @@ DWORD CALLBACK CRichEditCtrlEx::CBStreamIn(DWORD_PTR dwCookie, LPBYTE pbBuff, LO
 /*
 	Callback function to stream the RTF string out of the rich edit control.
 */
-DWORD CALLBACK CRichEditCtrlEx::CBStreamOut(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
+DWORD CALLBACK CRichEditCtrlEx::CBStreamOut(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb)
 {
 	// Address of our string var is in psEntry
-	CString *psEntry = (CString*) dwCookie;
+	CString* psEntry = (CString*)dwCookie;
 
 	// the buffer holds cb bytes without a terminator: exactly these are converted (upstream read
 	// the buffer up to a null, past its end)
@@ -245,8 +242,8 @@ DWORD CALLBACK CRichEditCtrlEx::CBStreamOut(DWORD_PTR dwCookie, LPBYTE pbBuff, L
 
 bool CRichEditCtrlEx::SelectionIsBold()
 {
-	CHARFORMAT cf = GetCharFormat();	
-	
+	CHARFORMAT cf = GetCharFormat();
+
 	if (cf.dwEffects & CFM_BOLD)
 		return true;
 	else
@@ -255,8 +252,8 @@ bool CRichEditCtrlEx::SelectionIsBold()
 
 bool CRichEditCtrlEx::SelectionIsItalic()
 {
-	CHARFORMAT cf = GetCharFormat();	
-	
+	CHARFORMAT cf = GetCharFormat();
+
 	if (cf.dwEffects & CFM_ITALIC)
 		return true;
 	else
@@ -265,8 +262,8 @@ bool CRichEditCtrlEx::SelectionIsItalic()
 
 bool CRichEditCtrlEx::SelectionIsUnderlined()
 {
-	CHARFORMAT cf = GetCharFormat();	
-	
+	CHARFORMAT cf = GetCharFormat();
+
 	if (cf.dwEffects & CFM_UNDERLINE)
 		return true;
 	else
@@ -290,35 +287,34 @@ void CRichEditCtrlEx::SetCharStyle(int MASK, int STYLE, int /*nStart*/, int /*nE
 	CHARFORMAT cf;
 	cf.cbSize = sizeof(CHARFORMAT);
 	//cf.dwMask = MASK;
-	
+
 	GetSelectionCharFormat(cf);
-	
-	if (cf.dwMask & MASK)	// selection is all the same
+
+	if (cf.dwMask & MASK) // selection is all the same
 	{
-		cf.dwEffects ^= STYLE; 
+		cf.dwEffects ^= STYLE;
 	}
 	else
 	{
 		cf.dwEffects |= STYLE;
 	}
-	
+
 	cf.dwMask = MASK;
 
 	SetSelectionCharFormat(cf);
-
 }
 
 void CRichEditCtrlEx::SetSelectionBold()
 {
-	long start=0, end=0;
-	GetSel(start, end);		// Get the current selection
+	long start = 0, end = 0;
+	GetSel(start, end); // Get the current selection
 
-	SetCharStyle(CFM_BOLD, CFE_BOLD, start, end);	// Make it bold
+	SetCharStyle(CFM_BOLD, CFE_BOLD, start, end); // Make it bold
 }
 
 void CRichEditCtrlEx::SetSelectionItalic()
 {
-	long start=0, end=0;
+	long start = 0, end = 0;
 	GetSel(start, end);
 
 	SetCharStyle(CFM_ITALIC, CFE_ITALIC, start, end);
@@ -326,7 +322,7 @@ void CRichEditCtrlEx::SetSelectionItalic()
 
 void CRichEditCtrlEx::SetSelectionUnderlined()
 {
-	long start=0, end=0;
+	long start = 0, end = 0;
 	GetSel(start, end);
 
 	SetCharStyle(CFM_UNDERLINE, CFE_UNDERLINE, start, end);
@@ -334,21 +330,21 @@ void CRichEditCtrlEx::SetSelectionUnderlined()
 
 void CRichEditCtrlEx::SetParagraphCenter()
 {
-	PARAFORMAT paraFormat;    
+	PARAFORMAT paraFormat;
 	paraFormat.cbSize = sizeof(PARAFORMAT);
-	paraFormat.dwMask = PFM_ALIGNMENT;    
+	paraFormat.dwMask = PFM_ALIGNMENT;
 	paraFormat.wAlignment = PFA_CENTER;
-	
-	SetParaFormat(paraFormat);	// Set the paragraph.
+
+	SetParaFormat(paraFormat); // Set the paragraph.
 }
 
 void CRichEditCtrlEx::SetParagraphLeft()
 {
 	PARAFORMAT paraFormat;
 	paraFormat.cbSize = sizeof(PARAFORMAT);
-	paraFormat.dwMask = PFM_ALIGNMENT;    
+	paraFormat.dwMask = PFM_ALIGNMENT;
 	paraFormat.wAlignment = PFA_LEFT;
-	
+
 	SetParaFormat(paraFormat);
 }
 
@@ -356,9 +352,9 @@ void CRichEditCtrlEx::SetParagraphRight()
 {
 	PARAFORMAT paraFormat;
 	paraFormat.cbSize = sizeof(PARAFORMAT);
-	paraFormat.dwMask = PFM_ALIGNMENT;    
+	paraFormat.dwMask = PFM_ALIGNMENT;
 	paraFormat.wAlignment = PFA_RIGHT;
-	
+
 	SetParaFormat(paraFormat);
 }
 
@@ -397,7 +393,7 @@ PARAFORMAT CRichEditCtrlEx::GetParagraphFormat()
 	PARAFORMAT pf;
 	pf.cbSize = sizeof(PARAFORMAT);
 
-	pf.dwMask = PFM_ALIGNMENT | PFM_NUMBERING;    	
+	pf.dwMask = PFM_ALIGNMENT | PFM_NUMBERING;
 
 	GetParaFormat(pf);
 
@@ -408,7 +404,7 @@ void CRichEditCtrlEx::SetParagraphBulleted()
 {
 	PARAFORMAT paraformat = GetParagraphFormat();
 
-	if ( (paraformat.dwMask & PFM_NUMBERING) && (paraformat.wNumbering == PFN_BULLET) )
+	if ((paraformat.dwMask & PFM_NUMBERING) && (paraformat.wNumbering == PFN_BULLET))
 	{
 		paraformat.wNumbering = 0;
 		paraformat.dxOffset = 0;
@@ -425,9 +421,8 @@ void CRichEditCtrlEx::SetParagraphBulleted()
 			paraformat.dwMask = PFM_NUMBERING | PFM_STARTINDENT | PFM_OFFSET;
 		}
 	}
-	
-	SetParaFormat(paraformat);
 
+	SetParaFormat(paraformat);
 }
 
 bool CRichEditCtrlEx::ParagraphIsBulleted()
@@ -449,8 +444,8 @@ void CRichEditCtrlEx::SelectColor()
 	if (cf.dwEffects & CFE_AUTOCOLOR) cf.dwEffects -= CFE_AUTOCOLOR;
 
 	// Get a color from the common color dialog.
-	if( dlg.DoModal() == IDOK )
-	{	
+	if (dlg.DoModal() == IDOK)
+	{
 		cf.crTextColor = dlg.GetColor();
 	}
 
@@ -464,7 +459,7 @@ void CRichEditCtrlEx::SetFontName(CString sFontName)
 	CHARFORMAT cf = GetCharFormat();
 
 	// Set the font name.
-	for (int i = 0; i <= sFontName.GetLength()-1; i++)
+	for (int i = 0; i <= sFontName.GetLength() - 1; i++)
 		cf.szFaceName[i] = (char)sFontName[i];
 
 
@@ -477,20 +472,19 @@ void CRichEditCtrlEx::SetFontSize(int nPointSize)
 {
 	CHARFORMAT cf = GetCharFormat();
 
-	nPointSize *= 20;	// convert from to twips
+	nPointSize *= 20; // convert from to twips
 	cf.yHeight = nPointSize;
-	
+
 	cf.dwMask = CFM_SIZE;
 
 	SetSelectionCharFormat(cf);
 }
 
-void CRichEditCtrlEx::GetSystemFonts(CStringArray &saFontList)
+void CRichEditCtrlEx::GetSystemFonts(CStringArray& saFontList)
 {
-	CDC *pDC = GetDC ();
+	CDC* pDC = GetDC();
 
-	EnumFonts (pDC->GetSafeHdc(),NULL,(FONTENUMPROC) CBEnumFonts,(LPARAM)&saFontList);//Enumerate
-
+	EnumFonts(pDC->GetSafeHdc(), NULL, (FONTENUMPROC)CBEnumFonts, (LPARAM)&saFontList); //Enumerate
 }
 
 BOOL CALLBACK CRichEditCtrlEx::CBEnumFonts(LPLOGFONT lplf, LPTEXTMETRIC /*lptm*/, DWORD dwType, LPARAM lpData)
@@ -498,9 +492,9 @@ BOOL CALLBACK CRichEditCtrlEx::CBEnumFonts(LPLOGFONT lplf, LPTEXTMETRIC /*lptm*/
 	// This function was written with the help of CCustComboBox, by Girish Bharadwaj.
 	// Available from Codeguru.
 
-	if (dwType == TRUETYPE_FONTTYPE) 
+	if (dwType == TRUETYPE_FONTTYPE)
 	{
-		((CStringArray *) lpData)->Add( lplf->lfFaceName );
+		((CStringArray*)lpData)->Add(lplf->lfFaceName);
 	}
 
 	return true;
@@ -519,23 +513,22 @@ long CRichEditCtrlEx::GetSelectionFontSize()
 {
 	CHARFORMAT cf = GetCharFormat();
 
-	long nSize = cf.yHeight/20;
+	long nSize = cf.yHeight / 20;
 
 	return nSize;
 }
 
-int CRichEditCtrlEx::OnCreate(LPCREATESTRUCT lpCreateStruct) 
+int CRichEditCtrlEx::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if (CRichEditCtrl::OnCreate(lpCreateStruct) == -1)
 		return -1;
-	
+
 	// TODO: Add your specialized creation code here
-	
+
 	return 0;
 }
 
-BOOL CRichEditCtrlEx::Create(LPCTSTR /*lpszClassName*/,LPCTSTR lpszWindowName, DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID, CCreateContext* pContext) 
+BOOL CRichEditCtrlEx::Create(LPCTSTR /*lpszClassName*/, LPCTSTR lpszWindowName, DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID, CCreateContext* pContext)
 {
 	return CWnd::Create(_T("RichEdit50W"), lpszWindowName, dwStyle, rect, pParentWnd, nID, pContext);
-
 }

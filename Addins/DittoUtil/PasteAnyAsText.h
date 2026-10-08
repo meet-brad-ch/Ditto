@@ -12,7 +12,7 @@ public:
 	PasteAnyAsText(void);
 	~PasteAnyAsText(void);
 
-	static bool SelectClipToPasteAsText(const CDittoInfo &DittoInfo, IClip *pClip);
+	static bool SelectClipToPasteAsText(const CDittoInfo& DittoInfo, IClip* pClip);
 
 private:
 	// The bytes of a format as text of Char: trailing nulls (the terminator and any padding) are

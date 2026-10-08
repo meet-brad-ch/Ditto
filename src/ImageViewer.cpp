@@ -49,9 +49,8 @@ BOOL CImageViewer::Create(CWnd* pParent)
 
 	// Register window class
 	CString csClassName = AfxRegisterWndClass(CS_OWNDC | CS_HREDRAW | CS_VREDRAW,
-		LoadCursor(NULL, IDC_ARROW),
-		CBrush(::GetSysColor(COLOR_BTNFACE)));
-
+											  LoadCursor(NULL, IDC_ARROW),
+											  CBrush(::GetSysColor(COLOR_BTNFACE)));
 
 
 	// If no parent supplied then try and get a pointer to it anyway
@@ -61,16 +60,15 @@ BOOL CImageViewer::Create(CWnd* pParent)
 	// Create popup window
 	//bSuccess = CreateEx(WS_EX_DLGMODALFRAME|WS_EX_TOPMOST, // Extended style
 	bSuccess = CreateEx(0,
-		csClassName,                       // Classname
-		_T(""),                          // Title
-		WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL,     // style
-		0, 0,                               // position - updated soon.
-		390, 130,                           // Size - updated soon
-		pParent->GetSafeHwnd(),            // handle to parent
-		0,                                 // No menu
-		NULL);
+						csClassName,                                     // Classname
+						_T(""),                                          // Title
+						WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL, // style
+						0, 0,                                            // position - updated soon.
+						390, 130,                                        // Size - updated soon
+						pParent->GetSafeHwnd(),                          // handle to parent
+						0,                                               // No menu
+						NULL);
 	if (!bSuccess) return FALSE;
-
 
 
 	return TRUE;
@@ -111,8 +109,8 @@ void CImageViewer::UpdateBitmapSize(bool setScale)
 			m_scrollHelper.ScrollToOrigin(true, true);
 		}
 
-		m_scrollHelper.AttachWnd(this);		
-		m_scrollHelper.SetDisplaySize(m_pGdiplusBitmap->GetWidth(), m_pGdiplusBitmap->GetHeight(), m_scale);		
+		m_scrollHelper.AttachWnd(this);
+		m_scrollHelper.SetDisplaySize(m_pGdiplusBitmap->GetWidth(), m_pGdiplusBitmap->GetHeight(), m_scale);
 
 		this->GetParent()->PostMessage(CDittoMessage::RefreshFooter, 0, 0);
 	}
@@ -125,9 +123,9 @@ void CImageViewer::OnPaint()
 	CMemDCEx memDC(&dc);
 
 	CRect rect;
-	GetClientRect(rect);	
+	GetClientRect(rect);
 
-	CBrush  Brush, *pOldBrush;
+	CBrush Brush, *pOldBrush;
 	Brush.CreateSolidBrush(Settings().m_Theme.DescriptionWindowBG());
 
 	pOldBrush = memDC.SelectObject(&Brush);
@@ -152,7 +150,7 @@ void CImageViewer::OnPaint()
 
 		//OutputDebugString(CStringUtil::Format(_T("OnPaint, Width: %d, New Width: %d\r\n"), rect.Width(), (int)nW));
 	}
-	
+
 	memDC.SelectObject(pOldBrush);
 }
 
@@ -261,12 +259,12 @@ void CImageViewer::OnLButtonUp(UINT nFlags, CPoint point)
 		m_hoveringOverImage)
 	{
 		Settings().SetScaleImagesToDescWindow(!Settings().GetScaleImagesToDescWindow());
-		
+
 		UpdateBitmapSize(true);
-		
+
 		Invalidate();
 
-		
+
 		return;
 	}
 
@@ -304,7 +302,8 @@ BOOL CImageViewer::HandleGesture(const GESTUREINFO& gi)
 {
 	BOOL bHandled = FALSE;
 
-	switch (gi.dwID) {
+	switch (gi.dwID)
+	{
 	case GID_ZOOM:
 		//OutputDebugString(_T("zoom\r\n"));
 		// Code for zooming goes here
@@ -433,27 +432,27 @@ void CImageViewer::HandlePanGesture(const GESTUREINFO& gi)
 LRESULT CImageViewer::OnGestureNotify(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	// This is the right place to define the list of gestures that this
-			// application will support. By populating GESTURECONFIG structure 
-			// and calling SetGestureConfig function. We can choose gestures 
-			// that we want to handle in our application. In this app we
-			// decide to handle all gestures.
+	// application will support. By populating GESTURECONFIG structure
+	// and calling SetGestureConfig function. We can choose gestures
+	// that we want to handle in our application. In this app we
+	// decide to handle all gestures.
 	GESTURECONFIG gc = {
-		0,              // gesture ID
+		0, // gesture ID
 		GC_ALLGESTURES,
-		//GC_PAN | GC_PAN_WITH_SINGLE_FINGER_VERTICALLY | GC_PAN_WITH_SINGLE_FINGER_HORIZONTALLY | GC_PAN_WITH_GUTTER | GC_PAN_WITH_INERTIA, // settings related to gesture ID that are to be 
-						// turned on
-		0               // settings related to gesture ID that are to be 
-						// turned off
+		//GC_PAN | GC_PAN_WITH_SINGLE_FINGER_VERTICALLY | GC_PAN_WITH_SINGLE_FINGER_HORIZONTALLY | GC_PAN_WITH_GUTTER | GC_PAN_WITH_INERTIA, // settings related to gesture ID that are to be
+		// turned on
+		0 // settings related to gesture ID that are to be
+		  // turned off
 	};
 
 	if (!::SetGestureConfig(
-		m_hWnd,                 // window for which configuration is specified
-		0,                    // reserved, must be 0
-		1,                    // count of GESTURECONFIG structures
-		&gc,                  // array of GESTURECONFIG structures, dwIDs will be processed in the
-							  // order specified and repeated occurances will overwrite previous ones
-		sizeof(GESTURECONFIG) // sizeof(GESTURECONFIG)
-	))
+			m_hWnd,               // window for which configuration is specified
+			0,                    // reserved, must be 0
+			1,                    // count of GESTURECONFIG structures
+			&gc,                  // array of GESTURECONFIG structures, dwIDs will be processed in the
+								  // order specified and repeated occurances will overwrite previous ones
+			sizeof(GESTURECONFIG) // sizeof(GESTURECONFIG)
+			))
 	{
 		CLogger::Log(CStringUtil::Format(_T("CImageViewer::OnGestureNotify SetGestureConfig failed, GetLastError %u"), ::GetLastError()));
 	}

@@ -14,12 +14,12 @@
 
 IMPLEMENT_DYNCREATE(COptionsStats, CPropertyPage)
 
-COptionsStats::COptionsStats()
-	: CPropertyPage(COptionsStats::IDD)
+COptionsStats::COptionsStats() :
+	CPropertyPage(COptionsStats::IDD)
 {
 	m_csTitle = theApp.Services().Language().GetString("StatsTitle", "Stats");
 	m_psp.pszTitle = m_csTitle;
-	m_psp.dwFlags |= PSP_USETITLE; 
+	m_psp.dwFlags |= PSP_USETITLE;
 
 	//{{AFX_DATA_INIT(COptionsStats)
 	m_eAllCopies = _T("");
@@ -65,12 +65,12 @@ END_MESSAGE_MAP()
 // COptionsStats message handlers
 
 
-BOOL COptionsStats::OnInitDialog() 
+BOOL COptionsStats::OnInitDialog()
 {
 	CPropertyPage::OnInitDialog();
 
 	CGetSetOptions& settings = theApp.Services().Settings();
-	COleDateTime time((time_t) settings.GetTotalDate());
+	COleDateTime time((time_t)settings.GetTotalDate());
 	m_eAllDate = time.Format();
 
 	m_eAllCopies.Format(_T("%d"), settings.GetTotalCopyCount());
@@ -101,7 +101,7 @@ BOOL COptionsStats::OnInitDialog()
 		CErrorReport::Show(CStringUtil::Format(_T("Counting the saved clips for the statistics failed: %s"), e.errorMessage()));
 		return TRUE;
 	}
-	
+
 	__int64 size = CFileSystem::FileSize(CDatabaseManager::GetDBName(theApp.Services().Settings()));
 
 	const int MAX_FILE_SIZE_BUFFER = 255;
@@ -113,11 +113,11 @@ BOOL COptionsStats::OnInitDialog()
 	UpdateData(FALSE);
 
 	theApp.Services().Language().UpdateOptionStats(this);
-		
+
 	return TRUE;
 }
 
-void COptionsStats::OnResetCounts() 
+void COptionsStats::OnResetCounts()
 {
 	CGetSetOptions& settings = theApp.Services().Settings();
 	settings.SetTripCopyCount(0);
@@ -131,11 +131,11 @@ void COptionsStats::OnResetCounts()
 	UpdateData(FALSE);
 }
 
-void COptionsStats::OnRemoveAll() 
+void COptionsStats::OnRemoveAll()
 {
-	if(MessageBox(theApp.Services().Language().GetString("Remove_All", "This will remove all Copy Entries!\n\nContinue?"), _T("Warning"), MB_OKCANCEL) == IDOK)
+	if (MessageBox(theApp.Services().Language().GetString("Remove_All", "This will remove all Copy Entries!\n\nContinue?"), _T("Warning"), MB_OKCANCEL) == IDOK)
 	{
-		if( CClipDatabase::DeleteAllIDs(theApp.Services().Database()) )
+		if (CClipDatabase::DeleteAllIDs(theApp.Services().Database()))
 		{
 			m_eSavedCopies.Empty();
 			m_eSavedCopyData.Empty();
@@ -143,8 +143,8 @@ void COptionsStats::OnRemoveAll()
 			struct _stat buf;
 			int nResult;
 			nResult = _tstat(CDatabaseManager::GetDBName(theApp.Services().Settings()), &buf);
-			if(nResult == 0)
-				m_eDatabaseSize.Format(_T("%d KB"), (buf.st_size/1024));
+			if (nResult == 0)
+				m_eDatabaseSize.Format(_T("%d KB"), (buf.st_size / 1024));
 
 			UpdateData(FALSE);
 		}

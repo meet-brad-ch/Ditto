@@ -40,7 +40,6 @@ BEGIN_MESSAGE_MAP(CEditWithButton, CEdit)
 END_MESSAGE_MAP()
 
 
-
 // CEditWithButton message handlers
 
 void CEditWithButton::PreSubclassWindow()
@@ -102,20 +101,20 @@ bool CEditWithButton::HandleControlKey(WPARAM key)
 bool CEditWithButton::IsListNavigationKey(WPARAM key)
 {
 	return key == VK_DOWN ||
-		key == VK_UP ||
-		key == VK_F3 ||
-		key == VK_PRIOR ||
-		key == VK_NEXT;
+		   key == VK_UP ||
+		   key == VK_F3 ||
+		   key == VK_PRIOR ||
+		   key == VK_NEXT;
 }
 
 bool CEditWithButton::HandleKeyDown(const MSG* pMsg)
 {
-	if(pMsg->wParam == VK_RETURN)
+	if (pMsg->wParam == VK_RETURN)
 	{
-		CWnd *pWnd = GetParent();
-		if(pWnd)
+		CWnd* pWnd = GetParent();
+		if (pWnd)
 		{
-			if(theApp.Services().Settings().m_bFindAsYouType)
+			if (theApp.Services().Settings().m_bFindAsYouType)
 			{
 				pWnd->SendMessage(CQListCtrl::NmSearchEnterPressed, 0, 0);
 			}
@@ -130,8 +129,8 @@ bool CEditWithButton::HandleKeyDown(const MSG* pMsg)
 	}
 	else if (IsListNavigationKey(pMsg->wParam))
 	{
-		CWnd *pWnd = GetParent();
-		if(pWnd)
+		CWnd* pWnd = GetParent();
+		if (pWnd)
 		{
 			pWnd->SendMessage(CQListCtrl::CbUpDown, pMsg->wParam, pMsg->lParam);
 			return true;
@@ -151,12 +150,12 @@ BOOL CEditWithButton::SetBitmaps(UINT iEmptyEdit, UINT iFilledEdit)
 
 	m_bmpEmptyEdit.LoadBitmap(iEmptyEdit);
 	m_bmpFilledEdit.LoadBitmap(iFilledEdit);
-	
+
 	m_bmpEmptyEdit.GetBitmap(&bmpInfo);
-	m_sizeEmptyBitmap.SetSize(bmpInfo.bmWidth,bmpInfo.bmHeight);
-	
+	m_sizeEmptyBitmap.SetSize(bmpInfo.bmWidth, bmpInfo.bmHeight);
+
 	m_bmpFilledEdit.GetBitmap(&bmpInfo);
-	m_sizeFilledBitmap.SetSize(bmpInfo.bmWidth,bmpInfo.bmHeight);
+	m_sizeFilledBitmap.SetSize(bmpInfo.bmWidth, bmpInfo.bmHeight);
 
 	return TRUE;
 }
@@ -172,20 +171,20 @@ void CEditWithButton::ResizeWindow()
 	if (!::IsWindow(m_hWnd)) return;
 
 	//proceed only if edit area is set
-	if (m_rcBorder == CRect(0,0,0,0)) 
+	if (m_rcBorder == CRect(0, 0, 0, 0))
 		return;
 
 	CRect r;
 	GetWindowRect(r);
 	ScreenToClient(r);
 
-	SetWindowPos(&wndTop, 0, 0, r.Width(), r.Height(), SWP_NOMOVE|SWP_NOZORDER);
+	SetWindowPos(&wndTop, 0, 0, r.Width(), r.Height(), SWP_NOMOVE | SWP_NOZORDER);
 
 	m_rcEditArea.left = r.left + m_rcBorder.left;
 	m_rcEditArea.top = r.top + m_rcBorder.top;
 	m_rcEditArea.right = r.right -= m_rcBorder.right;
 	m_rcEditArea.bottom = r.bottom -= m_rcBorder.bottom;
-	
+
 	SetRect(&m_rcEditArea);
 }
 
@@ -211,13 +210,13 @@ BOOL CEditWithButton::OnEraseBkgnd(CDC* pDC)
 {
 	// Get the size of the bitmap
 	CDC dcMemory;
-    CSize sizeBitmap;
+	CSize sizeBitmap;
 	CBitmap* pOldBitmap = NULL;
 	int iTextLength = GetWindowTextLength();
 
 	CRect size;
 	GetWindowRect(size);
-    
+
 	if (iTextLength == 0)
 	{
 		sizeBitmap = m_sizeEmptyBitmap;
@@ -227,9 +226,9 @@ BOOL CEditWithButton::OnEraseBkgnd(CDC* pDC)
 		sizeBitmap = m_sizeFilledBitmap;
 	}
 
-    // Create an in-memory DC compatible with the
-    // display DC we're using to paint
-    dcMemory.CreateCompatibleDC(pDC);
+	// Create an in-memory DC compatible with the
+	// display DC we're using to paint
+	dcMemory.CreateCompatibleDC(pDC);
 
 	if (iTextLength == 0)
 	{
@@ -242,22 +241,22 @@ BOOL CEditWithButton::OnEraseBkgnd(CDC* pDC)
 		pOldBitmap = dcMemory.SelectObject(&m_bmpFilledEdit);
 	}
 
-    // Copy the bits from the in-memory DC into the on-
-    // screen DC to actually do the painting. Use the centerpoint
-    // we computed for the target offset.
-    pDC->BitBlt(0,0, 50, sizeBitmap.cy, &dcMemory, 
-        0, 0, SRCCOPY);
+	// Copy the bits from the in-memory DC into the on-
+	// screen DC to actually do the painting. Use the centerpoint
+	// we computed for the target offset.
+	pDC->BitBlt(0, 0, 50, sizeBitmap.cy, &dcMemory,
+				0, 0, SRCCOPY);
 
-	for(int i = 50; i < size.Width()-50; i++)
+	for (int i = 50; i < size.Width() - 50; i++)
 	{
-		pDC->BitBlt(i, 0, 1, sizeBitmap.cy, &dcMemory, 
-			50, 0, SRCCOPY);
+		pDC->BitBlt(i, 0, 1, sizeBitmap.cy, &dcMemory,
+					50, 0, SRCCOPY);
 	}
 
-	pDC->BitBlt(size.Width()-50, 0, 50, sizeBitmap.cy, &dcMemory, 
-		sizeBitmap.cx-50, 0, SRCCOPY);
+	pDC->BitBlt(size.Width() - 50, 0, 50, sizeBitmap.cy, &dcMemory,
+				sizeBitmap.cx - 50, 0, SRCCOPY);
 
-    dcMemory.SelectObject(pOldBitmap);
+	dcMemory.SelectObject(pOldBitmap);
 
 	return TRUE;
 }
@@ -294,11 +293,11 @@ void CEditWithButton::OnLButtonUp(UINT nFlags, CPoint point)
 	{
 		//it is assumed that when the text is not typed in the
 		//edit control, the button will not be visible
-		//but you can override this by setting 
+		//but you can override this by setting
 		//the m_bButtonExistsAlways to TRUE
-		if ( (GetWindowTextLength() > 0) || m_bButtonExistsAlways)
+		if ((GetWindowTextLength() > 0) || m_bButtonExistsAlways)
 		{
-			CWnd *pOwner = GetOwner();
+			CWnd* pOwner = GetOwner();
 			if (pOwner)
 			{
 				pOwner->SendMessage(m_iButtonClickedMessageId, 0, 0);
@@ -351,7 +350,7 @@ int CEditWithButton::OnCreate(LPCREATESTRUCT lpCreateStruct)
 }
 
 
-LRESULT CEditWithButton::OnSetFont( WPARAM wParam, LPARAM lParam )
+LRESULT CEditWithButton::OnSetFont(WPARAM wParam, LPARAM lParam)
 {
 	DefWindowProc(WM_SETFONT, wParam, lParam);
 
@@ -360,10 +359,9 @@ LRESULT CEditWithButton::OnSetFont( WPARAM wParam, LPARAM lParam )
 	return 0;
 }
 
-void CEditWithButton::OnSize(UINT nType, int cx, int cy) 
+void CEditWithButton::OnSize(UINT nType, int cx, int cy)
 {
 	CEdit::OnSize(nType, cx, cy);
 
 	ResizeWindow();
 }
-

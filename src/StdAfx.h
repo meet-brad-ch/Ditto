@@ -4,7 +4,7 @@
 //
 
 #if !defined(AFX_STDAFX_H__56F3D184_7208_47FE_AFE2_E270325F356A__INCLUDED_)
-//#define _ATL_APARTMENT_THREADED 
+//#define _ATL_APARTMENT_THREADED
 #define AFX_STDAFX_H__56F3D184_7208_47FE_AFE2_E270325F356A__INCLUDED_
 
 #if _MSC_VER > 1000
@@ -17,13 +17,13 @@
 // _CRT_SECURE_NO_DEPRECATE, _CRT_NON_CONFORMING_SWPRINTFS and VC_EXTRALEAN are set in the
 // PreprocessorDefinitions of CP_Main.vcxproj and tests\AppTests\AppTests.vcxproj.
 
-#include <afxwin.h>        // MFC core and standard components
-#include <afxext.h>         // MFC extensions
-#include <afxdisp.h>        // MFC Automation classes
-#include <afxdtctl.h>		// MFC support for Internet Explorer 4 Common Controls
+#include <afxwin.h>   // MFC core and standard components
+#include <afxext.h>   // MFC extensions
+#include <afxdisp.h>  // MFC Automation classes
+#include <afxdtctl.h> // MFC support for Internet Explorer 4 Common Controls
 #ifndef _AFX_NO_AFXCMN_SUPPORT
-#include <afxcmn.h>			// MFC support for Windows Common Controls
-#endif // _AFX_NO_AFXCMN_SUPPORT
+#include <afxcmn.h> // MFC support for Windows Common Controls
+#endif              // _AFX_NO_AFXCMN_SUPPORT
 #include <afxole.h>
 
 #include <imm.h>

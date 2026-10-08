@@ -57,25 +57,24 @@
 #include <vector>
 
 
-
 /////////////////////////////////////////////////////////////////////////////
 // Registered messages for ruler/CRulerRichEditCtrl communication
 
 const UINT& CRulerRichEditCtrl::SetCurrentFontNameMessage()
 {
-	static const UINT message{ ::RegisterWindowMessage( _T( "_RULERRICHEDITCTRL_SET_CURRENT_FONT_NAME" ) ) };
+	static const UINT message{ ::RegisterWindowMessage(_T( "_RULERRICHEDITCTRL_SET_CURRENT_FONT_NAME" )) };
 	return message;
 }
 
 const UINT& CRulerRichEditCtrl::SetCurrentFontSizeMessage()
 {
-	static const UINT message{ ::RegisterWindowMessage( _T( "_RULERRICHEDITCTRL_SET_CURRENT_FONT_SIZE" ) ) };
+	static const UINT message{ ::RegisterWindowMessage(_T( "_RULERRICHEDITCTRL_SET_CURRENT_FONT_SIZE" )) };
 	return message;
 }
 
 const UINT& CRulerRichEditCtrl::SetCurrentFontColorMessage()
 {
-	static const UINT message{ ::RegisterWindowMessage( _T( "_RULERRICHEDITCTRL_SET_CURRENT_FONT_COLOR" ) ) };
+	static const UINT message{ ::RegisterWindowMessage(_T( "_RULERRICHEDITCTRL_SET_CURRENT_FONT_COLOR" )) };
 	return message;
 }
 
@@ -116,11 +115,11 @@ CRulerRichEditCtrl::~CRulerRichEditCtrl()
 	Usage :			
 
    ============================================================*/
-{	
+{
 }
 
 
-BOOL CRulerRichEditCtrl::Create( DWORD dwStyle, const RECT &rect, CWnd* pParentWnd, UINT nID, BOOL autohscroll )
+BOOL CRulerRichEditCtrl::Create(DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID, BOOL autohscroll)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::Create
 	Description :	Creates the control and sub controls.
@@ -141,24 +140,24 @@ BOOL CRulerRichEditCtrl::Create( DWORD dwStyle, const RECT &rect, CWnd* pParentW
 	Usage :			Call to create the control.
 
    ============================================================*/
-{	
+{
 	BOOL result = CWnd::Create(NULL, _T( "" ), dwStyle, rect, pParentWnd, nID);
-	if ( result )
+	if (result)
 	{
 		result = FALSE;
 		// Save screen resolution for
 		// later on.
-		CClientDC dc( this );
-		m_physicalInch = dc.GetDeviceCaps( LOGPIXELSX );
+		CClientDC dc(this);
+		m_physicalInch = dc.GetDeviceCaps(LOGPIXELSX);
 
 		// Create sub-controls
-		if( CreateRTFControl( autohscroll ) )
+		if (CreateRTFControl(autohscroll))
 		{
 			CreateMargins();
-			if( CreateToolbar() )
+			if (CreateToolbar())
 			{
 				UpdateToolbarButtons();
-				result = TRUE;				
+				result = TRUE;
 			}
 
 			//Do wrap will reverse the saved option so initially set it as opposite of what it's saved as
@@ -175,7 +174,7 @@ BOOL CRulerRichEditCtrl::Create( DWORD dwStyle, const RECT &rect, CWnd* pParentW
 void CRulerRichEditCtrl::OnDpiChanged(CWnd* /*pParent*/, int dpi)
 {
 	m_dpi.Update(dpi);
-	
+
 	m_toolbar.DestroyWindow();
 	CreateToolbar();
 
@@ -204,13 +203,13 @@ BOOL CRulerRichEditCtrl::CreateToolbar()
 {
 
 	CRect rect;
-	GetClientRect( rect );
+	GetClientRect(rect);
 
-	CRect toolbarRect( 0, 0, rect.right, m_dpi.Scale(s_toolbarHeight));
-	return m_toolbar.Create( this, toolbarRect, ToolbarIdPerDPI());
+	CRect toolbarRect(0, 0, rect.right, m_dpi.Scale(s_toolbarHeight));
+	return m_toolbar.Create(this, toolbarRect, ToolbarIdPerDPI());
 }
 
-BOOL CRulerRichEditCtrl::CreateRTFControl( BOOL autohscroll )
+BOOL CRulerRichEditCtrl::CreateRTFControl(BOOL autohscroll)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::CreateRTFControl
 	Description :	Creates the embedded RTF-control.
@@ -229,42 +228,42 @@ BOOL CRulerRichEditCtrl::CreateRTFControl( BOOL autohscroll )
 	BOOL result = FALSE;
 
 	CRect rect;
-	GetClientRect( rect );
+	GetClientRect(rect);
 
 	int top = s_toolbarHeight;
-	CRect rtfRect( 0, top, rect.right, rect.bottom );
-	DWORD style = ES_NOHIDESEL|WS_CHILD|WS_VISIBLE|WS_HSCROLL|WS_VSCROLL|ES_WANTRETURN|ES_MULTILINE;
-	if( autohscroll )
+	CRect rtfRect(0, top, rect.right, rect.bottom);
+	DWORD style = ES_NOHIDESEL | WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL | ES_WANTRETURN | ES_MULTILINE;
+	if (autohscroll)
 		style |= ES_AUTOHSCROLL;
 
-	if( m_rtf.Create( style, rtfRect, this ) )
+	if (m_rtf.Create(style, rtfRect, this))
 	{
 		// Setting up default tab stops
- 		ParaFormat para( PFM_TABSTOPS );
- 		para.cTabCount = MAX_TAB_STOPS;
- 		for( int t = 0; t < MAX_TAB_STOPS ; t++ )
- 			para.rgxTabs[ t ] = 640 * ( t + 1 );
- 
- 		m_rtf.SetParaFormat( para );
- 
- 		// Setting default character format
- 		CharFormat	cf;
- 		cf.dwMask = CFM_SIZE | CFM_FACE | CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE | CFM_LINK;
- 		cf.yHeight = theApp.Services().Settings().GetEditorDefaultFontSize() * 20;
- 		cf.dwEffects = 0;
- 		lstrcpy( cf.szFaceName, _T( "Segoe UI" ) );
- 		m_rtf.SendMessage(EM_SETCHARFORMAT, 0, (LPARAM)&cf);
+		ParaFormat para(PFM_TABSTOPS);
+		para.cTabCount = MAX_TAB_STOPS;
+		for (int t = 0; t < MAX_TAB_STOPS; t++)
+			para.rgxTabs[t] = 640 * (t + 1);
+
+		m_rtf.SetParaFormat(para);
+
+		// Setting default character format
+		CharFormat cf;
+		cf.dwMask = CFM_SIZE | CFM_FACE | CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE | CFM_LINK;
+		cf.yHeight = theApp.Services().Settings().GetEditorDefaultFontSize() * 20;
+		cf.dwEffects = 0;
+		lstrcpy(cf.szFaceName, _T( "Segoe UI" ));
+		m_rtf.SendMessage(EM_SETCHARFORMAT, 0, (LPARAM)&cf);
 
 		DWORD editStyle = s_sesHyperlinkTooltips | s_sesNoFocusLinkNotify;
 		m_rtf.SendMessage(EM_SETEDITSTYLE, editStyle, editStyle);
 
 		m_rtf.SendMessage(EM_AUTOURLDETECT, TRUE, 0);
- 
- 		// Set the internal tabs array
- 		SetTabStops( ( LPLONG ) ( para.rgxTabs ), MAX_TAB_STOPS );
- 
- 		m_rtf.SetEventMask( m_rtf.GetEventMask() | ENM_SELCHANGE | ENM_SCROLL | ENM_CHANGE );
- 		SetReadOnly( GetReadOnly() ); 
+
+		// Set the internal tabs array
+		SetTabStops((LPLONG)(para.rgxTabs), MAX_TAB_STOPS);
+
+		m_rtf.SetEventMask(m_rtf.GetEventMask() | ENM_SELCHANGE | ENM_SCROLL | ENM_CHANGE);
+		SetReadOnly(GetReadOnly());
 
 		result = TRUE;
 	}
@@ -289,25 +288,25 @@ void CRulerRichEditCtrl::CreateMargins()
 	// Set up edit rect margins
 	int scmargin = 4;
 	CRect rc;
-	m_rtf.GetClientRect( rc );
+	m_rtf.GetClientRect(rc);
 
 	rc.top = scmargin;
 	rc.left = scmargin * 2;
 	rc.right -= scmargin * 2;
 
-	m_rtf.SetRect( rc );
+	m_rtf.SetRect(rc);
 
-	// Get the diff between the window- and client 
-	// rect of the RTF-control. This gives the actual 
+	// Get the diff between the window- and client
+	// rect of the RTF-control. This gives the actual
 	// size of the RTF-control border.
-	CRect	r1;
-	CRect	r2;
+	CRect r1;
+	CRect r2;
 
-	m_rtf.GetWindowRect( r1 );
-	m_rtf.GetClientRect( r2 );
-	m_rtf.ClientToScreen( r2 );
+	m_rtf.GetWindowRect(r1);
+	m_rtf.GetClientRect(r2);
+	m_rtf.ClientToScreen(r2);
 
-	// Create the margin for the toolbar 
+	// Create the margin for the toolbar
 	// controls and the ruler.
 	m_margin = scmargin * 2 + r2.left - r1.left;
 	//m_ruler.SetMargin( m_margin );
@@ -318,9 +317,9 @@ BEGIN_MESSAGE_MAP(CRulerRichEditCtrl, CWnd)
 	ON_WM_PAINT()
 	ON_WM_ERASEBKGND()
 	ON_WM_SIZE()
-	ON_MESSAGE( WM_SETTEXT, OnSetText )
-	ON_MESSAGE( WM_GETTEXT, OnGetText  )
-	ON_MESSAGE( WM_GETTEXTLENGTH, OnGetTextLength )
+	ON_MESSAGE(WM_SETTEXT, OnSetText)
+	ON_MESSAGE(WM_GETTEXT, OnGetText)
+	ON_MESSAGE(WM_GETTEXTLENGTH, OnGetTextLength)
 	ON_BN_CLICKED(BUTTON_FONT, OnButtonFont)
 	ON_BN_CLICKED(BUTTON_COLOR, OnButtonColor)
 	ON_BN_CLICKED(BUTTON_BOLD, OnButtonBold)
@@ -345,7 +344,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CRulerRichEditCtrl message handlers
 
-void CRulerRichEditCtrl::OnPaint() 
+void CRulerRichEditCtrl::OnPaint()
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnPaint
 	Description :	Paints the ruler.
@@ -361,10 +360,9 @@ void CRulerRichEditCtrl::OnPaint()
 
 	CPaintDC mainDC(this);
 	UpdateTabStops();
-
 }
 
-BOOL CRulerRichEditCtrl::OnEraseBkgnd( CDC* /*pDC*/ ) 
+BOOL CRulerRichEditCtrl::OnEraseBkgnd(CDC* /*pDC*/)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnEraseBkgnd
 	Description :	Returns "TRUE" to avoid flicker.
@@ -377,12 +375,11 @@ BOOL CRulerRichEditCtrl::OnEraseBkgnd( CDC* /*pDC*/ )
 
    ============================================================*/
 {
-	
-	return TRUE;
 
+	return TRUE;
 }
 
-BOOL CRulerRichEditCtrl::OnNotify( WPARAM wParam, LPARAM lParam, LRESULT* pResult ) 
+BOOL CRulerRichEditCtrl::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnNotify
 	Description :	Called as the RTF-control is updated or 
@@ -403,7 +400,7 @@ BOOL CRulerRichEditCtrl::OnNotify( WPARAM wParam, LPARAM lParam, LRESULT* pResul
    ============================================================*/
 {
 
-	if( wParam == CRulerRichEdit::s_controlId )
+	if (wParam == CRulerRichEdit::s_controlId)
 	{
 
 		// Update the toolbar
@@ -411,19 +408,17 @@ BOOL CRulerRichEditCtrl::OnNotify( WPARAM wParam, LPARAM lParam, LRESULT* pResul
 
 		// Update ruler
 		CRect rect;
-		GetClientRect( rect );
+		GetClientRect(rect);
 		rect.top = s_toolbarHeight;
 		rect.bottom = rect.top;
 
-		RedrawWindow( rect );
-
+		RedrawWindow(rect);
 	}
-	
-	return CWnd::OnNotify( wParam, lParam, pResult );
 
+	return CWnd::OnNotify(wParam, lParam, pResult);
 }
 
-void CRulerRichEditCtrl::OnSize( UINT nType, int cx, int cy ) 
+void CRulerRichEditCtrl::OnSize(UINT nType, int cx, int cy)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnSize
 	Description :	We resize the embedded RTF-control.
@@ -439,18 +434,16 @@ void CRulerRichEditCtrl::OnSize( UINT nType, int cx, int cy )
    ============================================================*/
 {
 
-	CWnd::OnSize( nType, cx, cy );
-	
-	if( m_rtf.m_hWnd )
+	CWnd::OnSize(nType, cx, cy);
+
+	if (m_rtf.m_hWnd)
 	{
 
-		LayoutControls( cx, cy );
-
+		LayoutControls(cx, cy);
 	}
-	
 }
 
-void CRulerRichEditCtrl::OnSetFocus( CWnd* pOldWnd ) 
+void CRulerRichEditCtrl::OnSetFocus(CWnd* pOldWnd)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnSetFocus
 	Description :	We handle over the focus to the embedded 
@@ -465,12 +458,11 @@ void CRulerRichEditCtrl::OnSetFocus( CWnd* pOldWnd )
    ============================================================*/
 {
 
-	CWnd::OnSetFocus( pOldWnd );
+	CWnd::OnSetFocus(pOldWnd);
 	m_rtf.SetFocus();
-	
 }
 
-LRESULT CRulerRichEditCtrl::OnSetText( WPARAM wParam, LPARAM lParam )
+LRESULT CRulerRichEditCtrl::OnSetText(WPARAM wParam, LPARAM lParam)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnSetText
 	Description :	The function handles the "WM_SETTEXT" 
@@ -486,12 +478,11 @@ LRESULT CRulerRichEditCtrl::OnSetText( WPARAM wParam, LPARAM lParam )
 
    ============================================================*/
 {
-	
-	return m_rtf.SendMessage( WM_SETTEXT, wParam, lParam );
 
+	return m_rtf.SendMessage(WM_SETTEXT, wParam, lParam);
 }
 
-LRESULT CRulerRichEditCtrl::OnGetText( WPARAM wParam, LPARAM lParam )
+LRESULT CRulerRichEditCtrl::OnGetText(WPARAM wParam, LPARAM lParam)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnGetText
 	Description :	The function handles the "WM_GETTEXT" 
@@ -508,11 +499,10 @@ LRESULT CRulerRichEditCtrl::OnGetText( WPARAM wParam, LPARAM lParam )
    ============================================================*/
 {
 
-	return m_rtf.SendMessage( WM_GETTEXT, wParam, lParam );
-
+	return m_rtf.SendMessage(WM_GETTEXT, wParam, lParam);
 }
 
-LRESULT CRulerRichEditCtrl::OnGetTextLength( WPARAM /*wParam*/, LPARAM /*lParam*/ )
+LRESULT CRulerRichEditCtrl::OnGetTextLength(WPARAM /*wParam*/, LPARAM /*lParam*/)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnGetTextLength
 	Description :	The function handles the "WM_GETTEXTLENGTH" 
@@ -530,7 +520,6 @@ LRESULT CRulerRichEditCtrl::OnGetTextLength( WPARAM /*wParam*/, LPARAM /*lParam*
 {
 
 	return m_rtf.GetTextLength();
-
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -544,7 +533,7 @@ CString CRulerRichEditCtrl::GetRTF()
 {
 	CRichEditStringSink sink;
 	EDITSTREAM stream{ sink.Stream() };
-	m_rtf.StreamOut( SF_RTF, stream );
+	m_rtf.StreamOut(SF_RTF, stream);
 	return sink.Text();
 }
 
@@ -552,11 +541,11 @@ CString CRulerRichEditCtrl::GetRTF()
  * @brief Replaces the contents of the control with RTF.
  * @param rtf The RTF contents, streamed in as UTF-8 through CRichEditUtf8Source.
  */
-void CRulerRichEditCtrl::SetRTF( const CString& rtf )
+void CRulerRichEditCtrl::SetRTF(const CString& rtf)
 {
 	CRichEditUtf8Source source{ rtf };
 	EDITSTREAM stream{ source.Stream() };
-	m_rtf.StreamIn( SF_RTF, stream );
+	m_rtf.StreamIn(SF_RTF, stream);
 }
 
 /**
@@ -567,7 +556,7 @@ void CRulerRichEditCtrl::SetText(CString sText)
 {
 	SETTEXTEX stex{};
 	stex.flags = ST_SELECTION | ST_KEEPUNDO;
-	stex.codepage = 1200;  // Unicode code page (see SETTEXTEX documentation)
+	stex.codepage = 1200; // Unicode code page (see SETTEXTEX documentation)
 	m_rtf.SendMessage(EM_SETTEXTEX, (WPARAM)&stex, (LPARAM)sText.GetString());
 }
 
@@ -581,7 +570,7 @@ CString CRulerRichEditCtrl::GetText()
 	std::vector<wchar_t> text(static_cast<std::size_t>(m_rtf.GetTextLength()) + 50, L'\0');
 
 	GETTEXTEX stex{};
-	stex.codepage = 1200;  // Unicode code page (see GETTEXTEX documentation)
+	stex.codepage = 1200; // Unicode code page (see GETTEXTEX documentation)
 	stex.flags = GT_USECRLF;
 	stex.cb = static_cast<DWORD>(text.size() * sizeof(wchar_t));
 	m_rtf.SendMessage(EM_GETTEXTEX, (WPARAM)&stex, (LPARAM)text.data());
@@ -589,7 +578,7 @@ CString CRulerRichEditCtrl::GetText()
 	return CString(text.data());
 }
 
-void CRulerRichEditCtrl::SetMode( int /*mode*/ )
+void CRulerRichEditCtrl::SetMode(int /*mode*/)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::SetMode
 	Description :	Sets the internal mode, that is, if the 
@@ -606,7 +595,6 @@ void CRulerRichEditCtrl::SetMode( int /*mode*/ )
 {
 
 	//m_ruler.SetMode( mode );
-
 }
 
 int CRulerRichEditCtrl::GetMode() const
@@ -627,7 +615,6 @@ int CRulerRichEditCtrl::GetMode() const
 
 	return 0;
 	//return m_ruler.GetMode();
-
 }
 
 CRichEditCtrl& CRulerRichEditCtrl::GetRichEditCtrl()
@@ -645,13 +632,12 @@ CRichEditCtrl& CRulerRichEditCtrl::GetRichEditCtrl()
 {
 
 	return m_rtf;
-
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // CRulerRichEditCtrl toolbar button handlers
 
-void CRulerRichEditCtrl::OnButtonFont() 
+void CRulerRichEditCtrl::OnButtonFont()
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnButtonFont
 	Description :	Button handler for the Font button
@@ -666,11 +652,9 @@ void CRulerRichEditCtrl::OnButtonFont()
 {
 
 	DoFont();
-
-
 }
 
-void CRulerRichEditCtrl::OnButtonColor() 
+void CRulerRichEditCtrl::OnButtonColor()
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnButtonColor
 	Description :	Button handler for the Color button
@@ -685,10 +669,9 @@ void CRulerRichEditCtrl::OnButtonColor()
 {
 
 	DoColor();
-
 }
 
-void CRulerRichEditCtrl::OnButtonBold() 
+void CRulerRichEditCtrl::OnButtonBold()
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnButtonBold
 	Description :	Button handler for the Bold button
@@ -728,8 +711,8 @@ int CRulerRichEditCtrl::ToolbarIdPerDPI()
 	{
 		return IDR_EDIT_WND_FORMAT_125;
 	}
-	
-	return IDR_EDIT_WND_FORMAT;	
+
+	return IDR_EDIT_WND_FORMAT;
 }
 
 void CRulerRichEditCtrl::OnButtonWrap()
@@ -737,7 +720,7 @@ void CRulerRichEditCtrl::OnButtonWrap()
 	DoWrap();
 }
 
-void CRulerRichEditCtrl::OnButtonItalic() 
+void CRulerRichEditCtrl::OnButtonItalic()
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnButtonItalic
 	Description :	Button handler for the Italic button
@@ -752,10 +735,9 @@ void CRulerRichEditCtrl::OnButtonItalic()
 {
 
 	DoItalic();
-
 }
 
-void CRulerRichEditCtrl::OnButtonUnderline() 
+void CRulerRichEditCtrl::OnButtonUnderline()
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnButtonUnderline
 	Description :	Button handler for the Underline button
@@ -770,10 +752,9 @@ void CRulerRichEditCtrl::OnButtonUnderline()
 {
 
 	DoUnderline();
-
 }
 
-void CRulerRichEditCtrl::OnButtonLeftAlign() 
+void CRulerRichEditCtrl::OnButtonLeftAlign()
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnButtonLeftAlign
 	Description :	Button handler for the Left aligned button
@@ -788,10 +769,9 @@ void CRulerRichEditCtrl::OnButtonLeftAlign()
 {
 
 	DoLeftAlign();
-
 }
 
-void CRulerRichEditCtrl::OnButtonCenterAlign() 
+void CRulerRichEditCtrl::OnButtonCenterAlign()
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnButtonCenterAlign
 	Description :	Button handler for the Center button
@@ -806,10 +786,9 @@ void CRulerRichEditCtrl::OnButtonCenterAlign()
 {
 
 	DoCenterAlign();
-
 }
 
-void CRulerRichEditCtrl::OnButtonRightAlign() 
+void CRulerRichEditCtrl::OnButtonRightAlign()
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnButtonRightAlign
 	Description :	Button handler for the Right-aligned button
@@ -824,10 +803,9 @@ void CRulerRichEditCtrl::OnButtonRightAlign()
 {
 
 	DoRightAlign();
-
 }
 
-void CRulerRichEditCtrl::OnButtonIndent() 
+void CRulerRichEditCtrl::OnButtonIndent()
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnButtonIndent
 	Description :	Button handler for the Indent button
@@ -842,10 +820,9 @@ void CRulerRichEditCtrl::OnButtonIndent()
 {
 
 	DoIndent();
-
 }
 
-void CRulerRichEditCtrl::OnButtonOutdent() 
+void CRulerRichEditCtrl::OnButtonOutdent()
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnButtonOutdent
 	Description :	Button handler for the outdent button
@@ -860,10 +837,9 @@ void CRulerRichEditCtrl::OnButtonOutdent()
 {
 
 	DoOutdent();
-
 }
 
-void CRulerRichEditCtrl::OnButtonBullet() 
+void CRulerRichEditCtrl::OnButtonBullet()
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnButtonBullet
 	Description :	Button handler for the Bullet button
@@ -878,13 +854,12 @@ void CRulerRichEditCtrl::OnButtonBullet()
 {
 
 	DoBullet();
-
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // CRulerRichEditCtrl private helpers
 
-void CRulerRichEditCtrl::SetTabStops( LPLONG tabs, int size )
+void CRulerRichEditCtrl::SetTabStops(LPLONG tabs, int size)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::SetTabStops
 	Description :	Set the tab stops in the internal tab stop 
@@ -904,14 +879,13 @@ void CRulerRichEditCtrl::SetTabStops( LPLONG tabs, int size )
 
 	m_tabs.RemoveAll();
 
-	double twip = ( double )m_physicalInch / 1440;
-	for( int t = 0 ; t < size ; t++ )
+	double twip = (double)m_physicalInch / 1440;
+	for (int t = 0; t < size; t++)
 	{
 		// Convert from twips to pixels
-		int tabpos = *( tabs + t );
-		tabpos = ( int ) ( ( double ) tabpos * twip +.5 );
-		m_tabs.Add( tabpos );
-
+		int tabpos = *(tabs + t);
+		tabpos = (int)((double)tabpos * twip + .5);
+		m_tabs.Add(tabpos);
 	}
 
 	//m_ruler.SetTabStops( m_tabs );
@@ -934,10 +908,9 @@ void CRulerRichEditCtrl::UpdateTabStops()
    ============================================================*/
 {
 
-	ParaFormat para( PFM_TABSTOPS );
-	m_rtf.GetParaFormat( para );
-	SetTabStops( (LPLONG)(para.rgxTabs), MAX_TAB_STOPS );
-
+	ParaFormat para(PFM_TABSTOPS);
+	m_rtf.GetParaFormat(para);
+	SetTabStops((LPLONG)(para.rgxTabs), MAX_TAB_STOPS);
 }
 
 void CRulerRichEditCtrl::UpdateToolbarButtons()
@@ -956,47 +929,47 @@ void CRulerRichEditCtrl::UpdateToolbarButtons()
 
    ============================================================*/
 {
-	if( m_showToolbar && m_toolbar.m_hWnd )
+	if (m_showToolbar && m_toolbar.m_hWnd)
 	{
-		CharFormat	cf;
+		CharFormat cf;
 		cf.dwMask = CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE;
-		m_rtf.SendMessage( EM_GETCHARFORMAT, SCF_SELECTION, ( LPARAM ) &cf );
+		m_rtf.SendMessage(EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
 
-		ParaFormat para( PFM_ALIGNMENT | PFM_NUMBERING );
-		m_rtf.GetParaFormat( para );
+		ParaFormat para(PFM_ALIGNMENT | PFM_NUMBERING);
+		m_rtf.GetParaFormat(para);
 
 		// Style
-		m_toolbar.SetState( BUTTON_BOLD, ToolbarButtonState( ( cf.dwEffects & CFE_BOLD ) != 0 ) );
-		m_toolbar.SetState( BUTTON_ITALIC, ToolbarButtonState( ( cf.dwEffects & CFE_ITALIC ) != 0 ) );
-		m_toolbar.SetState( BUTTON_UNDERLINE, ToolbarButtonState( ( cf.dwEffects & CFM_UNDERLINE ) != 0 ) );
-		m_toolbar.SetState( BUTTON_LEFTALIGN, ToolbarButtonState( para.wAlignment == PFA_LEFT ) );
-		m_toolbar.SetState( BUTTON_CENTERALIGN, ToolbarButtonState( para.wAlignment == PFA_CENTER ) );
-		m_toolbar.SetState( BUTTON_RIGHTALIGN, ToolbarButtonState( para.wAlignment == PFA_RIGHT ) );
-		m_toolbar.SetState( BUTTON_BULLET, ToolbarButtonState( para.wNumbering != 0 ) );
-		m_toolbar.SetState( ID_BUTTONWRAP, ToolbarButtonState( m_bInWrapMode != FALSE ) );
+		m_toolbar.SetState(BUTTON_BOLD, ToolbarButtonState((cf.dwEffects & CFE_BOLD) != 0));
+		m_toolbar.SetState(BUTTON_ITALIC, ToolbarButtonState((cf.dwEffects & CFE_ITALIC) != 0));
+		m_toolbar.SetState(BUTTON_UNDERLINE, ToolbarButtonState((cf.dwEffects & CFM_UNDERLINE) != 0));
+		m_toolbar.SetState(BUTTON_LEFTALIGN, ToolbarButtonState(para.wAlignment == PFA_LEFT));
+		m_toolbar.SetState(BUTTON_CENTERALIGN, ToolbarButtonState(para.wAlignment == PFA_CENTER));
+		m_toolbar.SetState(BUTTON_RIGHTALIGN, ToolbarButtonState(para.wAlignment == PFA_RIGHT));
+		m_toolbar.SetState(BUTTON_BULLET, ToolbarButtonState(para.wNumbering != 0));
+		m_toolbar.SetState(ID_BUTTONWRAP, ToolbarButtonState(m_bInWrapMode != FALSE));
 
-		UpdateToolbarFont( cf );
+		UpdateToolbarFont(cf);
 	}
 }
 
-UINT CRulerRichEditCtrl::ToolbarButtonState( bool checked )
+UINT CRulerRichEditCtrl::ToolbarButtonState(bool checked)
 {
-	return TBSTATE_ENABLED | ( checked ? TBSTATE_CHECKED : 0 );
+	return TBSTATE_ENABLED | (checked ? TBSTATE_CHECKED : 0);
 }
 
-void CRulerRichEditCtrl::UpdateToolbarFont( const CharFormat& cf )
+void CRulerRichEditCtrl::UpdateToolbarFont(const CharFormat& cf)
 {
-	if( cf.dwMask & CFM_FACE )
-		m_toolbar.SetFontName( CString( cf.szFaceName ) );
+	if (cf.dwMask & CFM_FACE)
+		m_toolbar.SetFontName(CString(cf.szFaceName));
 
-	if( cf.dwMask & CFM_SIZE )
-		m_toolbar.SetFontSize( cf.yHeight / 20 );
+	if (cf.dwMask & CFM_SIZE)
+		m_toolbar.SetFontSize(cf.yHeight / 20);
 
-	if( cf.dwMask & CFM_COLOR )
-		m_toolbar.SetFontColor( cf.crTextColor );
+	if (cf.dwMask & CFM_COLOR)
+		m_toolbar.SetFontColor(cf.crTextColor);
 }
 
-void CRulerRichEditCtrl::SetEffect( int mask, int effect )
+void CRulerRichEditCtrl::SetEffect(int mask, int effect)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::SetEffect
 	Description :	Sets the effect (bold, italic and/or 
@@ -1020,12 +993,11 @@ void CRulerRichEditCtrl::SetEffect( int mask, int effect )
 	cf.dwMask = mask;
 	cf.dwEffects = effect;
 
-	m_rtf.SendMessage( EM_SETCHARFORMAT, SCF_SELECTION, ( LPARAM ) &cf );
+	m_rtf.SendMessage(EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
 	m_rtf.SetFocus();
-
 }
 
-void CRulerRichEditCtrl::SetAlignment( int alignment )
+void CRulerRichEditCtrl::SetAlignment(int alignment)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::SetAlignment
 	Description :	Sets the alignment for the currently 
@@ -1042,13 +1014,12 @@ void CRulerRichEditCtrl::SetAlignment( int alignment )
    ============================================================*/
 {
 
-	ParaFormat	para( PFM_ALIGNMENT );
-	para.wAlignment = ( WORD ) alignment;
+	ParaFormat para(PFM_ALIGNMENT);
+	para.wAlignment = (WORD)alignment;
 
-	m_rtf.SetParaFormat( para );
+	m_rtf.SetParaFormat(para);
 	UpdateToolbarButtons();
 	m_rtf.SetFocus();
-
 }
 
 // Virtual interface
@@ -1068,68 +1039,67 @@ void CRulerRichEditCtrl::DoFont()
 {
 
 	// Get the current font
-	LOGFONT	lf;
-	ZeroMemory( &lf, sizeof( LOGFONT ) );
-	CharFormat	cf;
-	m_rtf.SendMessage( EM_GETCHARFORMAT, SCF_SELECTION, ( LPARAM ) &cf );
+	LOGFONT lf;
+	ZeroMemory(&lf, sizeof(LOGFONT));
+	CharFormat cf;
+	m_rtf.SendMessage(EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
 
 	// Creating a LOGFONT from the current font settings
-	CharFormatToLogFont( cf, lf );
+	CharFormatToLogFont(cf, lf);
 
 	// Show font dialog
-	CFontDialog	dlg(&lf);
-	if(dlg.DoModal() == IDOK)
+	CFontDialog dlg(&lf);
+	if (dlg.DoModal() == IDOK)
 	{
 		// Apply new font
-		FontDialogToCharFormat( dlg, cf );
+		FontDialogToCharFormat(dlg, cf);
 
-		m_rtf.SendMessage(EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM) &cf);
+		m_rtf.SendMessage(EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
 
 		m_rtf.SetFocus();
 	}
 }
 
-void CRulerRichEditCtrl::CharFormatToLogFont( const CharFormat& cf, LOGFONT& lf ) const
+void CRulerRichEditCtrl::CharFormatToLogFont(const CharFormat& cf, LOGFONT& lf) const
 {
 	int height{};
 
 	// Font
-	if( cf.dwMask & CFM_FACE )
-		lstrcpy( lf.lfFaceName, cf.szFaceName );
+	if (cf.dwMask & CFM_FACE)
+		lstrcpy(lf.lfFaceName, cf.szFaceName);
 
-	if( cf.dwMask & CFM_SIZE )
+	if (cf.dwMask & CFM_SIZE)
 	{
-		double twip = ( double )m_physicalInch / 1440;
+		double twip = (double)m_physicalInch / 1440;
 		height = cf.yHeight;
-		height = -( int ) ( ( double ) height * twip +.5 );
+		height = -(int)((double)height * twip + .5);
 		lf.lfHeight = height;
-
 	}
 
 	// Effects
-	CharEffectsToLogFont( cf, lf );
+	CharEffectsToLogFont(cf, lf);
 }
 
-void CRulerRichEditCtrl::CharEffectsToLogFont( const CharFormat& cf, LOGFONT& lf )
+void CRulerRichEditCtrl::CharEffectsToLogFont(const CharFormat& cf, LOGFONT& lf)
 {
-	if( cf.dwMask & CFM_BOLD )
+	if (cf.dwMask & CFM_BOLD)
 	{
-		if( cf.dwEffects & CFE_BOLD )
+		if (cf.dwEffects & CFE_BOLD)
 			lf.lfWeight = FW_BOLD;
 		else
 			lf.lfWeight = FW_NORMAL;
 	}
 
-	if( cf.dwMask & CFM_ITALIC )
-		if( cf.dwEffects & CFE_ITALIC )
+	if (cf.dwMask & CFM_ITALIC)
+		if (cf.dwEffects & CFE_ITALIC)
 			lf.lfItalic = TRUE;
 
-	if( cf.dwMask & CFM_UNDERLINE )
-		if( cf.dwEffects & CFE_UNDERLINE )
+	if (cf.dwMask & CFM_UNDERLINE)
+		if (cf.dwEffects & CFE_UNDERLINE)
 			lf.lfUnderline = TRUE;
 }
 
-void CRulerRichEditCtrl::FontDialogToCharFormat( CFontDialog& dlg, CharFormat& cf )
+void CRulerRichEditCtrl::FontDialogToCharFormat(CFontDialog& dlg, CharFormat& cf)
 {
 	cf.yHeight = dlg.GetSize() * 2;
 	lstrcpy(cf.szFaceName, dlg.GetFaceName());
@@ -1137,26 +1107,26 @@ void CRulerRichEditCtrl::FontDialogToCharFormat( CFontDialog& dlg, CharFormat& c
 	cf.dwMask = CFM_FACE | CFM_SIZE;
 	cf.dwEffects = 0;
 
-	if( dlg.IsBold() )
+	if (dlg.IsBold())
 	{
 		cf.dwMask |= CFM_BOLD;
 		cf.dwEffects |= CFE_BOLD;
 	}
 
-	if( dlg.IsItalic() )
+	if (dlg.IsItalic())
 	{
 		cf.dwMask |= CFM_ITALIC;
 		cf.dwEffects |= CFE_ITALIC;
 	}
 
-	if( dlg.IsUnderline() )
+	if (dlg.IsUnderline())
 	{
 		cf.dwMask |= CFM_UNDERLINE;
 		cf.dwEffects |= CFE_UNDERLINE;
 	}
 }
 
-void CRulerRichEditCtrl::SetCurrentFontName( const CString& font )
+void CRulerRichEditCtrl::SetCurrentFontName(const CString& font)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::SetCurrentFontName
 	Description :	Changes the font of the selected text in 
@@ -1172,15 +1142,15 @@ void CRulerRichEditCtrl::SetCurrentFontName( const CString& font )
 
    ============================================================*/
 {
-	CharFormat	cf;
+	CharFormat cf;
 	cf.dwMask = CFM_FACE;
 
-	lstrcpy( cf.szFaceName, font );
+	lstrcpy(cf.szFaceName, font);
 
-	m_rtf.SendMessage( EM_SETCHARFORMAT, SCF_SELECTION, ( LPARAM ) &cf );
+	m_rtf.SendMessage(EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
 }
 
-void CRulerRichEditCtrl::SetCurrentFontSize( int size )
+void CRulerRichEditCtrl::SetCurrentFontSize(int size)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::SetCurrentFontSize
 	Description :	Changes the size of the selected text in 
@@ -1197,14 +1167,14 @@ void CRulerRichEditCtrl::SetCurrentFontSize( int size )
 
    ============================================================*/
 {
-	CharFormat	cf;
+	CharFormat cf;
 	cf.dwMask = CFM_SIZE;
 	cf.yHeight = size * 20;
 
-	m_rtf.SendMessage( EM_SETCHARFORMAT, SCF_SELECTION, ( LPARAM ) &cf );
+	m_rtf.SendMessage(EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
 }
 
-void CRulerRichEditCtrl::SetCurrentFontColor( COLORREF color )
+void CRulerRichEditCtrl::SetCurrentFontColor(COLORREF color)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::SetCurrentFontSize
 	Description :	Changes the color of the selected text in 
@@ -1220,15 +1190,14 @@ void CRulerRichEditCtrl::SetCurrentFontColor( COLORREF color )
    ============================================================*/
 {
 
-	CharFormat	cf;
+	CharFormat cf;
 	cf.dwMask = CFM_COLOR;
 	cf.crTextColor = color;
 
-	m_rtf.SendMessage( EM_SETCHARFORMAT, SCF_SELECTION, ( LPARAM ) &cf );
-
+	m_rtf.SendMessage(EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
 }
 
-LRESULT CRulerRichEditCtrl::OnSetCurrentFontName( WPARAM font, LPARAM )
+LRESULT CRulerRichEditCtrl::OnSetCurrentFontName(WPARAM font, LPARAM)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::OnSetCurrentFontName
 	Description :	Handler for the registered message 
@@ -1245,11 +1214,10 @@ LRESULT CRulerRichEditCtrl::OnSetCurrentFontName( WPARAM font, LPARAM )
    ============================================================*/
 {
 
-	CString fnt( ( LPCTSTR ) font );
-	SetCurrentFontName( fnt );
+	CString fnt((LPCTSTR)font);
+	SetCurrentFontName(fnt);
 
 	return 0;
-	
 }
 
 LRESULT CRulerRichEditCtrl::OnSetCurrentFontSize(WPARAM, LPARAM size)
@@ -1272,7 +1240,6 @@ LRESULT CRulerRichEditCtrl::OnSetCurrentFontSize(WPARAM, LPARAM size)
 
 	SetCurrentFontSize((int)size);
 	return 0;
-	
 }
 
 LRESULT CRulerRichEditCtrl::OnSetCurrentFontColor(WPARAM, LPARAM color)
@@ -1293,9 +1260,8 @@ LRESULT CRulerRichEditCtrl::OnSetCurrentFontColor(WPARAM, LPARAM color)
    ============================================================*/
 {
 
-	SetCurrentFontColor( ( COLORREF ) color );
+	SetCurrentFontColor((COLORREF)color);
 	return 0;
-	
 }
 
 void CRulerRichEditCtrl::DoColor()
@@ -1314,32 +1280,30 @@ void CRulerRichEditCtrl::DoColor()
 {
 
 	// Get the current color
-	COLORREF	clr( RGB( 0, 0, 0 ) );
-	CharFormat	cf;
-	m_rtf.SendMessage( EM_GETCHARFORMAT, SCF_SELECTION, ( LPARAM ) &cf );
-	if( cf.dwMask & CFM_COLOR )
+	COLORREF clr(RGB(0, 0, 0));
+	CharFormat cf;
+	m_rtf.SendMessage(EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+	if (cf.dwMask & CFM_COLOR)
 		clr = cf.crTextColor;
 
 	// Display color selection dialog
-	CColorDialog dlg( clr );
-	if( dlg.DoModal() == IDOK )
+	CColorDialog dlg(clr);
+	if (dlg.DoModal() == IDOK)
 	{
 		// Apply new color
 		cf.dwMask = CFM_COLOR;
 		cf.dwEffects = 0;
 		cf.crTextColor = dlg.GetColor();
 
-		m_rtf.SendMessage( EM_SETCHARFORMAT, SCF_SELECTION, ( LPARAM ) &cf );
-
+		m_rtf.SendMessage(EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
 	}
 
 	m_rtf.SetFocus();
-
 }
 
 void CRulerRichEditCtrl::DoWrap()
 {
-	if(m_bInWrapMode)
+	if (m_bInWrapMode)
 	{
 		// Turn off word wrap.
 		m_rtf.SetTargetDevice(NULL, 1);
@@ -1348,7 +1312,7 @@ void CRulerRichEditCtrl::DoWrap()
 	else
 	{
 		// Turn on word wrap.
-		m_rtf.SetTargetDevice(NULL, 0); 
+		m_rtf.SetTargetDevice(NULL, 0);
 		m_bInWrapMode = true;
 	}
 
@@ -1372,13 +1336,13 @@ void CRulerRichEditCtrl::DoBold()
 
    ============================================================*/
 {
-	m_toolbar.CheckButton( BUTTON_BOLD, !m_toolbar.IsButtonChecked( BUTTON_BOLD ) );
+	m_toolbar.CheckButton(BUTTON_BOLD, !m_toolbar.IsButtonChecked(BUTTON_BOLD));
 
 	int effect = 0;
-	if( m_toolbar.IsButtonChecked( BUTTON_BOLD ) )
+	if (m_toolbar.IsButtonChecked(BUTTON_BOLD))
 		effect = CFE_BOLD;
 
-	SetEffect( CFM_BOLD, effect );
+	SetEffect(CFM_BOLD, effect);
 }
 
 void CRulerRichEditCtrl::DoItalic()
@@ -1397,13 +1361,13 @@ void CRulerRichEditCtrl::DoItalic()
    ===========================================================  =*/
 {
 
-	m_toolbar.CheckButton( BUTTON_ITALIC, !m_toolbar.IsButtonChecked( BUTTON_ITALIC ) );
+	m_toolbar.CheckButton(BUTTON_ITALIC, !m_toolbar.IsButtonChecked(BUTTON_ITALIC));
 
 	int effect = 0;
-	if( m_toolbar.IsButtonChecked( BUTTON_ITALIC ) )
+	if (m_toolbar.IsButtonChecked(BUTTON_ITALIC))
 		effect = CFE_ITALIC;
 
-	SetEffect( CFM_ITALIC, effect );
+	SetEffect(CFM_ITALIC, effect);
 }
 
 void CRulerRichEditCtrl::DoUnderline()
@@ -1422,13 +1386,13 @@ void CRulerRichEditCtrl::DoUnderline()
    ============================================================*/
 {
 
-	m_toolbar.CheckButton( BUTTON_UNDERLINE, !m_toolbar.IsButtonChecked( BUTTON_UNDERLINE ) );
+	m_toolbar.CheckButton(BUTTON_UNDERLINE, !m_toolbar.IsButtonChecked(BUTTON_UNDERLINE));
 
 	int effect = 0;
-	if( m_toolbar.IsButtonChecked( BUTTON_UNDERLINE ) )
+	if (m_toolbar.IsButtonChecked(BUTTON_UNDERLINE))
 		effect = CFE_UNDERLINE;
 
-	SetEffect( CFM_UNDERLINE, effect );
+	SetEffect(CFM_UNDERLINE, effect);
 }
 
 void CRulerRichEditCtrl::DoLeftAlign()
@@ -1446,8 +1410,8 @@ void CRulerRichEditCtrl::DoLeftAlign()
    ============================================================*/
 {
 
-	if( !m_toolbar.IsButtonChecked( BUTTON_LEFTALIGN ) )
-		SetAlignment( PFA_LEFT );
+	if (!m_toolbar.IsButtonChecked(BUTTON_LEFTALIGN))
+		SetAlignment(PFA_LEFT);
 }
 
 void CRulerRichEditCtrl::DoCenterAlign()
@@ -1464,8 +1428,8 @@ void CRulerRichEditCtrl::DoCenterAlign()
 
    ============================================================*/
 {
-	if( !m_toolbar.IsButtonChecked( BUTTON_CENTERALIGN ) )
-		SetAlignment( PFA_CENTER );
+	if (!m_toolbar.IsButtonChecked(BUTTON_CENTERALIGN))
+		SetAlignment(PFA_CENTER);
 }
 
 void CRulerRichEditCtrl::DoRightAlign()
@@ -1482,8 +1446,8 @@ void CRulerRichEditCtrl::DoRightAlign()
 
    ============================================================*/
 {
-	if( !m_toolbar.IsButtonChecked( BUTTON_RIGHTALIGN ) )
-		SetAlignment( PFA_RIGHT );
+	if (!m_toolbar.IsButtonChecked(BUTTON_RIGHTALIGN))
+		SetAlignment(PFA_RIGHT);
 }
 
 void CRulerRichEditCtrl::DoIndent()
@@ -1501,20 +1465,19 @@ void CRulerRichEditCtrl::DoIndent()
    ============================================================*/
 {
 	// Get current indent
-	ParaFormat	para( PFM_STARTINDENT | PFM_TABSTOPS );
-	m_rtf.GetParaFormat( para );
+	ParaFormat para(PFM_STARTINDENT | PFM_TABSTOPS);
+	m_rtf.GetParaFormat(para);
 	int newindent = para.dxStartIndent;
 
 	// Find next larger tab
-	for( int t = MAX_TAB_STOPS - 1 ; t >= 0 ; t-- )
+	for (int t = MAX_TAB_STOPS - 1; t >= 0; t--)
 	{
 
-		if( para.rgxTabs[ t ] > para.dxStartIndent )
-			newindent = para.rgxTabs[ t ];
-
+		if (para.rgxTabs[t] > para.dxStartIndent)
+			newindent = para.rgxTabs[t];
 	}
 
-	if( newindent != para.dxStartIndent )
+	if (newindent != para.dxStartIndent)
 	{
 
 		// Set indent to this value
@@ -1522,8 +1485,7 @@ void CRulerRichEditCtrl::DoIndent()
 		para.dxStartIndent = newindent;
 		para.dxOffset = newindent;
 
-		m_rtf.SetParaFormat( para );
-
+		m_rtf.SetParaFormat(para);
 	}
 
 	m_rtf.SetFocus();
@@ -1544,21 +1506,21 @@ void CRulerRichEditCtrl::DoOutdent()
    ============================================================*/
 {
 	// Get the current indent, if any
-	ParaFormat	para( PFM_STARTINDENT | PFM_TABSTOPS );
-	m_rtf.GetParaFormat( para );
+	ParaFormat para(PFM_STARTINDENT | PFM_TABSTOPS);
+	m_rtf.GetParaFormat(para);
 	int newindent = 0;
 
 	// Find closest smaller tab
-	for( int t = 0 ; t < MAX_TAB_STOPS ; t++ )
-		if( para.rgxTabs[ t ] < para.dxStartIndent )
-			newindent = para.rgxTabs[ t ];
+	for (int t = 0; t < MAX_TAB_STOPS; t++)
+		if (para.rgxTabs[t] < para.dxStartIndent)
+			newindent = para.rgxTabs[t];
 
 	// Set indent to this value or 0 if none
 	para.dwMask = PFM_STARTINDENT | PFM_OFFSET;
 	para.dxStartIndent = newindent;
 	para.dxOffset = newindent;
 
-	m_rtf.SetParaFormat( para );
+	m_rtf.SetParaFormat(para);
 	m_rtf.SetFocus();
 }
 
@@ -1576,19 +1538,19 @@ void CRulerRichEditCtrl::DoBullet()
 
    ============================================================*/
 {
-	m_toolbar.CheckButton( BUTTON_BULLET, !m_toolbar.IsButtonChecked( BUTTON_BULLET ) );
+	m_toolbar.CheckButton(BUTTON_BULLET, !m_toolbar.IsButtonChecked(BUTTON_BULLET));
 
-	ParaFormat	para( PFM_NUMBERING );
-	if( m_toolbar.IsButtonChecked( BUTTON_BULLET ) )
+	ParaFormat para(PFM_NUMBERING);
+	if (m_toolbar.IsButtonChecked(BUTTON_BULLET))
 		para.wNumbering = PFN_BULLET;
 	else
 		para.wNumbering = 0;
 
-	m_rtf.SetParaFormat( para );
+	m_rtf.SetParaFormat(para);
 	m_rtf.SetFocus();
 }
 
-void CRulerRichEditCtrl::ShowToolbar( BOOL show )
+void CRulerRichEditCtrl::ShowToolbar(BOOL show)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::ShowToolbar
 	Description :	Shows or hides the toolbar
@@ -1603,20 +1565,20 @@ void CRulerRichEditCtrl::ShowToolbar( BOOL show )
 {
 	m_showToolbar = show;
 
-	if( m_hWnd )
+	if (m_hWnd)
 	{
-		if( show )
-			m_toolbar.ShowWindow( SW_SHOW );
+		if (show)
+			m_toolbar.ShowWindow(SW_SHOW);
 		else
-			m_toolbar.ShowWindow( SW_HIDE );
+			m_toolbar.ShowWindow(SW_HIDE);
 
 		CRect rect;
-		GetClientRect( rect );
-		LayoutControls( rect.Width(), rect.Height() );
+		GetClientRect(rect);
+		LayoutControls(rect.Width(), rect.Height());
 	}
 }
 
-void CRulerRichEditCtrl::LayoutControls( int width, int height )
+void CRulerRichEditCtrl::LayoutControls(int width, int height)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::LayoutControls
 	Description :	Lays out the sub-controls depending on 
@@ -1632,14 +1594,14 @@ void CRulerRichEditCtrl::LayoutControls( int width, int height )
    ============================================================*/
 {
 	int toolbarHeight = 0;
-	if( m_showToolbar )
+	if (m_showToolbar)
 		toolbarHeight = m_dpi.Scale(s_toolbarHeight);
 
-	m_toolbar.MoveWindow( 0, 0, width, toolbarHeight );
+	m_toolbar.MoveWindow(0, 0, width, toolbarHeight);
 
 	int top = toolbarHeight;
-	CRect rect( 0, top, width, height );
-	m_rtf.MoveWindow( rect );
+	CRect rect(0, top, width, height);
+	m_rtf.MoveWindow(rect);
 }
 
 BOOL CRulerRichEditCtrl::IsToolbarVisible() const
@@ -1658,7 +1620,7 @@ BOOL CRulerRichEditCtrl::IsToolbarVisible() const
 	return m_showToolbar;
 }
 
-void CRulerRichEditCtrl::SetReadOnly( BOOL readOnly )
+void CRulerRichEditCtrl::SetReadOnly(BOOL readOnly)
 /* ============================================================
 	Function :		CRulerRichEditCtrl::SetReadOnly
 	Description :	Sets the control to read only or not.
@@ -1672,8 +1634,8 @@ void CRulerRichEditCtrl::SetReadOnly( BOOL readOnly )
 
    ============================================================*/
 {
-	if( m_rtf.m_hWnd )
-		m_rtf.SetReadOnly( readOnly );
+	if (m_rtf.m_hWnd)
+		m_rtf.SetReadOnly(readOnly);
 
 	m_readOnly = readOnly;
 }
@@ -1697,22 +1659,20 @@ BOOL CRulerRichEditCtrl::GetReadOnly() const
 
 BOOL CRulerRichEditCtrl::PreTranslateMessage(MSG* pMsg)
 {
-	if(pMsg->message == WM_KEYDOWN)
+	if (pMsg->message == WM_KEYDOWN)
 	{
 		// Ctrl + key shortcuts; the key is checked before the Ctrl state
-		const std::array<ControlShortcut, 9> shortcuts{ {
-			{ 'X', &CRulerRichEditCtrl::RtfCut },
-			{ 'C', &CRulerRichEditCtrl::RtfCopy },
-			{ 'V', &CRulerRichEditCtrl::RtfPaste },
-			{ 'I', &CRulerRichEditCtrl::DoItalic },
-			{ 'B', &CRulerRichEditCtrl::DoBold },
-			{ 'U', &CRulerRichEditCtrl::DoUnderline },
-			{ 'Z', &CRulerRichEditCtrl::RtfUndo },
-			{ 'Y', &CRulerRichEditCtrl::RtfRedo },
-			{ 'W', &CRulerRichEditCtrl::DoWrap }
-		} };
+		const std::array<ControlShortcut, 9> shortcuts{ { { 'X', &CRulerRichEditCtrl::RtfCut },
+														  { 'C', &CRulerRichEditCtrl::RtfCopy },
+														  { 'V', &CRulerRichEditCtrl::RtfPaste },
+														  { 'I', &CRulerRichEditCtrl::DoItalic },
+														  { 'B', &CRulerRichEditCtrl::DoBold },
+														  { 'U', &CRulerRichEditCtrl::DoUnderline },
+														  { 'Z', &CRulerRichEditCtrl::RtfUndo },
+														  { 'Y', &CRulerRichEditCtrl::RtfRedo },
+														  { 'W', &CRulerRichEditCtrl::DoWrap } } };
 
-		if(RunControlShortcut(pMsg->wParam, shortcuts))
+		if (RunControlShortcut(pMsg->wParam, shortcuts))
 		{
 			return TRUE;
 		}
@@ -1723,11 +1683,11 @@ BOOL CRulerRichEditCtrl::PreTranslateMessage(MSG* pMsg)
 
 bool CRulerRichEditCtrl::RunControlShortcut(WPARAM key, std::span<const ControlShortcut> shortcuts)
 {
-	for(const ControlShortcut& shortcut : shortcuts)
+	for (const ControlShortcut& shortcut : shortcuts)
 	{
-		if(shortcut.key == key)
+		if (shortcut.key == key)
 		{
-			if(CKeyboard::IsControlPressed())
+			if (CKeyboard::IsControlPressed())
 			{
 				(this->*shortcut.handler)();
 				return true;

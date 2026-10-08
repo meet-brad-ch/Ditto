@@ -14,7 +14,6 @@ CGdiImageDrawer::~CGdiImageDrawer()
 void CGdiImageDrawer::Reset()
 {
 	m_pStdImage.reset();
-
 }
 
 BOOL CGdiImageDrawer::LoadStdImage(UINT id, LPCTSTR pType)
@@ -32,19 +31,17 @@ BOOL CGdiImageDrawer::LoadRaw(unsigned char* bitmapData, int imageSize)
 BOOL CGdiImageDrawer::LoadStdImageDPI(int dpi, UINT id96, UINT id120, UINT id144, UINT id168, UINT id192, LPCTSTR pType, UINT id225, UINT id250, UINT id275, UINT id300, UINT id325, UINT id350)
 {
 	// first entry that matches wins; the large sizes are optional (id 0 = not given)
-	const std::array<DpiImageChoice, 11> choices{ {
-		{ 336, id350, true },
-		{ 312, id325, true },
-		{ 288, id300, true },
-		{ 264, id275, true },
-		{ 240, id250, true },
-		{ 216, id225, true },
-		{ 192, id192, false },
-		{ 168, id168, false },
-		{ 144, id144, false },
-		{ 120, id120, false },
-		{ INT_MIN, id96, false }
-	} };
+	const std::array<DpiImageChoice, 11> choices{ { { 336, id350, true },
+													{ 312, id325, true },
+													{ 288, id300, true },
+													{ 264, id275, true },
+													{ 240, id250, true },
+													{ 216, id225, true },
+													{ 192, id192, false },
+													{ 168, id168, false },
+													{ 144, id144, false },
+													{ 120, id120, false },
+													{ INT_MIN, id96, false } } };
 
 	BOOL ret = LoadStdImage(PickDpiImageId(dpi, choices), pType);
 
@@ -65,7 +62,7 @@ UINT CGdiImageDrawer::PickDpiImageId(int dpi, std::span<const DpiImageChoice> ch
 	return id;
 }
 
-void CGdiImageDrawer::Draw(CDC* pScreenDC, CDPI &dpi, CWnd *pWnd, CRect rc, bool mouseHover, bool mouseDown)
+void CGdiImageDrawer::Draw(CDC* pScreenDC, CDPI& dpi, CWnd* pWnd, CRect rc, bool mouseHover, bool mouseDown)
 {
 	int width = m_pStdImage->m_pBitmap->GetWidth();
 	int height = m_pStdImage->m_pBitmap->GetHeight();
@@ -76,7 +73,7 @@ void CGdiImageDrawer::Draw(CDC* pScreenDC, CDPI &dpi, CWnd *pWnd, CRect rc, bool
 	Draw(pScreenDC, dpi, pWnd, x, y, mouseHover, mouseDown);
 }
 
-void CGdiImageDrawer::Draw(CDC* pScreenDC, CDPI &dpi, CWnd *pWnd, int posX, int posY, bool /*mouseHover*/, bool mouseDown, int forceWidth, int forceHeight)
+void CGdiImageDrawer::Draw(CDC* pScreenDC, CDPI& dpi, CWnd* pWnd, int posX, int posY, bool /*mouseHover*/, bool mouseDown, int forceWidth, int forceHeight)
 {
 	int width = m_pStdImage->m_pBitmap->GetWidth();
 	if (forceWidth != INT_MAX)
@@ -86,18 +83,18 @@ void CGdiImageDrawer::Draw(CDC* pScreenDC, CDPI &dpi, CWnd *pWnd, int posX, int 
 		height = forceHeight;
 
 	CRect rectWithBorder(posX, posY, posX + width, posY + height);
-	
+
 	CDC dcBk;
 	CBitmap bmp;
 	CClientDC clDC(pWnd);
-		
+
 	//Copy the background over the entire area
 	dcBk.CreateCompatibleDC(&clDC);
 	bmp.CreateCompatibleBitmap(&clDC, 1, 1);
 	dcBk.SelectObject(&bmp);
-	dcBk.BitBlt(0, 0, 1, 1, &clDC, rectWithBorder.left-1, rectWithBorder.top, SRCCOPY);
-	
-	bmp.DeleteObject();		
+	dcBk.BitBlt(0, 0, 1, 1, &clDC, rectWithBorder.left - 1, rectWithBorder.top, SRCCOPY);
+
+	bmp.DeleteObject();
 
 	//Draw the png file
 	if (mouseDown)
@@ -116,7 +113,7 @@ void CGdiImageDrawer::Draw(CDC* pScreenDC, CDPI &dpi, CWnd *pWnd, int posX, int 
 	//ia.SetRemapTable(1, &blackToRed);
 
 	Gdiplus::Graphics graphics(pScreenDC->m_hDC);
-	graphics.DrawImage(*m_pStdImage, posX, posY, width, height);	
+	graphics.DrawImage(*m_pStdImage, posX, posY, width, height);
 
 	//RectF grect; grect.X = posX, grect.Y = posY; grect.Width = width; grect.Height = height;
 	//graphics.DrawImage(*m_pStdImage, grect, 0, 0, width, height, UnitPixel, &ia);

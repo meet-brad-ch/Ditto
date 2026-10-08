@@ -29,19 +29,19 @@ protected:
 	 * @param saveUtf8 Write the unicode text as UTF-8.
 	 * @return The file; empty when no free name was found or the file could not be written.
 	 */
-	CString SaveToFile(int id, CClip *clip, bool saveW, bool SaveA, bool saveUtf8);
-	CString GetComparePath(CString &params);
+	CString SaveToFile(int id, CClip* clip, bool saveW, bool SaveA, bool saveUtf8);
+	CString GetComparePath(CString& params);
 
 private:
 	/** @brief Which text formats Compare writes to the compare files. */
 	struct CompareFormats
 	{
 		/** @brief Write the unicode text. */
-		bool saveW{true};
+		bool saveW{ true };
 		/** @brief Write the CF_TEXT text. */
-		bool saveA{true};
+		bool saveA{ true };
 		/** @brief Write the unicode text as UTF-8. */
-		bool saveUtf8{true};
+		bool saveUtf8{ true };
 	};
 
 	/** @brief A compare application looked for when no diff app is configured. */
@@ -56,8 +56,7 @@ private:
 	};
 
 	/** @brief The compare applications in search order (first one found is used). */
-	static constexpr std::array<CompareApp, 18> m_compareApps
-	{{
+	static constexpr std::array<CompareApp, 18> m_compareApps{ {
 		{ _T("C:\\Program Files\\Beyond Compare 5\\BCompare.exe"), nullptr, false },
 		{ _T("C:\\Program Files (x86)\\Beyond Compare 4\\BCompare.exe"), nullptr, false },
 		{ _T("C:\\Program Files\\Beyond Compare 4\\BCompare.exe"), nullptr, false },
@@ -76,7 +75,7 @@ private:
 		{ _T("%localappdata%\\Programs\\Microsoft VS Code\\Code.exe"), _T(" --diff "), true },
 		{ _T("C:\\Program Files\\Microsoft VS Code\\Code.exe"), _T(" --diff "), false },
 		{ _T("C:\\Program Files (x86)\\Microsoft VS Code\\Code.exe"), _T(" --diff "), false },
-	}};
+	} };
 
 	/**
 	 * @brief Decides which text formats both clips have, for the compare files.
@@ -114,4 +113,3 @@ private:
 	/// The application's settings (not owned; m_context.Settings()).
 	CGetSetOptions& m_settings;
 };
-

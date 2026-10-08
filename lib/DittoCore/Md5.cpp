@@ -30,7 +30,8 @@ namespace DittoCore
 	{
 		BCRYPT_ALG_HANDLE algorithmHandle{};
 		Check(BCryptOpenAlgorithmProvider(&algorithmHandle, BCRYPT_MD5_ALGORITHM, nullptr, 0), "BCryptOpenAlgorithmProvider");
-		const auto closeAlgorithm = [](BCRYPT_ALG_HANDLE handle) { BCryptCloseAlgorithmProvider(handle, 0); };
+		const auto closeAlgorithm = [](BCRYPT_ALG_HANDLE handle)
+		{ BCryptCloseAlgorithmProvider(handle, 0); };
 		const std::unique_ptr<std::remove_pointer_t<BCRYPT_ALG_HANDLE>, decltype(closeAlgorithm)> algorithm{ algorithmHandle, closeAlgorithm };
 
 		BCRYPT_HASH_HANDLE hashHandle{};

@@ -18,13 +18,13 @@ CPasteImageAsHtmlImage::~CPasteImageAsHtmlImage(void)
 {
 }
 
-bool CPasteImageAsHtmlImage::ConvertPathToHtmlImageTag(const CDittoInfo &DittoInfo, IClip *pClip)
+bool CPasteImageAsHtmlImage::ConvertPathToHtmlImageTag(const CDittoInfo& DittoInfo, IClip* pClip)
 {
 	bool bRet = false;
-	IClipFormats *pFormats = pClip->Clips();
-	if(pFormats)
+	IClipFormats* pFormats = pClip->Clips();
+	if (pFormats)
 	{
-		if(m_dibImagePath.IsEmpty() && CreateLocalPath(true) == false)
+		if (m_dibImagePath.IsEmpty() && CreateLocalPath(true) == false)
 		{
 			CString message;
 			message.Format(_T("The images were not pasted as HTML: the temporary folder could not be found (error %lu)."), ::GetLastError());
@@ -37,7 +37,7 @@ bool CPasteImageAsHtmlImage::ConvertPathToHtmlImageTag(const CDittoInfo &DittoIn
 		if (!GetImageTags(DittoInfo.m_hWndDitto, pFormats, csIMG))
 			return false;
 
-		if(csIMG.IsEmpty() == FALSE)
+		if (csIMG.IsEmpty() == FALSE)
 		{
 			pFormats->DeleteAll();
 			const CStringA utf8 = CTextConvert::UnicodeToUTF8(csIMG);
@@ -51,16 +51,16 @@ bool CPasteImageAsHtmlImage::ConvertPathToHtmlImageTag(const CDittoInfo &DittoIn
 	return bRet;
 }
 
-bool CPasteImageAsHtmlImage::GetImageTags(HWND owner, IClipFormats *pFormats, CString& csIMG)
+bool CPasteImageAsHtmlImage::GetImageTags(HWND owner, IClipFormats* pFormats, CString& csIMG)
 {
-	IClipFormat *pCF_DIB = pFormats->FindFormatEx(CF_DIB);
-	if(pCF_DIB != NULL)
+	IClipFormat* pCF_DIB = pFormats->FindFormatEx(CF_DIB);
+	if (pCF_DIB != NULL)
 	{
 		return DibImageTag(owner, pCF_DIB, csIMG);
 	}
 
-	IClipFormat *pHDrop = pFormats->FindFormatEx(CF_HDROP);
-	if(pHDrop)
+	IClipFormat* pHDrop = pFormats->FindFormatEx(CF_HDROP);
+	if (pHDrop)
 	{
 		return HDropImageTags(owner, pHDrop, csIMG);
 	}
@@ -85,17 +85,17 @@ bool CPasteImageAsHtmlImage::HDropImageTags(HWND owner, IClipFormat* pHDrop, CSt
 	}
 
 	const size_t nNumFiles = files.size();
-	for(size_t nFile = 0; nFile < nNumFiles; nFile++)
+	for (size_t nFile = 0; nFile < nNumFiles; nFile++)
 	{
 		CString csOrigfile(files[nFile].c_str());
 		CString csFile(csOrigfile);
 		csFile = csFile.MakeLower();
 
-		if(IsImageFile(csFile))
+		if (IsImageFile(csFile))
 		{
 			CString csFormat;
 			csFormat.Format(_T("<IMG src=\"file:///%s\">"), csOrigfile.GetString());
-			if(nFile < nNumFiles-1)
+			if (nFile < nNumFiles - 1)
 			{
 				csFormat += _T("<br>");
 			}
@@ -166,7 +166,7 @@ bool CPasteImageAsHtmlImage::WriteDibToFile(const CString& csPath, std::span<con
 
 bool CPasteImageAsHtmlImage::CleanupPastedImages()
 {
-	if(m_dibImagePath.IsEmpty() && CreateLocalPath(false) == false)
+	if (m_dibImagePath.IsEmpty() && CreateLocalPath(false) == false)
 	{
 		return false;
 	}
@@ -174,7 +174,7 @@ bool CPasteImageAsHtmlImage::CleanupPastedImages()
 	CFileFind find;
 	BOOL bCont = find.FindFile(m_dibImagePath + _T("\\*"));
 
-	while(bCont)
+	while (bCont)
 	{
 		bCont = find.FindNextFile();
 		DeleteFile(find.GetFilePath());
@@ -191,7 +191,7 @@ bool CPasteImageAsHtmlImage::CreateLocalPath(bool bCreateDir)
 	TCHAR tempPath[MAX_PATH + 1]{};
 	const DWORD capacity{ static_cast<DWORD>(_countof(tempPath)) };
 	const DWORD length{ ::GetTempPath(capacity, tempPath) };
-	if(length == 0 || length > capacity)
+	if (length == 0 || length > capacity)
 	{
 		return false;
 	}
@@ -199,7 +199,7 @@ bool CPasteImageAsHtmlImage::CreateLocalPath(bool bCreateDir)
 	// GetTempPath's path ends with a backslash
 	m_dibImagePath = tempPath;
 	m_dibImagePath += _T("ditto");
-	if(bCreateDir)
+	if (bCreateDir)
 	{
 		CreateDirectory(m_dibImagePath, NULL);
 	}

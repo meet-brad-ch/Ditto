@@ -13,14 +13,15 @@
 
 IMPLEMENT_DYNCREATE(CAbout, CPropertyPage)
 
-CAbout::CAbout() : CPropertyPage(CAbout::IDD)
+CAbout::CAbout() :
+	CPropertyPage(CAbout::IDD)
 {
 	m_csTitle = theApp.Services().Language().GetString("AboutTitle", "About");
 	m_psp.pszTitle = m_csTitle;
 	m_psp.dwFlags |= PSP_USETITLE;
 
 	//{{AFX_DATA_INIT(CAbout)
-		// NOTE: the ClassWizard will add member initialization here
+	// NOTE: the ClassWizard will add member initialization here
 	//}}AFX_DATA_INIT
 }
 
@@ -47,7 +48,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CAbout message handlers
 
-BOOL CAbout::OnInitDialog() 
+BOOL CAbout::OnInitDialog()
 {
 	CPropertyPage::OnInitDialog();
 
@@ -65,12 +66,13 @@ BOOL CAbout::OnInitDialog()
 #endif
 	m_List.AddString(csText);
 
-	const char *SqliteVersion = sqlite3_libversion();
+	const char* SqliteVersion = sqlite3_libversion();
 	csText = "    Sqlite Version ";
 	csText += SqliteVersion;
 	m_List.AddString(csText);
 
-	cs = theApp.Services().Settings().GetExeFileName();;
+	cs = theApp.Services().Settings().GetExeFileName();
+	;
 	csText = "    Exe Path " + cs;
 	m_List.AddString(csText);
 
@@ -81,7 +83,7 @@ BOOL CAbout::OnInitDialog()
 	m_List.AddString(_T(""));
 
 	m_List.AddString(_T("Credits"));
-	
+
 	cs = "    Authors - Scott Brogden, sabrogden@users.sourceforge.net";
 	m_List.AddString(cs);
 	cs = "            - Kevin Edwards, ingenuus@users.sourceforge.net";
@@ -95,27 +97,27 @@ BOOL CAbout::OnInitDialog()
 	CStringArray arr;
 	theApp.Services().Addins().AboutScreenText(arr);
 	INT_PTR count = arr.GetCount();
-	for(int i = 0; i < count; i++)
+	for (int i = 0; i < count; i++)
 	{
 		m_List.AddString(_T("    ") + arr[i]);
 	}
 
 	CRect rect;
 	GetClientRect(rect);
-	
+
 	rect.bottom -= 30;
-	
+
 	m_List.MoveWindow(rect);
 
 	rect.top = rect.bottom + 10;
 	rect.bottom = rect.top + 30;
-	
+
 	m_HyperLink.MoveWindow(rect);
 
 	rect.top = rect.bottom + 5;
 	rect.bottom = rect.top + 5;
 	m_Link.MoveWindow(rect);
 
-	return TRUE;  // return TRUE unless you set the focus to a control
-	              // EXCEPTION: OCX Property Pages should return FALSE
+	return TRUE; // return TRUE unless you set the focus to a control
+				 // EXCEPTION: OCX Property Pages should return FALSE
 }

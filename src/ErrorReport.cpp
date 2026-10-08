@@ -17,14 +17,14 @@ void CErrorReport::Show(const CString& text)
 	// the window before it reads its messages), without a database, or while closing, a message
 	// box shows it instead
 	// the documented exception to the access rule: CErrorReport is called from every class and thread
-	CAppServices& services{theApp.Services()};
+	CAppServices& services{ theApp.Services() };
 	const HWND mainWindow = services.Windows().MainHwnd();
 	if (mainWindow != NULL && services.State().m_bAppRunning)
 	{
 		auto message = std::make_unique<CString>(text);
 		if (::PostMessage(mainWindow, CDittoMessage::ShowOwnedErrorMsg, reinterpret_cast<WPARAM>(message.get()), 0))
 		{
-			message.release();  // CMainFrame::OnOwnedErrorMsg owns it now
+			message.release(); // CMainFrame::OnOwnedErrorMsg owns it now
 			return;
 		}
 		CLogger::Log(CStringUtil::Format(_T("Could not post the error to the main window, GetLastError %d; showing a message box"), ::GetLastError()));

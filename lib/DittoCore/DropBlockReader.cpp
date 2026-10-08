@@ -12,8 +12,9 @@
 
 namespace DittoCore
 {
-	DropBlockReader::DropBlockReader(const void* data, std::size_t size)
-		: m_bytes(static_cast<const std::uint8_t*>(data)), m_size(size)
+	DropBlockReader::DropBlockReader(const void* data, std::size_t size) :
+		m_bytes(static_cast<const std::uint8_t*>(data)),
+		m_size(size)
 	{
 		if (m_bytes == nullptr)
 		{
@@ -22,7 +23,7 @@ namespace DittoCore
 		if (m_size < HeaderSize)
 		{
 			throw ClipboardFormatError("CF_HDROP block of " + std::to_string(m_size) +
-				" bytes is smaller than the 20-byte DROPFILES header");
+									   " bytes is smaller than the 20-byte DROPFILES header");
 		}
 	}
 
@@ -32,7 +33,7 @@ namespace DittoCore
 		if (listStart < HeaderSize || listStart >= m_size)
 		{
 			throw ClipboardFormatError("CF_HDROP path list offset " + std::to_string(listStart) +
-				" is outside the block (header 20 bytes, block " + std::to_string(m_size) + " bytes)");
+									   " is outside the block (header 20 bytes, block " + std::to_string(m_size) + " bytes)");
 		}
 		return ReadUint32(WideFlagPosition) != 0 ? ReadWideList(listStart) : ReadAnsiList(listStart);
 	}
@@ -60,7 +61,7 @@ namespace DittoCore
 			}
 			if (current.empty())
 			{
-				return paths;  // the empty entry ends the list
+				return paths; // the empty entry ends the list
 			}
 			paths.push_back(std::move(current));
 			current.clear();

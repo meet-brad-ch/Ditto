@@ -76,7 +76,7 @@ TEST(DibHeader, Reads24BitImage)
 	const DibLayout layout = DibHeader::Read(Dib(DibSpec{}));
 
 	EXPECT_EQ(layout.bitsOffset, 40u);
-	EXPECT_EQ(layout.imageSize, 16u);   // 2 rows of 6 bytes, padded to 8
+	EXPECT_EQ(layout.imageSize, 16u); // 2 rows of 6 bytes, padded to 8
 	EXPECT_EQ(layout.width, 2);
 	EXPECT_EQ(layout.height, 2);
 }
@@ -245,7 +245,7 @@ TEST(DibHeader, CountsFourMasksOfAlphaBitFields)
 TEST(DibHeader, RejectsColorTablePastBlock)
 {
 	DibSpec spec{};
-	spec.bitCount = 8;           // 256 colors = 1024 table bytes
+	spec.bitCount = 8; // 256 colors = 1024 table bytes
 	spec.tableBytes = 0;
 	spec.pixelBytes = 100;
 
@@ -255,7 +255,7 @@ TEST(DibHeader, RejectsColorTablePastBlock)
 TEST(DibHeader, RejectsUnknownCompression)
 {
 	DibSpec spec{};
-	spec.compression = 4;        // BI_JPEG
+	spec.compression = 4; // BI_JPEG
 
 	EXPECT_THROW(DibHeader::Read(Dib(spec)), ClipboardFormatError);
 }

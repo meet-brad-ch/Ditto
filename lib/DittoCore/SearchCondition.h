@@ -57,7 +57,13 @@ namespace DittoCore
 
 	private:
 		/** @brief A search keyword, or none. */
-		enum class Keyword { None, Not, And, Or };
+		enum class Keyword
+		{
+			None,
+			Not,
+			And,
+			Or
+		};
 
 		/** @brief The operators waiting for the next term of a keyword search. */
 		struct Pending

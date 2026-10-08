@@ -14,7 +14,7 @@
 
 IMPLEMENT_DYNCREATE(CCopyThread, CWinThread)
 
-CCopyThread::CCopyThread():
+CCopyThread::CCopyThread() :
 	m_bQuit(false),
 	m_bConfigChanged(false),
 	m_connectOnStartup(true)
@@ -50,13 +50,13 @@ void CCopyThread::OnClipboardChange(CString activeWindow)
 	CLogger::Log(_T("OnClipboardChange - Start"));
 
 	SyncConfig(); // synchronize with the main thread's copy configuration
-	
+
 	// if we are told not to copy on change, then we have nothing to do.
-	if(!m_LocalConfig.m_bCopyOnChange)
+	if (!m_LocalConfig.m_bCopyOnChange)
 		return;
-	
+
 	int groupId = Services().State().GetActiveGroupId();
-	if(groupId > -1)
+	if (groupId > -1)
 	{
 		CLogger::Log(CStringUtil::Format(_T("LoadFromClipboard - loading clips into groupId: %d"), groupId));
 	}
@@ -68,7 +68,7 @@ void CCopyThread::OnClipboardChange(CString activeWindow)
 	CClipTypes* pSupportedTypes = m_LocalConfig.m_pSupportedTypes.get();
 
 	// If we are copying from a Ditto Buffer or use advanced option
-	// then save all to the database, so when we paste this it will paste 
+	// then save all to the database, so when we paste this it will paste
 	// just like you were using Ctrl-V
 	std::shared_ptr<CClipTypes> availableTypes;
 	if (Services().CopyBuffer().Active() || Settings().GetSupportAllTypes())
@@ -82,22 +82,22 @@ void CCopyThread::OnClipboardChange(CString activeWindow)
 	{
 		bResult = LoadClipWithRetry(*pClip, pSupportedTypes, activeWindow);
 	}
-	catch(const DittoCore::ClipboardFormatError& error)
+	catch (const DittoCore::ClipboardFormatError& error)
 	{
 		// clipboard data comes from other processes: this copy is rejected, Ditto keeps running
 		CErrorReport::Show(CStringUtil::Format(_T("A copy from %s was not saved: its clipboard data is malformed (%s)."),
-			activeWindow.GetString(), CString(error.what()).GetString()));
+											   activeWindow.GetString(), CString(error.what()).GetString()));
 		return;
 	}
 
 	pSupportedTypes = NULL;
 
-	if(bResult != TRUE)
+	if (bResult != TRUE)
 	{
 		return; // nothing to save
 	}
 
-	if(groupId > -1)
+	if (groupId > -1)
 	{
 		pClip->m_parentId = groupId;
 	}
@@ -113,10 +113,10 @@ int CCopyThread::LoadClipWithRetry(CClip& clip, CClipTypes* pSupportedTypes, con
 	int bResult = clip.LoadFromClipboard(pSupportedTypes, Settings().m_regexHelper, true, activeWindow);
 	CLogger::Log(_T("LoadFromClipboard - After"));
 
-	if(bResult == FALSE)
+	if (bResult == FALSE)
 	{
 		DWORD delay = Settings().GetNoFormatsRetryDelay();
-		if(delay > 0)
+		if (delay > 0)
 		{
 			CLogger::Log(CStringUtil::Format(_T("LoadFromClipboard didn't find any clips to save, sleeping %dms, then trying again"), delay));
 			Sleep(delay);
@@ -147,9 +147,9 @@ CAppServices& CCopyThread::Services() const
 void CCopyThread::HandOverClip(std::unique_ptr<CClip>& pClip)
 {
 	// the CDittoMessage::ClipboardCopied handler takes ownership of the clip
-	if(m_LocalConfig.m_bAsyncCopy)
+	if (m_LocalConfig.m_bAsyncCopy)
 	{
-		if(::PostMessage(m_LocalConfig.m_hClipHandler, CDittoMessage::ClipboardCopied, reinterpret_cast<WPARAM>(pClip.get()), 0))
+		if (::PostMessage(m_LocalConfig.m_hClipHandler, CDittoMessage::ClipboardCopied, reinterpret_cast<WPARAM>(pClip.get()), 0))
 		{
 			pClip.release(); // ownership: CMainFrame::OnClipboardCopied retakes it in a std::unique_ptr
 		}
@@ -166,7 +166,7 @@ void CCopyThread::HandOverClip(std::unique_ptr<CClip>& pClip)
 
 void CCopyThread::SyncConfig()
 {
-	if(m_bConfigChanged)
+	if (m_bConfigChanged)
 	{
 		ATL::CCritSecLock csLock(m_cs.m_sect);
 
@@ -175,7 +175,7 @@ void CCopyThread::SyncConfig()
 		m_LocalConfig.CopySettingsFrom(m_SharedConfig);
 
 		// null means that the types shouldn't be sync'ed: m_LocalConfig keeps its types
-		if( m_SharedConfig.m_pSupportedTypes )
+		if (m_SharedConfig.m_pSupportedTypes)
 		{
 			// now owned by LocalConfig; its old types are deleted
 			m_LocalConfig.m_pSupportedTypes = std::move(m_SharedConfig.m_pSupportedTypes);
@@ -195,13 +195,13 @@ bool CCopyThread::GetConnectCV()
 
 void CCopyThread::SetConnectCV(bool bConnect)
 {
-	if(m_pClipboardViewer && m_pClipboardViewer->m_hWnd != NULL)
+	if (m_pClipboardViewer && m_pClipboardViewer->m_hWnd != NULL)
 	{
-		::SendMessage( m_pClipboardViewer->m_hWnd, CDittoMessage::SetConnect, bConnect, 0 );
+		::SendMessage(m_pClipboardViewer->m_hWnd, CDittoMessage::SetConnect, bConnect, 0);
 	}
 }
 
-void CCopyThread::SetSupportedTypes( std::unique_ptr<CClipTypes> pTypes )
+void CCopyThread::SetSupportedTypes(std::unique_ptr<CClipTypes> pTypes)
 {
 	ATL::CCritSecLock csLock(m_cs.m_sect);
 
@@ -279,6 +279,6 @@ void CCopyThread::Init(CCopyConfig cfg)
 bool CCopyThread::Quit()
 {
 	m_bQuit = true;
-	m_pClipboardViewer->PostMessage( WM_QUIT );
-	return CWinThread::PostThreadMessage( WM_QUIT, NULL, NULL ) != FALSE;
+	m_pClipboardViewer->PostMessage(WM_QUIT);
+	return CWinThread::PostThreadMessage(WM_QUIT, NULL, NULL) != FALSE;
 }

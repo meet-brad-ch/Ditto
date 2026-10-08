@@ -27,10 +27,10 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CNumberEdit message handlers
 
-void CNumberEdit::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags) 
+void CNumberEdit::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	//Only allow the number 0 - 9 and a the backspace to go through
-	if(((nChar < '0') || (nChar > '9')) && (nChar != VK_BACK))
+	if (((nChar < '0') || (nChar > '9')) && (nChar != VK_BACK))
 		return;
 
 	CString csText;
@@ -42,9 +42,9 @@ void CNumberEdit::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 
 	//Set the new number
 	CEdit::OnChar(nChar, nRepCnt, nFlags);
-	
+
 	//If its not valid set it back to the old number
-	if(!ValidateNumber(GetNumberD()))
+	if (!ValidateNumber(GetNumberD()))
 	{
 		SetWindowText(csText);
 		SetSel(nStartChar, nEndChar);
@@ -53,7 +53,7 @@ void CNumberEdit::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 
 BOOL CNumberEdit::ValidateNumber(double dNumber)
 {
-	if(dNumber > m_dMax)
+	if (dNumber > m_dMax)
 		return FALSE;
 
 	return TRUE;
@@ -63,7 +63,7 @@ long CNumberEdit::GetNumber()
 {
 	CString csText;
 	GetWindowText(csText);
-	
+
 	return _ttol(csText);
 }
 
@@ -72,8 +72,8 @@ double CNumberEdit::GetNumberD()
 	CString csText;
 	GetWindowText(csText);
 
-#ifdef _UNICODE				
-	TCHAR *pEnd;
+#ifdef _UNICODE
+	TCHAR* pEnd;
 	double d = _tcstod(csText, &pEnd);
 #else
 	double d = atof(csText);
@@ -85,7 +85,7 @@ double CNumberEdit::GetNumberD()
 BOOL CNumberEdit::SetNumber(long lNumber)
 {
 	//Check if its a good number
-	if(!ValidateNumber(lNumber))
+	if (!ValidateNumber(lNumber))
 	{
 		MessageBeep(0);
 		return FALSE;
@@ -98,4 +98,3 @@ BOOL CNumberEdit::SetNumber(long lNumber)
 
 	return TRUE;
 }
-

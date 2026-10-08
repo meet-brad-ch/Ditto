@@ -22,8 +22,8 @@ public:
 	 * @brief Copies bytes into a new movable global block.
 	 * @param bytes The data.
 	 */
-	explicit TestGlobalBlock(const std::vector<BYTE>& bytes)
-		: m_hGlobal(::GlobalAlloc(GMEM_MOVEABLE, bytes.size()))
+	explicit TestGlobalBlock(const std::vector<BYTE>& bytes) :
+		m_hGlobal(::GlobalAlloc(GMEM_MOVEABLE, bytes.size()))
 	{
 		if (m_hGlobal == NULL)
 		{

@@ -41,7 +41,7 @@ namespace DittoCore
 			const std::size_t colon = line.find(':');
 			if (colon == std::string_view::npos || line.starts_with('<'))
 			{
-				break;   // the header ends where the HTML starts
+				break; // the header ends where the HTML starts
 			}
 			ApplyField(header, line.substr(0, colon), line.substr(colon + 1));
 			pos = eol == std::string::npos ? text.size() : text.find_first_not_of("\r\n", eol);
@@ -100,14 +100,14 @@ namespace DittoCore
 
 		// four offset lines of fixed width: "Name:" + 10 digits + CRLF
 		const std::size_t headerSize = versionLine.size() + urlLine.size() +
-			std::string_view("StartHTML:EndHTML:StartFragment:EndFragment:").size() + 4 * 12;
+									   std::string_view("StartHTML:EndHTML:StartFragment:EndFragment:").size() + 4 * 12;
 		const std::size_t startFragment = headerSize + htmlStart.size();
 		const std::size_t endFragment = startFragment + fragment.size();
 		const std::size_t endHtml = endFragment + htmlEnd.size();
 
 		return versionLine +
-			std::format("StartHTML:{:010}\r\nEndHTML:{:010}\r\nStartFragment:{:010}\r\nEndFragment:{:010}\r\n", headerSize, endHtml, startFragment, endFragment) +
-			urlLine + std::string(htmlStart) + fragment + std::string(htmlEnd);
+			   std::format("StartHTML:{:010}\r\nEndHTML:{:010}\r\nStartFragment:{:010}\r\nEndFragment:{:010}\r\n", headerSize, endHtml, startFragment, endFragment) +
+			   urlLine + std::string(htmlStart) + fragment + std::string(htmlEnd);
 	}
 
 	std::string CfHtml::HtmlFromText(std::wstring_view text)
@@ -117,7 +117,7 @@ namespace DittoCore
 		{
 			if (text[i] == L'\r' && i + 1 < text.size() && text[i + 1] == L'\n')
 			{
-				continue;   // CR LF is one line break: the LF writes it
+				continue; // CR LF is one line break: the LF writes it
 			}
 			html += Escape(text[i]);
 		}

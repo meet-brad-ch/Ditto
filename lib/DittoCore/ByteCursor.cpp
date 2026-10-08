@@ -10,7 +10,8 @@
 namespace DittoCore
 {
 	ByteCursor::ByteCursor(std::span<const std::byte> block) noexcept
-		: m_rest(block)
+		:
+		m_rest(block)
 	{
 	}
 

@@ -20,18 +20,17 @@ struct CharFormat : public CHARFORMAT
 {
 	CharFormat()
 	{
-		memset( this, 0, sizeof ( CharFormat ) );
-		cbSize = sizeof( CharFormat );
+		memset(this, 0, sizeof(CharFormat));
+		cbSize = sizeof(CharFormat);
 	};
-
 };
 
 struct ParaFormat : public PARAFORMAT
 {
-	ParaFormat( DWORD mask )
+	ParaFormat(DWORD mask)
 	{
-		memset( this, 0, sizeof ( ParaFormat ) );
-		cbSize = sizeof( ParaFormat );
+		memset(this, 0, sizeof(ParaFormat));
+		cbSize = sizeof(ParaFormat);
 		dwMask = mask;
 	}
 };
@@ -43,13 +42,13 @@ class CRulerRichEditCtrl : public CWnd
 {
 
 public:
-// Construction/creation/destruction
+	// Construction/creation/destruction
 	CRulerRichEditCtrl();
 	virtual ~CRulerRichEditCtrl();
-	virtual BOOL Create( DWORD dwStyle, const RECT &rect, CWnd* pParentWnd, UINT nID, BOOL autohscroll = FALSE );
+	virtual BOOL Create(DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID, BOOL autohscroll = FALSE);
 
-// Registered messages for ruler/toolbar/CRulerRichEditCtrl communication. Each is registered on the
-// first call; the getters return a reference because ON_REGISTERED_MESSAGE takes the id's address.
+	// Registered messages for ruler/toolbar/CRulerRichEditCtrl communication. Each is registered on the
+	// first call; the getters return a reference because ON_REGISTERED_MESSAGE takes the id's address.
 	/**
 	 * @brief The registered message the toolbar sends when the user picks a font name (WPARAM: the LPCTSTR name).
 	 * @return The message id.
@@ -66,27 +65,27 @@ public:
 	 */
 	static const UINT& SetCurrentFontColorMessage();
 
-// Attributes
-	void	SetMode( int mode );
-	int		GetMode() const;
+	// Attributes
+	void SetMode(int mode);
+	int GetMode() const;
 
-	void ShowToolbar( BOOL show = TRUE );
+	void ShowToolbar(BOOL show = TRUE);
 
 	BOOL IsToolbarVisible() const;
 
-	CRichEditCtrl& GetRichEditCtrl( );
+	CRichEditCtrl& GetRichEditCtrl();
 
-// Implementation
+	// Implementation
 	CString GetRTF();
-	void	SetRTF( const CString& rtf );
-	void	SetText(CString sText);
+	void SetRTF(const CString& rtf);
+	void SetText(CString sText);
 	CString GetText();
 
-	void SetReadOnly( BOOL readOnly );
+	void SetReadOnly(BOOL readOnly);
 	BOOL GetReadOnly() const;
 	void OnDpiChanged(CWnd* pParent, int dpi);
 
-// Formatting
+	// Formatting
 	virtual void DoFont();
 	virtual void DoColor();
 	virtual void DoBold();
@@ -100,18 +99,18 @@ public:
 	virtual void DoBullet();
 	virtual void DoWrap();
 
-	void SetCurrentFontName( const CString& font );
-	void SetCurrentFontSize( int points );
-	void SetCurrentFontColor( COLORREF color );
+	void SetCurrentFontName(const CString& font);
+	void SetCurrentFontSize(int points);
+	void SetCurrentFontColor(COLORREF color);
 
-// Overrides
+	// Overrides
 	//{{AFX_VIRTUAL(CRulerRichEditCtrl)
-	protected:
+protected:
 	virtual BOOL OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult);
 	//}}AFX_VIRTUAL
 
 protected:
-// Message handlers
+	// Message handlers
 	//{{AFX_MSG(CRulerRichEditCtrl)
 	afx_msg void OnPaint();
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
@@ -129,9 +128,9 @@ protected:
 	afx_msg void OnButtonBullet();
 	afx_msg void OnButtonWrap();
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
-	afx_msg LRESULT OnSetText (WPARAM wParam, LPARAM lParam);
-	afx_msg LRESULT OnGetText (WPARAM wParam, LPARAM lParam);
-	afx_msg LRESULT OnGetTextLength (WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnSetText(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnGetText(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnGetTextLength(WPARAM wParam, LPARAM lParam);
 	//}}AFX_MSG
 
 	LRESULT OnSetCurrentFontName(WPARAM font, LPARAM size);
@@ -142,50 +141,50 @@ protected:
 
 protected:
 	// Internal data
-	CDWordArray		m_tabs;				// An array containing the tab-positions in device pixels
-	int				m_margin;			// The margin to use for the ruler and buttons
+	CDWordArray m_tabs; // An array containing the tab-positions in device pixels
+	int m_margin;       // The margin to use for the ruler and buttons
 
-	int				m_physicalInch;		// The number of pixels for an inch on screen
-	int				m_movingtab;		// The tab-position being moved, or -1 if none
-	int				m_offset;			// Internal offset of the tab-marker being moved.
+	int m_physicalInch; // The number of pixels for an inch on screen
+	int m_movingtab;    // The tab-position being moved, or -1 if none
+	int m_offset;       // Internal offset of the tab-marker being moved.
 
-	BOOL			m_showToolbar;
-	BOOL			m_readOnly;
+	BOOL m_showToolbar;
+	BOOL m_readOnly;
 
-	BOOL			m_bInWrapMode;
+	BOOL m_bInWrapMode;
 
 	// Sub-controls
-	CRulerRichEdit	m_rtf;
-	CRRECToolbar	m_toolbar;	
+	CRulerRichEdit m_rtf;
+	CRRECToolbar m_toolbar;
 
 	// Private helpers
-	void	SetTabStops( LPLONG tabs, int size );
-	void	UpdateTabStops();
+	void SetTabStops(LPLONG tabs, int size);
+	void UpdateTabStops();
 
-	BOOL	CreateToolbar();
-	BOOL	CreateRTFControl( BOOL autohscroll );
-	void	CreateMargins();
+	BOOL CreateToolbar();
+	BOOL CreateRTFControl(BOOL autohscroll);
+	void CreateMargins();
 
-	void	UpdateToolbarButtons();
+	void UpdateToolbarButtons();
 
-	void	SetEffect( int mask, int effect );
-	void	SetAlignment( int alignment );
+	void SetEffect(int mask, int effect);
+	void SetAlignment(int alignment);
 
-	void	LayoutControls( int width, int height );
-	int		ToolbarIdPerDPI();
+	void LayoutControls(int width, int height);
+	int ToolbarIdPerDPI();
 
 	CDPI m_dpi;
 
 	/** @brief The height of the formatting toolbar, in unscaled pixels. */
-	static constexpr int s_toolbarHeight{28};
+	static constexpr int s_toolbarHeight{ 28 };
 
 	/**
 	 * @brief Rich edit style SES_HYPERLINKTOOLTIPS (Richedit.h, _RICHEDIT_VER >= 0x0500). MFC's
 	 * afxwin.h sets _RICHEDIT_VER to 0x0210 before Richedit.h, so the SDK name is not defined here.
 	 */
-	static constexpr DWORD s_sesHyperlinkTooltips{8};
+	static constexpr DWORD s_sesHyperlinkTooltips{ 8 };
 	/** @brief Rich edit style SES_NOFOCUSLINKNOTIFY (Richedit.h, _RICHEDIT_VER >= 0x0500); see s_sesHyperlinkTooltips. */
-	static constexpr DWORD s_sesNoFocusLinkNotify{32};
+	static constexpr DWORD s_sesNoFocusLinkNotify{ 32 };
 
 public:
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
@@ -220,26 +219,26 @@ private:
 	/** @brief Toolbar button state: enabled, and checked if asked.
 	 *  @param checked true to show the button as checked.
 	 *  @return TBSTATE_ENABLED, with TBSTATE_CHECKED if checked. */
-	static UINT ToolbarButtonState( bool checked );
+	static UINT ToolbarButtonState(bool checked);
 
 	/** @brief Shows the font name, size and colour of the selection in the toolbar.
 	 *  @param cf Character format of the selection. */
-	void UpdateToolbarFont( const CharFormat& cf );
+	void UpdateToolbarFont(const CharFormat& cf);
 
 	/** @brief Fills a LOGFONT from the character format of the selection.
 	 *  @param cf Character format of the selection.
 	 *  @param lf LOGFONT to fill. */
-	void CharFormatToLogFont( const CharFormat& cf, LOGFONT& lf ) const;
+	void CharFormatToLogFont(const CharFormat& cf, LOGFONT& lf) const;
 
 	/** @brief Copies the bold, italic and underline effects into a LOGFONT.
 	 *  @param cf Character format of the selection.
 	 *  @param lf LOGFONT to fill. */
-	static void CharEffectsToLogFont( const CharFormat& cf, LOGFONT& lf );
+	static void CharEffectsToLogFont(const CharFormat& cf, LOGFONT& lf);
 
 	/** @brief Sets a character format from the choice in the font dialog.
 	 *  @param dlg Font dialog closed with OK.
 	 *  @param cf Character format to set. */
-	static void FontDialogToCharFormat( CFontDialog& dlg, CharFormat& cf );
+	static void FontDialogToCharFormat(CFontDialog& dlg, CharFormat& cf);
 };
 
 #endif // !defined(AFX_RULERRICHEDITCTRL_H__4CD13283_82E4_484A_83B4_DBAD5B64F17C__INCLUDED_)

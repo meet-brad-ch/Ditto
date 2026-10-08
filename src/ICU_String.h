@@ -2,7 +2,6 @@
 class CICU_String
 {
 public:
-
 	CICU_String();
 	virtual ~CICU_String();
 
@@ -35,4 +34,3 @@ private:
 	int(__cdecl* u_strToLower)(wchar_t* dest, int destCapacity, const wchar_t* src, int srcLength, const char* locale, int* pErrorCode);
 	int(__cdecl* u_strToUpper)(wchar_t* dest, int destCapacity, const wchar_t* src, int srcLength, const char* locale, int* pErrorCode);
 };
-

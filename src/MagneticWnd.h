@@ -24,12 +24,12 @@ private:
 	 *  @param pOtherWnd Window to snap to (may be NULL).
 	 *  @param lpwndpos New position of this window.
 	 *  @return true if both windows are visible and the position and size are all non-zero. */
-	bool CanSnapTo(CMagneticWnd *pOtherWnd, const WINDOWPOS* lpwndpos);
+	bool CanSnapTo(CMagneticWnd* pOtherWnd, const WINDOWPOS* lpwndpos);
 
 	/** @brief Snaps the new position to another window and updates the attached state.
 	 *  @param pOtherWnd Window to snap to.
 	 *  @param lpwndpos New position of this window; changed by the snap. */
-	void SnapToWindow(CMagneticWnd *pOtherWnd, WINDOWPOS* lpwndpos);
+	void SnapToWindow(CMagneticWnd* pOtherWnd, WINDOWPOS* lpwndpos);
 
 	/** @brief Moves the new position onto the edges of a rectangle that are within 15 pixels.
 	 *  @param lpwndpos New position of this window; changed by the snap.
@@ -38,10 +38,10 @@ private:
 	static bool SnapEdges(WINDOWPOS* lpwndpos, const CRect& rectParent);
 
 public:
-	void AddWindowToSnapTo(CMagneticWnd *pWnd)	{ m_SnapToWnds.push_back(pWnd); }
-	void SetWindowAttached(CMagneticWnd *pOther, bool bAttache);
-	bool IsWindowAttached(CMagneticWnd *pWnd);
+	void AddWindowToSnapTo(CMagneticWnd* pWnd) { m_SnapToWnds.push_back(pWnd); }
+	void SetWindowAttached(CMagneticWnd* pOther, bool bAttache);
+	bool IsWindowAttached(CMagneticWnd* pWnd);
 	void MoveMagneticWWnd(LPCRECT lpRect, BOOL bRepaint = TRUE);
 
-	void SetMoveAttachedWnds(bool bMove)	{ m_bMovedAttachedWnd = bMove; }
+	void SetMoveAttachedWnds(bool bMove) { m_bMovedAttachedWnd = bMove; }
 };

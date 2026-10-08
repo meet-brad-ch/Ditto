@@ -35,7 +35,7 @@ namespace
 		const std::size_t end = start + fragment.size();
 		char header[256]{};
 		std::snprintf(header, sizeof(header), "Version:1.0\r\nStartHTML:%010zu\r\nEndHTML:%010zu\r\nStartFragment:%010zu\r\nEndFragment:%010zu\r\n",
-			headerTemplate.size(), end + after.size(), start, end);
+					  headerTemplate.size(), end + after.size(), start, end);
 		return std::string(header) + extraHeader + before + fragment + after;
 	}
 }

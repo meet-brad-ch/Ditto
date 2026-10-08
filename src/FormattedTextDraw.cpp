@@ -9,9 +9,9 @@
 /////////////////////////////////////////////////////////////////////////////
 // CallBack functions
 
-DWORD CALLBACK CFormattedTextDraw::EditStreamInCallback(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
+DWORD CALLBACK CFormattedTextDraw::EditStreamInCallback(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb)
 {
-	PCOOKIE pCookie = (PCOOKIE) dwCookie;
+	PCOOKIE pCookie = (PCOOKIE)dwCookie;
 
 	const std::size_t left = pCookie->text->size() - pCookie->offset;
 	*pcb = static_cast<LONG>((std::min)(left, static_cast<std::size_t>(cb)));
@@ -21,13 +21,13 @@ DWORD CALLBACK CFormattedTextDraw::EditStreamInCallback(DWORD_PTR dwCookie, LPBY
 	CopyMemory(pbBuff, pCookie->text->data() + pCookie->offset, *pcb);
 	pCookie->offset += *pcb;
 
-	return 0;	//	callback succeeded - no errors
+	return 0; //	callback succeeded - no errors
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // CFormattedTextDraw
 
-HRESULT CFormattedTextDraw::get_RTFText(BSTR *pVal)
+HRESULT CFormattedTextDraw::get_RTFText(BSTR* pVal)
 {
 	*pVal = SysAllocStringLen(m_RTFText, SysStringLen(m_RTFText));
 	return S_OK;
@@ -36,7 +36,7 @@ HRESULT CFormattedTextDraw::get_RTFText(BSTR *pVal)
 HRESULT CFormattedTextDraw::put_RTFText(BSTR newVal)
 {
 	HRESULT hr;
-	long    len;
+	long len;
 	LRESULT lResult = 0;
 	EDITSTREAM editStream;
 
@@ -58,34 +58,34 @@ HRESULT CFormattedTextDraw::put_RTFText(BSTR newVal)
 	m_editCookie.text = &rtfBytes;
 	m_editCookie.offset = 0;
 
-	editStream.dwCookie = (DWORD_PTR) &m_editCookie;
+	editStream.dwCookie = (DWORD_PTR)&m_editCookie;
 	editStream.dwError = 0;
 	editStream.pfnCallback = EditStreamInCallback;
 	hr = m_spTextServices->TxSendMessage(EM_STREAMIN, (WPARAM)(SF_RTF | SF_UNICODE), (LPARAM)&editStream, &lResult);
 
-	m_editCookie.text = NULL;   // rtfBytes ends here
+	m_editCookie.text = NULL; // rtfBytes ends here
 
 	return S_OK;
 }
 
-HRESULT CFormattedTextDraw::Draw(void *hdcDraw, RECT *prc)
+HRESULT CFormattedTextDraw::Draw(void* hdcDraw, RECT* prc)
 {
-	if (!m_spTextServices) 
+	if (!m_spTextServices)
 		return S_FALSE;
 
 	m_spTextServices->TxDraw(
-	    DVASPECT_CONTENT,  		// Draw Aspect
-		0,						// Lindex
-		NULL,					// Info for drawing optimization
-		NULL,					// target device information
-		(HDC) hdcDraw,				// Draw device HDC
-		NULL,			 	   	// Target device HDC
-		(RECTL *) prc,			// Bounding client rectangle
-		NULL,					// Clipping rectangle for metafiles
-		(RECT *) NULL,			// Update rectangle
-		NULL, 	   				// Call back function
-		NULL,					// Call back parameter
-		TXTVIEW_INACTIVE);		// What view of the object could be TXTVIEW_ACTIVE
+		DVASPECT_CONTENT,  // Draw Aspect
+		0,                 // Lindex
+		NULL,              // Info for drawing optimization
+		NULL,              // target device information
+		(HDC)hdcDraw,      // Draw device HDC
+		NULL,              // Target device HDC
+		(RECTL*)prc,       // Bounding client rectangle
+		NULL,              // Clipping rectangle for metafiles
+		(RECT*)NULL,       // Update rectangle
+		NULL,              // Call back function
+		NULL,              // Call back parameter
+		TXTVIEW_INACTIVE); // What view of the object could be TXTVIEW_ACTIVE
 	return S_OK;
 }
 
@@ -94,11 +94,11 @@ HRESULT CFormattedTextDraw::Create()
 	return CreateTextServicesObject();
 }
 
-HRESULT CFormattedTextDraw::get_NaturalWidth(long Height, long *pVal)
+HRESULT CFormattedTextDraw::get_NaturalWidth(long Height, long* pVal)
 {
 	long lWidth;
 	SIZEL szExtent;
-	HDC	hdcDraw;
+	HDC hdcDraw;
 
 	if (!m_spTextServices)
 		return S_FALSE;
@@ -107,25 +107,25 @@ HRESULT CFormattedTextDraw::get_NaturalWidth(long Height, long *pVal)
 	szExtent.cy = Height;
 	szExtent.cx = 10000;
 	lWidth = 10000;
-	m_spTextServices->TxGetNaturalSize(DVASPECT_CONTENT, 
-		hdcDraw, 
-		NULL,
-		NULL,
-		TXTNS_FITTOCONTENT,
-		&szExtent,
-		&lWidth,
-		&Height);
+	m_spTextServices->TxGetNaturalSize(DVASPECT_CONTENT,
+									   hdcDraw,
+									   NULL,
+									   NULL,
+									   TXTNS_FITTOCONTENT,
+									   &szExtent,
+									   &lWidth,
+									   &Height);
 
 	ReleaseDC(NULL, hdcDraw);
 	*pVal = lWidth;
 	return S_OK;
 }
 
-HRESULT CFormattedTextDraw::get_NaturalHeight(long Width, long *pVal)
+HRESULT CFormattedTextDraw::get_NaturalHeight(long Width, long* pVal)
 {
 	long lHeight;
 	SIZEL szExtent;
-	HDC	hdcDraw;
+	HDC hdcDraw;
 
 	if (!m_spTextServices)
 		return S_FALSE;
@@ -134,14 +134,14 @@ HRESULT CFormattedTextDraw::get_NaturalHeight(long Width, long *pVal)
 	szExtent.cx = Width;
 	szExtent.cy = 10000;
 	lHeight = 10000;
-	m_spTextServices->TxGetNaturalSize(DVASPECT_CONTENT, 
-		hdcDraw, 
-		NULL,
-		NULL,
-		TXTNS_FITTOCONTENT,
-		&szExtent,
-		&Width,
-		&lHeight);
+	m_spTextServices->TxGetNaturalSize(DVASPECT_CONTENT,
+									   hdcDraw,
+									   NULL,
+									   NULL,
+									   TXTNS_FITTOCONTENT,
+									   &szExtent,
+									   &Width,
+									   &lHeight);
 
 	ReleaseDC(NULL, hdcDraw);
 	*pVal = lHeight;
@@ -238,35 +238,35 @@ BOOL CFormattedTextDraw::TxClientToScreen(LPPOINT /*lppt*/)
 	return FALSE;
 }
 
-HRESULT	CFormattedTextDraw::TxActivate(LONG * /*plOldState*/)
+HRESULT CFormattedTextDraw::TxActivate(LONG* /*plOldState*/)
 {
 	return S_OK;
 }
 
-HRESULT	CFormattedTextDraw::TxDeactivate(LONG /*lNewState*/)
+HRESULT CFormattedTextDraw::TxDeactivate(LONG /*lNewState*/)
 {
 	return S_OK;
 }
 
-HRESULT	CFormattedTextDraw::TxGetClientRect(LPRECT prc)
+HRESULT CFormattedTextDraw::TxGetClientRect(LPRECT prc)
 {
 	*prc = m_rcClient;
 	return S_OK;
 }
 
-HRESULT	CFormattedTextDraw::TxGetViewInset(LPRECT prc)
+HRESULT CFormattedTextDraw::TxGetViewInset(LPRECT prc)
 {
 	*prc = m_rcViewInset;
 	return S_OK;
 }
 
-HRESULT CFormattedTextDraw::TxGetCharFormat(const CHARFORMATW **ppCF)
+HRESULT CFormattedTextDraw::TxGetCharFormat(const CHARFORMATW** ppCF)
 {
 	*ppCF = &m_CF;
 	return S_OK;
 }
 
-HRESULT	CFormattedTextDraw::TxGetParaFormat(const PARAFORMAT **ppPF)
+HRESULT CFormattedTextDraw::TxGetParaFormat(const PARAFORMAT** ppPF)
 {
 	*ppPF = &m_PF;
 	return S_OK;
@@ -277,59 +277,59 @@ COLORREF CFormattedTextDraw::TxGetSysColor(int nIndex)
 	return GetSysColor(nIndex);
 }
 
-HRESULT	CFormattedTextDraw::TxGetBackStyle(TXTBACKSTYLE *pstyle)
+HRESULT CFormattedTextDraw::TxGetBackStyle(TXTBACKSTYLE* pstyle)
 {
 	*pstyle = TXTBACK_TRANSPARENT;
 	return S_OK;
 }
 
-HRESULT	CFormattedTextDraw::TxGetMaxLength(DWORD *plength)
+HRESULT CFormattedTextDraw::TxGetMaxLength(DWORD* plength)
 {
 	*plength = m_dwMaxLength;
 	return S_OK;
 }
 
-HRESULT	CFormattedTextDraw::TxGetScrollBars(DWORD *pdwScrollBar)
+HRESULT CFormattedTextDraw::TxGetScrollBars(DWORD* pdwScrollBar)
 {
 	*pdwScrollBar = m_dwScrollbar;
 	return S_OK;
 }
 
-HRESULT	CFormattedTextDraw::TxGetPasswordChar(TCHAR * /*pch*/)
+HRESULT CFormattedTextDraw::TxGetPasswordChar(TCHAR* /*pch*/)
 {
 	return S_FALSE;
 }
 
-HRESULT	CFormattedTextDraw::TxGetAcceleratorPos(LONG *pcp)
+HRESULT CFormattedTextDraw::TxGetAcceleratorPos(LONG* pcp)
 {
 	*pcp = -1;
 	return S_OK;
 }
 
-HRESULT	CFormattedTextDraw::TxGetExtent(LPSIZEL /*lpExtent*/)
+HRESULT CFormattedTextDraw::TxGetExtent(LPSIZEL /*lpExtent*/)
 {
 	return E_NOTIMPL;
 }
 
-HRESULT CFormattedTextDraw::OnTxCharFormatChange(const CHARFORMATW * pcf)
+HRESULT CFormattedTextDraw::OnTxCharFormatChange(const CHARFORMATW* pcf)
 {
 	memcpy(&m_CF, pcf, pcf->cbSize);
 	return S_OK;
 }
 
-HRESULT	CFormattedTextDraw::OnTxParaFormatChange(const PARAFORMAT * ppf)
+HRESULT CFormattedTextDraw::OnTxParaFormatChange(const PARAFORMAT* ppf)
 {
 	memcpy(&m_PF, ppf, ppf->cbSize);
 	return S_OK;
 }
 
-HRESULT	CFormattedTextDraw::TxGetPropertyBits(DWORD /*dwMask*/, DWORD *pdwBits)
+HRESULT CFormattedTextDraw::TxGetPropertyBits(DWORD /*dwMask*/, DWORD* pdwBits)
 {
 	*pdwBits = m_dwPropertyBits;
 	return S_OK;
 }
 
-HRESULT	CFormattedTextDraw::TxNotify(DWORD /*iNotify*/, void * /*pv*/)
+HRESULT CFormattedTextDraw::TxNotify(DWORD /*iNotify*/, void* /*pv*/)
 {
 	return S_OK;
 }
@@ -343,7 +343,7 @@ void CFormattedTextDraw::TxImmReleaseContext(HIMC /*himc*/)
 {
 }
 
-HRESULT	CFormattedTextDraw::TxGetSelectionBarWidth(LONG *lSelBarWidth)
+HRESULT CFormattedTextDraw::TxGetSelectionBarWidth(LONG* lSelBarWidth)
 {
 	*lSelBarWidth = 100;
 	return S_OK;
@@ -363,7 +363,7 @@ HRESULT CFormattedTextDraw::CharFormatFromHFONT(CHARFORMAT2W* pCF, HFONT hFont)
 
 	// Get LOGFONT for default font
 	if (!hFont)
-		hFont = (HFONT) GetStockObject(SYSTEM_FONT);
+		hFont = (HFONT)GetStockObject(SYSTEM_FONT);
 
 	// Get LOGFONT for passed hfont
 	if (!GetObject(hFont, sizeof(LOGFONT), &lf))
@@ -385,16 +385,16 @@ HRESULT CFormattedTextDraw::CharFormatFromHFONT(CHARFORMAT2W* pCF, HFONT hFont)
 	pCF->dwEffects = CFM_EFFECTS | CFE_AUTOBACKCOLOR;
 	pCF->dwEffects &= ~(CFE_PROTECTED | CFE_LINK | CFE_AUTOCOLOR);
 
-	if(lf.lfWeight < FW_BOLD)
+	if (lf.lfWeight < FW_BOLD)
 		pCF->dwEffects &= ~CFE_BOLD;
 
-	if(!lf.lfItalic)
+	if (!lf.lfItalic)
 		pCF->dwEffects &= ~CFE_ITALIC;
 
-	if(!lf.lfUnderline)
+	if (!lf.lfUnderline)
 		pCF->dwEffects &= ~CFE_UNDERLINE;
 
-	if(!lf.lfStrikeOut)
+	if (!lf.lfStrikeOut)
 		pCF->dwEffects &= ~CFE_STRIKEOUT;
 
 	pCF->dwMask = CFM_ALL | CFM_BACKCOLOR | CFM_STYLE;
@@ -427,12 +427,12 @@ HRESULT CFormattedTextDraw::InitDefaultParaFormat()
 }
 
 //https://connect.microsoft.com/VisualStudio/feedback/details/551071/the-6-0a-sdk-is-missing-riched20-lib-for-x64
-HRESULT CFormattedTextDraw::CreateRichEdit(ITextHost *pTextHost, IUnknown **ppUnk)
+HRESULT CFormattedTextDraw::CreateRichEdit(ITextHost* pTextHost, IUnknown** ppUnk)
 {
 	HRESULT hr = E_FAIL;
 	PCreateTextServices TextServicesProc = NULL;
 	HMODULE hmod = LoadLibrary(_T("msftedit.dll"));
-	if (hmod) 
+	if (hmod)
 	{
 		TextServicesProc = (PCreateTextServices)GetProcAddress(hmod, "CreateTextServices");
 		if (TextServicesProc)
@@ -447,10 +447,10 @@ HRESULT CFormattedTextDraw::CreateRichEdit(ITextHost *pTextHost, IUnknown **ppUn
 HRESULT CFormattedTextDraw::CreateTextServicesObject()
 {
 	HRESULT hr = S_OK;
-	
-	IUnknown *spUnk;
+
+	IUnknown* spUnk;
 	hr = CreateRichEdit(static_cast<ITextHost*>(this), &spUnk);
-	if (hr == S_OK) 
+	if (hr == S_OK)
 	{
 		hr = spUnk->QueryInterface(IID_ITextServicesEx, (void**)&m_spTextServices);
 		hr = spUnk->QueryInterface(IID_ITextDocument, (void**)&m_spTextDocument);
@@ -459,4 +459,3 @@ HRESULT CFormattedTextDraw::CreateTextServicesObject()
 
 	return hr;
 }
-

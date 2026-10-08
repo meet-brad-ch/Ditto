@@ -28,13 +28,13 @@ int CDittoPopupWindow::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	}
 
 	CWndEx::SetCaptionOn(CGetSetOptions::CaptionOnTop, false, theApp.Services().Settings().m_Theme.GetCaptionSize(), theApp.Services().Settings().m_Theme.GetCaptionFontSize());
-		
+
 	m_font.CreateFont(-m_DittoWindow.m_dpi.Scale(12), 0, 0, 0, 400, 0, 0, 0, DEFAULT_CHARSET, 3, 2, 1, 34, _T("MS Sans Serif"));
 	m_textLabel.Create(_T("test"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this);
 	m_textLabel.SetFont(&m_font);
-	
 
-	m_progressWnd.Create(WS_CHILD|PBS_SMOOTH, CRect(0, 0, 0, 0), this, 2);
+
+	m_progressWnd.Create(WS_CHILD | PBS_SMOOTH, CRect(0, 0, 0, 0), this, 2);
 
 	m_progressWnd.SetRange(0, 100);
 
@@ -61,7 +61,7 @@ void CDittoPopupWindow::UpdateText(CString text)
 
 void CDittoPopupWindow::SetProgressBarPercent(int percent)
 {
-	if(::IsWindowVisible(m_progressWnd.m_hWnd) == FALSE)
+	if (::IsWindowVisible(m_progressWnd.m_hWnd) == FALSE)
 	{
 		m_progressWnd.ShowWindow(SW_SHOW);
 
@@ -86,26 +86,26 @@ void CDittoPopupWindow::HideProgressBar()
 void CDittoPopupWindow::OnSize(UINT nType, int cx, int cy)
 {
 	CWndEx::OnSize(nType, cx, cy);
-	DoSize(cx, cy);	
+	DoSize(cx, cy);
 }
 
 void CDittoPopupWindow::DoSize(int cx, int cy)
 {
-	if(m_textLabel.m_hWnd != NULL)
+	if (m_textLabel.m_hWnd != NULL)
 	{
 		int bottom = 0;
-		if(::IsWindowVisible(m_progressWnd.m_hWnd))
+		if (::IsWindowVisible(m_progressWnd.m_hWnd))
 		{
 			bottom = 50;
 		}
-		m_textLabel.MoveWindow(10, 10, cx-20, cy-bottom);
+		m_textLabel.MoveWindow(10, 10, cx - 20, cy - bottom);
 		this->Invalidate();
 	}
 
-	if(m_progressWnd.m_hWnd != NULL)
+	if (m_progressWnd.m_hWnd != NULL)
 	{
-		m_progressWnd.MoveWindow(10, cy-40, cx-20, 30);
-	}	
+		m_progressWnd.MoveWindow(10, cy - 40, cx - 20, 30);
+	}
 }
 
 HBRUSH CDittoPopupWindow::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
@@ -136,10 +136,10 @@ void CDittoPopupWindow::PumpMessages()
 
 void CDittoPopupWindow::OnLButtonUp(UINT /*nFlags*/, CPoint /*point*/)
 {
-	if(m_groupId > 0)
+	if (m_groupId > 0)
 	{
-		CWnd *pParent = this->GetParent();
-		if(pParent)
+		CWnd* pParent = this->GetParent();
+		if (pParent)
 		{
 			pParent->PostMessageW(CDittoMessage::ShowDittoGroup, m_groupId, 0);
 		}

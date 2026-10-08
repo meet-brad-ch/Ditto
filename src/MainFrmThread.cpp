@@ -14,15 +14,14 @@ CMainFrmThread::CMainFrmThread(CGetSetOptions& settings, CIdleTime& idleTime, CD
 	m_windows(windows)
 {
 	m_threadName = "CMainFrmThread";
-    for(int eventEnum = 0; eventEnum < ECMAINFRMTHREADEVENTS_COUNT; eventEnum++)
-    {
-        AddEvent(eventEnum);
-    }
+	for (int eventEnum = 0; eventEnum < ECMAINFRMTHREADEVENTS_COUNT; eventEnum++)
+	{
+		AddEvent(eventEnum);
+	}
 }
 
 CMainFrmThread::~CMainFrmThread(void)
 {
-
 }
 
 void CMainFrmThread::AddClipToSave(std::unique_ptr<CClip> clip)
@@ -34,23 +33,23 @@ void CMainFrmThread::AddClipToSave(std::unique_ptr<CClip> clip)
 	FireEvent(SAVE_CLIPS);
 }
 
-void CMainFrmThread::OnEvent(int eventId, void * /*param*/)
+void CMainFrmThread::OnEvent(int eventId, void* /*param*/)
 {
-    switch((eCMainFrmThreadEvents)eventId)
-    {
-        case DELETE_ENTRIES:
-            OnDeleteEntries();
-            break;
-        case REMOVE_TEMP_FILES:
-            OnRemoveTempFiles();
-            break;
-		case SAVE_CLIPS:
-			OnSaveClips();
-			break;
-		case READ_DB_FILE:
-			OnReadDbFile();
-			break;
-    }
+	switch ((eCMainFrmThreadEvents)eventId)
+	{
+	case DELETE_ENTRIES:
+		OnDeleteEntries();
+		break;
+	case REMOVE_TEMP_FILES:
+		OnRemoveTempFiles();
+		break;
+	case SAVE_CLIPS:
+		OnSaveClips();
+		break;
+	case READ_DB_FILE:
+		OnReadDbFile();
+		break;
+	}
 }
 
 //try and keep our db file in windows cache by randomly reading some data
@@ -82,7 +81,7 @@ void CMainFrmThread::OnReadDbFile()
 
 void CMainFrmThread::OnDeleteEntries()
 {
-    CClipRetentionPolicy::RemoveOldEntries(m_settings, m_idleTime, m_windows, true);
+	CClipRetentionPolicy::RemoveOldEntries(m_settings, m_idleTime, m_windows, true);
 }
 
 void CMainFrmThread::OnRemoveTempFiles()
@@ -103,8 +102,8 @@ void CMainFrmThread::OnSaveClips()
 	}
 
 	// the copy reason of the newest clip
-	CopyReasonEnum::CopyReason copyReason{CopyReasonEnum::COPY_TO_UNKOWN};
-	if(!localClips.IsEmpty())
+	CopyReasonEnum::CopyReason copyReason{ CopyReasonEnum::COPY_TO_UNKOWN };
+	if (!localClips.IsEmpty())
 	{
 		copyReason = localClips.Last().m_copyReason;
 	}
@@ -117,10 +116,10 @@ void CMainFrmThread::OnSaveClips()
 
 	// the newest clip that was saved (set when count > 0): upstream used the newest clip, also
 	// when its save failed
-	const CClip* const pLastSaved{localClips.LastSaved()};
-	if(pLastSaved != nullptr)
+	const CClip* const pLastSaved{ localClips.LastSaved() };
+	if (pLastSaved != nullptr)
 	{
-		const CClip& lastClip{*pLastSaved};
+		const CClip& lastClip{ *pLastSaved };
 		int Id = lastClip.m_id;
 
 		CLogger::Log(CStringUtil::Format(_T("SaveCopyclips After AddToDb, Id: %d Before OnCopyCopyCompleted"), Id));
@@ -148,7 +147,7 @@ void CMainFrmThread::OnSaveClips()
 				return;
 			}
 
-			auto message{std::make_unique<CString>()};
+			auto message{ std::make_unique<CString>() };
 			message->Format(_T("Saved new clip \"%s\"\r\ndirectly to the group \"%s\""), lastClip.m_Desc.Left(35).GetString(), groupName.GetString());
 
 			// posted to the handle: this thread must not touch the frame object, which can be gone

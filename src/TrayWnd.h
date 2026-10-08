@@ -18,5 +18,3 @@ protected:
 	DECLARE_MESSAGE_MAP()
 	LRESULT OnTaskBarCreated(WPARAM wParam, LPARAM lParam);
 };
-
-

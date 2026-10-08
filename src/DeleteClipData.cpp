@@ -23,30 +23,29 @@
 
 IMPLEMENT_DYNAMIC(CDeleteClipData, CDialog)
 
-CDeleteClipData::CDeleteClipData(CWnd* pParent /*=NULL*/)
-	: CDialog(CDeleteClipData::IDD, pParent)
-	, m_showTaskbar(theApp.Services().Windows(), theApp.Services().State())
-	, m_pDescriptionWindow(nullptr)
-	, m_clipTitle(_T(""))
-	, m_filterByClipTitle(FALSE)
-	, m_filterByCreatedDate(FALSE)
-	, m_filterByLastUsedDate(FALSE)
-	, m_filterByClipboardFormat(FALSE)
-	, m_createdDateStart(COleDateTime::GetCurrentTime())
-	, m_createdDateEnd(COleDateTime::GetCurrentTime())
-	, m_createdTimeStart(COleDateTime::GetCurrentTime())
-	, m_createdTimeEnd(COleDateTime::GetCurrentTime())
-	, m_usedTimeStart(COleDateTime::GetCurrentTime())
-	, m_usedTimeEnd(COleDateTime::GetCurrentTime())
-	, m_usedDateStart(COleDateTime::GetCurrentTime())
-	, m_usedDateEnd(COleDateTime::GetCurrentTime())
-	, m_databaseSize(_T(""))
-	, m_selectedSize(_T(""))
-	, m_selectedCount(_T(""))
+CDeleteClipData::CDeleteClipData(CWnd* pParent /*=NULL*/) :
+	CDialog(CDeleteClipData::IDD, pParent),
+	m_showTaskbar(theApp.Services().Windows(), theApp.Services().State()),
+	m_pDescriptionWindow(nullptr),
+	m_clipTitle(_T("")),
+	m_filterByClipTitle(FALSE),
+	m_filterByCreatedDate(FALSE),
+	m_filterByLastUsedDate(FALSE),
+	m_filterByClipboardFormat(FALSE),
+	m_createdDateStart(COleDateTime::GetCurrentTime()),
+	m_createdDateEnd(COleDateTime::GetCurrentTime()),
+	m_createdTimeStart(COleDateTime::GetCurrentTime()),
+	m_createdTimeEnd(COleDateTime::GetCurrentTime()),
+	m_usedTimeStart(COleDateTime::GetCurrentTime()),
+	m_usedTimeEnd(COleDateTime::GetCurrentTime()),
+	m_usedDateStart(COleDateTime::GetCurrentTime()),
+	m_usedDateEnd(COleDateTime::GetCurrentTime()),
+	m_databaseSize(_T("")),
+	m_selectedSize(_T("")),
+	m_selectedCount(_T(""))
 {
 	m_applyingDelete = false;
 	m_cancelDelete = false;
-
 }
 
 CDeleteClipData::~CDeleteClipData()
@@ -156,7 +155,7 @@ void CDeleteClipData::InitListCtrlCols()
 void CDeleteClipData::LoadItems()
 {
 	CWaitCursor wait;
-	m_data.clear();	
+	m_data.clear();
 	m_filteredOut.clear();
 
 	if (m_clipboardFomatCombo.GetCount() == 0)
@@ -172,9 +171,9 @@ void CDeleteClipData::LoadItems()
 	}
 
 	CppSQLite3Query q = theApp.Services().Database().execQueryEx(_T("SELECT Main.lID, Main.mText, Main.lDate, Main.lastPasteDate, Main.QuickPasteText, Data.lID AS DataID, Data.strClipBoardFormat, length(Data.ooData) AS DataLength ")
-													_T("FROM Data ")
-													_T("INNER JOIN Main on Main.lID = Data.lParentID ")
-													_T("ORDER BY length(ooData) DESC"));
+																 _T("FROM Data ")
+																 _T("INNER JOIN Main on Main.lID = Data.lParentID ")
+																 _T("ORDER BY length(ooData) DESC"));
 
 	int row = 0;
 	while (q.eof() == false)
@@ -193,7 +192,7 @@ void CDeleteClipData::LoadItems()
 
 		row++;
 
-		q.nextRow();		
+		q.nextRow();
 	}
 
 	m_clipList.SetItemCountEx(row, 0);
@@ -230,8 +229,8 @@ void CDeleteClipData::CloseDescriptionWindow()
 bool CDeleteClipData::IsDescriptionWindowValid() const
 {
 	return m_pDescriptionWindow != nullptr &&
-		::IsWindow(m_descriptionWindowHwnd) &&
-		CWnd::FromHandlePermanent(m_descriptionWindowHwnd) == m_pDescriptionWindow;
+		   ::IsWindow(m_descriptionWindowHwnd) &&
+		   CWnd::FromHandlePermanent(m_descriptionWindowHwnd) == m_pDescriptionWindow;
 }
 
 void CDeleteClipData::OnSize(UINT nType, int cx, int cy)
@@ -276,7 +275,7 @@ void CDeleteClipData::FilterItems()
 	{
 		CDeleteData data = m_data[i];
 
-		if(MatchesFilter(&data) == false)
+		if (MatchesFilter(&data) == false)
 		{
 			m_filteredOut.push_back(data);
 			rowsToDelete.push_back(i);
@@ -315,7 +314,7 @@ void CDeleteClipData::FilterItems()
 	{
 		m_clipList.SetItemState(toSelect, LVIS_SELECTED, LVIS_SELECTED);
 	}
-	
+
 	m_clipList.SetItemCountEx((int)m_data.size(), 0);
 }
 
@@ -334,7 +333,7 @@ void CDeleteClipData::FindFilteredOutMatches(std::vector<CDeleteData>& addBackIn
 	}
 }
 
-bool CDeleteClipData::MatchesFilter(CDeleteData *pdata)
+bool CDeleteClipData::MatchesFilter(CDeleteData* pdata)
 {
 	if (IsRejectedByTitle(pdata))
 	{
@@ -362,14 +361,14 @@ bool CDeleteClipData::MatchesFilter(CDeleteData *pdata)
 
 bool CDeleteClipData::IsRejectedByTitle(const CDeleteData* pdata) const
 {
-	if(m_filterByClipTitle &&
+	if (m_filterByClipTitle &&
 		m_clipTitle != _T("") &&
 		pdata->m_Desc != _T(""))
 	{
 		// compare lower-case copies: the item's description and the typed title keep their case
 		CString description{ pdata->m_Desc };
 		CString title{ m_clipTitle };
-		if(description.MakeLower().Find(title.MakeLower()) == -1)
+		if (description.MakeLower().Find(title.MakeLower()) == -1)
 		{
 			return true;
 		}
@@ -401,46 +400,46 @@ bool CDeleteClipData::MatchesSelectedFormat(const CDeleteData* pdata)
 	return pdata->m_clipboardFormat == selectedFormat;
 }
 
-void CDeleteClipData::OnLvnKeydownList2(NMHDR *pNMHDR, LRESULT *pResult)
+void CDeleteClipData::OnLvnKeydownList2(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	LPNMLVKEYDOWN pLVKeyDow = reinterpret_cast<LPNMLVKEYDOWN>(pNMHDR);
 	// TODO: Add your control notification handler code here
 
-	switch(pLVKeyDow->wVKey)
+	switch (pLVKeyDow->wVKey)
 	{
-		case VK_DELETE:
-			this->ApplyDelete();
-			break;
-		case VK_RETURN:
-		{
-			if (GetKeyState(VK_MENU) & 0x8000) // Check if Alt is also pressed
-			{
-				ShowClipPropertiesWindow();
-				*pResult = 1;
-			}
-		}
+	case VK_DELETE:
+		this->ApplyDelete();
 		break;
-		case VK_F3:
+	case VK_RETURN:
+	{
+		if (GetKeyState(VK_MENU) & 0x8000) // Check if Alt is also pressed
 		{
-			CreateAndShowDescriptionWindow();
+			ShowClipPropertiesWindow();
 			*pResult = 1;
 		}
+	}
+	break;
+	case VK_F3:
+	{
+		CreateAndShowDescriptionWindow();
+		*pResult = 1;
+	}
+	break;
+	case 'N':
+	{
+		SelectNextRowAndDescribe();
+		*pResult = 1;
+	}
+	break;
+	case 'P':
+	{
+		SelectPreviousRowAndDescribe();
+		*pResult = 1;
+	}
+	break;
+	default:
+		*pResult = 0;
 		break;
-		case 'N':
-		{
-			SelectNextRowAndDescribe();
-			*pResult = 1;
-		}
-		break;
-		case 'P':
-		{
-			SelectPreviousRowAndDescribe();
-			*pResult = 1;
-		}
-		break;
-		default:
-			*pResult = 0;
-			break;
 	}
 }
 
@@ -464,7 +463,7 @@ void CDeleteClipData::SelectPreviousRowAndDescribe()
 	}
 }
 
-void CDeleteClipData::OnLvnItemchangedList2(NMHDR * /*pNMHDR*/, LRESULT *pResult)
+void CDeleteClipData::OnLvnItemchangedList2(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
 	POSITION pos = m_clipList.GetFirstSelectedItemPosition();
 	__int64 selectedDataSize = 0;
@@ -479,7 +478,7 @@ void CDeleteClipData::OnLvnItemchangedList2(NMHDR * /*pNMHDR*/, LRESULT *pResult
 		{
 			INT_PTR row = m_clipList.GetNextSelectedItem(pos);
 
-			if(row >= 0 && row < (INT_PTR)m_data.size())
+			if (row >= 0 && row < (INT_PTR)m_data.size())
 			{
 				selectedDataSize += m_data[row].m_dataSize;
 				selectedCount++;
@@ -521,11 +520,11 @@ void CDeleteClipData::OnLvnItemchangedList2(NMHDR * /*pNMHDR*/, LRESULT *pResult
 }
 
 
-void CDeleteClipData::OnHdnGetdispinfoList2(NMHDR *pNMHDR, LRESULT *pResult)
+void CDeleteClipData::OnHdnGetdispinfoList2(NMHDR* pNMHDR, LRESULT* pResult)
 {
-	LPNMHDDISPINFO pDispInfo = reinterpret_cast<LPNMHDDISPINFO>(pNMHDR);	
-	
-	if (pDispInfo->mask &LVIF_TEXT)
+	LPNMHDDISPINFO pDispInfo = reinterpret_cast<LPNMHDDISPINFO>(pNMHDR);
+
+	if (pDispInfo->mask & LVIF_TEXT)
 	{
 		switch (pDispInfo->iItem)
 		{
@@ -538,9 +537,9 @@ void CDeleteClipData::OnHdnGetdispinfoList2(NMHDR *pNMHDR, LRESULT *pResult)
 }
 
 
-void CDeleteClipData::OnLvnGetdispinfoList2(NMHDR *pNMHDR, LRESULT *pResult)
+void CDeleteClipData::OnLvnGetdispinfoList2(NMHDR* pNMHDR, LRESULT* pResult)
 {
-	NMLVDISPINFO *pDispInfo = reinterpret_cast<NMLVDISPINFO*>(pNMHDR);
+	NMLVDISPINFO* pDispInfo = reinterpret_cast<NMLVDISPINFO*>(pNMHDR);
 	if (pDispInfo->item.mask & LVIF_TEXT)
 	{
 		if (pDispInfo->item.iItem >= 0 && static_cast<size_t>(pDispInfo->item.iItem) < m_data.size())
@@ -555,47 +554,47 @@ void CDeleteClipData::CopyColumnText(LVITEM& item)
 {
 	switch (item.iSubItem)
 	{
-		case 0:
-		{
-			CopyDisplayText(item, CStringUtil::Format(_T("%d"), m_data[item.iItem].m_lID));
-		}
-		break;
-		case 1:
-		{
-			  CopyDisplayText(item, m_data[item.iItem].m_Desc);
-		}
-		break;
-		case 2:
-		{
-			CopyDisplayText(item, m_data[item.iItem].m_quickPasteText);
-		}
-		break;
-		case 3:
-		{
-			  COleDateTime dtTime(m_data[item.iItem].m_createdDateTime.GetTime());
-			  CopyDisplayText(item, dtTime.Format());
-		}
-		break;
-		case 4:
-		{
-			  COleDateTime dtTime(m_data[item.iItem].m_lastUsedDateTime.GetTime());
-			  CopyDisplayText(item, dtTime.Format());
-		}
-		break;
-		case 5:
-		{
-			  CopyDisplayText(item, m_data[item.iItem].m_clipboardFormat);
-		}
-		break;
-		case 6:
-		{
-			  const int MAX_FILE_SIZE_BUFFER = 255;
-			  TCHAR szFileSize[MAX_FILE_SIZE_BUFFER];
-			  StrFormatByteSize(m_data[item.iItem].m_dataSize, szFileSize, MAX_FILE_SIZE_BUFFER);
+	case 0:
+	{
+		CopyDisplayText(item, CStringUtil::Format(_T("%d"), m_data[item.iItem].m_lID));
+	}
+	break;
+	case 1:
+	{
+		CopyDisplayText(item, m_data[item.iItem].m_Desc);
+	}
+	break;
+	case 2:
+	{
+		CopyDisplayText(item, m_data[item.iItem].m_quickPasteText);
+	}
+	break;
+	case 3:
+	{
+		COleDateTime dtTime(m_data[item.iItem].m_createdDateTime.GetTime());
+		CopyDisplayText(item, dtTime.Format());
+	}
+	break;
+	case 4:
+	{
+		COleDateTime dtTime(m_data[item.iItem].m_lastUsedDateTime.GetTime());
+		CopyDisplayText(item, dtTime.Format());
+	}
+	break;
+	case 5:
+	{
+		CopyDisplayText(item, m_data[item.iItem].m_clipboardFormat);
+	}
+	break;
+	case 6:
+	{
+		const int MAX_FILE_SIZE_BUFFER = 255;
+		TCHAR szFileSize[MAX_FILE_SIZE_BUFFER];
+		StrFormatByteSize(m_data[item.iItem].m_dataSize, szFileSize, MAX_FILE_SIZE_BUFFER);
 
-			  CopyDisplayText(item, szFileSize);
-		}
-		break;
+		CopyDisplayText(item, szFileSize);
+	}
+	break;
 	}
 }
 
@@ -608,7 +607,7 @@ void CDeleteClipData::CopyDisplayText(LVITEM& item, LPCTSTR text)
 void CDeleteClipData::OnBnClickedCheckClipTitle()
 {
 	UpdateData();
-	::EnableWindow(::GetDlgItem(m_hWnd, IDC_EDIT_CLIP_TITLE), m_filterByClipTitle);	
+	::EnableWindow(::GetDlgItem(m_hWnd, IDC_EDIT_CLIP_TITLE), m_filterByClipTitle);
 	::SetFocus(::GetDlgItem(m_hWnd, IDC_EDIT_CLIP_TITLE));
 }
 
@@ -655,10 +654,10 @@ void CDeleteClipData::ApplyDelete()
 
 			progress.StepIt();
 			progress.SetText(_T("Refreshing database size"));
-			SetDbSize();			
-			
+			SetDbSize();
+
 			progress.StepIt();
-			progress.SetText(_T("Applying filter"));			
+			progress.SetText(_T("Applying filter"));
 			FilterItems();
 
 			m_clipList.SetItemCountEx((int)m_data.size(), 0);
@@ -684,7 +683,7 @@ void CDeleteClipData::ApplyDelete()
 
 void CDeleteClipData::DeleteRows(const std::vector<int>& rowsToDelete, CProgressWnd& progress)
 {
-	INT_PTR count{static_cast<INT_PTR>(rowsToDelete.size())};
+	INT_PTR count{ static_cast<INT_PTR>(rowsToDelete.size()) };
 	for (INT_PTR i = count - 1; i >= 0; i--)
 	{
 		progress.PeekAndPump();
@@ -694,9 +693,9 @@ void CDeleteClipData::DeleteRows(const std::vector<int>& rowsToDelete, CProgress
 		}
 		progress.StepIt();
 
-		int row{rowsToDelete[i]};
+		int row{ rowsToDelete[i] };
 
-		CDeleteData data{m_data[row]};
+		CDeleteData data{ m_data[row] };
 		try
 		{
 			// one transaction per item: upstream ran the two deletes without one, so a failed second
@@ -706,14 +705,15 @@ void CDeleteClipData::DeleteRows(const std::vector<int>& rowsToDelete, CProgress
 
 			//If there are no more children for this clip then delete the parent
 			theApp.Services().Database().execDMLEx(_T("DELETE FROM Main where lID IN ")
-				_T("(")
-				_T("SELECT Main.lID ")
-				_T("FROM Main ")
-				_T("LEFT OUTER JOIN Data on Data.lParentID = Main.lID ")
-				_T("WHERE bIsGroup = 0 AND Main.lID = %d ")
-				_T("Group by Main.lID ")
-				_T("having Count(Data.lID) = 0 ")
-				_T(")"), data.m_lID);
+												   _T("(")
+												   _T("SELECT Main.lID ")
+												   _T("FROM Main ")
+												   _T("LEFT OUTER JOIN Data on Data.lParentID = Main.lID ")
+												   _T("WHERE bIsGroup = 0 AND Main.lID = %d ")
+												   _T("Group by Main.lID ")
+												   _T("having Count(Data.lID) = 0 ")
+												   _T(")"),
+												   data.m_lID);
 			transaction.Commit();
 
 			m_data.erase(m_data.begin() + row);
@@ -740,7 +740,7 @@ void CDeleteClipData::OnBnClickedClose()
 
 void CDeleteClipData::OnTimer(UINT_PTR nIDEvent)
 {
-	switch(nIDEvent)
+	switch (nIDEvent)
 	{
 	case 1:
 		LoadItems();
@@ -759,7 +759,7 @@ void CDeleteClipData::OnBnClickedCheckCreateDate()
 	::EnableWindow(::GetDlgItem(m_hWnd, IDC_TIME_CREATE_START), m_filterByCreatedDate);
 	::EnableWindow(::GetDlgItem(m_hWnd, IDC_DATE_CREATE_END), m_filterByCreatedDate);
 	::EnableWindow(::GetDlgItem(m_hWnd, IDC_TIME_CREATE_END), m_filterByCreatedDate);
-	::SetFocus(::GetDlgItem(m_hWnd, IDC_DATE_CREATE_START));	
+	::SetFocus(::GetDlgItem(m_hWnd, IDC_DATE_CREATE_START));
 }
 
 
@@ -827,7 +827,6 @@ bool CDeleteClipData::SortByDataSizeDesc(const CDeleteData& a1, const CDeleteDat
 }
 
 
-
 bool CDeleteClipData::SortByCreatedDateAsc(const CDeleteData& a1, const CDeleteData& a2)
 {
 	return a1.m_createdDateTime < a2.m_createdDateTime;
@@ -859,9 +858,9 @@ const std::array<CDeleteClipData::ColumnSort, 7> CDeleteClipData::s_columnSorts{
 	{ SortByDataSizeDesc, SortByDataSizeAsc },
 } };
 
-void CDeleteClipData::OnLvnColumnclickList2(NMHDR *pNMHDR, LRESULT *pResult)
+void CDeleteClipData::OnLvnColumnclickList2(NMHDR* pNMHDR, LRESULT* pResult)
 {
-	HD_NOTIFY *phdn = (HD_NOTIFY *)pNMHDR;
+	HD_NOTIFY* phdn = (HD_NOTIFY*)pNMHDR;
 
 	if (phdn->iItem >= 0 && static_cast<size_t>(phdn->iItem) < s_columnSorts.size())
 	{
@@ -884,7 +883,7 @@ BOOL CDeleteClipData::PreTranslateMessage(MSG* pMsg)
 		if (pMsg->wParam == VK_RETURN)
 		{
 			FilterItems();
-			return TRUE;                // Do not process further
+			return TRUE; // Do not process further
 		}
 		else if (pMsg->wParam == VK_ESCAPE)
 		{
@@ -939,7 +938,7 @@ void CDeleteClipData::CreateAndShowDescriptionWindow()
 	{
 		// a self-deleting window: CWnd::CreateEx calls PostNcDestroy on failure too, so the
 		// window owns the object from the Create call on
-		CToolTipEx *pWindow{ std::make_unique<CToolTipEx>().release() }; // ownership: the window (PostNcDestroy deletes it, also when Create fails)
+		CToolTipEx* pWindow{ std::make_unique<CToolTipEx>().release() }; // ownership: the window (PostNcDestroy deletes it, also when Create fails)
 		if (pWindow->Create(this) == FALSE)
 		{
 			AfxThrowResourceException();
@@ -955,7 +954,7 @@ void CDeleteClipData::CreateAndShowDescriptionWindow()
 		INT_PTR row = m_clipList.GetNextSelectedItem(pos);
 		if (row >= 0 && row < (INT_PTR)m_data.size())
 		{
-			SetDescriptionWindowText(row);			
+			SetDescriptionWindowText(row);
 
 			CRect rc;
 			this->GetWindowRect(rc);
@@ -1010,7 +1009,7 @@ CString CDeleteClipData::DescribeClip(CClip& selectedClip)
 	COleDateTime modified(selectedClip.m_lastPasteDate.GetTime());
 	clipData += _T(" | Last Used: ") + modified.Format();
 
-	if(selectedClip.m_dontAutoDelete > 0)
+	if (selectedClip.m_dontAutoDelete > 0)
 	{
 		clipData += _T(" | Never Auto Delete");
 	}
@@ -1143,25 +1142,25 @@ void CDeleteClipData::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 
 		switch (nID)
 		{
-			case ID__VIEWFULLDESCRIPTION:
+		case ID__VIEWFULLDESCRIPTION:
+		{
+			CreateAndShowDescriptionWindow();
+		}
+		break;
+		case ID__SAVETOFILE:
+		{
+			int row = m_clipList.GetNextItem(-1, LVNI_SELECTED);
+			if (row >= 0 && row < (INT_PTR)m_data.size())
 			{
-				CreateAndShowDescriptionWindow();
+				SaveClipDataItemToFile(m_data[row]);
 			}
-			break;
-			case ID__SAVETOFILE:
-			{
-				int row = m_clipList.GetNextItem(-1, LVNI_SELECTED);
-				if (row >= 0 && row < (INT_PTR)m_data.size())
-				{
-					SaveClipDataItemToFile(m_data[row]);
-				}
-			}
-			break;
-			case ID__PROPERTIES:
-			{
-				ShowClipPropertiesWindow();
-			}
-			break;
+		}
+		break;
+		case ID__PROPERTIES:
+		{
+			ShowClipPropertiesWindow();
+		}
+		break;
 		}
 	}
 }

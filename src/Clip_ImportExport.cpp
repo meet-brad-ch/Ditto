@@ -25,7 +25,6 @@ CClip_ImportExport::CClip_ImportExport(CClipContext& context) :
 	CClip(context),
 	m_importCount(0)
 {
-
 }
 
 CClip_ImportExport::~CClip_ImportExport(void)
@@ -235,7 +234,8 @@ bool CClip_ImportExport::ImportFromSqliteV1(CppSQLite3DB& db, CppSQLite3Query& q
 	csSQL.Format(
 		_T("SELECT Data.* FROM Data ")
 		_T("INNER JOIN Main ON Main.lID = Data.lParentID ")
-		_T("WHERE Main.lID = %d ORDER BY Data.lID desc"), lID);
+		_T("WHERE Main.lID = %d ORDER BY Data.lID desc"),
+		lID);
 
 	CppSQLite3Query qData = db.execQuery(csSQL);
 	while (qData.eof() == false)
@@ -292,7 +292,8 @@ bool CClip_ImportExport::Append_CF_TEXT_AND_CF_UNICODETEXT(CStringA& csCF_TEXT, 
 			if (csCF_UNICODETEXT.IsEmpty() == FALSE)
 				csCF_UNICODETEXT += _T("\r\n");
 
-			csCF_UNICODETEXT += pCF->GetAsCString();;
+			csCF_UNICODETEXT += pCF->GetAsCString();
+			;
 			bRet = true;
 		}
 		break;

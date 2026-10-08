@@ -27,7 +27,7 @@ public:
 	 * All of them must outlive this object.
 	 */
 	CClipContext(CGetSetOptions& settings, CLastAddedClip& lastAdded, CDittoDb& database,
-		const CRegisteredClipboardFormats& formats, CAppWindows& windows) :
+				 const CRegisteredClipboardFormats& formats, CAppWindows& windows) :
 		m_settings(settings),
 		m_lastAdded(lastAdded),
 		m_database(database),

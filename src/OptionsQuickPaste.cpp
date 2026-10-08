@@ -12,14 +12,15 @@
 
 IMPLEMENT_DYNCREATE(COptionsQuickPaste, CPropertyPage)
 
-COptionsQuickPaste::COptionsQuickPaste() : CPropertyPage(COptionsQuickPaste::IDD)
+COptionsQuickPaste::COptionsQuickPaste() :
+	CPropertyPage(COptionsQuickPaste::IDD)
 {
 	m_csTitle = theApp.Services().Language().GetString("QuickPasteTitle", "Quick Paste");
 	m_psp.pszTitle = m_csTitle;
-	m_psp.dwFlags |= PSP_USETITLE; 
+	m_psp.dwFlags |= PSP_USETITLE;
 
 	//{{AFX_DATA_INIT(COptionsQuickPaste)
-		// NOTE: the ClassWizard will add member initialization here
+	// NOTE: the ClassWizard will add member initialization here
 	//}}AFX_DATA_INIT
 
 	memset(&m_LogFont, 0, sizeof(LOGFONT));
@@ -73,12 +74,12 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // COptionsQuickPaste message handlers
 
-BOOL COptionsQuickPaste::OnInitDialog() 
+BOOL COptionsQuickPaste::OnInitDialog()
 {
 	CPropertyPage::OnInitDialog();
 
-	m_pParent = (COptionsSheet *)GetParent();
-	
+	m_pParent = (COptionsSheet*)GetParent();
+
 	m_btEnableTransparency.SetCheck(Settings().GetEnableTransparency());
 	m_eTransparencyPercent.SetNumber(Settings().GetTransparencyPercent());
 	m_eLinesPerRow.SetNumber(Settings().GetLinesPerRow());
@@ -90,11 +91,11 @@ BOOL COptionsQuickPaste::OnInitDialog()
 	m_ShowAllInMainList.SetCheck(Settings().m_bShowAllClipsInMainList);
 	m_FindAsYouType.SetCheck(Settings().m_bFindAsYouType);
 
-	if(Settings().GetQuickPastePosition() == CGetSetOptions::PosAtCaret)
+	if (Settings().GetQuickPastePosition() == CGetSetOptions::PosAtCaret)
 		CheckDlgButton(IDC_AT_CARET, BST_CHECKED);
-	else if(Settings().GetQuickPastePosition() == CGetSetOptions::PosAtCursor)
+	else if (Settings().GetQuickPastePosition() == CGetSetOptions::PosAtCursor)
 		CheckDlgButton(IDC_AT_CURSOR, BST_CHECKED);
-	else if(Settings().GetQuickPastePosition() == CGetSetOptions::PosAtPrevious)
+	else if (Settings().GetQuickPastePosition() == CGetSetOptions::PosAtPrevious)
 		CheckDlgButton(IDC_AT_PREVIOUS, BST_CHECKED);
 
 	m_btDescShowLeadingWhiteSpace.SetCheck(Settings().m_bDescShowLeadingWhiteSpace);
@@ -104,14 +105,14 @@ BOOL COptionsQuickPaste::OnInitDialog()
 	m_elevatedPrivileges.SetCheck(Settings().GetPasteAsAdmin());
 	m_showInTaskBar.SetCheck(Settings().GetShowInTaskBar());
 
-	if(Settings().GetFont(m_LogFont))
-	{		
+	if (Settings().GetFont(m_LogFont))
+	{
 		m_Font.CreateFontIndirect(&m_LogFont);
 		m_btFont.SetFont(&m_Font);
 	}
 	else
 	{
-		CFont *ft =	m_btFont.GetFont();
+		CFont* ft = m_btFont.GetFont();
 		ft->GetLogFont(&m_LogFont);
 	}
 
@@ -127,11 +128,11 @@ BOOL COptionsQuickPaste::OnInitDialog()
 	FillThemes();
 
 	theApp.Services().Language().UpdateOptionQuickPaste(this);
-		
+
 	return FALSE;
 }
 
-BOOL COptionsQuickPaste::OnApply() 
+BOOL COptionsQuickPaste::OnApply()
 {
 	Settings().SetEnableTransparency(m_btEnableTransparency.GetCheck());
 	Settings().SetTransparencyPercent(m_eTransparencyPercent.GetNumber());
@@ -152,12 +153,12 @@ BOOL COptionsQuickPaste::OnApply()
 
 	BOOL prevValue = Settings().GetShowInTaskBar();
 	Settings().SetShowInTaskBar(m_showInTaskBar.GetCheck());
-	if(Settings().GetShowInTaskBar() != prevValue)
+	if (Settings().GetShowInTaskBar() != prevValue)
 	{
 		theApp.Services().Windows().RefreshShowInTaskBar();
 	}
-	
-	if(m_LogFont.lfWeight != 0)
+
+	if (m_LogFont.lfWeight != 0)
 	{
 		Settings().SetFont(m_LogFont);
 	}
@@ -178,11 +179,11 @@ BOOL COptionsQuickPaste::OnApply()
 
 void COptionsQuickPaste::ApplyQuickPastePosition()
 {
-	if(IsDlgButtonChecked(IDC_AT_CARET))
+	if (IsDlgButtonChecked(IDC_AT_CARET))
 		Settings().SetQuickPastePosition(CGetSetOptions::PosAtCaret);
-	else if(IsDlgButtonChecked(IDC_AT_CURSOR))
+	else if (IsDlgButtonChecked(IDC_AT_CURSOR))
 		Settings().SetQuickPastePosition(CGetSetOptions::PosAtCursor);
-	else if(IsDlgButtonChecked(IDC_AT_PREVIOUS))
+	else if (IsDlgButtonChecked(IDC_AT_PREVIOUS))
 		Settings().SetQuickPastePosition(CGetSetOptions::PosAtPrevious);
 }
 
@@ -191,7 +192,7 @@ void COptionsQuickPaste::ApplyTheme()
 	CString currentTheme = Settings().GetTheme();
 
 	CString csTheme;
-	if(m_cbTheme.GetCurSel() >= 0)
+	if (m_cbTheme.GetCurSel() >= 0)
 	{
 		m_cbTheme.GetLBText(m_cbTheme.GetCurSel(), csTheme);
 		if (csTheme == s_defaultTheme)
@@ -213,14 +214,14 @@ void COptionsQuickPaste::ApplyTheme()
 	}
 }
 
-void COptionsQuickPaste::OnButtonFont() 
+void COptionsQuickPaste::OnButtonFont()
 {
 	CFontDialog dlg(&m_LogFont, (CF_TTONLY | CF_SCREENFONTS), 0, this);
-	if(dlg.DoModal() == IDOK)
-	{	
+	if (dlg.DoModal() == IDOK)
+	{
 		m_Font.DeleteObject();
 
-		memcpy(&m_LogFont, dlg.m_cf.lpLogFont, sizeof(LOGFONT));		
+		memcpy(&m_LogFont, dlg.m_cf.lpLogFont, sizeof(LOGFONT));
 
 		m_Font.CreateFontIndirect(&m_LogFont);
 
@@ -232,9 +233,9 @@ void COptionsQuickPaste::OnButtonFont()
 	}
 }
 
-void COptionsQuickPaste::OnButtonDefaultFault() 
+void COptionsQuickPaste::OnButtonDefaultFault()
 {
-	CFont *ft =	m_btDefaultButton.GetFont();
+	CFont* ft = m_btDefaultButton.GetFont();
 	ft->GetLogFont(&m_LogFont);
 
 	memset(&m_LogFont, 0, sizeof(m_LogFont));
@@ -252,7 +253,7 @@ void COptionsQuickPaste::OnButtonDefaultFault()
 	CString cs;
 	cs.Format(_T("Font - %s"), m_LogFont.lfFaceName);
 	m_btFont.SetWindowText(cs);
-}	
+}
 
 void COptionsQuickPaste::FillThemes()
 {
@@ -265,7 +266,7 @@ void COptionsQuickPaste::FillThemes()
 	BOOL bCont = find.FindFile(csFile);
 	bool bSetCurSel = false;
 
-	while(bCont)
+	while (bCont)
 	{
 		bCont = find.FindNextFile();
 
@@ -286,7 +287,7 @@ void COptionsQuickPaste::FillThemes()
 	}
 
 	int nIndex = m_cbTheme.AddString(s_defaultTheme);
-	if(bSetCurSel == false)
+	if (bSetCurSel == false)
 	{
 		m_cbTheme.SetCurSel(nIndex);
 	}
@@ -299,20 +300,21 @@ void COptionsQuickPaste::OnBnClickedButtonTheme()
 	CString csTheme;
 	m_cbTheme.GetLBText(m_cbTheme.GetCurSel(), csTheme);
 
-	if(csTheme == s_defaultTheme)
+	if (csTheme == s_defaultTheme)
 		return;
-	
-	if(theme.Load(Settings(), csTheme, true, false))
+
+	if (theme.Load(Settings(), csTheme, true, false))
 	{
 		CString csMessage;
 
 		csMessage.Format(_T("Theme -  %s\n")
-			_T("Version -   %d\n")
-			_T("Author -   %s\n")
-			_T("Notes -   %s"), csTheme.GetString(),
-			theme.FileVersion(),
-			theme.Author().GetString(),
-			theme.Notes().GetString());
+						 _T("Version -   %d\n")
+						 _T("Author -   %s\n")
+						 _T("Notes -   %s"),
+						 csTheme.GetString(),
+						 theme.FileVersion(),
+						 theme.Author().GetString(),
+						 theme.Notes().GetString());
 
 		MessageBox(csMessage, _T("Ditto"), MB_OK);
 	}
@@ -328,9 +330,9 @@ void COptionsQuickPaste::OnBnClickedButtonTheme()
 
 void COptionsQuickPaste::OnBnClickedButtonDiffBrowse()
 {
-	OPENFILENAME	FileName;
-	TCHAR			szFileName[400];
-	TCHAR			szDir[400];
+	OPENFILENAME FileName;
+	TCHAR szFileName[400];
+	TCHAR szDir[400];
 
 	memset(&FileName, 0, sizeof(FileName));
 	memset(szFileName, 0, sizeof(szFileName));
@@ -345,7 +347,7 @@ void COptionsQuickPaste::OnBnClickedButtonDiffBrowse()
 	FileName.lpstrDefExt = _T("");
 	FileName.hwndOwner = m_hWnd;
 
-	if(GetOpenFileName(&FileName) == 0)
+	if (GetOpenFileName(&FileName) == 0)
 		return;
 
 	CString csPath(CFileDialogPath::From(FileName));

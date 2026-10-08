@@ -28,7 +28,7 @@ namespace DittoCore
 		{
 			if (text[i] == L'\r' && i + 1 < text.size() && text[i + 1] == L'\n')
 			{
-				i++;   // CRLF is one break
+				i++; // CRLF is one break
 			}
 			line += (text[i] == L'\r' || text[i] == L'\n') ? L' ' : text[i];
 		}
@@ -79,7 +79,7 @@ namespace DittoCore
 				posix += L'/';
 				posix += static_cast<wchar_t>(std::towlower(trimmed[i]));
 				posix += L'/';
-				i += 2;   // the colon and the backslash
+				i += 2; // the colon and the backslash
 			}
 			else
 			{

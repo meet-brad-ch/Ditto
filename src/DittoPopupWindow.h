@@ -12,7 +12,7 @@ public:
 	void HideProgressBar();
 
 	void SetCopyToGroupId(int groupId) { m_groupId = groupId; }
-	
+
 protected:
 	DECLARE_MESSAGE_MAP()
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
@@ -30,4 +30,3 @@ protected:
 
 	void DoSize(int cx, int cy);
 };
-

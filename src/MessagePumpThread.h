@@ -9,7 +9,7 @@ public:
 	static unsigned int __stdcall MessagePumpThread(void* thisptr);
 
 protected:
-	virtual void TakeMsg(UINT /*msg*/, WPARAM /*wParam*/, LPARAM /*lParam*/)	{ return; }
+	virtual void TakeMsg(UINT /*msg*/, WPARAM /*wParam*/, LPARAM /*lParam*/) { return; }
 	void RunMessagePump();
 
 	UINT m_threadID{};
@@ -18,12 +18,9 @@ protected:
 
 public:
 	void Start();
-	void Stop(); 
+	void Stop();
 	void PostMsg(UINT msg, WPARAM wParam, LPARAM lParam);
 
 	UINT getThreadID() const { return m_threadID; }
 	uintptr_t getThread() const { return m_thread; }
 };
-
-
-

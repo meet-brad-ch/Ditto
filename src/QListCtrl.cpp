@@ -16,7 +16,7 @@
 #include <cmath>
 #include <vector>
 #include <string>
-#include <cwchar>   // For swscanf
+#include <cwchar>    // For swscanf
 #include <algorithm> // For std::round
 #include <gdiplus.h>
 #include <numbers>
@@ -87,149 +87,149 @@ std::map<CString, COLORREF> CCssColorParser::BuildColorNameMap()
 {
 	std::map<CString, COLORREF> names{};
 	{
-        // Populate the map with W3C named colors
-        // A comprehensive list of 148 colors
-        names[_T("black")] = RGB(0, 0, 0);
-        names[_T("silver")] = RGB(192, 192, 192);
-        names[_T("gray")] = RGB(128, 128, 128);
-        names[_T("white")] = RGB(255, 255, 255);
-        names[_T("maroon")] = RGB(128, 0, 0);
-        names[_T("red")] = RGB(255, 0, 0);
-        names[_T("purple")] = RGB(128, 0, 128);
-        names[_T("fuchsia")] = RGB(255, 0, 255);
-        names[_T("green")] = RGB(0, 128, 0);
-        names[_T("lime")] = RGB(0, 255, 0);
-        names[_T("olive")] = RGB(128, 128, 0);
-        names[_T("yellow")] = RGB(255, 255, 0);
-        names[_T("navy")] = RGB(0, 0, 128);
-        names[_T("blue")] = RGB(0, 0, 255);
-        names[_T("teal")] = RGB(0, 128, 128);
-        names[_T("aqua")] = RGB(0, 255, 255);
-        names[_T("aliceblue")] = RGB(240, 248, 255);
-        names[_T("antiquewhite")] = RGB(250, 235, 215);
-        names[_T("aquamarine")] = RGB(127, 255, 212);
-        names[_T("azure")] = RGB(240, 255, 255);
-        names[_T("beige")] = RGB(245, 245, 220);
-        names[_T("bisque")] = RGB(255, 228, 196);
-        names[_T("blanchedalmond")] = RGB(255, 235, 205);
-        names[_T("blueviolet")] = RGB(138, 43, 226);
-        names[_T("brown")] = RGB(165, 42, 42);
-        names[_T("burlywood")] = RGB(222, 184, 135);
-        names[_T("cadetblue")] = RGB(95, 158, 160);
-        names[_T("chartreuse")] = RGB(127, 255, 0);
-        names[_T("chocolate")] = RGB(210, 105, 30);
-        names[_T("coral")] = RGB(255, 127, 80);
-        names[_T("cornflowerblue")] = RGB(100, 149, 237);
-        names[_T("cornsilk")] = RGB(255, 248, 220);
-        names[_T("crimson")] = RGB(220, 20, 60);
-        names[_T("cyan")] = RGB(0, 255, 255);
-        names[_T("darkblue")] = RGB(0, 0, 139);
-        names[_T("darkcyan")] = RGB(0, 139, 139);
-        names[_T("darkgoldenrod")] = RGB(184, 134, 11);
-        names[_T("darkgray")] = RGB(169, 169, 169);
-        names[_T("darkgreen")] = RGB(0, 100, 0);
-        names[_T("darkkhaki")] = RGB(189, 183, 107);
-        names[_T("darkmagenta")] = RGB(139, 0, 139);
-        names[_T("darkolivegreen")] = RGB(85, 107, 47);
-        names[_T("darkorange")] = RGB(255, 140, 0);
-        names[_T("darkorchid")] = RGB(153, 50, 204);
-        names[_T("darkred")] = RGB(139, 0, 0);
-        names[_T("darksalmon")] = RGB(233, 150, 122);
-        names[_T("darkseagreen")] = RGB(143, 188, 143);
-        names[_T("darkslateblue")] = RGB(72, 61, 139);
-        names[_T("darkslategray")] = RGB(47, 79, 79);
-        names[_T("darkturquoise")] = RGB(0, 206, 209);
-        names[_T("darkviolet")] = RGB(148, 0, 211);
-        names[_T("deeppink")] = RGB(255, 20, 147);
-        names[_T("deepskyblue")] = RGB(0, 191, 255);
-        names[_T("dimgray")] = RGB(105, 105, 105);
-        names[_T("dodgerblue")] = RGB(30, 144, 255);
-        names[_T("firebrick")] = RGB(178, 34, 34);
-        names[_T("floralwhite")] = RGB(255, 250, 240);
-        names[_T("forestgreen")] = RGB(34, 139, 34);
-        names[_T("gainsboro")] = RGB(220, 220, 220);
-        names[_T("ghostwhite")] = RGB(248, 248, 255);
-        names[_T("gold")] = RGB(255, 215, 0);
-        names[_T("goldenrod")] = RGB(218, 165, 32);
-        names[_T("greenyellow")] = RGB(173, 255, 47);
-        names[_T("honeydew")] = RGB(240, 255, 240);
-        names[_T("hotpink")] = RGB(255, 105, 180);
-        names[_T("indianred")] = RGB(205, 92, 92);
-        names[_T("indigo")] = RGB(75, 0, 130);
-        names[_T("ivory")] = RGB(255, 255, 240);
-        names[_T("khaki")] = RGB(240, 230, 140);
-        names[_T("lavender")] = RGB(230, 230, 250);
-        names[_T("lavenderblush")] = RGB(255, 240, 245);
-        names[_T("lawngreen")] = RGB(124, 252, 0);
-        names[_T("lemonchiffon")] = RGB(255, 250, 205);
-        names[_T("lightblue")] = RGB(173, 216, 230);
-        names[_T("lightcoral")] = RGB(240, 128, 128);
-        names[_T("lightcyan")] = RGB(224, 255, 255);
-        names[_T("lightgoldenrodyellow")] = RGB(250, 250, 210);
-        names[_T("lightgray")] = RGB(211, 211, 211);
-        names[_T("lightgreen")] = RGB(144, 238, 144);
-        names[_T("lightpink")] = RGB(255, 182, 193);
-        names[_T("lightsalmon")] = RGB(255, 160, 122);
-        names[_T("lightseagreen")] = RGB(32, 178, 170);
-        names[_T("lightskyblue")] = RGB(135, 206, 250);
-        names[_T("lightslategray")] = RGB(119, 136, 153);
-        names[_T("lightsteelblue")] = RGB(176, 196, 222);
-        names[_T("lightyellow")] = RGB(255, 255, 224);
-        names[_T("limegreen")] = RGB(50, 205, 50);
-        names[_T("linen")] = RGB(250, 240, 230);
-        names[_T("magenta")] = RGB(255, 0, 255);
-        names[_T("mediumaquamarine")] = RGB(102, 205, 170);
-        names[_T("mediumblue")] = RGB(0, 0, 205);
-        names[_T("mediumorchid")] = RGB(186, 85, 211);
-        names[_T("mediumpurple")] = RGB(147, 112, 219);
-        names[_T("mediumseagreen")] = RGB(60, 179, 113);
-        names[_T("mediumslateblue")] = RGB(123, 104, 238);
-        names[_T("mediumspringgreen")] = RGB(0, 250, 154);
-        names[_T("mediumturquoise")] = RGB(72, 209, 204);
-        names[_T("mediumvioletred")] = RGB(199, 21, 133);
-        names[_T("midnightblue")] = RGB(25, 25, 112);
-        names[_T("mintcream")] = RGB(245, 255, 250);
-        names[_T("mistyrose")] = RGB(255, 228, 225);
-        names[_T("moccasin")] = RGB(255, 228, 181);
-        names[_T("navajowhite")] = RGB(255, 222, 173);
-        names[_T("oldlace")] = RGB(253, 245, 230);
-        names[_T("olivedrab")] = RGB(107, 142, 35);
-        names[_T("orange")] = RGB(255, 165, 0);
-        names[_T("orangered")] = RGB(255, 69, 0);
-        names[_T("orchid")] = RGB(218, 112, 214);
-        names[_T("palegoldenrod")] = RGB(238, 232, 170);
-        names[_T("palegreen")] = RGB(152, 251, 152);
-        names[_T("paleturquoise")] = RGB(175, 238, 238);
-        names[_T("palevioletred")] = RGB(219, 112, 147);
-        names[_T("papayawhip")] = RGB(255, 239, 213);
-        names[_T("peachpuff")] = RGB(255, 218, 185);
-        names[_T("peru")] = RGB(205, 133, 63);
-        names[_T("pink")] = RGB(255, 192, 203);
-        names[_T("plum")] = RGB(221, 160, 221);
-        names[_T("powderblue")] = RGB(176, 224, 230);
-        names[_T("rebeccapurple")] = RGB(102, 51, 153);
-        names[_T("rosybrown")] = RGB(188, 143, 143);
-        names[_T("royalblue")] = RGB(65, 105, 225);
-        names[_T("saddlebrown")] = RGB(139, 69, 19);
-        names[_T("salmon")] = RGB(250, 128, 114);
-        names[_T("sandybrown")] = RGB(244, 164, 96);
-        names[_T("seagreen")] = RGB(46, 139, 87);
-        names[_T("seashell")] = RGB(255, 245, 238);
-        names[_T("sienna")] = RGB(160, 82, 45);
-        names[_T("skyblue")] = RGB(135, 206, 235);
-        names[_T("slateblue")] = RGB(106, 90, 205);
-        names[_T("slategray")] = RGB(112, 128, 144);
-        names[_T("snow")] = RGB(255, 250, 250);
-        names[_T("springgreen")] = RGB(0, 255, 127);
-        names[_T("steelblue")] = RGB(70, 130, 180);
-        names[_T("tan")] = RGB(210, 180, 140);
-        names[_T("thistle")] = RGB(216, 191, 216);
-        names[_T("tomato")] = RGB(255, 99, 71);
-        names[_T("turquoise")] = RGB(64, 224, 208);
-        names[_T("violet")] = RGB(238, 130, 238);
-        names[_T("wheat")] = RGB(245, 222, 179);
-        names[_T("whitesmoke")] = RGB(245, 245, 245);
-        names[_T("yellowgreen")] = RGB(154, 205, 50);
+		// Populate the map with W3C named colors
+		// A comprehensive list of 148 colors
+		names[_T("black")] = RGB(0, 0, 0);
+		names[_T("silver")] = RGB(192, 192, 192);
+		names[_T("gray")] = RGB(128, 128, 128);
+		names[_T("white")] = RGB(255, 255, 255);
+		names[_T("maroon")] = RGB(128, 0, 0);
+		names[_T("red")] = RGB(255, 0, 0);
+		names[_T("purple")] = RGB(128, 0, 128);
+		names[_T("fuchsia")] = RGB(255, 0, 255);
+		names[_T("green")] = RGB(0, 128, 0);
+		names[_T("lime")] = RGB(0, 255, 0);
+		names[_T("olive")] = RGB(128, 128, 0);
+		names[_T("yellow")] = RGB(255, 255, 0);
+		names[_T("navy")] = RGB(0, 0, 128);
+		names[_T("blue")] = RGB(0, 0, 255);
+		names[_T("teal")] = RGB(0, 128, 128);
+		names[_T("aqua")] = RGB(0, 255, 255);
+		names[_T("aliceblue")] = RGB(240, 248, 255);
+		names[_T("antiquewhite")] = RGB(250, 235, 215);
+		names[_T("aquamarine")] = RGB(127, 255, 212);
+		names[_T("azure")] = RGB(240, 255, 255);
+		names[_T("beige")] = RGB(245, 245, 220);
+		names[_T("bisque")] = RGB(255, 228, 196);
+		names[_T("blanchedalmond")] = RGB(255, 235, 205);
+		names[_T("blueviolet")] = RGB(138, 43, 226);
+		names[_T("brown")] = RGB(165, 42, 42);
+		names[_T("burlywood")] = RGB(222, 184, 135);
+		names[_T("cadetblue")] = RGB(95, 158, 160);
+		names[_T("chartreuse")] = RGB(127, 255, 0);
+		names[_T("chocolate")] = RGB(210, 105, 30);
+		names[_T("coral")] = RGB(255, 127, 80);
+		names[_T("cornflowerblue")] = RGB(100, 149, 237);
+		names[_T("cornsilk")] = RGB(255, 248, 220);
+		names[_T("crimson")] = RGB(220, 20, 60);
+		names[_T("cyan")] = RGB(0, 255, 255);
+		names[_T("darkblue")] = RGB(0, 0, 139);
+		names[_T("darkcyan")] = RGB(0, 139, 139);
+		names[_T("darkgoldenrod")] = RGB(184, 134, 11);
+		names[_T("darkgray")] = RGB(169, 169, 169);
+		names[_T("darkgreen")] = RGB(0, 100, 0);
+		names[_T("darkkhaki")] = RGB(189, 183, 107);
+		names[_T("darkmagenta")] = RGB(139, 0, 139);
+		names[_T("darkolivegreen")] = RGB(85, 107, 47);
+		names[_T("darkorange")] = RGB(255, 140, 0);
+		names[_T("darkorchid")] = RGB(153, 50, 204);
+		names[_T("darkred")] = RGB(139, 0, 0);
+		names[_T("darksalmon")] = RGB(233, 150, 122);
+		names[_T("darkseagreen")] = RGB(143, 188, 143);
+		names[_T("darkslateblue")] = RGB(72, 61, 139);
+		names[_T("darkslategray")] = RGB(47, 79, 79);
+		names[_T("darkturquoise")] = RGB(0, 206, 209);
+		names[_T("darkviolet")] = RGB(148, 0, 211);
+		names[_T("deeppink")] = RGB(255, 20, 147);
+		names[_T("deepskyblue")] = RGB(0, 191, 255);
+		names[_T("dimgray")] = RGB(105, 105, 105);
+		names[_T("dodgerblue")] = RGB(30, 144, 255);
+		names[_T("firebrick")] = RGB(178, 34, 34);
+		names[_T("floralwhite")] = RGB(255, 250, 240);
+		names[_T("forestgreen")] = RGB(34, 139, 34);
+		names[_T("gainsboro")] = RGB(220, 220, 220);
+		names[_T("ghostwhite")] = RGB(248, 248, 255);
+		names[_T("gold")] = RGB(255, 215, 0);
+		names[_T("goldenrod")] = RGB(218, 165, 32);
+		names[_T("greenyellow")] = RGB(173, 255, 47);
+		names[_T("honeydew")] = RGB(240, 255, 240);
+		names[_T("hotpink")] = RGB(255, 105, 180);
+		names[_T("indianred")] = RGB(205, 92, 92);
+		names[_T("indigo")] = RGB(75, 0, 130);
+		names[_T("ivory")] = RGB(255, 255, 240);
+		names[_T("khaki")] = RGB(240, 230, 140);
+		names[_T("lavender")] = RGB(230, 230, 250);
+		names[_T("lavenderblush")] = RGB(255, 240, 245);
+		names[_T("lawngreen")] = RGB(124, 252, 0);
+		names[_T("lemonchiffon")] = RGB(255, 250, 205);
+		names[_T("lightblue")] = RGB(173, 216, 230);
+		names[_T("lightcoral")] = RGB(240, 128, 128);
+		names[_T("lightcyan")] = RGB(224, 255, 255);
+		names[_T("lightgoldenrodyellow")] = RGB(250, 250, 210);
+		names[_T("lightgray")] = RGB(211, 211, 211);
+		names[_T("lightgreen")] = RGB(144, 238, 144);
+		names[_T("lightpink")] = RGB(255, 182, 193);
+		names[_T("lightsalmon")] = RGB(255, 160, 122);
+		names[_T("lightseagreen")] = RGB(32, 178, 170);
+		names[_T("lightskyblue")] = RGB(135, 206, 250);
+		names[_T("lightslategray")] = RGB(119, 136, 153);
+		names[_T("lightsteelblue")] = RGB(176, 196, 222);
+		names[_T("lightyellow")] = RGB(255, 255, 224);
+		names[_T("limegreen")] = RGB(50, 205, 50);
+		names[_T("linen")] = RGB(250, 240, 230);
+		names[_T("magenta")] = RGB(255, 0, 255);
+		names[_T("mediumaquamarine")] = RGB(102, 205, 170);
+		names[_T("mediumblue")] = RGB(0, 0, 205);
+		names[_T("mediumorchid")] = RGB(186, 85, 211);
+		names[_T("mediumpurple")] = RGB(147, 112, 219);
+		names[_T("mediumseagreen")] = RGB(60, 179, 113);
+		names[_T("mediumslateblue")] = RGB(123, 104, 238);
+		names[_T("mediumspringgreen")] = RGB(0, 250, 154);
+		names[_T("mediumturquoise")] = RGB(72, 209, 204);
+		names[_T("mediumvioletred")] = RGB(199, 21, 133);
+		names[_T("midnightblue")] = RGB(25, 25, 112);
+		names[_T("mintcream")] = RGB(245, 255, 250);
+		names[_T("mistyrose")] = RGB(255, 228, 225);
+		names[_T("moccasin")] = RGB(255, 228, 181);
+		names[_T("navajowhite")] = RGB(255, 222, 173);
+		names[_T("oldlace")] = RGB(253, 245, 230);
+		names[_T("olivedrab")] = RGB(107, 142, 35);
+		names[_T("orange")] = RGB(255, 165, 0);
+		names[_T("orangered")] = RGB(255, 69, 0);
+		names[_T("orchid")] = RGB(218, 112, 214);
+		names[_T("palegoldenrod")] = RGB(238, 232, 170);
+		names[_T("palegreen")] = RGB(152, 251, 152);
+		names[_T("paleturquoise")] = RGB(175, 238, 238);
+		names[_T("palevioletred")] = RGB(219, 112, 147);
+		names[_T("papayawhip")] = RGB(255, 239, 213);
+		names[_T("peachpuff")] = RGB(255, 218, 185);
+		names[_T("peru")] = RGB(205, 133, 63);
+		names[_T("pink")] = RGB(255, 192, 203);
+		names[_T("plum")] = RGB(221, 160, 221);
+		names[_T("powderblue")] = RGB(176, 224, 230);
+		names[_T("rebeccapurple")] = RGB(102, 51, 153);
+		names[_T("rosybrown")] = RGB(188, 143, 143);
+		names[_T("royalblue")] = RGB(65, 105, 225);
+		names[_T("saddlebrown")] = RGB(139, 69, 19);
+		names[_T("salmon")] = RGB(250, 128, 114);
+		names[_T("sandybrown")] = RGB(244, 164, 96);
+		names[_T("seagreen")] = RGB(46, 139, 87);
+		names[_T("seashell")] = RGB(255, 245, 238);
+		names[_T("sienna")] = RGB(160, 82, 45);
+		names[_T("skyblue")] = RGB(135, 206, 235);
+		names[_T("slateblue")] = RGB(106, 90, 205);
+		names[_T("slategray")] = RGB(112, 128, 144);
+		names[_T("snow")] = RGB(255, 250, 250);
+		names[_T("springgreen")] = RGB(0, 255, 127);
+		names[_T("steelblue")] = RGB(70, 130, 180);
+		names[_T("tan")] = RGB(210, 180, 140);
+		names[_T("thistle")] = RGB(216, 191, 216);
+		names[_T("tomato")] = RGB(255, 99, 71);
+		names[_T("turquoise")] = RGB(64, 224, 208);
+		names[_T("violet")] = RGB(238, 130, 238);
+		names[_T("wheat")] = RGB(245, 222, 179);
+		names[_T("whitesmoke")] = RGB(245, 245, 245);
+		names[_T("yellowgreen")] = RGB(154, 205, 50);
 	}
 	return names;
 }
@@ -464,17 +464,17 @@ void CQListCtrl::OnCustomdrawList(NMHDR* pNMHDR, LRESULT* pResult)
 	{
 		DrawListItem(pLVCD);
 
-		*pResult = CDRF_SKIPDEFAULT;    // We've painted everything.
+		*pResult = CDRF_SKIPDEFAULT; // We've painted everything.
 	}
 }
 
 void CQListCtrl::DrawListItem(NMLVCUSTOMDRAW* pLVCD)
 {
-	LVITEM   rItem;
-	int      nItem = static_cast<int>(pLVCD->nmcd.dwItemSpec);
+	LVITEM rItem;
+	int nItem = static_cast<int>(pLVCD->nmcd.dwItemSpec);
 	CDC* pDC = CDC::FromHandle(pLVCD->nmcd.hdc);
-	BOOL     bListHasFocus;
-	CRect    rcItem;
+	BOOL bListHasFocus;
+	CRect rcItem;
 
 	bListHasFocus = (GetSafeHwnd() == ::GetFocus());
 
@@ -498,7 +498,7 @@ void CQListCtrl::DrawListItem(NMLVCUSTOMDRAW* pLVCD)
 
 	// Draw the background of the list item.  Colors are selected
 	// according to the item's state.
-	const RowColors colors{ChooseRowColors(nItem, rItem.state, bListHasFocus)};
+	const RowColors colors{ ChooseRowColors(nItem, rItem.state, bListHasFocus) };
 	OldColor = pDC->SetTextColor(colors.text);
 
 	pDC->FillSolidRect(rcItem, colors.background);
@@ -578,24 +578,24 @@ CQListCtrl::RowColors CQListCtrl::ChooseRowColors(int nItem, UINT state, BOOL bL
 	{
 		if (bListHasFocus)
 		{
-			return RowColors{Settings().m_Theme.ListBoxSelectedBG(), Settings().m_Theme.ListBoxSelectedText()};
+			return RowColors{ Settings().m_Theme.ListBoxSelectedBG(), Settings().m_Theme.ListBoxSelectedText() };
 		}
-		return RowColors{Settings().m_Theme.ListBoxSelectedNoFocusBG(), Settings().m_Theme.ListBoxSelectedNoFocusText()};
+		return RowColors{ Settings().m_Theme.ListBoxSelectedNoFocusBG(), Settings().m_Theme.ListBoxSelectedNoFocusText() };
 	}
 
 	//Shade alternating Rows
 	if ((nItem % 2) == 0)
 	{
-		return RowColors{Settings().m_Theme.ListBoxOddRowsBG(), Settings().m_Theme.ListBoxOddRowsText()};
+		return RowColors{ Settings().m_Theme.ListBoxOddRowsBG(), Settings().m_Theme.ListBoxOddRowsText() };
 	}
-	return RowColors{Settings().m_Theme.ListBoxEvenRowsBG(), Settings().m_Theme.ListBoxEvenRowsText()};
+	return RowColors{ Settings().m_Theme.ListBoxEvenRowsBG(), Settings().m_Theme.ListBoxEvenRowsText() };
 }
 
 bool CQListCtrl::IsPastedClip(const CString& strSymbols) const
 {
 	return m_showIfClipWasPasted &&
-		strSymbols.GetLength() > 0 &&
-		strSymbols.Find(_T("<pasted>")) >= 0;
+		   strSymbols.GetLength() > 0 &&
+		   strSymbols.Find(_T("<pasted>")) >= 0;
 }
 
 void CQListCtrl::DrawPastedMarker(CDC* pDC, const CRect& rcItem)
@@ -614,7 +614,7 @@ bool CQListCtrl::ShowsFirstTenHotKey(int firstTenNum) const
 
 bool CQListCtrl::ShouldDrawInGroupIcon(const CString& strSymbols)
 {
-	return (theApp.Services().State().m_GroupID > 0 &&strSymbols.Find(_T("<ingroup>")) >= 0) == false;
+	return (theApp.Services().State().m_GroupID > 0 && strSymbols.Find(_T("<ingroup>")) >= 0) == false;
 }
 
 void CQListCtrl::DrawSymbolIcons(CDC* pDC, CRect& rcText, const CString& strSymbols, bool drawInGroupIcon)
@@ -662,7 +662,7 @@ bool CQListCtrl::HighlightSearchMatches(CString& csText)
 	auto highlightColor = Settings().m_Theme.SearchTextHighlight();
 	//use unprintable characters so it doesn't find copied html to convert
 	return m_searchText.GetLength() > 0 &&
-		CMarkerInserter::Insert(theApp.Services().IcuString(), csText, m_searchText,CStringUtil::Format(_T("\x01\x04 color='#%02x%02x%02x'\x02"), GetRValue(highlightColor), GetGValue(highlightColor), GetBValue(highlightColor)), _T("\x01\x03\x04\x02"), m_linesPerRow) > 0;
+		   CMarkerInserter::Insert(theApp.Services().IcuString(), csText, m_searchText, CStringUtil::Format(_T("\x01\x04 color='#%02x%02x%02x'\x02"), GetRValue(highlightColor), GetGValue(highlightColor), GetBValue(highlightColor)), _T("\x01\x03\x04\x02"), m_linesPerRow) > 0;
 }
 
 void CQListCtrl::DrawFirstTenHotKey(CDC* pDC, const CRect& rcItem, int firstTenNum)
@@ -703,11 +703,14 @@ void CQListCtrl::DrawFirstTenHotKey(CDC* pDC, const CRect& rcItem, int firstTenN
 // Helper function implementation to check for valid hex characters
 bool CQListCtrl::IsHexString(const CString& str)
 {
-	if (str.IsEmpty()) {
+	if (str.IsEmpty())
+	{
 		return false;
 	}
-	for (int i = 0; i < str.GetLength(); ++i) {
-		if (!iswxdigit(str[i])) {
+	for (int i = 0; i < str.GetLength(); ++i)
+	{
+		if (!iswxdigit(str[i]))
+		{
 			return false;
 		}
 	}
@@ -729,14 +732,14 @@ COLORREF CQListCtrl::HslToRgb(double h, double s, double l)
 	else
 	{
 		auto hue2rgb = [&](double p, double q, double t)
-			{
-				if (t < 0) t += 1;
-				if (t > 1) t -= 1;
-				if (t < 1.0 / 6.0) return p + (q - p) * 6 * t;
-				if (t < 1.0 / 2.0) return q;
-				if (t < 2.0 / 3.0) return p + (q - p) * (2.0 / 3.0 - t) * 6;
-				return p;
-			};
+		{
+			if (t < 0) t += 1;
+			if (t > 1) t -= 1;
+			if (t < 1.0 / 6.0) return p + (q - p) * 6 * t;
+			if (t < 1.0 / 2.0) return q;
+			if (t < 2.0 / 3.0) return p + (q - p) * (2.0 / 3.0 - t) * 6;
+			return p;
+		};
 
 		// Normalize h to 0-1 range
 		double h_norm = h / 360.0;
@@ -814,8 +817,10 @@ COLORREF CCssColorParser::OklchToRgb(double l, double c, double h)
 	double b_linear = +0.0556434 * x - 0.2040259 * y + 1.0572252 * z;
 
 	// 4. Convert linear sRGB to gamma-corrected sRGB
-	auto ToSrgb = [](double val) {
-		if (val <= 0.0031308) {
+	auto ToSrgb = [](double val)
+	{
+		if (val <= 0.0031308)
+		{
 			return 12.92 * val;
 		}
 		return 1.055 * pow(val, 1.0 / 2.4) - 0.055;
@@ -852,7 +857,7 @@ void CQListCtrl::DrawCheckerboard(CDC* pDC, CRect rect)
 	{
 		for (int x = rect.left; x < rect.right; x += squareSize)
 		{
-			COLORREF color = ((( (x - rect.left) / squareSize) + ((y - rect.top) / squareSize)) % 2 == 0) ? color1 : color2;
+			COLORREF color = ((((x - rect.left) / squareSize) + ((y - rect.top) / squareSize)) % 2 == 0) ? color1 : color2;
 			CRect square(x, y, min(x + squareSize, rect.right), min(y + squareSize, rect.bottom));
 			pDC->FillSolidRect(square, color);
 		}
@@ -915,7 +920,7 @@ bool CQListCtrl::ParseNamedColor(const CString& parseText, CopiedColor& color)
 	if (CCssColorParser::FindColorName(parseText, namedColor) == false)
 		return false;
 
-	color = CopiedColor{namedColor, 255};
+	color = CopiedColor{ namedColor, 255 };
 	return true;
 }
 
@@ -949,7 +954,11 @@ CString CQListCtrl::ExpandShorthandHex(const CString& hexString)
 
 	// Expand shorthand
 	CString expanded;
-	for (int i = 0; i < len; ++i) { expanded += hexString[i]; expanded += hexString[i]; }
+	for (int i = 0; i < len; ++i)
+	{
+		expanded += hexString[i];
+		expanded += hexString[i];
+	}
 	return expanded;
 }
 
@@ -961,7 +970,7 @@ bool CQListCtrl::ScanHexColor(const CString& hexString, CopiedColor& color)
 		if (swscanf(hexString, _T("%2x%2x%2x%2x"), &r, &g, &b, &a) != 4)
 			return false;
 
-		color = CopiedColor{RGB(r, g, b), static_cast<int>(a)};
+		color = CopiedColor{ RGB(r, g, b), static_cast<int>(a) };
 		return true;
 	}
 
@@ -969,7 +978,7 @@ bool CQListCtrl::ScanHexColor(const CString& hexString, CopiedColor& color)
 	if (swscanf(hexString, _T("%2x%2x%2x"), &r, &g, &b) != 3)
 		return false;
 
-	color = CopiedColor{RGB(r, g, b), 255}; // default alpha
+	color = CopiedColor{ RGB(r, g, b), 255 }; // default alpha
 	return true;
 }
 
@@ -996,9 +1005,9 @@ std::vector<CString> CQListCtrl::SplitCssArguments(CString content)
 bool CQListCtrl::ParseCssValues(const std::vector<CString>& tokens, CssValues& values)
 {
 	return tokens.size() >= 3 &&
-		CCssColorParser::ParseCssValue(tokens[0], values.first) &&
-		CCssColorParser::ParseCssValue(tokens[1], values.second) &&
-		CCssColorParser::ParseCssValue(tokens[2], values.third);
+		   CCssColorParser::ParseCssValue(tokens[0], values.first) &&
+		   CCssColorParser::ParseCssValue(tokens[1], values.second) &&
+		   CCssColorParser::ParseCssValue(tokens[2], values.third);
 }
 
 int CQListCtrl::CssAlpha(const std::vector<CString>& tokens)
@@ -1056,7 +1065,7 @@ bool CQListCtrl::ParseCssRgbColor(const CString& parseText, CopiedColor& color)
 	if ((IsByteValue(rgb.first) && IsByteValue(rgb.second) && IsByteValue(rgb.third)) == false)
 		return false;
 
-	color = CopiedColor{RGB(static_cast<int>(rgb.first), static_cast<int>(rgb.second), static_cast<int>(rgb.third)), alpha};
+	color = CopiedColor{ RGB(static_cast<int>(rgb.first), static_cast<int>(rgb.second), static_cast<int>(rgb.third)), alpha };
 	return true;
 }
 
@@ -1082,7 +1091,7 @@ bool CQListCtrl::ParseCssHslColor(const CString& parseText, CopiedColor& color)
 
 	double h_val = fmod(hsl.first, 360.0);
 	if (h_val < 0) h_val += 360.0;
-	color = CopiedColor{HslToRgb(h_val, hsl.second / 100.0, hsl.third / 100.0), alpha};
+	color = CopiedColor{ HslToRgb(h_val, hsl.second / 100.0, hsl.third / 100.0), alpha };
 	return true;
 }
 
@@ -1106,7 +1115,7 @@ bool CQListCtrl::ParseCssOklchColor(const CString& parseText, CopiedColor& color
 	if ((l_normalized >= 0 && l_normalized <= 1.0 && lch.second >= 0) == false)
 		return false;
 
-	color = CopiedColor{CCssColorParser::OklchToRgb(l_normalized, lch.second, lch.third), alpha};
+	color = CopiedColor{ CCssColorParser::OklchToRgb(l_normalized, lch.second, lch.third), alpha };
 	return true;
 }
 
@@ -1116,9 +1125,9 @@ bool CQListCtrl::ParsePlainRgbColor(const CString& parseText, CopiedColor& color
 	// the parsers share r, g, b and the consumed character count, in this order
 	RgbScan scan{};
 	return ParseParenthesizedRgb(parseText, scan, color) ||
-		ParseCommaSeparatedRgb(parseText, scan, color) ||
-		ParseSpaceSeparatedRgb(parseText, scan, color) ||
-		ParseSixDigitHex(parseText, scan, color);
+		   ParseCommaSeparatedRgb(parseText, scan, color) ||
+		   ParseSpaceSeparatedRgb(parseText, scan, color) ||
+		   ParseSixDigitHex(parseText, scan, color);
 }
 
 bool CQListCtrl::ParseParenthesizedRgb(const CString& parseText, RgbScan& scan, CopiedColor& color)
@@ -1176,7 +1185,7 @@ bool CQListCtrl::ParseSixDigitHex(const CString& parseText, RgbScan& scan, Copie
 	unsigned int blue{};
 	if (swscanf(parseText, _T("%2x%2x%2x%n"), &red, &green, &blue, &scan.charsConsumed) == 3 && scan.charsConsumed == 6)
 	{
-		color = CopiedColor{RGB(red, green, blue), 255};
+		color = CopiedColor{ RGB(red, green, blue), 255 };
 		return true;
 	}
 	return false;
@@ -1187,7 +1196,7 @@ bool CQListCtrl::AcceptRgb(const RgbScan& scan, CopiedColor& color)
 	if ((IsRgbByte(scan.r) && IsRgbByte(scan.g) && IsRgbByte(scan.b)) == false)
 		return false;
 
-	color = CopiedColor{RGB(scan.r, scan.g, scan.b), 255};
+	color = CopiedColor{ RGB(scan.r, scan.g, scan.b), 255 };
 	return true;
 }
 
@@ -1242,9 +1251,7 @@ BOOL CQListCtrl::DrawRtfText(int nItem, CRect& crRect, CDC* pDC)
 
 	if (m_rtfFormater.m_hWnd == NULL)
 	{
-		m_rtfFormater.Create(_T(""), _T(""), WS_CHILD | WS_VSCROLL |
-			WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_NOHIDESEL |
-			ES_AUTOHSCROLL, CRect(0, 0, 0, 0), this, static_cast<UINT>(-1));
+		m_rtfFormater.Create(_T(""), _T(""), WS_CHILD | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_NOHIDESEL | ES_AUTOHSCROLL, CRect(0, 0, 0, 0), this, static_cast<UINT>(-1));
 	}
 
 	if (m_pFormatter)
@@ -1328,11 +1335,11 @@ BOOL CQListCtrl::OnEraseBkgnd(CDC* pDC)
 
 	CRect rect;
 	GetClientRect(&rect);
-	CBrush myBrush(Settings().m_Theme.MainWindowBG());    // dialog background color
+	CBrush myBrush(Settings().m_Theme.MainWindowBG()); // dialog background color
 	CBrush* pOld = pDC->SelectObject(&myBrush);
 	BOOL bRes = pDC->PatBlt(0, 0, rect.Width(), rect.Height(), PATCOPY);
-	pDC->SelectObject(pOld);    // restore old brush
-	return bRes;                       // CDialog::OnEraseBkgnd(pDC);
+	pDC->SelectObject(pOld); // restore old brush
+	return bRes;             // CDialog::OnEraseBkgnd(pDC);
 
 	// Simply returning TRUE seems OK since we do custom item
 	//	painting.  However, there is a pixel buffer around the
@@ -1356,8 +1363,8 @@ BOOL CQListCtrl::OnToolTipText(UINT /*id*/, NMHDR* pNMHDR, LRESULT* pResult)
 
 	UINT_PTR nID = pNMHDR->idFrom;
 
-	if (nID == 0)	  	// Notification in NT from automatically
-		return FALSE;   	// created tooltip
+	if (nID == 0)     // Notification in NT from automatically
+		return FALSE; // created tooltip
 
 	::SendMessage(pNMHDR->hwndFrom, TTM_SETMAXTIPWIDTH, 0, 500);
 
@@ -1385,9 +1392,9 @@ BOOL CQListCtrl::OnToolTipText(UINT /*id*/, NMHDR* pNMHDR, LRESULT* pResult)
 		m_toolTipTextW = strTipText;
 		reinterpret_cast<TOOLTIPTEXTW*>(pNMHDR)->lpszText = const_cast<LPWSTR>(m_toolTipTextW.GetString());
 	}
-	* pResult = 0;
+	*pResult = 0;
 
-	return TRUE;    // message was handled
+	return TRUE; // message was handled
 }
 
 INT_PTR CQListCtrl::OnToolHitTest(CPoint point, TOOLINFO* pTI) const
@@ -1660,7 +1667,7 @@ bool CQListCtrl::ShowFullDescription(bool bFromAuto, bool fromNextPrev)
 	}
 
 	int nItem = GetCaret();
-	CPoint pt{DescriptionPosition(nItem, bFromAuto)};
+	CPoint pt{ DescriptionPosition(nItem, bFromAuto) };
 
 	CString csDescription;
 	GetToolTipText(nItem, csDescription);
@@ -1679,9 +1686,9 @@ bool CQListCtrl::ShowFullDescription(bool bFromAuto, bool fromNextPrev)
 bool CQListCtrl::IsToolTipShowingClip(int clipId)
 {
 	return IsToolTipValid() &&
-		clipId > 0 &&
-		m_pToolTip->GetClipId() == clipId &&
-		::IsWindow(m_toolTipHwnd);
+		   clipId > 0 &&
+		   m_pToolTip->GetClipId() == clipId &&
+		   ::IsWindow(m_toolTipHwnd);
 }
 
 CPoint CQListCtrl::DescriptionPosition(int nItem, bool bFromAuto)
@@ -1774,7 +1781,7 @@ bool CQListCtrl::LoadToolTipClipData(int clipId)
 		CppSQLite3Query q = theApp.Services().Database().execQueryEx(_T("SELECT lID, lDate, lastPasteDate, lDontAutoDelete, QuickPasteText, lShortCut, globalShortCut, stickyClipOrder, stickyClipGroupOrder, lParentID FROM Main WHERE lID = %d"), clipId);
 		if (q.eof() == false)
 		{
-			CString clipData{ClipDataText(q)};
+			CString clipData{ ClipDataText(q) };
 
 			int parentId = q.getIntField(_T("lParentID"));
 			if (parentId > 0)
@@ -1848,10 +1855,10 @@ void CQListCtrl::SetToolTipRtf(int nItem, CClipFormat& Clip)
 CString CQListCtrl::ClipDataText(CppSQLite3Query& q)
 {
 	CString clipData{};
-	COleDateTime time{(time_t)q.getInt64Field(_T("lDate"))};
+	COleDateTime time{ (time_t)q.getInt64Field(_T("lDate")) };
 	clipData += "Added: " + time.Format();
 
-	COleDateTime modified{(time_t)q.getInt64Field(_T("lastPasteDate"))};
+	COleDateTime modified{ (time_t)q.getInt64Field(_T("lastPasteDate")) };
 	clipData += _T(" | Last Used: ") + modified.Format();
 
 	if (q.getIntField(_T("lDontAutoDelete")) > 0)
@@ -1859,20 +1866,20 @@ CString CQListCtrl::ClipDataText(CppSQLite3Query& q)
 		clipData += _T(" | Never Auto Delete");
 	}
 
-	CString csQuickPaste{q.getStringField(_T("QuickPasteText"))};
+	CString csQuickPaste{ q.getStringField(_T("QuickPasteText")) };
 	if (csQuickPaste.IsEmpty() == FALSE)
 	{
 		clipData += _T(" | Quick Paste = ");
 		clipData += csQuickPaste;
 	}
 
-	int shortCut{q.getIntField(_T("lShortCut"))};
+	int shortCut{ q.getIntField(_T("lShortCut")) };
 	if (shortCut > 0)
 	{
 		clipData += _T(" | ");
 		clipData += CHotKey::GetHotKeyDisplayStatic(shortCut);
 
-		BOOL globalShortCut{q.getIntField(_T("globalShortCut"))};
+		BOOL globalShortCut{ q.getIntField(_T("globalShortCut")) };
 		if (globalShortCut)
 		{
 			clipData += _T(" - Global Shortcut Key");
@@ -1881,7 +1888,7 @@ CString CQListCtrl::ClipDataText(CppSQLite3Query& q)
 
 	if (theApp.Services().State().m_GroupID > 0)
 	{
-		int sticky{q.getIntField(_T("stickyClipGroupOrder"))};
+		int sticky{ q.getIntField(_T("stickyClipGroupOrder")) };
 		if (sticky != CClip::InvalidSticky)
 		{
 			clipData += _T(" | ");
@@ -1890,7 +1897,7 @@ CString CQListCtrl::ClipDataText(CppSQLite3Query& q)
 	}
 	else
 	{
-		int sticky{q.getIntField(_T("stickyClipOrder"))};
+		int sticky{ q.getIntField(_T("stickyClipOrder")) };
 		if (sticky != CClip::InvalidSticky)
 		{
 			clipData += _T(" | ");
@@ -2063,7 +2070,7 @@ void CQListCtrl::OnKillFocus(CWnd* pNewWnd)
 	CListCtrl::OnKillFocus(pNewWnd);
 
 	//if(FocusOnToolTip() == FALSE)
-		//m_pToolTip->Hide();
+	//m_pToolTip->Hide();
 }
 
 HWND CQListCtrl::GetToolTipHWnd()
@@ -2161,7 +2168,6 @@ void CQListCtrl::OnTimer(UINT_PTR nIDEvent)
 		this->GetWindowRect(&crWindow);
 
 
-
 		//check and see if they moved out of the scroll area
 		//If they did tell our parent so
 		if (MouseInScrollBarArea(crWindow, cursorPos) == false)
@@ -2223,7 +2229,7 @@ void CQListCtrl::SetLogFont(LOGFONT& font)
 void CQListCtrl::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
 	CListCtrl::OnVScroll(nSBCode, nPos, pScrollBar);
-	
+
 	// Notify parent to update modern scrollbar
 	CWnd* pParent = GetParent();
 	if (pParent && pParent->GetSafeHwnd())
@@ -2277,7 +2283,7 @@ void CQListCtrl::OnMouseMove(UINT nFlags, CPoint point)
 			if (m_mouseOverScrollAreaStart == 0)
 			{
 				m_mouseOverScrollAreaStart = GetTickCount64();
-				
+
 				// For modern scrollbar, notify parent
 				if (Settings().m_useModernScrollBar)
 				{
@@ -2391,7 +2397,7 @@ BOOL CQListCtrl::IsToolTipWindowFocus()
 	if (IsToolTipValid())
 	{
 		return ::GetFocus() == m_toolTipHwnd ||
-			::GetParent(::GetFocus()) == m_toolTipHwnd;
+			   ::GetParent(::GetFocus()) == m_toolTipHwnd;
 	}
 
 	return FALSE;
@@ -2455,8 +2461,8 @@ bool CQListCtrl::IsToolTipValid() const
 	// the tool tip deletes itself when its window goes away: only the stored handle may be read
 	// until the window is known to be alive (and still the one m_pToolTip points to)
 	return m_pToolTip != NULL &&
-		::IsWindow(m_toolTipHwnd) &&
-		CWnd::FromHandlePermanent(m_toolTipHwnd) == m_pToolTip;
+		   ::IsWindow(m_toolTipHwnd) &&
+		   CWnd::FromHandlePermanent(m_toolTipHwnd) == m_pToolTip;
 }
 
 void CQListCtrl::CreateToolTip()
@@ -2466,7 +2472,7 @@ void CQListCtrl::CreateToolTip()
 
 	// a self-deleting window: CWnd::CreateEx calls PostNcDestroy on failure too, so the window
 	// owns the object from the Create call on
-	CToolTipEx *pToolTip{ std::make_unique<CToolTipEx>().release() }; // ownership: the window (PostNcDestroy deletes it, also when Create fails)
+	CToolTipEx* pToolTip{ std::make_unique<CToolTipEx>().release() }; // ownership: the window (PostNcDestroy deletes it, also when Create fails)
 	if (pToolTip->Create(this) == FALSE)
 	{
 		AfxThrowResourceException();

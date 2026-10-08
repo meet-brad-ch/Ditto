@@ -2,10 +2,10 @@
 // GdipButton.cpp : Version 1.0 - see article at CodeProject.com
 //
 // Author:  Darren Sessions
-//          
+//
 //
 // Description:
-//     GdipButton is a CButton derived control that uses GDI+ 
+//     GdipButton is a CButton derived control that uses GDI+
 //     to support alternate image formats
 //
 // History
@@ -15,11 +15,11 @@
 // License:
 //     This software is released under the Code Project Open License (CPOL),
 //     which may be found here:  http://www.codeproject.com/info/eula.aspx
-//     You are free to use this software in any way you like, except that you 
+//     You are free to use this software in any way you like, except that you
 //     may not sell this source code.
 //
 //     This software is provided "as is" with no expressed or implied warranty.
-//     I accept no liability for any damage or loss of business that this 
+//     I accept no liability for any damage or loss of business that this
 //     software may cause.
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -48,7 +48,6 @@ CGdipButton::CGdipButton()
 	m_bIsTracking = FALSE;
 
 	m_nCurType = STD_TYPE;
-
 }
 
 CGdipButton::~CGdipButton()
@@ -71,19 +70,17 @@ END_MESSAGE_MAP()
 BOOL CGdipButton::LoadStdImageDPI(int dpi, UINT id96, UINT id120, UINT id144, UINT id168, UINT id192, LPCTSTR pType, UINT id225, UINT id250, UINT id275, UINT id300, UINT id325, UINT id350)
 {
 	// first entry that matches wins; the large sizes are optional (id 0 = not given)
-	const std::array<DpiImageChoice, 11> choices{ {
-		{ 336, id350, true },
-		{ 312, id325, true },
-		{ 288, id300, true },
-		{ 264, id275, true },
-		{ 240, id250, true },
-		{ 216, id225, true },
-		{ 192, id192, false },
-		{ 168, id168, false },
-		{ 144, id144, false },
-		{ 120, id120, false },
-		{ INT_MIN, id96, false }
-	} };
+	const std::array<DpiImageChoice, 11> choices{ { { 336, id350, true },
+													{ 312, id325, true },
+													{ 288, id300, true },
+													{ 264, id275, true },
+													{ 240, id250, true },
+													{ 216, id225, true },
+													{ 192, id192, false },
+													{ 168, id168, false },
+													{ 144, id144, false },
+													{ 120, id120, false },
+													{ INT_MIN, id96, false } } };
 
 	BOOL ret = LoadStdImage(PickDpiImageId(dpi, choices), pType);
 
@@ -108,18 +105,18 @@ UINT CGdipButton::PickDpiImageId(int dpi, std::span<const DpiImageChoice> choice
 //
 // LoadStdImage()
 //
-// Purpose:     The LoadStdImage() Loads the image for the button.  This 
-//				function must be called at a minimum or the button wont do 
+// Purpose:     The LoadStdImage() Loads the image for the button.  This
+//				function must be called at a minimum or the button wont do
 //				anything.
 //
-// Parameters:  
+// Parameters:
 //		[IN]	id
-//				resource id, one of the resources already imported with the 
-//				resource editor, usually begins with IDR_  
+//				resource id, one of the resources already imported with the
+//				resource editor, usually begins with IDR_
 //
 //		[IN]	pType
 //				pointer to string describing the resource type
-//				
+//
 // Returns:     BOOL
 //				Non zero if successful, otherwise zero
 //
@@ -149,16 +146,16 @@ void CGdipButton::Reset()
 //
 // LoadAltImage()
 //
-// Purpose:     The LoadAltImage() Loads the altername image for the button.  
+// Purpose:     The LoadAltImage() Loads the altername image for the button.
 //				This function call is optional
-// Parameters:  
+// Parameters:
 //		[IN]	id
-//				resource id, one of the resources already imported with the 
-//				resource editor, usually begins with IDR_  
+//				resource id, one of the resources already imported with the
+//				resource editor, usually begins with IDR_
 //
 //		[IN]	pType
 //				pointer to string describing the resource type
-//				
+//
 // Returns:     BOOL
 //				Non zero if successful, otherwise zero
 //
@@ -173,20 +170,20 @@ BOOL CGdipButton::LoadAltImage(UINT id, LPCTSTR pType)
 
 //=============================================================================
 //
-//	The framework calls this member function when a child control is about to 
+//	The framework calls this member function when a child control is about to
 //	be drawn.  All the bitmaps are created here on the first call. Every thing
-//	is done with a memory DC except the background, which get's it's information 
-//	from the parent. The background is needed for transparent portions of PNG 
-//	images. An always on top app (such as Task Manager) that is in the way can 
-//	cause it to get an incorrect background.  To avoid this, the parent should 
+//	is done with a memory DC except the background, which get's it's information
+//	from the parent. The background is needed for transparent portions of PNG
+//	images. An always on top app (such as Task Manager) that is in the way can
+//	cause it to get an incorrect background.  To avoid this, the parent should
 //	call the SetBkGnd function with a memory DC when it creates the background.
-//				
+//
 //=============================================================================
 HBRUSH CGdipButton::CtlColor(CDC* pScreenDC, UINT /*nCtlColor*/)
 {
-	if(!m_bHaveBitmaps)
+	if (!m_bHaveBitmaps)
 	{
-		if(!m_pStdImage)
+		if (!m_pStdImage)
 		{
 			return NULL; // Load the standard image with LoadStdImage()
 		}
@@ -212,12 +209,12 @@ HBRUSH CGdipButton::CtlColor(CDC* pScreenDC, UINT /*nCtlColor*/)
 		}
 
 		// alternate image
-		if( (m_dcAlt.m_hDC == NULL) && m_bHaveAltImage )
+		if ((m_dcAlt.m_hDC == NULL) && m_bHaveAltImage)
 		{
 			CreateAltImageDCs(pDC, graphics, rect);
 		}
 
-		if(m_pCurBtn == NULL)
+		if (m_pCurBtn == NULL)
 		{
 			m_pCurBtn = &m_dcStd;
 		}
@@ -279,7 +276,10 @@ void CGdipButton::CreateStdImageDCs(CDC* pDC, Gdiplus::Graphics& graphics, const
 	float width = (float)m_pStdImage->m_pBitmap->GetWidth();
 	float height = (float)m_pStdImage->m_pBitmap->GetHeight();
 
-	RectF grect; grect.X = 0, grect.Y = 0; grect.Width = width; grect.Height = height;
+	RectF grect;
+	grect.X = 0, grect.Y = 0;
+	grect.Width = width;
+	grect.Height = height;
 
 	graphics.DrawImage(*m_pStdImage, grect, 0, 0, width, height, UnitPixel);
 
@@ -301,7 +301,10 @@ void CGdipButton::CreateStdImageDCs(CDC* pDC, Gdiplus::Graphics& graphics, const
 		float pressedWidth = (float)m_pStdImage->m_pBitmap->GetWidth();
 		float pressedHeight = (float)m_pStdImage->m_pBitmap->GetHeight();
 
-		RectF pressedRect; pressedRect.X = 0, pressedRect.Y = 0; pressedRect.Width = pressedWidth; pressedRect.Height = pressedHeight;
+		RectF pressedRect;
+		pressedRect.X = 0, pressedRect.Y = 0;
+		pressedRect.Width = pressedWidth;
+		pressedRect.Height = pressedHeight;
 
 		graphics.DrawImage(*m_pStdImage, pressedRect, -1, -1, pressedWidth, pressedHeight, UnitPixel);
 
@@ -309,15 +312,15 @@ void CGdipButton::CreateStdImageDCs(CDC* pDC, Gdiplus::Graphics& graphics, const
 	}
 
 	// standard image hot
-	if(m_dcStdH.m_hDC == NULL)
+	if (m_dcStdH.m_hDC == NULL)
 	{
 		PaintBk(pDC);
 
-		ColorMatrix HotMat = {	1.05f, 0.00f, 0.00f, 0.00f, 0.00f,
-								0.00f, 1.05f, 0.00f, 0.00f, 0.00f,
-								0.00f, 0.00f, 1.05f, 0.00f, 0.00f,
-								0.00f, 0.00f, 0.00f, 1.00f, 0.00f,
-								0.05f, 0.05f, 0.05f, 0.00f, 1.00f	};
+		ColorMatrix HotMat = { 1.05f, 0.00f, 0.00f, 0.00f, 0.00f,
+							   0.00f, 1.05f, 0.00f, 0.00f, 0.00f,
+							   0.00f, 0.00f, 1.05f, 0.00f, 0.00f,
+							   0.00f, 0.00f, 0.00f, 1.00f, 0.00f,
+							   0.05f, 0.05f, 0.05f, 0.00f, 1.00f };
 
 		ImageAttributes ia;
 		ia.SetColorMatrix(&HotMat);
@@ -325,7 +328,10 @@ void CGdipButton::CreateStdImageDCs(CDC* pDC, Gdiplus::Graphics& graphics, const
 		float hotWidth = (float)m_pStdImage->m_pBitmap->GetWidth();
 		float hotHeight = (float)m_pStdImage->m_pBitmap->GetHeight();
 
-		RectF hotRect; hotRect.X=0, hotRect.Y=0; hotRect.Width = hotWidth; hotRect.Height = hotHeight;
+		RectF hotRect;
+		hotRect.X = 0, hotRect.Y = 0;
+		hotRect.Width = hotWidth;
+		hotRect.Height = hotHeight;
 
 		graphics.DrawImage(*m_pStdImage, hotRect, 0, 0, hotWidth, hotHeight, UnitPixel, &ia);
 
@@ -333,15 +339,15 @@ void CGdipButton::CreateStdImageDCs(CDC* pDC, Gdiplus::Graphics& graphics, const
 	}
 
 	// grayscale image
-	if(m_dcGS.m_hDC == NULL)
+	if (m_dcGS.m_hDC == NULL)
 	{
 		PaintBk(pDC);
 
-		ColorMatrix GrayMat = {	0.30f, 0.30f, 0.30f, 0.00f, 0.00f,
+		ColorMatrix GrayMat = { 0.30f, 0.30f, 0.30f, 0.00f, 0.00f,
 								0.59f, 0.59f, 0.59f, 0.00f, 0.00f,
 								0.11f, 0.11f, 0.11f, 0.00f, 0.00f,
 								0.00f, 0.00f, 0.00f, 1.00f, 0.00f,
-								0.00f, 0.00f, 0.00f, 0.00f, 1.00f	};
+								0.00f, 0.00f, 0.00f, 0.00f, 1.00f };
 
 		ImageAttributes ia;
 		ia.SetColorMatrix(&GrayMat);
@@ -349,7 +355,10 @@ void CGdipButton::CreateStdImageDCs(CDC* pDC, Gdiplus::Graphics& graphics, const
 		float grayWidth = (float)m_pStdImage->m_pBitmap->GetWidth();
 		float grayHeight = (float)m_pStdImage->m_pBitmap->GetHeight();
 
-		RectF grayRect; grayRect.X=0, grayRect.Y=0; grayRect.Width = grayWidth; grayRect.Height = grayHeight;
+		RectF grayRect;
+		grayRect.X = 0, grayRect.Y = 0;
+		grayRect.Width = grayWidth;
+		grayRect.Height = grayHeight;
 
 		graphics.DrawImage(*m_pStdImage, grayRect, 0, 0, grayWidth, grayHeight, UnitPixel, &ia);
 
@@ -369,7 +378,7 @@ void CGdipButton::CreateAltImageDCs(CDC* pDC, Gdiplus::Graphics& graphics, const
 	CaptureToDC(m_dcAlt, pDC, rect);
 
 	// alternate image pressed
-	if( (m_dcAltP.m_hDC == NULL) && m_bHaveAltImage )
+	if ((m_dcAltP.m_hDC == NULL) && m_bHaveAltImage)
 	{
 		PaintBk(pDC);
 
@@ -379,15 +388,15 @@ void CGdipButton::CreateAltImageDCs(CDC* pDC, Gdiplus::Graphics& graphics, const
 	}
 
 	// alternate image hot
-	if(m_dcAltH.m_hDC == NULL)
+	if (m_dcAltH.m_hDC == NULL)
 	{
 		PaintBk(pDC);
 
-		ColorMatrix HotMat = {	1.05f, 0.00f, 0.00f, 0.00f, 0.00f,
-								0.00f, 1.05f, 0.00f, 0.00f, 0.00f,
-								0.00f, 0.00f, 1.05f, 0.00f, 0.00f,
-								0.00f, 0.00f, 0.00f, 1.00f, 0.00f,
-								0.05f, 0.05f, 0.05f, 0.00f, 1.00f	};
+		ColorMatrix HotMat = { 1.05f, 0.00f, 0.00f, 0.00f, 0.00f,
+							   0.00f, 1.05f, 0.00f, 0.00f, 0.00f,
+							   0.00f, 0.00f, 1.05f, 0.00f, 0.00f,
+							   0.00f, 0.00f, 0.00f, 1.00f, 0.00f,
+							   0.05f, 0.05f, 0.05f, 0.00f, 1.00f };
 
 		ImageAttributes ia;
 		ia.SetColorMatrix(&HotMat);
@@ -395,7 +404,10 @@ void CGdipButton::CreateAltImageDCs(CDC* pDC, Gdiplus::Graphics& graphics, const
 		float width = (float)m_pAltImage->m_pBitmap->GetWidth();
 		float height = (float)m_pAltImage->m_pBitmap->GetHeight();
 
-		RectF grect; grect.X=0, grect.Y=0; grect.Width = width; grect.Height = height;
+		RectF grect;
+		grect.X = 0, grect.Y = 0;
+		grect.Width = width;
+		grect.Height = height;
 
 		graphics.DrawImage(*m_pAltImage, grect, 0, 0, width, height, UnitPixel, &ia);
 
@@ -406,7 +418,7 @@ void CGdipButton::CreateAltImageDCs(CDC* pDC, Gdiplus::Graphics& graphics, const
 //=============================================================================
 // paint the background
 //=============================================================================
-void CGdipButton::PaintBk(CDC *pDC)
+void CGdipButton::PaintBk(CDC* pDC)
 {
 	CRect rect;
 	GetClientRect(rect);
@@ -416,7 +428,7 @@ void CGdipButton::PaintBk(CDC *pDC)
 //=============================================================================
 // paint the bitmap currently pointed to with m_pCurBtn
 //=============================================================================
-void CGdipButton::PaintBtn(CDC *pDC)
+void CGdipButton::PaintBtn(CDC* pDC)
 {
 	CRect rect;
 	GetClientRect(rect);
@@ -429,14 +441,13 @@ void CGdipButton::PaintBtn(CDC *pDC)
 //=============================================================================
 void CGdipButton::EnableToggle(BOOL bEnable)
 {
-	if(!m_bHaveAltImage) return;
+	if (!m_bHaveAltImage) return;
 
-	m_bIsToggle = bEnable; 
+	m_bIsToggle = bEnable;
 
 	// this actually makes it start in the std state since toggle is called before paint
-	if(bEnable)	m_pCurBtn = &m_dcAlt;
-	else		m_pCurBtn = &m_dcStd;
-
+	if (bEnable) m_pCurBtn = &m_dcAlt;
+	else m_pCurBtn = &m_dcStd;
 }
 
 //=============================================================================
@@ -463,9 +474,9 @@ void CGdipButton::PreSubclassWindow()
 }
 
 //=============================================================================
-// disable double click 
+// disable double click
 //=============================================================================
-BOOL CGdipButton::PreTranslateMessage(MSG* pMsg) 
+BOOL CGdipButton::PreTranslateMessage(MSG* pMsg)
 {
 	if (pMsg->message == WM_LBUTTONDBLCLK)
 		pMsg->message = WM_LBUTTONDOWN;
@@ -474,7 +485,7 @@ BOOL CGdipButton::PreTranslateMessage(MSG* pMsg)
 	{
 		if (::IsWindow(m_pToolTip->m_hWnd))
 		{
-			m_pToolTip->RelayEvent(pMsg);		
+			m_pToolTip->RelayEvent(pMsg);
 		}
 	}
 
@@ -493,12 +504,12 @@ BOOL CGdipButton::OnEraseBkgnd(CDC* /*pDC*/)
 //=============================================================================
 // Paint the button depending on the state of the mouse
 //=============================================================================
-void CGdipButton::DrawItem(LPDRAWITEMSTRUCT lpDIS) 
+void CGdipButton::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 {
 	CDC* pDC = CDC::FromHandle(lpDIS->hDC);
 
 	// handle disabled state
-	if(m_bIsDisabled)
+	if (m_bIsDisabled)
 	{
 		m_pCurBtn = &m_dcGS;
 		PaintBtn(pDC);
@@ -508,7 +519,7 @@ void CGdipButton::DrawItem(LPDRAWITEMSTRUCT lpDIS)
 	BOOL bIsPressed = (lpDIS->itemState & ODS_SELECTED);
 
 	// handle toggle button
-	if(m_bIsToggle && bIsPressed)
+	if (m_bIsToggle && bIsPressed)
 	{
 		(m_nCurType == STD_TYPE) ? m_nCurType = ALT_TYPE : m_nCurType = STD_TYPE;
 	}
@@ -526,11 +537,11 @@ void CGdipButton::SelectCurBtn(BOOL bIsPressed)
 {
 	const bool isStd = (m_nCurType == STD_TYPE);
 
-	if(bIsPressed)
+	if (bIsPressed)
 	{
 		m_pCurBtn = isStd ? &m_dcStdP : &m_dcAltP;
 	}
-	else if(m_bIsHovering)
+	else if (m_bIsHovering)
 	{
 		m_pCurBtn = isStd ? &m_dcStdH : &m_dcAltH;
 	}
@@ -575,7 +586,7 @@ LRESULT CGdipButton::OnMouseLeave(WPARAM /*wparam*/, LPARAM /*lparam*/)
 }
 
 //=============================================================================
-void CGdipButton::OnMouseMove(UINT nFlags, CPoint point) 
+void CGdipButton::OnMouseMove(UINT nFlags, CPoint point)
 //=============================================================================
 {
 	if (!m_bIsTracking)
@@ -583,18 +594,18 @@ void CGdipButton::OnMouseMove(UINT nFlags, CPoint point)
 		TRACKMOUSEEVENT tme;
 		tme.cbSize = sizeof(tme);
 		tme.hwndTrack = m_hWnd;
-		tme.dwFlags = TME_LEAVE|TME_HOVER;
+		tme.dwFlags = TME_LEAVE | TME_HOVER;
 		tme.dwHoverTime = 1;
 		m_bIsTracking = _TrackMouseEvent(&tme);
 	}
-	
+
 	CButton::OnMouseMove(nFlags, point);
 }
 
 //=============================================================================
-//	
-//	Call this member function with a memory DC from the code that paints 
-//	the parents background.  Passing the screen DC defeats the purpose of 
+//
+//	Call this member function with a memory DC from the code that paints
+//	the parents background.  Passing the screen DC defeats the purpose of
 //  using this function.
 //
 //=============================================================================
@@ -633,7 +644,6 @@ void CGdipButton::SetToolTipText(UINT nId, BOOL bActivate)
 	{
 		SetToolTipText(m_tooltext, bActivate);
 	}
-
 }
 
 //=============================================================================
@@ -651,7 +661,7 @@ void CGdipButton::SetToolTipText(CString spText, BOOL bActivate)
 	// If there is no tooltip defined then add it
 	if (m_pToolTip->GetToolCount() == 0)
 	{
-		CRect rectBtn; 
+		CRect rectBtn;
 		GetClientRect(rectBtn);
 		m_pToolTip->AddTool(this, m_tooltext, rectBtn, 1);
 	}
@@ -673,7 +683,7 @@ void CGdipButton::InitToolTip()
 		m_pToolTip->Create(this);
 		m_pToolTip->Activate(TRUE);
 	}
-} 
+}
 
 //=============================================================================
 void CGdipButton::DeleteToolTip()
@@ -682,4 +692,3 @@ void CGdipButton::DeleteToolTip()
 	// Destroy Tooltip incase the size of the button has changed.
 	m_pToolTip.reset();
 }
-

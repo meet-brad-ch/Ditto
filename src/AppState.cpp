@@ -4,19 +4,19 @@
 
 CLastAddedClip::Entry CLastAddedClip::Get() const
 {
-	const std::scoped_lock lock{m_lock};
+	const std::scoped_lock lock{ m_lock };
 	return m_entry;
 }
 
 void CLastAddedClip::Record(DWORD crc, int id)
 {
-	const std::scoped_lock lock{m_lock};
-	m_entry = Entry{.crc = crc, .id = id};
+	const std::scoped_lock lock{ m_lock };
+	m_entry = Entry{ .crc = crc, .id = id };
 }
 
 void CLastAddedClip::ClearCrc()
 {
-	const std::scoped_lock lock{m_lock};
+	const std::scoped_lock lock{ m_lock };
 	m_entry.crc = 0;
 }
 
@@ -57,7 +57,7 @@ int CAppState::GetActiveGroupId()
 	ULONGLONG maxDiff = m_settings.GetSaveToGroupTimeoutMS();
 	ULONGLONG diff = GetTickCount64() - m_activeGroupStartTime;
 
-	if(m_activeGroupId > -1 &&
+	if (m_activeGroupId > -1 &&
 		diff < maxDiff)
 	{
 		ret = m_activeGroupId;
@@ -81,7 +81,7 @@ CopyReasonEnum::CopyReason CAppState::GetCopyReason()
 	ULONGLONG maxDiff = m_settings.GetCopyReasonTimeoutMS();
 	ULONGLONG diff = GetTickCount64() - m_copyReasonStartTime;
 
-	if(m_copyReason != CopyReasonEnum::COPY_TO_UNKOWN &&
+	if (m_copyReason != CopyReasonEnum::COPY_TO_UNKOWN &&
 		diff < maxDiff)
 	{
 		ret = m_copyReason;

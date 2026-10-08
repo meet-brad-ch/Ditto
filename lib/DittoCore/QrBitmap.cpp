@@ -65,13 +65,13 @@ namespace DittoCore
 		AppendLittleEndian(out, InfoHeaderSize, 4);
 		AppendLittleEndian(out, width, 4);
 		AppendLittleEndian(out, static_cast<std::uint32_t>(-static_cast<std::int32_t>(width)), 4);
-		AppendLittleEndian(out, 1, 2);     // planes
-		AppendLittleEndian(out, 24, 2);    // bits per pixel
-		AppendLittleEndian(out, 0, 4);     // BI_RGB
-		AppendLittleEndian(out, 0, 4);     // image size: may be 0 for BI_RGB
-		AppendLittleEndian(out, 0, 4);     // horizontal resolution
-		AppendLittleEndian(out, 0, 4);     // vertical resolution
-		AppendLittleEndian(out, 0, 4);     // colours used
-		AppendLittleEndian(out, 0, 4);     // important colours
+		AppendLittleEndian(out, 1, 2);  // planes
+		AppendLittleEndian(out, 24, 2); // bits per pixel
+		AppendLittleEndian(out, 0, 4);  // BI_RGB
+		AppendLittleEndian(out, 0, 4);  // image size: may be 0 for BI_RGB
+		AppendLittleEndian(out, 0, 4);  // horizontal resolution
+		AppendLittleEndian(out, 0, 4);  // vertical resolution
+		AppendLittleEndian(out, 0, 4);  // colours used
+		AppendLittleEndian(out, 0, 4);  // important colours
 	}
 }

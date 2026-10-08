@@ -5,8 +5,8 @@
 #include "SendKeys.h"
 #include "Accels.h"
 
-CHotKey::CHotKey(const CHotKeys& registry, CGetSetOptions& settings, int globalId, CString name, DWORD defKey, bool bUnregOnShowDitto, HotKeyType hkType, CString description)
-	: m_Name(name),
+CHotKey::CHotKey(const CHotKeys& registry, CGetSetOptions& settings, int globalId, CString name, DWORD defKey, bool bUnregOnShowDitto, HotKeyType hkType, CString description) :
+	m_Name(name),
 	m_description(description),
 	m_bIsRegistered(false),
 	m_bUnRegisterOnShowDitto(bUnregOnShowDitto),
@@ -16,7 +16,7 @@ CHotKey::CHotKey(const CHotKeys& registry, CGetSetOptions& settings, int globalI
 {
 	m_Atom = ::GlobalAddAtom(CStringUtil::Format(_T("%s_%d"), m_Name.GetString(), hkType));
 	ASSERT(m_Atom);
-	m_Key = (DWORD)m_settings.GetProfileLong(m_Name, (long) defKey);
+	m_Key = (DWORD)m_settings.GetProfileLong(m_Name, (long)defKey);
 	m_globalId = globalId;
 	m_hkType = hkType;
 }
@@ -37,22 +37,22 @@ CString CHotKey::GetHotKeyDisplayStatic(DWORD dwHotKey)
 	WORD vk = LOBYTE(dwHotKey);
 	CString keyDisplay;
 	UINT modifiers = GetModifier(HIBYTE(dwHotKey));
-	if(modifiers & MOD_SHIFT)
+	if (modifiers & MOD_SHIFT)
 	{
 		keyDisplay += _T("Shift + ");
 	}
 
-	if(modifiers & MOD_CONTROL)
+	if (modifiers & MOD_CONTROL)
 	{
 		keyDisplay += _T("Ctrl + ");
 	}
 
-	if(modifiers & MOD_ALT)
+	if (modifiers & MOD_ALT)
 	{
 		keyDisplay += _T("Alt + ");
 	}
 
-	if(modifiers & MOD_WIN)
+	if (modifiers & MOD_WIN)
 	{
 		keyDisplay += _T("Win + ");
 	}
@@ -74,7 +74,7 @@ CString CHotKey::GetHotKeyDisplayStatic(DWORD dwHotKey)
 	default:
 		keyDisplay += GetVirKeyName(vk);
 		break;
-	}	
+	}
 
 	return keyDisplay;
 }
@@ -82,26 +82,26 @@ CString CHotKey::GetHotKeyDisplayStatic(DWORD dwHotKey)
 //http://www.ffuts.org/blog/mapvirtualkey-getkeynametext-and-a-story-of-how-to/
 CString CHotKey::GetVirKeyName(unsigned int virtualKey)
 {
-       // MapVirtualKey/GetKeyNameText does not return a name for F13-F24
-       // even though these keys can be registered as global hotkeys.  If we
-       // detect one of these virtual key codes then manually return the
-       // appropriate string.
-       if(virtualKey >= VK_F13 && virtualKey <= VK_F24)
-       {
-               return CStringUtil::Format(_T("F%d"), (virtualKey - VK_F1) + 1);
-       }
+	// MapVirtualKey/GetKeyNameText does not return a name for F13-F24
+	// even though these keys can be registered as global hotkeys.  If we
+	// detect one of these virtual key codes then manually return the
+	// appropriate string.
+	if (virtualKey >= VK_F13 && virtualKey <= VK_F24)
+	{
+		return CStringUtil::Format(_T("F%d"), (virtualKey - VK_F1) + 1);
+	}
 
-       // Provide friendly names for multimedia and browser keys which
-       // otherwise return an empty string from GetKeyNameText.
-       for (const NamedKey& namedKey : s_namedKeys)
-       {
-               if (namedKey.virtualKey == virtualKey)
-               {
-                       return namedKey.name;
-               }
-       }
+	// Provide friendly names for multimedia and browser keys which
+	// otherwise return an empty string from GetKeyNameText.
+	for (const NamedKey& namedKey : s_namedKeys)
+	{
+		if (namedKey.virtualKey == virtualKey)
+		{
+			return namedKey.name;
+		}
+	}
 
-       unsigned int scanCode = MapVirtualKey(virtualKey, MAPVK_VK_TO_VSC);
+	unsigned int scanCode = MapVirtualKey(virtualKey, MAPVK_VK_TO_VSC);
 
 	// because MapVirtualKey strips the extended bit for some keys
 	if (IsExtendedKey(virtualKey))
@@ -109,8 +109,8 @@ CString CHotKey::GetVirKeyName(unsigned int virtualKey)
 		scanCode |= 0x100; // set extended bit
 	}
 
-       wchar_t keyName[50];
-       if (GetKeyNameText(scanCode << 16, keyName, _countof(keyName)) != 0)
+	wchar_t keyName[50];
+	if (GetKeyNameText(scanCode << 16, keyName, _countof(keyName)) != 0)
 	{
 		return keyName;
 	}
@@ -137,42 +137,42 @@ UINT CHotKey::GetModifier(DWORD dwHotKey)
 {
 	UINT uMod = 0;
 
-	if(dwHotKey & HOTKEYF_SHIFT)   
+	if (dwHotKey & HOTKEYF_SHIFT)
 		uMod |= MOD_SHIFT;
-	if(dwHotKey & HOTKEYF_CONTROL) 
+	if (dwHotKey & HOTKEYF_CONTROL)
 		uMod |= MOD_CONTROL;
-	if(dwHotKey & HOTKEYF_ALT)     
+	if (dwHotKey & HOTKEYF_ALT)
 		uMod |= MOD_ALT;
-	if(dwHotKey & HOTKEYF_EXT)     
+	if (dwHotKey & HOTKEYF_EXT)
 		uMod |= MOD_WIN;
 
 	return uMod;
 }
 
-void CHotKey::SetKey( DWORD key, bool bSave )
+void CHotKey::SetKey(DWORD key, bool bSave)
 {
-	if(m_Key == key)
+	if (m_Key == key)
 	{
 		return;
 	}
 
-	if(m_bIsRegistered)
+	if (m_bIsRegistered)
 		Unregister();
 	m_Key = key;
-	if(bSave)
+	if (bSave)
 		SaveKey();
 }
 
 void CHotKey::LoadKey()
 {
-	SetKey((DWORD) m_settings.GetProfileLong(m_Name, 0));
+	SetKey((DWORD)m_settings.GetProfileLong(m_Name, 0));
 }
 
 bool CHotKey::SaveKey()
 {
-	if(m_clipId <= 0)
+	if (m_clipId <= 0)
 	{
-		return m_settings.SetProfileLong( m_Name, (long) m_Key ) != FALSE;
+		return m_settings.SetProfileLong(m_Name, (long)m_Key) != FALSE;
 	}
 
 
@@ -182,12 +182,12 @@ bool CHotKey::SaveKey()
 BOOL CHotKeys::ValidateHotKey(DWORD dwHotKey) const
 {
 	ATOM id = ::GlobalAddAtom(_T("HK_VALIDATE"));
-	BOOL bResult = ::RegisterHotKey( m_hWnd,
-		id,
-		CHotKey::GetModifier(HIBYTE(dwHotKey)),
-		LOBYTE(dwHotKey) );
+	BOOL bResult = ::RegisterHotKey(m_hWnd,
+									id,
+									CHotKey::GetModifier(HIBYTE(dwHotKey)),
+									LOBYTE(dwHotKey));
 
-	if(bResult)
+	if (bResult)
 		::UnregisterHotKey(m_hWnd, id);
 
 	::GlobalDeleteAtom(id);
@@ -195,24 +195,24 @@ BOOL CHotKeys::ValidateHotKey(DWORD dwHotKey) const
 	return bResult;
 }
 
-void CHotKey::CopyFromCtrl(CHotKeyCtrl& ctrl, HWND hParent, int nWindowsCBID) 
-{ 
+void CHotKey::CopyFromCtrl(CHotKeyCtrl& ctrl, HWND hParent, int nWindowsCBID)
+{
 	long lHotKey = ctrl.GetHotKey();
 
 	short sKeyKode = LOBYTE(lHotKey);
 	short sModifers = ((HIBYTE(lHotKey)) & ~HOTKEYF_EXT);
 
-	if(lHotKey && ::IsDlgButtonChecked(hParent, nWindowsCBID))
+	if (lHotKey && ::IsDlgButtonChecked(hParent, nWindowsCBID))
 	{
 		sModifers |= HOTKEYF_EXT;
 	}
 
-	SetKey(MAKEWORD(sKeyKode, sModifers)); 
+	SetKey(MAKEWORD(sKeyKode, sModifers));
 }
 
 void CHotKey::CopyToCtrl(CHotKeyCtrl& ctrl, HWND hParent, int nWindowsCBID)
 {
-	DWORD shortcut = CAccels::MakeKey(LOBYTE(m_Key), ((HIBYTE(m_Key)) &~HOTKEYF_EXT));
+	DWORD shortcut = CAccels::MakeKey(LOBYTE(m_Key), ((HIBYTE(m_Key)) & ~HOTKEYF_EXT));
 
 	if (IsExtendedKey(LOBYTE(shortcut)))
 	{
@@ -222,10 +222,10 @@ void CHotKey::CopyToCtrl(CHotKeyCtrl& ctrl, HWND hParent, int nWindowsCBID)
 	long lModifiers = HIBYTE(shortcut);
 	long keys = LOBYTE(shortcut);
 
-	ctrl.SetHotKey((WORD)keys, (WORD)lModifiers); 
+	ctrl.SetHotKey((WORD)keys, (WORD)lModifiers);
 
 	long originalModifiers = HIBYTE(m_Key);
-	if(originalModifiers & HOTKEYF_EXT)
+	if (originalModifiers & HOTKEYF_EXT)
 	{
 		::CheckDlgButton(hParent, nWindowsCBID, BST_CHECKED);
 	}
@@ -233,15 +233,15 @@ void CHotKey::CopyToCtrl(CHotKeyCtrl& ctrl, HWND hParent, int nWindowsCBID)
 
 bool CHotKey::Register()
 {
-	if(m_Key)
+	if (m_Key)
 	{
-		if(m_bIsRegistered == false)
+		if (m_bIsRegistered == false)
 		{
 			ASSERT(m_registry.Window());
 			m_bIsRegistered = ::RegisterHotKey(m_registry.Window(),
-				m_Atom,
-				GetModifier(),
-				LOBYTE(m_Key) ) == TRUE;
+											   m_Atom,
+											   GetModifier(),
+											   LOBYTE(m_Key)) == TRUE;
 		}
 	}
 	else
@@ -253,19 +253,19 @@ bool CHotKey::Register()
 }
 bool CHotKey::Unregister(bool bOnShowingDitto)
 {
-	if(!m_bIsRegistered)
+	if (!m_bIsRegistered)
 		return true;
 
-	if(bOnShowingDitto)
+	if (bOnShowingDitto)
 	{
-		if(m_bUnRegisterOnShowDitto == false)
+		if (m_bUnRegisterOnShowDitto == false)
 			return true;
 	}
 
-	if(m_Key)
+	if (m_Key)
 	{
 		ASSERT(m_registry.Window());
-		if(::UnregisterHotKey( m_registry.Window(), m_Atom))
+		if (::UnregisterHotKey(m_registry.Window(), m_Atom))
 		{
 			m_bIsRegistered = false;
 			return true;
@@ -293,7 +293,7 @@ CHotKeys::CHotKeys(CGetSetOptions& settings) :
 CHotKeys::~CHotKeys()
 {
 	// destroy the keys in index order (each unregisters itself while m_hWnd is still set)
-	for(std::unique_ptr<CHotKey>& key : m_keys)
+	for (std::unique_ptr<CHotKey>& key : m_keys)
 	{
 		key.reset();
 	}
@@ -301,7 +301,7 @@ CHotKeys::~CHotKeys()
 
 CHotKey& CHotKeys::Create(CString name, DWORD defKey, bool bUnregOnShowDitto, CHotKey::HotKeyType hkType, CString description)
 {
-	const int globalId{m_nextId};
+	const int globalId{ m_nextId };
 	m_nextId++;
 	m_keys.push_back(std::make_unique<CHotKey>(*this, m_settings, globalId, name, defKey, bUnregOnShowDitto, hkType, description));
 	return *m_keys.back();
@@ -323,9 +323,9 @@ CHotKey* CHotKeys::Named(Id id) const
 INT_PTR CHotKeys::Find(CHotKey* pHotKey)
 {
 	INT_PTR count = GetSize();
-	for(int i=0; i < count; i++)
+	for (int i = 0; i < count; i++)
 	{
-		if(pHotKey == ElementAt(i))
+		if (pHotKey == ElementAt(i))
 		{
 			return i;
 		}
@@ -336,10 +336,10 @@ INT_PTR CHotKeys::Find(CHotKey* pHotKey)
 bool CHotKeys::Remove(CHotKey* pHotKey)
 {
 	INT_PTR i = Find(pHotKey);
-	if(i >= 0)
+	if (i >= 0)
 	{
 		// take the key out of the registry first, then destroy it
-		std::unique_ptr<CHotKey> removed{std::move(m_keys[static_cast<size_t>(i)])};
+		std::unique_ptr<CHotKey> removed{ std::move(m_keys[static_cast<size_t>(i)]) };
 		m_keys.erase(m_keys.begin() + i);
 		return true;
 	}
@@ -349,9 +349,9 @@ bool CHotKeys::Remove(CHotKey* pHotKey)
 bool CHotKeys::Remove(int clipId, CHotKey::HotKeyType hkType)
 {
 	INT_PTR count = GetSize();
-	for(INT_PTR i = 0; i < count; i++)
+	for (INT_PTR i = 0; i < count; i++)
 	{
-		if(ElementAt(i) != NULL &&
+		if (ElementAt(i) != NULL &&
 			ElementAt(i)->m_clipId == clipId &&
 			ElementAt(i)->m_hkType == hkType)
 		{
@@ -363,11 +363,11 @@ bool CHotKeys::Remove(int clipId, CHotKey::HotKeyType hkType)
 
 BOOL CHotKeys::ValidateClip(int clipId, DWORD key, CString desc, CHotKey::HotKeyType hkType)
 {
-	CHotKey *pKey = NULL;
+	CHotKey* pKey = NULL;
 	INT_PTR count = GetSize();
-	for(int i=0; i < count; i++)
+	for (int i = 0; i < count; i++)
 	{
-		if(ElementAt(i) != NULL && 
+		if (ElementAt(i) != NULL &&
 			ElementAt(i)->m_clipId == clipId &&
 			ElementAt(i)->m_hkType == hkType)
 		{
@@ -376,7 +376,7 @@ BOOL CHotKeys::ValidateClip(int clipId, DWORD key, CString desc, CHotKey::HotKey
 		}
 	}
 
-	if(pKey == NULL)
+	if (pKey == NULL)
 	{
 		pKey = &Create(desc, key, true, hkType);
 	}
@@ -391,7 +391,7 @@ BOOL CHotKeys::ValidateClip(int clipId, DWORD key, CString desc, CHotKey::HotKey
 void CHotKeys::LoadAllKeys()
 {
 	INT_PTR count = GetSize();
-	for(int i=0; i < count; i++)
+	for (int i = 0; i < count; i++)
 	{
 		ElementAt(i)->LoadKey();
 	}
@@ -400,7 +400,7 @@ void CHotKeys::LoadAllKeys()
 void CHotKeys::SaveAllKeys()
 {
 	INT_PTR count = GetSize();
-	for(int i=0; i < count; i++)
+	for (int i = 0; i < count; i++)
 	{
 		ElementAt(i)->SaveKey();
 	}
@@ -411,15 +411,15 @@ void CHotKeys::RegisterAll(bool bMsgOnError)
 	CString str;
 	CHotKey* pHotKey;
 	INT_PTR count = GetSize();
-	for(int i = 0; i < count; i++)
+	for (int i = 0; i < count; i++)
 	{
 		pHotKey = ElementAt(i);
-		if(!pHotKey->Register() && pHotKey->m_Key > 0)
+		if (!pHotKey->Register() && pHotKey->m_Key > 0)
 		{
-			str =  "Error Registering ";
+			str = "Error Registering ";
 			str += pHotKey->GetName();
 			CLogger::Log(str);
-			if(bMsgOnError)
+			if (bMsgOnError)
 				AfxMessageBox(str);
 		}
 	}
@@ -430,15 +430,15 @@ void CHotKeys::UnregisterAll(bool bMsgOnError, bool bOnShowDitto)
 	CString str;
 	CHotKey* pHotKey;
 	INT_PTR count = GetSize();
-	for(int i = 0; i < count; i++)
+	for (int i = 0; i < count; i++)
 	{
 		pHotKey = ElementAt(i);
-		if(!pHotKey->Unregister(bOnShowDitto))
+		if (!pHotKey->Unregister(bOnShowDitto))
 		{
 			str = "Error Unregistering ";
 			str += pHotKey->GetName();
 			CLogger::Log(str);
-			if(bMsgOnError)
+			if (bMsgOnError)
 				AfxMessageBox(str);
 		}
 	}
@@ -448,7 +448,7 @@ void CHotKeys::GetKeys(ARRAY& keys)
 {
 	INT_PTR count = GetSize();
 	keys.SetSize(count);
-	for(int i=0; i < count; i++)
+	for (int i = 0; i < count; i++)
 	{
 		keys[i] = ElementAt(i)->GetKey();
 	}
@@ -459,7 +459,7 @@ void CHotKeys::SetKeys(ARRAY& keys, bool bSave)
 {
 	INT_PTR count = GetSize();
 	ASSERT(count == keys.GetSize());
-	for(int i=0; i < count; i++)
+	for (int i = 0; i < count; i++)
 	{
 		ElementAt(i)->SetKey(keys[(INT)i], bSave);
 	}
@@ -472,17 +472,17 @@ bool CHotKeys::FindFirstConflict(ARRAY& keys, INT_PTR* pX, INT_PTR* pY)
 	INT_PTR j{};
 	INT_PTR count = keys.GetSize();
 	int key = 0;
-	for(i = 0; i < count && !bConflict; i++)
+	for (i = 0; i < count && !bConflict; i++)
 	{
 		key = keys.ElementAt(i);
 		// only check valid keys
-		if(key == 0)
+		if (key == 0)
 			continue;
 
 		// scan the array for a duplicate
-		for(j = i+1; j < count; j++ )
+		for (j = i + 1; j < count; j++)
 		{
-			if(keys.ElementAt(j) == key)
+			if (keys.ElementAt(j) == key)
 			{
 				bConflict = true;
 				break;
@@ -490,11 +490,11 @@ bool CHotKeys::FindFirstConflict(ARRAY& keys, INT_PTR* pX, INT_PTR* pY)
 		}
 	}
 
-	if(bConflict)
+	if (bConflict)
 	{
-		if(pX)
-			*pX = i-1;
-		if(pY)
+		if (pX)
+			*pX = i - 1;
+		if (pY)
 			*pY = j;
 	}
 

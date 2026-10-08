@@ -9,10 +9,9 @@ public:
 	BOOL OnDrop(CWnd* pWnd, COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoint point);
 	void OnDragLeave(CWnd* pWnd);
 
-	CMyDropTarget(CWnd *pMainWnd);
+	CMyDropTarget(CWnd* pMainWnd);
 	virtual ~CMyDropTarget();
 
 private:
-	CWnd *m_pParent;
+	CWnd* m_pParent;
 };
-

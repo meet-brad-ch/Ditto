@@ -10,8 +10,8 @@
 
 namespace DittoCore
 {
-	RtfJoin::RtfJoin(std::wstring_view separator)
-		: m_separator(Escape(separator))
+	RtfJoin::RtfJoin(std::wstring_view separator) :
+		m_separator(Escape(separator))
 	{
 	}
 

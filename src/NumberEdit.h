@@ -12,17 +12,15 @@
 
 class CNumberEdit : public CEdit
 {
-// Construction
+	// Construction
 public:
 	CNumberEdit();
 
-// Attributes
+	// Attributes
 public:
-
-// Operations
+	// Operations
 public:
-
-// Overrides
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CNumberEdit)
 	//}}AFX_VIRTUAL
@@ -31,16 +29,16 @@ public:
 	double GetNumberD();
 	long GetNumber();
 	BOOL SetNumber(long lNumber);
-	
-	void SetMaxNumber(long lMax)		{ m_dMax = lMax;		}
-	long GetMaxNumber()					{ return (long)m_dMax;	}
-	
+
+	void SetMaxNumber(long lMax) { m_dMax = lMax; }
+	long GetMaxNumber() { return (long)m_dMax; }
+
 protected:
 	BOOL ValidateNumber(double dNumber);
 
 	double m_dMax;
 
-// Implementation
+	// Implementation
 public:
 	virtual ~CNumberEdit();
 

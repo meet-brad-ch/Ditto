@@ -17,8 +17,8 @@
 // CCopyProperties dialog
 
 
-CCopyProperties::CCopyProperties(long lCopyID, CWnd* pParent, CClip *pMemoryClip)
-	: CDialog(CCopyProperties::IDD, pParent),
+CCopyProperties::CCopyProperties(long lCopyID, CWnd* pParent, CClip* pMemoryClip) :
+	CDialog(CCopyProperties::IDD, pParent),
 	m_clip(theApp.Services().ClipContext())
 {
 	m_lCopyID = lCopyID;
@@ -70,7 +70,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CCopyProperties message handlers
 
-BOOL CCopyProperties::OnInitDialog() 
+BOOL CCopyProperties::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
@@ -79,7 +79,7 @@ BOOL CCopyProperties::OnInitDialog()
 	SetWindowLong(m_hWnd, GWL_EXSTYLE, extendedStyle | WS_EX_DLGMODALFRAME);
 	SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
-	if(LoadDialogData() == false)
+	if (LoadDialogData() == false)
 	{
 		// close the dialog: OK would save empty or partly loaded properties
 		EndDialog(IDCANCEL);
@@ -88,10 +88,10 @@ BOOL CCopyProperties::OnInitDialog()
 
 	UpdateData(FALSE);
 
-	if(m_bSetToTopMost)
-		SetWindowPos(&CWnd::wndTopMost, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
+	if (m_bSetToTopMost)
+		SetWindowPos(&CWnd::wndTopMost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 
-	if(m_lCopyID == -1 && m_pMemoryClip != NULL)
+	if (m_lCopyID == -1 && m_pMemoryClip != NULL)
 	{
 		GetDlgItem(IDOK)->SetFocus();
 	}
@@ -99,7 +99,7 @@ BOOL CCopyProperties::OnInitDialog()
 	{
 		m_description.SetFocus();
 	}
-	
+
 	m_Resize.SetParent(m_hWnd);
 	m_Resize.AddControl(IDC_EDIT_PROPERTIES, CDialogResizer::SizeHeight | CDialogResizer::SizeWidth);
 	m_Resize.AddControl(IDC_STATIC_FORMATS, CDialogResizer::MoveTop);
@@ -111,7 +111,7 @@ BOOL CCopyProperties::OnInitDialog()
 	m_Resize.AddControl(IDC_COMBO1, CDialogResizer::SizeWidth);
 	m_Resize.AddControl(IDC_STATIC_MD5, CDialogResizer::MoveTop | CDialogResizer::MoveLeft);
 	m_Resize.AddControl(IDC_EDIT_MD5, CDialogResizer::MoveTop | CDialogResizer::MoveLeft);
-	
+
 	theApp.Services().Language().UpdateClipProperties(this);
 
 	if (m_clip.ID() > 0)
@@ -132,14 +132,14 @@ bool CCopyProperties::LoadDialogData()
 	{
 		m_GroupCombo.FillCombo();
 
-		if(m_lCopyID == -1 && m_pMemoryClip != NULL)
+		if (m_lCopyID == -1 && m_pMemoryClip != NULL)
 		{
 			LoadDataFromCClip(*m_pMemoryClip);
 			return true;
 		}
 
 		// LoadStoredMainTable and LoadFormats show their own errors
-		if(LoadStoredMainTable(m_clip) == false || m_clip.LoadFormats(m_lCopyID) == false)
+		if (LoadStoredMainTable(m_clip) == false || m_clip.LoadFormats(m_lCopyID) == false)
 		{
 			return false;
 		}
@@ -153,17 +153,17 @@ bool CCopyProperties::LoadDialogData()
 	}
 }
 
-void CCopyProperties::LoadDataFromCClip(CClip &Clip)
+void CCopyProperties::LoadDataFromCClip(CClip& Clip)
 {
 	COleDateTime dtTime(Clip.m_Time.GetTime());
 	m_eDate = dtTime.Format();
-	
+
 	COleDateTime lastPasteDate(Clip.m_lastPasteDate.GetTime());
 	m_lastPasteDate = lastPasteDate.Format();
 
 	m_description.SetWindowText(Clip.m_Desc);
-	
-	if(Clip.m_dontAutoDelete)
+
+	if (Clip.m_dontAutoDelete)
 	{
 		m_bNeverAutoDelete = TRUE;
 	}
@@ -185,7 +185,7 @@ void CCopyProperties::LoadDataFromCClip(CClip &Clip)
 	//show the selected data md5
 	OnLbnSelchangeCopyData();
 
-	if(Clip.m_bIsGroup == FALSE)
+	if (Clip.m_bIsGroup == FALSE)
 	{
 		HideMoveToGroupHotKey();
 	}
@@ -196,9 +196,9 @@ bool CCopyProperties::IsExtendedHotKey(BYTE key)
 	return std::find(s_extendedHotKeys.begin(), s_extendedHotKeys.end(), key) != s_extendedHotKeys.end();
 }
 
-void CCopyProperties::LoadHotKeys(CClip &Clip)
+void CCopyProperties::LoadHotKeys(CClip& Clip)
 {
-	DWORD shortcut = CAccels::MakeKey(LOBYTE(Clip.m_shortCut), ((HIBYTE(Clip.m_shortCut)) &~HOTKEYF_EXT));
+	DWORD shortcut = CAccels::MakeKey(LOBYTE(Clip.m_shortCut), ((HIBYTE(Clip.m_shortCut)) & ~HOTKEYF_EXT));
 
 	if (IsExtendedHotKey(LOBYTE(shortcut)))
 	{
@@ -207,7 +207,7 @@ void CCopyProperties::LoadHotKeys(CClip &Clip)
 
 	m_HotKey.SetHotKey(LOBYTE(shortcut), (HIBYTE(shortcut)));
 	m_HotKey.SetRules(HKCOMB_A, 0);
-	if(HIBYTE(Clip.m_shortCut) & HOTKEYF_EXT)
+	if (HIBYTE(Clip.m_shortCut) & HOTKEYF_EXT)
 	{
 		::CheckDlgButton(m_hWnd, IDC_CHECK_WIN, BST_CHECKED);
 	}
@@ -216,17 +216,17 @@ void CCopyProperties::LoadHotKeys(CClip &Clip)
 
 	m_MoveToGrouHotKey.SetHotKey(LOBYTE(Clip.m_moveToGroupShortCut), (HIBYTE(Clip.m_moveToGroupShortCut) & ~HOTKEYF_EXT));
 	m_MoveToGrouHotKey.SetRules(HKCOMB_A, 0);
-	if(HIBYTE(Clip.m_moveToGroupShortCut) & HOTKEYF_EXT)
+	if (HIBYTE(Clip.m_moveToGroupShortCut) & HOTKEYF_EXT)
 	{
 		::CheckDlgButton(m_hWnd, IDC_CHECK_WIN_MOVE_TO_GROUP, BST_CHECKED);
 	}
 }
 
-void CCopyProperties::LoadFormatList(CClip &Clip)
+void CCopyProperties::LoadFormatList(CClip& Clip)
 {
 	CString cs;
 	INT_PTR count = Clip.m_Formats.GetSize();
-	for(int i = 0; i < count; i++)
+	for (int i = 0; i < count; i++)
 	{
 		const CClipFormat* pCF{ &Clip.m_Formats.GetData()[i] };
 		const int MAX_SIZE_BUFFER = 255;
@@ -236,7 +236,7 @@ void CCopyProperties::LoadFormatList(CClip &Clip)
 		cs.Format(_T("%s, %s"), CClipboardFormats::GetFormatName(pCF->m_cfType).GetString(), size);
 		int nIndex = m_lCopyData.AddString(cs);
 
-		if(m_lCopyID == -1 && pCF->m_dataId == -1)
+		if (m_lCopyID == -1 && pCF->m_dataId == -1)
 			m_lCopyData.SetItemData(nIndex, i);
 		else
 			m_lCopyData.SetItemData(nIndex, pCF->m_dataId);
@@ -247,8 +247,8 @@ void CCopyProperties::LoadFormatList(CClip &Clip)
 
 void CCopyProperties::SelectLastFormat()
 {
-	int selectedRow = m_lCopyData.GetCount()-1;
-	if(selectedRow >= 0 && selectedRow < m_lCopyData.GetCount())
+	int selectedRow = m_lCopyData.GetCount() - 1;
+	if (selectedRow >= 0 && selectedRow < m_lCopyData.GetCount())
 	{
 		m_lCopyData.SetSel(selectedRow);
 		m_lCopyData.SetCurSel(selectedRow);
@@ -278,11 +278,11 @@ void CCopyProperties::HideMoveToGroupHotKey()
 		::GetWindowRect(hwnd, &rect);
 		ScreenToClient(&rect);
 
-		if(rect.top > anchorRect.bottom)
+		if (rect.top > anchorRect.bottom)
 		{
 			::MoveWindow(hwnd, rect.left,
-				rect.top - (anchorRect.Height()+4), rect.Width(),
-				rect.Height(), TRUE);
+						 rect.top - (anchorRect.Height() + 4), rect.Width(),
+						 rect.Height(), TRUE);
 		}
 
 		// do something with the hwnd
@@ -294,19 +294,19 @@ void CCopyProperties::HideMoveToGroupHotKey()
 	::GetWindowRect(m_hWnd, &rect2);
 
 	::MoveWindow(m_hWnd, rect2.left,
-			rect2.top, rect2.Width(),
-			rect2.Height() - (anchorRect.Height()+4), TRUE);
+				 rect2.top, rect2.Width(),
+				 rect2.Height() - (anchorRect.Height() + 4), TRUE);
 }
 
-void CCopyProperties::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized) 
+void CCopyProperties::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 {
 	CDialog::OnActivate(nState, pWndOther, bMinimized);
 
 	if (nState == WA_INACTIVE)
 	{
-		if(m_bHideOnKillFocus)
+		if (m_bHideOnKillFocus)
 		{
-			if(!m_bHandleKillFocus)
+			if (!m_bHandleKillFocus)
 			{
 				EndDialog(-1);
 				m_bHandleKillFocus = false;
@@ -318,19 +318,18 @@ void CCopyProperties::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 		SetFocus();
 		::SetForegroundWindow(m_hWnd);
 	}
-
 }
-void CCopyProperties::OnOK() 
+void CCopyProperties::OnOK()
 {
 	UpdateData();
 
 	try
 	{
-		if(m_lCopyID == -1 && m_pMemoryClip != NULL)
+		if (m_lCopyID == -1 && m_pMemoryClip != NULL)
 		{
 			SaveToMemoryClip();
 		}
-		else if(SaveToStoredClip() == false)
+		else if (SaveToStoredClip() == false)
 		{
 			return;
 		}
@@ -352,8 +351,8 @@ void CCopyProperties::SaveToMemoryClip()
 	LoadDataIntoCClip(*m_pMemoryClip);
 
 	m_DeletedData.SortDescending();
-	INT_PTR count{m_DeletedData.GetSize()};
-	for(int i = 0; i < count; i++)
+	INT_PTR count{ m_DeletedData.GetSize() };
+	for (int i = 0; i < count; i++)
 	{
 		m_pMemoryClip->m_Formats.RemoveAt(m_DeletedData[i]);
 	}
@@ -362,31 +361,31 @@ void CCopyProperties::SaveToMemoryClip()
 bool CCopyProperties::SaveToStoredClip()
 {
 	CClip clip{ theApp.Services().ClipContext() };
-	if(LoadStoredMainTable(clip) == false)
+	if (LoadStoredMainTable(clip) == false)
 	{
 		return false;
 	}
 
 	LoadDataIntoCClip(clip);
 
-	if(CheckGlobalHotKey(clip) == FALSE)
+	if (CheckGlobalHotKey(clip) == FALSE)
 	{
-		if(MessageBox(_T("Error registering global hot key\n\nContinue?"), _T(""), MB_OKCANCEL |MB_ICONWARNING) != IDOK)
+		if (MessageBox(_T("Error registering global hot key\n\nContinue?"), _T(""), MB_OKCANCEL | MB_ICONWARNING) != IDOK)
 		{
 			return false;
 		}
 	}
 
-	if(CheckMoveToGroupGlobalHotKey(clip) == FALSE)
+	if (CheckMoveToGroupGlobalHotKey(clip) == FALSE)
 	{
-		if(MessageBox(_T("Error registering global move to group hot key\n\nContinue?"), _T(""), MB_OKCANCEL |MB_ICONWARNING) != IDOK)
+		if (MessageBox(_T("Error registering global move to group hot key\n\nContinue?"), _T(""), MB_OKCANCEL | MB_ICONWARNING) != IDOK)
 		{
 			return false;
 		}
 	}
 
 	// ModifyMainTable and DeleteFormats show their own errors; the dialog stays open
-	if(clip.ModifyMainTable() == false)
+	if (clip.ModifyMainTable() == false)
 	{
 		return false;
 	}
@@ -398,7 +397,7 @@ bool CCopyProperties::LoadStoredMainTable(CClip& clip)
 {
 	// LoadMainTable shows a database error itself, but returns the same FALSE for a missing clip:
 	// the missing clip is checked first, so each failure is shown once
-	if(CClipRepository(theApp.Services().Database()).LoadClip(m_lCopyID).has_value() == false)
+	if (CClipRepository(theApp.Services().Database()).LoadClip(m_lCopyID).has_value() == false)
 	{
 		CErrorReport::Show(CStringUtil::Format(_T("Clip id %ld was not found, it may have been deleted"), m_lCopyID));
 		return false;
@@ -407,11 +406,11 @@ bool CCopyProperties::LoadStoredMainTable(CClip& clip)
 	return clip.LoadMainTable(m_lCopyID) != FALSE;
 }
 
-BOOL CCopyProperties::CheckGlobalHotKey(CClip &clip)
+BOOL CCopyProperties::CheckGlobalHotKey(CClip& clip)
 {
 	BOOL ret = FALSE;
 
-	if(clip.m_globalShortCut)
+	if (clip.m_globalShortCut)
 	{
 		ret = theApp.Services().HotKeys().ValidateClip(clip.m_id, clip.m_shortCut, clip.m_Desc, CHotKey::PASTE_OPEN_CLIP);
 	}
@@ -424,11 +423,11 @@ BOOL CCopyProperties::CheckGlobalHotKey(CClip &clip)
 	return ret;
 }
 
-BOOL CCopyProperties::CheckMoveToGroupGlobalHotKey(CClip &clip)
+BOOL CCopyProperties::CheckMoveToGroupGlobalHotKey(CClip& clip)
 {
 	BOOL ret = FALSE;
 
-	if(clip.m_globalMoveToGroupShortCut)
+	if (clip.m_globalMoveToGroupShortCut)
 	{
 		ret = theApp.Services().HotKeys().ValidateClip(clip.m_id, clip.m_moveToGroupShortCut, clip.m_Desc, CHotKey::MOVE_TO_GROUP);
 	}
@@ -441,31 +440,31 @@ BOOL CCopyProperties::CheckMoveToGroupGlobalHotKey(CClip &clip)
 	return ret;
 }
 
-void CCopyProperties::LoadDataIntoCClip(CClip &Clip)
+void CCopyProperties::LoadDataIntoCClip(CClip& Clip)
 {
 	const DWORD hotKey{ m_HotKey.GetHotKey() };
 
 	short sKeyKode = LOBYTE(hotKey);
 	short sModifers = (HIBYTE(hotKey)) & ~HOTKEYF_EXT;
 
-	if(sKeyKode && ::IsDlgButtonChecked(m_hWnd, IDC_CHECK_WIN))
+	if (sKeyKode && ::IsDlgButtonChecked(m_hWnd, IDC_CHECK_WIN))
 	{
 		sModifers |= HOTKEYF_EXT;
 	}
 
-	Clip.m_shortCut = MAKEWORD(sKeyKode, sModifers); 
+	Clip.m_shortCut = MAKEWORD(sKeyKode, sModifers);
 
 	const DWORD moveToGroupHotKey{ m_MoveToGrouHotKey.GetHotKey() };
 
 	short moveToGroupKeyKode = LOBYTE(moveToGroupHotKey);
 	short moveToGroupModifers = HIBYTE(moveToGroupHotKey);
 
-	if(moveToGroupKeyKode && ::IsDlgButtonChecked(m_hWnd, IDC_CHECK_WIN_MOVE_TO_GROUP))
+	if (moveToGroupKeyKode && ::IsDlgButtonChecked(m_hWnd, IDC_CHECK_WIN_MOVE_TO_GROUP))
 	{
 		moveToGroupModifers |= HOTKEYF_EXT;
 	}
 
-	Clip.m_moveToGroupShortCut = MAKEWORD(moveToGroupKeyKode, moveToGroupModifers); 
+	Clip.m_moveToGroupShortCut = MAKEWORD(moveToGroupKeyKode, moveToGroupModifers);
 
 	//remove any others that have the same hot key
 	CClipRepository repository(theApp.Services().Database());
@@ -473,17 +472,17 @@ void CCopyProperties::LoadDataIntoCClip(CClip &Clip)
 
 	m_description.GetWindowText(Clip.m_Desc);
 
-	m_QuickPasteText.GetWindowText(Clip.m_csQuickPaste);	
+	m_QuickPasteText.GetWindowText(Clip.m_csQuickPaste);
 
 	Clip.m_parentId = m_GroupCombo.GetItemDataFromCursel();
 
 	//If we are going from no group to a group or the
 	//don't auto delete check box is checked
-	if(m_bNeverAutoDelete)
+	if (m_bNeverAutoDelete)
 	{
 		Clip.m_dontAutoDelete = (int)CTime::GetCurrentTime().GetTime();
 	}
-	else if(m_bNeverAutoDelete == FALSE)
+	else if (m_bNeverAutoDelete == FALSE)
 	{
 		Clip.m_dontAutoDelete = FALSE;
 	}
@@ -493,55 +492,55 @@ void CCopyProperties::LoadDataIntoCClip(CClip &Clip)
 	Clip.m_globalMoveToGroupShortCut = m_moveToGroupHotKeyGlobal;
 }
 
-void CCopyProperties::OnDeleteCopyData() 
+void CCopyProperties::OnDeleteCopyData()
 {
 	int nCount = m_lCopyData.GetSelCount();
-	if(nCount)
+	if (nCount)
 	{
 		m_bDeletedData = true;
 
 		//Get the selected indexes
 		ARRAY items;
 		items.SetSize(nCount);
-		m_lCopyData.GetSelItems(nCount, items.GetData()); 
+		m_lCopyData.GetSelItems(nCount, items.GetData());
 
 		items.SortDescending();
 
 		//Get the selected itemdata
-		for(int i = 0; i < nCount; i++)
+		for (int i = 0; i < nCount; i++)
 		{
 			int row = items[i];
 			m_DeletedData.Add((int)m_lCopyData.GetItemData(row));
 			m_lCopyData.DeleteString(row);
 
-			int newRow = row-1;
-			if(newRow < 0)
+			int newRow = row - 1;
+			if (newRow < 0)
 			{
 				newRow = 0;
 			}
 
-			if(newRow >= 0 && newRow < m_lCopyData.GetCount())
+			if (newRow >= 0 && newRow < m_lCopyData.GetCount())
 			{
 				m_lCopyData.SetSel(newRow);
 				m_lCopyData.SetCurSel(newRow);
 				m_lCopyData.SetCaretIndex(newRow);
 				m_lCopyData.SetAnchorIndex(newRow);
 			}
-		}		
+		}
 	}
 }
 
-void CCopyProperties::OnCancel() 
+void CCopyProperties::OnCancel()
 {
 	m_bHandleKillFocus = true;
-		
+
 	CDialog::OnCancel();
 }
 
-void CCopyProperties::OnSize(UINT nType, int cx, int cy) 
+void CCopyProperties::OnSize(UINT nType, int cx, int cy)
 {
 	CDialog::OnSize(nType, cx, cy);
-	
+
 	// the high bit (0x8000) is the "down" bit; upstream tested 0x100, which is never set
 	if (((GetKeyState(VK_LBUTTON) & 0x8000) != 0) &&
 		m_mouseDownOnCaption == false)
@@ -575,7 +574,7 @@ void CCopyProperties::OnLbnSelchangeCopyData()
 			int row = items[0];
 			int itemData = (int)m_lCopyData.GetItemData(row);
 
-			CClip *pClip = NULL;
+			CClip* pClip = NULL;
 			if (m_lCopyID == -1 && m_pMemoryClip != NULL)
 			{
 				pClip = m_pMemoryClip;

@@ -34,11 +34,14 @@ public:
 		KeyboardAB Array[10];
 	};
 
-// Dialog Data
-	enum { IDD = IDD_OPTIONS_QUICK_PASTE_KEYBOARD };
+	// Dialog Data
+	enum
+	{
+		IDD = IDD_OPTIONS_QUICK_PASTE_KEYBOARD
+	};
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	virtual void DoDataExchange(CDataExchange* pDX); // DDX/DDV support
 
 	DECLARE_MESSAGE_MAP()
 public:
@@ -56,7 +59,7 @@ protected:
 	int SelectedCommandId();
 	int SelectedCommandShortCutId();
 	int SelectedCommandRow();
-	void SelectMouseTypeCombo(CComboBox &combo, int value);
+	void SelectMouseTypeCombo(CComboBox& combo, int value);
 	void SelectedRow(int row);
 
 	/** @brief The keys that get the extended key flag when a shortcut is loaded into a hot key control. */
@@ -92,10 +95,10 @@ protected:
 	void HideSecondPressControls();
 	/** @brief Reads the first press from the keyboard or mouse controls into a shortcut.
 	@param ab the shortcut; A is set when the keyboard or mouse radio is checked. */
-	void ReadFirstPress(KeyboardAB &ab);
+	void ReadFirstPress(KeyboardAB& ab);
 	/** @brief Reads the second press from the keyboard or mouse controls into a shortcut (0 when disabled).
 	@param ab the shortcut; B is set. */
-	void ReadSecondPress(KeyboardAB &ab);
+	void ReadSecondPress(KeyboardAB& ab);
 	/** @brief The HOTKEYF_* modifiers of the checked shift, control and alt check boxes.
 	@param shiftId the shift check box.
 	@param controlId the control check box.
@@ -104,8 +107,8 @@ protected:
 	WORD CheckedModifiers(int shiftId, int controlId, int altId);
 
 public:
-	afx_msg void OnLvnItemActivateList1(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnLvnItemchangedList1(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnLvnItemActivateList1(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnLvnItemchangedList1(NMHDR* pNMHDR, LRESULT* pResult);
 	CHotKeyCtrl m_hotKey1;
 	afx_msg void OnBnClickedAssign();
 	CHotKeyCtrl m_hotKey2;

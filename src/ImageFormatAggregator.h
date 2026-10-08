@@ -23,4 +23,3 @@ protected:
 	/** @brief The registered "PNG" format. */
 	CLIPFORMAT m_pngFormat{};
 };
-

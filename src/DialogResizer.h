@@ -35,7 +35,7 @@ protected:
 	{
 	public:
 		CDR_Data()
-		{			
+		{
 			m_nFlags = 0;
 		}
 		HWND m_hWnd{};
@@ -51,8 +51,7 @@ public:
 	void SetParent(HWND hWndParent);
 
 protected:
-
-	CArray< CDR_Data, CDR_Data > m_Controls;
+	CArray<CDR_Data, CDR_Data> m_Controls;
 	CSize m_DlgSize;
 	HWND m_hWndParent{};
 

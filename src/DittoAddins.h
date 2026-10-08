@@ -27,11 +27,11 @@ public:
 	bool LoadAll();
 	bool UnloadAll();
 
-	bool Loaded()	{ return m_Addins.size() > 0; }
+	bool Loaded() { return m_Addins.size() > 0; }
 
-	bool AddPrePasteAddinsToMenu(CMenu *pMenu);
-	bool CallPrePasteFunction(int Id, IClip *pClip);
-	void AboutScreenText(CStringArray &arr);
+	bool AddPrePasteAddinsToMenu(CMenu* pMenu);
+	bool CallPrePasteFunction(int Id, IClip* pClip);
+	void AboutScreenText(CStringArray& arr);
 
 protected:
 	// The loaded addins; this object owns them
@@ -41,14 +41,14 @@ protected:
 	{
 	public:
 		// One of m_Addins (not owned)
-		CDittoAddin *m_pAddin{};
+		CDittoAddin* m_pAddin{};
 		CStringA m_csFunctionName;
 	};
 
 	CMap<int, int, CFunctionLookup, CFunctionLookup> m_FunctionMap;
 
 protected:
-	void LoadDittoInfo(CDittoInfo &DittoInfo);
+	void LoadDittoInfo(CDittoInfo& DittoInfo);
 
 	/// The application's settings (not owned).
 	CGetSetOptions& m_settings;

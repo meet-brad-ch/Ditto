@@ -43,7 +43,8 @@ HGLOBAL CImageFormatAggregator::GetHGlobal()
 {
 	// the window DC is released on every path; upstream never released it
 	const HWND window = GetActiveWindow();
-	const auto releaseDc = [window](HDC dc) { ::ReleaseDC(window, dc); };
+	const auto releaseDc = [window](HDC dc)
+	{ ::ReleaseDC(window, dc); };
 	const std::unique_ptr<std::remove_pointer_t<HDC>, decltype(releaseDc)> dc(::GetDC(window), releaseDc);
 
 	CBitmap bitmap;

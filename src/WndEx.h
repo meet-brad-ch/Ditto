@@ -15,20 +15,18 @@ class CGetSetOptions;
 
 class CWndEx : public CWnd
 {
-// Construction
+	// Construction
 public:
 	CWndEx();
 
-// Attributes
+	// Attributes
 public:
-
-// Operations
+	// Operations
 public:
-
-// Overrides
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CWndEx)
-	public:
+public:
 	virtual BOOL Create(const CRect& crStart, CWnd* pParentWnd);
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	//}}AFX_VIRTUAL
@@ -39,8 +37,8 @@ public:
 	void MinMaxWindow(long lOption = CDittoWindow::SwapMinMax);
 	void GetWindowRectEx(LPRECT lpRect);
 	bool SetCaptionColorActive(BOOL bPersistant, BOOL ConnectedToClipboard);
-	void SetAutoMaxDelay(long lDelay)	{ m_lDelayMaxSeconds = lDelay; }
-	bool GetMinimized()	{ return m_DittoWindow.m_bMinimized; }
+	void SetAutoMaxDelay(long lDelay) { m_lDelayMaxSeconds = lDelay; }
+	bool GetMinimized() { return m_DittoWindow.m_bMinimized; }
 
 	void SetCustomWindowTitle(CString title);
 
@@ -50,9 +48,8 @@ public:
 
 	CDittoWindow m_DittoWindow;
 
-protected:	
-	
-	bool m_bMaxSetTimer;	
+protected:
+	bool m_bMaxSetTimer;
 	int m_lDelayMaxSeconds;
 	CToolTipCtrl m_toolTip;
 	SnapWindow m_snap;
@@ -66,7 +63,7 @@ protected:
 		TimerButtonUp = 6,
 	};
 
-// Implementation
+	// Implementation
 public:
 	virtual ~CWndEx();
 
@@ -83,7 +80,7 @@ protected:
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnWindowPosChanging(WINDOWPOS* lpwndpos);
-	afx_msg void OnInitMenuPopup(CMenu *pPopupMenu, UINT nIndex,BOOL bSysMenu);
+	afx_msg void OnInitMenuPopup(CMenu* pPopupMenu, UINT nIndex, BOOL bSysMenu);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 public:

@@ -25,29 +25,29 @@ CUAC_Thread::~CUAC_Thread(void)
 }
 
 
-void CUAC_Thread::OnTimeOut(void * /*param*/)
+void CUAC_Thread::OnTimeOut(void* /*param*/)
 {
 	bool close = false;
 	DWORD exitCode = 0;
 
 	HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, m_processId);
-	if(hProcess == NULL)
+	if (hProcess == NULL)
 	{
 		close = true;
 	}
 	else
 	{
-		if(GetExitCodeProcess(hProcess, &exitCode) == 0)
+		if (GetExitCodeProcess(hProcess, &exitCode) == 0)
 		{
 			close = true;
 		}
-		else if(exitCode != STILL_ACTIVE)
+		else if (exitCode != STILL_ACTIVE)
 		{
 			close = true;
 		}
 	}
 
-	if(close)
+	if (close)
 	{
 		CLogger::Log(CStringUtil::Format(_T("Found parent process id (%d) is not running, Exit Code %d closing uac aware app"), m_processId, exitCode));
 		this->CancelThread();
@@ -59,12 +59,12 @@ void CUAC_Thread::OnTimeOut(void * /*param*/)
 	}
 }
 
-void CUAC_Thread::OnEvent(int eventId, void * /*param*/)
+void CUAC_Thread::OnEvent(int eventId, void* /*param*/)
 {
 	ULONGLONG startTick = GetTickCount64();
 	CLogger::Log(CStringUtil::Format(_T("Start of OnEvent, eventId: %s"), EnumName((eUacThreadEvents)eventId).GetString()));
 
-	switch((eUacThreadEvents)eventId)
+	switch ((eUacThreadEvents)eventId)
 	{
 	case UAC_PASTE:
 		m_activeWindow.SendPaste(false);
@@ -74,7 +74,7 @@ void CUAC_Thread::OnEvent(int eventId, void * /*param*/)
 		break;
 	case UAC_CUT:
 		m_activeWindow.SendCut();
-		break; 
+		break;
 	case UAC_EXIT:
 		this->CancelThread();
 		break;
@@ -86,7 +86,7 @@ void CUAC_Thread::OnEvent(int eventId, void * /*param*/)
 
 CString CUAC_Thread::EnumName(eUacThreadEvents e)
 {
-	switch(e)
+	switch (e)
 	{
 	case UAC_PASTE:
 		return _T("Paste Elevated");
@@ -102,7 +102,7 @@ CString CUAC_Thread::EnumName(eUacThreadEvents e)
 }
 
 bool CUAC_Thread::UACPaste()
-{	
+{
 	bool ret = StartProcess();
 
 	FirePaste();
@@ -111,7 +111,7 @@ bool CUAC_Thread::UACPaste()
 }
 
 bool CUAC_Thread::UACCopy()
-{	
+{
 	bool ret = StartProcess();
 
 	FireCopy();
@@ -120,7 +120,7 @@ bool CUAC_Thread::UACCopy()
 }
 
 bool CUAC_Thread::UACCut()
-{	
+{
 	bool ret = StartProcess();
 
 	FireCut();
@@ -136,12 +136,12 @@ bool CUAC_Thread::StartProcess()
 
 	HANDLE mutex = CreateMutex(NULL, FALSE, mutexName);
 	DWORD dwError = GetLastError();
-	if(mutex == NULL)
+	if (mutex == NULL)
 	{
 		CLogger::Log(CStringUtil::Format(_T("CreateMutex %s failed, error: %d"), mutexName.GetString(), dwError));
 	}
 
-	if(dwError == ERROR_ALREADY_EXISTS)
+	if (dwError == ERROR_ALREADY_EXISTS)
 	{
 		CLogger::Log(_T("Paste uac admin exe is already running just signalling paste"));
 	}
@@ -171,7 +171,7 @@ bool CUAC_Thread::StartProcess()
 		}
 	}
 
-	if(mutex != NULL)
+	if (mutex != NULL)
 	{
 		CloseHandle(mutex);
 	}

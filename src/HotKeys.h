@@ -12,19 +12,19 @@ class CHotKey
 {
 public:
 	enum HotKeyType
-	{ 
+	{
 		PASTE_OPEN_CLIP,
 		MOVE_TO_GROUP
 	};
 
-	CString	m_Name;
+	CString m_Name;
 	CString m_description;
-	ATOM	m_Atom;
-	DWORD	m_Key; //704 is ctrl-tilda
-	bool	m_bIsRegistered;
-	bool	m_bUnRegisterOnShowDitto;
-	int		m_clipId;
-	int		m_globalId;
+	ATOM m_Atom;
+	DWORD m_Key; //704 is ctrl-tilda
+	bool m_bIsRegistered;
+	bool m_bUnRegisterOnShowDitto;
+	int m_clipId;
+	int m_globalId;
 	HotKeyType m_hkType;
 
 	/**
@@ -39,17 +39,17 @@ public:
 	 * @param hkType What the hot key does.
 	 * @param description The text shown for the hot key.
 	 */
-	CHotKey( const CHotKeys& registry, CGetSetOptions& settings, int globalId, CString name, DWORD defKey = 0, bool bUnregOnShowDitto = false, HotKeyType hkType = PASTE_OPEN_CLIP, CString description = _T(""));
+	CHotKey(const CHotKeys& registry, CGetSetOptions& settings, int globalId, CString name, DWORD defKey = 0, bool bUnregOnShowDitto = false, HotKeyType hkType = PASTE_OPEN_CLIP, CString description = _T(""));
 	~CHotKey();
 	CHotKey(const CHotKey&) = delete; // the hot key owns its global atom
 	CHotKey& operator=(const CHotKey&) = delete;
 
-	bool	IsRegistered() { return m_bIsRegistered; }
-	CString GetName()      { return m_Name; }
-	DWORD   GetKey()       { return m_Key; }
+	bool IsRegistered() { return m_bIsRegistered; }
+	CString GetName() { return m_Name; }
+	DWORD GetKey() { return m_Key; }
 	CString GetHotKeyDisplay();
-	
-	void SetKey( DWORD key, bool bSave = false );
+
+	void SetKey(DWORD key, bool bSave = false);
 	// profile
 	void LoadKey();
 	bool SaveKey();
@@ -106,11 +106,12 @@ private:
 	/** @brief The keys whose scan code needs the extended bit (MapVirtualKey strips it for them). */
 	static constexpr std::array<unsigned int, 12> s_extendedKeys{
 		VK_LEFT, VK_UP, VK_RIGHT, VK_DOWN, // arrow keys
-		VK_PRIOR, VK_NEXT, // page up and page down
+		VK_PRIOR, VK_NEXT,                 // page up and page down
 		VK_END, VK_HOME,
 		VK_INSERT, VK_DELETE,
 		VK_DIVIDE, // numpad slash
-		VK_NUMLOCK };
+		VK_NUMLOCK
+	};
 
 	/**
 	 * @brief Tells whether a key is one whose scan code needs the extended bit.
@@ -182,7 +183,7 @@ public:
 	 * @brief Sets the window the hot keys are registered for (WM_HOTKEY goes there).
 	 * @param hWnd The window.
 	 */
-	void Init( HWND hWnd ) { m_hWnd = hWnd; }
+	void Init(HWND hWnd) { m_hWnd = hWnd; }
 
 	/**
 	 * @brief The window the hot keys are registered for.
@@ -234,13 +235,13 @@ public:
 	 */
 	CHotKey* operator[](INT_PTR index) const { return ElementAt(index); }
 
-	INT_PTR Find( CHotKey* pHotKey );
+	INT_PTR Find(CHotKey* pHotKey);
 	/**
 	 * @brief Removes a hot key from the registry and destroys it (the registry owns it).
 	 * @param pHotKey The hot key to remove; it is invalid after the call when it was found.
 	 * @return True when the hot key was in the registry.
 	 */
-	bool Remove( CHotKey* pHotKey );
+	bool Remove(CHotKey* pHotKey);
 
 	bool Remove(int clipId, CHotKey::HotKeyType hkType);
 
@@ -269,12 +270,12 @@ public:
 	void RegisterAll(bool bMsgOnError = false);
 	void UnregisterAll(bool bMsgOnError = false, bool bOnShowDitto = false);
 
-	void GetKeys( ARRAY& keys );
-	void SetKeys( ARRAY& keys, bool bSave = false ); // caution! this alters hotkeys based upon corresponding indexes
+	void GetKeys(ARRAY& keys);
+	void SetKeys(ARRAY& keys, bool bSave = false); // caution! this alters hotkeys based upon corresponding indexes
 
-	static bool FindFirstConflict( ARRAY& keys, INT_PTR* pX = NULL, INT_PTR* pY = NULL );
+	static bool FindFirstConflict(ARRAY& keys, INT_PTR* pX = NULL, INT_PTR* pY = NULL);
 	// if true, pX and pY (if valid) are set to the index of the conflicting hotkeys.
-	bool FindFirstConflict( INT_PTR* pX = NULL, INT_PTR* pY = NULL );
+	bool FindFirstConflict(INT_PTR* pX = NULL, INT_PTR* pY = NULL);
 
 private:
 	/** @brief The profile name and the defaults of a named hot key. */
@@ -291,7 +292,7 @@ private:
 	};
 
 	/** @brief The number of named hot keys. */
-	static constexpr size_t s_namedCount{static_cast<size_t>(Id::Count)};
+	static constexpr size_t s_namedCount{ static_cast<size_t>(Id::Count) };
 
 	/** @brief The named hot keys in creation order (the order CCP_MainApp::AfterMainCreate always used). */
 	static constexpr std::array<NamedHotKeySpec, s_namedCount> s_namedHotKeys{ {

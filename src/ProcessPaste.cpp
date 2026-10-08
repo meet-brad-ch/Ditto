@@ -64,7 +64,7 @@ BOOL CProcessPaste::DoPaste()
 {
 	bool handedToClipboard{ false };
 	const BOOL ret = RunAtBoundary(_T("Paste"), [this, &handedToClipboard]() -> BOOL
-	{
+								   {
 		m_pOle->m_pasteOptions = m_pasteOptions;
 		if (!m_pOle->DoImmediateRender())
 		{
@@ -103,8 +103,7 @@ BOOL CProcessPaste::DoPaste()
 			CLogger::Log(_T("Activating active window"));
 			m_activeWindow.ActivateTarget();
 		}
-		return TRUE;
-	});
+		return TRUE; });
 
 	if (handedToClipboard)
 	{
@@ -118,7 +117,7 @@ BOOL CProcessPaste::DoPaste()
 BOOL CProcessPaste::DoDrag()
 {
 	const BOOL ret = RunAtBoundary(_T("Drag drop"), [this]() -> BOOL
-	{
+								   {
 		m_pOle->m_pasteOptions = m_pasteOptions;
 		m_pOle->DoDelayRender();
 		DROPEFFECT de = m_pOle->DoDragDrop(DROPEFFECT_COPY);
@@ -127,8 +126,7 @@ BOOL CProcessPaste::DoDrag()
 			return FALSE;
 		}
 		MarkAsPasted(m_pasteOptions.m_updateClipOrder);
-		return TRUE;
-	});
+		return TRUE; });
 
 	//from https://www.codeproject.com/Articles/886711/Drag-Drop-Images-and-Drop-Descriptions-for-MFC-App
 	//You may have noted the InternalRelease() function call.This is required here to delete the object.While it is possible to use
@@ -149,11 +147,11 @@ void CProcessPaste::MarkAsPasted(bool updateClipOrder)
 	CLogger::Log(_T("start of MarkAsPasted"));
 
 	CClipIDs& clips = GetClipIDs();
-	
+
 	m_settings.SetTripPasteCount(-1);
 	m_settings.SetTotalPasteCount(-1);
 
-	auto pData{std::make_unique<MarkAsPastedData>(m_context)};
+	auto pData{ std::make_unique<MarkAsPastedData>(m_context) };
 	for (int i = 0; i < clips.GetCount(); i++)
 	{
 		pData->ids.Add(clips.ElementAt(i));
@@ -189,11 +187,11 @@ UINT CProcessPaste::MarkAsPastedThread(LPVOID pParam)
 	BOOL bRet = FALSE;
 	int clipId = 0;
 	// owns the data from MarkAsPasted, also when an update below fails
-	const std::unique_ptr<MarkAsPastedData> pData{static_cast<MarkAsPastedData*>(pParam)};
+	const std::unique_ptr<MarkAsPastedData> pData{ static_cast<MarkAsPastedData*>(pParam) };
 
 	try
 	{
-		if(pData)
+		if (pData)
 		{
 			UpdatePastedClips(*pData, clipId);
 
@@ -209,8 +207,8 @@ UINT CProcessPaste::MarkAsPastedThread(LPVOID pParam)
 	CLogger::Log(_T("End of MarkAsPastedThread"));
 
 	ULONGLONG endTick = GetTickCount64();
-	if((endTick-startTick) > 350)
-		CLogger::Log(CStringUtil::Format(_T("Paste Timing MarkAsPastedThread: %llu, ClipId: %d"), endTick-startTick, clipId));
+	if ((endTick - startTick) > 350)
+		CLogger::Log(CStringUtil::Format(_T("Paste Timing MarkAsPastedThread: %llu, ClipId: %d"), endTick - startTick, clipId));
 
 	UpdateTimeEvent.SetEvent();
 	return bRet;
@@ -224,7 +222,7 @@ void CProcessPaste::UpdatePastedClips(MarkAsPastedData& data, int& clipId)
 	const CGetSetOptions& settings{ data.context.Settings() };
 	CDittoDb& db{ data.context.Database() };
 
-	if(data.updateTimeOnPaste &&
+	if (data.updateTimeOnPaste &&
 		data.updateClipOrder)
 	{
 		if (settings.m_refreshViewAfterPasting)
@@ -258,11 +256,11 @@ void CProcessPaste::MoveToTopOrder(CDittoDb& db, int id, bool pastedFromGroup)
 {
 	if (pastedFromGroup)
 	{
-		CppSQLite3Query q{db.execQuery(_T("SELECT clipGroupOrder FROM Main ORDER BY clipGroupOrder DESC LIMIT 1"))};
+		CppSQLite3Query q{ db.execQuery(_T("SELECT clipGroupOrder FROM Main ORDER BY clipGroupOrder DESC LIMIT 1")) };
 
 		if (q.eof() == false)
 		{
-			double latestDate{q.getFloatField(_T("clipGroupOrder"))};
+			double latestDate{ q.getFloatField(_T("clipGroupOrder")) };
 			latestDate += 1;
 
 			CLogger::Log(CStringUtil::Format(_T("Setting clipId: %d, GroupOrder: %f"), id, latestDate));
@@ -272,11 +270,11 @@ void CProcessPaste::MoveToTopOrder(CDittoDb& db, int id, bool pastedFromGroup)
 	}
 	else
 	{
-		CppSQLite3Query q{db.execQuery(_T("SELECT clipOrder FROM Main ORDER BY clipOrder DESC LIMIT 1"))};
+		CppSQLite3Query q{ db.execQuery(_T("SELECT clipOrder FROM Main ORDER BY clipOrder DESC LIMIT 1")) };
 
 		if (q.eof() == false)
 		{
-			double latestDate{q.getFloatField(_T("clipOrder"))};
+			double latestDate{ q.getFloatField(_T("clipOrder")) };
 			latestDate += 1;
 
 			CLogger::Log(CStringUtil::Format(_T("Setting clipId: %d, order: %f"), id, latestDate));

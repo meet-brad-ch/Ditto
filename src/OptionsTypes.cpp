@@ -15,11 +15,12 @@
 
 IMPLEMENT_DYNCREATE(COptionsTypes, CPropertyPage)
 
-COptionsTypes::COptionsTypes() : CPropertyPage(COptionsTypes::IDD)
+COptionsTypes::COptionsTypes() :
+	CPropertyPage(COptionsTypes::IDD)
 {
 	m_csTitle = theApp.Services().Language().GetString("SupportedTypesTitle", "Supported Types");
 	m_psp.pszTitle = m_csTitle;
-	m_psp.dwFlags |= PSP_USETITLE; 
+	m_psp.dwFlags |= PSP_USETITLE;
 
 	//{{AFX_DATA_INIT(COptionsTypes)
 	//}}AFX_DATA_INIT
@@ -50,9 +51,9 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // COptionsTypes message handlers
 
-BOOL COptionsTypes::OnApply() 
+BOOL COptionsTypes::OnApply()
 {
-	if(m_bSave)
+	if (m_bSave)
 	{
 		try
 		{
@@ -66,7 +67,7 @@ BOOL COptionsTypes::OnApply()
 			CppSQLite3Statement insert = database.compileStatement(_T("INSERT INTO Types VALUES(NULL, ?);"));
 			CString csText;
 			int nCount = m_List.GetCount();
-			for(int i = 0; i < nCount; i++)
+			for (int i = 0; i < nCount; i++)
 			{
 				m_List.GetText(i, csText);
 
@@ -86,18 +87,18 @@ BOOL COptionsTypes::OnApply()
 		// refresh our local cache
 		theApp.Services().Clipboard().ReloadTypes();
 	}
-	
+
 	return CPropertyPage::OnApply();
 }
 
-BOOL COptionsTypes::OnInitDialog() 
+BOOL COptionsTypes::OnInitDialog()
 {
 	CPropertyPage::OnInitDialog();
 
 	try
 	{
 		CppSQLite3Query q = theApp.Services().Database().execQuery(_T("SELECT TypeText FROM Types"));
-		if(q.eof())
+		if (q.eof())
 		{
 			m_List.AddString(_T("CF_TEXT"));
 			// Registered formats are in 0xC000-0xFFFF, so they fit a CLIPFORMAT
@@ -109,7 +110,7 @@ BOOL COptionsTypes::OnInitDialog()
 			m_List.AddString(CClipboardFormats::GetFormatName(CClipboardFormats::GetFormatID(_T("PNG"))));
 		}
 
-		while(q.eof() == false)
+		while (q.eof() == false)
 		{
 			m_List.AddString(q.getStringField(0));
 
@@ -125,56 +126,56 @@ BOOL COptionsTypes::OnInitDialog()
 	m_List.SetFocus();
 
 	theApp.Services().Language().UpdateOptionSupportedTypes(this);
-	
+
 	return FALSE;
 }
 
-void COptionsTypes::OnDelete() 
+void COptionsTypes::OnDelete()
 {
 	int nCount = m_List.GetSelCount();
-	if(nCount)
+	if (nCount)
 	{
 		m_bSave = true;
 		CArrayEx<int> items;
 		items.SetSize(nCount);
-		m_List.GetSelItems(nCount, items.GetData()); 
+		m_List.GetSelItems(nCount, items.GetData());
 		items.SortDescending();
 
-		for(int i = 0; i < nCount; i++)
+		for (int i = 0; i < nCount; i++)
 			m_List.DeleteString(items[i]);
 	}
 }
 
 #include "AddType.h"
-void COptionsTypes::OnAdd() 
+void COptionsTypes::OnAdd()
 {
 	CDimWnd dim(this->GetParent());
 	CAddType add(this);
 
-	if(add.DoModal() == IDOK)
+	if (add.DoModal() == IDOK)
 	{
 		INT_PTR nCount = add.m_csSelectedTypes.GetSize();
-		if(nCount)
+		if (nCount)
 		{
 			m_bSave = true;
-			for(int i = 0; i < nCount; i++)
+			for (int i = 0; i < nCount; i++)
 			{
-				if(TextAllReadyThere(add.m_csSelectedTypes[i]) == FALSE)
+				if (TextAllReadyThere(add.m_csSelectedTypes[i]) == FALSE)
 					m_List.AddString(add.m_csSelectedTypes[i]);
 			}
 		}
-	}	
+	}
 }
 
-BOOL COptionsTypes::TextAllReadyThere(const CString &cs)
+BOOL COptionsTypes::TextAllReadyThere(const CString& cs)
 {
 	CString csThere;
 	int nCount = m_List.GetCount();
 
-	for(int i = 0; i < nCount; i++)
+	for (int i = 0; i < nCount; i++)
 	{
 		m_List.GetText(i, csThere);
-		if(cs == csThere)
+		if (cs == csThere)
 			return TRUE;
 	}
 

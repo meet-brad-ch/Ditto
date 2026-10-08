@@ -19,51 +19,55 @@ class COptionsKeyBoard : public CPropertyPage
 {
 	DECLARE_DYNCREATE(COptionsKeyBoard)
 
-// Construction
+	// Construction
 public:
 	COptionsKeyBoard();
 	~COptionsKeyBoard();
 
-// Dialog Data
+	// Dialog Data
 	//{{AFX_DATA(COptionsKeyBoard)
-	enum { IDD = IDD_OPTIONS_KEYSTROKES };
-	CButton	m_btSendPaste;
-	CButton	m_UseUiGroupForLastTen;
-	CButton	m_btMoveClipOnGlobal10;
-	CHotKeyCtrl	m_Nine;
-	CHotKeyCtrl	m_Eight;
-	CHotKeyCtrl	m_Seven;
-	CHotKeyCtrl	m_Six;
-	CHotKeyCtrl	m_Five;
-	CHotKeyCtrl	m_Four;
-	CHotKeyCtrl	m_Three;
-	CHotKeyCtrl	m_Two;
-	CHotKeyCtrl	m_Ten;
-	CHotKeyCtrl	m_One;
-	CHotKeyCtrl	m_HotKey;
-	CHotKeyCtrl	m_HotKey2;
-	CHotKeyCtrl	m_HotKey3;
+	enum
+	{
+		IDD = IDD_OPTIONS_KEYSTROKES
+	};
+	CButton m_btSendPaste;
+	CButton m_UseUiGroupForLastTen;
+	CButton m_btMoveClipOnGlobal10;
+	CHotKeyCtrl m_Nine;
+	CHotKeyCtrl m_Eight;
+	CHotKeyCtrl m_Seven;
+	CHotKeyCtrl m_Six;
+	CHotKeyCtrl m_Five;
+	CHotKeyCtrl m_Four;
+	CHotKeyCtrl m_Three;
+	CHotKeyCtrl m_Two;
+	CHotKeyCtrl m_Ten;
+	CHotKeyCtrl m_One;
+	CHotKeyCtrl m_HotKey;
+	CHotKeyCtrl m_HotKey2;
+	CHotKeyCtrl m_HotKey3;
 	CHotKeyCtrl m_TextOnlyKey;
 	CHotKeyCtrl m_copyAndSaveClipboardCtrl;
 	//}}AFX_DATA
 
 
-// Overrides
+	// Overrides
 	// ClassWizard generate virtual function overrides
 	//{{AFX_VIRTUAL(COptionsKeyBoard)
-	public:
+public:
 	virtual BOOL OnApply();
 	virtual void OnCancel();
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-	//}}AFX_VIRTUAL
 
-// Implementation
 protected:
-//	BOOL RegisterHotKey(WORD wHotKey);
-//	BOOL ValidateHotKey(WORD wHotKey);
+	virtual void DoDataExchange(CDataExchange* pDX); // DDX/DDV support
+													 //}}AFX_VIRTUAL
 
-	COptionsSheet *m_pParent{};
+	// Implementation
+protected:
+	//	BOOL RegisterHotKey(WORD wHotKey);
+	//	BOOL ValidateHotKey(WORD wHotKey);
+
+	COptionsSheet* m_pParent{};
 	CString m_csTitle;
 
 	// Generated message map functions

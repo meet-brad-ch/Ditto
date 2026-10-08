@@ -11,4 +11,3 @@ public:
 	static bool AreTheyRunningElevated(HWND hWnd);
 	static bool RunningElevated(HANDLE h, bool defaultValue);
 };
-

@@ -10,12 +10,12 @@ public:
 	CReadOnlyFlag(void);
 	~CReadOnlyFlag(void);
 
-	bool ResetReadOnlyFlag(const CDittoInfo &DittoInfo, IClip *pClip, bool resetFlag);
+	bool ResetReadOnlyFlag(const CDittoInfo& DittoInfo, IClip* pClip, bool resetFlag);
 
 protected:
-	bool LoadUnicodeFiles(CStringArray &lines, IClipFormats *pFormats);
-	bool LoadTextFiles(CStringArray &lines, IClipFormats *pFormats);
-	bool LoadHDropFiles(CStringArray &lines, IClipFormats *pFormats);
+	bool LoadUnicodeFiles(CStringArray& lines, IClipFormats* pFormats);
+	bool LoadTextFiles(CStringArray& lines, IClipFormats* pFormats);
+	bool LoadHDropFiles(CStringArray& lines, IClipFormats* pFormats);
 
 private:
 	/**
@@ -24,7 +24,7 @@ private:
 	 * @param pFormats the clip formats.
 	 * @throws DittoCore::ClipboardFormatError for malformed clip data.
 	 */
-	void LoadFileLines(CStringArray &lines, IClipFormats *pFormats);
+	void LoadFileLines(CStringArray& lines, IClipFormats* pFormats);
 	/**
 	 * @brief Cuts the text before the first "//", "\\" or drive ("x:\" or "x:/") in a line.
 	 * @param file the lower-case line.
@@ -32,4 +32,3 @@ private:
 	 */
 	static CString SkipToFileStart(CString file);
 };
-

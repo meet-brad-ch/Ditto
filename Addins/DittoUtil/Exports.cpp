@@ -7,12 +7,12 @@
 #include "RemoveLineFeeds.h"
 
 
-bool DittoAddin(const CDittoInfo &DittoInfo, CDittoAddinInfo &info)
+bool DittoAddin(const CDittoInfo& DittoInfo, CDittoAddinInfo& info)
 {
-	if(DittoInfo.ValidateSize() == false || info.ValidateSize() == false)
+	if (DittoInfo.ValidateSize() == false || info.ValidateSize() == false)
 	{
 		CString csError;
-		csError.Format(_T("PasteAnyAsText Addin - Passed in structures are of different size, DittoInfo Passed: %d, Local: %zu, DittoAddinInfo Passed: %d, Local: %zu"),DittoInfo.m_nSizeOfThis, sizeof(CDittoInfo), info.m_nSizeOfThis, sizeof(CDittoAddinInfo));
+		csError.Format(_T("PasteAnyAsText Addin - Passed in structures are of different size, DittoInfo Passed: %d, Local: %zu, DittoAddinInfo Passed: %d, Local: %zu"), DittoInfo.m_nSizeOfThis, sizeof(CDittoInfo), info.m_nSizeOfThis, sizeof(CDittoAddinInfo));
 		OutputDebugString(csError);
 		return false;
 	}
@@ -23,57 +23,57 @@ bool DittoAddin(const CDittoInfo &DittoInfo, CDittoAddinInfo &info)
 	return true;
 }
 
-bool SupportedFunctions(const CDittoInfo & /*DittoInfo*/, FunctionType type, std::vector<CFunction> &Functions)
+bool SupportedFunctions(const CDittoInfo& /*DittoInfo*/, FunctionType type, std::vector<CFunction>& Functions)
 {
-	switch(type)
+	switch (type)
 	{
 	case eFuncType_PRE_PASTE:
-		{
-			CFunction func;
-			func.m_csFunction = _T("PasteAnyAsText");
-			func.m_csDisplayName = _T("Paste Any Clip As Text");
-			func.m_csDetailDescription = _T("Displays a list of clip formats allowing you to select one and paste the contents as text");
+	{
+		CFunction func;
+		func.m_csFunction = _T("PasteAnyAsText");
+		func.m_csDisplayName = _T("Paste Any Clip As Text");
+		func.m_csDetailDescription = _T("Displays a list of clip formats allowing you to select one and paste the contents as text");
 
-			Functions.push_back(func);
+		Functions.push_back(func);
 
-			CFunction func2;
-			func2.m_csFunction = _T("ConvertPathToHtmlImageTag");
-			func2.m_csDisplayName = _T("Paste As html image link");
-			func2.m_csDetailDescription = _T("Converts a CF_DIB or CF_HDROP to a html format for pasting into outlook express");
+		CFunction func2;
+		func2.m_csFunction = _T("ConvertPathToHtmlImageTag");
+		func2.m_csDisplayName = _T("Paste As html image link");
+		func2.m_csDetailDescription = _T("Converts a CF_DIB or CF_HDROP to a html format for pasting into outlook express");
 
-			Functions.push_back(func2);
+		Functions.push_back(func2);
 
-			CFunction func3;
-			func3.m_csFunction = _T("ClearReadOnlyFlag");
-			func3.m_csDisplayName = _T("Clear read only flag");
-			func3.m_csDetailDescription = _T("Clears read only flag on the types CF_HDROP, or files paths in text");
+		CFunction func3;
+		func3.m_csFunction = _T("ClearReadOnlyFlag");
+		func3.m_csDisplayName = _T("Clear read only flag");
+		func3.m_csDetailDescription = _T("Clears read only flag on the types CF_HDROP, or files paths in text");
 
-			Functions.push_back(func3);
+		Functions.push_back(func3);
 
-			CFunction func4;
-			func4.m_csFunction = _T("SetReadOnlyFlag");
-			func4.m_csDisplayName = _T("Set read only flag");
-			func4.m_csDetailDescription = _T("Sets the read only flag on the types CF_HDROP, or files paths in text");
+		CFunction func4;
+		func4.m_csFunction = _T("SetReadOnlyFlag");
+		func4.m_csDisplayName = _T("Set read only flag");
+		func4.m_csDetailDescription = _T("Sets the read only flag on the types CF_HDROP, or files paths in text");
 
-			Functions.push_back(func4);
-		}
-		break;
+		Functions.push_back(func4);
 	}
-	
+	break;
+	}
+
 	return true;
 }
 
-bool PasteAnyAsText(const CDittoInfo &DittoInfo, IClip *pClip)
+bool PasteAnyAsText(const CDittoInfo& DittoInfo, IClip* pClip)
 {
 	return PasteAnyAsText::SelectClipToPasteAsText(DittoInfo, pClip);
 }
 
-bool ConvertPathToHtmlImageTag(const CDittoInfo &DittoInfo, IClip *pClip)
+bool ConvertPathToHtmlImageTag(const CDittoInfo& DittoInfo, IClip* pClip)
 {
 	return CDittoUtilApp::Instance().PasteImageAsHtml().ConvertPathToHtmlImageTag(DittoInfo, pClip);
 }
 
-bool ClearReadOnlyFlag(const CDittoInfo &DittoInfo, IClip *pClip)
+bool ClearReadOnlyFlag(const CDittoInfo& DittoInfo, IClip* pClip)
 {
 	CReadOnlyFlag readOnly;
 	readOnly.ResetReadOnlyFlag(DittoInfo, pClip, true);
@@ -82,7 +82,7 @@ bool ClearReadOnlyFlag(const CDittoInfo &DittoInfo, IClip *pClip)
 	return false;
 }
 
-bool SetReadOnlyFlag(const CDittoInfo &DittoInfo, IClip *pClip)
+bool SetReadOnlyFlag(const CDittoInfo& DittoInfo, IClip* pClip)
 {
 	CReadOnlyFlag readOnly;
 	readOnly.ResetReadOnlyFlag(DittoInfo, pClip, false);
@@ -91,7 +91,7 @@ bool SetReadOnlyFlag(const CDittoInfo &DittoInfo, IClip *pClip)
 	return false;
 }
 
-bool RemoveLineFeeds(const CDittoInfo &DittoInfo, IClip *pClip)
+bool RemoveLineFeeds(const CDittoInfo& DittoInfo, IClip* pClip)
 {
 	CRemoveLineFeeds remove;
 

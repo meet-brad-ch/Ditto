@@ -12,16 +12,16 @@ class CRulerRichEdit : public CRichEditCtrlEx
 {
 public:
 	/** @brief The control id of the rich edit control (its notifications to the ruler control carry it). */
-	static constexpr UINT s_controlId{12};
+	static constexpr UINT s_controlId{ 12 };
 
-// Construction/creation/destruction
+	// Construction/creation/destruction
 	CRulerRichEdit();
 	virtual ~CRulerRichEdit();
 
-	BOOL Create( DWORD style, CRect rect, CWnd* parent );
+	BOOL Create(DWORD style, CRect rect, CWnd* parent);
 
 protected:
-// Message handlers
+	// Message handlers
 	//{{AFX_MSG(CRulerRichEdit)
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void OnChange();
@@ -31,9 +31,8 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
-// Private helpers
+	// Private helpers
 	//void UpdateRuler();
-
 };
 
 #endif // !defined(AFX_RULERRICHEDIT_H__E10A8ED3_2E1D_402E_A599_003214085F1A__INCLUDED_)

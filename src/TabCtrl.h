@@ -3,13 +3,14 @@
 #include <afxtempl.h>
 #include "DPI.h"
 
-typedef struct tagNMTABCHANGE{
-    NMHDR hdr;
-    long lOldTab;
-    long lNewTab;
+typedef struct tagNMTABCHANGE
+{
+	NMHDR hdr;
+	long lOldTab;
+	long lNewTab;
 	long lOldItemData;
 	long lNewItemData;
-} NMTABCHANGE, FAR *LPNMTABCHANGE;
+} NMTABCHANGE, FAR* LPNMTABCHANGE;
 
 /////////////////////////////////////////////////////////////////////////////
 // CTabCtrlEx window
@@ -41,18 +42,18 @@ public:
 		SnSetActiveTab = WM_APP + 1122,
 	};
 
-// Construction
+	// Construction
 public:
 	CTabCtrlEx();
 
 public:
-// Overrides
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CTabCtrlEx)
-	public:
+public:
 	//}}AFX_VIRTUAL
 
-// Implementation
+	// Implementation
 public:
 	virtual ~CTabCtrlEx();
 
@@ -64,16 +65,16 @@ public:
 
 	// Insert a new window in the sheet. Returns the index of the new tab, -1 on error
 	bool InsertItem(int nTab, const CString& csTabTitle, CWnd* pTabWnd);
-	
+
 	//Replaces the window in nTab position -- Calls HideWindow for the old and ShowWindow for the new
-	bool ReplaceItem(int nTab, const CString &csTabTitle, CWnd* pTabWnd);
+	bool ReplaceItem(int nTab, const CString& csTabTitle, CWnd* pTabWnd);
 
 	// Delete a tab in the sheet
 	bool DeleteItem(int nTab);
 
 	// Delete all tabs in the sheet
 	bool DeleteAllItems();
-	
+
 	// Get/Set the tab title
 	CString GetTabTitle(int nTab);
 	bool SetTabTitle(int nTab, const CString& csTabTitle);
@@ -92,7 +93,7 @@ public:
 
 	// Make a tab title visible
 	void MakeTabVisible(int nTab);
-	
+
 	// Set the tab height
 	void SetTabHeight(int nTabHeight);
 
@@ -101,10 +102,14 @@ public:
 	// return FALSE if the message was not processed
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 
-	void SetFocusToNewlySelectedTab(bool bVal)	{ m_bSetFocusToNewlySelectedTab = bVal;	}
-	bool GetFocusToNewlySelectedTab()			{ return m_bSetFocusToNewlySelectedTab;	}
+	void SetFocusToNewlySelectedTab(bool bVal) { m_bSetFocusToNewlySelectedTab = bVal; }
+	bool GetFocusToNewlySelectedTab() { return m_bSetFocusToNewlySelectedTab; }
 
-	void SetTabColors(COLORREF Selected, COLORREF NonSelected)	{ m_SelectedColor = Selected; m_NonSelectedColor = NonSelected;}
+	void SetTabColors(COLORREF Selected, COLORREF NonSelected)
+	{
+		m_SelectedColor = Selected;
+		m_NonSelectedColor = NonSelected;
+	}
 
 	void OnDpiChanged(CWnd* pParent, int dpi);
 
@@ -122,8 +127,16 @@ protected:
 		long lItemData;
 	};
 
-	typedef enum {ArrowLeft, ArrowRight} ButtonStyle;
-	typedef enum {BtnDown, BtnUp/*, BtnHover*/} ButtonState;
+	typedef enum
+	{
+		ArrowLeft,
+		ArrowRight
+	} ButtonStyle;
+	typedef enum
+	{
+		BtnDown,
+		BtnUp /*, BtnHover*/
+	} ButtonState;
 
 	/** @brief Win32 values of the control: its timer id and the key it switches tabs with. */
 	enum : UINT
@@ -134,24 +147,24 @@ protected:
 		VkTilde = 0xC0,
 	};
 	/** @brief The space on each side of a tab title, in pixels. */
-	static constexpr int s_textPad{7};
+	static constexpr int s_textPad{ 7 };
 	/** @brief The window class name registered for the sheet control. */
-	static constexpr const TCHAR* s_className{_T("_TabCtrlClass_")};
+	static constexpr const TCHAR* s_className{ _T("_TabCtrlClass_") };
 	/** @brief The window class style of the sheet control. */
-	static constexpr UINT s_classStyle{CS_DBLCLKS};
+	static constexpr UINT s_classStyle{ CS_DBLCLKS };
 	/** @brief The space left of the spinner buttons, in pixels. */
-	static constexpr int s_spinPad{3};
+	static constexpr int s_spinPad{ 3 };
 	/** @brief How far one spinner step shifts the tabs, in pixels. */
-	static constexpr int s_shiftUnits{10};
+	static constexpr int s_shiftUnits{ 10 };
 	/** @brief The light edge colour of a spinner button. */
-	static constexpr COLORREF s_colorWhite{RGB(255, 255, 255)};
+	static constexpr COLORREF s_colorWhite{ RGB(255, 255, 255) };
 	/** @brief The dark edge colour of a spinner button. */
-	static constexpr COLORREF s_colorDarkGray{RGB(64, 64, 64)};
+	static constexpr COLORREF s_colorDarkGray{ RGB(64, 64, 64) };
 
 
 protected:
 	short m_nStyle;
-	CArray <CTab, CTab&> m_Tabs;
+	CArray<CTab, CTab&> m_Tabs;
 	int m_nActiveTab;
 	int m_nTabHeight;
 	/** @brief Fills the tab bar and the spinner background (the non-selected tab colour). */
@@ -171,13 +184,13 @@ protected:
 	COLORREF m_NonSelectedColor;
 	CDPI m_dpi;
 
-	
+
 protected:
 	int GetTextWidth(const CString& csText);
 	int GetDisplayWidth();
 	int GetTabsWidth();
 	int GetSpinnerWidth();
-	
+
 	void GetFullRect(CRect& rcTab);
 	void GetTabListRect(CRect& rcTab);
 	void GetTabRect(int nTab, CRect& rcTab);
@@ -185,14 +198,14 @@ protected:
 	void GetButtonRect(int nBtn, CRect& rcBtn);
 
 	void EnableSpinners();
-	void DrawTabs(CDC *pDC);
+	void DrawTabs(CDC* pDC);
 	void DrawBar(CDC* pDC);
-	void DrawTab(int nTab, CDC *pDC, CRect& rcTab);
-	void DrawTabEx(int nTab, CDC *pDC, CRect& rcTab);
-	void DrawSpinner(CDC *pDC);
-	void DrawButton(CDC *pDC, CRect& rcBtn, ButtonState btnState, ButtonStyle btnStyle, bool bEnable);
+	void DrawTab(int nTab, CDC* pDC, CRect& rcTab);
+	void DrawTabEx(int nTab, CDC* pDC, CRect& rcTab);
+	void DrawSpinner(CDC* pDC);
+	void DrawButton(CDC* pDC, CRect& rcBtn, ButtonState btnState, ButtonStyle btnStyle, bool bEnable);
 	void ScrollTab(CPoint point);
-	
+
 	void ActivateTab(int nTab, bool bNotify, bool bOnSize = false);
 	void ResizeTabWindow(int nOldTab, int nNewTab, bool bNotify, bool bOnSize);
 	void SwitchTabs(bool bNext = true);

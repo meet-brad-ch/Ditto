@@ -145,7 +145,10 @@ public:
 	static BOOL RestoreDB(CGetSetOptions& settings, CMultiLanguage& language, CDittoDb& database, CAppState& state, CAppWindows& windows, CString backupPath);
 };
 
-namespace nsPath { class CPath; }
+namespace nsPath
+{
+	class CPath;
+}
 
 /**
  * @brief Finds, creates or replaces the clip database at startup.

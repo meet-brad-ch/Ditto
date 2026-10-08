@@ -87,7 +87,7 @@ bool DatabaseLocator::IsNetworkShareOrNonCDrive(CPath& path)
 	auto driveLetter = path.GetDriveLetter();
 
 	return rootType == ERootType::rtServerShare ||
-		((rootType == ERootType::rtDriveCur || rootType == rtDriveRoot) && driveLetter >= 'A' && driveLetter != 'C');
+		   ((rootType == ERootType::rtDriveCur || rootType == rtDriveRoot) && driveLetter >= 'A' && driveLetter != 'C');
 }
 
 BOOL DatabaseLocator::CreateMissingDB(CGetSetOptions& settings, CString& csDBPath)
@@ -142,15 +142,15 @@ BOOL DatabaseLocator::CheckExistingDB(CGetSetOptions& settings, CMultiLanguage& 
 
 	CString cs;
 	cs.Format(_T("%s \"%s\",\n")
-		_T("%s \"%s\",\n")
-		_T("%s,\n")
-		_T("\"%s\""),
-		language.GetString("Database_Format", "Unrecognized Database Format").GetString(),
-		csDBPath.GetString(),
-		language.GetString("File_Renamed", "the file will be renamed").GetString(),
-		csMarkAsBad.GetString(),
-		language.GetString("New_Database","and a new database will be created").GetString(),
-		csPath.GetString());
+			  _T("%s \"%s\",\n")
+			  _T("%s,\n")
+			  _T("\"%s\""),
+			  language.GetString("Database_Format", "Unrecognized Database Format").GetString(),
+			  csDBPath.GetString(),
+			  language.GetString("File_Renamed", "the file will be renamed").GetString(),
+			  csMarkAsBad.GetString(),
+			  language.GetString("New_Database", "and a new database will be created").GetString(),
+			  csPath.GetString());
 
 	AfxMessageBox(cs);
 
@@ -277,8 +277,8 @@ void DatabaseSchemaUpgrader::UpgradeStickyOrderIndexes(CppSQLite3DB& db)
 {
 	// IF NOT EXISTS instead of a catch: upstream swallowed every error here, also a locked
 	// database (SQLITE_BUSY), to skip the "index already exists" of Data_ParentId_Format
-	CppSQLite3Query q{db.execQuery(_T("PRAGMA index_info(Main_NoGroup);"))};
-	int count{0};
+	CppSQLite3Query q{ db.execQuery(_T("PRAGMA index_info(Main_NoGroup);")) };
+	int count{ 0 };
 	while (q.eof() == false)
 	{
 		count++;
@@ -339,8 +339,8 @@ void DatabaseSchemaUpgrader::CheckAndUpgrade(CString csPath)
 void DatabaseSchemaUpgrader::CheckRequiredTables(CppSQLite3DB& db)
 {
 	db.execQuery(_T("SELECT lID, lDate, mText, lShortCut, lDontAutoDelete, ")
-		_T("CRC, bIsGroup, lParentID, QuickPasteText ")
-		_T("FROM Main"));
+				 _T("CRC, bIsGroup, lParentID, QuickPasteText ")
+				 _T("FROM Main"));
 
 	db.execQuery(_T("SELECT lID, lParentID, strClipBoardFormat, ooData FROM Data"));
 
@@ -365,9 +365,9 @@ void DatabaseSchemaUpgrader::CreateDeleteDataTrigger(CppSQLite3DB& db)
 	// added in a later version; IF NOT EXISTS instead of a catch: upstream swallowed every error
 	// to skip "trigger already exists", also a locked database (SQLITE_BUSY)
 	db.execDML(_T("CREATE TRIGGER IF NOT EXISTS delete_data_trigger BEFORE DELETE ON Main FOR EACH ROW\n")
-		_T("BEGIN\n")
-		_T("INSERT INTO MainDeletes VALUES(old.lID, datetime('now'));\n")
-		_T("END\n"));
+			   _T("BEGIN\n")
+			   _T("INSERT INTO MainDeletes VALUES(old.lID, datetime('now'));\n")
+			   _T("END\n"));
 }
 
 void DatabaseSchemaUpgrader::AddCopyBuffersTable(CppSQLite3DB& db)
@@ -382,9 +382,9 @@ void DatabaseSchemaUpgrader::AddCopyBuffersTable(CppSQLite3DB& db)
 		e.errorCode();
 
 		db.execDML(_T("CREATE TABLE CopyBuffers(")
-			_T("lID INTEGER PRIMARY KEY AUTOINCREMENT, ")
-			_T("lClipID INTEGER,")
-			_T("lCopyBuffer INTEGER)"));
+				   _T("lID INTEGER PRIMARY KEY AUTOINCREMENT, ")
+				   _T("lClipID INTEGER,")
+				   _T("lCopyBuffer INTEGER)"));
 	}
 }
 
@@ -400,14 +400,14 @@ void DatabaseSchemaUpgrader::AddMainDeletesTable(CppSQLite3DB& db)
 		e.errorCode();
 
 		db.execDML(_T("CREATE TABLE MainDeletes(")
-			_T("clipID INTEGER,")
-			_T("modifiedDate)"));
+				   _T("clipID INTEGER,")
+				   _T("modifiedDate)"));
 
 		db.execDML(_T("CREATE TRIGGER MainDeletes_delete_data_trigger BEFORE DELETE ON MainDeletes FOR EACH ROW\n")
-			_T("BEGIN\n")
-			_T("DELETE FROM CopyBuffers WHERE lClipID = old.clipID;\n")
-			_T("DELETE FROM Data WHERE lParentID = old.clipID;\n")
-			_T("END\n"));
+				   _T("BEGIN\n")
+				   _T("DELETE FROM CopyBuffers WHERE lClipID = old.clipID;\n")
+				   _T("DELETE FROM Data WHERE lParentID = old.clipID;\n")
+				   _T("END\n"));
 	}
 }
 
@@ -545,14 +545,13 @@ BOOL CDatabaseBackupService::BackupDB(CMultiLanguage& language, CString dbPath, 
 		const std::uintmax_t fileSize = std::filesystem::file_size(dbPath.GetString());
 		int percentageComplete{};
 		DittoCore::GzipStream::Compress(in, out, [&](std::uint64_t bytesDone)
-		{
+										{
 			const int percent = fileSize == 0 ? 100 : static_cast<int>((bytesDone * 100) / fileSize);
 			if (percent != percentageComplete)
 			{
 				percentageComplete = percent;
 				status.Show(CStringUtil::Format(_T("Ditto - %02d%% %s - %s"), percentageComplete, msg.GetString(), backupPath.GetString()));
-			}
-		});
+			} });
 
 		out.close();
 		if (!out)
@@ -626,7 +625,7 @@ BOOL CDatabaseBackupService::RestoreDB(CGetSetOptions& settings, CMultiLanguage&
 		settings.SetDBPath(newFullPath);
 		if (!CDatabaseManager::OpenDatabase(settings, database, state, newFullPath))
 		{
-			return FALSE;   // OpenDatabase showed the error
+			return FALSE; // OpenDatabase showed the error
 		}
 	}
 	catch (const std::exception& e)
@@ -650,33 +649,33 @@ BOOL CDatabaseManager::CreateDB(CString csFile)
 		db.execDML(_T("PRAGMA auto_vacuum = 1"));
 
 		db.execDML(_T("CREATE TABLE Main(")
-			_T("lID INTEGER PRIMARY KEY AUTOINCREMENT, ")
-			_T("lDate INTEGER, ")
-			_T("mText TEXT, ")
-			_T("lShortCut INTEGER, ")
-			_T("lDontAutoDelete INTEGER, ")
-			_T("CRC INTEGER, ")
-			_T("bIsGroup INTEGER, ")
-			_T("lParentID INTEGER, ")
-			_T("QuickPasteText TEXT, ")
-			_T("clipOrder REAL, ")
-			_T("clipGroupOrder REAL, ")
-			_T("globalShortCut INTEGER, ")
-			_T("lastPasteDate INTEGER, ")
-			_T("stickyClipOrder REAL, ")
-			_T("stickyClipGroupOrder REAL, ")
-			_T("MoveToGroupShortCut INTEGER, ")
-			_T("GlobalMoveToGroupShortCut INTEGER);"));
+				   _T("lID INTEGER PRIMARY KEY AUTOINCREMENT, ")
+				   _T("lDate INTEGER, ")
+				   _T("mText TEXT, ")
+				   _T("lShortCut INTEGER, ")
+				   _T("lDontAutoDelete INTEGER, ")
+				   _T("CRC INTEGER, ")
+				   _T("bIsGroup INTEGER, ")
+				   _T("lParentID INTEGER, ")
+				   _T("QuickPasteText TEXT, ")
+				   _T("clipOrder REAL, ")
+				   _T("clipGroupOrder REAL, ")
+				   _T("globalShortCut INTEGER, ")
+				   _T("lastPasteDate INTEGER, ")
+				   _T("stickyClipOrder REAL, ")
+				   _T("stickyClipGroupOrder REAL, ")
+				   _T("MoveToGroupShortCut INTEGER, ")
+				   _T("GlobalMoveToGroupShortCut INTEGER);"));
 
 		db.execDML(_T("CREATE TABLE Data(")
-			_T("lID INTEGER PRIMARY KEY AUTOINCREMENT, ")
-			_T("lParentID INTEGER, ")
-			_T("strClipBoardFormat TEXT, ")
-			_T("ooData BLOB);"));
+				   _T("lID INTEGER PRIMARY KEY AUTOINCREMENT, ")
+				   _T("lParentID INTEGER, ")
+				   _T("strClipBoardFormat TEXT, ")
+				   _T("ooData BLOB);"));
 
 		db.execDML(_T("CREATE TABLE Types(")
-			_T("lID INTEGER PRIMARY KEY AUTOINCREMENT, ")
-			_T("TypeText TEXT);"));
+				   _T("lID INTEGER PRIMARY KEY AUTOINCREMENT, ")
+				   _T("TypeText TEXT);"));
 
 		db.execDML(_T("CREATE UNIQUE INDEX Main_ID on Main(lID ASC)"));
 		db.execDML(_T("CREATE UNIQUE INDEX Data_ID on Data(lID ASC)"));
@@ -686,24 +685,24 @@ BOOL CDatabaseManager::CreateDB(CString csFile)
 		db.execDML(_T("CREATE INDEX Main_IsGroup on Main(bIsGroup DESC)"));
 
 		db.execDML(_T("CREATE TRIGGER delete_data_trigger BEFORE DELETE ON Main FOR EACH ROW\n")
-			_T("BEGIN\n")
-			_T("INSERT INTO MainDeletes VALUES(old.lID, datetime('now'));\n")
-			_T("END\n"));
+				   _T("BEGIN\n")
+				   _T("INSERT INTO MainDeletes VALUES(old.lID, datetime('now'));\n")
+				   _T("END\n"));
 
 		db.execDML(_T("CREATE TABLE CopyBuffers(")
-			_T("lID INTEGER PRIMARY KEY AUTOINCREMENT, ")
-			_T("lClipID INTEGER, ")
-			_T("lCopyBuffer INTEGER)"));
+				   _T("lID INTEGER PRIMARY KEY AUTOINCREMENT, ")
+				   _T("lClipID INTEGER, ")
+				   _T("lCopyBuffer INTEGER)"));
 
 		db.execDML(_T("CREATE TABLE MainDeletes(")
-			_T("clipID INTEGER,")
-			_T("modifiedDate)"));
+				   _T("clipID INTEGER,")
+				   _T("modifiedDate)"));
 
 		db.execDML(_T("CREATE TRIGGER MainDeletes_delete_data_trigger BEFORE DELETE ON MainDeletes FOR EACH ROW\n")
-			_T("BEGIN\n")
-			_T("DELETE FROM CopyBuffers WHERE lClipID = old.clipID;\n")
-			_T("DELETE FROM Data WHERE lParentID = old.clipID;\n")
-			_T("END\n"));
+				   _T("BEGIN\n")
+				   _T("DELETE FROM CopyBuffers WHERE lClipID = old.clipID;\n")
+				   _T("DELETE FROM Data WHERE lParentID = old.clipID;\n")
+				   _T("END\n"));
 
 		db.execDML(_T("CREATE INDEX Data_ParentId_Format ON Data(lParentID COLLATE BINARY ASC, strClipBoardFormat COLLATE NOCASE ASC);"));
 
@@ -723,12 +722,12 @@ BOOL CDatabaseManager::CreateDB(CString csFile)
 		return FALSE;
 	}
 
-		return TRUE;
+	return TRUE;
 }
 
 bool CClipRetentionPolicy::RemoveClipsOverMaxEntries(CGetSetOptions& settings, CAppWindows& windows, CDittoDb& db)
 {
-	long lMax{settings.GetMaxEntries()};
+	long lMax{ settings.GetMaxEntries() };
 	if (lMax < 0)
 	{
 		return true;
@@ -737,14 +736,14 @@ bool CClipRetentionPolicy::RemoveClipsOverMaxEntries(CGetSetOptions& settings, C
 	CClipIDs IDs{};
 	int clipId{};
 
-	CppSQLite3Query q{db.execQueryEx(_T("SELECT lID, lShortCut, lParentID, lDontAutoDelete, stickyClipOrder, stickyClipGroupOrder FROM Main WHERE bIsGroup = 0 ORDER BY clipOrder DESC LIMIT -1 OFFSET %d"), lMax)};
+	CppSQLite3Query q{ db.execQueryEx(_T("SELECT lID, lShortCut, lParentID, lDontAutoDelete, stickyClipOrder, stickyClipGroupOrder FROM Main WHERE bIsGroup = 0 ORDER BY clipOrder DESC LIMIT -1 OFFSET %d"), lMax) };
 	while (q.eof() == false)
 	{
-		int shortcut{q.getIntField(_T("lShortCut"))};
-		int dontDelete{q.getIntField(_T("lDontAutoDelete"))};
-		int parentId{q.getIntField(_T("lParentID"))};
-		double stickyClipOrder{q.getFloatField(_T("stickyClipOrder"))};
-		double stickyClipGroupOrder{q.getFloatField(_T("stickyClipGroupOrder"))};
+		int shortcut{ q.getIntField(_T("lShortCut")) };
+		int dontDelete{ q.getIntField(_T("lDontAutoDelete")) };
+		int parentId{ q.getIntField(_T("lParentID")) };
+		double stickyClipOrder{ q.getFloatField(_T("stickyClipOrder")) };
+		double stickyClipGroupOrder{ q.getFloatField(_T("stickyClipGroupOrder")) };
 
 		//Only delete entries that have no shortcut and don't have the flag set and aren't in groups and
 		if (shortcut == 0 &&
@@ -767,21 +766,22 @@ bool CClipRetentionPolicy::RemoveClipsOverMaxEntries(CGetSetOptions& settings, C
 
 bool CClipRetentionPolicy::RemoveExpiredClips(CGetSetOptions& settings, CAppWindows& windows, CDittoDb& db)
 {
-	long lExpire{settings.GetExpiredEntries()};
+	long lExpire{ settings.GetExpiredEntries() };
 
 	if (lExpire == 0)
 	{
 		return true;
 	}
 
-	CTime now{CTime::GetCurrentTime()};
+	CTime now{ CTime::GetCurrentTime() };
 	now -= CTimeSpan(lExpire, 0, 0, 0);
 
 	CClipIDs IDs{};
 
-	CppSQLite3Query q{db.execQueryEx(_T("SELECT lID FROM Main ")
-		_T("WHERE lastPasteDate < %d AND ")
-		_T("bIsGroup = 0 AND lShortCut = 0 AND lParentID <= 0 AND lDontAutoDelete = 0 AND stickyClipOrder = -(2147483647) AND stickyClipGroupOrder = -(2147483647)"), (int)now.GetTime())};
+	CppSQLite3Query q{ db.execQueryEx(_T("SELECT lID FROM Main ")
+									  _T("WHERE lastPasteDate < %d AND ")
+									  _T("bIsGroup = 0 AND lShortCut = 0 AND lParentID <= 0 AND lDontAutoDelete = 0 AND stickyClipOrder = -(2147483647) AND stickyClipGroupOrder = -(2147483647)"),
+									  (int)now.GetTime()) };
 
 	while (q.eof() == false)
 	{
@@ -803,7 +803,8 @@ BOOL CClipRetentionPolicy::RemoveOldEntries(CGetSetOptions& settings, CIdleTime&
 	try
 	{
 		// its own connection (also from the background thread); a CDittoDb, so DeleteIDs can delete in one transaction
-		CDittoDb db([](const CString& text) { CLogger::Log(text); });
+		CDittoDb db([](const CString& text)
+					{ CLogger::Log(text); });
 		CString csDbPath = settings.GetDBPath();
 		db.open(csDbPath);
 
@@ -839,7 +840,7 @@ BOOL CClipRetentionPolicy::RemoveOldEntries(CGetSetOptions& settings, CIdleTime&
 			else
 			{
 				CLogger::Log(CStringUtil::Format(_T("Computer has not been idle long enough to delete clips, Min Idle: %d, current Idle: %f"),
-					settings.GetIdleSecondsBeforeDelete(), idleSeconds));
+												 settings.GetIdleSecondsBeforeDelete(), idleSeconds));
 
 				break;
 			}
@@ -856,7 +857,7 @@ BOOL CClipRetentionPolicy::RemoveOldEntries(CGetSetOptions& settings, CIdleTime&
 		return FALSE;
 	}
 
-		CLogger::Log(_T("End of RemoveOldEntries"));
+	CLogger::Log(_T("End of RemoveOldEntries"));
 
 	return TRUE;
 }
@@ -884,7 +885,7 @@ BOOL CClipRetentionPolicy::DeleteNonUsedClips(CDittoDb& database, CAppWindows& w
 		{
 			if (IDs.DeleteIDs(windows, fromAppWindow, database) == FALSE)
 			{
-				return FALSE;   // DeleteIDs showed the error and deleted nothing
+				return FALSE; // DeleteIDs showed the error and deleted nothing
 			}
 
 			deletedTableCount = database.execDMLEx(_T("DELETE FROM MainDeletes"));
@@ -901,4 +902,3 @@ BOOL CClipRetentionPolicy::DeleteNonUsedClips(CDittoDb& database, CAppWindows& w
 
 	return TRUE;
 }
-

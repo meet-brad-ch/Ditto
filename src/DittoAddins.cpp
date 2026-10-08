@@ -36,14 +36,14 @@ bool CDittoAddins::LoadAll()
 	CFileFind find;
 	BOOL bCont = find.FindFile(csDir + _T("*.dll"));
 
-	while(bCont)
+	while (bCont)
 	{
 		bCont = find.FindNextFile();
 
 		CLogger::Log(CStringUtil::Format(_T("Ditto Addin - Trying to load addin file %s"), find.GetFilePath().GetString()));
 
-		auto pAddin{std::make_unique<CDittoAddin>()};
-		if(pAddin->DoLoad(find.GetFilePath(), DittoInfo))
+		auto pAddin{ std::make_unique<CDittoAddin>() };
+		if (pAddin->DoLoad(find.GetFilePath(), DittoInfo))
 		{
 			CLogger::Log(CStringUtil::Format(_T("Ditto Addin - Success, loaded addin: %s"), find.GetFilePath().GetString()));
 			m_Addins.push_back(std::move(pAddin));
@@ -58,7 +58,7 @@ bool CDittoAddins::LoadAll()
 	return m_Addins.size() > 0;
 }
 
-bool CDittoAddins::AddPrePasteAddinsToMenu(CMenu *pMenu)
+bool CDittoAddins::AddPrePasteAddinsToMenu(CMenu* pMenu)
 {
 	bool bRet = false;
 
@@ -67,16 +67,16 @@ bool CDittoAddins::AddPrePasteAddinsToMenu(CMenu *pMenu)
 
 	HMENU AllAddinsMenu = ::CreateMenu();
 
-	for(const std::unique_ptr<CDittoAddin>& addin : m_Addins)
+	for (const std::unique_ptr<CDittoAddin>& addin : m_Addins)
 	{
-		CDittoAddin *pAddin{addin.get()};
-		if(pAddin)
+		CDittoAddin* pAddin{ addin.get() };
+		if (pAddin)
 		{
 			INT_PTR subCount = pAddin->m_PrePasteFunctions.size();
-			if(subCount > 1)
+			if (subCount > 1)
 			{
 				HMENU AddinMenu = ::CreateMenu();
-				for(int x = 0; x < subCount; x++)
+				for (int x = 0; x < subCount; x++)
 				{
 					::AppendMenu(AddinMenu, MF_ENABLED, nMenuId, pAddin->m_PrePasteFunctions[x].m_csDisplayName);
 
@@ -87,10 +87,10 @@ bool CDittoAddins::AddPrePasteAddinsToMenu(CMenu *pMenu)
 					nMenuId++;
 				}
 
-				::AppendMenu(AllAddinsMenu, MF_ENABLED|MF_POPUP, (UINT_PTR)AddinMenu, pAddin->DisplayName());
+				::AppendMenu(AllAddinsMenu, MF_ENABLED | MF_POPUP, (UINT_PTR)AddinMenu, pAddin->DisplayName());
 				bRet = true;
 			}
-			else if(subCount == 1)
+			else if (subCount == 1)
 			{
 				//If there is only 1 function for this add in then just show one menu with addin name - function
 				CFunctionLookup lookup;
@@ -108,20 +108,20 @@ bool CDittoAddins::AddPrePasteAddinsToMenu(CMenu *pMenu)
 		}
 	}
 
-	if(bRet)
+	if (bRet)
 	{
 		pMenu->InsertMenu(17, MF_BYPOSITION | MF_SEPARATOR);
-		pMenu->InsertMenu(18, MF_BYPOSITION|MF_ENABLED|MF_STRING|MF_POPUP, (UINT_PTR)AllAddinsMenu, m_language.GetString("Add_Ins", "Add-Ins"));
+		pMenu->InsertMenu(18, MF_BYPOSITION | MF_ENABLED | MF_STRING | MF_POPUP, (UINT_PTR)AllAddinsMenu, m_language.GetString("Add_Ins", "Add-Ins"));
 	}
 
 	return bRet;
 }
 
-bool CDittoAddins::CallPrePasteFunction(int Id, IClip *pClip)
+bool CDittoAddins::CallPrePasteFunction(int Id, IClip* pClip)
 {
 	bool bRet = false;
 	CFunctionLookup func;
-	if(m_FunctionMap.Lookup(Id, func))
+	if (m_FunctionMap.Lookup(Id, func))
 	{
 		CDittoInfo DittoInfo;
 		LoadDittoInfo(DittoInfo);
@@ -132,7 +132,7 @@ bool CDittoAddins::CallPrePasteFunction(int Id, IClip *pClip)
 	return bRet;
 }
 
-void CDittoAddins::LoadDittoInfo(CDittoInfo &DittoInfo)
+void CDittoAddins::LoadDittoInfo(CDittoInfo& DittoInfo)
 {
 	DittoInfo.m_csDatabasePath = m_settings.GetDBPath();
 	DittoInfo.m_csLanguageCode = m_language.GetLangCode();
@@ -140,18 +140,18 @@ void CDittoAddins::LoadDittoInfo(CDittoInfo &DittoInfo)
 	DittoInfo.m_hWndDitto = m_windows.QPastehWnd();
 }
 
-void CDittoAddins::AboutScreenText(CStringArray &arr)
+void CDittoAddins::AboutScreenText(CStringArray& arr)
 {
-	for(const std::unique_ptr<CDittoAddin>& addin : m_Addins)
+	for (const std::unique_ptr<CDittoAddin>& addin : m_Addins)
 	{
-		CDittoAddin *pAddin{addin.get()};
-		if(pAddin)
+		CDittoAddin* pAddin{ addin.get() };
+		if (pAddin)
 		{
 			CString csLine;
-			csLine.Format(_T("%s Ver: %d, Ver2: %d"), pAddin->DisplayName().GetString(),pAddin->Version(), pAddin->PrivateVersion());
+			csLine.Format(_T("%s Ver: %d, Ver2: %d"), pAddin->DisplayName().GetString(), pAddin->Version(), pAddin->PrivateVersion());
 			arr.Add(csLine);
 			INT_PTR subCount = pAddin->m_PrePasteFunctions.size();
-			for(int x = 0; x < subCount; x++)
+			for (int x = 0; x < subCount; x++)
 			{
 				CString csLine2;
 				csLine2.Format(_T("    %s (%s)"), pAddin->m_PrePasteFunctions[x].m_csDisplayName.GetString(), pAddin->m_PrePasteFunctions[x].m_csDetailDescription.GetString());

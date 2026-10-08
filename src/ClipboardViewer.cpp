@@ -56,7 +56,7 @@ void CClipboardViewer::Create()
 	CString strParentClass = AfxRegisterWndClass(0);
 	CWnd::CreateEx(0, strParentClass, _T("Ditto Clipboard Viewer"), 0, -1, -1, 0, 0, 0, 0);
 
-	if(m_connectOnStartup)
+	if (m_connectOnStartup)
 	{
 		SetConnect(true);
 	}
@@ -67,7 +67,7 @@ void CClipboardViewer::Connect()
 {
 	CLogger::Log(_T("Connect to Clipboard"));
 
-	if(!::AddClipboardFormatListener(m_hWnd))
+	if (!::AddClipboardFormatListener(m_hWnd))
 	{
 		CErrorReport::Show(CStringUtil::Format(_T("Ditto could not listen for clipboard changes (AddClipboardFormatListener failed, error %u). Copies are not saved."), ::GetLastError()));
 		return;
@@ -81,7 +81,7 @@ void CClipboardViewer::Connect()
 
 void CClipboardViewer::SetEnsureConnectedTimer()
 {
-	SetTimer(TimerEnsureViewerInChain, CMilliseconds::OneMinute*5, NULL);
+	SetTimer(TimerEnsureViewerInChain, CMilliseconds::OneMinute * 5, NULL);
 }
 
 // disconnects as a clipboard viewer
@@ -91,22 +91,22 @@ void CClipboardViewer::Disconnect(bool bSendPing)
 
 	KillTimer(TimerEnsureViewerInChain);
 
-	if(m_bIsConnected && !::RemoveClipboardFormatListener(m_hWnd))
+	if (m_bIsConnected && !::RemoveClipboardFormatListener(m_hWnd))
 	{
 		CErrorReport::Show(CStringUtil::Format(_T("Ditto could not stop listening for clipboard changes (RemoveClipboardFormatListener failed, error %u)."), ::GetLastError()));
 	}
 
 	m_bConnect = false;
 	m_bIsConnected = false;
-	if(bSendPing)
+	if (bSendPing)
 		SendPing();
 }
 
 void CClipboardViewer::SendPing()
 {
-	if(Settings().m_bEnsureConnectToClipboard)
+	if (Settings().m_bEnsureConnectToClipboard)
 	{
-		if(OpenClipboard())
+		if (OpenClipboard())
 		{
 			m_bPinging = true;
 			SetClipboardData(Formats().Ping(), CGlobalMemory::NewGlobalP("Ditto Ping", sizeof("Ditto Ping")));
@@ -121,9 +121,9 @@ void CClipboardViewer::SendPing()
 void CClipboardViewer::SetConnect(bool bConnect)
 {
 	m_bConnect = bConnect;
-	if(bConnect)
+	if (bConnect)
 	{
-		if(m_bIsConnected == false)
+		if (m_bIsConnected == false)
 		{
 			Connect();
 		}
@@ -143,15 +143,15 @@ void CClipboardViewer::SetConnect(bool bConnect)
 
 int CClipboardViewer::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
-	if(CWnd::OnCreate(lpCreateStruct) == -1)
+	if (CWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
-	
+
 	//Set up the clip board viewer
-	if(m_connectOnStartup)
+	if (m_connectOnStartup)
 	{
 		Connect();
 	}
-	
+
 	return 0;
 }
 
@@ -172,7 +172,7 @@ LRESULT CClipboardViewer::OnClipboardChange(WPARAM /*wParam*/, LPARAM /*lPara*/)
 
 bool CClipboardViewer::GetIgnoreClipboardChange()
 {
-	if(::IsClipboardFormatAvailable(Formats().IgnoreClipboard()))
+	if (::IsClipboardFormatAvailable(Formats().IgnoreClipboard()))
 	{
 		CLogger::Log(_T("Clipboard Viewer Ignore clipboard format is on the clipboard, ignoring change"));
 		return true;
@@ -196,24 +196,24 @@ bool CClipboardViewer::GetIgnoreClipboardChange()
 //The clipboard data has changed
 void CClipboardViewer::ProcessClipboardChange()
 {
-	if(::IsClipboardFormatAvailable(Formats().Ping()))
+	if (::IsClipboardFormatAvailable(Formats().Ping()))
 	{
 		m_bPinging = false;
 		return;
 	}
 
-	if(m_pHandler)
+	if (m_pHandler)
 	{
-		if(m_bIsConnected)
+		if (m_bIsConnected)
 		{
-			if(GetIgnoreClipboardChange() == false)
+			if (GetIgnoreClipboardChange() == false)
 			{
-				if(ValidActiveWnd())
-				{          
+				if (ValidActiveWnd())
+				{
 					CLogger::Log(CStringUtil::Format(_T("OnDrawClipboard:: *** SetTimer *** %llu"), GetTickCount64()));
 
 					KillTimer(TimerDrawClipboard);
-					SetTimer(TimerDrawClipboard, Settings().m_lProcessDrawClipboardDelay, NULL);		
+					SetTimer(TimerDrawClipboard, Settings().m_lProcessDrawClipboardDelay, NULL);
 				}
 			}
 		}
@@ -233,7 +233,7 @@ bool CClipboardViewer::ValidActiveWnd()
 	CLogger::Log(CStringUtil::Format(_T("INCLUDE app names: %s, Active App: %s"), includeApps.GetString(), m_activeWindow.GetString()));
 
 	CString line;
-	if(FindAppMatch(includeApps, line) == false)
+	if (FindAppMatch(includeApps, line) == false)
 	{
 		CLogger::Log(CStringUtil::Format(_T("Didn't find a match to INCLUDE match %s, NOT SAVING COPY"), includeApps.GetString()));
 		return false;
@@ -243,12 +243,12 @@ bool CClipboardViewer::ValidActiveWnd()
 
 	CString excludeApps = Settings().GetCopyAppExclude().MakeLower();
 
-	if(excludeApps != "")
+	if (excludeApps != "")
 	{
 		CLogger::Log(CStringUtil::Format(_T("EXCLUDE app names %s, Active App: %s"), excludeApps.GetString(), m_activeWindow.GetString()));
 
 		CString line2;
-		if(FindAppMatch(excludeApps, line2))
+		if (FindAppMatch(excludeApps, line2))
 		{
 			CLogger::Log(CStringUtil::Format(_T("Exclude app names Found Match %s - %s - NOT SAVING COPY"), line2.GetString(), m_activeWindow.GetString()));
 
@@ -263,11 +263,11 @@ bool CClipboardViewer::FindAppMatch(const CString& apps, CString& line)
 {
 	CTokenizer token(apps, Settings().GetCopyAppSeparator());
 
-	while(token.Next(line))
+	while (token.Next(line))
 	{
-		if(line != "")
+		if (line != "")
 		{
-			if(CWildCardMatch::WildMatch(line.Trim(), m_activeWindow, ""))
+			if (CWildCardMatch::WildMatch(line.Trim(), m_activeWindow, ""))
 			{
 				return true;
 			}
@@ -305,7 +305,7 @@ void CClipboardViewer::UpdateActiveWindowName()
 
 void CClipboardViewer::OnTimer(UINT_PTR nIDEvent)
 {
-	switch(nIDEvent)
+	switch (nIDEvent)
 	{
 	case TimerEnsureViewerInChain:
 		SendPing();
@@ -329,7 +329,7 @@ void CClipboardViewer::OnDrawClipboardTimer(UINT_PTR nIDEvent)
 
 	ULONGLONG dwNow = GetTickCount64();
 
-	if(dwNow - m_dwLastCopy > Settings().m_dwSaveClipDelay || m_dwLastCopy > dwNow)
+	if (dwNow - m_dwLastCopy > Settings().m_dwSaveClipDelay || m_dwLastCopy > dwNow)
 	{
 		if (GetIgnoreClipboardChange() == false)
 		{
@@ -354,9 +354,9 @@ void CClipboardViewer::OnPingTimer()
 
 	//If we haven't received the change clipboard message then we are disconnected
 	//if so reconnect
-	if(m_bPinging)
+	if (m_bPinging)
 	{
-		if(m_bConnect)
+		if (m_bConnect)
 		{
 			CLogger::Log(_T("Ping Failed Reconnecting to clipboard"));
 			Disconnect(false);
@@ -369,7 +369,7 @@ void CClipboardViewer::OnPingTimer()
 	}
 	else
 	{
-		if(m_bConnect)
+		if (m_bConnect)
 		{
 			m_bIsConnected = true;
 		}

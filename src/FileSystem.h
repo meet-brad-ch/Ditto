@@ -19,14 +19,14 @@ public:
 	 * @param fileName The file.
 	 * @return The size in bytes, or -1 when the file cannot be read.
 	 */
-	static __int64 FileSize(const TCHAR *fileName);
+	static __int64 FileSize(const TCHAR* fileName);
 
 	/**
 	 * @brief The last write time of a file.
 	 * @param csFile The file.
 	 * @return The FILETIME as a 64 bit number, or 0 when the file is not found.
 	 */
-	static __int64 GetLastWriteTime(const CString &csFile);
+	static __int64 GetLastWriteTime(const CString& csFile);
 
 	/**
 	 * @brief The folder part of a path, up to and including the last backslash.

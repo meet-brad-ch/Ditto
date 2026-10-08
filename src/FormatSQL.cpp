@@ -14,12 +14,10 @@
 CFormatSQL::CFormatSQL(CGetSetOptions& settings) :
 	m_settings(settings)
 {
-
 }
 
 CFormatSQL::~CFormatSQL()
 {
-
 }
 
 void CFormatSQL::Parse(CString cs)
@@ -38,4 +36,3 @@ void CFormatSQL::Parse(CString cs)
 
 	m_csWhere = DittoCore::SearchCondition::Build(m_csVariable.GetString(), cs.GetString(), options).c_str();
 }
-

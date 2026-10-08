@@ -20,7 +20,7 @@ CGroupCombo::~CGroupCombo()
 
 BEGIN_MESSAGE_MAP(CGroupCombo, CComboBox)
 	//{{AFX_MSG_MAP(CGroupCombo)
-		// NOTE - the ClassWizard will add and remove mapping macros here.
+	// NOTE - the ClassWizard will add and remove mapping macros here.
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -45,13 +45,13 @@ void CGroupCombo::FillCombo(long lParentID, long lSpaces)
 	int nIndex{};
 	CString csSpaces;
 
-	for(int i = 0; i < lSpaces; i++)
+	for (int i = 0; i < lSpaces; i++)
 	{
 		csSpaces += "---";
 	}
 
 	//First time through
-	if(lSpaces > 0)
+	if (lSpaces > 0)
 	{
 		csSpaces += " ";
 		//ResetContent();
@@ -61,11 +61,11 @@ void CGroupCombo::FillCombo(long lParentID, long lSpaces)
 
 	CppSQLite3Query q = theApp.Services().Database().execQueryEx(_T("SELECT lID, mText FROM Main WHERE bIsGroup = 1 AND lParentID = %d"), lParentID);
 
-	if(q.eof() == false)
+	if (q.eof() == false)
 	{
-		while(!q.eof())
+		while (!q.eof())
 		{
-			if(q.getIntField(_T("lID")) != m_lSkipGroupID)
+			if (q.getIntField(_T("lID")) != m_lSkipGroupID)
 			{
 				nIndex = AddString(csSpaces + q.getStringField(_T("mText")));
 				SetItemData(nIndex, q.getIntField(_T("lID")));
@@ -82,10 +82,10 @@ BOOL CGroupCombo::SetCurSelOnItemData(long lItemData)
 {
 	long lCount = GetCount();
 
-	for(int i = 0; i < lCount; i++)
+	for (int i = 0; i < lCount; i++)
 	{
 		// the item data holds a group id (a long) or -1
-		if(static_cast<long>(GetItemData(i)) == lItemData)
+		if (static_cast<long>(GetItemData(i)) == lItemData)
 		{
 			SetCurSel(i);
 			return TRUE;

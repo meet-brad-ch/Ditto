@@ -17,11 +17,11 @@ CRemoveLineFeeds::~CRemoveLineFeeds(void)
 {
 }
 
-bool CRemoveLineFeeds::RemoveLineFeeds(const CDittoInfo &DittoInfo, IClip *pClip)
+bool CRemoveLineFeeds::RemoveLineFeeds(const CDittoInfo& DittoInfo, IClip* pClip)
 {
 	bool didSomething = false;
-	IClipFormats *pFormats = pClip->Clips();
-	if(pFormats)
+	IClipFormats* pFormats = pClip->Clips();
+	if (pFormats)
 	{
 		try
 		{
@@ -44,10 +44,10 @@ bool CRemoveLineFeeds::RemoveLineFeeds(const CDittoInfo &DittoInfo, IClip *pClip
 	return didSomething;
 }
 
-bool CRemoveLineFeeds::Handle_CF_TEXT(IClipFormats *pFormats)
+bool CRemoveLineFeeds::Handle_CF_TEXT(IClipFormats* pFormats)
 {
-	IClipFormat *pFormat = pFormats->FindFormatEx(CF_TEXT);
-	if(pFormat == NULL)
+	IClipFormat* pFormat = pFormats->FindFormatEx(CF_TEXT);
+	if (pFormat == NULL)
 	{
 		return false;
 	}
@@ -59,10 +59,10 @@ bool CRemoveLineFeeds::Handle_CF_TEXT(IClipFormats *pFormats)
 	return true;
 }
 
-bool CRemoveLineFeeds::Handle_CF_UNICODETEXT(IClipFormats *pFormats)
+bool CRemoveLineFeeds::Handle_CF_UNICODETEXT(IClipFormats* pFormats)
 {
-	IClipFormat *pFormat = pFormats->FindFormatEx(CF_UNICODETEXT);
-	if(pFormat == NULL)
+	IClipFormat* pFormat = pFormats->FindFormatEx(CF_UNICODETEXT);
+	if (pFormat == NULL)
 	{
 		return false;
 	}
@@ -74,13 +74,13 @@ bool CRemoveLineFeeds::Handle_CF_UNICODETEXT(IClipFormats *pFormats)
 	return true;
 }
 
-bool CRemoveLineFeeds::Handle_RichText(IClipFormats *pFormats)
+bool CRemoveLineFeeds::Handle_RichText(IClipFormats* pFormats)
 {
 	// Registered formats are in 0xC000-0xFFFF, so they fit a CLIPFORMAT
 	CLIPFORMAT m_RTFFormat = static_cast<CLIPFORMAT>(::RegisterClipboardFormat(_T("Rich Text Format")));
 
-	IClipFormat *pFormat = pFormats->FindFormatEx(m_RTFFormat);
-	if(pFormat == NULL)
+	IClipFormat* pFormat = pFormats->FindFormatEx(m_RTFFormat);
+	if (pFormat == NULL)
 	{
 		return false;
 	}

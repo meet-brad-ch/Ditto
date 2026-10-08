@@ -10,8 +10,8 @@ class CEditFrameWnd : public CFrameWnd
 	DECLARE_DYNCREATE(CEditFrameWnd)
 	CEditFrameWnd();
 
-	bool EditIds(CClipIDs &Ids);
-	void SetNotifyWnd(HWND hWnd)	{ m_hNotifyWnd = hWnd; }
+	bool EditIds(CClipIDs& Ids);
+	void SetNotifyWnd(HWND hWnd) { m_hNotifyWnd = hWnd; }
 	bool CloseAll();
 
 protected:
@@ -36,8 +36,10 @@ public:
 	afx_msg void OnNcPaint();
 	afx_msg void OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp);
 	afx_msg LRESULT OnNcHitTest(CPoint point);
+
 protected:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
+
 public:
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnClose();
@@ -59,6 +61,3 @@ private:
 		TimerButtonUp = 1,
 	};
 };
-
-
-

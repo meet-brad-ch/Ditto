@@ -18,34 +18,31 @@ class COptionsSheet : public CPropertySheet
 {
 	DECLARE_DYNAMIC(COptionsSheet)
 
-// Construction
+	// Construction
 public:
 	COptionsSheet(LPCTSTR pszCaption, CWnd* pParentWnd = NULL, UINT iSelectPage = 0);
 
 	void SetNotifyWnd(HWND hWnd);
 
-// Attributes
+	// Attributes
 public:
-
-// Operations
+	// Operations
 public:
-
 	BOOL m_themeChanged;
 
-// Overrides
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(COptionsSheet)
-	public:
+public:
 	virtual BOOL OnInitDialog();
 	//}}AFX_VIRTUAL
 
-// Implementation
+	// Implementation
 public:
 	virtual ~COptionsSheet();
 
 	// Generated message map functions
 protected:
-
 	HWND m_hWndParent;
 
 	// the option pages (owned); the sheet's AddPage keeps non-owning pointers to them
@@ -53,7 +50,7 @@ protected:
 	std::unique_ptr<CPropertyPage> m_pKeyBoardOptions{};
 	/** @brief The general page. */
 	std::unique_ptr<CPropertyPage> m_pGeneralOptions{};
-	CPropertyPage *m_pQuickPasteOptions{};
+	CPropertyPage* m_pQuickPasteOptions{};
 	/** @brief The statistics page. */
 	std::unique_ptr<CPropertyPage> m_pStats{};
 	/** @brief The supported types page. */
@@ -69,7 +66,7 @@ protected:
 
 
 	//{{AFX_MSG(COptionsSheet)
-		// NOTE - the ClassWizard will add and remove member functions here.
+	// NOTE - the ClassWizard will add and remove member functions here.
 	afx_msg void OnNcDestroy();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()

@@ -16,30 +16,32 @@ class CAbout : public CPropertyPage
 {
 	DECLARE_DYNCREATE(CAbout)
 
-// Construction
+	// Construction
 public:
 	CAbout();
 	~CAbout();
 
-// Dialog Data
+	// Dialog Data
 	//{{AFX_DATA(CAbout)
-	enum { IDD = IDD_ABOUT };
-	CStatic	m_Link;
-	CStatic	m_HyperLink;
-	CHListBox	m_List;
+	enum
+	{
+		IDD = IDD_ABOUT
+	};
+	CStatic m_Link;
+	CStatic m_HyperLink;
+	CHListBox m_List;
 	//}}AFX_DATA
 
 
-// Overrides
+	// Overrides
 	// ClassWizard generate virtual function overrides
 	//{{AFX_VIRTUAL(CAbout)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-	//}}AFX_VIRTUAL
-
-// Implementation
 protected:
+	virtual void DoDataExchange(CDataExchange* pDX); // DDX/DDV support
+													 //}}AFX_VIRTUAL
 
+	// Implementation
+protected:
 	CString m_csTitle;
 
 	// Generated message map functions
@@ -47,7 +49,6 @@ protected:
 	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
-
 };
 
 //{{AFX_INSERT_LOCATION}}

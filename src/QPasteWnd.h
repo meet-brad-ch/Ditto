@@ -29,30 +29,28 @@ class CMainFrame;
 class CMainTable
 {
 public:
-    CMainTable(): 
-		m_lID( - 1), 
-		m_bDontAutoDelete(false), 
-		m_bIsGroup(false), 
-		m_bHasShortCut(false), 
+	CMainTable() :
+		m_lID(-1),
+		m_bDontAutoDelete(false),
+		m_bIsGroup(false),
+		m_bHasShortCut(false),
 		m_bHasParent(false),
 		m_dateCopied(0),
 		m_datePasted(0)
 	{
-
 	}
 
-    ~CMainTable()
+	~CMainTable()
 	{
+	}
 
-    }
-
-    long m_lID;
-    CString m_Desc;
-    bool m_bDontAutoDelete;
-    bool m_bIsGroup;
-    bool m_bHasShortCut;
-    bool m_bHasParent;
-    CString m_QuickPaste;
+	long m_lID;
+	CString m_Desc;
+	bool m_bDontAutoDelete;
+	bool m_bIsGroup;
+	bool m_bHasShortCut;
+	bool m_bHasParent;
+	CString m_QuickPaste;
 	double m_clipOrder{};
 	double m_clipGroupOrder{};
 	double m_stickyClipOrder{};
@@ -63,7 +61,7 @@ public:
 	static bool SortDesc(const CMainTable& d1, const CMainTable& d2)
 	{
 		double d1StickyOrder = d1.m_stickyClipOrder;
-		double d2StickyOrder = d2.m_stickyClipOrder;		
+		double d2StickyOrder = d2.m_stickyClipOrder;
 
 		if (d1StickyOrder != d2StickyOrder)
 			return d1StickyOrder > d2StickyOrder;
@@ -91,10 +89,9 @@ public:
 };
 
 
-typedef std::map < int, CMainTable > MainTypeMap;
-typedef std::map < int, CClipFormatQListCtrl > CF_DibTypeMap;
-typedef std::map < int, char > CF_NoDibTypeMap;
-
+typedef std::map<int, CMainTable> MainTypeMap;
+typedef std::map<int, CClipFormatQListCtrl> CF_DibTypeMap;
+typedef std::map<int, char> CF_NoDibTypeMap;
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -103,11 +100,11 @@ typedef std::map < int, char > CF_NoDibTypeMap;
 class CGetSetOptions;
 class CAppServices;
 
-class CQPasteWnd: public CWndEx
+class CQPasteWnd : public CWndEx
 {
-    // Construction
+	// Construction
 public:
-    CQPasteWnd();
+	CQPasteWnd();
 
 private:
 	/** @brief The application settings (theApp's services; this window is created by the framework).
@@ -118,72 +115,70 @@ private:
 	@return the services. */
 	static CAppServices& Services();
 
-    // Attributes
+	// Attributes
 public:
-
-    // Operations
+	// Operations
 public:
-
-    // Overrides
-    // ClassWizard generated virtual function overrides
-    //{{AFX_VIRTUAL(CQPasteWnd)
+	// Overrides
+	// ClassWizard generated virtual function overrides
+	//{{AFX_VIRTUAL(CQPasteWnd)
 public:
-    virtual BOOL Create(CRect rect, CWnd *pParentWnd);
-    virtual BOOL PreTranslateMessage(MSG *pMsg);
+	virtual BOOL Create(CRect rect, CWnd* pParentWnd);
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 
-	bool CheckActions(MSG * pMsg);
+	bool CheckActions(MSG* pMsg);
 
 	//}}AFX_VIRTUAL
 
-    // Implementation
+	// Implementation
 public:
-    bool Add(const CString &csHeader, const CString &csText, int nID);
-    virtual ~CQPasteWnd();
+	bool Add(const CString& csHeader, const CString& csText, int nID);
+	virtual ~CQPasteWnd();
 
-    void UpdateFont();
+	void UpdateFont();
 
-    //protected:
-    CQListCtrl m_lstHeader;
+	//protected:
+	CQListCtrl m_lstHeader;
 
-    CAlphaBlend m_Alpha;
+	CAlphaBlend m_Alpha;
 	//CEditWithButton m_search;
 	CSymbolEdit m_search;
-    CFont m_SearchFont;
-    bool m_bHideWnd;
-    CString m_strSQLSearch;
+	CFont m_SearchFont;
+	bool m_bHideWnd;
+	CString m_strSQLSearch;
 	CString m_strSearch;
-    CGroupStatic m_stGroup;
-    CFont m_groupFont;
-    CString m_Title;
-    CGroupTree m_GroupTree;
-    CGdipButton m_ShowGroupsFolderBottom;
-    CGdipButton m_BackButton;
+	CGroupStatic m_stGroup;
+	CFont m_groupFont;
+	CString m_Title;
+	CGroupTree m_GroupTree;
+	CGdipButton m_ShowGroupsFolderBottom;
+	CGdipButton m_BackButton;
 	CGroupStatic m_alwaysOnToWarningStatic;
 	CGdipButton m_systemMenu;
 	CGroupStatic m_noSearchResultsStatic;
 
-    long m_lRecordCount{};
-    bool m_bStopQuery{};
-    bool m_bHandleSearchTextChange;
-    bool m_bModifersMoveActive;
+	long m_lRecordCount{};
+	bool m_bStopQuery{};
+	bool m_bHandleSearchTextChange;
+	bool m_bModifersMoveActive;
 
-    CQPasteWndThread m_thread;
+	CQPasteWndThread m_thread;
 	CQPasteWndThread m_extraDataThread;
 	std::vector<CMainTable> m_listItems;
 
 	std::list<CPoint> m_loadItems;
-    std::list<CClipFormatQListCtrl> m_ExtraDataLoadItems;
-    CF_DibTypeMap m_cf_dibCache;
+	std::list<CClipFormatQListCtrl> m_ExtraDataLoadItems;
+	CF_DibTypeMap m_cf_dibCache;
 	CF_NoDibTypeMap m_cf_NO_dibCache;
-    CF_DibTypeMap m_cf_rtfCache;
+	CF_DibTypeMap m_cf_rtfCache;
 	CF_NoDibTypeMap m_cf_NO_rtfCache;
-    CCriticalSection m_CritSection;
-    CAccels m_actions;
+	CCriticalSection m_CritSection;
+	CAccels m_actions;
 	CAccels m_toolTipActions;
 	CAccels m_modifierKeyActions;
 	bool m_showScrollBars;
-	CModernScrollBar m_modernScrollBar;       // Vertical scrollbar
-	CModernScrollBar m_modernScrollBarHorz;   // Horizontal scrollbar
+	CModernScrollBar m_modernScrollBar;     // Vertical scrollbar
+	CModernScrollBar m_modernScrollBarHorz; // Horizontal scrollbar
 	int m_leftSelectedCompareId;
 	INT64 m_extraDataCounter;
 	CPopup m_popupMsg;
@@ -194,41 +189,41 @@ public:
 	bool m_pendingRefresh;
 	ULONGLONG m_lastNonActiveMouseMove{};
 
-    void RefreshNc();
-    void UpdateStatus(bool bRepaintImmediately = false); // regenerates the status (caption) text
-    BOOL FillList(CString csSQLSearch = "");
-    BOOL HideQPasteWindow(bool releaseFocus, BOOL clearSearchData = -1);
-    BOOL ShowQPasteWindow(BOOL bFillList = TRUE);
-    void MoveControls();
+	void RefreshNc();
+	void UpdateStatus(bool bRepaintImmediately = false); // regenerates the status (caption) text
+	BOOL FillList(CString csSQLSearch = "");
+	BOOL HideQPasteWindow(bool releaseFocus, BOOL clearSearchData = -1);
+	BOOL ShowQPasteWindow(BOOL bFillList = TRUE);
+	void MoveControls();
 
-    void DeleteSelectedRows();
+	void DeleteSelectedRows();
 
 	BOOL OpenID(int id, CSpecialPasteOptions pasteOptions);
 	BOOL OpenSelection(CSpecialPasteOptions pasteOptions);
-    BOOL OpenIndex(int item, bool plainTextOnly = false);
+	BOOL OpenIndex(int item, bool plainTextOnly = false);
 	BOOL NewGroup(bool bGroupSelection = true, int parentId = -1);
 
-    CString LoadDescription(int nItem);
-    bool SaveDescription(int nItem, CString text);
+	CString LoadDescription(int nItem);
+	bool SaveDescription(int nItem, CString text);
 
-    //Menu Items
-    void SetLinesPerRow(int lines, bool force, bool resetListCount);
-    void SetTransparency(int percent);
-    void OnUpdateLinesPerRow(CCmdUI *pCmdUI, int nValue);
-    void OnUpdateTransparency(CCmdUI *pCmdUI, int nValue);
-	void AddShowStarredClipsMenuItem(CMenu *pMenu);
-    void SetMenuChecks(CMenu *pMenu);
+	//Menu Items
+	void SetLinesPerRow(int lines, bool force, bool resetListCount);
+	void SetTransparency(int percent);
+	void OnUpdateLinesPerRow(CCmdUI* pCmdUI, int nValue);
+	void OnUpdateTransparency(CCmdUI* pCmdUI, int nValue);
+	void AddShowStarredClipsMenuItem(CMenu* pMenu);
+	void SetMenuChecks(CMenu* pMenu);
 
 
-    bool InsertNextNRecords(int nEnd);
+	bool InsertNextNRecords(int nEnd);
 
-    CString GetDisplayText(int lDontAutoDelete, int lShortCut, bool bIsGroup, int lParentID, CString csText);
+	CString GetDisplayText(int lDontAutoDelete, int lShortCut, bool bIsGroup, int lParentID, CString csText);
 
-    static void FillMainTable(CMainTable &table, CppSQLite3Query &q);
-    void RunThread();
-    void MoveSelection(bool down, bool requireModifersActive);
-    void OnKeyStateUp();
-    void SetKeyModiferState(bool bActive);
+	static void FillMainTable(CMainTable& table, CppSQLite3Query& q);
+	void RunThread();
+	void MoveSelection(bool down, bool requireModifersActive);
+	void OnKeyStateUp();
+	void SetKeyModiferState(bool bActive);
 	void SaveWindowSize();
 	void SelectFocusID();
 	void SetSearchImages();
@@ -238,18 +233,18 @@ public:
 	 * @param sort Set to true when the list item changed.
 	 * @return False when the clip could not be saved (the error is shown).
 	 */
-	bool RemoveStickyInternal(int id, bool &sort);
+	bool RemoveStickyInternal(int id, bool& sort);
 
 	DROPEFFECT OnDragOver(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point);
 	DROPEFFECT OnDragEnter(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point);
 	BOOL OnDrop(COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoint point);
 	void OnDragLeave();
-	COleDropTarget *m_pDropTarget{};
+	COleDropTarget* m_pDropTarget{};
 
 	bool DoAction(CAccel a);
 	bool DoAction(DWORD cmd);
 	bool DoActionShowDescription();
-	bool DoActionNextDescription(); 
+	bool DoActionNextDescription();
 	bool DoActionPrevDescription();
 	bool DoActionShowMenu();
 	bool DoActionShowSystemMenu();
@@ -283,7 +278,7 @@ public:
 	bool DoActionPasteSelectedPlainText();
 	bool DoActionMoveClipToGroup();
 	bool DoActionElevatePrivleges();
-	bool DoShowInTaskBar();	
+	bool DoShowInTaskBar();
 	bool DoClipCompare();
 	bool DoSelectLeftSideCompare();
 	bool DoSelectRightSideAndDoCompare();
@@ -319,7 +314,7 @@ public:
 	bool OnToggleLastGroupToggle();
 	bool OnMakeTopSticky(bool forceSort);
 	bool OnMakeLastSticky();
-	bool OnRemoveStickySetting();	
+	bool OnRemoveStickySetting();
 	bool DoActionReplaceTopStickyClip();
 	bool DoActionSaveCF_HDROP_FileData();
 	bool DoActionToggleClipboardConnection();
@@ -330,7 +325,7 @@ public:
 	bool DoActionToggleTransparency();
 	bool DoActionIncreaseTransparency();
 	bool DoActionDecreaseTransparency();
-	
+
 	// Refresh scrollbar colors from current theme
 	void RefreshScrollBarColors();
 	// Refresh all theme colors (caption, scrollbars, etc.)
@@ -344,14 +339,14 @@ public:
 	bool OnImportClip();
 	bool OnDeleteClipData();
 	bool OnGlobalHotkyes();
-	
-	void UpdateMenuShortCut(CCmdUI *pCmdUI, DWORD action);
+
+	void UpdateMenuShortCut(CCmdUI* pCmdUI, DWORD action);
 
 	bool ShowProperties(int id, int row);
-	bool DeleteClips(CClipIDs &IDs, ARRAY &Indexs);
+	bool DeleteClips(CClipIDs& IDs, ARRAY& Indexs);
 	void RemoveFromImageRtfCache(int row, int id = -1);
-	bool SyncClipDataToArrayData(CClip &clip);
-	bool SelectIds(ARRAY &ids);
+	bool SyncClipDataToArrayData(CClip& clip);
+	bool SelectIds(ARRAY& ids);
 
 	void LoadShortcuts();
 
@@ -359,114 +354,114 @@ public:
 
 	void SetCurrentTransparency();
 
-    // Generated message map functions
+	// Generated message map functions
 protected:
-    //{{AFX_MSG(CQPasteWnd)
-    DECLARE_MESSAGE_MAP()
+	//{{AFX_MSG(CQPasteWnd)
+	DECLARE_MESSAGE_MAP()
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
-    afx_msg void OnSize(UINT nType, int cx, int cy);
-    afx_msg void OnSetFocus(CWnd *pOldWnd);
-	afx_msg void OnKillFocus(CWnd *pOldWnd);
-    afx_msg void OnActivate(UINT nState, CWnd *pWndOther, BOOL bMinimized);
-    afx_msg void OnMenuLinesperrow1();
-    afx_msg void OnMenuLinesperrow2();
-    afx_msg void OnMenuLinesperrow3();
-    afx_msg void OnMenuLinesperrow4();
-    afx_msg void OnMenuLinesperrow5();
-    afx_msg void OnMenuTransparency10();
-    afx_msg void OnMenuTransparency15();
-    afx_msg void OnMenuTransparency20();
-    afx_msg void OnMenuTransparency25();
-    afx_msg void OnMenuTransparency30();
-    afx_msg void OnMenuTransparency40();
-    afx_msg void OnMenuTransparency5();
-    afx_msg void OnMenuTransparencyNone();
-    afx_msg void OnMenuDelete();
-    afx_msg void OnMenuPositioningAtcaret();
-    afx_msg void OnMenuPositioningAtcursor();
-    afx_msg void OnMenuPositioningAtpreviousposition();
-    afx_msg void OnMenuOptions();
-    afx_msg LRESULT OnCancelFilter(WPARAM wParam, LPARAM lParam);
-    afx_msg void OnMenuExitprogram();
-    afx_msg void OnMenuToggleConnectCV();
-    afx_msg void OnMenuProperties();
-    afx_msg void OnClose();
-    afx_msg void OnBegindrag(NMHDR *pNMHDR, LRESULT *pResult);
-    afx_msg void OnSysKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
-    afx_msg void GetDispInfo(NMHDR *pNMHDR, LRESULT *pResult);
-    afx_msg void OnFindItem(NMHDR *pNMHDR, LRESULT *pResult);
-    afx_msg void OnMenuFirsttenhotkeysUsectrlnum();
-    afx_msg void OnMenuFirsttenhotkeysShowhotkeytext();
-    afx_msg void OnMenuQuickoptionsAllwaysshowdescription();
-    afx_msg void OnMenuQuickoptionsDoubleclickingoncaptionTogglesalwaysontop();
-    afx_msg void OnMenuQuickoptionsDoubleclickingoncaptionRollupwindow();
-    afx_msg void OnMenuQuickoptionsDoubleclickingoncaptionTogglesshowdescription();
-    afx_msg void OnMenuQuickoptionsPromptfornewgroupnames();
-    afx_msg void OnShowGroupsBottom();
-    afx_msg void OnShowGroupsTop();
-    afx_msg void OnMenuViewgroups();
-    afx_msg void OnMenuQuickpropertiesSettoneverautodelete();
-    afx_msg void OnMenuQuickpropertiesAutodelete();
-    afx_msg void OnMenuQuickpropertiesRemovehotkey();
-    afx_msg void OnMenuGroupsMovetogroup();
-    afx_msg void OnMenuPasteplaintextonly();
-    afx_msg void OnMenuQuickoptionsFont();
-    afx_msg void OnMenuQuickoptionsShowthumbnails();
-    afx_msg void OnMenuQuickoptionsDrawrtftext();
-    afx_msg void OnMenuQuickoptionsPasteclipafterselection();
-    afx_msg void OnSearchEditChange();
-    afx_msg void OnMenuQuickoptionsFindasyoutype();
-    afx_msg void OnMenuQuickoptionsEnsureentirewindowisvisible();
-    afx_msg void OnMenuQuickoptionsShowclipsthatareingroupsinmainlist();
-    afx_msg void OnMenuPastehtmlasplaintext();
-    afx_msg void OnPromptToDeleteClip();
-    afx_msg void OnUpdateMenuNewgroup(CCmdUI *pCmdUI);
-    afx_msg void OnUpdateMenuNewgroupselection(CCmdUI *pCmdUI);
-    afx_msg void OnUpdateMenuAllwaysontop(CCmdUI *pCmdUI);
-    afx_msg void OnUpdateMenuViewfulldescription(CCmdUI *pCmdUI);
-    afx_msg void OnUpdateMenuViewgroups(CCmdUI *pCmdUI);
-    afx_msg void OnUpdateMenuPasteplaintextonly(CCmdUI *pCmdUI);
-    afx_msg void OnUpdateMenuDelete(CCmdUI *pCmdUI);
-    afx_msg void OnUpdateMenuProperties(CCmdUI *pCmdUI);
-    afx_msg void OnDestroy();
-    afx_msg LRESULT OnSearchEnterKeyPressed(WPARAM wParam, LPARAM lParam);
-    afx_msg LRESULT OnSearch(WPARAM wParam, LPARAM lParam);
-    afx_msg LRESULT OnDelete(WPARAM wParam, LPARAM lParam);
-    afx_msg void OnGetToolTipText(NMHDR *pNMHDR, LRESULT *pResult);
-    afx_msg LRESULT OnListSelect_DB_ID(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnSetFocus(CWnd* pOldWnd);
+	afx_msg void OnKillFocus(CWnd* pOldWnd);
+	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
+	afx_msg void OnMenuLinesperrow1();
+	afx_msg void OnMenuLinesperrow2();
+	afx_msg void OnMenuLinesperrow3();
+	afx_msg void OnMenuLinesperrow4();
+	afx_msg void OnMenuLinesperrow5();
+	afx_msg void OnMenuTransparency10();
+	afx_msg void OnMenuTransparency15();
+	afx_msg void OnMenuTransparency20();
+	afx_msg void OnMenuTransparency25();
+	afx_msg void OnMenuTransparency30();
+	afx_msg void OnMenuTransparency40();
+	afx_msg void OnMenuTransparency5();
+	afx_msg void OnMenuTransparencyNone();
+	afx_msg void OnMenuDelete();
+	afx_msg void OnMenuPositioningAtcaret();
+	afx_msg void OnMenuPositioningAtcursor();
+	afx_msg void OnMenuPositioningAtpreviousposition();
+	afx_msg void OnMenuOptions();
+	afx_msg LRESULT OnCancelFilter(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnMenuExitprogram();
+	afx_msg void OnMenuToggleConnectCV();
+	afx_msg void OnMenuProperties();
+	afx_msg void OnClose();
+	afx_msg void OnBegindrag(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnSysKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
+	afx_msg void GetDispInfo(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnFindItem(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnMenuFirsttenhotkeysUsectrlnum();
+	afx_msg void OnMenuFirsttenhotkeysShowhotkeytext();
+	afx_msg void OnMenuQuickoptionsAllwaysshowdescription();
+	afx_msg void OnMenuQuickoptionsDoubleclickingoncaptionTogglesalwaysontop();
+	afx_msg void OnMenuQuickoptionsDoubleclickingoncaptionRollupwindow();
+	afx_msg void OnMenuQuickoptionsDoubleclickingoncaptionTogglesshowdescription();
+	afx_msg void OnMenuQuickoptionsPromptfornewgroupnames();
+	afx_msg void OnShowGroupsBottom();
+	afx_msg void OnShowGroupsTop();
+	afx_msg void OnMenuViewgroups();
+	afx_msg void OnMenuQuickpropertiesSettoneverautodelete();
+	afx_msg void OnMenuQuickpropertiesAutodelete();
+	afx_msg void OnMenuQuickpropertiesRemovehotkey();
+	afx_msg void OnMenuGroupsMovetogroup();
+	afx_msg void OnMenuPasteplaintextonly();
+	afx_msg void OnMenuQuickoptionsFont();
+	afx_msg void OnMenuQuickoptionsShowthumbnails();
+	afx_msg void OnMenuQuickoptionsDrawrtftext();
+	afx_msg void OnMenuQuickoptionsPasteclipafterselection();
+	afx_msg void OnSearchEditChange();
+	afx_msg void OnMenuQuickoptionsFindasyoutype();
+	afx_msg void OnMenuQuickoptionsEnsureentirewindowisvisible();
+	afx_msg void OnMenuQuickoptionsShowclipsthatareingroupsinmainlist();
+	afx_msg void OnMenuPastehtmlasplaintext();
+	afx_msg void OnPromptToDeleteClip();
+	afx_msg void OnUpdateMenuNewgroup(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateMenuNewgroupselection(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateMenuAllwaysontop(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateMenuViewfulldescription(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateMenuViewgroups(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateMenuPasteplaintextonly(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateMenuDelete(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateMenuProperties(CCmdUI* pCmdUI);
+	afx_msg void OnDestroy();
+	afx_msg LRESULT OnSearchEnterKeyPressed(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnSearch(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnDelete(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnGetToolTipText(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg LRESULT OnListSelect_DB_ID(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnListMoveSelectionToGroup(WPARAM wParam, LPARAM lParam);
-    afx_msg LRESULT OnRefreshView(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnRefreshView(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnReloadClipInUI(WPARAM wParam, LPARAM lParam);
-    afx_msg LRESULT OnGroupTreeMessage(WPARAM wParam, LPARAM lParam);
-    afx_msg LRESULT OnFillRestOfList(WPARAM wParam, LPARAM lParam);
-    afx_msg LRESULT OnRefeshRow(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnGroupTreeMessage(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnFillRestOfList(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnRefeshRow(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnSetListCount(WPARAM wParam, LPARAM lParam);
-    afx_msg HBRUSH CtlColor(CDC *pDC, UINT nCtlColor);
-    afx_msg void OnNcLButtonDblClk(UINT nHitTest, CPoint point);
-    afx_msg void OnViewcaptionbaronRight();
-    afx_msg void OnViewcaptionbaronBottom();
-    afx_msg void OnViewcaptionbaronLeft();
-    afx_msg void OnViewcaptionbaronTop();
-    afx_msg void OnMenuAutohide();
-    afx_msg void OnMenuViewfulldescription();
-    afx_msg void OnMenuAllwaysontop();
-    afx_msg void OnMenuNewGroup();
-    afx_msg void OnMenuNewGroupSelection();
-    afx_msg void OnBackButton();
+	afx_msg HBRUSH CtlColor(CDC* pDC, UINT nCtlColor);
+	afx_msg void OnNcLButtonDblClk(UINT nHitTest, CPoint point);
+	afx_msg void OnViewcaptionbaronRight();
+	afx_msg void OnViewcaptionbaronBottom();
+	afx_msg void OnViewcaptionbaronLeft();
+	afx_msg void OnViewcaptionbaronTop();
+	afx_msg void OnMenuAutohide();
+	afx_msg void OnMenuViewfulldescription();
+	afx_msg void OnMenuAllwaysontop();
+	afx_msg void OnMenuNewGroup();
+	afx_msg void OnMenuNewGroupSelection();
+	afx_msg void OnBackButton();
 	afx_msg void OnSystemButton();
-    afx_msg LRESULT OnUpDown(WPARAM wParam, LPARAM lParam);
-    afx_msg LRESULT OnItemDeleted(WPARAM wParam, LPARAM lParam);
-    LRESULT OnToolTipWndInactive(WPARAM wParam, LPARAM lParam);
-    afx_msg void OnTimer(UINT_PTR nIDEvent);
-    afx_msg void OnMenuExport();
-    afx_msg void OnMenuImport();
-    afx_msg void OnQuickpropertiesRemovequickpaste();
-    afx_msg void OnMenuEdititem();
-    afx_msg void OnMenuNewclip();
-    afx_msg void OnUpdateMenuEdititem(CCmdUI *pCmdUI);
-    afx_msg void OnUpdateMenuNewclip(CCmdUI *pCmdUI);
-    afx_msg void OnAddinSelect(UINT id);
-    afx_msg LRESULT OnSelectAll(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnUpDown(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnItemDeleted(WPARAM wParam, LPARAM lParam);
+	LRESULT OnToolTipWndInactive(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg void OnMenuExport();
+	afx_msg void OnMenuImport();
+	afx_msg void OnQuickpropertiesRemovequickpaste();
+	afx_msg void OnMenuEdititem();
+	afx_msg void OnMenuNewclip();
+	afx_msg void OnUpdateMenuEdititem(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateMenuNewclip(CCmdUI* pCmdUI);
+	afx_msg void OnAddinSelect(UINT id);
+	afx_msg LRESULT OnSelectAll(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnShowHideScrollBar(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnUpdateScrollBar(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnMenuSearchDescription();
@@ -479,7 +474,7 @@ protected:
 	afx_msg void OnMakeLastStickyClip();
 	afx_msg void OnRemoveSticky();
 	afx_msg void OnElevateAppToPasteIntoElevatedApp();
-	
+
 public:
 	afx_msg void OnQuickoptionsShowintaskbar();
 	afx_msg void OnMenuViewasqrcode();
@@ -487,105 +482,105 @@ public:
 	afx_msg void OnCompareCompare();
 	afx_msg void OnCompareSelectleftcompare();
 	afx_msg void OnCompareCompareagainst();
-	afx_msg void OnUpdateCompareCompare(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateCompareCompare(CCmdUI* pCmdUI);
 	afx_msg LRESULT OnShowProperties(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnNewGroup(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnDeleteId(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnMenuRegularexpressionsearch();
 	afx_msg void OnImportExportclipBitmap();
-	afx_msg void OnUpdateImportExportclipBitmap(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateImportExportclipBitmap(CCmdUI* pCmdUI);
 	afx_msg void OnMenuWildcardsearch();
 	afx_msg void OnMenuSavecurrentclipboard();
-	afx_msg void OnUpdateMenuSavecurrentclipboard(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateMenuSavecurrentclipboard(CCmdUI* pCmdUI);
 	afx_msg void OnCliporderMoveup();
-	afx_msg void OnUpdateCliporderMoveup(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateCliporderMoveup(CCmdUI* pCmdUI);
 	afx_msg void OnCliporderMovedown();
-	afx_msg void OnUpdateCliporderMovedown(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateCliporderMovedown(CCmdUI* pCmdUI);
 	afx_msg void OnCliporderMovetotop();
-	afx_msg void OnUpdateCliporderMovetotop(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateCliporderMovetotop(CCmdUI* pCmdUI);
 	afx_msg void OnMenuFilteron();
-	afx_msg void OnUpdateMenuFilteron(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateMenuFilteron(CCmdUI* pCmdUI);
 	afx_msg void OnMenuGoToEntry();
-	afx_msg void OnUpdateMenuGoToEntry(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateMenuGoToEntry(CCmdUI* pCmdUI);
 	afx_msg void OnAlwaysOnTopClicked();
 	//afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	afx_msg void OnSpecialpasteUppercase();
-	afx_msg void OnUpdateSpecialpasteUppercase(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateSpecialpasteUppercase(CCmdUI* pCmdUI);
 	afx_msg void OnSpecialpasteLowercase();
-	afx_msg void OnUpdateSpecialpasteLowercase(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateSpecialpasteLowercase(CCmdUI* pCmdUI);
 	afx_msg void OnSpecialpasteCapitalize();
-	afx_msg void OnUpdateSpecialpasteCapitalize(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateSpecialpasteCapitalize(CCmdUI* pCmdUI);
 	afx_msg void OnSpecialpasteSentence();
-	afx_msg void OnUpdateSpecialpasteSentence(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateSpecialpasteSentence(CCmdUI* pCmdUI);
 	afx_msg void OnSpecialpasteRemovelinefeeds();
-	afx_msg void OnUpdateSpecialpasteRemovelinefeeds(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateSpecialpasteRemovelinefeeds(CCmdUI* pCmdUI);
 	afx_msg void OnSpecialpastePaste();
-	afx_msg void OnUpdateSpecialpastePaste(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateSpecialpastePaste(CCmdUI* pCmdUI);
 	afx_msg void OnSpecialpastePaste32919();
-	afx_msg void OnUpdateSpecialpastePaste32919(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateSpecialpastePaste32919(CCmdUI* pCmdUI);
 	afx_msg void OnSpecialpasteTypoglycemia();
-	afx_msg void OnUpdateSpecialpasteTypoglycemia(CCmdUI *pCmdUI);
-	afx_msg void OnNMClickList1(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnNMDblclkList1(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnNMRClickList1(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnNMRDblclkList1(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnUpdateSpecialpasteTypoglycemia(CCmdUI* pCmdUI);
+	afx_msg void OnNMClickList1(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnNMDblclkList1(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnNMRClickList1(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnNMRDblclkList1(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnQuickoptionsShowtextforfirsttencopyhotkeys();
-	afx_msg void OnUpdateQuickoptionsShowtextforfirsttencopyhotkeys(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateQuickoptionsShowtextforfirsttencopyhotkeys(CCmdUI* pCmdUI);
 	afx_msg void OnQuickoptionsShowindicatoracliphasbeenpasted();
-	afx_msg void OnUpdateQuickoptionsShowindicatoracliphasbeenpasted(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateQuickoptionsShowindicatoracliphasbeenpasted(CCmdUI* pCmdUI);
 	afx_msg void OnGroupsTogglelastgroup();
-	afx_msg void OnUpdateGroupsTogglelastgroup(CCmdUI *pCmdUI);
-	afx_msg void OnUpdateStickyclipsMaketopstickyclip(CCmdUI *pCmdUI);
-	afx_msg void OnUpdateStickyclipsMakelaststickyclip(CCmdUI *pCmdUI);
-	afx_msg void OnUpdateStickyclipsRemovestickysetting(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateGroupsTogglelastgroup(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateStickyclipsMaketopstickyclip(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateStickyclipsMakelaststickyclip(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateStickyclipsRemovestickysetting(CCmdUI* pCmdUI);
 	afx_msg void OnSpecialpastePaste32927();
-	afx_msg void OnUpdateSpecialpastePaste32927(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateSpecialpastePaste32927(CCmdUI* pCmdUI);
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	afx_msg void OnMenuGlobalhotkeys32933();
 	afx_msg void OnMenuDeleteclipdata32934();
 	afx_msg void OnMenuImportclip32935();
 	afx_msg void OnMenuNewclip32937();
-	afx_msg void OnUpdateMenuImportclip32935(CCmdUI *pCmdUI);
-	afx_msg void OnUpdateMenuNewclip32937(CCmdUI *pCmdUI);
-	afx_msg void OnUpdateMenuGlobalhotkeys32933(CCmdUI *pCmdUI);
-	afx_msg void OnUpdateMenuDeleteclipdata32934(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateMenuImportclip32935(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateMenuNewclip32937(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateMenuGlobalhotkeys32933(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateMenuDeleteclipdata32934(CCmdUI* pCmdUI);
 	afx_msg LRESULT OnSearchFocused(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnCliporderReplacetopstickyclip();
-	afx_msg void OnUpdateCliporderReplacetopstickyclip(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateCliporderReplacetopstickyclip(CCmdUI* pCmdUI);
 	afx_msg void OnImportImportcopiedfile();
-	afx_msg void OnUpdateImportImportcopiedfile(CCmdUI *pCmdUI);
-	afx_msg void OnUpdate32775(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateImportImportcopiedfile(CCmdUI* pCmdUI);
+	afx_msg void OnUpdate32775(CCmdUI* pCmdUI);
 	afx_msg LRESULT OnDpiChanged(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnCliporderMovetolast();
-	afx_msg void OnUpdateCliporderMovetolast(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateCliporderMovetolast(CCmdUI* pCmdUI);
 	afx_msg LRESULT OnCopyClip(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnSpecialpastePasteDontUpdateOrder();
-	afx_msg void OnUpdateOnSpecialPasteDontUpdateOrder(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateOnSpecialPasteDontUpdateOrder(CCmdUI* pCmdUI);
 
 	afx_msg void OnSpecialpasteTrim();
 	afx_msg void OnSpecialpastePosixifyPaths();
-	afx_msg void OnUpdateSpecialpasteTrim(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateSpecialpasteTrim(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateSpecialPosixifyPaths(CCmdUI* pCmdUI);
 	afx_msg void OnTransparencyIncrease();
-	afx_msg void OnUpdateTransparencyIncrease(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateTransparencyIncrease(CCmdUI* pCmdUI);
 	afx_msg void OnTransparencyDecrease();
-	afx_msg void OnUpdateTransparencyDecrease(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateTransparencyDecrease(CCmdUI* pCmdUI);
 	afx_msg void OnTransparencyToggle();
-	afx_msg void OnUpdateTransparencyToggle(CCmdUI *pCmdUI);
-	afx_msg void OnUpdateTransparencyNone(CCmdUI *pCmdUI);
-	afx_msg void OnUpdateTransparency5(CCmdUI *pCmdUI);
-	afx_msg void OnUpdateTransparency10(CCmdUI *pCmdUI);
-	afx_msg void OnUpdateTransparency15(CCmdUI *pCmdUI);
-	afx_msg void OnUpdateTransparency20(CCmdUI *pCmdUI);
-	afx_msg void OnUpdateTransparency25(CCmdUI *pCmdUI);
-	afx_msg void OnUpdateTransparency30(CCmdUI *pCmdUI);
-	afx_msg void OnUpdateTransparency35(CCmdUI *pCmdUI);
-	afx_msg void OnUpdateTransparency40(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateTransparencyToggle(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateTransparencyNone(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateTransparency5(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateTransparency10(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateTransparency15(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateTransparency20(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateTransparency25(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateTransparency30(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateTransparency35(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateTransparency40(CCmdUI* pCmdUI);
 	afx_msg void OnTransparency35();
 	afx_msg void OnSpecialpasteSlugify();
-	afx_msg void OnUpdateSpecialpasteSlugify(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateSpecialpasteSlugify(CCmdUI* pCmdUI);
 	afx_msg void OnSpecialpasteTogglecase();
-	afx_msg void OnUpdateSpecialpasteTogglecase(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateSpecialpasteTogglecase(CCmdUI* pCmdUI);
 	afx_msg void OnFirstShowstartupmessage();
 	afx_msg void OnFirstBackupDb();
 	afx_msg void OnFirstRestoreDb();
@@ -608,7 +603,7 @@ public:
 
 private:
 	/** @brief The window title (and the prefix of the "always on top" title). */
-	static constexpr const TCHAR* s_qpasteTitle{_T("Ditto")};
+	static constexpr const TCHAR* s_qpasteTitle{ _T("Ditto") };
 
 	/** @brief The control ids of the window's child controls (Create and the message map). */
 	enum : UINT
@@ -651,12 +646,12 @@ private:
 	};
 	// OnTimer passes every timer on to CWndEx: an id shared with CWndEx would run both handlers
 	// (UINT{} conversions: comparing two enumeration types is deprecated)
-	static_assert(UINT{TimerFillCache} != UINT{TimerAutoMax} && UINT{TimerFillCache} != UINT{TimerButtonUp}, "CWndEx uses this timer id");
-	static_assert(UINT{TimerDoSearch} != UINT{TimerAutoMax} && UINT{TimerDoSearch} != UINT{TimerButtonUp}, "CWndEx uses this timer id");
-	static_assert(UINT{TimerPasteFromModifier} != UINT{TimerAutoMax} && UINT{TimerPasteFromModifier} != UINT{TimerButtonUp}, "CWndEx uses this timer id");
-	static_assert(UINT{TimerErrorMsg} != UINT{TimerAutoMax} && UINT{TimerErrorMsg} != UINT{TimerButtonUp}, "CWndEx uses this timer id");
-	static_assert(UINT{TimerDragHideWindow} != UINT{TimerAutoMax} && UINT{TimerDragHideWindow} != UINT{TimerButtonUp}, "CWndEx uses this timer id");
-	static_assert(UINT{TimerDoAction} != UINT{TimerAutoMax} && UINT{TimerDoAction} != UINT{TimerButtonUp}, "CWndEx uses this timer id");
+	static_assert(UINT{ TimerFillCache } != UINT{ TimerAutoMax } && UINT{ TimerFillCache } != UINT{ TimerButtonUp }, "CWndEx uses this timer id");
+	static_assert(UINT{ TimerDoSearch } != UINT{ TimerAutoMax } && UINT{ TimerDoSearch } != UINT{ TimerButtonUp }, "CWndEx uses this timer id");
+	static_assert(UINT{ TimerPasteFromModifier } != UINT{ TimerAutoMax } && UINT{ TimerPasteFromModifier } != UINT{ TimerButtonUp }, "CWndEx uses this timer id");
+	static_assert(UINT{ TimerErrorMsg } != UINT{ TimerAutoMax } && UINT{ TimerErrorMsg } != UINT{ TimerButtonUp }, "CWndEx uses this timer id");
+	static_assert(UINT{ TimerDragHideWindow } != UINT{ TimerAutoMax } && UINT{ TimerDragHideWindow } != UINT{ TimerButtonUp }, "CWndEx uses this timer id");
+	static_assert(UINT{ TimerDoAction } != UINT{ TimerAutoMax } && UINT{ TimerDoAction } != UINT{ TimerButtonUp }, "CWndEx uses this timer id");
 
 	// OnGetToolTipText's clip text: the clip's lines, each ended with "\r\n", up to the max tool tip lines
 	CString ToolTipClipLines(const CString& clipText) const;
@@ -777,7 +772,7 @@ private:
 	/** @brief Runs one entry of s_actionHandlers.
 	@param entry the table entry.
 	@return the handler's result, or false when the entry ignores it. */
-	bool RunActionHandler(const ActionHandler &entry);
+	bool RunActionHandler(const ActionHandler& entry);
 	/** @brief The MAKE_TOP_STICKY action: OnMakeTopSticky(false).
 	@return the result of OnMakeTopSticky. */
 	bool DoActionMakeTopSticky();
@@ -834,12 +829,12 @@ private:
 	@param updateFlags the UPDATE_* flags.
 	@param clipId the clip ID.
 	@return TRUE when the item was updated. */
-	BOOL ApplyReloadedClip(CMainTable &item, const ReloadedClip &reloaded, int updateFlags, int clipId);
+	BOOL ApplyReloadedClip(CMainTable& item, const ReloadedClip& reloaded, int updateFlags, int clipId);
 
 	/** @brief Sets the filter and sort of the list for the starred view, the main list or a group.
 	@param query the query parts to set.
 	@param strStarredFilter the starred clips condition. */
-	void SetGroupFilter(FillListQuery &query, const CString &strStarredFilter);
+	void SetGroupFilter(FillListQuery& query, const CString& strStarredFilter);
 	/** @brief The main list condition by the options.
 	@return the condition. */
 	CString MainListFilter() const;
@@ -847,28 +842,28 @@ private:
 	@param csSQLSearch the search text; a /q or /f prefix is removed.
 	@param query the query parts to set.
 	@param strStarredFilter the starred clips condition. */
-	void SetSearchFilter(CString &csSQLSearch, FillListQuery &query, const CString &strStarredFilter);
+	void SetSearchFilter(CString& csSQLSearch, FillListQuery& query, const CString& strStarredFilter);
 	/** @brief The description search condition.
 	@param csSQLSearch the search text.
 	@return the condition, or empty when the description is not searched. */
-	CString SearchDescriptionSql(const CString &csSQLSearch) const;
+	CString SearchDescriptionSql(const CString& csSQLSearch) const;
 	/** @brief The quick paste text search condition.
 	@param csSQLSearch the search text; a /q prefix is removed.
 	@return the condition, or empty when the quick paste text is not searched. */
-	CString SearchQuickPasteSql(CString &csSQLSearch) const;
+	CString SearchQuickPasteSql(CString& csSQLSearch) const;
 	/** @brief The full text search condition; sets the Data join and DISTINCT.
 	@param csSQLSearch the search text; a /f prefix is removed.
 	@param descriptionSql the description condition.
 	@param quickPasteSql the quick paste text condition.
 	@param query the query parts to set.
 	@return the condition, or empty when the full text is not searched. */
-	CString SearchFullTextSql(CString &csSQLSearch, const CString &descriptionSql, const CString &quickPasteSql, FillListQuery &query) const;
+	CString SearchFullTextSql(CString& csSQLSearch, const CString& descriptionSql, const CString& quickPasteSql, FillListQuery& query) const;
 	/** @brief Joins the search conditions with OR, in parentheses.
 	@param descriptionSql the description condition.
 	@param quickPasteSql the quick paste text condition.
 	@param fullTextSql the full text condition.
 	@return the joined condition. */
-	static CString JoinSearchSql(const CString &descriptionSql, const CString &quickPasteSql, const CString &fullTextSql);
+	static CString JoinSearchSql(const CString& descriptionSql, const CString& quickPasteSql, const CString& fullTextSql);
 
 	/** @brief Checks a menu item when a condition holds.
 	@param pMenu the menu.
@@ -917,17 +912,17 @@ private:
 	@param id the clip ID.
 	@param errorMessage the errors, added to.
 	@return False when reloading the list item failed with a database error (shown to the user). */
-	bool SaveClipFileData(int row, int id, CString &errorMessage);
+	bool SaveClipFileData(int row, int id, CString& errorMessage);
 
 	/** @brief The file path for the next exported clip: the chosen path, or the next free numbered path.
 	@param names the chosen file name; its next number is advanced.
 	@param clipCount the number of clips to export.
 	@return the path, or empty when no free path was found. */
-	static CString NextExportFilePath(ExportFileNames &names, INT_PTR clipCount);
+	static CString NextExportFilePath(ExportFileNames& names, INT_PTR clipCount);
 	/** @brief Has a clip a bitmap or PNG format to export?
 	@param toSave the clip, with its formats loaded.
 	@return true when it has one. */
-	static bool HasExportImage(CClip &toSave);
+	static bool HasExportImage(CClip& toSave);
 
 	/** @brief GetDispInfo's text of a row, or queues the row to load.
 	@param pItem the list item. */
@@ -935,11 +930,11 @@ private:
 	/** @brief The list text of a clip: its symbol tags, "|" and its display text.
 	@param item the list item.
 	@return the text. */
-	CString ListItemDisplayText(const CMainTable &item) const;
+	CString ListItemDisplayText(const CMainTable& item) const;
 	/** @brief Is a clip sticky in the current view (group or main list)?
 	@param item the list item.
 	@return true when sticky. */
-	static bool IsListItemSticky(const CMainTable &item);
+	static bool IsListItemSticky(const CMainTable& item);
 	/** @brief Queues a list row to load, unless a queued range has it, and starts the load.
 	@param item the list row. */
 	void QueueListItemLoad(int item);
@@ -951,7 +946,7 @@ private:
 	@param cfType the clip format.
 	@param noFormatCache the rows known not to have the format.
 	@param formatCache the loaded formats. */
-	void GetDispInfoExtraFormat(LV_ITEM* pItem, CLIPFORMAT cfType, CF_NoDibTypeMap &noFormatCache, CF_DibTypeMap &formatCache);
+	void GetDispInfoExtraFormat(LV_ITEM* pItem, CLIPFORMAT cfType, CF_NoDibTypeMap& noFormatCache, CF_DibTypeMap& formatCache);
 	/** @brief Queues a format of a list row to load, unless it is queued, and starts the load.
 	@param row the list row.
 	@param cfType the clip format. */
@@ -960,15 +955,15 @@ private:
 	/** @brief Adds the clip details (ID, dates, flags, shortcut, sticky, group) to the tool tip.
 	@param q the clip's query row.
 	@param clipData the tool tip details, added to. */
-	static void AppendToolTipClipDetails(CppSQLite3Query &q, CString &clipData);
+	static void AppendToolTipClipDetails(CppSQLite3Query& q, CString& clipData);
 	/** @brief Adds the clip's shortcut to the tool tip.
 	@param q the clip's query row.
 	@param clipData the tool tip details, added to. */
-	static void AppendToolTipShortCut(CppSQLite3Query &q, CString &clipData);
+	static void AppendToolTipShortCut(CppSQLite3Query& q, CString& clipData);
 	/** @brief Adds the clip's sticky state to the tool tip.
 	@param q the clip's query row.
 	@param clipData the tool tip details, added to. */
-	static void AppendToolTipSticky(CppSQLite3Query &q, CString &clipData);
+	static void AppendToolTipSticky(CppSQLite3Query& q, CString& clipData);
 
 	/** @brief The search timer: fills the list with the search text. */
 	void OnDoSearchTimer();
@@ -981,12 +976,12 @@ private:
 	@param targetID the clip ID.
 	@param key the sort key to set.
 	@return true when the clip was found. */
-	static bool LoadGoToEntryKey(long targetID, GoToEntryKey &key);
+	static bool LoadGoToEntryKey(long targetID, GoToEntryKey& key);
 	/** @brief The row of a clip in the main list.
 	@param filter the main list condition.
 	@param key the clip's sort key.
 	@return the row, or -1 on a database error. */
-	static int GoToEntryRank(const CString &filter, const GoToEntryKey &key);
+	static int GoToEntryRank(const CString& filter, const GoToEntryKey& key);
 	/** @brief Waits up to 5 s for the list load, pumping messages. */
 	void WaitForListLoad();
 };

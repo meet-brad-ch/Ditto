@@ -11,11 +11,11 @@
 // CMoveToGroupDlg dialog
 
 
-CMoveToGroupDlg::CMoveToGroupDlg(CWnd* pParent /*=NULL*/, CString windowTitle /*= _T("")*/)
-	: CDialog(CMoveToGroupDlg::IDD, pParent)
+CMoveToGroupDlg::CMoveToGroupDlg(CWnd* pParent /*=NULL*/, CString windowTitle /*= _T("")*/) :
+	CDialog(CMoveToGroupDlg::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CMoveToGroupDlg)
-		// NOTE: the ClassWizard will add member initialization here
+	// NOTE: the ClassWizard will add member initialization here
 	//}}AFX_DATA_INIT
 	m_nSelectedGroup = -1;
 	m_windowTitle = windowTitle;
@@ -42,29 +42,29 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CMoveToGroupDlg message handlers
 
-BOOL CMoveToGroupDlg::OnInitDialog() 
+BOOL CMoveToGroupDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	if(!m_windowTitle.IsEmpty())
+	if (!m_windowTitle.IsEmpty())
 	{
 		SetWindowText(m_windowTitle);
 	}
-	
+
 	m_Tree.m_selectedFolderID = m_nSelectedGroup;
 	m_Tree.SetNotificationWndEx(m_hWnd);
 	m_Tree.FillTree();
 
 	theApp.Services().Language().UpdateMoveToGroups(this);
-	
-	return TRUE;  // return TRUE unless you set the focus to a control
-	              // EXCEPTION: OCX Property Pages should return FALSE
+
+	return TRUE; // return TRUE unless you set the focus to a control
+				 // EXCEPTION: OCX Property Pages should return FALSE
 }
 
 LRESULT CMoveToGroupDlg::OnTreeSelect(WPARAM wParam, LPARAM /*lParam*/)
 {
 	int nID = (int)wParam;
-	if(nID != 0)
+	if (nID != 0)
 	{
 		m_nSelectedGroup = nID;
 		OnOK();
@@ -77,10 +77,10 @@ LRESULT CMoveToGroupDlg::OnTreeSelect(WPARAM wParam, LPARAM /*lParam*/)
 	return TRUE;
 }
 
-void CMoveToGroupDlg::OnOK() 
+void CMoveToGroupDlg::OnOK()
 {
 	m_nSelectedGroup = m_Tree.GetSelectedTree();
-	
+
 	CDialog::OnOK();
 }
 
@@ -89,17 +89,17 @@ void CMoveToGroupDlg::OnSize(UINT nType, int cx, int cy)
 	CDialog::OnSize(nType, cx, cy);
 }
 
-void CMoveToGroupDlg::OnButtonNewGroup() 
+void CMoveToGroupDlg::OnButtonNewGroup()
 {
 	CGroupName Name;
-	if(Name.DoModal() != IDOK)
+	if (Name.DoModal() != IDOK)
 		return;
-		
+
 	CString csName = Name.m_csName;
-	
+
 	// NewGroupID returns 0 when the insert failed (and shows why); ids start at 1
 	long lID = CClipDatabase::NewGroupID(theApp.Services().Database(), m_Tree.GetSelectedTree(), csName);
-	if(lID > 0)
+	if (lID > 0)
 	{
 		m_Tree.AddNode(csName, lID);
 	}

@@ -3,7 +3,6 @@
 class CTextConvert
 {
 public:
-
 	static CStringA UnicodeToAnsi(CString unicode)
 	{
 		CStringA ansi{ CW2A(unicode, CP_ACP) };

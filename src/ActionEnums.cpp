@@ -209,7 +209,7 @@ CString ActionEnums::EnumDescription(ActionEnumValues value, CMultiLanguage& lan
 
 int ActionEnums::GetDefaultShortCutKeyA(ActionEnumValues value, int pos)
 {
-	switch(pos)
+	switch (pos)
 	{
 	case 0:
 		return FindDefaultShortcut(s_defaultShortcutsFirst, value);
@@ -250,7 +250,8 @@ bool ActionEnums::UserConfigurable(ActionEnumValues value)
 	static const std::array internalOnly{
 		NEXTTABCONTROL, PREVTABCONTROL,
 		MODIFIER_ACTVE_SELECTIONUP, MODIFIER_ACTVE_SELECTIONDOWN, MODIFIER_ACTVE_MOVEFIRST, MODIFIER_ACTVE_MOVELAST,
-		BACKGRROUP, DELETE_SELECTED, TOGGLEFILELOGGING, TOGGLEOUTPUTDEBUGSTRING, HOMELIST };
+		BACKGRROUP, DELETE_SELECTED, TOGGLEFILELOGGING, TOGGLEOUTPUTDEBUGSTRING, HOMELIST
+	};
 
 	const bool internal{ std::find(internalOnly.begin(), internalOnly.end(), value) != internalOnly.end() };
 	return !internal && !Removed(value);
@@ -264,7 +265,8 @@ bool ActionEnums::Removed(ActionEnumValues value)
 		SEND_TO_FRIEND_11, SEND_TO_FRIEND_12, SEND_TO_FRIEND_13, SEND_TO_FRIEND_14, SEND_TO_FRIEND_15,
 		PROMPT_SEND_TO_FRIEND, EXPORT_TO_GOOGLE_TRANSLATE, EXPORT_TO_WEB_SEARCH,
 		EMAILTO_BODY, EMAILTO_ATTACH_EXPORT, EMAILTO_ATTACH_CONTENT, GMAIL,
-		PASTE_SCRIPT };
+		PASTE_SCRIPT
+	};
 
 	return std::find(removed.begin(), removed.end(), value) != removed.end();
 }

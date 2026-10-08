@@ -11,7 +11,7 @@ class CDittoDb;
 class CClipIDs : public CArrayEx<int>
 {
 public:
-// PASTING FUNCTIONS
+	// PASTING FUNCTIONS
 
 	/**
 	 * @brief Allocates an HGLOBAL of the given format representing the clip ids in this array
@@ -21,7 +21,7 @@ public:
 	 * @param cfType the clipboard format.
 	 * @return the data, or NULL/0 when there is none.
 	 */
-	HGLOBAL	Render(CClipContext& context, UINT cfType);
+	HGLOBAL Render(CClipContext& context, UINT cfType);
 	/**
 	 * @brief Fills "types" with the Format Types corresponding to the Clip IDs in this array.
 	 * @param context the clip services (the database).
@@ -37,9 +37,9 @@ public:
 	 * @param textOnly a text-only paste (text formats also take file lists).
 	 * @return true when a clip added data.
 	 */
-	bool AggregateData(CClipContext& context, IClipAggregator &Aggregator, UINT cfType, BOOL bReverse, bool textOnly);
+	bool AggregateData(CClipContext& context, IClipAggregator& Aggregator, UINT cfType, BOOL bReverse, bool textOnly);
 
-// MANAGEMENT FUNCTIONS
+	// MANAGEMENT FUNCTIONS
 
 	/**
 	 * @brief Blindly Moves IDs into the lParentID Group sequentially with the given order
@@ -70,9 +70,9 @@ public:
 	 * @return TRUE on success or when there is nothing to export.
 	 */
 	BOOL Export(CClipContext& context, CString csFilePath);
-	
+
 protected:
-	BOOL CreateExportSqliteDB(CppSQLite3DB &db);
+	BOOL CreateExportSqliteDB(CppSQLite3DB& db);
 
 private:
 	/**
@@ -120,5 +120,4 @@ private:
 	BOOL ExportClips(CClipContext& context, CppSQLite3DB& db);
 
 protected:
-
 };

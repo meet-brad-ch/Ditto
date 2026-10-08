@@ -46,7 +46,7 @@ namespace DittoCore
 		 * @brief The paths of this list.
 		 * @return The paths, valid while the list lives.
 		 */
-		const std::vector<std::wstring>& Paths() const & { return m_paths; }
+		const std::vector<std::wstring>& Paths() const& { return m_paths; }
 
 		/**
 		 * @brief The paths of a temporary list, moved out.

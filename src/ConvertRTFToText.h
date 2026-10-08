@@ -9,6 +9,4 @@ public:
 
 private:
 	CRichEditCtrlEx m_richEditTextConverter;
-
 };
-

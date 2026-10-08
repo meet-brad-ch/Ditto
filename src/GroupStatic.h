@@ -12,30 +12,28 @@
 
 class CGroupStatic : public CStatic
 {
-// Construction
+	// Construction
 public:
 	CGroupStatic();
 
-// Attributes
+	// Attributes
 public:
-
-// Operations
+	// Operations
 public:
+	void SetTextColor(COLORREF color) { m_dwTextColor = color; }
+	void SetBkColor(COLORREF color) { m_dwBkColor = color; }
+	void SetFont(int nPointSize, LPCTSTR lpszFaceName, CDC* pDC = NULL);
+	void SetFont(CFont* pFont) { CStatic::SetFont(pFont); }
+	void SetToggleCursor(bool toggle) { m_toggleCursorToHand = toggle; }
 
-	void SetTextColor( COLORREF color )		{ m_dwTextColor = color;	}
-	void SetBkColor( COLORREF color )		{ m_dwBkColor = color;		}
-	void SetFont( int nPointSize, LPCTSTR lpszFaceName, CDC* pDC = NULL );
-	void SetFont(CFont *pFont)				{ CStatic::SetFont(pFont);		}
-	void SetToggleCursor(bool toggle)		{ m_toggleCursorToHand = toggle; }
-
-// Overrides
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CGroupStatic)
-	public:
+public:
 	virtual BOOL OnChildNotify(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pLResult);
 	//}}AFX_VIRTUAL
 
-// Implementation
+	// Implementation
 public:
 	virtual ~CGroupStatic();
 
@@ -43,12 +41,12 @@ protected:
 	COLORREF m_dwTextColor;
 	COLORREF m_dwBkColor;
 	/** @brief The font set by SetFont; empty until then. */
-	CFont    m_font{};
-	CBrush   m_brush;
-	CString  m_strBuff;        // Holds the static controls contents before & after the control is displayed
+	CFont m_font{};
+	CBrush m_brush;
+	CString m_strBuff; // Holds the static controls contents before & after the control is displayed
 	bool m_toggleCursorToHand;
 	/** @brief The last parent background colour OnChildNotify read successfully (CLR_INVALID until then); used when the read fails. */
-	COLORREF m_clrPrevValid{CLR_INVALID};
+	COLORREF m_clrPrevValid{ CLR_INVALID };
 
 
 	// Generated message map functions

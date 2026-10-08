@@ -20,8 +20,7 @@ struct CToolBarData
 	WORD wItemCount;
 
 	WORD* items()
-		{ return ( WORD* )( this + 1 ); }
-
+	{ return (WORD*)(this + 1); }
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -29,62 +28,58 @@ struct CToolBarData
 
 class CRRECToolbar : public CToolBarCtrl
 {
-// Construction
+	// Construction
 public:
 	CRRECToolbar();
-	BOOL Create( CWnd* parent, CRect& rect, int resourceId);
+	BOOL Create(CWnd* parent, CRect& rect, int resourceId);
 
-// Attributes
+	// Attributes
 public:
-
-// Operations
+	// Operations
 public:
+	void SetFontName(const CString& font);
+	void SetFontSize(int size);
+	void SetFontColor(COLORREF color);
 
-	void SetFontName( const CString& font );
-	void SetFontSize( int size );
-	void SetFontColor( COLORREF color );
-
-// Overrides
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CRRECToolbar)
 	//}}AFX_VIRTUAL
 
-// Implementation
+	// Implementation
 public:
 	virtual ~CRRECToolbar();
 
 	// Generated message map functions
 protected:
 	//{{AFX_MSG(CRRECToolbar)
-		// NOTE - the ClassWizard will add and remove member functions here.
+	// NOTE - the ClassWizard will add and remove member functions here.
 	afx_msg void OnSelchangeFont();
 	afx_msg void OnSelchangeSize();
-	afx_msg LRESULT OnColorButton( WPARAM w, LPARAM l);
+	afx_msg LRESULT OnColorButton(WPARAM w, LPARAM l);
 	//}}AFX_MSG
 
 	DECLARE_MESSAGE_MAP()
 
 private:
-
 	/** @brief Sets the font, sizes, buttons and bitmap of the created toolbar from the toolbar resource.
 	 *  @param hInstance Module that holds the resource.
 	 *  @param pData Locked toolbar resource data.
 	 *  @param resourceId Id of the toolbar and bitmap resource.
 	 *  @return false if the bitmap cannot be loaded. */
-	bool InitButtons( HINSTANCE hInstance, CToolBarData* pData, int resourceId );
+	bool InitButtons(HINSTANCE hInstance, CToolBarData* pData, int resourceId);
 
 	/** @brief Creates the font name combo, the font size combo and the colour picker on the toolbar.
 	 *  @return true if all three controls were created. */
 	bool CreateEmbeddedControls();
 
-	CFontComboBox	m_fontCombo;
-	CSizeComboBox	m_size;
-	CColourPicker	m_color;
+	CFontComboBox m_fontCombo;
+	CSizeComboBox m_size;
+	CColourPicker m_color;
 
 	CFont m_font;
 
 	CDPI m_dpi;
-
 };
 
 /////////////////////////////////////////////////////////////////////////////

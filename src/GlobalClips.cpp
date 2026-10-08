@@ -12,11 +12,10 @@
 
 IMPLEMENT_DYNAMIC(GlobalClips, CDialogEx)
 
-GlobalClips::GlobalClips(CWnd* pParent /*=NULL*/)
-	: CDialogEx(GlobalClips::IDD, pParent)
-	, m_showTaskbar(theApp.Services().Windows(), theApp.Services().State())
+GlobalClips::GlobalClips(CWnd* pParent /*=NULL*/) :
+	CDialogEx(GlobalClips::IDD, pParent),
+	m_showTaskbar(theApp.Services().Windows(), theApp.Services().State())
 {
-
 }
 
 GlobalClips::~GlobalClips()
@@ -66,28 +65,28 @@ void GlobalClips::LoadItems()
 	int row = 0;
 	for (int i = 0; i < count; i++)
 	{
-		CHotKey *pHotKey = hotKeys[i];
+		CHotKey* pHotKey = hotKeys[i];
 
-		if(pHotKey->m_Key <= 0)
+		if (pHotKey->m_Key <= 0)
 		{
 			continue;
 		}
 
 		// Insert the first item
-		lvi.mask =  LVIF_TEXT;
+		lvi.mask = LVIF_TEXT;
 		lvi.iItem = row;
 
 		strItem = pHotKey->m_Name;
 
-		if(pHotKey->m_clipId > 0)
+		if (pHotKey->m_clipId > 0)
 		{
 			strItem = pHotKey->m_description;
 
-			if(pHotKey->m_hkType == CHotKey::PASTE_OPEN_CLIP)
+			if (pHotKey->m_hkType == CHotKey::PASTE_OPEN_CLIP)
 			{
 				strItem.Insert(0, theApp.Services().Language().GetGlobalHotKeyString("(Clip)", "(Clip) "));
 			}
-			else if(pHotKey->m_hkType == CHotKey::MOVE_TO_GROUP)
+			else if (pHotKey->m_hkType == CHotKey::MOVE_TO_GROUP)
 			{
 				strItem.Insert(0, _T("(Move To Group) "));
 			}
@@ -101,7 +100,7 @@ void GlobalClips::LoadItems()
 		m_List.SetItemText(row, 1, strItem);
 
 		strItem = theApp.Services().Language().GetGlobalHotKeyString("Error", "Error");
-		if(pHotKey->IsRegistered())
+		if (pHotKey->IsRegistered())
 		{
 			strItem = theApp.Services().Language().GetGlobalHotKeyString("Yes", "Yes");
 		}
@@ -117,7 +116,7 @@ void GlobalClips::LoadItems()
 void GlobalClips::InitListCtrlCols()
 {
 	m_List.SetExtendedStyle(LVS_EX_FULLROWSELECT);
-	
+
 	m_List.InsertColumn(0, theApp.Services().Language().GetGlobalHotKeyString("Description", "Description"), LVCFMT_LEFT, 200);
 	m_List.InsertColumn(1, theApp.Services().Language().GetGlobalHotKeyString("HotKey", "Hot Key"), LVCFMT_LEFT, 100);
 	m_List.InsertColumn(2, theApp.Services().Language().GetGlobalHotKeyString("Registered", "Registered"), LVCFMT_LEFT, 100);
@@ -183,7 +182,7 @@ void GlobalClips::OnSize(UINT nType, int cx, int cy)
 //			break;
 //		}
 //	}
-//	
+//
 //	*pResult = 0;
 //}
 

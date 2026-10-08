@@ -23,7 +23,6 @@
 /************************************************************************/
 
 
-
 #pragma once
 
 #include <memory>
@@ -58,7 +57,7 @@ class CSymbolEdit : public CEdit
 	COLORREF m_colorPromptText;
 
 	CBrush m_brush;
-	COLORREF m_lastBrushColor{CLR_INVALID};
+	COLORREF m_lastBrushColor{ CLR_INVALID };
 
 	void DestroyIcon();
 
@@ -163,7 +162,7 @@ public:
 	 * @param dpi The DPI of the window (not owned; must outlive this control).
 	 * @throws std::invalid_argument when dpi is null.
 	 */
-	void SetDpiInfo(CDPI *dpi);
+	void SetDpiInfo(CDPI* dpi);
 
 	/**
 	 * @brief Reloads the buttons for the current DPI (SetDpiInfo must have been called).
@@ -174,7 +173,6 @@ public:
 	//void SetWindowTextEx(LPCSTR)
 
 protected:
-	
 	//CGdiImageDrawer m_searchButton;
 	CGdiImageDrawer m_closeButton;
 	CRect m_closeButtonRect;
@@ -199,14 +197,14 @@ protected:
 		IdClearList = 3010,
 	};
 	/** @brief The most past searches the history keeps and shows. */
-	static constexpr int s_listMaxCount{10};
+	static constexpr int s_listMaxCount{ 10 };
 	/** @brief The most characters of a search the history keeps. */
-	static constexpr int s_maxSavedSearchLength{50};
+	static constexpr int s_maxSavedSearchLength{ 50 };
 
 	void RecalcLayout();
 	virtual void PreSubclassWindow();
 
-	CDPI *m_windowDpi;
+	CDPI* m_windowDpi;
 
 	int m_centerTextDiff;
 	CString m_lastTextOnPaint;
@@ -232,5 +230,3 @@ public:
 	afx_msg void OnNcPaint();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };
-
-

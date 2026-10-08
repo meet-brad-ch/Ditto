@@ -22,7 +22,7 @@ public:
 	CTrayNotifyIcon m_trayIcon;
 	std::unique_ptr<COptionsSheet> m_pOptions{}; // the modeless options sheet while it is open
 	// the hot keys below are owned by the CHotKeys registry (theApp.Services().HotKeys()); these pointers do not own them
-	CHotKey* m_pDittoHotKey; // activate ditto's qpaste window
+	CHotKey* m_pDittoHotKey;  // activate ditto's qpaste window
 	CHotKey* m_pDittoHotKey2; // activate ditto's qpaste window
 	CHotKey* m_pDittoHotKey3; // activate ditto's qpaste window
 
@@ -65,4 +65,3 @@ private:
 	 */
 	CGetSetOptions& Settings() const;
 };
-

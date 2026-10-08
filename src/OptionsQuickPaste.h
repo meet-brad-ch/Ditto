@@ -19,39 +19,43 @@ class COptionsQuickPaste : public CPropertyPage
 {
 	DECLARE_DYNCREATE(COptionsQuickPaste)
 
-// Construction
+	// Construction
 public:
 	COptionsQuickPaste();
 	~COptionsQuickPaste();
 
-// Dialog Data
+	// Dialog Data
 	//{{AFX_DATA(COptionsQuickPaste)
-	enum { IDD = IDD_OPTIONS_QUICK_PASTE };
-	CButton	m_EnsureEntireWindowVisible;
-	CButton	m_ShowAllInMainList;
-	CButton	m_FindAsYouType;
-	CButton	m_btDrawRTF;
-	CButton	m_btShowThumbnails;
-	CButton	m_btDefaultButton;
-	CButton	m_btFont;
-	CButton	m_btShowText;
-	CNumberEdit	m_eLinesPerRow;
-	CNumberEdit	m_eTransparencyPercent;
-	CButton	m_btEnableTransparency;
+	enum
+	{
+		IDD = IDD_OPTIONS_QUICK_PASTE
+	};
+	CButton m_EnsureEntireWindowVisible;
+	CButton m_ShowAllInMainList;
+	CButton m_FindAsYouType;
+	CButton m_btDrawRTF;
+	CButton m_btShowThumbnails;
+	CButton m_btDefaultButton;
+	CButton m_btFont;
+	CButton m_btShowText;
+	CNumberEdit m_eLinesPerRow;
+	CNumberEdit m_eTransparencyPercent;
+	CButton m_btEnableTransparency;
 	CButton m_btDescShowLeadingWhiteSpace;
 	//}}AFX_DATA
 
 
-// Overrides
+	// Overrides
 	// ClassWizard generate virtual function overrides
 	//{{AFX_VIRTUAL(COptionsQuickPaste)
-	public:
+public:
 	virtual BOOL OnApply();
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-	//}}AFX_VIRTUAL
+
 protected:
-	COptionsSheet *m_pParent{};
+	virtual void DoDataExchange(CDataExchange* pDX); // DDX/DDV support
+													 //}}AFX_VIRTUAL
+protected:
+	COptionsSheet* m_pParent{};
 
 	CFont m_Font;
 	LOGFONT m_LogFont;
@@ -60,7 +64,7 @@ protected:
 	void FillThemes();
 
 
-// Implementation
+	// Implementation
 protected:
 	// Generated message map functions
 	//{{AFX_MSG(COptionsQuickPaste)
@@ -82,7 +86,7 @@ public:
 
 private:
 	/** @brief The theme list's entry for the built-in theme. */
-	static constexpr const TCHAR* s_defaultTheme{_T("(Default)")};
+	static constexpr const TCHAR* s_defaultTheme{ _T("(Default)") };
 
 	/** @brief Saves the quick paste position of the checked position radio button. */
 	void ApplyQuickPastePosition();

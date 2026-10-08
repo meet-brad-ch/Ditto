@@ -10,8 +10,8 @@
 // CAddType dialog
 
 
-CAddType::CAddType(CWnd* pParent /*=NULL*/)
-	: CDialog(CAddType::IDD, pParent)
+CAddType::CAddType(CWnd* pParent /*=NULL*/) :
+	CDialog(CAddType::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CAddType)
 	m_eCustomType = _T("");
@@ -42,13 +42,13 @@ END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CAddType message handlers
-BOOL CAddType::OnInitDialog() 
+BOOL CAddType::OnInitDialog()
 {
-	CDialog::OnInitDialog();		
-	
+	CDialog::OnInitDialog();
+
 	::CheckDlgButton(m_hWnd, IDC_RADIO_CURRENT_TYPES, BST_CHECKED);
 	OnBnClickedRadioCurrentTypes();
-	
+
 	m_lbCandidateTypes.SetFocus();
 
 	theApp.Services().Language().UpdateOptionSupportedTypesAdd(this);
@@ -79,7 +79,8 @@ void CAddType::AddCurrentClipboardTypes()
 void CAddType::AddCommonTypes()
 {
 	m_lbCandidateTypes.ResetContent();
-	for (auto systemClipFormat : CClipboardFormats::GetSystemClipFormats()) {
+	for (auto systemClipFormat : CClipboardFormats::GetSystemClipFormats())
+	{
 		m_lbCandidateTypes.AddString(CClipboardFormats::GetFormatName(systemClipFormat));
 	}
 	// Registered formats are in 0xC000-0xFFFF, so they fit a CLIPFORMAT
@@ -112,7 +113,6 @@ void CAddType::OnBnClickedRadioCurrentTypes()
 	{
 		m_lbCandidateTypes.SetCurSel(0);
 		m_lbCandidateTypes.SetSel(0);
-
 	}
 }
 

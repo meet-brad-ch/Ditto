@@ -12,31 +12,29 @@
 
 class CSearchEditBox : public CEdit
 {
-// Construction
+	// Construction
 public:
 	CSearchEditBox();
 
-// Attributes
+	// Attributes
 public:
-
-// Operations
+	// Operations
 public:
-
-// Overrides
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CSearchEditBox)
-	public:
+public:
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	//}}AFX_VIRTUAL
 
-// Implementation
+	// Implementation
 public:
 	virtual ~CSearchEditBox();
 
 	// Generated message map functions
 protected:
 	//{{AFX_MSG(CSearchEditBox)
-		// NOTE - the ClassWizard will add and remove member functions here.
+	// NOTE - the ClassWizard will add and remove member functions here.
 	//}}AFX_MSG
 
 	DECLARE_MESSAGE_MAP()

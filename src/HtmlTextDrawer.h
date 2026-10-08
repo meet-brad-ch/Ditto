@@ -32,7 +32,19 @@ public:
 
 private:
 	/** @brief The token ids that GetToken returns (an end tag adds s_endFlag). */
-	enum TokenId : int { tNONE, tB, tBR, tFONT, tI, tP, tSUB, tSUP, tU, tNUMTAGS };
+	enum TokenId : int
+	{
+		tNONE,
+		tB,
+		tBR,
+		tFONT,
+		tI,
+		tP,
+		tSUB,
+		tSUP,
+		tU,
+		tNUMTAGS
+	};
 
 	/** @brief One tag the drawer recognises. */
 	struct TagInfo
@@ -61,21 +73,21 @@ private:
 	};
 
 	/** @brief Added to a token id for an end tag. */
-	static constexpr int s_endFlag{0x100};
+	static constexpr int s_endFlag{ 0x100 };
 	/** @brief Font variant flag: bold. */
-	static constexpr int s_bold{0x01};
+	static constexpr int s_bold{ 0x01 };
 	/** @brief Font variant flag: italic. */
-	static constexpr int s_italic{s_bold << 1};
+	static constexpr int s_italic{ s_bold << 1 };
 	/** @brief Font variant flag: underline. */
-	static constexpr int s_underline{s_italic << 1};
+	static constexpr int s_underline{ s_italic << 1 };
 	/** @brief Font variant flag: superscript. */
-	static constexpr int s_superscript{s_underline << 1};
+	static constexpr int s_superscript{ s_underline << 1 };
 	/** @brief Font variant flag: subscript. */
-	static constexpr int s_subscript{s_superscript << 1};
+	static constexpr int s_subscript{ s_superscript << 1 };
 	/** @brief The number of font variants (all flag combinations). */
-	static constexpr int s_fontVariants{s_subscript << 1};
+	static constexpr int s_fontVariants{ s_subscript << 1 };
 	/** @brief The number of text colours the colour stack holds. */
-	static constexpr int s_colorStackSize{8};
+	static constexpr int s_colorStackSize{ 8 };
 
 	/** @brief The recognised tags; entry 0 stands for "no tag". */
 	static const std::array<TagInfo, 3> s_tags;

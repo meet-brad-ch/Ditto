@@ -18,76 +18,76 @@ CQPasteWndThread::CQPasteWndThread(CGetSetOptions& settings, CDittoDb& database,
 {
 	m_rowHeight = 0;
 	m_threadName = "CQPasteWndThread";
-    m_waitTimeout = CMilliseconds::OneHour * 12;
+	m_waitTimeout = CMilliseconds::OneHour * 12;
 
-    m_SearchingEvent = CreateEvent(NULL, TRUE, FALSE, _T(""));
+	m_SearchingEvent = CreateEvent(NULL, TRUE, FALSE, _T(""));
 
-    for(int eventEnum = 0; eventEnum < ECQPASTEWNDTHREADEVENTS_COUNT; eventEnum++)
-    {
-        AddEvent(eventEnum);
-    }
+	for (int eventEnum = 0; eventEnum < ECQPASTEWNDTHREADEVENTS_COUNT; eventEnum++)
+	{
+		AddEvent(eventEnum);
+	}
 }
 
 CQPasteWndThread::~CQPasteWndThread(void)
 {
-    CloseHandle(m_SearchingEvent);
+	CloseHandle(m_SearchingEvent);
 }
 
-void CQPasteWndThread::OnTimeOut(void * /*param*/)
+void CQPasteWndThread::OnTimeOut(void* /*param*/)
 {
 }
 
-void CQPasteWndThread::OnEvent(int eventId, void *param)
+void CQPasteWndThread::OnEvent(int eventId, void* param)
 {
 	ULONGLONG startTick = GetTickCount64();
 	CLogger::Log(CStringUtil::Format(_T("Start of OnEvent, eventId: %s"), EnumName((eCQPasteWndThreadEvents)eventId).GetString()));
 
-    switch((eCQPasteWndThreadEvents)eventId)
-    {
-        case DO_SET_LIST_COUNT:
-            OnSetListCount(param);
-            break;
-        case LOAD_ACCELERATORS:
-            OnLoadAccelerators(param);
-            break;
-        case UNLOAD_ACCELERATORS:
-            OnUnloadAccelerators(param);
-            break;
-        case LOAD_ITEMS:
-            OnLoadItems(param);
-            break;
-        case LOAD_EXTRA_DATA:
-            OnLoadExtraData(param);
-            break;
-    }
+	switch ((eCQPasteWndThreadEvents)eventId)
+	{
+	case DO_SET_LIST_COUNT:
+		OnSetListCount(param);
+		break;
+	case LOAD_ACCELERATORS:
+		OnLoadAccelerators(param);
+		break;
+	case UNLOAD_ACCELERATORS:
+		OnUnloadAccelerators(param);
+		break;
+	case LOAD_ITEMS:
+		OnLoadItems(param);
+		break;
+	case LOAD_EXTRA_DATA:
+		OnLoadExtraData(param);
+		break;
+	}
 
 	ULONGLONG length = GetTickCount64() - startTick;
 	CLogger::Log(CStringUtil::Format(_T("End of OnEvent, eventId: %s, Time: %llu(ms)"), EnumName((eCQPasteWndThreadEvents)eventId).GetString(), length));
 }
 
-void CQPasteWndThread::OnSetListCount(void *param)
+void CQPasteWndThread::OnSetListCount(void* param)
 {
-    CQPasteWnd *pasteWnd = (CQPasteWnd*)param;
+	CQPasteWnd* pasteWnd = (CQPasteWnd*)param;
 
-    static CEvent UpdateTimeEvent(TRUE, TRUE, _T("Ditto_Update_Clip_Time"), NULL);
-    //If we pasted then wait for the time on the pasted event to be updated before we query the db
-    if (WaitForSingleObject(UpdateTimeEvent, 2000) == WAIT_FAILED)
-    {
-        throw std::runtime_error("waiting for the clip time update event failed, error " + std::to_string(::GetLastError()));
-    }
+	static CEvent UpdateTimeEvent(TRUE, TRUE, _T("Ditto_Update_Clip_Time"), NULL);
+	//If we pasted then wait for the time on the pasted event to be updated before we query the db
+	if (WaitForSingleObject(UpdateTimeEvent, 2000) == WAIT_FAILED)
+	{
+		throw std::runtime_error("waiting for the clip time update event failed, error " + std::to_string(::GetLastError()));
+	}
 
-    ResetEvent(m_SearchingEvent);
-    ULONGLONG lTick = GetTickCount64();
+	ResetEvent(m_SearchingEvent);
+	ULONGLONG lTick = GetTickCount64();
 
 	CString countSQL = m_countSql;
 
-    long lRecordCount = 0;
+	long lRecordCount = 0;
 
-    try
-    {
-        lRecordCount = m_database.execScalar(countSQL);
-        ::PostMessage(pasteWnd->m_hWnd, CQListCtrl::NmSetListCount, lRecordCount, 0);
-    }
+	try
+	{
+		lRecordCount = m_database.execScalar(countSQL);
+		::PostMessage(pasteWnd->m_hWnd, CQListCtrl::NmSetListCount, lRecordCount, 0);
+	}
 	catch (CppSQLite3Exception& e)
 	{
 		CErrorReport::Show(CStringUtil::Format(_T("Counting the clips for the clip list failed: %s"), e.errorMessage()));
@@ -95,18 +95,18 @@ void CQPasteWndThread::OnSetListCount(void *param)
 		return;
 	}
 
-    SetEvent(m_SearchingEvent);
+	SetEvent(m_SearchingEvent);
 
-    CLogger::Log(CStringUtil::Format(_T("Set list count = %d, time = %llu"), lRecordCount, GetTickCount64() - lTick));
+	CLogger::Log(CStringUtil::Format(_T("Set list count = %d, time = %llu"), lRecordCount, GetTickCount64() - lTick));
 }
 
-void CQPasteWndThread::OnLoadItems(void *param)
+void CQPasteWndThread::OnLoadItems(void* param)
 {
-    CQPasteWnd *pasteWnd = (CQPasteWnd*)param;
+	CQPasteWnd* pasteWnd = (CQPasteWnd*)param;
 
-    ResetEvent(m_SearchingEvent);
+	ResetEvent(m_SearchingEvent);
 
-	while(true)
+	while (true)
 	{
 		ULONGLONG startTick = GetTickCount64();
 		LoadItemsRequest request{};
@@ -114,8 +114,8 @@ void CQPasteWndThread::OnLoadItems(void *param)
 
 		TakeLoadItemsRequest(pasteWnd, request);
 
-	    if(request.clearFirstLoadItem)
-	    {
+		if (request.clearFirstLoadItem)
+		{
 			try
 			{
 				CLogger::Log(CStringUtil::Format(_T("Load Items start = %d, count = %d, list size: %zu"), request.index, request.count, request.listSize));
@@ -131,7 +131,7 @@ void CQPasteWndThread::OnLoadItems(void *param)
 				ULONGLONG countCount = 0;
 				ULONGLONG acceleratorCount = 0;
 
-				if(request.firstLoad)
+				if (request.firstLoad)
 				{
 					// OnRefeshRow reads the clip id back as an int, so -2 survives the WPARAM round trip.
 					::PostMessage(pasteWnd->m_hWnd, CQListCtrl::NmRefreshRow, static_cast<WPARAM>(-2), 0);
@@ -151,7 +151,7 @@ void CQPasteWndThread::OnLoadItems(void *param)
 					::PostMessage(pasteWnd->m_hWnd, CQListCtrl::NmRefreshRow, static_cast<WPARAM>(-1), 0);
 				}
 
-				if(request.clearFirstLoadItem)
+				if (request.clearFirstLoadItem)
 				{
 					ATL::CCritSecLock csLock(pasteWnd->m_CritSection.m_sect);
 
@@ -173,25 +173,25 @@ void CQPasteWndThread::OnLoadItems(void *param)
 		}
 	}
 
-    SetEvent(m_SearchingEvent);
+	SetEvent(m_SearchingEvent);
 }
 
-void CQPasteWndThread::TakeLoadItemsRequest(CQPasteWnd *pasteWnd, LoadItemsRequest &request)
+void CQPasteWndThread::TakeLoadItemsRequest(CQPasteWnd* pasteWnd, LoadItemsRequest& request)
 {
 	ATL::CCritSecLock csLock(pasteWnd->m_CritSection.m_sect);
 
-    if(pasteWnd->m_loadItems.size() > 0)
-    {
+	if (pasteWnd->m_loadItems.size() > 0)
+	{
 		request.firstLoad = (pasteWnd->m_loadItems.begin()->x == -1);
-        request.index = max(pasteWnd->m_loadItems.begin()->x, 0);
-        request.count = pasteWnd->m_loadItems.begin()->y - pasteWnd->m_loadItems.begin()->x;
-        pasteWnd->m_bStopQuery = false;
+		request.index = max(pasteWnd->m_loadItems.begin()->x, 0);
+		request.count = pasteWnd->m_loadItems.begin()->y - pasteWnd->m_loadItems.begin()->x;
+		pasteWnd->m_bStopQuery = false;
 		request.listSize = pasteWnd->m_listItems.size();
-        request.clearFirstLoadItem = true;
-    }
+		request.clearFirstLoadItem = true;
+	}
 }
 
-int CQPasteWndThread::LoadItemRows(CQPasteWnd *pasteWnd, const CString &localSql, const LoadItemsRequest &request)
+int CQPasteWndThread::LoadItemRows(CQPasteWnd* pasteWnd, const CString& localSql, const LoadItemsRequest& request)
 {
 	int loadItemsIndex = request.index;
 	int loadCount = 0;
@@ -200,13 +200,13 @@ int CQPasteWndThread::LoadItemRows(CQPasteWnd *pasteWnd, const CString &localSql
 	CMainTable table;
 
 	CppSQLite3Query q = m_database.execQuery(localSql);
-	while(!q.eof())
+	while (!q.eof())
 	{
 		CQPasteWnd::FillMainTable(table, q);
 
 		int updateIndex = StoreLoadedItem(pasteWnd, table, pos);
 
-		if(pasteWnd->m_bStopQuery)
+		if (pasteWnd->m_bStopQuery)
 		{
 			CLogger::Log(CStringUtil::Format(_T("StopQuery called exiting filling cache count = %d"), loadItemsIndex));
 			break;
@@ -214,14 +214,14 @@ int CQPasteWndThread::LoadItemRows(CQPasteWnd *pasteWnd, const CString &localSql
 
 		q.nextRow();
 
-		if(request.firstLoad == false)
+		if (request.firstLoad == false)
 		{
 			/*if (updateIndex != loadItemsIndex)
 			{
 				CLogger::Log(CStringUtil::Format(_T("index difference old: %d, new: %d"), loadItemsIndex, updateIndex));
 			}*/
 
-    		::PostMessage(pasteWnd->m_hWnd, CQListCtrl::NmRefreshRow, table.m_lID, updateIndex);
+			::PostMessage(pasteWnd->m_hWnd, CQListCtrl::NmRefreshRow, table.m_lID, updateIndex);
 		}
 
 		loadItemsIndex++;
@@ -232,7 +232,7 @@ int CQPasteWndThread::LoadItemRows(CQPasteWnd *pasteWnd, const CString &localSql
 	return loadCount;
 }
 
-int CQPasteWndThread::StoreLoadedItem(CQPasteWnd *pasteWnd, const CMainTable &table, int pos)
+int CQPasteWndThread::StoreLoadedItem(CQPasteWnd* pasteWnd, const CMainTable& table, int pos)
 {
 	int updateIndex = -1;
 
@@ -253,7 +253,7 @@ int CQPasteWndThread::StoreLoadedItem(CQPasteWnd *pasteWnd, const CMainTable &ta
 	}
 	else if (listPos > pasteWnd->m_listItems.size())
 	{
-		for (int toAdd = (int)pasteWnd->m_listItems.size()-1; toAdd < pos - 1; toAdd++)
+		for (int toAdd = (int)pasteWnd->m_listItems.size() - 1; toAdd < pos - 1; toAdd++)
 		{
 			CMainTable empty;
 			empty.m_lID = -1;
@@ -268,7 +268,7 @@ int CQPasteWndThread::StoreLoadedItem(CQPasteWnd *pasteWnd, const CMainTable &ta
 	return updateIndex;
 }
 
-void CQPasteWndThread::ReduceMapItems(CF_DibTypeMap &mapItem, CCriticalSection &critSection, CString mapName)
+void CQPasteWndThread::ReduceMapItems(CF_DibTypeMap& mapItem, CCriticalSection& critSection, CString mapName)
 {
 	ATL::CCritSecLock csLock(critSection.m_sect);
 
@@ -305,15 +305,15 @@ void CQPasteWndThread::ReduceMapItems(CF_DibTypeMap &mapItem, CCriticalSection &
 	}
 }
 
-void CQPasteWndThread::OnLoadExtraData(void *param)
+void CQPasteWndThread::OnLoadExtraData(void* param)
 {
-    ResetEvent(m_SearchingEvent);
+	ResetEvent(m_SearchingEvent);
 
-    CQPasteWnd *pasteWnd = (CQPasteWnd*)param;
+	CQPasteWnd* pasteWnd = (CQPasteWnd*)param;
 
-    CLogger::Log(_T("Start of load extra data, Bitmaps/rtf"));
+	CLogger::Log(_T("Start of load extra data, Bitmaps/rtf"));
 
-    std::list<CClipFormatQListCtrl> localFormats;
+	std::list<CClipFormatQListCtrl> localFormats;
 	{
 		ATL::CCritSecLock csLock(pasteWnd->m_CritSection.m_sect);
 
@@ -321,11 +321,11 @@ void CQPasteWndThread::OnLoadExtraData(void *param)
 		{
 			localFormats.push_back(*it);
 		}
-	    pasteWnd->m_ExtraDataLoadItems.clear();
+		pasteWnd->m_ExtraDataLoadItems.clear();
 	}
-	
+
 	for (std::list<CClipFormatQListCtrl>::iterator it = localFormats.begin(); it != localFormats.end(); it++)
-    {
+	{
 		bool loadClip = NeedsExtraDataLoad(pasteWnd, *it);
 
 		if (loadClip)
@@ -341,13 +341,13 @@ void CQPasteWndThread::OnLoadExtraData(void *param)
 		{
 			ReduceMapItems(pasteWnd->m_cf_rtfCache, pasteWnd->m_CritSection, _T("rtf"));
 		}
-    }
+	}
 
-    SetEvent(m_SearchingEvent);
-    CLogger::Log(_T("End of load extra data, Bitmaps/rtf"));
+	SetEvent(m_SearchingEvent);
+	CLogger::Log(_T("End of load extra data, Bitmaps/rtf"));
 }
 
-bool CQPasteWndThread::NeedsExtraDataLoad(CQPasteWnd *pasteWnd, const CClipFormatQListCtrl &format)
+bool CQPasteWndThread::NeedsExtraDataLoad(CQPasteWnd* pasteWnd, const CClipFormatQListCtrl& format)
 {
 	bool loadClip = true;
 
@@ -391,7 +391,7 @@ bool CQPasteWndThread::NeedsExtraDataLoad(CQPasteWnd *pasteWnd, const CClipForma
 	return loadClip;
 }
 
-void CQPasteWndThread::LoadExtraDataFormat(CQPasteWnd *pasteWnd, CClipFormatQListCtrl &format)
+void CQPasteWndThread::LoadExtraDataFormat(CQPasteWnd* pasteWnd, CClipFormatQListCtrl& format)
 {
 	ULONGLONG startLoadClipData = GetTickCount64();
 
@@ -415,9 +415,9 @@ void CQPasteWndThread::LoadExtraDataFormat(CQPasteWnd *pasteWnd, CClipFormatQLis
 	}
 }
 
-BOOL CQPasteWndThread::GetExtraClipData(CClipFormatQListCtrl &format)
+BOOL CQPasteWndThread::GetExtraClipData(CClipFormatQListCtrl& format)
 {
-	CClipDataReader reader{m_database};
+	CClipDataReader reader{ m_database };
 	BOOL foundClipData = reader.GetClipData(format.m_parentId, format);
 	if (foundClipData == false &&
 		format.m_cfType == CF_DIB)
@@ -431,7 +431,7 @@ BOOL CQPasteWndThread::GetExtraClipData(CClipFormatQListCtrl &format)
 	return foundClipData;
 }
 
-void CQPasteWndThread::CacheExtraData(CQPasteWnd *pasteWnd, CClipFormatQListCtrl &format)
+void CQPasteWndThread::CacheExtraData(CQPasteWnd* pasteWnd, CClipFormatQListCtrl& format)
 {
 	if (format.m_cfType == CF_DIB ||
 		format.m_cfType == m_clipboardFormats.Png())
@@ -473,7 +473,7 @@ void CQPasteWndThread::CacheExtraData(CQPasteWnd *pasteWnd, CClipFormatQListCtrl
 	}
 }
 
-void CQPasteWndThread::MarkNoExtraData(CQPasteWnd *pasteWnd, const CClipFormatQListCtrl &format)
+void CQPasteWndThread::MarkNoExtraData(CQPasteWnd* pasteWnd, const CClipFormatQListCtrl& format)
 {
 	ATL::CCritSecLock csLock(pasteWnd->m_CritSection.m_sect);
 
@@ -488,21 +488,21 @@ void CQPasteWndThread::MarkNoExtraData(CQPasteWnd *pasteWnd, const CClipFormatQL
 	}
 }
 
-void CQPasteWndThread::OnLoadAccelerators(void *param)
+void CQPasteWndThread::OnLoadAccelerators(void* param)
 {
-    CQPasteWnd *pasteWnd = (CQPasteWnd*)param;
-    pasteWnd->m_lstHeader.DestroyAndCreateAccelerator(TRUE, m_database);
+	CQPasteWnd* pasteWnd = (CQPasteWnd*)param;
+	pasteWnd->m_lstHeader.DestroyAndCreateAccelerator(TRUE, m_database);
 }
 
-void CQPasteWndThread::OnUnloadAccelerators(void *param)
+void CQPasteWndThread::OnUnloadAccelerators(void* param)
 {
-    CQPasteWnd *pasteWnd = (CQPasteWnd*)param;
-    pasteWnd->m_lstHeader.DestroyAndCreateAccelerator(FALSE, m_database);
+	CQPasteWnd* pasteWnd = (CQPasteWnd*)param;
+	pasteWnd->m_lstHeader.DestroyAndCreateAccelerator(FALSE, m_database);
 }
 
 CString CQPasteWndThread::EnumName(eCQPasteWndThreadEvents e)
 {
-	switch(e)
+	switch (e)
 	{
 	case DO_SET_LIST_COUNT:
 		return _T("Load List Count");

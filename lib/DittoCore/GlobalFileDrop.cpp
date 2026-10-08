@@ -20,7 +20,7 @@ namespace DittoCore
 		if (lock.Data() == nullptr)
 		{
 			throw ClipboardFormatError("CF_HDROP global memory block cannot be locked, GetLastError " +
-				std::to_string(::GetLastError()));
+									   std::to_string(::GetLastError()));
 		}
 		return FileDropList::Parse(lock.Data(), ::GlobalSize(block));
 	}

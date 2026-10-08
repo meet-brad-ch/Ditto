@@ -21,13 +21,13 @@
 
 using namespace nsPath;
 
-CGetSetOptions::CGetSetOptions()
-	: CGetSetOptions(std::make_unique<DittoCore::RegistrySettingsStore>(RegPath))
+CGetSetOptions::CGetSetOptions() :
+	CGetSetOptions(std::make_unique<DittoCore::RegistrySettingsStore>(RegPath))
 {
 }
 
-CGetSetOptions::CGetSetOptions(std::unique_ptr<DittoCore::ISettingsStore> store)
-	: m_store(std::move(store))
+CGetSetOptions::CGetSetOptions(std::unique_ptr<DittoCore::ISettingsStore> store) :
+	m_store(std::move(store))
 {
 	if (!m_store)
 	{
@@ -37,7 +37,6 @@ CGetSetOptions::CGetSetOptions(std::unique_ptr<DittoCore::ISettingsStore> store)
 
 CGetSetOptions::~CGetSetOptions()
 {
-
 }
 
 void CGetSetOptions::LocateIniFile(const CString& exeDir)
@@ -99,10 +98,10 @@ void CGetSetOptions::LoadSettings()
 
 	LocateIniFile(exeDir);
 
-	if(m_bFromIni)
+	if (m_bFromIni)
 	{
 		CString csPath = CFileSystem::GetFilePath(m_csIniFileName);
-		if(CFileSystem::FileExists(csPath) == FALSE)
+		if (CFileSystem::FileExists(csPath) == FALSE)
 			CreateDirectory(csPath, NULL);
 
 		//create the ini file as unicode, this way we can save unicode string to the ini file
@@ -125,7 +124,7 @@ void CGetSetOptions::LoadSettings()
 	{
 		SetCheckForMaxEntries(TRUE);
 		SetSimpleTextSearch(TRUE);
-	}	
+	}
 
 	m_nLinesPerRow = GetLinesPerRow();
 	m_bUseCtrlNumAccel = GetUseCtrlNumForFirstTenHotKeys();
@@ -215,8 +214,8 @@ void CGetSetOptions::CreateIniFile(CString path)
 CString CGetSetOptions::GetIniFileName(bool bLocalIniFile)
 {
 	CString csPath = _T("c:\\program files\\Ditto\\");
-	
-	if(bLocalIniFile)
+
+	if (bLocalIniFile)
 	{
 		csPath = CFileSystem::GetFilePath(GetExeFileName());
 	}
@@ -333,7 +332,7 @@ long CGetSetOptions::GetResolutionProfileLong(CString csName, long lDefaultValue
 
 	long value = GetProfileLong(resName, INT_MIN, csNewPath);
 
-	if(value == INT_MIN)
+	if (value == INT_MIN)
 	{
 		value = GetProfileLong(csName, lDefaultValue, csNewPath);
 	}
@@ -372,7 +371,7 @@ BOOL CGetSetOptions::SetProfileString(CString csName, CString csValue)
 
 BOOL CGetSetOptions::SetProfileData(CString csName, LPVOID lpData, DWORD dwLength)
 {
-	if(m_bFromIni)
+	if (m_bFromIni)
 	{
 		ASSERT(!"SetProfileData not supported in .ini settings");
 		return FALSE;
@@ -382,7 +381,7 @@ BOOL CGetSetOptions::SetProfileData(CString csName, LPVOID lpData, DWORD dwLengt
 	return m_store->SetData(std::wstring(), std::wstring(csName.GetString()), data) ? TRUE : FALSE;
 }
 
-BOOL CGetSetOptions::GetProfileFont(CString csSection, LOGFONT &font)
+BOOL CGetSetOptions::GetProfileFont(CString csSection, LOGFONT& font)
 {
 	const std::wstring section{ csSection.GetString() };
 	font.lfHeight = m_store->GetLong(section, L"Height", 0);
@@ -416,7 +415,7 @@ BOOL CGetSetOptions::GetProfileFont(CString csSection, LOGFONT &font)
 	return TRUE;
 }
 
-BOOL CGetSetOptions::SetProfileFont(CString csSection, LOGFONT &font)
+BOOL CGetSetOptions::SetProfileFont(CString csSection, LOGFONT& font)
 {
 	const std::wstring section{ csSection.GetString() };
 	m_store->SetLong(section, L"Height", font.lfHeight);
@@ -439,7 +438,7 @@ BOOL CGetSetOptions::SetProfileFont(CString csSection, LOGFONT &font)
 
 std::vector<BYTE> CGetSetOptions::GetProfileData(CString csName)
 {
-	if(m_bFromIni)
+	if (m_bFromIni)
 	{
 		ASSERT(!"GetProfileData not supported in .ini settings");
 		return {};
@@ -450,12 +449,12 @@ std::vector<BYTE> CGetSetOptions::GetProfileData(CString csName)
 	return std::vector<BYTE>(bytes, bytes + data.size());
 }
 
-BOOL CGetSetOptions::GetShowIconInSysTray() 
+BOOL CGetSetOptions::GetShowIconInSysTray()
 {
 	return GetProfileLong("ShowIconInSystemTray", TRUE);
 }
 
-BOOL CGetSetOptions::SetShowIconInSysTray(BOOL bShow) 
+BOOL CGetSetOptions::SetShowIconInSysTray(BOOL bShow)
 {
 	return SetProfileLong("ShowIconInSystemTray", bShow);
 }
@@ -472,9 +471,9 @@ BOOL CGetSetOptions::GetEnableTransparency()
 
 BOOL CGetSetOptions::SetTransparencyPercent(long lPercent)
 {
-	if(lPercent > CAlphaBlend::OpacityMax)
+	if (lPercent > CAlphaBlend::OpacityMax)
 		lPercent = CAlphaBlend::OpacityMax;
-	if(lPercent < 0)
+	if (lPercent < 0)
 		lPercent = 0;
 
 	return SetProfileLong("TransparencyPercent", lPercent);
@@ -484,8 +483,8 @@ long CGetSetOptions::GetTransparencyPercent()
 {
 	long lValue = GetProfileLong("TransparencyPercent", 14);
 
-	if(lValue > CAlphaBlend::OpacityMax) lValue = CAlphaBlend::OpacityMax;
-	if(lValue < 0) lValue = 0;
+	if (lValue > CAlphaBlend::OpacityMax) lValue = CAlphaBlend::OpacityMax;
+	if (lValue < 0) lValue = 0;
 
 	return lValue;
 }
@@ -506,10 +505,10 @@ BOOL CGetSetOptions::GetRunOnStartUp()
 	HKEY hkRun;
 
 	LONG nResult = RegOpenKeyEx(HKEY_CURRENT_USER,
-		_T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
-		NULL, KEY_READ, &hkRun);
+								_T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
+								NULL, KEY_READ, &hkRun);
 
-	if(nResult != ERROR_SUCCESS)
+	if (nResult != ERROR_SUCCESS)
 		return FALSE;
 
 	nResult = RegQueryValueEx(hkRun, GetAppName(), NULL, NULL, NULL, NULL);
@@ -521,19 +520,19 @@ void CGetSetOptions::SetRunOnStartUp(BOOL bRun)
 {
 	HKEY hkRun;
 	LONG nResult = RegOpenKeyEx(HKEY_CURRENT_USER,
-		_T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
-		NULL, KEY_ALL_ACCESS, &hkRun);
+								_T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
+								NULL, KEY_ALL_ACCESS, &hkRun);
 
-	if(nResult != ERROR_SUCCESS)
+	if (nResult != ERROR_SUCCESS)
 		return;
 
-	if(bRun)
+	if (bRun)
 	{
 		CString sExeName = GetExeFileName();
 		::RegSetValueEx(hkRun, GetAppName(), NULL, REG_SZ,
-			(BYTE*)(LPCTSTR)sExeName, sExeName.GetLength()*sizeof(TCHAR));
-	} 
-	else 
+						(BYTE*)(LPCTSTR)sExeName, sExeName.GetLength() * sizeof(TCHAR));
+	}
+	else
 	{
 		::RegDeleteValue(hkRun, GetAppName());
 	}
@@ -544,7 +543,7 @@ void CGetSetOptions::SetRunOnStartUp(BOOL bRun)
 CString CGetSetOptions::GetExeFileName()
 {
 	CString sExeName;
-	GetModuleFileName(NULL, sExeName.GetBuffer(_MAX_PATH),_MAX_PATH);
+	GetModuleFileName(NULL, sExeName.GetBuffer(_MAX_PATH), _MAX_PATH);
 	sExeName.ReleaseBuffer();
 	return sExeName;
 }
@@ -572,11 +571,11 @@ BOOL CGetSetOptions::SetQuickPasteSize(CSize size)
 	return bRet;
 }
 
-void CGetSetOptions::GetQuickPasteSize(CSize &size)
-{	
+void CGetSetOptions::GetQuickPasteSize(CSize& size)
+{
 	size.cx = GetResolutionProfileLong("QuickPasteCX", 300);
 	size.cy = GetResolutionProfileLong("QuickPasteCY", 300);
-	if(size.cx <= 0 && size.cy <= 0)
+	if (size.cx <= 0 && size.cy <= 0)
 	{
 		size.cx = 300;
 		size.cy = 300;
@@ -591,7 +590,7 @@ BOOL CGetSetOptions::SetQuickPastePoint(CPoint point)
 	return bRet;
 }
 
-void CGetSetOptions::GetQuickPastePoint(CPoint &point)
+void CGetSetOptions::GetQuickPastePoint(CPoint& point)
 {
 	point.x = GetResolutionProfileLong("QuickPasteX", 300);
 	point.y = GetResolutionProfileLong("QuickPasteY", 300);
@@ -656,7 +655,7 @@ void CGetSetOptions::SetCheckForMaxEntries(BOOL bVal)
 BOOL CGetSetOptions::GetCheckForMaxEntries()
 {
 	BOOL bDefault = FALSE;
-	if(GetIsPortableDitto())
+	if (GetIsPortableDitto())
 		bDefault = TRUE;
 
 	return GetProfileLong("CheckForMaxEntries", bDefault);
@@ -680,7 +679,7 @@ void CGetSetOptions::SetMaxEntries(long lVal)
 long CGetSetOptions::GetMaxEntries()
 {
 	long lMax = 500;
-	if(GetIsPortableDitto())
+	if (GetIsPortableDitto())
 		lMax = 100;
 	return GetProfileLong("MaxEntries", lMax);
 }
@@ -698,10 +697,10 @@ long CGetSetOptions::GetExpiredEntries()
 void CGetSetOptions::SetTripCopyCount(long lVal)
 {
 	// negative means a relative offset
-	if(lVal < 0)
+	if (lVal < 0)
 		lVal = GetTripCopyCount() - lVal; // add the absolute value
 
-	if(GetTripDate() == 0)
+	if (GetTripDate() == 0)
 		SetTripDate(-1);
 
 	SetProfileLong("TripCopies", lVal);
@@ -715,10 +714,10 @@ long CGetSetOptions::GetTripCopyCount()
 void CGetSetOptions::SetTripPasteCount(long lVal)
 {
 	// negative means a relative offset
-	if(lVal < 0)
+	if (lVal < 0)
 		lVal = GetTripPasteCount() - lVal; // add the absolute value
 
-	if(GetTripDate() == 0)
+	if (GetTripDate() == 0)
 		SetTripDate(-1);
 
 	SetProfileLong("TripPastes", lVal);
@@ -731,7 +730,7 @@ long CGetSetOptions::GetTripPasteCount()
 
 void CGetSetOptions::SetTripDate(long lDate)
 {
-	if(lDate == -1)
+	if (lDate == -1)
 		lDate = (long)CTime::GetCurrentTime().GetTime();
 
 	SetProfileLong("TripDate", lDate);
@@ -745,10 +744,10 @@ long CGetSetOptions::GetTripDate()
 void CGetSetOptions::SetTotalCopyCount(long lVal)
 {
 	// negative means a relative offset
-	if(lVal < 0)
+	if (lVal < 0)
 		lVal = GetTotalCopyCount() - lVal; // add the absolute value
 
-	if(GetTotalDate() == 0)
+	if (GetTotalDate() == 0)
 		SetTotalDate(-1);
 
 	SetProfileLong("TotalCopies", lVal);
@@ -762,10 +761,10 @@ long CGetSetOptions::GetTotalCopyCount()
 void CGetSetOptions::SetTotalPasteCount(long lVal)
 {
 	// negative means a relative offset
-	if(lVal < 0)
+	if (lVal < 0)
 		lVal = GetTotalPasteCount() - lVal; // add the absolute value
 
-	if(GetTotalDate() == 0)
+	if (GetTotalDate() == 0)
 		SetTotalDate(-1);
 
 	SetProfileLong("TotalPastes", lVal);
@@ -778,7 +777,7 @@ long CGetSetOptions::GetTotalPasteCount()
 
 void CGetSetOptions::SetTotalDate(long lDate)
 {
-	if(lDate == -1)
+	if (lDate == -1)
 		lDate = (long)CTime::GetCurrentTime().GetTime();
 
 	SetProfileLong("TotalDate", lDate);
@@ -789,196 +788,196 @@ long CGetSetOptions::GetTotalDate()
 	return GetProfileLong("TotalDate", 0);
 }
 
-CString	CGetSetOptions::GetUpdateFilePath()			
-{ 
-	return GetProfileString("UpdateFilePath", "");	
+CString CGetSetOptions::GetUpdateFilePath()
+{
+	return GetProfileString("UpdateFilePath", "");
 }
-BOOL CGetSetOptions::SetUpdateFilePath(CString cs)	
-{ 
-	return SetProfileString("UpdateFilePath", cs);	
-}
-
-CString	CGetSetOptions::GetUpdateInstallPath()			
-{ 
-	return GetProfileString("UpdateInstallPath", "");	
-}
-BOOL CGetSetOptions::SetUpdateInstallPath(CString cs)	
-{ 
-	return SetProfileString("UpdateInstallPath", cs);	
+BOOL CGetSetOptions::SetUpdateFilePath(CString cs)
+{
+	return SetProfileString("UpdateFilePath", cs);
 }
 
-long CGetSetOptions::GetLastUpdate()			
-{ 
-	return GetProfileLong("LastUpdateDay", 0);		
+CString CGetSetOptions::GetUpdateInstallPath()
+{
+	return GetProfileString("UpdateInstallPath", "");
 }
-long CGetSetOptions::SetLastUpdate(long lValue)	
-{ 
-	return SetProfileLong("LastUpdateDay", lValue);	
-}
-
-BOOL CGetSetOptions::GetCheckForUpdates()				
-{ 
-	return GetProfileLong("CheckForUpdates", TRUE);	
-}
-BOOL CGetSetOptions::SetCheckForUpdates(BOOL bCheck)	
-{ 
-	return SetProfileLong("CheckForUpdates", bCheck);	
+BOOL CGetSetOptions::SetUpdateInstallPath(CString cs)
+{
+	return SetProfileString("UpdateInstallPath", cs);
 }
 
-void CGetSetOptions::SetUseCtrlNumForFirstTenHotKeys(BOOL bVal)	
-{	
-	SetProfileLong("UseCtrlNumForFirstTenHotKeys", bVal);	
-	m_bUseCtrlNumAccel = bVal;	
+long CGetSetOptions::GetLastUpdate()
+{
+	return GetProfileLong("LastUpdateDay", 0);
 }
-BOOL CGetSetOptions::GetUseCtrlNumForFirstTenHotKeys()			
-{	
-	return GetProfileLong("UseCtrlNumForFirstTenHotKeys", 0); 
-}
-
-void CGetSetOptions::SetAllowDuplicates(BOOL bVal)	
-{	
-	SetProfileLong("AllowDuplicates", bVal); 
-	m_bAllowDuplicates = bVal; 
-}
-BOOL CGetSetOptions::GetAllowDuplicates()			
-{	
-	return GetProfileLong("AllowDuplicates", 0); 
+long CGetSetOptions::SetLastUpdate(long lValue)
+{
+	return SetProfileLong("LastUpdateDay", lValue);
 }
 
-void CGetSetOptions::SetUpdateTimeOnPaste(BOOL bVal)	
-{	
-	SetProfileLong("UpdateTimeOnPaste", bVal); 
-	m_bUpdateTimeOnPaste = bVal; 
+BOOL CGetSetOptions::GetCheckForUpdates()
+{
+	return GetProfileLong("CheckForUpdates", TRUE);
 }
-BOOL CGetSetOptions::GetUpdateTimeOnPaste()			
-{	
-	return GetProfileLong("UpdateTimeOnPaste", TRUE); 
-}
-
-void CGetSetOptions::SetSaveMultiPaste(BOOL bVal)	
-{	
-	SetProfileLong("SaveMultiPaste", bVal); 
-	m_bSaveMultiPaste = bVal; 
-}
-BOOL CGetSetOptions::GetSaveMultiPaste()			
-{	
-	return GetProfileLong("SaveMultiPaste", 0); 
+BOOL CGetSetOptions::SetCheckForUpdates(BOOL bCheck)
+{
+	return SetProfileLong("CheckForUpdates", bCheck);
 }
 
-void CGetSetOptions::SetShowPersistent(BOOL bVal)	
-{	
-	SetProfileLong("ShowPersistent", bVal); 
-	m_bShowPersistent = bVal; 
+void CGetSetOptions::SetUseCtrlNumForFirstTenHotKeys(BOOL bVal)
+{
+	SetProfileLong("UseCtrlNumForFirstTenHotKeys", bVal);
+	m_bUseCtrlNumAccel = bVal;
 }
-BOOL CGetSetOptions::GetShowPersistent()			
-{	
-	return GetProfileLong("ShowPersistent", 0); 
-}
-
-void CGetSetOptions::SetHideDittoOnPaste(BOOL bVal)	
-{	
-	SetProfileLong("HideDittoOnPaste", bVal); 
-	m_bHideDittoOnPaste = bVal; 
-}
-BOOL CGetSetOptions::GetHideDittoOnPaste()			
-{	
-	return GetProfileLong("HideDittoOnPaste", 1); 
+BOOL CGetSetOptions::GetUseCtrlNumForFirstTenHotKeys()
+{
+	return GetProfileLong("UseCtrlNumForFirstTenHotKeys", 0);
 }
 
-void CGetSetOptions::SetShowTextForFirstTenHotKeys(BOOL bVal)	
-{	
-	SetProfileLong("ShowTextForFirstTenHotKeys", bVal);			
+void CGetSetOptions::SetAllowDuplicates(BOOL bVal)
+{
+	SetProfileLong("AllowDuplicates", bVal);
+	m_bAllowDuplicates = bVal;
 }
-BOOL CGetSetOptions::GetShowTextForFirstTenHotKeys()			
-{	
-	return GetProfileLong("ShowTextForFirstTenHotKeys", TRUE);	
-}
-
-void CGetSetOptions::SetMainHWND(long lhWnd)	
-{	
-	SetProfileLong("MainhWnd", lhWnd);		
-}
-long CGetSetOptions::GetMainHWND()				
-{	
-	return GetProfileLong("MainhWnd", 0);	
+BOOL CGetSetOptions::GetAllowDuplicates()
+{
+	return GetProfileLong("AllowDuplicates", 0);
 }
 
-void CGetSetOptions::SetCaptionPos(long lPos)	
-{	
-	SetProfileLong("CaptionPos", lPos);					
+void CGetSetOptions::SetUpdateTimeOnPaste(BOOL bVal)
+{
+	SetProfileLong("UpdateTimeOnPaste", bVal);
+	m_bUpdateTimeOnPaste = bVal;
 }
-long CGetSetOptions::GetCaptionPos()			
-{	
-	return GetProfileLong("CaptionPos", CGetSetOptions::CaptionOnRight);	
+BOOL CGetSetOptions::GetUpdateTimeOnPaste()
+{
+	return GetProfileLong("UpdateTimeOnPaste", TRUE);
+}
+
+void CGetSetOptions::SetSaveMultiPaste(BOOL bVal)
+{
+	SetProfileLong("SaveMultiPaste", bVal);
+	m_bSaveMultiPaste = bVal;
+}
+BOOL CGetSetOptions::GetSaveMultiPaste()
+{
+	return GetProfileLong("SaveMultiPaste", 0);
+}
+
+void CGetSetOptions::SetShowPersistent(BOOL bVal)
+{
+	SetProfileLong("ShowPersistent", bVal);
+	m_bShowPersistent = bVal;
+}
+BOOL CGetSetOptions::GetShowPersistent()
+{
+	return GetProfileLong("ShowPersistent", 0);
+}
+
+void CGetSetOptions::SetHideDittoOnPaste(BOOL bVal)
+{
+	SetProfileLong("HideDittoOnPaste", bVal);
+	m_bHideDittoOnPaste = bVal;
+}
+BOOL CGetSetOptions::GetHideDittoOnPaste()
+{
+	return GetProfileLong("HideDittoOnPaste", 1);
+}
+
+void CGetSetOptions::SetShowTextForFirstTenHotKeys(BOOL bVal)
+{
+	SetProfileLong("ShowTextForFirstTenHotKeys", bVal);
+}
+BOOL CGetSetOptions::GetShowTextForFirstTenHotKeys()
+{
+	return GetProfileLong("ShowTextForFirstTenHotKeys", TRUE);
+}
+
+void CGetSetOptions::SetMainHWND(long lhWnd)
+{
+	SetProfileLong("MainhWnd", lhWnd);
+}
+long CGetSetOptions::GetMainHWND()
+{
+	return GetProfileLong("MainhWnd", 0);
+}
+
+void CGetSetOptions::SetCaptionPos(long lPos)
+{
+	SetProfileLong("CaptionPos", lPos);
+}
+long CGetSetOptions::GetCaptionPos()
+{
+	return GetProfileLong("CaptionPos", CGetSetOptions::CaptionOnRight);
 }
 
 void CGetSetOptions::SetAutoHide(BOOL bAutoHide)
-{	
-	SetProfileLong("AutoHide", bAutoHide);					
+{
+	SetProfileLong("AutoHide", bAutoHide);
 }
-BOOL CGetSetOptions::GetAutoHide()				
-{	
-	return GetProfileLong("AutoHide", FALSE);				
+BOOL CGetSetOptions::GetAutoHide()
+{
+	return GetProfileLong("AutoHide", FALSE);
 }
 
 void CGetSetOptions::SetDescTextSize(long lSize)
-{	
-	SetProfileLong("DescTextSize", lSize); 
-	m_bDescTextSize = lSize; 
+{
+	SetProfileLong("DescTextSize", lSize);
+	m_bDescTextSize = lSize;
 }
-long CGetSetOptions::GetDescTextSize()			
-{	
-	return GetProfileLong("DescTextSize", 500); 
+long CGetSetOptions::GetDescTextSize()
+{
+	return GetProfileLong("DescTextSize", 500);
 }
 
 void CGetSetOptions::SetDescShowLeadingWhiteSpace(BOOL bVal)
-{ 
-	SetProfileLong("DescShowLeadingWhiteSpace", bVal); 
-	m_bDescShowLeadingWhiteSpace = bVal; 
+{
+	SetProfileLong("DescShowLeadingWhiteSpace", bVal);
+	m_bDescShowLeadingWhiteSpace = bVal;
 }
-BOOL CGetSetOptions::GetDescShowLeadingWhiteSpace()         
-{ 
-	return GetProfileLong("DescShowLeadingWhiteSpace", FALSE); 
-}
-
-void CGetSetOptions::SetAllwaysShowDescription(long bShow)	
-{	
-	SetProfileLong("AllwaysShowDescription", bShow); 
-	m_bAllwaysShowDescription = bShow; 
-}
-BOOL CGetSetOptions::GetAllwaysShowDescription()			
-{	
-	return GetProfileLong("AllwaysShowDescription", FALSE); 
+BOOL CGetSetOptions::GetDescShowLeadingWhiteSpace()
+{
+	return GetProfileLong("DescShowLeadingWhiteSpace", FALSE);
 }
 
-void CGetSetOptions::SetDoubleClickingOnCaptionDoes(long lOption)	
-{	
-	SetProfileLong("DoubleClickingOnCaptionDoes", lOption); 
-	m_bDoubleClickingOnCaptionDoes = lOption; 
+void CGetSetOptions::SetAllwaysShowDescription(long bShow)
+{
+	SetProfileLong("AllwaysShowDescription", bShow);
+	m_bAllwaysShowDescription = bShow;
 }
-long CGetSetOptions::GetDoubleClickingOnCaptionDoes()				
-{	
-	return GetProfileLong("DoubleClickingOnCaptionDoes", CGetSetOptions::TogglesAlwaysOnTop); 
-}
-
-void CGetSetOptions::SetPrompForNewGroupName(BOOL bOption)	
-{	
-	SetProfileLong("PrompForNewGroupName", bOption); 
-	m_bPrompForNewGroupName = bOption; 
-}
-BOOL CGetSetOptions::GetPrompForNewGroupName()				
-{	
-	return GetProfileLong("PrompForNewGroupName", TRUE); 
+BOOL CGetSetOptions::GetAllwaysShowDescription()
+{
+	return GetProfileLong("AllwaysShowDescription", FALSE);
 }
 
-void CGetSetOptions::SetSendPasteOnFirstTenHotKeys(BOOL bOption)	
-{	
-	SetProfileLong("SendPasteOnFirstTenHotKeys", bOption); 
-	m_bSendPasteOnFirstTenHotKeys = bOption; 
+void CGetSetOptions::SetDoubleClickingOnCaptionDoes(long lOption)
+{
+	SetProfileLong("DoubleClickingOnCaptionDoes", lOption);
+	m_bDoubleClickingOnCaptionDoes = lOption;
 }
-BOOL CGetSetOptions::GetSendPasteOnFirstTenHotKeys()				
-{	
-	return GetProfileLong("SendPasteOnFirstTenHotKeys", TRUE); 
+long CGetSetOptions::GetDoubleClickingOnCaptionDoes()
+{
+	return GetProfileLong("DoubleClickingOnCaptionDoes", CGetSetOptions::TogglesAlwaysOnTop);
+}
+
+void CGetSetOptions::SetPrompForNewGroupName(BOOL bOption)
+{
+	SetProfileLong("PrompForNewGroupName", bOption);
+	m_bPrompForNewGroupName = bOption;
+}
+BOOL CGetSetOptions::GetPrompForNewGroupName()
+{
+	return GetProfileLong("PrompForNewGroupName", TRUE);
+}
+
+void CGetSetOptions::SetSendPasteOnFirstTenHotKeys(BOOL bOption)
+{
+	SetProfileLong("SendPasteOnFirstTenHotKeys", bOption);
+	m_bSendPasteOnFirstTenHotKeys = bOption;
+}
+BOOL CGetSetOptions::GetSendPasteOnFirstTenHotKeys()
+{
+	return GetProfileLong("SendPasteOnFirstTenHotKeys", TRUE);
 }
 
 BOOL CGetSetOptions::GetHideDittoOnHotKeyIfAlreadyShown()
@@ -993,9 +992,9 @@ void CGetSetOptions::SetHideDittoOnHotKeyIfAlreadyShown(BOOL bVal)
 	SetProfileLong("HideDittoOnHotKeyIfAlreadyShown", bVal);
 }
 
-BOOL CGetSetOptions::GetFont(LOGFONT &font)
+BOOL CGetSetOptions::GetFont(LOGFONT& font)
 {
-	if(m_bFromIni)
+	if (m_bFromIni)
 	{
 		try
 		{
@@ -1006,24 +1005,24 @@ BOOL CGetSetOptions::GetFont(LOGFONT &font)
 			// A damaged font setting: report it and remove it, so the default font below is used
 			// and the report does not come back on every start; a failed removal throws
 			CErrorReport::Show(CStringUtil::Format(_T("The display font setting in %s is damaged (%s). Ditto removed it and uses its default font; choose a font again in Options."),
-				m_csIniFileName.GetString(), CString(e.what()).GetString()));
+												   m_csIniFileName.GetString(), CString(e.what()).GetString()));
 			m_store->DeleteSection(L"DisplayFont6");
 			font = LOGFONT{};
 		}
 
 		//Return true if there is a font name
 		//other wise load the default font below
-		if(font.lfFaceName[0] != 0)
+		if (font.lfFaceName[0] != 0)
 		{
 			return TRUE;
 		}
 	}
 	else
 	{
-		const std::vector<BYTE> data{GetProfileData("DisplayFont6")};
-		if(!data.empty())
+		const std::vector<BYTE> data{ GetProfileData("DisplayFont6") };
+		if (!data.empty())
 		{
-			if(sizeof(font) == data.size())
+			if (sizeof(font) == data.size())
 			{
 				memcpy(&font, data.data(), data.size());
 				return TRUE;
@@ -1043,21 +1042,21 @@ BOOL CGetSetOptions::GetFont(LOGFONT &font)
 	return TRUE;
 }
 
-void CGetSetOptions::SetFont(LOGFONT &font)
+void CGetSetOptions::SetFont(LOGFONT& font)
 {
-	if(m_bFromIni)
+	if (m_bFromIni)
 	{
 		SetProfileFont("DisplayFont6", font);
 	}
 	else
-	{	
+	{
 		SetProfileData("DisplayFont6", &font, sizeof(LOGFONT));
 	}
 }
 
 void CGetSetOptions::SetDrawThumbnail(long bDraw)
 {
-	SetProfileLong("DrawThumbnail", bDraw); 
+	SetProfileLong("DrawThumbnail", bDraw);
 	m_bDrawThumbnail = bDraw;
 }
 
@@ -1070,7 +1069,7 @@ BOOL CGetSetOptions::GetDrawThumbnail()
 
 void CGetSetOptions::SetFastThumbnailMode(BOOL thumbnailDrawMode)
 {
-	SetProfileLong("FastThumbnailMode", thumbnailDrawMode); 
+	SetProfileLong("FastThumbnailMode", thumbnailDrawMode);
 	m_bFastThumbnailMode = thumbnailDrawMode;
 }
 
@@ -1081,7 +1080,7 @@ BOOL CGetSetOptions::GetFastThumbnailMode()
 
 void CGetSetOptions::SetDrawRTF(long bDraw)
 {
-	SetProfileLong("DrawRTF", bDraw); 
+	SetProfileLong("DrawRTF", bDraw);
 	m_bDrawRTF = bDraw;
 }
 
@@ -1092,13 +1091,13 @@ BOOL CGetSetOptions::GetDrawRTF()
 
 void CGetSetOptions::SetMultiPasteReverse(BOOL bVal)
 {
-	SetProfileLong("MultiPasteReverse", bVal); 
+	SetProfileLong("MultiPasteReverse", bVal);
 	m_bMultiPasteReverse = bVal;
 }
 
 BOOL CGetSetOptions::GetMultiPasteReverse()
 {
-	return GetProfileLong("MultiPasteReverse", TRUE); 
+	return GetProfileLong("MultiPasteReverse", TRUE);
 }
 
 void CGetSetOptions::SetPlaySoundOnCopy(CString cs)
@@ -1315,14 +1314,13 @@ void CGetSetOptions::ApplyPathRule(const PathRule& rule, CString& csDir)
 long CGetSetOptions::GetDittoRestoreClipboardDelay()
 {
 	return GetProfileLong("RestoreClipboardDelay", 750);
-
 }
 void CGetSetOptions::SetDittoRestoreClipboardDelay(long lDelay)
 {
 	SetProfileLong("RestoreClipboardDelay", lDelay);
 }
 
-void CGetSetOptions::GetCopyBufferItem(int nPos, CCopyBufferItem &Item)
+void CGetSetOptions::GetCopyBufferItem(int nPos, CCopyBufferItem& Item)
 {
 	Item.m_lCopyHotKey = GetProfileLong(CStringUtil::Format(_T("CopyBufferCopyHotKey_%d"), nPos), 0);
 	Item.m_lPasteHotKey = GetProfileLong(CStringUtil::Format(_T("CopyBufferPasteHotKey_%d"), nPos), 0);
@@ -1330,7 +1328,7 @@ void CGetSetOptions::GetCopyBufferItem(int nPos, CCopyBufferItem &Item)
 	Item.m_bPlaySoundOnCopy = GetProfileLong(CStringUtil::Format(_T("CopyBufferPlaySound_%d"), nPos), 0);
 }
 
-void CGetSetOptions::SetCopyBufferItem(int nPos, CCopyBufferItem &Item)
+void CGetSetOptions::SetCopyBufferItem(int nPos, CCopyBufferItem& Item)
 {
 	SetProfileLong(CStringUtil::Format(_T("CopyBufferCopyHotKey_%d"), nPos), Item.m_lCopyHotKey);
 	SetProfileLong(CStringUtil::Format(_T("CopyBufferPasteHotKey_%d"), nPos), Item.m_lPasteHotKey);
@@ -1341,7 +1339,7 @@ void CGetSetOptions::SetCopyBufferItem(int nPos, CCopyBufferItem &Item)
 CString CGetSetOptions::GetMultiPasteSeparator(bool bConvertToLineFeeds)
 {
 	CString csSep = GetProfileString(_T("MultiPasteSeparator"), _T("[LF]"));
-	if(bConvertToLineFeeds)
+	if (bConvertToLineFeeds)
 	{
 		CString csLineFeed(_T("\r\n"));
 		csSep.Replace(_T("[LF]"), csLineFeed);
@@ -1358,7 +1356,7 @@ void CGetSetOptions::SetMultiPasteSeparator(CString csSep)
 
 BOOL CGetSetOptions::GetSetCurrentDirectory()
 {
-	if(m_portable)
+	if (m_portable)
 	{
 		CString csExePath = CFileSystem::GetFilePath(GetExeFileName());
 		CFolderPath::AddTrailingSlash(csExePath);
@@ -1409,7 +1407,7 @@ void CGetSetOptions::SetDefaultPasteString(CString val)
 CString CGetSetOptions::GetCopyString(CString csAppName)
 {
 	CString csString = GetProfileString(csAppName, _T(""), _T("CopyStrings"));
-	if(csString.IsEmpty())
+	if (csString.IsEmpty())
 		return GetDefaultCopyString();
 
 	return csString;
@@ -1430,7 +1428,7 @@ void CGetSetOptions::SetDefaultCopyString(CString val)
 CString CGetSetOptions::GetCutString(CString csAppName)
 {
 	CString csString = GetProfileString(csAppName, _T(""), _T("CutStrings"));
-	if(csString.IsEmpty())
+	if (csString.IsEmpty())
 		return GetDefaultCutString();
 
 	return csString;
@@ -1574,7 +1572,7 @@ void CGetSetOptions::SetCopyAppInclude(CString csAppName)
 CString CGetSetOptions::GetCopyAppInclude()
 {
 	CString includeApp = GetProfileString(_T("CopyAppInclude"), "*");
-	if(includeApp == "")
+	if (includeApp == "")
 	{
 		includeApp = "*";
 	}
@@ -1603,22 +1601,22 @@ DWORD CGetSetOptions::GetNoFormatsRetryDelay()
 }
 
 DWORD CGetSetOptions::GetMainDeletesDeleteCount()
-{  
+{
 	return GetProfileLong(_T("MainDeletesDeleteCount"), 100);
 }
 
 DWORD CGetSetOptions::GetIdleSecondsBeforeDelete()
-{  
-	return GetProfileLong(_T("IdleSecondsBeforeDelete"), 60*10);
+{
+	return GetProfileLong(_T("IdleSecondsBeforeDelete"), 60 * 10);
 }
 
 DWORD CGetSetOptions::GetDbTimeout()
-{  
+{
 	return GetProfileLong(_T("DbTimeout"), 5000);
 }
 
 DWORD CGetSetOptions::GetFunnyTickCountAdjustment()
-{  
+{
 	return GetProfileLong(_T("FunnyTickCountAdjustment"), 300001);
 }
 
@@ -1761,17 +1759,17 @@ void CGetSetOptions::SetDescWndPoint(CPoint point)
 	SetResolutionProfileLong("DescWndY", point.y);
 }
 
-void CGetSetOptions::GetDescWndPoint(CPoint &point)
+void CGetSetOptions::GetDescWndPoint(CPoint& point)
 {
 	point.x = GetResolutionProfileLong("DescWndX", 100);
 	point.y = GetResolutionProfileLong("DescWndY", 100);
 }
 
-void CGetSetOptions::GetDescWndSize(CSize &size)
+void CGetSetOptions::GetDescWndSize(CSize& size)
 {
 	size.cx = GetResolutionProfileLong("DescWndCX", 300);
 	size.cy = GetResolutionProfileLong("DescWndCY", 300);
-	if(size.cx <= 0 && size.cy <= 0)
+	if (size.cx <= 0 && size.cy <= 0)
 	{
 		size.cx = 300;
 		size.cy = 300;
@@ -1809,7 +1807,7 @@ void CGetSetOptions::SetDiffApp(CString val)
 	SetProfileString(_T("DiffApp"), val);
 }
 
-CString	CGetSetOptions::GetDiffApp()
+CString CGetSetOptions::GetDiffApp()
 {
 	return GetProfileString(_T("DiffApp"), _T(""));
 }
@@ -2017,7 +2015,6 @@ void CGetSetOptions::SetUseUISelectedGroupForLastTenCopies(int val)
 }
 
 
-
 BOOL CGetSetOptions::GetAdjustClipsForCRC()
 {
 	return GetProfileLong(_T("AdjustClipsForCRC"), TRUE);
@@ -2068,7 +2065,7 @@ void CGetSetOptions::SetRegexFilter(CString val, int pos)
 	SetProfileString(cs, val);
 }
 
-CString	CGetSetOptions::GetRegexFilter(int pos)
+CString CGetSetOptions::GetRegexFilter(int pos)
 {
 	CString cs;
 	cs.Format(_T("RegexFilter_%d"), pos);
@@ -2085,7 +2082,7 @@ void CGetSetOptions::SetRegexFilterByProcessName(CString val, int pos)
 	SetProfileString(cs, val);
 }
 
-CString	CGetSetOptions::GetRegexFilterByProcessName(int pos)
+CString CGetSetOptions::GetRegexFilterByProcessName(int pos)
 {
 	CString cs;
 	cs.Format(_T("RegexFilterByProcessName_%d"), pos);

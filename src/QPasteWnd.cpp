@@ -280,7 +280,7 @@ BEGIN_MESSAGE_MAP(CQPasteWnd, CWndEx)
 	ON_COMMAND(ID_SPECIALPASTE_PASTE32945, &CQPasteWnd::OnSpecialpastePasteDontUpdateOrder)
 	ON_UPDATE_COMMAND_UI(ID_SPECIALPASTE_PASTE32945, &CQPasteWnd::OnUpdateOnSpecialPasteDontUpdateOrder)
 	ON_COMMAND(ID_SPECIALPASTE_TRIM, &CQPasteWnd::OnSpecialpasteTrim)
-	ON_COMMAND(ID_SPECIALPASTE_POSIXIFY_PATHS , &CQPasteWnd::OnSpecialpastePosixifyPaths)
+	ON_COMMAND(ID_SPECIALPASTE_POSIXIFY_PATHS, &CQPasteWnd::OnSpecialpastePosixifyPaths)
 	ON_UPDATE_COMMAND_UI(ID_SPECIALPASTE_TRIM, &CQPasteWnd::OnUpdateSpecialpasteTrim)
 	ON_COMMAND(ID_TRANSPARENCY_INCREASE, &CQPasteWnd::OnTransparencyIncrease)
 	ON_UPDATE_COMMAND_UI(ID_TRANSPARENCY_INCREASE, &CQPasteWnd::OnUpdateTransparencyIncrease)
@@ -321,11 +321,11 @@ BEGIN_MESSAGE_MAP(CQPasteWnd, CWndEx)
 
 	ON_COMMAND(ID_SPECIALPASTE_ASCIITEXTONLY, &CQPasteWnd::OnSpecialpasteAsciitextonly)
 	ON_UPDATE_COMMAND_UI(ID_SPECIALPASTE_ASCIITEXTONLY, &CQPasteWnd::OnUpdateSpecialpasteAsciitextonly)
-		ON_COMMAND(ID_SPECIALPASTE_PASTENEWGUID, &CQPasteWnd::OnSpecialpastePastenewguid)
-		ON_UPDATE_COMMAND_UI(ID_SPECIALPASTE_PASTENEWGUID, &CQPasteWnd::OnUpdateSpecialpastePastenewguid)
-		ON_COMMAND(ID_SPECIALPASTE_PASTEASIMAGE, &CQPasteWnd::OnSpecialpastePasteAsImage)
-		ON_UPDATE_COMMAND_UI(ID_SPECIALPASTE_PASTEASIMAGE, &CQPasteWnd::OnUpdateSpecialpastePasteAsImage)
-		END_MESSAGE_MAP()
+	ON_COMMAND(ID_SPECIALPASTE_PASTENEWGUID, &CQPasteWnd::OnSpecialpastePastenewguid)
+	ON_UPDATE_COMMAND_UI(ID_SPECIALPASTE_PASTENEWGUID, &CQPasteWnd::OnUpdateSpecialpastePastenewguid)
+	ON_COMMAND(ID_SPECIALPASTE_PASTEASIMAGE, &CQPasteWnd::OnSpecialpastePasteAsImage)
+	ON_UPDATE_COMMAND_UI(ID_SPECIALPASTE_PASTEASIMAGE, &CQPasteWnd::OnUpdateSpecialpastePasteAsImage)
+END_MESSAGE_MAP()
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -386,8 +386,7 @@ int CQPasteWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_modernScrollBar.SetColors(
 		Settings().m_Theme.ScrollBarTrack(),
 		Settings().m_Theme.ScrollBarThumb(),
-		Settings().m_Theme.ScrollBarThumbHover()
-	);
+		Settings().m_Theme.ScrollBarThumbHover());
 
 	// Create modern scrollbar overlay (horizontal)
 	m_modernScrollBarHorz.Create(this, &m_lstHeader, ScrollBarOrientation::Horizontal);
@@ -395,8 +394,7 @@ int CQPasteWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_modernScrollBarHorz.SetColors(
 		Settings().m_Theme.ScrollBarTrack(),
 		Settings().m_Theme.ScrollBarThumb(),
-		Settings().m_Theme.ScrollBarThumbHover()
-	);
+		Settings().m_Theme.ScrollBarThumbHover());
 
 	((CWnd*)&m_GroupTree)->CreateEx(NULL, _T("SysTreeView32"), NULL, TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS, CRect(0, 0, 100, 100), this, 0);
 	m_GroupTree.ModifyStyle(WS_CAPTION | WS_TABSTOP, 0);
@@ -566,25 +564,25 @@ void CQPasteWnd::SetSearchImages()
 {
 	//int iSourceImageDPIToUse = 96; // We will assume 96 by default.
 
-	//if (m_DittoWindow.m_dpi.GetDPI() > 144) 
+	//if (m_DittoWindow.m_dpi.GetDPI() > 144)
 	//	iSourceImageDPIToUse = 192;
-	//else if (m_DittoWindow.m_dpi.GetDPI() > 120) 
+	//else if (m_DittoWindow.m_dpi.GetDPI() > 120)
 	//	iSourceImageDPIToUse = 144;
-	//else if (m_DittoWindow.m_dpi.GetDPI() > 96) 
+	//else if (m_DittoWindow.m_dpi.GetDPI() > 96)
 	//	iSourceImageDPIToUse = 120;
 
 	//// Now select the right resource to load.
 	//switch(iSourceImageDPIToUse)
 	//{
-	//case 120: 
+	//case 120:
 	//	m_search.SetBitmaps(IDB_BITMAP_SEARCH_NORMAL_125, IDB_BITMAP_SEARCH_CLOSE_125);
 	//	break;
-	//case 144: 
+	//case 144:
 	//	m_search.SetBitmaps(IDB_BITMAP_SEARCH_NORMAL_150, IDB_BITMAP_SEARCH_CLOSE_150);
 	//	break;
-	//case 192: 
+	//case 192:
 	//	m_search.SetBitmaps(IDB_BITMAP_SEARCH_NORMAL_200, IDB_BITMAP_SEARCH_CLOSE_200);
-	//	break;						
+	//	break;
 	//default: // default to 96 DPI
 	//	m_search.SetBitmaps(IDB_BITMAP_SEARCH_NORMAL, IDB_BITMAP_SEARCH_CLOSE);
 	//	break;
@@ -622,8 +620,8 @@ void CQPasteWnd::MoveControls()
 	int extraSize = 0;
 
 	// Hide native scrollbar if using modern scrollbar OR if scrollbar is set to not always show
-	bool hideNativeScrollbar = Settings().m_useModernScrollBar || 
-		(m_showScrollBars == false && Settings().m_showScrollBar == false);
+	bool hideNativeScrollbar = Settings().m_useModernScrollBar ||
+							   (m_showScrollBars == false && Settings().m_showScrollBar == false);
 
 	if (hideNativeScrollbar)
 	{
@@ -633,7 +631,7 @@ void CQPasteWnd::MoveControls()
 		CRect r;
 		m_lstHeader.GetWindowRect(&r);
 
-		rgnRect.CreateRectRgn(0, 0, cx, (cy - listBoxBottomOffset - topOfListBox) );
+		rgnRect.CreateRectRgn(0, 0, cx, (cy - listBoxBottomOffset - topOfListBox));
 
 		m_lstHeader.SetWindowRgn(rgnRect, TRUE);
 	}
@@ -1262,7 +1260,7 @@ LRESULT CQPasteWnd::OnReloadClipInUI(WPARAM wParam, LPARAM lParam)
 	return foundClip;
 }
 
-BOOL CQPasteWnd::ApplyReloadedClip(CMainTable &item, const ReloadedClip &reloaded, int updateFlags, int clipId)
+BOOL CQPasteWnd::ApplyReloadedClip(CMainTable& item, const ReloadedClip& reloaded, int updateFlags, int clipId)
 {
 	BOOL foundClip = FALSE;
 
@@ -1482,9 +1480,10 @@ BOOL CQPasteWnd::FillList(CString csSQLSearch)
 	countSql.Format(_T("SELECT COUNT(%s Main.lID) FROM Main %s where %s"), query.isDistinct.GetString(), query.dataJoin.GetString(), query.filter.GetString());
 
 	sql.Format(_T("SELECT %s Main.lID, Main.mText, Main.lParentID, Main.lDontAutoDelete, ")
-		_T("Main.lShortCut, Main.bIsGroup, Main.QuickPasteText, Main.clipOrder, Main.clipGroupOrder, ")
-		_T("Main.stickyClipOrder, Main.stickyClipGroupOrder, Main.lDate, Main.lastPasteDate FROM Main %s ")
-		_T("where %s order by %s"), query.isDistinct.GetString(), query.dataJoin.GetString(), query.filter.GetString(), query.sort.GetString());
+			   _T("Main.lShortCut, Main.bIsGroup, Main.QuickPasteText, Main.clipOrder, Main.clipGroupOrder, ")
+			   _T("Main.stickyClipOrder, Main.stickyClipGroupOrder, Main.lDate, Main.lastPasteDate FROM Main %s ")
+			   _T("where %s order by %s"),
+			   query.isDistinct.GetString(), query.dataJoin.GetString(), query.filter.GetString(), query.sort.GetString());
 
 
 	{
@@ -1511,14 +1510,14 @@ BOOL CQPasteWnd::FillList(CString csSQLSearch)
 	return TRUE;
 }
 
-void CQPasteWnd::SetGroupFilter(FillListQuery &query, const CString &strStarredFilter)
+void CQPasteWnd::SetGroupFilter(FillListQuery& query, const CString& strStarredFilter)
 {
 	// History Groupiter->m_stickyClipGroupOrder = clip.m_stickyClipGroupOrder;
 	if (m_bShowStarredClips)
 	{
 		query.sort = "Main.stickyClipOrder DESC, "
-			"Main.bIsGroup ASC, "
-			"Main.clipOrder DESC";
+					 "Main.bIsGroup ASC, "
+					 "Main.clipOrder DESC";
 
 		query.filter = strStarredFilter;
 	}
@@ -1526,18 +1525,18 @@ void CQPasteWnd::SetGroupFilter(FillListQuery &query, const CString &strStarredF
 	{
 		//do not change this this directly relates to the views in the Main table
 		query.sort = "Main.stickyClipOrder DESC, "
-			"Main.bIsGroup ASC, "
-			"Main.clipOrder DESC";
+					 "Main.bIsGroup ASC, "
+					 "Main.clipOrder DESC";
 
 		query.filter = MainListFilter();
 	}
 	else
-		// it's some other group
+	// it's some other group
 	{
 		//do not change this this directly relates to the views in the Main table
 		query.sort = "Main.stickyClipGroupOrder DESC, "
-			"Main.bIsGroup ASC, "
-			"Main.clipGroupOrder DESC";
+					 "Main.bIsGroup ASC, "
+					 "Main.clipGroupOrder DESC";
 
 		//Main.stickyClipGroupOrder DESC, Main.clipGroupOrder DESC";//
 
@@ -1575,7 +1574,7 @@ CString CQPasteWnd::MainListFilter() const
 	return strFilter;
 }
 
-void CQPasteWnd::SetSearchFilter(CString &csSQLSearch, FillListQuery &query, const CString &strStarredFilter)
+void CQPasteWnd::SetSearchFilter(CString& csSQLSearch, FillListQuery& query, const CString& strStarredFilter)
 {
 	CString descriptionSql = SearchDescriptionSql(csSQLSearch);
 	CString quickPasteSql = SearchQuickPasteSql(csSQLSearch);
@@ -1597,7 +1596,7 @@ void CQPasteWnd::SetSearchFilter(CString &csSQLSearch, FillListQuery &query, con
 	}
 }
 
-CString CQPasteWnd::SearchDescriptionSql(const CString &csSQLSearch) const
+CString CQPasteWnd::SearchDescriptionSql(const CString& csSQLSearch) const
 {
 	CString descriptionSql;
 
@@ -1615,7 +1614,7 @@ CString CQPasteWnd::SearchDescriptionSql(const CString &csSQLSearch) const
 	return descriptionSql;
 }
 
-CString CQPasteWnd::SearchQuickPasteSql(CString &csSQLSearch) const
+CString CQPasteWnd::SearchQuickPasteSql(CString& csSQLSearch) const
 {
 	CString quickPasteSql;
 
@@ -1639,7 +1638,7 @@ CString CQPasteWnd::SearchQuickPasteSql(CString &csSQLSearch) const
 	return quickPasteSql;
 }
 
-CString CQPasteWnd::SearchFullTextSql(CString &csSQLSearch, const CString &descriptionSql, const CString &quickPasteSql, FillListQuery &query) const
+CString CQPasteWnd::SearchFullTextSql(CString& csSQLSearch, const CString& descriptionSql, const CString& quickPasteSql, FillListQuery& query) const
 {
 	CString fullTextSql;
 
@@ -1677,7 +1676,7 @@ CString CQPasteWnd::SearchFullTextSql(CString &csSQLSearch, const CString &descr
 	return fullTextSql;
 }
 
-CString CQPasteWnd::JoinSearchSql(const CString &descriptionSql, const CString &quickPasteSql, const CString &fullTextSql)
+CString CQPasteWnd::JoinSearchSql(const CString& descriptionSql, const CString& quickPasteSql, const CString& fullTextSql)
 {
 	CString strFilter = _T("(");
 
@@ -1897,7 +1896,7 @@ void CQPasteWnd::CheckMenuItemIf(CMenu* pMenu, BOOL condition, UINT menuId)
 
 void CQPasteWnd::CheckMenuItemForValue(CMenu* pMenu, std::span<const MenuValueCheck> checks, long value)
 {
-	for (const MenuValueCheck &check : checks)
+	for (const MenuValueCheck& check : checks)
 	{
 		if (check.value == value)
 		{
@@ -2136,19 +2135,16 @@ void CQPasteWnd::OnMenuNewGroupSelection()
 void CQPasteWnd::OnMenuQuickoptionsAllwaysshowdescription()
 {
 	Settings().SetAllwaysShowDescription(!Settings().m_bAllwaysShowDescription);
-
 }
 
 void CQPasteWnd::OnMenuQuickoptionsDoubleclickingoncaptionTogglesalwaysontop()
 {
 	Settings().SetDoubleClickingOnCaptionDoes(CGetSetOptions::TogglesAlwaysOnTop);
-
 }
 
 void CQPasteWnd::OnMenuQuickoptionsDoubleclickingoncaptionRollupwindow()
 {
 	Settings().SetDoubleClickingOnCaptionDoes(CGetSetOptions::RollsUpWindow);
-
 }
 
 void CQPasteWnd::OnMenuQuickoptionsDoubleclickingoncaptionTogglesshowdescription()
@@ -2576,7 +2572,7 @@ bool CQPasteWnd::DeleteClips(CClipIDs& IDs, ARRAY& Indexs)
 
 	if (IDs.DeleteIDs(Services().Windows(), true, Services().Database()) == FALSE)
 	{
-		return false;   // DeleteIDs showed the error; nothing was deleted, so the list stays as it is
+		return false; // DeleteIDs showed the error; nothing was deleted, so the list stays as it is
 	}
 
 	Indexs.SortDescending();
@@ -2681,7 +2677,7 @@ CString CQPasteWnd::LoadDescription(int nItem)
 		return _T("");
 	}
 
-		return cs;
+	return cs;
 }
 
 void CQPasteWnd::MoveSelection(bool down, bool requireModifersActive)
@@ -3014,7 +3010,7 @@ const std::array<CQPasteWnd::TransparencyAction, 9> CQPasteWnd::s_transparencyAc
 
 bool CQPasteWnd::DoAction(CAccel a)
 {
-	for (const ActionHandler &entry : s_actionHandlers)
+	for (const ActionHandler& entry : s_actionHandlers)
 	{
 		if (static_cast<DWORD>(entry.action) == a.Cmd)
 		{
@@ -3022,7 +3018,7 @@ bool CQPasteWnd::DoAction(CAccel a)
 		}
 	}
 
-	for (const PastePositionAction &entry : s_pastePositionActions)
+	for (const PastePositionAction& entry : s_pastePositionActions)
 	{
 		if (static_cast<DWORD>(entry.action) == a.Cmd)
 		{
@@ -3030,7 +3026,7 @@ bool CQPasteWnd::DoAction(CAccel a)
 		}
 	}
 
-	for (const TransparencyAction &entry : s_transparencyActions)
+	for (const TransparencyAction& entry : s_transparencyActions)
 	{
 		if (static_cast<DWORD>(entry.action) == a.Cmd)
 		{
@@ -3043,7 +3039,7 @@ bool CQPasteWnd::DoAction(CAccel a)
 	return false;
 }
 
-bool CQPasteWnd::RunActionHandler(const ActionHandler &entry)
+bool CQPasteWnd::RunActionHandler(const ActionHandler& entry)
 {
 	bool result = (this->*entry.handler)();
 	if (entry.returnsResult == false)
@@ -3958,7 +3954,7 @@ bool CQPasteWnd::DoExportToTextFile()
 	return ret;
 }
 
-CString CQPasteWnd::NextExportFilePath(ExportFileNames &names, INT_PTR clipCount)
+CString CQPasteWnd::NextExportFilePath(ExportFileNames& names, INT_PTR clipCount)
 {
 	CString savePath = names.startingFilePath;
 	if (clipCount > 1 ||
@@ -4007,7 +4003,7 @@ bool CQPasteWnd::ShowQRCode(const CString& clipText, const CString& description)
 	LOGFONT lf;
 	Settings().GetFont(lf);
 
-	QRCodeViewer *pViewer{ viewer.release() }; // ownership: the window (PostNcDestroy deletes it, also when Create fails)
+	QRCodeViewer* pViewer{ viewer.release() }; // ownership: the window (PostNcDestroy deletes it, also when Create fails)
 	if (!pViewer->CreateEx(this, description, m_lstHeader.GetRowHeight(), lf))
 	{
 		CErrorReport::Show(CStringUtil::Format(_T("Ditto could not create the QR code window (error %u)."), ::GetLastError()));
@@ -4808,7 +4804,7 @@ bool CQPasteWnd::DoActionSaveCF_HDROP_FileData()
 	return true;
 }
 
-bool CQPasteWnd::SaveClipFileData(int row, int id, CString &errorMessage)
+bool CQPasteWnd::SaveClipFileData(int row, int id, CString& errorMessage)
 {
 	CClip clip(Services().ClipContext());
 	if (clip.LoadMainTable(id))
@@ -4967,7 +4963,7 @@ bool CQPasteWnd::DoExportToBitMapFile()
 	return ret;
 }
 
-bool CQPasteWnd::HasExportImage(CClip &toSave)
+bool CQPasteWnd::HasExportImage(CClip& toSave)
 {
 	CClipFormat* png = NULL;
 	CClipFormat* bitmap = toSave.m_Formats.FindFormat(CF_DIB);
@@ -5041,7 +5037,7 @@ void CQPasteWnd::OnBegindrag(NMHDR* pNMHDR, LRESULT* pResult)
 
 	this->SetTimer(TimerDragHideWindow, 500, NULL);
 
-	if (!paste.DoDrag() && !paste.m_lastErrorMessage.IsEmpty())  // FALSE without a message: drop cancelled
+	if (!paste.DoDrag() && !paste.m_lastErrorMessage.IsEmpty()) // FALSE without a message: drop cancelled
 	{
 		CString errorMessage;
 		errorMessage.Format(_T("Drag Error - %s"), paste.m_lastErrorMessage.GetString());
@@ -5077,7 +5073,6 @@ BOOL CQPasteWnd::OnDrop(COleDataObject* /*pDataObject*/, DROPEFFECT /*dropEffect
 
 void CQPasteWnd::OnDragLeave()
 {
-
 }
 
 void CQPasteWnd::OnSysKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
@@ -5098,7 +5093,7 @@ void CQPasteWnd::GetDispInfo(NMHDR* pNMHDR, LRESULT* /*pResult*/)
 			// reads only the loaded list rows (no database access), so it has no SQLite failure to report
 			GetDispInfoText(pItem);
 
-				break;
+			break;
 		}
 	}
 
@@ -5135,7 +5130,7 @@ void CQPasteWnd::GetDispInfoText(LV_ITEM* pItem)
 	}
 }
 
-CString CQPasteWnd::ListItemDisplayText(const CMainTable &item) const
+CString CQPasteWnd::ListItemDisplayText(const CMainTable& item) const
 {
 	CString cs;
 	if (item.m_bDontAutoDelete)
@@ -5180,7 +5175,7 @@ CString CQPasteWnd::ListItemDisplayText(const CMainTable &item) const
 	return cs;
 }
 
-bool CQPasteWnd::IsListItemSticky(const CMainTable &item)
+bool CQPasteWnd::IsListItemSticky(const CMainTable& item)
 {
 	if (Services().State().m_GroupID > 0)
 	{
@@ -5231,7 +5226,7 @@ void CQPasteWnd::GetDispInfoParam(LV_ITEM* pItem)
 	}
 }
 
-void CQPasteWnd::GetDispInfoExtraFormat(LV_ITEM* pItem, CLIPFORMAT cfType, CF_NoDibTypeMap &noFormatCache, CF_DibTypeMap &formatCache)
+void CQPasteWnd::GetDispInfoExtraFormat(LV_ITEM* pItem, CLIPFORMAT cfType, CF_NoDibTypeMap& noFormatCache, CF_DibTypeMap& formatCache)
 {
 	ATL::CCritSecLock csLock(m_CritSection.m_sect);
 
@@ -5342,9 +5337,9 @@ void CQPasteWnd::OnGetToolTipText(NMHDR* pNMHDR, LRESULT* /*pResult*/)
 
 #ifdef _DEBUG
 			clipData += CStringUtil::Format(_T("(Index = %d) (Seq = %f) (Group Seq = %f) (Sticky Seq = %f) (Sticky Group Seq = %f)\n"),
-				pInfo->lItem,
-				q.getFloatField(_T("clipOrder")), q.getFloatField(_T("clipGroupOrder")),
-				q.getFloatField(_T("stickyClipOrder")), q.getFloatField(_T("stickyClipGroupOrder")));
+											pInfo->lItem,
+											q.getFloatField(_T("clipOrder")), q.getFloatField(_T("clipGroupOrder")),
+											q.getFloatField(_T("stickyClipOrder")), q.getFloatField(_T("stickyClipGroupOrder")));
 #endif
 
 			AppendToolTipClipDetails(q, clipData);
@@ -5364,7 +5359,7 @@ void CQPasteWnd::OnGetToolTipText(NMHDR* pNMHDR, LRESULT* /*pResult*/)
 	}
 }
 
-void CQPasteWnd::AppendToolTipClipDetails(CppSQLite3Query &q, CString &clipData)
+void CQPasteWnd::AppendToolTipClipDetails(CppSQLite3Query& q, CString& clipData)
 {
 	clipData += CStringUtil::Format(_T("\r\nDatabase ID: %d"), q.getIntField(_T("lID")));
 
@@ -5399,7 +5394,7 @@ void CQPasteWnd::AppendToolTipClipDetails(CppSQLite3Query &q, CString &clipData)
 	}
 }
 
-void CQPasteWnd::AppendToolTipShortCut(CppSQLite3Query &q, CString &clipData)
+void CQPasteWnd::AppendToolTipShortCut(CppSQLite3Query& q, CString& clipData)
 {
 	int shortCut = q.getIntField(_T("lShortCut"));
 	if (shortCut > 0)
@@ -5415,7 +5410,7 @@ void CQPasteWnd::AppendToolTipShortCut(CppSQLite3Query &q, CString &clipData)
 	}
 }
 
-void CQPasteWnd::AppendToolTipSticky(CppSQLite3Query &q, CString &clipData)
+void CQPasteWnd::AppendToolTipSticky(CppSQLite3Query& q, CString& clipData)
 {
 	if (Services().State().m_GroupID > 0)
 	{
@@ -5440,9 +5435,9 @@ void CQPasteWnd::AppendToolTipSticky(CppSQLite3Query &q, CString &clipData)
 CString CQPasteWnd::ToolTipClipLines(const CString& clipText) const
 {
 	CString cs{};
-	int lines{0};
-	int maxLines{Settings().GetMaxToolTipLines()};
-	CTokenizer tokenizer{clipText, "\r\n"};
+	int lines{ 0 };
+	int maxLines{ Settings().GetMaxToolTipLines() };
+	CTokenizer tokenizer{ clipText, "\r\n" };
 	CString token{};
 	while (tokenizer.Next(token))
 	{
@@ -6097,11 +6092,11 @@ LRESULT CQPasteWnd::OnUpdateScrollBar(WPARAM wParam, LPARAM /*lParam*/)
 
 //HBRUSH CQPasteWnd::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 //{
-//	// Call the base class implementation first! Otherwise, it may 
+//	// Call the base class implementation first! Otherwise, it may
 //	// undo what we're trying to accomplish here.
 //	HBRUSH hbr = CWnd::OnCtlColor(pDC, pWnd, nCtlColor);
 //
-//	switch (nCtlColor) 
+//	switch (nCtlColor)
 //	{
 //	case CTLCOLOR_STATIC:
 //		switch (pWnd->GetDlgCtrlID())
@@ -6133,20 +6128,20 @@ LRESULT CQPasteWnd::OnUpdateScrollBar(WPARAM wParam, LPARAM /*lParam*/)
 //	CPaintDC dc(this);
 //	dc.FillRect(clientRect, &brush);*/
 //
-//	
+//
 //		CQPasteWnd::OnPaint();
-//	
+//
 //}
 
 BOOL CQPasteWnd::OnEraseBkgnd(CDC* pDC)
 {
 	CRect rect;
 	GetClientRect(&rect);
-	CBrush myBrush(Settings().m_Theme.MainWindowBG());    // dialog background color
+	CBrush myBrush(Settings().m_Theme.MainWindowBG()); // dialog background color
 	CBrush* pOld = pDC->SelectObject(&myBrush);
 	BOOL bRes = pDC->PatBlt(0, 0, rect.Width(), rect.Height(), PATCOPY);
-	pDC->SelectObject(pOld);    // restore old brush
-	return bRes;                       // CDialog::OnEraseBkgnd(pDC);
+	pDC->SelectObject(pOld); // restore old brush
+	return bRes;             // CDialog::OnEraseBkgnd(pDC);
 
 	//return TRUE;
 	// TODO: Add your message handler code here and/or call default
@@ -6281,7 +6276,6 @@ void CQPasteWnd::OnMenuRegularexpressionsearch()
 	Settings().SetSimpleTextSearch(FALSE);
 	Settings().SetRegExTextSearch(!Settings().GetRegExTextSearch());
 }
-
 
 
 void CQPasteWnd::OnImportExportclipBitmap()
@@ -6496,7 +6490,7 @@ void CQPasteWnd::OnMenuGoToEntry()
 	CLogger::Log(CStringUtil::Format(_T("GoToEntry: scrolled to index %d of %d"), targetIndex, totalRows));
 }
 
-bool CQPasteWnd::LoadGoToEntryKey(long targetID, GoToEntryKey &key)
+bool CQPasteWnd::LoadGoToEntryKey(long targetID, GoToEntryKey& key)
 {
 	bool gotKey = false;
 	try
@@ -6520,7 +6514,7 @@ bool CQPasteWnd::LoadGoToEntryKey(long targetID, GoToEntryKey &key)
 	return gotKey;
 }
 
-int CQPasteWnd::GoToEntryRank(const CString &filter, const GoToEntryKey &key)
+int CQPasteWnd::GoToEntryRank(const CString& filter, const GoToEntryKey& key)
 {
 	int targetIndex = -1;
 	try
@@ -6885,7 +6879,6 @@ void CQPasteWnd::OnMenuDeleteclipdata32934()
 }
 
 
-
 void CQPasteWnd::OnUpdateMenuDeleteclipdata32934(CCmdUI* pCmdUI)
 {
 	if (!pCmdUI->m_pMenu)
@@ -6895,7 +6888,6 @@ void CQPasteWnd::OnUpdateMenuDeleteclipdata32934(CCmdUI* pCmdUI)
 
 	UpdateMenuShortCut(pCmdUI, ActionEnums::DELETE_CLIP_DATA);
 }
-
 
 
 void CQPasteWnd::OnMenuImportclip32935()
@@ -7005,7 +6997,6 @@ void CQPasteWnd::OnUpdateCliporderReplacetopstickyclip(CCmdUI* pCmdUI)
 
 	UpdateMenuShortCut(pCmdUI, ActionEnums::REPLACE_TOP_STICKY_CLIP);
 }
-
 
 
 void CQPasteWnd::OnImportImportcopiedfile()
@@ -7257,13 +7248,11 @@ void CQPasteWnd::RefreshScrollBarColors()
 	m_modernScrollBar.SetColors(
 		Settings().m_Theme.ScrollBarTrack(),
 		Settings().m_Theme.ScrollBarThumb(),
-		Settings().m_Theme.ScrollBarThumbHover()
-	);
+		Settings().m_Theme.ScrollBarThumbHover());
 	m_modernScrollBarHorz.SetColors(
 		Settings().m_Theme.ScrollBarTrack(),
 		Settings().m_Theme.ScrollBarThumb(),
-		Settings().m_Theme.ScrollBarThumbHover()
-	);
+		Settings().m_Theme.ScrollBarThumbHover());
 }
 
 void CQPasteWnd::RefreshThemeColors()
@@ -7271,10 +7260,10 @@ void CQPasteWnd::RefreshThemeColors()
 	// Refresh caption bar colors
 	SetCaptionColorActive(Settings().m_bShowPersistent, Services().Clipboard().GetConnectCV());
 	SetCaptionOn(Settings().GetCaptionPos(), true, Settings().m_Theme.GetCaptionSize(), Settings().m_Theme.GetCaptionFontSize());
-	
+
 	// Refresh scrollbar colors
 	RefreshScrollBarColors();
-	
+
 	// Force repaint of the entire window including non-client area
 	SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 	RedrawWindow(NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN | RDW_FRAME);
@@ -7452,10 +7441,6 @@ void CQPasteWnd::OnUpdateTransparencyToggle(CCmdUI* pCmdUI)
 }
 
 
-
-
-
-
 void CQPasteWnd::OnSpecialpasteSlugify()
 {
 	DoAction(ActionEnums::SLUGIFY);
@@ -7470,8 +7455,6 @@ void CQPasteWnd::OnUpdateSpecialpasteSlugify(CCmdUI* pCmdUI)
 
 	UpdateMenuShortCut(pCmdUI, ActionEnums::SLUGIFY);
 }
-
-
 
 
 void CQPasteWnd::OnSpecialpasteTogglecase()

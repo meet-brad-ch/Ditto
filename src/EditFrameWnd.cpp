@@ -52,14 +52,14 @@ int CEditFrameWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CFrameWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
-	ModifyStyle(WS_CAPTION|WS_BORDER|WS_OVERLAPPED|0x0000C000|WS_THICKFRAME|WS_DLGFRAME|WS_SYSMENU|WS_MINIMIZEBOX|WS_MAXIMIZEBOX, 0, SWP_DRAWFRAME); 
+	ModifyStyle(WS_CAPTION | WS_BORDER | WS_OVERLAPPED | 0x0000C000 | WS_THICKFRAME | WS_DLGFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX, 0, SWP_DRAWFRAME);
 	ModifyStyleEx(WS_EX_CLIENTEDGE, 0, 0);
-		
+
 	CString csTitle = theApp.Services().Language().GetString("Ditto_Edit", "Ditto Edit");
 	m_EditWnd.Create(NULL, csTitle, WS_CHILD, CRect(0, 0, 0, 0), this, 100, NULL);
 	m_EditWnd.ShowWindow(SW_SHOW);
 
-	MoveControls();   
+	MoveControls();
 
 	m_DittoWindow.DoCreate(this);
 	m_DittoWindow.m_bDrawChevron = false;
@@ -95,7 +95,7 @@ void CEditFrameWnd::OnSize(UINT nType, int cx, int cy)
 
 void CEditFrameWnd::MoveControls()
 {
-	if(::IsWindow(m_EditWnd.GetSafeHwnd()))
+	if (::IsWindow(m_EditWnd.GetSafeHwnd()))
 	{
 		CRect cr;
 		GetClientRect(cr);
@@ -103,20 +103,20 @@ void CEditFrameWnd::MoveControls()
 	}
 }
 
-bool CEditFrameWnd::EditIds(CClipIDs &Ids)
+bool CEditFrameWnd::EditIds(CClipIDs& Ids)
 {
 	return m_EditWnd.EditIds(Ids);
 }
 
 BOOL CEditFrameWnd::PreCreateWindow(CREATESTRUCT& cs)
 {
-	if(cs.hMenu!=NULL)  
+	if (cs.hMenu != NULL)
 	{
-		::DestroyMenu(cs.hMenu);      // delete menu if loaded
-		cs.hMenu = NULL;              // no menu for this window
+		::DestroyMenu(cs.hMenu); // delete menu if loaded
+		cs.hMenu = NULL;         // no menu for this window
 	}
 
-	WNDCLASS wc;	
+	WNDCLASS wc;
 	wc.style = CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = AfxWndProc;
 	wc.cbClsExtra = 0;
@@ -125,7 +125,7 @@ BOOL CEditFrameWnd::PreCreateWindow(CREATESTRUCT& cs)
 	wc.hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-	wc.lpszMenuName =  NULL;
+	wc.lpszMenuName = NULL;
 	wc.lpszClassName = _T("Ditto Edit Wnd");
 
 	// Create the QPaste window class
@@ -139,7 +139,6 @@ BOOL CEditFrameWnd::PreCreateWindow(CREATESTRUCT& cs)
 
 void CEditFrameWnd::OnDummy()
 {
-
 }
 
 
@@ -152,13 +151,13 @@ void CEditFrameWnd::OnSetFocus(CWnd* pOldWnd)
 
 void CEditFrameWnd::OnClose()
 {
-	if(m_EditWnd.CloseEdits(true) == false)
+	if (m_EditWnd.CloseEdits(true) == false)
 		return;
 
 	CFrameWnd::OnClose();
 }
 
-void CEditFrameWnd::OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp) 
+void CEditFrameWnd::OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp)
 {
 	CWnd::OnNcCalcSize(bCalcValidRects, lpncsp);
 
@@ -167,13 +166,13 @@ void CEditFrameWnd::OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lp
 
 void CEditFrameWnd::OnNcPaint()
 {
-	m_DittoWindow.DoNcPaint(this);	
+	m_DittoWindow.DoNcPaint(this);
 }
 
-LRESULT CEditFrameWnd::OnNcHitTest(CPoint point) 
+LRESULT CEditFrameWnd::OnNcHitTest(CPoint point)
 {
 	UINT Ret = m_DittoWindow.DoNcHitTest(this, point);
-	if(Ret == -1)
+	if (Ret == -1)
 		return CWnd::OnNcHitTest(point);
 
 	return Ret;
@@ -192,7 +191,7 @@ void CEditFrameWnd::OnNcLButtonDown(UINT nHitTest, CPoint point)
 
 void CEditFrameWnd::OnNcLButtonUp(UINT nHitTest, CPoint point)
 {
-	if(m_DittoWindow.DoNcLButtonUp(this, nHitTest, point) > 0)
+	if (m_DittoWindow.DoNcLButtonUp(this, nHitTest, point) > 0)
 		return;
 
 	KillTimer(TimerButtonUp);
@@ -215,7 +214,7 @@ void CEditFrameWnd::OnNcLButtonDblClk(UINT nHitTest, CPoint point)
 {
 	CPoint pt(point);
 	ScreenToClient(&pt);
-	if(m_crIcon.PtInRect(pt))
+	if (m_crIcon.PtInRect(pt))
 	{
 		CloseAll();
 		OnClose();
@@ -234,15 +233,15 @@ void CEditFrameWnd::OnTimer(UINT_PTR nIDEvent)
 {
 	switch (nIDEvent)
 	{
-		case TimerButtonUp:
+	case TimerButtonUp:
+	{
+		if ((GetKeyState(VK_LBUTTON) & 0x8000) == 0)
 		{
-			if ((GetKeyState(VK_LBUTTON) & 0x8000) == 0)
-			{
-				m_DittoWindow.DoNcLButtonUp(this, 0, CPoint(0, 0));
-				KillTimer(TimerButtonUp);
-			}
-			break;
+			m_DittoWindow.DoNcLButtonUp(this, 0, CPoint(0, 0));
+			KillTimer(TimerButtonUp);
 		}
+		break;
+	}
 	}
 
 	CWnd::OnTimer(nIDEvent);
@@ -256,11 +255,11 @@ LRESULT CEditFrameWnd::OnDpiChanged(WPARAM wParam, LPARAM lParam)
 
 	RECT* const prcNewWindow = (RECT*)lParam;
 	SetWindowPos(NULL,
-		prcNewWindow->left,
-		prcNewWindow->top,
-		prcNewWindow->right - prcNewWindow->left,
-		prcNewWindow->bottom - prcNewWindow->top,
-		SWP_NOZORDER | SWP_NOACTIVATE);
+				 prcNewWindow->left,
+				 prcNewWindow->top,
+				 prcNewWindow->right - prcNewWindow->left,
+				 prcNewWindow->bottom - prcNewWindow->top,
+				 SWP_NOZORDER | SWP_NOACTIVATE);
 
 	CLogger::Write(CStringUtil::Format(_T("CEditFrameWnd::OnDpiChanged dpi: %d width: %d, height: %d"), dpi, (prcNewWindow->right - prcNewWindow->left), (prcNewWindow->bottom - prcNewWindow->top)));
 

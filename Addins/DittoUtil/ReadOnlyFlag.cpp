@@ -18,10 +18,10 @@ CReadOnlyFlag::~CReadOnlyFlag(void)
 }
 
 
-bool CReadOnlyFlag::ResetReadOnlyFlag(const CDittoInfo &DittoInfo, IClip *pClip, bool resetFlag)
+bool CReadOnlyFlag::ResetReadOnlyFlag(const CDittoInfo& DittoInfo, IClip* pClip, bool resetFlag)
 {
-	IClipFormats *pFormats = pClip->Clips();
-	if(pFormats)
+	IClipFormats* pFormats = pClip->Clips();
+	if (pFormats)
 	{
 		CStringArray lines;
 
@@ -39,18 +39,18 @@ bool CReadOnlyFlag::ResetReadOnlyFlag(const CDittoInfo &DittoInfo, IClip *pClip,
 		}
 
 		CString failedFiles;
-		for(int i = 0; i < lines.GetSize(); i++)
+		for (int i = 0; i < lines.GetSize(); i++)
 		{
 			CString file = SkipToFileStart(lines[i].TrimLeft(' ').TrimRight(' ').MakeLower());
 
 			const DWORD attributes{ static_cast<DWORD>(resetFlag ? FILE_ATTRIBUTE_NORMAL : FILE_ATTRIBUTE_READONLY) };
-			if(::SetFileAttributes(file, attributes) == FALSE)
+			if (::SetFileAttributes(file, attributes) == FALSE)
 			{
 				failedFiles.AppendFormat(_T("\n%s (error %u)"), file.GetString(), ::GetLastError());
 			}
 		}
 
-		if(failedFiles.IsEmpty() == FALSE)
+		if (failedFiles.IsEmpty() == FALSE)
 		{
 			::MessageBox(DittoInfo.m_hWndDitto, _T("The read-only flag was not changed for:") + failedFiles, _T("Ditto"), MB_OK | MB_ICONERROR);
 			return false;
@@ -60,16 +60,16 @@ bool CReadOnlyFlag::ResetReadOnlyFlag(const CDittoInfo &DittoInfo, IClip *pClip,
 	return true;
 }
 
-void CReadOnlyFlag::LoadFileLines(CStringArray &lines, IClipFormats *pFormats)
+void CReadOnlyFlag::LoadFileLines(CStringArray& lines, IClipFormats* pFormats)
 {
 	LoadHDropFiles(lines, pFormats);
 
-	if(lines.GetSize() <= 0)
+	if (lines.GetSize() <= 0)
 	{
 		LoadUnicodeFiles(lines, pFormats);
 	}
 
-	if(lines.GetSize() <= 0)
+	if (lines.GetSize() <= 0)
 	{
 		LoadTextFiles(lines, pFormats);
 	}
@@ -79,36 +79,36 @@ CString CReadOnlyFlag::SkipToFileStart(CString file)
 {
 	//Find the first occurance of a file // or \\ for a network file or a->z:\\ for a local files
 	int pos = file.Find(_T("//"));
-	if(pos >= 0)
+	if (pos >= 0)
 	{
 		file = file.Mid(pos);
 	}
 	else
 	{
 		pos = file.Find(_T("\\\\"));
-		if(pos >= 0)
+		if (pos >= 0)
 		{
 			file = file.Mid(pos);
 		}
 		else
 		{
-			for(wchar_t drive = 'a'; drive <= 'z'; drive++)
+			for (wchar_t drive = 'a'; drive <= 'z'; drive++)
 			{
 				CString csDrive(drive);
 				csDrive += _T(":\\");
 
 				pos = file.Find(csDrive);
-				if(pos >= 0)
+				if (pos >= 0)
 				{
 					file = file.Mid(pos);
 					break;
 				}
 
-				csDrive =  drive;
+				csDrive = drive;
 				csDrive += _T(":/");
 
 				pos = file.Find(csDrive);
-				if(pos >= 0)
+				if (pos >= 0)
 				{
 					file = file.Mid(pos);
 					break;
@@ -120,10 +120,10 @@ CString CReadOnlyFlag::SkipToFileStart(CString file)
 	return file;
 }
 
-bool CReadOnlyFlag::LoadUnicodeFiles(CStringArray &lines, IClipFormats *pFormats)
-{		
-	IClipFormat *pFormat = pFormats->FindFormatEx(CF_UNICODETEXT);
-	if(pFormat != NULL)
+bool CReadOnlyFlag::LoadUnicodeFiles(CStringArray& lines, IClipFormats* pFormats)
+{
+	IClipFormat* pFormat = pFormats->FindFormatEx(CF_UNICODETEXT);
+	if (pFormat != NULL)
 	{
 		const DittoCore::GlobalBytes bytes(pFormat->Data());
 		CString string(DittoCore::ClipText::ReadWideBounded(bytes.Bytes()).c_str());
@@ -131,7 +131,7 @@ bool CReadOnlyFlag::LoadUnicodeFiles(CStringArray &lines, IClipFormats *pFormats
 
 		CTokenizer token(string, delim);
 		CString line;
-		while(token.Next(line))
+		while (token.Next(line))
 		{
 			lines.Add(line);
 		}
@@ -140,10 +140,10 @@ bool CReadOnlyFlag::LoadUnicodeFiles(CStringArray &lines, IClipFormats *pFormats
 	return lines.GetSize() > 0;
 }
 
-bool CReadOnlyFlag::LoadTextFiles(CStringArray &lines, IClipFormats *pFormats)
-{		
-	IClipFormat *pFormat = pFormats->FindFormatEx(CF_TEXT);
-	if(pFormat != NULL)
+bool CReadOnlyFlag::LoadTextFiles(CStringArray& lines, IClipFormats* pFormats)
+{
+	IClipFormat* pFormat = pFormats->FindFormatEx(CF_TEXT);
+	if (pFormat != NULL)
 	{
 		const DittoCore::GlobalBytes bytes(pFormat->Data());
 		CStringA string(DittoCore::ClipText::ReadAnsiBounded(bytes.Bytes()).c_str());
@@ -152,7 +152,7 @@ bool CReadOnlyFlag::LoadTextFiles(CStringArray &lines, IClipFormats *pFormats)
 
 		CTokenizer token(unicodeString, delim);
 		CString line;
-		while(token.Next(line))
+		while (token.Next(line))
 		{
 			lines.Add(line);
 		}
@@ -161,10 +161,10 @@ bool CReadOnlyFlag::LoadTextFiles(CStringArray &lines, IClipFormats *pFormats)
 	return lines.GetSize() > 0;
 }
 
-bool CReadOnlyFlag::LoadHDropFiles(CStringArray &lines, IClipFormats *pFormats)
+bool CReadOnlyFlag::LoadHDropFiles(CStringArray& lines, IClipFormats* pFormats)
 {
-	IClipFormat *pFormat = pFormats->FindFormatEx(CF_HDROP);
-	if(pFormat != NULL)
+	IClipFormat* pFormat = pFormats->FindFormatEx(CF_HDROP);
+	if (pFormat != NULL)
 	{
 		for (const std::wstring& path : DittoCore::GlobalFileDrop::Read(pFormat->Data()).Paths())
 		{

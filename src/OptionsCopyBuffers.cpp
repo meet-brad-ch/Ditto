@@ -10,11 +10,12 @@
 
 IMPLEMENT_DYNCREATE(COptionsCopyBuffers, CPropertyPage)
 
-COptionsCopyBuffers::COptionsCopyBuffers() : CPropertyPage(COptionsCopyBuffers::IDD)
+COptionsCopyBuffers::COptionsCopyBuffers() :
+	CPropertyPage(COptionsCopyBuffers::IDD)
 {
 	m_csTitle = theApp.Services().Language().GetString("CopyBuffers", "Copy Buffers");
 	m_psp.pszTitle = m_csTitle;
-	m_psp.dwFlags |= PSP_USETITLE; 
+	m_psp.dwFlags |= PSP_USETITLE;
 }
 
 COptionsCopyBuffers::~COptionsCopyBuffers()
@@ -146,9 +147,9 @@ BOOL COptionsCopyBuffers::OnApply()
 	ARRAY NewKeys;
 	hotKeys.GetKeys(NewKeys);
 
-	if(hotKeys.FindFirstConflict(NewKeys, &x, &y))
+	if (hotKeys.FindFirstConflict(NewKeys, &x, &y))
 	{
-		CString str =  hotKeys.ElementAt(x)->GetName();
+		CString str = hotKeys.ElementAt(x)->GetName();
 		str += " and ";
 		str += hotKeys.ElementAt(y)->GetName();
 		str += " cannot be the same.";
@@ -162,4 +163,3 @@ BOOL COptionsCopyBuffers::OnApply()
 
 	return CPropertyPage::OnApply();
 }
-

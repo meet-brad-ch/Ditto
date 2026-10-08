@@ -8,18 +8,18 @@ using namespace std;
 class CAccel
 {
 public:
-    DWORD Key;
+	DWORD Key;
 	DWORD Key2;
-    DWORD Cmd;
+	DWORD Cmd;
 	int RefId;
 
-    CAccel(DWORD key = 0, DWORD cmd = 0, DWORD key2 = 0)
-    {
-        Key = key;
+	CAccel(DWORD key = 0, DWORD cmd = 0, DWORD key2 = 0)
+	{
+		Key = key;
 		Key2 = key2;
-        Cmd = cmd;
+		Cmd = cmd;
 		RefId = 0;
-    }
+	}
 };
 
 /*------------------------------------------------------------------*\
@@ -39,9 +39,9 @@ public:
 		return (mod << 8) | vkey;
 	}
 
-    CAccels();
+	CAccels();
 
-    void AddAccel(CAccel a);
+	void AddAccel(CAccel a);
 
 	void AddAccel(DWORD cmd, DWORD key, DWORD key2 = 0);
 
@@ -49,24 +49,23 @@ public:
 
 	CString GetCmdKeyText(DWORD cmd);
 
-    /**
+	/**
      * @brief Handles a key's first WM_KEYDOWN or WM_SYSKEYDOWN message; uses GetKeyState to test for modifiers.
      * @param pMsg The message.
      * @param a Receives the matching accelerator.
      * @param doubleKeyStrokeTimeout The settings' double keystroke timeout (ms): how long a two-key shortcut waits for its second key.
      * @return True when a shortcut matched.
      */
-    bool OnMsg(MSG *pMsg, CAccel &a, int doubleKeyStrokeTimeout);
+	bool OnMsg(MSG* pMsg, CAccel& a, int doubleKeyStrokeTimeout);
 
 	bool ContainsKey(int vKey);
 
 	bool m_handleRepeatKeys;
 	bool m_checkModifierKeys;
 
-    static BYTE GetKeyStateModifiers();
+	static BYTE GetKeyStateModifiers();
 
 protected:
-
 	multimap<DWORD, CAccel> m_multiMap;
 	DWORD m_activeFirstKey;
 
@@ -86,7 +85,7 @@ private:
 	 * @param a Receives the matching accelerator.
 	 * @return True when a shortcut matched (the pending first key is then cleared).
 	 */
-	bool MatchSecondKey(DWORD key, CAccel &a);
+	bool MatchSecondKey(DWORD key, CAccel& a);
 
 	/**
 	 * @brief OnMsg's first-key step: finds the single-key shortcut of key, or starts waiting for a second key.
@@ -94,5 +93,5 @@ private:
 	 * @param a Receives the matching single-key accelerator.
 	 * @return True when a single-key shortcut matched and no two-key shortcut starts with key.
 	 */
-	bool MatchFirstKey(DWORD key, CAccel &a);
+	bool MatchFirstKey(DWORD key, CAccel& a);
 };

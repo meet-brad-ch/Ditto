@@ -20,10 +20,10 @@ CClipCompare::~CClipCompare(void)
 void CClipCompare::Compare(int leftId, int rightId)
 {
 	CClip leftClip(m_context);
-	if(leftClip.LoadFormats(leftId, true))
+	if (leftClip.LoadFormats(leftId, true))
 	{
 		CClip rightClip(m_context);
-		if(rightClip.LoadFormats(rightId, true))
+		if (rightClip.LoadFormats(rightId, true))
 		{
 			CompareClips(leftId, leftClip, rightId, rightClip);
 		}
@@ -48,13 +48,13 @@ CClipCompare::CompareFormats CClipCompare::GetCompareFormats(CClip& leftClip, CC
 		formats.saveUtf8 = false;
 	}
 
-	if(leftClip.GetUnicodeTextFormat() == _T("") || rightClip.GetUnicodeTextFormat() == _T(""))
+	if (leftClip.GetUnicodeTextFormat() == _T("") || rightClip.GetUnicodeTextFormat() == _T(""))
 	{
 		formats.saveW = false;
 		formats.saveUtf8 = false;
 	}
 
-	if(leftClip.GetCFTextTextFormat() == "" || rightClip.GetCFTextTextFormat() == "")
+	if (leftClip.GetCFTextTextFormat() == "" || rightClip.GetCFTextTextFormat() == "")
 	{
 		formats.saveA = false;
 	}
@@ -66,7 +66,7 @@ void CClipCompare::CompareClips(int leftId, CClip& leftClip, int rightId, CClip&
 {
 	const CompareFormats formats = GetCompareFormats(leftClip, rightClip);
 
-	if(formats.saveW || formats.saveA || formats.saveUtf8)
+	if (formats.saveW || formats.saveA || formats.saveUtf8)
 	{
 		LaunchCompare(leftId, leftClip, rightId, rightClip, formats);
 	}
@@ -80,17 +80,17 @@ void CClipCompare::LaunchCompare(int leftId, CClip& leftClip, int rightId, CClip
 {
 	CString leftFile = SaveToFile(leftId, &leftClip, formats.saveW, formats.saveA, formats.saveUtf8);
 	CString rightFile = SaveToFile(rightId, &rightClip, formats.saveW, formats.saveA, formats.saveUtf8);
-	if(leftFile == _T("") || rightFile == _T(""))
+	if (leftFile == _T("") || rightFile == _T(""))
 	{
 		CErrorReport::Show(CStringUtil::Format(_T("Comparing clips %d and %d failed: the compare files could not be written to %s"),
-			leftId, rightId, m_settings.GetPath(CGetSetOptions::PathClipDiff).GetString()));
+											   leftId, rightId, m_settings.GetPath(CGetSetOptions::PathClipDiff).GetString()));
 		return;
 	}
 
 	CString params = _T("");
 	CString path = GetComparePath(params);
 
-	if(path != _T(""))
+	if (path != _T(""))
 	{
 		SHELLEXECUTEINFO sei = { sizeof(sei) };
 		sei.lpFile = path;
@@ -114,11 +114,11 @@ void CClipCompare::LaunchCompare(int leftId, CClip& leftClip, int rightId, CClip
 	}
 }
 
-CString CClipCompare::GetComparePath(CString &params)
+CString CClipCompare::GetComparePath(CString& params)
 {
 	CString path = m_settings.GetDiffApp().MakeLower();
 
-	if(path != _T(""))
+	if (path != _T(""))
 	{
 		SetConfiguredAppParams(path, params);
 		return path;
@@ -158,20 +158,20 @@ void CClipCompare::SetConfiguredAppParams(const CString& path, CString& params)
 	}
 }
 
-CString CClipCompare::SaveToFile(int id, CClip *pClip, bool saveW, bool saveA, bool saveUtf8)
+CString CClipCompare::SaveToFile(int id, CClip* pClip, bool saveW, bool saveA, bool saveUtf8)
 {
 	CString path;
 	CString pathCompare = m_settings.GetPath(CGetSetOptions::PathClipDiff);
 	CString cs;
 	cs.Format(_T("%sditto_compare_%d.txt"), pathCompare.GetString(), id);
 
-	if(CFileSystem::FileExists(cs))
+	if (CFileSystem::FileExists(cs))
 	{
 		// the file of an earlier compare may still be open in the compare application: take a free name
-		for(int i = 1; i < 1000; i++)
+		for (int i = 1; i < 1000; i++)
 		{
 			cs.Format(_T("%sditto_compare_%d_%d.txt"), pathCompare.GetString(), id, i);
-			if(CFileSystem::FileExists(cs) == false)
+			if (CFileSystem::FileExists(cs) == false)
 			{
 				path = cs;
 				break;
@@ -183,7 +183,7 @@ CString CClipCompare::SaveToFile(int id, CClip *pClip, bool saveW, bool saveA, b
 		path = cs;
 	}
 
-	if(path == _T("") || pClip == NULL || pClip->WriteTextToFile(path, saveW, saveA, FALSE, FALSE, saveUtf8) == FALSE)
+	if (path == _T("") || pClip == NULL || pClip->WriteTextToFile(path, saveW, saveA, FALSE, FALSE, saveUtf8) == FALSE)
 	{
 		return _T("");
 	}

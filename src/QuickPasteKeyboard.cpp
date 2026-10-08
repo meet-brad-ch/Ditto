@@ -12,8 +12,8 @@
 
 IMPLEMENT_DYNAMIC(CQuickPasteKeyboard, CPropertyPage)
 
-CQuickPasteKeyboard::CQuickPasteKeyboard()
-	: CPropertyPage(CQuickPasteKeyboard::IDD)
+CQuickPasteKeyboard::CQuickPasteKeyboard() :
+	CPropertyPage(CQuickPasteKeyboard::IDD)
 {
 	m_csTitle = theApp.Services().Language().GetString("QuickPasteKeyboardTitle", "Quick Paste Keyboard");
 	m_psp.pszTitle = m_csTitle;
@@ -98,8 +98,8 @@ BOOL CQuickPasteKeyboard::OnInitDialog()
 
 	theApp.Services().Language().UpdateOptionQuickPasteKeyboard(this);
 
-	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX Property Pages should return FALSE
+	return TRUE; // return TRUE unless you set the focus to a control
+				 // EXCEPTION: OCX Property Pages should return FALSE
 }
 
 void CQuickPasteKeyboard::InitListCtrlCols()
@@ -138,13 +138,13 @@ void CQuickPasteKeyboard::LoadItems()
 
 	for (DWORD i = ActionEnums::FIRST_ACTION + 1; i < ActionEnums::LAST_ACTION; i++)
 	{
-		ActionEnums::ActionEnumValues action = (ActionEnums::ActionEnumValues) i;
+		ActionEnums::ActionEnumValues action = (ActionEnums::ActionEnumValues)i;
 
 		if (ActionEnums::UserConfigurable(action))
 		{
 			// Insert the first item
 			lvi.mask = LVIF_TEXT;
-			lvi.iItem = (int) i;
+			lvi.iItem = (int)i;
 
 			KeyboardArray ar;
 			for (int x = 0; x < 10; x++)
@@ -156,7 +156,7 @@ void CQuickPasteKeyboard::LoadItems()
 			CString shortCutText = GetShortCutText(ar);
 
 			lvi.iSubItem = 0;
-			lvi.pszText = (LPTSTR) (LPCTSTR) (shortCutText);
+			lvi.pszText = (LPTSTR)(LPCTSTR)(shortCutText);
 			m_list.InsertItem(&lvi);
 
 			CString col2 = ActionEnums::EnumDescription(action, theApp.Services().Language());
@@ -175,7 +175,7 @@ void CQuickPasteKeyboard::LoadItems()
 }
 
 CString CQuickPasteKeyboard::GetShortCutText(KeyboardAB ab)
-{	
+{
 	CString shA;
 	CString shB;
 	if (ab.A > 0)
@@ -216,8 +216,8 @@ CString CQuickPasteKeyboard::GetShortCutText(KeyboardArray ar)
 		{
 			break;
 		}
-		
-		if(all.GetLength() > 0)
+
+		if (all.GetLength() > 0)
 		{
 			all += _T(", ");
 		}
@@ -228,21 +228,20 @@ CString CQuickPasteKeyboard::GetShortCutText(KeyboardArray ar)
 	return all;
 }
 
-void CQuickPasteKeyboard::OnLvnItemActivateList1(NMHDR * /*pNMHDR*/, LRESULT *pResult)
+void CQuickPasteKeyboard::OnLvnItemActivateList1(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 {
 	// TODO: Add your control notification handler code here
 	*pResult = 0;
 }
 
 
-void CQuickPasteKeyboard::OnLvnItemchangedList1(NMHDR *pNMHDR, LRESULT *pResult)
+void CQuickPasteKeyboard::OnLvnItemchangedList1(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
-	
-	if ((pNMLV->uChanged & LVIF_STATE)
-		&& (pNMLV->uNewState & LVIS_SELECTED))
+
+	if ((pNMLV->uChanged & LVIF_STATE) && (pNMLV->uNewState & LVIS_SELECTED))
 	{
-		int id = (int) m_list.GetItemData(pNMLV->iItem);
+		int id = (int)m_list.GetItemData(pNMLV->iItem);
 
 		m_assignedCombo.ResetContent();
 
@@ -250,7 +249,7 @@ void CQuickPasteKeyboard::OnLvnItemchangedList1(NMHDR *pNMHDR, LRESULT *pResult)
 
 		for (int i = 0; i < 10; i++)
 		{
-			if(m_map[id].Array[i].A > 0)
+			if (m_map[id].Array[i].A > 0)
 			{
 				CString shortcut = GetShortCutText(m_map[id].Array[i]);
 				int pos = m_assignedCombo.AddString(shortcut);
@@ -295,9 +294,9 @@ void CQuickPasteKeyboard::OnBnClickedAssign()
 		CString sh = GetShortCutText(m_map[id]);
 		LVITEM lvi;
 		lvi.mask = LVIF_TEXT;
-		lvi.iItem = (int) row;
+		lvi.iItem = (int)row;
 		lvi.iSubItem = 0;
-		lvi.pszText = (LPTSTR) (LPCTSTR) (sh);
+		lvi.pszText = (LPTSTR)(LPCTSTR)(sh);
 		m_list.SetItem(&lvi);
 
 		CString shItem = GetShortCutText(m_map[id].Array[shortCutId]);
@@ -309,7 +308,7 @@ void CQuickPasteKeyboard::OnBnClickedAssign()
 	}
 }
 
-void CQuickPasteKeyboard::ReadFirstPress(KeyboardAB &ab)
+void CQuickPasteKeyboard::ReadFirstPress(KeyboardAB& ab)
 {
 	if (this->IsDlgButtonChecked(IDC_RADIO_KEYBOARD_1) == BST_CHECKED)
 	{
@@ -325,7 +324,7 @@ void CQuickPasteKeyboard::ReadFirstPress(KeyboardAB &ab)
 	}
 }
 
-void CQuickPasteKeyboard::ReadSecondPress(KeyboardAB &ab)
+void CQuickPasteKeyboard::ReadSecondPress(KeyboardAB& ab)
 {
 	if (IsDlgButtonChecked(IDC_CHECK_ENABLE_SECOND_PRESS) == BST_CHECKED)
 	{
@@ -401,7 +400,7 @@ void CQuickPasteKeyboard::OnCbnSelchangeComboAllAssigned()
 
 void CQuickPasteKeyboard::OnBnClickedButtonRemove()
 {
-	int shortCutId = SelectedCommandShortCutId();	
+	int shortCutId = SelectedCommandShortCutId();
 	int id = SelectedCommandId();
 
 	if (m_map.find(id) != m_map.end() &&
@@ -459,9 +458,9 @@ void CQuickPasteKeyboard::OnBnClickedButtonRemove()
 		CString sh = GetShortCutText(m_map[id]);
 		LVITEM lvi;
 		lvi.mask = LVIF_TEXT;
-		lvi.iItem = (int) row;
+		lvi.iItem = (int)row;
 		lvi.iSubItem = 0;
-		lvi.pszText = (LPTSTR) (LPCTSTR) (sh);
+		lvi.pszText = (LPTSTR)(LPCTSTR)(sh);
 		m_list.SetItem(&lvi);
 
 		m_assignedCombo.SetCurSel(0);
@@ -508,7 +507,7 @@ int CQuickPasteKeyboard::SelectedCommandId()
 		while (pos)
 		{
 			int row = m_list.GetNextSelectedItem(pos);
-			id = (int) m_list.GetItemData(row);
+			id = (int)m_list.GetItemData(row);
 		}
 	}
 
@@ -701,7 +700,7 @@ void CQuickPasteKeyboard::HideSecondPressControls()
 	::ShowWindow(::GetDlgItem(m_hWnd, IDC_STATIC_SECOND_PRESS), SW_HIDE);
 }
 
-void CQuickPasteKeyboard::SelectMouseTypeCombo(CComboBox &combo, int value)
+void CQuickPasteKeyboard::SelectMouseTypeCombo(CComboBox& combo, int value)
 {
 	int count = combo.GetCount();
 	for (int i = 0; i < count; i++)
@@ -714,8 +713,6 @@ void CQuickPasteKeyboard::SelectMouseTypeCombo(CComboBox &combo, int value)
 		}
 	}
 }
-
-
 
 
 void CQuickPasteKeyboard::OnEnKillfocusEdit1()
@@ -734,7 +731,7 @@ void CQuickPasteKeyboard::OnKillFocus(CWnd* pNewWnd)
 
 BOOL CQuickPasteKeyboard::PreTranslateMessage(MSG* pMsg)
 {
-	switch(pMsg->message)
+	switch (pMsg->message)
 	{
 	case WM_KILLFOCUS:
 		break;
@@ -805,7 +802,7 @@ void CQuickPasteKeyboard::OnBnClickedButtonReset()
 	for (int row = 0; row < count; row++)
 	{
 		int actionId = (int)m_list.GetItemData(row);
-		
+
 		CString sh = GetShortCutText(m_map[actionId]);
 
 		LVITEM lvi;
@@ -816,7 +813,7 @@ void CQuickPasteKeyboard::OnBnClickedButtonReset()
 		m_list.SetItem(&lvi);
 	}
 
-	SelectedRow(0);	
+	SelectedRow(0);
 }
 
 void CQuickPasteKeyboard::SelectedRow(int row)

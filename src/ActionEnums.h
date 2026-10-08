@@ -14,7 +14,7 @@ public:
 	//note these can't change values as they are tied to translation values
 	//add new values at the end
 	enum ActionEnumValues
-	{ 
+	{
 		FIRST_ACTION,
 		SHOWDESCRIPTION,
 		NEXTDESCRIPTION,
@@ -112,7 +112,7 @@ public:
 		PASTE_SCRIPT,
 		MOVE_CLIP_LAST,
 		PASTE_DONT_MOVE_CLIP,
-		PASTE_TRIM_WHITE_SPACE,		
+		PASTE_TRIM_WHITE_SPACE,
 		TRANSPARENCY_NONE,
 		TRANSPARENCY_5,
 		TRANSPARENCY_10,
@@ -210,4 +210,3 @@ private:
 	 */
 	static int FindDefaultShortcut(std::span<const DefaultShortcut> shortcuts, ActionEnumValues value);
 };
-

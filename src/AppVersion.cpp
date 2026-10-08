@@ -9,10 +9,10 @@ CString CAppVersion::GetVersionString(VersionInfo version)
 {
 	CString csLine{};
 	csLine.Format(_T("%02i.%02i.%02i.%02i"),
-		version.Major,
-		version.Minor,
-		version.Revision,
-		version.Build);
+				  version.Major,
+				  version.Minor,
+				  version.Revision,
+				  version.Build);
 
 	return csLine;
 }

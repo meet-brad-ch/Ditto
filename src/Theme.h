@@ -32,7 +32,7 @@ public:
 	COLORREF CaptionLeftNotConnected() const { return m_CaptionLeftNotConnected; }
 	COLORREF CaptionRightNotConnected() const { return m_CaptionRightNotConnected; }
 	COLORREF CaptionTextColor() const { return m_CaptionTextColor; }
-	
+
 	COLORREF ListBoxOddRowsBG() const { return m_ListBoxOddRowsBG; }
 	COLORREF ListBoxEvenRowsBG() const { return m_ListBoxEvenRowsBG; }
 	COLORREF ListBoxOddRowsText() const { return m_ListBoxOddRowsText; }
@@ -43,7 +43,7 @@ public:
 	COLORREF ListBoxSelectedNoFocusText() const { return m_ListBoxSelectedNoFocusText; }
 	COLORREF ClipPastedColor() const { return m_clipPastedColor; }
 
-	COLORREF ListSmallQuickPasteIndexColor() const { return m_listSmallQuickPasteIndexColor;  }
+	COLORREF ListSmallQuickPasteIndexColor() const { return m_listSmallQuickPasteIndexColor; }
 	COLORREF MainWindowBG() const { return m_mainWindowBG; }
 	COLORREF SearchTextBoxFocusBG() const { return m_searchTextBoxFocusBG; }
 	COLORREF SearchTextBoxFocusText() const { return m_searchTextBoxFocusText; }
@@ -71,10 +71,10 @@ public:
 	CString LastError() const { return m_csLastError; }
 
 protected:
-	bool LoadElement(const tinyxml2::XMLElement *pParent, CStringA csNode, COLORREF &Color, int &intValue);
+	bool LoadElement(const tinyxml2::XMLElement* pParent, CStringA csNode, COLORREF& Color, int& intValue);
 
-	bool LoadInt(const tinyxml2::XMLElement *pParent, CStringA csNode, int &intValue);
-	bool LoadColor(const tinyxml2::XMLElement *pParent, CStringA csNode, COLORREF &Color);
+	bool LoadInt(const tinyxml2::XMLElement* pParent, CStringA csNode, int& intValue);
+	bool LoadColor(const tinyxml2::XMLElement* pParent, CStringA csNode, COLORREF& Color);
 	void LoadWindowsAccentColor();
 
 private:
@@ -107,7 +107,7 @@ private:
 	 * @brief Loads all colour and size values of the theme file.
 	 * @param ItemHeader the Ditto_Theme_File element.
 	 */
-	void LoadThemeValues(const tinyxml2::XMLElement *ItemHeader);
+	void LoadThemeValues(const tinyxml2::XMLElement* ItemHeader);
 	/**
 	 * @brief Tells whether a colour text starts with a 4 character function prefix.
 	 * @param csColor the trimmed colour text.
@@ -122,7 +122,7 @@ private:
 	 * @param Color receives the colour.
 	 * @return false (and sets m_csLastError) for a malformed value.
 	 */
-	bool ParseRgbValue(const CStringA& csNode, const CString& csColor, COLORREF &Color);
+	bool ParseRgbValue(const CStringA& csNode, const CString& csColor, COLORREF& Color);
 	/**
 	 * @brief Parses an "hsl(h, s%, l%)" colour text.
 	 * @param csNode the node name (for the error text).
@@ -130,7 +130,7 @@ private:
 	 * @param Color receives the colour.
 	 * @return false (and sets m_csLastError) for a malformed value.
 	 */
-	bool ParseHslValue(const CStringA& csNode, const CString& csColor, COLORREF &Color);
+	bool ParseHslValue(const CStringA& csNode, const CString& csColor, COLORREF& Color);
 	/**
 	 * @brief Converts an HSL colour to RGB.
 	 * @param h the hue in degrees, 0-360.
@@ -156,7 +156,7 @@ protected:
 	COLORREF m_ListBoxSelectedBG;
 	COLORREF m_ListBoxSelectedNoFocusBG;
 	COLORREF m_ListBoxSelectedText;
-	COLORREF m_ListBoxSelectedNoFocusText;	
+	COLORREF m_ListBoxSelectedNoFocusText;
 	COLORREF m_clipPastedColor;
 	COLORREF m_listSmallQuickPasteIndexColor;
 	COLORREF m_mainWindowBG;

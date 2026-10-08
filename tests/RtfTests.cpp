@@ -23,7 +23,7 @@ namespace
 		{
 			if (rtf[i] == '\\')
 			{
-				i++;   // an escaped brace is text
+				i++; // an escaped brace is text
 			}
 			else if (rtf[i] == '{')
 			{

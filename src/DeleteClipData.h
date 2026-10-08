@@ -25,7 +25,7 @@ public:
 	}
 
 	long m_lID;
-	long m_DatalID{-1};
+	long m_DatalID{ -1 };
 	CString m_Desc;
 	CTime m_createdDateTime;
 	CTime m_lastUsedDateTime;
@@ -33,30 +33,32 @@ public:
 	DWORD m_dataSize;
 	CString m_quickPasteText;
 };
-	
-	
-	
+
+
 class CDeleteClipData : public CDialog
 {
 	DECLARE_DYNAMIC(CDeleteClipData)
 
 public:
-	CDeleteClipData(CWnd* pParent = NULL);   // standard constructor
+	CDeleteClipData(CWnd* pParent = NULL); // standard constructor
 	virtual ~CDeleteClipData();
 
 	void SetNotifyWnd(HWND hWnd);
 
-// Dialog Data
-	enum { IDD = IDD_DELETE_CLIP_DATA };
+	// Dialog Data
+	enum
+	{
+		IDD = IDD_DELETE_CLIP_DATA
+	};
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	virtual void DoDataExchange(CDataExchange* pDX); // DDX/DDV support
 
 	DECLARE_MESSAGE_MAP()
-		
+
 
 	CDialogResizer m_Resize;
-	CListCtrl	m_clipList;
+	CListCtrl m_clipList;
 	HWND m_hWndParent{};
 	CShowTaskBarIcon m_showTaskbar;
 	std::vector<CDeleteData> m_data;
@@ -89,7 +91,7 @@ protected:
 	afx_msg void OnNcDestroy();
 	void LoadItems();
 	void FilterItems();
-	bool MatchesFilter(CDeleteData *pdata);
+	bool MatchesFilter(CDeleteData* pdata);
 	void ApplyDelete();
 	void RemoveAllSelection();
 	BOOL SetCaret(int nRow, BOOL bFocus = 1);
@@ -119,10 +121,10 @@ public:
 	COleDateTime m_usedDateStart;
 	COleDateTime m_usedDateEnd;
 	afx_msg void OnBnClickedButtonSearch();
-	afx_msg void OnLvnKeydownList2(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnLvnItemchangedList2(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnHdnGetdispinfoList2(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnLvnGetdispinfoList2(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnLvnKeydownList2(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnLvnItemchangedList2(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnHdnGetdispinfoList2(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnLvnGetdispinfoList2(NMHDR* pNMHDR, LRESULT* pResult);
 	CString m_databaseSize;
 	CString m_selectedSize;
 	CString m_selectedCount;
@@ -134,8 +136,8 @@ public:
 	afx_msg void OnBnClickedCheckCreateDate();
 	afx_msg void OnBnClickedCheckLastUseDate();
 	afx_msg void OnBnClickedCheckDataFormat();
-	afx_msg void OnLvnColumnclickList2(NMHDR *pNMHDR, LRESULT *pResult);
-	virtual BOOL PreTranslateMessage(MSG* pMsg);	
+	afx_msg void OnLvnColumnclickList2(NMHDR* pNMHDR, LRESULT* pResult);
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	void ShowClipPropertiesWindow();
 	virtual void OnCancel();
@@ -207,7 +209,7 @@ private:
 	static const std::array<ColumnSort, 7> s_columnSorts;
 
 	/** @brief The direction of the next column sort: true for descending; every column click toggles it. */
-	bool m_sortDescending{true};
+	bool m_sortDescending{ true };
 
 	/**
 	 * @brief Orders by clip id, highest first.

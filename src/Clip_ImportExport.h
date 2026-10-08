@@ -1,7 +1,7 @@
 #pragma once
 #include "clip.h"
 
-class CClip_ImportExport :	public CClip
+class CClip_ImportExport : public CClip
 {
 public:
 	/**
@@ -12,17 +12,17 @@ public:
 	explicit CClip_ImportExport(CClipContext& context);
 	~CClip_ImportExport(void);
 
-	bool ExportToSqliteDB(CppSQLite3DB &m_db);
-	bool ImportFromSqliteDB(CppSQLite3DB &db, bool bAddToDB, bool bPutOnClipboard);
-	
+	bool ExportToSqliteDB(CppSQLite3DB& m_db);
+	bool ImportFromSqliteDB(CppSQLite3DB& db, bool bAddToDB, bool bPutOnClipboard);
+
 	int m_importCount;
 
 protected:
-	bool ImportFromSqliteV1(CppSQLite3DB &db, CppSQLite3Query &qMain);
-	bool Append_CF_TEXT_AND_CF_UNICODETEXT(CStringA &csCF_TEXT, CStringW &csCF_UNICODETEXT);
+	bool ImportFromSqliteV1(CppSQLite3DB& db, CppSQLite3Query& qMain);
+	bool Append_CF_TEXT_AND_CF_UNICODETEXT(CStringA& csCF_TEXT, CStringW& csCF_UNICODETEXT);
 
 	bool PlaceFormatsOnclipboard();
-	bool PlaceCF_TEXT_AND_CF_UNICODETEXT_OnClipboard(CStringA &csCF_TEXT, CStringW &csCF_UNICODETEXT);
+	bool PlaceCF_TEXT_AND_CF_UNICODETEXT_OnClipboard(CStringA& csCF_TEXT, CStringW& csCF_UNICODETEXT);
 
 private:
 	/** @brief What ImportRow did with one row of the export. */
@@ -37,7 +37,7 @@ private:
 	};
 
 	/** @brief The format version that ExportToSqliteDB writes into the export's Main table. */
-	static constexpr int s_currentExportVersion{1};
+	static constexpr int s_currentExportVersion{ 1 };
 
 	/**
 	 * @brief ImportFromSqliteDB's row step: imports a version-1 row and adds it to the database when asked.
@@ -48,7 +48,7 @@ private:
 	 * @return Imported when the row was imported and added or is to be put on the clipboard;
 	 *         Failed when adding it to the database failed (the error was shown).
 	 */
-	RowResult ImportRow(CppSQLite3DB &db, CppSQLite3Query &q, bool bAddToDB, bool bPutOnClipboard);
+	RowResult ImportRow(CppSQLite3DB& db, CppSQLite3Query& q, bool bAddToDB, bool bPutOnClipboard);
 
 	/**
 	 * @brief ImportFromSqliteDB's last step after an import: refreshes the view, or puts the clips on the clipboard.
@@ -57,5 +57,5 @@ private:
 	 * @param csCF_TEXT The joined CF_TEXT of all imported clips.
 	 * @param csCF_UNICODETEXT The joined CF_UNICODETEXT of all imported clips.
 	 */
-	void FinishImport(bool bAddToDB, bool bPutOnClipboard, CStringA &csCF_TEXT, CStringW &csCF_UNICODETEXT);
+	void FinishImport(bool bAddToDB, bool bPutOnClipboard, CStringA& csCF_TEXT, CStringW& csCF_UNICODETEXT);
 };

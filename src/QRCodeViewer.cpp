@@ -45,9 +45,9 @@ BOOL QRCodeViewer::LoadQrBitmap(std::vector<std::byte> bitmap)
 	return m_qrCodeDrawer.LoadRaw(reinterpret_cast<unsigned char*>(bitmap.data()), static_cast<int>(bitmap.size()));
 }
 
-BOOL QRCodeViewer::CreateEx(CWnd *pParentWnd, CString desc, int rowHeight, LOGFONT logFont)
+BOOL QRCodeViewer::CreateEx(CWnd* pParentWnd, CString desc, int rowHeight, LOGFONT logFont)
 {
-	CGetSetOptions &settings = theApp.Services().Settings();
+	CGetSetOptions& settings = theApp.Services().Settings();
 
 	// Get the class name and create the window
 	CString szClassName = AfxRegisterWndClass(CS_CLASSDC | CS_SAVEBITS, LoadCursor(NULL, IDC_ARROW));
@@ -58,12 +58,12 @@ BOOL QRCodeViewer::CreateEx(CWnd *pParentWnd, CString desc, int rowHeight, LOGFO
 	m_logFont = logFont;
 	m_originalFontHeight = logFont.lfHeight;
 
-	if(CWnd::CreateEx(0, szClassName, _T(""), WS_POPUP, 0, 0, 0, 0, NULL, 0, NULL))
-	{	
+	if (CWnd::CreateEx(0, szClassName, _T(""), WS_POPUP, 0, 0, 0, 0, NULL, 0, NULL))
+	{
 		m_font.CreateFontIndirect(&logFont);
 
 		// the QR code is still shown without its description; MoveControls skips a missing m_desc
-		if (m_desc.Create(CMainTableFunctions::GetDisplayText(settings.m_nLinesPerRow, desc, settings.m_bDescShowLeadingWhiteSpace), WS_CHILD|WS_VISIBLE, CRect(0,0,0,0), this, 2))
+		if (m_desc.Create(CMainTableFunctions::GetDisplayText(settings.m_nLinesPerRow, desc, settings.m_bDescShowLeadingWhiteSpace), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 2))
 		{
 			m_desc.SetFont(&m_font);
 		}
@@ -95,7 +95,7 @@ BOOL QRCodeViewer::CreateEx(CWnd *pParentWnd, CString desc, int rowHeight, LOGFO
 			rect.right += m_DittoWindow.m_captionBorderWidth;
 		}
 		rect.bottom = rect.top + m_DittoWindow.m_borderSize + m_DittoWindow.m_borderSize + rowHeight + 5 + m_qrCodeDrawer.ImageHeight() + (settings.GetQRCodeBorderPixels() * 2);
-		
+
 		CRect center = CMonitorGeometry::CenterRect(rect);
 
 		CMonitorGeometry::EnsureWindowVisible(&center);
@@ -130,7 +130,7 @@ void QRCodeViewer::MoveControls()
 	int cx = crRect.Width();
 	int cy = crRect.Height();
 
-	if(m_desc.m_hWnd != NULL)
+	if (m_desc.m_hWnd != NULL)
 	{
 		m_desc.MoveWindow(m_DittoWindow.m_dpi.Scale(5), cy - m_DittoWindow.m_dpi.Scale(m_descRowHeight) - m_DittoWindow.m_dpi.Scale(5), cx - m_DittoWindow.m_dpi.Scale(10), m_DittoWindow.m_dpi.Scale(m_descRowHeight));
 	}
@@ -143,12 +143,12 @@ void QRCodeViewer::OnPaint()
 	CRect thisRect;
 	GetClientRect(thisRect);
 	thisRect.bottom -= m_DittoWindow.m_dpi.Scale(m_descRowHeight) - m_DittoWindow.m_dpi.Scale(5);
-	
-	CGetSetOptions &settings = theApp.Services().Settings();
+
+	CGetSetOptions& settings = theApp.Services().Settings();
 	int width = thisRect.Width() - (settings.GetQRCodeBorderPixels() * 2);
 	int height = min(width, (thisRect.Height() - (settings.GetQRCodeBorderPixels() * 2)));
 	width = min(width, height);
-		
+
 	CRect imageRect(0, 0, width, height);
 
 	CRect centerRect = CMonitorGeometry::CenterRectFromRect(imageRect, thisRect);
@@ -156,15 +156,15 @@ void QRCodeViewer::OnPaint()
 	m_qrCodeDrawer.Draw(&dc, m_DittoWindow.m_dpi, this, centerRect.left, centerRect.top, false, false, width, height);
 }
 
-BOOL QRCodeViewer::PreTranslateMessage(MSG *pMsg)
+BOOL QRCodeViewer::PreTranslateMessage(MSG* pMsg)
 {
 	m_DittoWindow.DoPreTranslateMessage(pMsg);
 
-	switch(pMsg->message)
+	switch (pMsg->message)
 	{
 	case WM_KEYDOWN:
 
-		switch(pMsg->wParam)
+		switch (pMsg->wParam)
 		{
 		case VK_ESCAPE:
 			::SendMessage(m_hWnd, WM_CLOSE, 0, 0);
@@ -174,12 +174,12 @@ BOOL QRCodeViewer::PreTranslateMessage(MSG *pMsg)
 
 	return CWnd::PreTranslateMessage(pMsg);
 }
-	
+
 void QRCodeViewer::PostNcDestroy()
 {
-    CWnd::PostNcDestroy();
+	CWnd::PostNcDestroy();
 
-    delete this; // ownership: the window (a self-deleting window ends here)
+	delete this; // ownership: the window (a self-deleting window ends here)
 }
 
 void QRCodeViewer::OnNcPaint()
@@ -187,35 +187,35 @@ void QRCodeViewer::OnNcPaint()
 	m_DittoWindow.DoNcPaint(this);
 }
 
-void QRCodeViewer::OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp) 
+void QRCodeViewer::OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp)
 {
 	CWnd::OnNcCalcSize(bCalcValidRects, lpncsp);
 
 	m_DittoWindow.DoNcCalcSize(bCalcValidRects, lpncsp);
 }
 
-LRESULT QRCodeViewer::OnNcHitTest(CPoint point) 
+LRESULT QRCodeViewer::OnNcHitTest(CPoint point)
 {
 	UINT Ret = m_DittoWindow.DoNcHitTest(this, point);
-	if(Ret == -1)
+	if (Ret == -1)
 		return CWnd::OnNcHitTest(point);
 
 	return Ret;
 }
 
-BOOL QRCodeViewer::OnEraseBkgnd(CDC* pDC) 
+BOOL QRCodeViewer::OnEraseBkgnd(CDC* pDC)
 {
 	CRect rect;
 	GetClientRect(&rect);
 	CBrush myBrush(RGB(255, 255, 255));
-	CBrush *pOld = pDC->SelectObject(&myBrush);
+	CBrush* pOld = pDC->SelectObject(&myBrush);
 	pDC->PatBlt(0, 0, rect.Width(), rect.Height(), PATCOPY);
 	pDC->SelectObject(pOld);
 
 	return TRUE;
 }
 
-void QRCodeViewer::OnNcLButtonDown(UINT nHitTest, CPoint point) 
+void QRCodeViewer::OnNcLButtonDown(UINT nHitTest, CPoint point)
 {
 	int buttonPressed = m_DittoWindow.DoNcLButtonDown(this, nHitTest, point);
 
@@ -227,11 +227,11 @@ void QRCodeViewer::OnNcLButtonDown(UINT nHitTest, CPoint point)
 	CWnd::OnNcLButtonDown(nHitTest, point);
 }
 
-void QRCodeViewer::OnNcLButtonUp(UINT nHitTest, CPoint point) 
+void QRCodeViewer::OnNcLButtonUp(UINT nHitTest, CPoint point)
 {
 	long lRet = m_DittoWindow.DoNcLButtonUp(this, nHitTest, point);
 
-	switch(lRet)
+	switch (lRet)
 	{
 	case CDittoWindow::ButtonClose:
 		::PostMessage(m_hWnd, WM_CLOSE, 0, 0);
@@ -246,9 +246,9 @@ void QRCodeViewer::OnNcLButtonUp(UINT nHitTest, CPoint point)
 HBRUSH QRCodeViewer::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
 	HBRUSH hbr = CWnd::OnCtlColor(pDC, pWnd, nCtlColor);
-	if(pWnd->GetDlgCtrlID() == 2)
+	if (pWnd->GetDlgCtrlID() == 2)
 	{
-		pDC->SetBkColor(RGB(255,255,255));
+		pDC->SetBkColor(RGB(255, 255, 255));
 
 		return static_cast<HBRUSH>(m_descBackground.GetSafeHandle());
 	}
@@ -265,16 +265,16 @@ void QRCodeViewer::OnTimer(UINT_PTR nIDEvent)
 {
 	switch (nIDEvent)
 	{
-		case TimerButtonUp:
+	case TimerButtonUp:
+	{
+		// the high bit (0x8000) is the "down" bit; upstream tested 0x100, which is never set
+		if ((GetKeyState(VK_LBUTTON) & 0x8000) == 0)
 		{
-			// the high bit (0x8000) is the "down" bit; upstream tested 0x100, which is never set
-			if ((GetKeyState(VK_LBUTTON) & 0x8000) == 0)
-			{
-				m_DittoWindow.DoNcLButtonUp(this, 0, CPoint(0, 0));
-				KillTimer(TimerButtonUp);
-			}
-			break;
+			m_DittoWindow.DoNcLButtonUp(this, 0, CPoint(0, 0));
+			KillTimer(TimerButtonUp);
 		}
+		break;
+	}
 	}
 
 	CWnd::OnTimer(nIDEvent);
@@ -287,11 +287,11 @@ LRESULT QRCodeViewer::OnDpiChanged(WPARAM wParam, LPARAM lParam)
 
 	RECT* const prcNewWindow = (RECT*)lParam;
 	SetWindowPos(NULL,
-		prcNewWindow->left,
-		prcNewWindow->top,
-		prcNewWindow->right - prcNewWindow->left,
-		prcNewWindow->bottom - prcNewWindow->top,
-		SWP_NOZORDER | SWP_NOACTIVATE);
+				 prcNewWindow->left,
+				 prcNewWindow->top,
+				 prcNewWindow->right - prcNewWindow->left,
+				 prcNewWindow->bottom - prcNewWindow->top,
+				 SWP_NOZORDER | SWP_NOACTIVATE);
 
 	CLogger::Write(CStringUtil::Format(_T("QRCodeViewer::OnDpiChanged dpi: %d width: %d, height: %d"), dpi, (prcNewWindow->right - prcNewWindow->left), (prcNewWindow->bottom - prcNewWindow->top)));
 

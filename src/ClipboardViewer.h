@@ -21,35 +21,35 @@ class CClipboardViewer : public CWnd
 		TimerPing = 8,
 	};
 
-// Construction
+	// Construction
 public:
 	CClipboardViewer(CCopyThread* pHandler);
 	virtual ~CClipboardViewer();
 
-// Overrides
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CClipboardViewer)
 	//}}AFX_VIRTUAL
 
-// Implementation
+	// Implementation
 public:
 	void Create();
 
-	bool	m_bPinging;
-	bool	m_bConnect;
-	bool	m_bIsConnected;
-	bool	m_connectOnStartup;
+	bool m_bPinging;
+	bool m_bConnect;
+	bool m_bIsConnected;
+	bool m_connectOnStartup;
 	CString m_activeWindow;
 
 	// m_pHandler->OnClipboardChange is called when the clipboard changes.
-	CCopyThread*	m_pHandler;
+	CCopyThread* m_pHandler;
 
-	void Connect();    // starts listening for clipboard changes
+	void Connect();                         // starts listening for clipboard changes
 	void Disconnect(bool bSendPing = true); // stops listening for clipboard changes
 
 	void SendPing();
 
-	bool GetConnect()				{ return m_bConnect; }
+	bool GetConnect() { return m_bConnect; }
 	void SetConnect(bool bConnect);
 	void SetEnsureConnectedTimer();
 	bool ValidActiveWnd();

@@ -12,12 +12,10 @@
 
 CDialogResizer::CDialogResizer()
 {
-
 }
 
 CDialogResizer::~CDialogResizer()
 {
-
 }
 
 void CDialogResizer::SetParent(HWND hWndParent)
@@ -33,7 +31,7 @@ void CDialogResizer::SetParent(HWND hWndParent)
 void CDialogResizer::AddControl(int nControlID, int nFlags)
 {
 	HWND hWnd = GetDlgItem(m_hWndParent, nControlID);
-	if(hWnd)
+	if (hWnd)
 		AddControl(hWnd, nFlags);
 }
 
@@ -52,7 +50,7 @@ void CDialogResizer::MoveControls(CSize csNewSize)
 	int nDeltaX = csNewSize.cx - m_DlgSize.cx;
 	int nDeltaY = csNewSize.cy - m_DlgSize.cy;
 
-	if(nDeltaX == 0 && nDeltaY == 0)
+	if (nDeltaX == 0 && nDeltaY == 0)
 		return;
 
 	m_DlgSize = csNewSize;
@@ -63,16 +61,16 @@ void CDialogResizer::MoveControls(CSize csNewSize)
 
 	GetClientRect(m_hWndParent, rcParent);
 
-	for(int i = 0; i < nCount; i++)
+	for (int i = 0; i < nCount; i++)
 	{
 		CDR_Data data = m_Controls[i];
 
 		GetWindowRect(data.m_hWnd, rc);
-		MapWindowPoints(GetDesktopWindow(),  m_hWndParent, (LPPOINT)&rc, 2 );
-		
+		MapWindowPoints(GetDesktopWindow(), m_hWndParent, (LPPOINT)&rc, 2);
+
 		//
 		//	Adjust the window horizontally
-		if( data.m_nFlags & MoveLeft )
+		if (data.m_nFlags & MoveLeft)
 		{
 			rc.left += nDeltaX;
 			rc.right += nDeltaX;
@@ -80,7 +78,7 @@ void CDialogResizer::MoveControls(CSize csNewSize)
 
 		//
 		//	Adjust the window vertically
-		if( data.m_nFlags & MoveTop )
+		if (data.m_nFlags & MoveTop)
 		{
 			rc.top += nDeltaY;
 			rc.bottom += nDeltaY;
@@ -88,13 +86,13 @@ void CDialogResizer::MoveControls(CSize csNewSize)
 
 		//
 		//	Size the window horizontally
-		if( data.m_nFlags & SizeWidth )
+		if (data.m_nFlags & SizeWidth)
 		{
 			rc.right += nDeltaX;
 		}
 
 		//	Size the window vertically
-		if( data.m_nFlags & SizeHeight )
+		if (data.m_nFlags & SizeHeight)
 		{
 			rc.bottom += nDeltaY;
 		}

@@ -16,7 +16,7 @@ class CGetSetOptions;
 
 class CToolTipEx : public CWnd
 {
-// Construction
+	// Construction
 public:
 	CToolTipEx();
 
@@ -25,23 +25,22 @@ private:
 	@return the settings. */
 	CGetSetOptions& Settings() const;
 
-// Attributes
+	// Attributes
 public:
-
-// Operations
+	// Operations
 public:
 	BOOL OnMsg(MSG* pMsg);
 	BOOL Create(CWnd* pParentWnd);
 	BOOL Show(CPoint point);
 	BOOL Hide();
-	void SetToolTipText(const CString &csText);
-	void SetRTFText(const CStringA &rtf);
+	void SetToolTipText(const CString& csText);
+	void SetRTFText(const CStringA& rtf);
 	/**
 	 * @brief Shows an image (replacing the previous one) and takes ownership of it.
 	 * @param gdiplusBitmap the image; empty to show none.
 	 */
 	void SetGdiplusBitmap(std::unique_ptr<Gdiplus::Bitmap> gdiplusBitmap);
-	void SetNotifyWnd(CWnd *pNotify)		{ m_pNotifyWnd = pNotify;	}
+	void SetNotifyWnd(CWnd* pNotify) { m_pNotifyWnd = pNotify; }
 	void HideWindowInXMilliSeconds(long lms);
 	CRect GetBoundsRect();
 
@@ -53,17 +52,21 @@ public:
 
 	void SetSearchText(CString text) { m_searchText = text; }
 
-	void SetClipData(CString data) { m_clipData = data; m_originalClipData = data; }
+	void SetClipData(CString data)
+	{
+		m_clipData = data;
+		m_originalClipData = data;
+	}
 	void SetFolderPath(CString path) { m_folderPath = path; }
 
 	bool GetShowPersistant() { return m_showPersistant; }
 	void ToggleShowPersistant() { OnFirstAlwaysontop(); }
 	bool ToggleWordWrap();
-	void SetTooltipActions(CAccels *pToolTipActions) { m_pToolTipActions = pToolTipActions; }
+	void SetTooltipActions(CAccels* pToolTipActions) { m_pToolTipActions = pToolTipActions; }
 
 	void GetWindowRectEx(LPRECT lpRect);
 
-	void UpdateMenuShortCut(CMenu *subMenu, int id, DWORD action);
+	void UpdateMenuShortCut(CMenu* subMenu, int id, DWORD action);
 
 	void DoSearch();
 	void MoveControls();
@@ -71,18 +74,18 @@ public:
 	BOOL SetLogFont(LPLOGFONT lpLogFont, BOOL bRedraw /*=TRUE*/);
 
 
-// Overrides
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CToolTipEx)
-	protected:
+protected:
 	virtual void PostNcDestroy();
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	//}}AFX_VIRTUAL
 
-// Implementation
+	// Implementation
 public:
 	virtual ~CToolTipEx();
-	
+
 protected:
 	DWORD m_dwTextStyle;
 	CRect m_rectMargin;
@@ -91,7 +94,7 @@ protected:
 	int m_fontHeight{};
 	CStringA m_csRTF;
 	CRichEditCtrlEx m_RichEdit;
-	CWnd *m_pNotifyWnd;
+	CWnd* m_pNotifyWnd;
 	CGdipButton m_optionsButton;
 	int m_clipId;
 	CString m_searchText;
@@ -107,7 +110,7 @@ protected:
 	bool m_saveWindowLockout{};
 	int m_clipRow;
 	bool m_showPersistant;
-	CAccels *m_pToolTipActions;
+	CAccels* m_pToolTipActions;
 	bool m_bMaxSetTimer;
 	int m_lDelayMaxSeconds;
 	SnapWindow m_snap;
@@ -117,22 +120,22 @@ protected:
 	bool m_showingImage{};
 
 protected:
-	CString GetFieldFromString(CString ref, int nIndex, TCHAR ch);	
+	CString GetFieldFromString(CString ref, int nIndex, TCHAR ch);
 	BOOL IsCursorInToolTip();
-	void HighlightSearchText();	
+	void HighlightSearchText();
 	void ApplyWordWrap();
 	void SaveWindowSize();
 
 	// Generated message map functions
 protected:
-	//{{AFX_MSG(CToolTipEx)	
+	//{{AFX_MSG(CToolTipEx)
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg LRESULT OnNcHitTest(CPoint point);
 	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 	afx_msg void OnNcMouseMove(UINT nHitTest, CPoint point);
-	afx_msg void OnNcLButtonUp(UINT nHitTest, CPoint point); 
-	afx_msg void OnNcLButtonDown(UINT nHitTest, CPoint point); 
-	afx_msg void OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp); 
+	afx_msg void OnNcLButtonUp(UINT nHitTest, CPoint point);
+	afx_msg void OnNcLButtonDown(UINT nHitTest, CPoint point);
+	afx_msg void OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp);
 	afx_msg void OnNcPaint();
 	afx_msg void OnOptions();
 	afx_msg void OnWindowPosChanging(WINDOWPOS* lpwndpos);
@@ -145,12 +148,12 @@ public:
 	afx_msg void OnScaleimagestofitwindow();
 	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
-	afx_msg void OnPaint();	
+	afx_msg void OnPaint();
 	afx_msg void OnFirstHidedescriptionwindowonm();
 	afx_msg void OnFirstWraptext();
 	afx_msg void OnNcLButtonDblClk(UINT nHitTest, CPoint point);
 	afx_msg void OnFirstAlwaysontop();
-	void OnEnMsgfilterRichedit21(NMHDR *pNMHDR, LRESULT *pResult);
+	void OnEnMsgfilterRichedit21(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg LRESULT OnDpiChanged(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnMoving(UINT fwSide, LPRECT pRect);
 	afx_msg void OnEnterSizeMove();
@@ -176,11 +179,13 @@ private:
 	static constexpr std::array<UINT, 10> s_hidingClickMessages{
 		WM_LBUTTONDBLCLK, WM_RBUTTONDBLCLK, WM_MBUTTONDOWN, WM_MBUTTONDBLCLK,
 		WM_NCLBUTTONDOWN, WM_NCLBUTTONDBLCLK, WM_NCRBUTTONDOWN, WM_NCRBUTTONDBLCLK,
-		WM_NCMBUTTONDOWN, WM_NCMBUTTONDBLCLK };
+		WM_NCMBUTTONDOWN, WM_NCMBUTTONDBLCLK
+	};
 
 	/** @brief The keys that OnMsg leaves to the list (the window stays open). */
 	static constexpr std::array<WPARAM, 7> s_listKeys{
-		VK_CONTROL, VK_SHIFT, VK_UP, VK_DOWN, VK_NEXT, VK_PRIOR, VK_DELETE };
+		VK_CONTROL, VK_SHIFT, VK_UP, VK_DOWN, VK_NEXT, VK_PRIOR, VK_DELETE
+	};
 
 	/**
 	 * @brief The window rectangle from the saved description window size.

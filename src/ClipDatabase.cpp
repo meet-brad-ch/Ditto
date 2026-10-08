@@ -12,7 +12,7 @@ long CClipDatabase::NewGroupID(CDittoDb& db, int parentID, CString text)
 
 	try
 	{
-		if(text.IsEmpty())
+		if (text.IsEmpty())
 			text = time.Format("NewGroup %y/%m/%d %H:%M:%S");
 
 		// bound values: the name is stored as typed (no quote doubling) and the time keeps 64 bits
@@ -52,7 +52,7 @@ BOOL CClipDatabase::DeleteAllIDs(CDittoDb& db)
 
 BOOL CClipDatabase::DeleteFormats(CClipContext& context, int parentID, ARRAY& formatIDs)
 {
-	if(formatIDs.GetSize() <= 0)
+	if (formatIDs.GetSize() <= 0)
 		return TRUE;
 
 	try
@@ -60,13 +60,13 @@ BOOL CClipDatabase::DeleteFormats(CClipContext& context, int parentID, ARRAY& fo
 		CDittoDb& db{ context.Database() };
 		//Delete the requested data formats
 		const INT_PTR count{ formatIDs.GetSize() };
-		for(int i{}; i < count; i++)
+		for (int i{}; i < count; i++)
 		{
 			db.execDMLEx(_T("DELETE FROM Data WHERE lID = %d;"), formatIDs[i]);
 		}
 
 		CClip clip(context);
-		if(clip.LoadFormats(parentID))
+		if (clip.LoadFormats(parentID))
 		{
 			const DWORD CRC{ clip.GenerateCRC() };
 

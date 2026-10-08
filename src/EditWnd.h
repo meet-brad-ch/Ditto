@@ -16,7 +16,7 @@ public:
 	CEditWnd();
 	virtual ~CEditWnd();
 
-	bool EditIds(CClipIDs &Ids);
+	bool EditIds(CClipIDs& Ids);
 	bool CloseEdits(bool bPrompt);
 
 	void OnDpiChanged(CWnd* pParent, int dpi);
@@ -62,5 +62,3 @@ private:
 	 *  @return true if the key was handled and must not be passed on (Ctrl + N is passed on). */
 	bool HandleKeyDown(WPARAM key);
 };
-
-

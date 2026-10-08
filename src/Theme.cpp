@@ -31,7 +31,7 @@ void CTheme::LoadDefaults()
 
 	m_CaptionLeftTopMost = RGB(255, 255, 255);
 	m_CaptionRightTopMost = RGB(204, 204, 204);
-	
+
 	m_CaptionLeftNotConnected = RGB(255, 255, 255);
 	m_CaptionRightNotConnected = RGB(255, 255, 0);
 
@@ -55,7 +55,7 @@ void CTheme::LoadDefaults()
 	m_groupTreeBG = RGB(240, 240, 240);
 	m_groupTreeText = RGB(127, 127, 127);
 
-	m_descriptionWindowBG = RGB(240, 240, 240);// GetSysColor(COLOR_INFOBK);//RGB(240, 240, 240);//
+	m_descriptionWindowBG = RGB(240, 240, 240); // GetSysColor(COLOR_INFOBK);//RGB(240, 240, 240);//
 	/*int r = GetRValue(m_descriptionWindowBG);
 	int g = GetGValue(m_descriptionWindowBG);
 	int b = GetBValue(m_descriptionWindowBG);*/
@@ -90,9 +90,9 @@ bool CTheme::Load(CGetSetOptions& settings, CString csTheme, bool bHeaderOnly, b
 
 	__int64 LastWrite = CFileSystem::GetLastWriteTime(csPath);
 
-	if(bCheckLastWriteTime)
-	{	
-		if(m_lastTheme == csTheme &&
+	if (bCheckLastWriteTime)
+	{
+		if (m_lastTheme == csTheme &&
 			LastWrite == m_LastWriteTime)
 		{
 			return true;
@@ -145,7 +145,7 @@ bool CTheme::LoadThemeFile(const CString& csPath, bool bHeaderOnly, bool followW
 {
 	// collapsed whitespace, as TinyXML (Ditto's earlier parser) read the theme files
 	tinyxml2::XMLDocument doc(true, tinyxml2::COLLAPSE_WHITESPACE);
-	if(CXmlFile::Load(doc, csPath) != tinyxml2::XML_SUCCESS)
+	if (CXmlFile::Load(doc, csPath) != tinyxml2::XML_SUCCESS)
 	{
 		m_csLastError.Format(_T("Error loading Theme %s - reason = %hs"), csPath.GetString(), doc.ErrorStr());
 		ASSERT(!m_csLastError);
@@ -153,8 +153,8 @@ bool CTheme::LoadThemeFile(const CString& csPath, bool bHeaderOnly, bool followW
 		return false;
 	}
 
-	const tinyxml2::XMLElement *ItemHeader = doc.FirstChildElement("Ditto_Theme_File");
-	if(!ItemHeader)
+	const tinyxml2::XMLElement* ItemHeader = doc.FirstChildElement("Ditto_Theme_File");
+	if (!ItemHeader)
 	{
 		m_csLastError.Format(_T("Error finding the section Ditto_Theme_File"));
 		ASSERT(!m_csLastError);
@@ -167,7 +167,7 @@ bool CTheme::LoadThemeFile(const CString& csPath, bool bHeaderOnly, bool followW
 	m_csAuthor = ItemHeader->Attribute("Author");
 	m_csNotes = ItemHeader->Attribute("Notes");
 
-	if(bHeaderOnly)
+	if (bHeaderOnly)
 		return true;
 
 
@@ -181,7 +181,7 @@ bool CTheme::LoadThemeFile(const CString& csPath, bool bHeaderOnly, bool followW
 	return true;
 }
 
-void CTheme::LoadThemeValues(const tinyxml2::XMLElement *ItemHeader)
+void CTheme::LoadThemeValues(const tinyxml2::XMLElement* ItemHeader)
 {
 	LoadColor(ItemHeader, "CaptionLeft", m_CaptionLeft);
 	LoadColor(ItemHeader, "CaptionRight", m_CaptionRight);
@@ -211,7 +211,7 @@ void CTheme::LoadThemeValues(const tinyxml2::XMLElement *ItemHeader)
 
 	LoadColor(ItemHeader, "GroupTreeBG", m_groupTreeBG);
 	LoadColor(ItemHeader, "GroupTreeText", m_groupTreeText);
-	
+
 	LoadInt(ItemHeader, "CaptionSize", m_captionSize);
 	LoadInt(ItemHeader, "CaptionFontSize", m_captionFontSize);
 
@@ -281,36 +281,36 @@ COLORREF CTheme::HslToRgb(float h, float s, float l)
 	return RGB(r, g, b);
 }
 
-bool CTheme::LoadColor(const tinyxml2::XMLElement *pParent, CStringA csNode, COLORREF &Color)
+bool CTheme::LoadColor(const tinyxml2::XMLElement* pParent, CStringA csNode, COLORREF& Color)
 {
 	int intValue = 0;
 	return LoadElement(pParent, csNode, Color, intValue);
 }
 
-bool CTheme::LoadInt(const tinyxml2::XMLElement *pParent, CStringA csNode, int &intValue)
+bool CTheme::LoadInt(const tinyxml2::XMLElement* pParent, CStringA csNode, int& intValue)
 {
 	COLORREF colorValue = 0;
 	return LoadElement(pParent, csNode, colorValue, intValue);
 }
 
-bool CTheme::LoadElement(const tinyxml2::XMLElement *pParent, CStringA csNode, COLORREF &Color, int &intValue)
+bool CTheme::LoadElement(const tinyxml2::XMLElement* pParent, CStringA csNode, COLORREF& Color, int& intValue)
 {
-	const tinyxml2::XMLElement *pColorNode = pParent->FirstChildElement(csNode);
-	if(pColorNode == NULL)
+	const tinyxml2::XMLElement* pColorNode = pParent->FirstChildElement(csNode);
+	if (pColorNode == NULL)
 	{
 		m_csLastError.Format(_T("Theme Load, error loading Node = %hs"), csNode.GetString());
 		CLogger::Log(m_csLastError);
 		return false;
 	}
 
-	const tinyxml2::XMLNode *pColor = pColorNode->FirstChild();
-	if(pColor == NULL)
+	const tinyxml2::XMLNode* pColor = pColorNode->FirstChild();
+	if (pColor == NULL)
 	{
 		m_csLastError.Format(_T("Theme Load, error getting node text for = %hs"), csNode.GetString());
 		CLogger::Log(m_csLastError);
 		return false;
 	}
-	
+
 	CString csColor = pColor->Value();
 	csColor.Trim();
 
@@ -349,7 +349,7 @@ bool CTheme::HasColorPrefix(const CString& csColor, LPCTSTR prefix)
 	return csColor.GetLength() > 4 && csColor.Left(4).CompareNoCase(prefix) == 0;
 }
 
-bool CTheme::ParseRgbValue(const CStringA& csNode, const CString& csColor, COLORREF &Color)
+bool CTheme::ParseRgbValue(const CStringA& csNode, const CString& csColor, COLORREF& Color)
 {
 	CString values = csColor.Mid(4, csColor.GetLength() - 5);
 	values.Trim();
@@ -382,7 +382,7 @@ bool CTheme::ParseRgbValue(const CStringA& csNode, const CString& csColor, COLOR
 	return true;
 }
 
-bool CTheme::ParseHslValue(const CStringA& csNode, const CString& csColor, COLORREF &Color)
+bool CTheme::ParseHslValue(const CStringA& csNode, const CString& csColor, COLORREF& Color)
 {
 	CString values = csColor.Mid(4, csColor.GetLength() - 5);
 	values.Trim();

@@ -23,8 +23,8 @@ namespace DittoCore
 		 * @brief Starts a join.
 		 * @param separator The text put between two items.
 		 */
-		explicit TextJoin(std::basic_string_view<CharT> separator)
-			: m_separator(separator)
+		explicit TextJoin(std::basic_string_view<CharT> separator) :
+			m_separator(separator)
 		{
 		}
 

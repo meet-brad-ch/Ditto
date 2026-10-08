@@ -2,7 +2,7 @@
 class CDimWnd : public CFrameWnd
 {
 public:
-	CDimWnd(CWnd *pParent);
+	CDimWnd(CWnd* pParent);
 	BOOL OnEraseBkgnd(CDC* pDC);
 
 	~CDimWnd();

@@ -12,35 +12,34 @@
 
 class CHListBox : public CListBox
 {
-// Construction
+	// Construction
 public:
 	CHListBox();
 
-// Attributes
+	// Attributes
 public:
-
-// Operations
+	// Operations
 public:
-    int AddString(LPCTSTR s);
-    int InsertString(int i, LPCTSTR s);
-    void ResetContent();
-    int DeleteString(int i);
+	int AddString(LPCTSTR s);
+	int InsertString(int i, LPCTSTR s);
+	void ResetContent();
+	int DeleteString(int i);
 
-// Overrides
+	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CHListBox)
 	//}}AFX_VIRTUAL
 
-// Implementation
+	// Implementation
 public:
 	virtual ~CHListBox();
 
 	// Generated message map functions
 protected:
-        void updateWidth(LPCTSTR s);
+	void updateWidth(LPCTSTR s);
 	int width;
 	//{{AFX_MSG(CHListBox)
-		// NOTE - the ClassWizard will add and remove member functions here.
+	// NOTE - the ClassWizard will add and remove member functions here.
 	//}}AFX_MSG
 
 	DECLARE_MESSAGE_MAP()

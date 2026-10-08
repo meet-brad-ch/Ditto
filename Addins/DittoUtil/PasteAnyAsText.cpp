@@ -28,24 +28,24 @@ HGLOBAL PasteAnyAsText::TextBlock(std::span<const std::byte> bytes)
 	return DittoAddinHelpers::NewGlobalP(const_cast<Char*>(text.c_str()), static_cast<UINT>((text.size() + 1) * sizeof(Char)));
 }
 
-bool PasteAnyAsText::SelectClipToPasteAsText(const CDittoInfo &DittoInfo, IClip *pClip)
+bool PasteAnyAsText::SelectClipToPasteAsText(const CDittoInfo& DittoInfo, IClip* pClip)
 {
 	bool ret = false;
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
-	IClipFormats *pFormats = pClip->Clips();
+	IClipFormats* pFormats = pClip->Clips();
 
 	CWnd* pWnd = CWnd::FromHandle(DittoInfo.m_hWndDitto);
 	CSelectPasteFormat dlg(pWnd, pFormats);
 
-	if(dlg.DoModal() == IDOK)
+	if (dlg.DoModal() == IDOK)
 	{
 		//Find the format that was selected, remove all then readd the data as text
 		CLIPFORMAT format = dlg.SelectedFormat();
-		if(format > 0)
+		if (format > 0)
 		{
-			IClipFormat *pText = pFormats->FindFormatEx(format);
-			if(pText != NULL)
+			IClipFormat* pText = pFormats->FindFormatEx(format);
+			if (pText != NULL)
 			{
 				const bool unicode = dlg.PasteAsUnicode();
 				HGLOBAL text = NULL;
@@ -68,8 +68,8 @@ bool PasteAnyAsText::SelectClipToPasteAsText(const CDittoInfo &DittoInfo, IClip 
 				const CLIPFORMAT textFormat = unicode ? CF_UNICODETEXT : CF_TEXT;
 				pFormats->AddNew(textFormat, text);
 
-				IClipFormat *pAdded = pFormats->FindFormatEx(textFormat);
-				if(pAdded != NULL)
+				IClipFormat* pAdded = pFormats->FindFormatEx(textFormat);
+				if (pAdded != NULL)
 				{
 					pAdded->AutoDeleteData(true);
 				}

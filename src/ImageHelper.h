@@ -8,14 +8,16 @@ template <class Concrete, class GdipImage>
 class ImageHelper abstract
 {
 public:
-	static std::unique_ptr<GdipImage> GdipImageFromHGLOBAL(HGLOBAL hGlobal) {
+	static std::unique_ptr<GdipImage> GdipImageFromHGLOBAL(HGLOBAL hGlobal)
+	{
 		CComPtr<IStream> stream = StreamFromHGLOBAL(hGlobal);
 		if (!stream)
 			return nullptr;
 
 		return std::unique_ptr<GdipImage>{ GdipImage::FromStream(stream) };
 	};
-	static std::shared_ptr<CImage> CImageFromHGLOBAL(HGLOBAL hGlobal) {
+	static std::shared_ptr<CImage> CImageFromHGLOBAL(HGLOBAL hGlobal)
+	{
 		CComPtr<IStream> stream = StreamFromHGLOBAL(hGlobal);
 		if (!stream)
 			return NULL;
@@ -28,7 +30,8 @@ public:
 	};
 	// Returns NULL for a null handle or when the stream cannot be written; throws
 	// DittoCore::ClipboardFormatError when the image data is malformed.
-	static CComPtr<IStream> StreamFromHGLOBAL(HGLOBAL hGlobal) {
+	static CComPtr<IStream> StreamFromHGLOBAL(HGLOBAL hGlobal)
+	{
 		if (!hGlobal)
 			return NULL;
 

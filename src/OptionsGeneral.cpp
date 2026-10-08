@@ -1,4 +1,4 @@
-	// OptionsGeneral.cpp : implementation file
+// OptionsGeneral.cpp : implementation file
 //
 
 #include "stdafx.h"
@@ -18,11 +18,12 @@ using namespace nsPath;
 
 IMPLEMENT_DYNCREATE(COptionsGeneral, CPropertyPage)
 
-COptionsGeneral::COptionsGeneral() : CPropertyPage(COptionsGeneral::IDD)
+COptionsGeneral::COptionsGeneral() :
+	CPropertyPage(COptionsGeneral::IDD)
 {
 	m_csTitle = Services().Language().GetString("GeneralTitle", "General");
 	m_psp.pszTitle = m_csTitle;
-	m_psp.dwFlags |= PSP_USETITLE; 
+	m_psp.dwFlags |= PSP_USETITLE;
 
 	memset(&m_LogFont, 0, sizeof(LOGFONT));
 
@@ -88,13 +89,13 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // COptionsGeneral message handlers
 
-BOOL COptionsGeneral::OnInitDialog() 
+BOOL COptionsGeneral::OnInitDialog()
 {
 	CPropertyPage::OnInitDialog();
 
 	m_brush.CreateSolidBrush(RGB(251, 251, 251));
-	
-	m_pParent = (COptionsSheet *)GetParent();
+
+	m_pParent = (COptionsSheet*)GetParent();
 
 #ifndef _DEBUG
 
@@ -112,7 +113,7 @@ BOOL COptionsGeneral::OnInitDialog()
 	m_btMaximumCheck.SetCheck(Settings().GetCheckForMaxEntries());
 	if (Settings().GetCheckForMaxEntries() == FALSE)
 	{
-		m_eMaxSavedCopies.EnableWindow(FALSE);		
+		m_eMaxSavedCopies.EnableWindow(FALSE);
 	}
 	m_btExpire.SetCheck(Settings().GetCheckForExpiredEntries());
 	if (Settings().GetCheckForExpiredEntries() == FALSE)
@@ -122,7 +123,7 @@ BOOL COptionsGeneral::OnInitDialog()
 	m_eExpireAfter.SetNumber(Settings().GetExpiredEntries());
 	m_eMaxSavedCopies.SetNumber(Settings().GetMaxEntries());
 
-	if(Settings().GetDisableExpireClipsConfig())
+	if (Settings().GetDisableExpireClipsConfig())
 	{
 		m_btMaximumCheck.EnableWindow(FALSE);
 		m_btExpire.EnableWindow(FALSE);
@@ -133,8 +134,8 @@ BOOL COptionsGeneral::OnInitDialog()
 	m_copyAppInclude.SetWindowText(Settings().GetCopyAppInclude());
 	m_copyAppExclude.SetWindowText(Settings().GetCopyAppExclude());
 
-	
-	Settings().GetFont(m_LogFont);	
+
+	Settings().GetFont(m_LogFont);
 
 	CString cs;
 	cs.Format(_T("Font - %s (%d)"), m_LogFont.lfFaceName, GetFontSize(m_hWnd, m_LogFont));
@@ -189,24 +190,24 @@ void COptionsGeneral::FillLanguages()
 	BOOL bCont = find.FindFile(csFile);
 	int nEnglishIndex = s_noMatch;
 
-	while(bCont)
+	while (bCont)
 	{
 		bCont = find.FindNextFile();
 		int nIndex = m_cbLanguage.AddString(find.GetFileTitle());
 
-		if(find.GetFileTitle() == csLanguage)
+		if (find.GetFileTitle() == csLanguage)
 		{
 			nEnglishIndex = -1;
 			m_cbLanguage.SetCurSel(nIndex);
 		}
-		else if(find.GetFileTitle() == _T("English"))
+		else if (find.GetFileTitle() == _T("English"))
 		{
-			if(nEnglishIndex == s_noMatch)
+			if (nEnglishIndex == s_noMatch)
 				nEnglishIndex = nIndex;
 		}
 	}
 
-	if(nEnglishIndex >= 0)
+	if (nEnglishIndex >= 0)
 	{
 		m_cbLanguage.SetCurSel(nEnglishIndex);
 	}
@@ -228,7 +229,7 @@ BOOL COptionsGeneral::OnApply()
 	Settings().SetCheckForExpiredEntries(m_btExpire.GetCheck());
 	Settings().SetMaxEntries(m_eMaxSavedCopies.GetNumber());
 	Settings().SetExpiredEntries(m_eExpireAfter.GetNumber());
-	
+
 	CString stringVal;
 
 	m_copyAppInclude.GetWindowText(stringVal);
@@ -258,16 +259,16 @@ BOOL COptionsGeneral::OnApply()
 void COptionsGeneral::ApplyLanguage()
 {
 	CString csLanguage;
-	if(m_cbLanguage.GetCurSel() >= 0)
+	if (m_cbLanguage.GetCurSel() >= 0)
 	{
 		m_cbLanguage.GetLBText(m_cbLanguage.GetCurSel(), csLanguage);
 		Settings().SetLanguageFile(csLanguage);
 	}
 
-	if(csLanguage.IsEmpty() == FALSE)
+	if (csLanguage.IsEmpty() == FALSE)
 	{
 		CMultiLanguage& language = Services().Language();
-		if(!language.LoadLanguageFile(Settings().GetPath(CGetSetOptions::PathLanguage), csLanguage))
+		if (!language.LoadLanguageFile(Settings().GetPath(CGetSetOptions::PathLanguage), csLanguage))
 		{
 			CString cs;
 			cs.Format(_T("Error loading language file - %s - \n\n%s"), csLanguage.GetString(), language.m_csLastError.GetString());
@@ -285,9 +286,9 @@ bool COptionsGeneral::ApplyDatabasePath()
 
 	bool bOpenNewDatabase = false;
 
-	if(resolvedPath.IsEmpty() == FALSE)
+	if (resolvedPath.IsEmpty() == FALSE)
 	{
-		if(CFileSystem::FileExists(resolvedPath) == FALSE)
+		if (CFileSystem::FileExists(resolvedPath) == FALSE)
 		{
 			if (!PromptCreateDatabase(resolvedPath, bOpenNewDatabase))
 			{
@@ -296,7 +297,7 @@ bool COptionsGeneral::ApplyDatabasePath()
 		}
 		else
 		{
-			if(DatabaseSchemaUpgrader::ValidDB(resolvedPath) == FALSE)
+			if (DatabaseSchemaUpgrader::ValidDB(resolvedPath) == FALSE)
 			{
 				// ValidDB showed the error; upstream showed a second "Invalid Database" box
 				m_ePath.SetFocus();
@@ -308,7 +309,7 @@ bool COptionsGeneral::ApplyDatabasePath()
 			}
 		}
 
-		if(bOpenNewDatabase)
+		if (bOpenNewDatabase)
 		{
 			return OpenNewDatabase(toSavePath, resolvedPath);
 		}
@@ -322,7 +323,7 @@ bool COptionsGeneral::PromptCreateDatabase(const CString& resolvedPath, bool& bO
 	CString cs;
 	cs.Format(_T("The database %s does not exist.\n\nCreate a new database?"), resolvedPath.GetString());
 
-	if(MessageBox(cs, _T("Ditto"), MB_OKCANCEL) == IDOK)
+	if (MessageBox(cs, _T("Ditto"), MB_OKCANCEL) == IDOK)
 	{
 		// -- create a new one
 		// a failed create is shown by CreateDB; upstream showed a second "Error Creating Database" box
@@ -340,7 +341,7 @@ bool COptionsGeneral::OpenNewDatabase(const CString& toSavePath, const CString& 
 {
 	Settings().SetDBPath(toSavePath);
 
-	if(CDatabaseManager::OpenDatabase(Settings(), theApp.Services().Database(), theApp.Services().State(), resolvedPath) == FALSE)
+	if (CDatabaseManager::OpenDatabase(Settings(), theApp.Services().Database(), theApp.Services().State(), resolvedPath) == FALSE)
 	{
 		// OpenDatabase showed the error; upstream showed a second "Error Opening new database" box
 		m_ePath.SetFocus();
@@ -363,7 +364,7 @@ void COptionsGeneral::ApplyTheme()
 	{
 		if (m_cbTheme.GetItemData(m_cbTheme.GetCurSel()) == 1)
 		{
-			m_cbTheme.GetLBText(m_cbTheme.GetCurSel(), csTheme);			
+			m_cbTheme.GetLBText(m_cbTheme.GetCurSel(), csTheme);
 			Settings().SetTheme(csTheme);
 		}
 		else
@@ -384,9 +385,9 @@ void COptionsGeneral::ApplyTheme()
 
 void COptionsGeneral::OnGetPath()
 {
-	OPENFILENAME	FileName;
-	TCHAR			szFileName[400];
-	TCHAR			szDir[400];
+	OPENFILENAME FileName;
+	TCHAR szFileName[400];
+	TCHAR szDir[400];
 
 	memset(&FileName, 0, sizeof(FileName));
 	memset(szFileName, 0, sizeof(szFileName));
@@ -401,20 +402,20 @@ void COptionsGeneral::OnGetPath()
 	FileName.lpstrDefExt = _T("db");
 	FileName.hwndOwner = m_hWnd;
 
-	if(GetOpenFileName(&FileName) == 0)
+	if (GetOpenFileName(&FileName) == 0)
 		return;
 
 	CString csPath(CFileDialogPath::From(FileName));
-	if(CFileSystem::FileExists(csPath))
+	if (CFileSystem::FileExists(csPath))
 	{
-		if(DatabaseSchemaUpgrader::ValidDB(csPath) == FALSE)
+		if (DatabaseSchemaUpgrader::ValidDB(csPath) == FALSE)
 		{
 			// ValidDB showed the error; upstream showed a second "Invalid Database" box
 			m_ePath.SetFocus();
 		}
 		else
 		{
-			m_ePath.SetWindowText(csPath);	
+			m_ePath.SetWindowText(csPath);
 		}
 	}
 	else
@@ -423,7 +424,7 @@ void COptionsGeneral::OnGetPath()
 	}
 }
 
-void COptionsGeneral::OnButtonAbout() 
+void COptionsGeneral::OnButtonAbout()
 {
 	CDimWnd dim(this->GetParent());
 
@@ -433,18 +434,19 @@ void COptionsGeneral::OnButtonAbout()
 	m_cbLanguage.GetLBText(m_cbLanguage.GetCurSel(), csLanguage);
 
 	Lang.SetOnlyGetHeader(true);
-		
-	if(Lang.LoadLanguageFile(Settings().GetPath(CGetSetOptions::PathLanguage), csLanguage))
+
+	if (Lang.LoadLanguageFile(Settings().GetPath(CGetSetOptions::PathLanguage), csLanguage))
 	{
 		CString csMessage;
 
 		csMessage.Format(_T("Language -  %s\n")
 						 _T("Version -   %d\n")
 						 _T("Author -   %s\n")
-						 _T("Notes -   %s"), csLanguage.GetString(),
-									   Lang.GetVersion(),
-									   Lang.GetAuthor().GetString(),
-									   Lang.GetNotes().GetString());
+						 _T("Notes -   %s"),
+						 csLanguage.GetString(),
+						 Lang.GetVersion(),
+						 Lang.GetAuthor().GetString(),
+						 Lang.GetNotes().GetString());
 
 		MessageBox(csMessage, _T("Ditto"), MB_OK);
 	}
@@ -470,12 +472,11 @@ HBRUSH COptionsGeneral::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
 	HBRUSH hbr = CPropertyPage::OnCtlColor(pDC, pWnd, nCtlColor);
 
-	
 
-	switch(nCtlColor)
+	switch (nCtlColor)
 	{
-	case CTLCOLOR_DLG:     // dialog 
-	case CTLCOLOR_STATIC:  // static, checkbox, read-only edit, etc.
+	case CTLCOLOR_DLG:    // dialog
+	case CTLCOLOR_STATIC: // static, checkbox, read-only edit, etc.
 		//pDC->SetBkColor(RGB(251, 251, 251));
 		//hbr = m_brush;
 		break;
@@ -489,12 +490,12 @@ void COptionsGeneral::FillThemes()
 	csFile += "*.xml";
 
 	CString csTheme = Settings().GetTheme();
-	
+
 	m_cbTheme.Clear();
 
 	int windowsSettingIndex = m_cbTheme.AddString(Services().Language().GetString("FollowWindowsTheme", "(Follow windows light/dark themes)"));
-		
-		//_T("(Follow windows light/dark themes)"));
+
+	//_T("(Follow windows light/dark themes)"));
 	m_cbTheme.SetItemData(windowsSettingIndex, 0);
 
 	bool bSetCurSel = AddThemeFiles(csFile, csTheme);
@@ -575,12 +576,13 @@ void COptionsGeneral::OnBnClickedButtonTheme()
 		CString csMessage;
 
 		csMessage.Format(_T("Theme -  %s\n")
-			_T("Version -   %d\n")
-			_T("Author -   %s\n")
-			_T("Notes -   %s"), csTheme.GetString(),
-			theme.FileVersion(),
-			theme.Author().GetString(),
-			theme.Notes().GetString());
+						 _T("Version -   %d\n")
+						 _T("Author -   %s\n")
+						 _T("Notes -   %s"),
+						 csTheme.GetString(),
+						 theme.FileVersion(),
+						 theme.Author().GetString(),
+						 theme.Notes().GetString());
 
 		MessageBox(csMessage, _T("Ditto"), MB_OK);
 	}
@@ -602,17 +604,17 @@ void COptionsGeneral::OnBnClickedButtonDefaultFault()
 	m_LogFont.lfWeight = 400;
 	m_LogFont.lfCharSet = 1;
 	_tcscpy(m_LogFont.lfFaceName, _T("Segoe UI"));
-		
+
 	CString cs;
 	cs.Format(_T("Font - %s (%d)"), m_LogFont.lfFaceName, GetFontSize(m_hWnd, m_LogFont));
-	m_btFont.SetWindowText(cs);	
+	m_btFont.SetWindowText(cs);
 }
 
 int COptionsGeneral::GetFontSize(HWND /*hWnd*/, const LOGFONT& lf)
 {
 	//font is saved un scaled, so scale it with the default values to get the font size
 	int nFontSize = -::MulDiv(lf.lfHeight, 72, 96);
-	
+
 	return nFontSize;
 }
 
@@ -630,7 +632,7 @@ void COptionsGeneral::OnBnClickedButtonFont()
 
 		//save the font unscaled, we will scale it per monitor later
 		m_LogFont.lfHeight = dpi.UnScale(m_LogFont.lfHeight);
-		
+
 		CString cs;
 		cs.Format(_T("Font - %s (%d)"), m_LogFont.lfFaceName, GetFontSize(m_hWnd, m_LogFont));
 		m_btFont.SetWindowText(cs);
@@ -651,12 +653,12 @@ void COptionsGeneral::OnEnChangePath()
 	if (toSavePath.Find(_T("%")) >= 0)
 	{
 		CString resolvedPath = Settings().ResolvePath(toSavePath);
-		m_envVarLink.SetWindowText(resolvedPath);		
+		m_envVarLink.SetWindowText(resolvedPath);
 	}
 	else
-	{		
+	{
 		m_envVarLink.SetWindowText(m_originalEnvVariables);
-	}		
+	}
 }
 
 
@@ -737,7 +739,7 @@ void COptionsGeneral::ApplySelectedThemeToPreview()
 			m_cbTheme.GetLBText(m_cbTheme.GetCurSel(), csTheme);
 		}
 	}
-	
+
 	// Load the selected theme
 	CGetSetOptions& settings{ Settings() };
 	settings.m_Theme.Load(settings, csTheme, false, true);

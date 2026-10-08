@@ -58,6 +58,7 @@ namespace DittoCore
 			throw std::invalid_argument("the default settings section cannot be deleted");
 		}
 
-		std::erase_if(m_values, [&section](const auto& entry) { return entry.first.section == section; });
+		std::erase_if(m_values, [&section](const auto& entry)
+					  { return entry.first.section == section; });
 	}
 }

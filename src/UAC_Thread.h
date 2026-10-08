@@ -18,12 +18,12 @@ public:
 
 	enum eUacThreadEvents
 	{
-		UAC_PASTE, 
+		UAC_PASTE,
 		UAC_COPY,
 		UAC_CUT,
 		UAC_EXIT,
 
-		eUacThreadEvents_COUNT  //must be last
+		eUacThreadEvents_COUNT //must be last
 	};
 
 	int m_processId;
@@ -56,9 +56,8 @@ private:
 	/** @brief The tracker that sends the paste, copy or cut (not owned). */
 	ExternalWindowTracker& m_activeWindow;
 
-	virtual void OnEvent(int eventId, void *param);
-	virtual void OnTimeOut(void *param);
+	virtual void OnEvent(int eventId, void* param);
+	virtual void OnTimeOut(void* param);
 	CString EnumName(eUacThreadEvents e);
 	bool StartProcess();
 };
-

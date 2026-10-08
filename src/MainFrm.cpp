@@ -74,15 +74,15 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CMainFrame construction/destruction
 
-CMainFrame::CMainFrame()
-	: m_quickPaste(theApp.Services().Settings(), theApp.Services().State(), theApp.Services().Database(), theApp.Services().ActiveWindow()),
+CMainFrame::CMainFrame() :
+	m_quickPaste(theApp.Services().Settings(), theApp.Services().State(), theApp.Services().Database(), theApp.Services().ActiveWindow()),
 	m_thread(theApp.Services().Settings(), theApp.Services().IdleTime(), theApp.Services().Database(), theApp.Services().Clipboard(), theApp.Services().Windows())
 {
 	m_pEditFrameWnd = NULL;
-    m_keyStateModifiers = 0;
-    m_startKeyStateTime = 0;
-    m_bMovedSelectionMoveKeyState = false;
-    m_keyModifiersTimerCount = 0;
+	m_keyStateModifiers = 0;
+	m_startKeyStateTime = 0;
+	m_bMovedSelectionMoveKeyState = false;
+	m_keyModifiersTimerCount = 0;
 	m_doubleClickGroupId = -1;
 	m_doubleClickGroupStartTime = 0;
 }
@@ -99,44 +99,44 @@ CGetSetOptions& CMainFrame::Settings() const
 
 CMainFrame::~CMainFrame()
 {
-    Settings().SetMainHWND(0);
+	Settings().SetMainHWND(0);
 }
 
 int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
-    if(CFrameWnd::OnCreate(lpCreateStruct) ==  - 1)
-    {
-        return  - 1;
-    }
+	if (CFrameWnd::OnCreate(lpCreateStruct) == -1)
+	{
+		return -1;
+	}
 
 	m_PowerManager.Start(m_hWnd);
 
-    ////Center the main window so message boxes are in the center
-    CRect rcScreen = CMonitorGeometry::DefaultMonitorRect();
-    CPoint cpCenter = rcScreen.CenterPoint();
-    MoveWindow(cpCenter.x, cpCenter.x,  1,  1);
+	////Center the main window so message boxes are in the center
+	CRect rcScreen = CMonitorGeometry::DefaultMonitorRect();
+	CPoint cpCenter = rcScreen.CenterPoint();
+	MoveWindow(cpCenter.x, cpCenter.x, 1, 1);
 
 	m_startupScreenWidth = CMonitorGeometry::GetScreenWidth();
 	m_startupScreenHeight = CMonitorGeometry::GetScreenHeight();
 
-    //Then set the main window to transparent so it's never shown
-    //if it is shown then only the task tray icon
-    //m_Transparency.SetTransparent(m_hWnd, 0, true);
+	//Then set the main window to transparent so it's never shown
+	//if it is shown then only the task tray icon
+	//m_Transparency.SetTransparent(m_hWnd, 0, true);
 
-    SetWindowText(_T(""));
+	SetWindowText(_T(""));
 
-    CLogger::Log(_T("Setting polling timer to track focus"));
-    SetTimer(ActiveWindowTimer,Settings().FocusWndTimerTimeout(), 0);
+	CLogger::Log(_T("Setting polling timer to track focus"));
+	SetTimer(ActiveWindowTimer, Settings().FocusWndTimerTimeout(), 0);
 
 	SetTimer(ReadRandomDbFileTimer, Settings().ReadRandomFileInterval() * 1000, 0);
 
-    SetWindowText(_T("Ditto"));
-	
+	SetWindowText(_T("Ditto"));
+
 	m_trayIcon.Create(this, IDR_MENU, _T("Ditto"), CTrayNotifyIcon::LoadIcon(IDR_MAINFRAME), WmTrayNotify, 0, 1);
-	m_trayIcon.SetDefaultMenuItem(ID_FIRST_SHOWQUICKPASTE, FALSE);	    
+	m_trayIcon.SetDefaultMenuItem(ID_FIRST_SHOWQUICKPASTE, FALSE);
 
 	//removed to keep Ditto from taking focus on start
-    //m_trayIcon.MinimiseToTray(this);
+	//m_trayIcon.MinimiseToTray(this);
 
 	if (Settings().GetShowStartupMessage())
 	{
@@ -146,37 +146,37 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	Services().Language().UpdateTrayIconRightClickMenu(&m_trayIcon.GetMenu());
 
-    //Only if in release
-    #ifndef _DEBUG
-        {
-            //If not showing the icon show it for 40 seconds so they can get to the option
-            //in case they can't remember the hot keys or something like that
-            if(!(Settings().GetShowIconInSysTray()))
-            {
-                SetTimer(HideIconTimer, 40000, 0);
-            }
-        }
-    #endif 
+//Only if in release
+#ifndef _DEBUG
+	{
+		//If not showing the icon show it for 40 seconds so they can get to the option
+		//in case they can't remember the hot keys or something like that
+		if (!(Settings().GetShowIconInSysTray()))
+		{
+			SetTimer(HideIconTimer, 40000, 0);
+		}
+	}
+#endif
 
-    //SetTimer(CloseWindowTimer, CMilliseconds::OneHour*24, 0);
+	//SetTimer(CloseWindowTimer, CMilliseconds::OneHour*24, 0);
 	SetTimer(RemoveOldTempFilesTimer, CMilliseconds::OneHour * 6, 0);
-    SetTimer(RemoveOldEntriesTimer, CMilliseconds::OneMinute*15, 0);
+	SetTimer(RemoveOldEntriesTimer, CMilliseconds::OneMinute * 15, 0);
 	SetTimer(CloseNoDbWindowTimer, 10000, 0);
 
 	//found on some computers GetTickCount gettickcount returns a smaller value than other, can't explain
 	//check here to see if we need to make an adjustment
 	Services().IdleTime().IdleSeconds();
 
-    m_ulCopyGap = Settings().GetCopyGap();
+	m_ulCopyGap = Settings().GetCopyGap();
 
-    if (!theApp.AfterMainCreate())
-    {
-        return -1;  // the failure is reported; CCP_MainApp::CreateMainWnd stops the start
-    }
+	if (!theApp.AfterMainCreate())
+	{
+		return -1; // the failure is reported; CCP_MainApp::CreateMainWnd stops the start
+	}
 
-    m_thread.Start(this);
+	m_thread.Start(this);
 
-    return 0;
+	return 0;
 }
 
 LRESULT CMainFrame::OnPlainTextPaste(WPARAM /*wParam*/, LPARAM /*lParam*/)
@@ -195,62 +195,62 @@ LRESULT CMainFrame::OnTrayNotification(WPARAM wParam, LPARAM lParam)
 	//click on balloon
 	if (lParam == 0x405)
 	{
-		SetTimer(DelayedShowDittoTimer, 100, NULL);		
+		SetTimer(DelayedShowDittoTimer, 100, NULL);
 	}
-	
+
 	m_trayIcon.OnTrayNotification(wParam, lParam);
 	return 0L;
 }
 
-BOOL CMainFrame::PreCreateWindow(CREATESTRUCT &cs)
+BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 {
-    if(cs.hMenu != NULL)
-    {
-        ::DestroyMenu(cs.hMenu); // delete menu if loaded
-        cs.hMenu = NULL; // no menu for this window
-    }
+	if (cs.hMenu != NULL)
+	{
+		::DestroyMenu(cs.hMenu); // delete menu if loaded
+		cs.hMenu = NULL;         // no menu for this window
+	}
 
-    if(!CFrameWnd::PreCreateWindow(cs))
-    {
-        return FALSE;
-    }
+	if (!CFrameWnd::PreCreateWindow(cs))
+	{
+		return FALSE;
+	}
 
-    WNDCLASS wc;
-    wc.style = CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW;
-    wc.lpfnWndProc = AfxWndProc;
-    wc.cbClsExtra = 0;
-    wc.cbWndExtra = 0;
-    wc.hInstance = AfxGetInstanceHandle();
-    wc.hIcon = NULL;
-    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-    wc.lpszMenuName = NULL;
-    wc.lpszClassName = _T("Ditto");
+	WNDCLASS wc;
+	wc.style = CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW;
+	wc.lpfnWndProc = AfxWndProc;
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = 0;
+	wc.hInstance = AfxGetInstanceHandle();
+	wc.hIcon = NULL;
+	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+	wc.lpszMenuName = NULL;
+	wc.lpszClassName = _T("Ditto");
 
-    // Create the QPaste window class
-    if(!AfxRegisterClass(&wc))
-    {
-        return FALSE;
-    }
+	// Create the QPaste window class
+	if (!AfxRegisterClass(&wc))
+	{
+		return FALSE;
+	}
 
-    cs.lpszClass = wc.lpszClassName;
+	cs.lpszClass = wc.lpszClassName;
 
-    return TRUE;
+	return TRUE;
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // CMainFrame diagnostics
 
 #ifdef _DEBUG
-    void CMainFrame::AssertValid()const
-    {
-        CFrameWnd::AssertValid();
-    }
+void CMainFrame::AssertValid() const
+{
+	CFrameWnd::AssertValid();
+}
 
-    void CMainFrame::Dump(CDumpContext &dc)const
-    {
-        CFrameWnd::Dump(dc);
-    }
+void CMainFrame::Dump(CDumpContext& dc) const
+{
+	CFrameWnd::Dump(dc);
+}
 
 #endif //_DEBUG
 
@@ -258,11 +258,9 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT &cs)
 // CMainFrame message handlers
 
 
-
-
 void CMainFrame::OnFirstExit()
 {
-    this->SendMessage(WM_CLOSE, 0, 0);
+	this->SendMessage(WM_CLOSE, 0, 0);
 }
 
 LRESULT CMainFrame::OnHotKey(WPARAM wParam, LPARAM /*lParam*/)
@@ -278,7 +276,7 @@ LRESULT CMainFrame::OnHotKey(WPARAM wParam, LPARAM /*lParam*/)
 		return TRUE;
 	}
 
-	const CHotKeys& hotKeys{Services().HotKeys()};
+	const CHotKeys& hotKeys{ Services().HotKeys() };
 	if (IsHotKey(hotKeys.Named(CHotKeys::Id::TextOnlyPaste), wParam))
 	{
 		DoTextOnlyPaste();
@@ -296,7 +294,7 @@ LRESULT CMainFrame::OnHotKey(WPARAM wParam, LPARAM /*lParam*/)
 		DoGlobalClipHotKey(wParam);
 	}
 
-    return TRUE;
+	return TRUE;
 }
 
 bool CMainFrame::IsHotKey(const CHotKey* hotKey, WPARAM wParam)
@@ -306,50 +304,50 @@ bool CMainFrame::IsHotKey(const CHotKey* hotKey, WPARAM wParam)
 
 bool CMainFrame::IsShowDittoHotKey(WPARAM wParam) const
 {
-	const CHotKeys& hotKeys{Services().HotKeys()};
+	const CHotKeys& hotKeys{ Services().HotKeys() };
 	return IsHotKey(hotKeys.Named(CHotKeys::Id::DittoHotKey), wParam) ||
-		IsHotKey(hotKeys.Named(CHotKeys::Id::DittoHotKey2), wParam) ||
-		IsHotKey(hotKeys.Named(CHotKeys::Id::DittoHotKey3), wParam);
+		   IsHotKey(hotKeys.Named(CHotKeys::Id::DittoHotKey2), wParam) ||
+		   IsHotKey(hotKeys.Named(CHotKeys::Id::DittoHotKey3), wParam);
 }
 
 void CMainFrame::OnShowDittoHotKey()
 {
-    //If they still have the shift/ctrl keys down
-    if(m_keyStateModifiers != 0 && m_quickPaste.IsWindowVisibleEx())
-    {
-        CLogger::Log(_T("On Show Ditto HotKey, key state modifiers are still down, moving selection"));
+	//If they still have the shift/ctrl keys down
+	if (m_keyStateModifiers != 0 && m_quickPaste.IsWindowVisibleEx())
+	{
+		CLogger::Log(_T("On Show Ditto HotKey, key state modifiers are still down, moving selection"));
 
-        if(m_bMovedSelectionMoveKeyState == false)
-        {
-            CLogger::Log(_T("Setting flag m_bMovedSelectionMoveKeyState to true, will paste when modifier keys are up"));
-        }
+		if (m_bMovedSelectionMoveKeyState == false)
+		{
+			CLogger::Log(_T("Setting flag m_bMovedSelectionMoveKeyState to true, will paste when modifier keys are up"));
+		}
 
-        m_quickPaste.MoveSelection(true);
-        m_bMovedSelectionMoveKeyState = true;
-    }
-    else if(Settings().m_HideDittoOnHotKeyIfAlreadyShown && m_quickPaste.IsWindowTopLevel() && Settings().GetShowPersistent() == FALSE)
-    {
-        CLogger::Log(_T("On Show Ditto HotKey, window is already visible, hiding window"));
-        m_quickPaste.HideQPasteWnd();
-    }
-    else
-    {
-        CLogger::Log(_T("On Show Ditto HotKey, showing window"));
+		m_quickPaste.MoveSelection(true);
+		m_bMovedSelectionMoveKeyState = true;
+	}
+	else if (Settings().m_HideDittoOnHotKeyIfAlreadyShown && m_quickPaste.IsWindowTopLevel() && Settings().GetShowPersistent() == FALSE)
+	{
+		CLogger::Log(_T("On Show Ditto HotKey, window is already visible, hiding window"));
+		m_quickPaste.HideQPasteWnd();
+	}
+	else
+	{
+		CLogger::Log(_T("On Show Ditto HotKey, showing window"));
 
 		StartKeyModifierTimer();
 
 		ShowQPasteWithActiveWindowCheck();
-    }
+	}
 
-    //KillTimer(CloseWindowTimer);
-    //SetTimer(CloseWindowTimer, CMilliseconds::OneHour *24, 0);
+	//KillTimer(CloseWindowTimer);
+	//SetTimer(CloseWindowTimer, CMilliseconds::OneHour *24, 0);
 }
 
 bool CMainFrame::DoFirstTenHotKey(WPARAM wParam)
 {
 	const std::array<CHotKeys::Id, 10> positions{ CHotKeys::Id::PosOne, CHotKeys::Id::PosTwo, CHotKeys::Id::PosThree, CHotKeys::Id::PosFour, CHotKeys::Id::PosFive,
-		CHotKeys::Id::PosSix, CHotKeys::Id::PosSeven, CHotKeys::Id::PosEight, CHotKeys::Id::PosNine, CHotKeys::Id::PosTen };
-	const CHotKeys& hotKeys{Services().HotKeys()};
+												  CHotKeys::Id::PosSix, CHotKeys::Id::PosSeven, CHotKeys::Id::PosEight, CHotKeys::Id::PosNine, CHotKeys::Id::PosTen };
+	const CHotKeys& hotKeys{ Services().HotKeys() };
 
 	for (int pos = 0; pos < static_cast<int>(positions.size()); pos++)
 	{
@@ -366,7 +364,7 @@ bool CMainFrame::DoFirstTenHotKey(WPARAM wParam)
 
 bool CMainFrame::DoCopyBufferHotKey(WPARAM wParam)
 {
-	const CHotKeys& hotKeys{Services().HotKeys()};
+	const CHotKeys& hotKeys{ Services().HotKeys() };
 	const std::array<CopyBufferHotKeys, 5> buffers{ {
 		{ hotKeys.Named(CHotKeys::Id::CopyBuffer1), hotKeys.Named(CHotKeys::Id::PasteBuffer1), hotKeys.Named(CHotKeys::Id::CutBuffer1) },
 		{ hotKeys.Named(CHotKeys::Id::CopyBuffer2), hotKeys.Named(CHotKeys::Id::PasteBuffer2), hotKeys.Named(CHotKeys::Id::CutBuffer2) },
@@ -430,19 +428,19 @@ void CMainFrame::DoCopyAndSaveClipboard()
 
 void CMainFrame::DoGlobalClipHotKey(WPARAM wParam)
 {
-	const CHotKeys& hotKeys{Services().HotKeys()};
-	for(int i = 0; i < hotKeys.GetCount(); i++)
+	const CHotKeys& hotKeys{ Services().HotKeys() };
+	for (int i = 0; i < hotKeys.GetCount(); i++)
 	{
-		if(hotKeys[i] != NULL &&
+		if (hotKeys[i] != NULL &&
 			hotKeys[i]->m_Atom == wParam &&
 			hotKeys[i]->m_clipId > 0)
 		{
-			if(hotKeys[i]->m_hkType == CHotKey::PASTE_OPEN_CLIP)
+			if (hotKeys[i]->m_hkType == CHotKey::PASTE_OPEN_CLIP)
 			{
 				CLogger::Log(CStringUtil::Format(_T("Pasting clip from global shortcut, clipId: %d"), hotKeys[i]->m_clipId));
 				PasteOrShowGroup(hotKeys[i]->m_clipId, -1, FALSE, TRUE, false);
 			}
-			else if(hotKeys[i]->m_hkType == CHotKey::MOVE_TO_GROUP)
+			else if (hotKeys[i]->m_hkType == CHotKey::MOVE_TO_GROUP)
 			{
 				CLogger::Log(CStringUtil::Format(_T("Global hot key to save clip to group Id: %d, Sending copy to save selection to this group"), hotKeys[i]->m_clipId));
 
@@ -462,7 +460,7 @@ void CMainFrame::DoGlobalClipHotKey(WPARAM wParam)
 void CMainFrame::ShowQPasteWithActiveWindowCheck()
 {
 	//Before we show our window find the current focused window for paste into
-	ExternalWindowTracker& activeWindow{Services().ActiveWindow()};
+	ExternalWindowTracker& activeWindow{ Services().ActiveWindow() };
 	activeWindow.TrackActiveWnd(true);
 
 	if (Settings().GetOpenToGroupByActiveExe() &&
@@ -528,20 +526,20 @@ void CMainFrame::DoTextOnlyPaste()
 
 void CMainFrame::DoFirstTenPositionsPaste(int nPos)
 {
-    try
+	try
 	{
 		CString csSort = _T("");
 		CString strFilter = _T("");
 		bool pastedFromGroup = false;
-		const long groupId{Services().State().m_GroupID};
+		const long groupId{ Services().State().m_GroupID };
 
 		if (groupId < 0 ||
 			Settings().GetUseUISelectedGroupForLastTenCopies() == FALSE)
 		{
 			//do not change this this directly relates to the views in the Main table
 			csSort = "Main.bIsGroup ASC, "
-				"Main.stickyClipOrder DESC, "
-				"Main.clipOrder DESC";
+					 "Main.stickyClipOrder DESC, "
+					 "Main.clipOrder DESC";
 
 			if (Settings().m_bShowAllClipsInMainList)
 			{
@@ -566,9 +564,9 @@ void CMainFrame::DoFirstTenPositionsPaste(int nPos)
 
 			//do not change this this directly relates to the views in the Main table
 			csSort = "Main.bIsGroup ASC, "
-				"Main.stickyClipGroupOrder DESC, "
-				"Main.clipGroupOrder DESC";
-			
+					 "Main.stickyClipGroupOrder DESC, "
+					 "Main.clipGroupOrder DESC";
+
 			if (groupId >= 0)
 			{
 				strFilter.Format(_T("Main.lParentID = %d"), groupId);
@@ -581,11 +579,11 @@ void CMainFrame::DoFirstTenPositionsPaste(int nPos)
 
 		CppSQLite3Query q = Services().Database().execQueryEx(query);
 
-        if(q.eof() == false)
-        {
+		if (q.eof() == false)
+		{
 			PasteOrShowGroup(q.getIntField(_T("lID")), Settings().GetMoveClipsOnGlobal10(), false, Settings().m_bSendPasteOnFirstTenHotKeys, pastedFromGroup);
-        }
-    }
+		}
+	}
 	catch (CppSQLite3Exception& e)
 	{
 		CErrorReport::Show(CStringUtil::Format(_T("Pasting the clip at position %d failed: %s"), nPos, e.errorMessage()));
@@ -611,24 +609,24 @@ void CMainFrame::PasteOrShowGroup(int dbId, BOOL updateClipTime, BOOL activeTarg
 	{
 		bool isGroup = false;
 		CppSQLite3Query q = Services().Database().execQueryEx(_T("SELECT bIsGroup FROM Main WHERE lID = %d"), dbId);
-		if(q.eof() == false)
+		if (q.eof() == false)
 		{
-			if(q.getIntField(_T("bIsGroup")) > 0)
+			if (q.getIntField(_T("bIsGroup")) > 0)
 			{
 				isGroup = true;
 			}
 		}
-		
-		if(isGroup)
+
+		if (isGroup)
 		{
 			ULONGLONG maxDiff = static_cast<ULONGLONG>(Settings().GetGroupDoubleClickTimeMS());
 			ULONGLONG diff = GetTickCount64() - m_doubleClickGroupStartTime;
 
-			if(m_doubleClickGroupId == dbId &&
+			if (m_doubleClickGroupId == dbId &&
 				diff < maxDiff)
 			{
 				CLogger::Log(CStringUtil::Format(_T("Second Press of group hot key, group Id: %d, Sending copy to save selection to this group"), dbId));
-				
+
 				KillTimer(GroupDoubleClickTimer);
 				m_doubleClickGroupId = -1;
 				m_doubleClickGroupStartTime = 0;
@@ -666,7 +664,7 @@ void CMainFrame::PasteSingleClip(int dbId, BOOL updateClipTime, BOOL activeTarge
 	m_doubleClickGroupId = -1;
 	m_doubleClickGroupStartTime = 0;
 
-	BOOL bItWas{Settings().m_bUpdateTimeOnPaste};
+	BOOL bItWas{ Settings().m_bUpdateTimeOnPaste };
 	if (updateClipTime != -1)
 	{
 		Settings().m_bUpdateTimeOnPaste = updateClipTime;
@@ -678,7 +676,8 @@ void CMainFrame::PasteSingleClip(int dbId, BOOL updateClipTime, BOOL activeTarge
 
 	if (activeTarget != -1)
 	{
-		paste.m_bActivateTarget = activeTarget ? true : false;;
+		paste.m_bActivateTarget = activeTarget ? true : false;
+		;
 	}
 
 	if (sendPaste != -1)
@@ -695,24 +694,24 @@ void CMainFrame::PasteSingleClip(int dbId, BOOL updateClipTime, BOOL activeTarge
 
 void CMainFrame::DoDittoCopyBufferPaste(int nCopyBuffer)
 {
-    try
-    {
-        CppSQLite3Query q = Services().Database().execQueryEx(_T("SELECT lID FROM Main WHERE CopyBuffer = %d"), nCopyBuffer);
+	try
+	{
+		CppSQLite3Query q = Services().Database().execQueryEx(_T("SELECT lID FROM Main WHERE CopyBuffer = %d"), nCopyBuffer);
 
-        if(q.eof() == false)
-        {
-            //Don't move these to the top
-            BOOL bItWas = Settings().m_bUpdateTimeOnPaste;
-            Settings().m_bUpdateTimeOnPaste = FALSE;
+		if (q.eof() == false)
+		{
+			//Don't move these to the top
+			BOOL bItWas = Settings().m_bUpdateTimeOnPaste;
+			Settings().m_bUpdateTimeOnPaste = FALSE;
 
-            CProcessPaste paste(Services().ClipContext(), Services().ActiveWindow());
-            paste.GetClipIDs().Add(q.getIntField(_T("lID")));
-            paste.m_bActivateTarget = false;
-            paste.DoPaste();
+			CProcessPaste paste(Services().ClipContext(), Services().ActiveWindow());
+			paste.GetClipIDs().Add(q.getIntField(_T("lID")));
+			paste.m_bActivateTarget = false;
+			paste.DoPaste();
 
-            Settings().m_bUpdateTimeOnPaste = bItWas;
-        }
-    }
+			Settings().m_bUpdateTimeOnPaste = bItWas;
+		}
+	}
 	catch (CppSQLite3Exception& e)
 	{
 		CErrorReport::Show(CStringUtil::Format(_T("Pasting Ditto copy buffer %d failed: %s"), nCopyBuffer, e.errorMessage()));
@@ -746,7 +745,7 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 		}
 	}
 
-    CFrameWnd::OnTimer(nIDEvent);
+	CFrameWnd::OnTimer(nIDEvent);
 }
 
 void CMainFrame::OnHideIconTimer()
@@ -770,41 +769,41 @@ void CMainFrame::OnRemoveOldTempFilesTimer()
 
 void CMainFrame::OnKeyStateModifiersTimer()
 {
-    m_keyModifiersTimerCount++;
-    if(m_keyStateModifiers != 0)
-    {
-        BYTE keyState = CAccels::GetKeyStateModifiers();
-        //Have they release the key state modifiers yet(ctrl, shift, alt)
-        if((m_keyStateModifiers &keyState) == 0)
-        {
-            KillTimer(KeyStateModifiersTimer);
-            long waitTime = static_cast<long>(GetTickCount64() - m_startKeyStateTime);
+	m_keyModifiersTimerCount++;
+	if (m_keyStateModifiers != 0)
+	{
+		BYTE keyState = CAccels::GetKeyStateModifiers();
+		//Have they release the key state modifiers yet(ctrl, shift, alt)
+		if ((m_keyStateModifiers & keyState) == 0)
+		{
+			KillTimer(KeyStateModifiersTimer);
+			long waitTime = static_cast<long>(GetTickCount64() - m_startKeyStateTime);
 
-            if(m_bMovedSelectionMoveKeyState || m_keyModifiersTimerCount > Settings().GetKeyStateWaitTimerCount())
-            {
-                CLogger::Log(CStringUtil::Format(_T("Timer KEY_STATE_MODIFIERS timeout count hit(%d), count (%d), time (%d), Move Selection from Modifer (%d) sending paste"), Settings().GetKeyStateWaitTimerCount(), m_keyModifiersTimerCount, waitTime, m_bMovedSelectionMoveKeyState));
-                m_quickPaste.OnKeyStateUp();
-            }
-            else
-            {
-                CLogger::Log(CStringUtil::Format(_T("Timer KEY_STATE_MODIFIERS count NOT hit(%d), count (%d) time (%d)"), Settings().GetKeyStateWaitTimerCount(), m_keyModifiersTimerCount, waitTime));
-                m_quickPaste.SetKeyModiferState(false);
-            }
+			if (m_bMovedSelectionMoveKeyState || m_keyModifiersTimerCount > Settings().GetKeyStateWaitTimerCount())
+			{
+				CLogger::Log(CStringUtil::Format(_T("Timer KEY_STATE_MODIFIERS timeout count hit(%d), count (%d), time (%d), Move Selection from Modifer (%d) sending paste"), Settings().GetKeyStateWaitTimerCount(), m_keyModifiersTimerCount, waitTime, m_bMovedSelectionMoveKeyState));
+				m_quickPaste.OnKeyStateUp();
+			}
+			else
+			{
+				CLogger::Log(CStringUtil::Format(_T("Timer KEY_STATE_MODIFIERS count NOT hit(%d), count (%d) time (%d)"), Settings().GetKeyStateWaitTimerCount(), m_keyModifiersTimerCount, waitTime));
+				m_quickPaste.SetKeyModiferState(false);
+			}
 
-            m_keyStateModifiers = 0;
-            m_keyModifiersTimerCount = 0;
-            m_bMovedSelectionMoveKeyState = 0;
-        }
-    }
-    else
-    {
-        KillTimer(KeyStateModifiersTimer);
-    }
+			m_keyStateModifiers = 0;
+			m_keyModifiersTimerCount = 0;
+			m_bMovedSelectionMoveKeyState = 0;
+		}
+	}
+	else
+	{
+		KillTimer(KeyStateModifiersTimer);
+	}
 }
 
 void CMainFrame::OnActiveWindowTimer()
 {
-	if(Services().State().m_bShowingQuickPaste)
+	if (Services().State().m_bShowingQuickPaste)
 	{
 		Services().ActiveWindow().TrackActiveWnd(false);
 	}
@@ -824,9 +823,9 @@ void CMainFrame::OnGroupDoubleClickTimer()
 	ULONGLONG maxDiff = static_cast<ULONGLONG>(Settings().GetGroupDoubleClickTimeMS() * 1.5);
 	ULONGLONG diff = GetTickCount64() - m_doubleClickGroupStartTime;
 
-	if(diff < maxDiff)
+	if (diff < maxDiff)
 	{
-		if(m_doubleClickGroupId > -1)
+		if (m_doubleClickGroupId > -1)
 		{
 			if (Services().Groups().EnterGroupID(m_doubleClickGroupId, FALSE, TRUE))
 			{
@@ -883,40 +882,40 @@ void CMainFrame::OnCloseNoDbWindowTimer()
 
 LRESULT CMainFrame::OnShowTrayIcon(WPARAM wParam, LPARAM lParam)
 {
-    if(lParam)
-    {
-        if(!m_trayIcon.IsHidden())
-        {
-            KillTimer(HideIconTimer);
-            SetTimer(HideIconTimer, 40000, 0);
-        }
-    }
+	if (lParam)
+	{
+		if (!m_trayIcon.IsHidden())
+		{
+			KillTimer(HideIconTimer);
+			SetTimer(HideIconTimer, 40000, 0);
+		}
+	}
 
-    if(wParam)
-    {
+	if (wParam)
+	{
 		m_trayIcon.Show();
-    }
-    else
-    {
-        m_trayIcon.Hide();
-    }
+	}
+	else
+	{
+		m_trayIcon.Hide();
+	}
 
-    return TRUE;
+	return TRUE;
 }
 
 void CMainFrame::OnFirstShowquickpaste()
 {
-    m_quickPaste.ShowQPasteWnd(this, false, false, FALSE);
+	m_quickPaste.ShowQPasteWnd(this, false, false, FALSE);
 }
 
 void CMainFrame::OnFirstToggleConnectCV()
 {
-    Services().Clipboard().ToggleConnectCV();
+	Services().Clipboard().ToggleConnectCV();
 }
 
-void CMainFrame::OnUpdateFirstToggleConnectCV(CCmdUI *pCmdUI)
+void CMainFrame::OnUpdateFirstToggleConnectCV(CCmdUI* pCmdUI)
 {
-    Services().Clipboard().UpdateMenuConnectCV(pCmdUI->m_pMenu, ID_FIRST_TOGGLECONNECTCV);
+	Services().Clipboard().UpdateMenuConnectCV(pCmdUI->m_pMenu, ID_FIRST_TOGGLECONNECTCV);
 }
 
 LRESULT CMainFrame::OnClipboardCopied(WPARAM wParam, LPARAM /*lParam*/)
@@ -924,17 +923,17 @@ LRESULT CMainFrame::OnClipboardCopied(WPARAM wParam, LPARAM /*lParam*/)
 	CLogger::Log(_T("Start of function OnClipboardCopied, adding clip to thread for processing"));
 
 	// retakes the clip released by the sender (CCopyThread::OnClipboardChange or OnFirstSavecurrentclipboard)
-	std::unique_ptr<CClip> clip{reinterpret_cast<CClip*>(wParam)};
-	if(clip)
+	std::unique_ptr<CClip> clip{ reinterpret_cast<CClip*>(wParam) };
+	if (clip)
 	{
 		m_thread.AddClipToSave(std::move(clip));
 	}
-    
-    CLogger::Log(_T("End of function OnClipboardCopied"));	
-    return TRUE;
+
+	CLogger::Log(_T("End of function OnClipboardCopied"));
+	return TRUE;
 }
 
-BOOL CMainFrame::PreTranslateMessage(MSG *pMsg)
+BOOL CMainFrame::PreTranslateMessage(MSG* pMsg)
 {
 	//forward the mouse wheel onto the window under the cursor
 	//normally windows only sends it to the window with focus, bypass this
@@ -951,7 +950,7 @@ BOOL CMainFrame::PreTranslateMessage(MSG *pMsg)
 			::GetWindowThreadProcessId(hwndFromPoint, &winProcessId);
 			if (winProcessId == ::GetCurrentProcessId()) //no-fail!
 			{
-				pMsg->hwnd = hwndFromPoint;				
+				pMsg->hwnd = hwndFromPoint;
 			}
 		}
 
@@ -959,7 +958,7 @@ BOOL CMainFrame::PreTranslateMessage(MSG *pMsg)
 			pMsg->message = WM_MOUSEHWHEEL;
 	}
 
-    return CFrameWnd::PreTranslateMessage(pMsg);
+	return CFrameWnd::PreTranslateMessage(pMsg);
 }
 
 void CMainFrame::OnClose()
@@ -972,65 +971,65 @@ void CMainFrame::OnClose()
 		}
 	}
 
-    CloseAllOpenDialogs();
+	CloseAllOpenDialogs();
 
-    CLogger::Log(_T("OnClose - before stop MainFrm thread"));
-    m_thread.Stop();
-    CLogger::Log(_T("OnClose - after stop MainFrm thread"));
+	CLogger::Log(_T("OnClose - before stop MainFrm thread"));
+	m_thread.Stop();
+	CLogger::Log(_T("OnClose - after stop MainFrm thread"));
 
-    theApp.BeforeMainClose();
+	theApp.BeforeMainClose();
 
 	m_PowerManager.Close();
 
-    CFrameWnd::OnClose();
+	CFrameWnd::OnClose();
 }
 
 bool CMainFrame::CloseAllOpenDialogs()
 {
-    bool bRet = false;
-    DWORD dwordProcessId;
-    DWORD dwordChildWindowProcessId;
-    GetWindowThreadProcessId(this->m_hWnd, &dwordProcessId);
-    ASSERT(dwordProcessId);
+	bool bRet = false;
+	DWORD dwordProcessId;
+	DWORD dwordChildWindowProcessId;
+	GetWindowThreadProcessId(this->m_hWnd, &dwordProcessId);
+	ASSERT(dwordProcessId);
 
 	CArray<CWnd*, CWnd*> openDialogs;
 
-    CWnd *pTempWnd = GetDesktopWindow()->GetWindow(GW_CHILD);
-    while((pTempWnd = pTempWnd->GetWindow(GW_HWNDNEXT)) != NULL)
-    {
-        if(pTempWnd->GetSafeHwnd() == NULL)
-        {
-            break;
-        }
+	CWnd* pTempWnd = GetDesktopWindow()->GetWindow(GW_CHILD);
+	while ((pTempWnd = pTempWnd->GetWindow(GW_HWNDNEXT)) != NULL)
+	{
+		if (pTempWnd->GetSafeHwnd() == NULL)
+		{
+			break;
+		}
 
-        GetWindowThreadProcessId(pTempWnd->GetSafeHwnd(), &dwordChildWindowProcessId);
-        if(dwordChildWindowProcessId == dwordProcessId)
-        {
-            TCHAR szTemp[100];
-            GetClassName(pTempWnd->GetSafeHwnd(), szTemp, 100);
+		GetWindowThreadProcessId(pTempWnd->GetSafeHwnd(), &dwordChildWindowProcessId);
+		if (dwordChildWindowProcessId == dwordProcessId)
+		{
+			TCHAR szTemp[100];
+			GetClassName(pTempWnd->GetSafeHwnd(), szTemp, 100);
 
-            // #32770 is class name for dialogs so don't process the message if it is a dialog
-            if(_tcscmp(szTemp, _T("#32770")) == 0)
-            {
-				openDialogs.Add(pTempWnd);                
-                bRet = true;
-            }
-        }
-    }
+			// #32770 is class name for dialogs so don't process the message if it is a dialog
+			if (_tcscmp(szTemp, _T("#32770")) == 0)
+			{
+				openDialogs.Add(pTempWnd);
+				bRet = true;
+			}
+		}
+	}
 
 	for (int i = 0; i < openDialogs.GetCount(); i++)
 	{
 		openDialogs[i]->PostMessage(WM_CLOSE, 0, 0);
 	}
 
-    MSG msg;
-    while(PeekMessage(&msg, NULL, NULL, NULL, PM_REMOVE))
-    {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
+	MSG msg;
+	while (PeekMessage(&msg, NULL, NULL, NULL, PM_REMOVE))
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
 
-    return bRet;
+	return bRet;
 }
 
 LRESULT CMainFrame::OnOwnedErrorMsg(WPARAM wParam, LPARAM /*lParam*/)
@@ -1096,37 +1095,37 @@ LRESULT CMainFrame::OnEditWndClose(WPARAM /*wParam*/, LPARAM /*lParam*/)
 
 void CMainFrame::ShowErrorMessage(CString csTitle, CString csMessage)
 {
-    CLogger::Log(CStringUtil::Format(_T("ShowErrorMessage %s - %s"), csTitle.GetString(), csMessage.GetString()));
+	CLogger::Log(CStringUtil::Format(_T("ShowErrorMessage %s - %s"), csTitle.GetString(), csMessage.GetString()));
 	m_trayIcon.SetBalloonDetails(csMessage, csTitle, CTrayNotifyIcon::BalloonStyle::Error, Settings().GetBalloonTimeout());
 }
 
 void CMainFrame::OnFirstImport()
 {
-    Services().ClipCommands().ImportClips(Services().Windows().MainHwnd());
+	Services().ClipCommands().ImportClips(Services().Windows().MainHwnd());
 }
 
 LRESULT CMainFrame::OnSetConnected(WPARAM wParam, LPARAM lParam)
 {
-    if(wParam)
-    {
-        Services().Clipboard().SetConnectCV(true);
-    }
-    else if(lParam)
-    {
-        Services().Clipboard().SetConnectCV(false);
-    }
+	if (wParam)
+	{
+		Services().Clipboard().SetConnectCV(true);
+	}
+	else if (lParam)
+	{
+		Services().Clipboard().SetConnectCV(false);
+	}
 
-    return TRUE;
+	return TRUE;
 }
 
 LRESULT CMainFrame::OnOpenCloseWindow(WPARAM wParam, LPARAM lParam)
 {
-	if(wParam)
+	if (wParam)
 	{
 		StartKeyModifierTimer();
 		ShowQPasteWithActiveWindowCheck();
 	}
-	else if(lParam)
+	else if (lParam)
 	{
 		m_quickPaste.HideQPasteWnd();
 	}
@@ -1141,7 +1140,7 @@ void CMainFrame::OnDestroy()
 		m_pEditFrameWnd->DestroyWindow();
 	}
 
-    CFrameWnd::OnDestroy();
+	CFrameWnd::OnDestroy();
 }
 
 void CMainFrame::PostNcDestroy()
@@ -1158,20 +1157,20 @@ void CMainFrame::PostNcDestroy()
 
 void CMainFrame::OnFirstNewclip()
 {
-    CClipIDs IDs;
-    IDs.Add( - 1);
-    Services().ClipCommands().EditItems(IDs, true, true);
+	CClipIDs IDs;
+	IDs.Add(-1);
+	Services().ClipCommands().EditItems(IDs, true, true);
 }
 
 void CMainFrame::OnFirstOption()
 {
-	if(m_pOptions)
+	if (m_pOptions)
 	{
 		::SetForegroundWindow(m_pOptions->m_hWnd);
 	}
 	else
 	{
-		auto options{std::make_unique<COptionsSheet>(_T(""))};
+		auto options{ std::make_unique<COptionsSheet>(_T("")) };
 		options->SetNotifyWnd(m_hWnd);
 		m_pOptions = std::move(options);
 
@@ -1182,13 +1181,13 @@ void CMainFrame::OnFirstOption()
 
 void CMainFrame::OnFirstGlobalhotkeys()
 {
-	if(m_pGlobalClips)
+	if (m_pGlobalClips)
 	{
 		::SetForegroundWindow(m_pGlobalClips->m_hWnd);
 	}
 	else
 	{
-		auto globalClips{std::make_unique<GlobalClips>()};
+		auto globalClips{ std::make_unique<GlobalClips>() };
 		globalClips->SetNotifyWnd(m_hWnd);
 		m_pGlobalClips = std::move(globalClips);
 
@@ -1240,7 +1239,7 @@ LRESULT CMainFrame::OnOptionsClosed(WPARAM wParam, LPARAM /*lParam*/)
 	{
 		m_trayIcon.Hide();
 	}
-	
+
 
 	return 0;
 }
@@ -1288,7 +1287,7 @@ void CMainFrame::OnFirstDeleteclipdata()
 	}
 	else
 	{
-		auto deleteClips{std::make_unique<CDeleteClipData>()};
+		auto deleteClips{ std::make_unique<CDeleteClipData>() };
 		deleteClips->SetNotifyWnd(m_hWnd);
 		m_pDeleteClips = std::move(deleteClips);
 
@@ -1310,7 +1309,7 @@ void CMainFrame::OnFirstSavecurrentclipboard()
 {
 	CLogger::Log(_T("Start Saving the current clipboard to the database"));
 	const std::unique_ptr<CClipTypes> types(CClipDataReader(Services().Database()).LoadTypesFromDB());
-	if(!types)
+	if (!types)
 	{
 		CLogger::Log(_T("Failed to load supported types from the db, not saving to the db"));
 		return;
@@ -1319,20 +1318,20 @@ void CMainFrame::OnFirstSavecurrentclipboard()
 	auto clip = std::make_unique<CClip>(Services().ClipContext());
 	try
 	{
-		if(!clip->LoadFromClipboard(types.get(), Settings().m_regexHelper, false, _T("")))
+		if (!clip->LoadFromClipboard(types.get(), Settings().m_regexHelper, false, _T("")))
 		{
 			CLogger::Log(_T("Failed to load clips from the clipboard, not saving to db"));
 			return;
 		}
 	}
-	catch(const DittoCore::ClipboardFormatError& error)
+	catch (const DittoCore::ClipboardFormatError& error)
 	{
 		CErrorReport::Show(CStringUtil::Format(_T("The clipboard was not saved: its data is malformed (%s)."), CString(error.what()).GetString()));
 		return;
 	}
 
 	CLogger::Log(_T("Loaded clips from the clipboard, sending message to save to the db"));
-	if(::PostMessage(m_hWnd, CDittoMessage::ClipboardCopied, reinterpret_cast<WPARAM>(clip.get()), 0))
+	if (::PostMessage(m_hWnd, CDittoMessage::ClipboardCopied, reinterpret_cast<WPARAM>(clip.get()), 0))
 	{
 		clip.release(); // ownership: CMainFrame::OnClipboardCopied retakes it in a std::unique_ptr
 	}
@@ -1340,7 +1339,7 @@ void CMainFrame::OnFirstSavecurrentclipboard()
 
 LRESULT CMainFrame::OnReAddTaskBarIcon(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
-	if(Settings().GetShowIconInSysTray())
+	if (Settings().GetShowIconInSysTray())
 	{
 		m_trayIcon.SetIcon(CTrayNotifyIcon::LoadIcon(IDR_MAINFRAME));
 	}
@@ -1351,14 +1350,14 @@ LRESULT CMainFrame::OnReOpenDatabase(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	CLogger::Log(CStringUtil::Format(_T("OnReOpenDatabase, Start closing and reopening database Delay: %d"), Settings().GetWindowsResumeDelayReOpenDbMS()));
 
-	try 
+	try
 	{
 		Sleep(Settings().GetWindowsResumeDelayReOpenDbMS());
 		m_quickPaste.CloseQPasteWnd();
 		Services().Database().close();
 		if (CDatabaseManager::OpenDatabase(Settings(), Services().Database(), Services().State(), Settings().GetDBPath()) == FALSE)
 		{
-			return FALSE;   // OpenDatabase showed the error
+			return FALSE; // OpenDatabase showed the error
 		}
 	}
 	catch (CppSQLite3Exception& e)
@@ -1375,7 +1374,7 @@ LRESULT CMainFrame::OnReOpenDatabase(WPARAM /*wParam*/, LPARAM /*lParam*/)
 LRESULT CMainFrame::OnShowMsgWindow(WPARAM wParam, LPARAM /*lParam*/)
 {
 	// retakes the message released by CMainFrmThread::OnSaveClips
-	const std::unique_ptr<CString> message{reinterpret_cast<CString*>(wParam)};
+	const std::unique_ptr<CString> message{ reinterpret_cast<CString*>(wParam) };
 
 	m_trayIcon.SetBalloonDetails(message->GetBuffer(), _T("Ditto"), CTrayNotifyIcon::BalloonStyle::Info, Settings().GetBalloonTimeout());
 
@@ -1386,9 +1385,9 @@ LRESULT CMainFrame::OnShowDittoGroup(WPARAM wParam, LPARAM /*lParam*/)
 {
 	int groupId = (int)wParam;
 	CppSQLite3Query q = Services().Database().execQueryEx(_T("SELECT bIsGroup FROM Main WHERE lID = %d"), groupId);
-	if(q.eof() == false)
+	if (q.eof() == false)
 	{
-		if(q.getIntField(_T("bIsGroup")) > 0)
+		if (q.getIntField(_T("bIsGroup")) > 0)
 		{
 			PasteOrShowGroup(groupId, FALSE, FALSE, FALSE, false);
 		}
@@ -1437,7 +1436,7 @@ void CMainFrame::OnFirstShowstartupmessage()
 }
 
 
-void CMainFrame::OnUpdateFirstShowstartupmessage(CCmdUI *pCmdUI)
+void CMainFrame::OnUpdateFirstShowstartupmessage(CCmdUI* pCmdUI)
 {
 	if (pCmdUI == NULL ||
 		pCmdUI->m_pMenu == NULL)

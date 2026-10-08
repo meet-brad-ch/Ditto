@@ -45,7 +45,7 @@ int CNoDbFrameWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	SetTimer(TimerOpenDb, 15000, NULL);
 	SetTimer(TimerErrorMsg, 180000, NULL);
 
-	CHotKeys& hotKeys{Services().HotKeys()};
+	CHotKeys& hotKeys{ Services().HotKeys() };
 	hotKeys.Init(m_hWnd);
 
 	m_pDittoHotKey = &hotKeys.Create(CString("DittoHotKey"), 704); //704 is ctrl-tilda
@@ -122,7 +122,7 @@ void CNoDbFrameWnd::TryOpenDatabase()
 		DatabaseLocator::CheckDBExists(Settings(), Services().Language(), Services().Database(), Services().State(), Settings().GetDBPath()))
 	{
 		// the registry owns the keys: Remove destroys them
-		CHotKeys& hotKeys{Services().HotKeys()};
+		CHotKeys& hotKeys{ Services().HotKeys() };
 		hotKeys.Remove(m_pDittoHotKey);
 		m_pDittoHotKey = NULL;
 

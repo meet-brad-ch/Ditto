@@ -34,9 +34,9 @@ public:
 	/** @brief Where the quick paste window opens (the stored ShowQuickPastePosition value). */
 	enum : int
 	{
-		PosAtCaret = 1,    ///< at the caret of the focused window
-		PosAtCursor = 2,   ///< at the mouse cursor
-		PosAtPrevious = 3  ///< where it was last
+		PosAtCaret = 1,   ///< at the caret of the focused window
+		PosAtCursor = 2,  ///< at the mouse cursor
+		PosAtPrevious = 3 ///< where it was last
 	};
 
 	/** @brief The side of a Ditto window its caption bar is on (the stored CaptionPos value). */
@@ -59,16 +59,16 @@ public:
 	/** @brief The folder ids of GetPath. */
 	enum : int
 	{
-		PathHelp = 0,          ///< the help files
-		PathRemoteFiles = 1,   ///< files received from other computers
-		PathLogFile = 2,       ///< the log file's folder
-		PathLanguage = 3,      ///< the language files
-		PathThemes = 8,        ///< the theme files
-		PathAddins = 9,        ///< the add-in DLLs
-		PathDragFiles = 10,    ///< files written for drag and drop
-		PathClipDiff = 11,     ///< files written for clip compare
-		PathRestoreTemp = 12,  ///< the temporary copy of a database to restore
-		PathEditClips = 13     ///< files written for editing clips
+		PathHelp = 0,         ///< the help files
+		PathRemoteFiles = 1,  ///< files received from other computers
+		PathLogFile = 2,      ///< the log file's folder
+		PathLanguage = 3,     ///< the language files
+		PathThemes = 8,       ///< the theme files
+		PathAddins = 9,       ///< the add-in DLLs
+		PathDragFiles = 10,   ///< files written for drag and drop
+		PathClipDiff = 11,    ///< files written for clip compare
+		PathRestoreTemp = 12, ///< the temporary copy of a database to restore
+		PathEditClips = 13    ///< files written for editing clips
 	};
 
 	/**
@@ -120,8 +120,8 @@ public:
 	BOOL GetRunOnStartUp();
 	void SetRunOnStartUp(BOOL bRun);
 
-	BOOL SetProfileFont(CString csSection, LOGFONT &font);
-	BOOL GetProfileFont(CString csSection, LOGFONT &font);
+	BOOL SetProfileFont(CString csSection, LOGFONT& font);
+	BOOL GetProfileFont(CString csSection, LOGFONT& font);
 
 	long GetResolutionProfileLong(CString csName, long lDefaultValue, CString csNewPath = _T(""));
 	BOOL SetResolutionProfileLong(CString csName, long lValue);
@@ -130,17 +130,17 @@ public:
 	long GetProfileLong(CString csName, long lDefaultValue = -1, CString csNewPath = _T(""));
 
 	CString GetProfileString(CString csName, CString csDefault, CString csNewPath = _T(""), int maxSize = -1);
-	BOOL	SetProfileString(CString csName, CString csValue);
+	BOOL SetProfileString(CString csName, CString csValue);
 
 	// The registry value's bytes; empty when the value does not exist or cannot be read
 	std::vector<BYTE> GetProfileData(CString csName);
-	BOOL	SetProfileData(CString csName, LPVOID lpData, DWORD dwLength);
+	BOOL SetProfileData(CString csName, LPVOID lpData, DWORD dwLength);
 
 	BOOL SetQuickPasteSize(CSize size);
-	void GetQuickPasteSize(CSize &size);
+	void GetQuickPasteSize(CSize& size);
 
 	BOOL SetQuickPastePoint(CPoint point);
-	void GetQuickPastePoint(CPoint &point);
+	void GetQuickPastePoint(CPoint& point);
 
 	BOOL SetEnableTransparency(BOOL bCheck);
 	BOOL GetEnableTransparency();
@@ -195,177 +195,177 @@ public:
 	void SetTotalDate(long lDate);
 	long GetTotalDate();
 
-	CString	GetUpdateFilePath();
-	BOOL		SetUpdateFilePath(CString cs);
+	CString GetUpdateFilePath();
+	BOOL SetUpdateFilePath(CString cs);
 
-	CString	GetUpdateInstallPath();
-	BOOL		SetUpdateInstallPath(CString cs);
+	CString GetUpdateInstallPath();
+	BOOL SetUpdateInstallPath(CString cs);
 
-	long		GetLastUpdate();
-	long		SetLastUpdate(long lValue);
+	long GetLastUpdate();
+	long SetLastUpdate(long lValue);
 
-	BOOL		GetCheckForUpdates();
-	BOOL		SetCheckForUpdates(BOOL bCheck);
+	BOOL GetCheckForUpdates();
+	BOOL SetCheckForUpdates(BOOL bCheck);
 
-	BOOL		m_bUseCtrlNumAccel{};
-	void		SetUseCtrlNumForFirstTenHotKeys(BOOL bVal);
-	BOOL		GetUseCtrlNumForFirstTenHotKeys();
+	BOOL m_bUseCtrlNumAccel{};
+	void SetUseCtrlNumForFirstTenHotKeys(BOOL bVal);
+	BOOL GetUseCtrlNumForFirstTenHotKeys();
 
-	BOOL		m_bAllowDuplicates{};
-	void		SetAllowDuplicates(BOOL bVal);
-	BOOL		GetAllowDuplicates();
+	BOOL m_bAllowDuplicates{};
+	void SetAllowDuplicates(BOOL bVal);
+	BOOL GetAllowDuplicates();
 
-	BOOL		m_bUpdateTimeOnPaste{};
-	void		SetUpdateTimeOnPaste(BOOL bVal);
-	BOOL		GetUpdateTimeOnPaste();
+	BOOL m_bUpdateTimeOnPaste{};
+	void SetUpdateTimeOnPaste(BOOL bVal);
+	BOOL GetUpdateTimeOnPaste();
 
-	BOOL		m_bSaveMultiPaste{};
-	void		SetSaveMultiPaste(BOOL bVal);
-	BOOL		GetSaveMultiPaste();
+	BOOL m_bSaveMultiPaste{};
+	void SetSaveMultiPaste(BOOL bVal);
+	BOOL GetSaveMultiPaste();
 
-	BOOL		m_bShowPersistent{};
-	void		SetShowPersistent(BOOL bVal);
-	BOOL		GetShowPersistent();
+	BOOL m_bShowPersistent{};
+	void SetShowPersistent(BOOL bVal);
+	BOOL GetShowPersistent();
 
-	BOOL		m_bHideDittoOnPaste{};
-	void		SetHideDittoOnPaste(BOOL bVal);
-	BOOL		GetHideDittoOnPaste();
+	BOOL m_bHideDittoOnPaste{};
+	void SetHideDittoOnPaste(BOOL bVal);
+	BOOL GetHideDittoOnPaste();
 
-	void		SetShowTextForFirstTenHotKeys(BOOL bVal);
-	BOOL		GetShowTextForFirstTenHotKeys();
+	void SetShowTextForFirstTenHotKeys(BOOL bVal);
+	BOOL GetShowTextForFirstTenHotKeys();
 
-	void		SetMainHWND(long lhWnd);
-	long		GetMainHWND();
+	void SetMainHWND(long lhWnd);
+	long GetMainHWND();
 
-	void		SetCaptionPos(long lPos);
-	long		GetCaptionPos();
+	void SetCaptionPos(long lPos);
+	long GetCaptionPos();
 
-	void		SetAutoHide(BOOL bAutoHide);
-	BOOL		GetAutoHide();
+	void SetAutoHide(BOOL bAutoHide);
+	BOOL GetAutoHide();
 
-	long		m_bDescTextSize{};
-	void		SetDescTextSize(long lSize);
-	long		GetDescTextSize();
+	long m_bDescTextSize{};
+	void SetDescTextSize(long lSize);
+	long GetDescTextSize();
 
-	BOOL		m_bDescShowLeadingWhiteSpace{};
-	void		SetDescShowLeadingWhiteSpace(BOOL bVal);
-	BOOL		GetDescShowLeadingWhiteSpace();
+	BOOL m_bDescShowLeadingWhiteSpace{};
+	void SetDescShowLeadingWhiteSpace(BOOL bVal);
+	BOOL GetDescShowLeadingWhiteSpace();
 
-	BOOL		m_bAllwaysShowDescription{};
-	void		SetAllwaysShowDescription(long bShow);
-	BOOL		GetAllwaysShowDescription();
+	BOOL m_bAllwaysShowDescription{};
+	void SetAllwaysShowDescription(long bShow);
+	BOOL GetAllwaysShowDescription();
 
-	long		m_bDoubleClickingOnCaptionDoes{};
-	void		SetDoubleClickingOnCaptionDoes(long lOption);
-	long		GetDoubleClickingOnCaptionDoes();
+	long m_bDoubleClickingOnCaptionDoes{};
+	void SetDoubleClickingOnCaptionDoes(long lOption);
+	long GetDoubleClickingOnCaptionDoes();
 
-	BOOL		m_bPrompForNewGroupName{};
-	void		SetPrompForNewGroupName(BOOL bOption);
-	BOOL		GetPrompForNewGroupName();
+	BOOL m_bPrompForNewGroupName{};
+	void SetPrompForNewGroupName(BOOL bOption);
+	BOOL GetPrompForNewGroupName();
 
-	BOOL		m_bSendPasteOnFirstTenHotKeys{};
-	void		SetSendPasteOnFirstTenHotKeys(BOOL bOption);
-	BOOL		GetSendPasteOnFirstTenHotKeys();
-
-
-	BOOL		m_HideDittoOnHotKeyIfAlreadyShown{};
-	BOOL		GetHideDittoOnHotKeyIfAlreadyShown();
-	void		SetHideDittoOnHotKeyIfAlreadyShown(BOOL bVal);
-
-	BOOL		GetFont(LOGFONT &font);
-	void		SetFont(LOGFONT &font);
-
-	BOOL		m_bDrawThumbnail{};
-	void		SetDrawThumbnail(long bDraw);
-	BOOL		GetDrawThumbnail();
-
-	BOOL		m_bFastThumbnailMode{};
-	void		SetFastThumbnailMode(BOOL bval);
-	BOOL		GetFastThumbnailMode();
-
-	BOOL		m_bDrawRTF{};
-	void		SetDrawRTF(long bDraw);
-	BOOL		GetDrawRTF();
-
-	BOOL		m_bMultiPasteReverse{};
-	void		SetMultiPasteReverse(BOOL bVal);
-	BOOL		GetMultiPasteReverse();
-
-	CString	m_csPlaySoundOnCopy{};
-	void		SetPlaySoundOnCopy(CString cs);
-	CString	GetPlaySoundOnCopy();
-
-	BOOL		m_bSendPasteMessageAfterSelection{};
-	void		SetSendPasteAfterSelection(BOOL bVal);
-	BOOL		GetSendPasteAfterSelection();
-
-	BOOL		m_bFindAsYouType{};
-	void		SetFindAsYouType(BOOL bVal);
-	BOOL		GetFindAsYouType();
-
-	BOOL		m_bEnsureEntireWindowCanBeSeen{};
-	void		SetEnsureEntireWindowCanBeSeen(BOOL bVal);
-	BOOL		GetEnsureEntireWindowCanBeSeen();
-
-	BOOL		m_bShowAllClipsInMainList{};
-	void		SetShowAllClipsInMainList(BOOL bVal);
-	BOOL		GetShowAllClipsInMainList();
+	BOOL m_bSendPasteOnFirstTenHotKeys{};
+	void SetSendPasteOnFirstTenHotKeys(BOOL bOption);
+	BOOL GetSendPasteOnFirstTenHotKeys();
 
 
-	long		m_lMaxClipSizeInBytes{};
-	long		GetMaxClipSizeInBytes();
-	void		SetMaxClipSizeInBytes(long lSize);
+	BOOL m_HideDittoOnHotKeyIfAlreadyShown{};
+	BOOL GetHideDittoOnHotKeyIfAlreadyShown();
+	void SetHideDittoOnHotKeyIfAlreadyShown(BOOL bVal);
 
-	CString	GetLanguageFile();
-	void		SetLanguageFile(CString csLanguage);
+	BOOL GetFont(LOGFONT& font);
+	void SetFont(LOGFONT& font);
 
-	DWORD	m_dwSaveClipDelay{};
-	ULONG	GetSaveClipDelay();
-	void		SetSaveClipDelay(DWORD dwDelay);
+	BOOL m_bDrawThumbnail{};
+	void SetDrawThumbnail(long bDraw);
+	BOOL GetDrawThumbnail();
 
-	long		m_lProcessDrawClipboardDelay{};
-	long		GetProcessDrawClipboardDelay();
-	void		SetProcessDrawClipboardDelay(long lDelay);
+	BOOL m_bFastThumbnailMode{};
+	void SetFastThumbnailMode(BOOL bval);
+	BOOL GetFastThumbnailMode();
 
-	BOOL		m_bEnableDebugLogging{};
-	BOOL		GetEnableDebugLogging();
-	void		SetEnableDebugLogging(BOOL bEnable);
+	BOOL m_bDrawRTF{};
+	void SetDrawRTF(long bDraw);
+	BOOL GetDrawRTF();
 
-	BOOL		m_bEnsureConnectToClipboard{};
-	BOOL		GetEnsureConnectToClipboard();
-	void		SetEnsureConnectToClipboard(BOOL bSet);
+	BOOL m_bMultiPasteReverse{};
+	void SetMultiPasteReverse(BOOL bVal);
+	BOOL GetMultiPasteReverse();
 
-	BOOL		GetPromptWhenDeletingClips();
-	void		SetPromptWhenDeletingClips(BOOL bSet);
+	CString m_csPlaySoundOnCopy{};
+	void SetPlaySoundOnCopy(CString cs);
+	CString GetPlaySoundOnCopy();
 
-	CString	GetLastImportDir();
-	void		SetLastImportDir(CString csDir);
+	BOOL m_bSendPasteMessageAfterSelection{};
+	void SetSendPasteAfterSelection(BOOL bVal);
+	BOOL GetSendPasteAfterSelection();
 
-	CString	GetLastExportDir();
-	void		SetLastExportDir(CString csDir);
+	BOOL m_bFindAsYouType{};
+	void SetFindAsYouType(BOOL bVal);
+	BOOL GetFindAsYouType();
 
-	BOOL		GetUpdateDescWhenSavingClip();
-	void		SetUpdateDescWhenSavingClip(BOOL bSet);
+	BOOL m_bEnsureEntireWindowCanBeSeen{};
+	void SetEnsureEntireWindowCanBeSeen(BOOL bVal);
+	BOOL GetEnsureEntireWindowCanBeSeen();
 
-	BOOL		m_outputDebugStringLogging{};
-	BOOL		GetEnableOutputDebugStringLogging();
-	void		SetEnableOutputDebugStringLogging(BOOL bSet);
+	BOOL m_bShowAllClipsInMainList{};
+	void SetShowAllClipsInMainList(BOOL bVal);
+	BOOL GetShowAllClipsInMainList();
 
 
-	CString  GetPath(long lPathID);
+	long m_lMaxClipSizeInBytes{};
+	long GetMaxClipSizeInBytes();
+	void SetMaxClipSizeInBytes(long lSize);
 
-	__int64	nLastDbWriteTime{};
+	CString GetLanguageFile();
+	void SetLanguageFile(CString csLanguage);
 
-	long		GetDittoRestoreClipboardDelay();
-	void		SetDittoRestoreClipboardDelay(long lDelay);
+	DWORD m_dwSaveClipDelay{};
+	ULONG GetSaveClipDelay();
+	void SetSaveClipDelay(DWORD dwDelay);
 
-	void		GetCopyBufferItem(int nPos, CCopyBufferItem &Item);
-	void		SetCopyBufferItem(int nPos, CCopyBufferItem &Item);
+	long m_lProcessDrawClipboardDelay{};
+	long GetProcessDrawClipboardDelay();
+	void SetProcessDrawClipboardDelay(long lDelay);
 
-	CString  GetMultiPasteSeparator(bool bConvertToLineFeeds = true);
-	void		SetMultiPasteSeparator(CString csSep);
+	BOOL m_bEnableDebugLogging{};
+	BOOL GetEnableDebugLogging();
+	void SetEnableDebugLogging(BOOL bEnable);
 
-	BOOL		GetSetCurrentDirectory();
+	BOOL m_bEnsureConnectToClipboard{};
+	BOOL GetEnsureConnectToClipboard();
+	void SetEnsureConnectToClipboard(BOOL bSet);
+
+	BOOL GetPromptWhenDeletingClips();
+	void SetPromptWhenDeletingClips(BOOL bSet);
+
+	CString GetLastImportDir();
+	void SetLastImportDir(CString csDir);
+
+	CString GetLastExportDir();
+	void SetLastExportDir(CString csDir);
+
+	BOOL GetUpdateDescWhenSavingClip();
+	void SetUpdateDescWhenSavingClip(BOOL bSet);
+
+	BOOL m_outputDebugStringLogging{};
+	BOOL GetEnableOutputDebugStringLogging();
+	void SetEnableOutputDebugStringLogging(BOOL bSet);
+
+
+	CString GetPath(long lPathID);
+
+	__int64 nLastDbWriteTime{};
+
+	long GetDittoRestoreClipboardDelay();
+	void SetDittoRestoreClipboardDelay(long lDelay);
+
+	void GetCopyBufferItem(int nPos, CCopyBufferItem& Item);
+	void SetCopyBufferItem(int nPos, CCopyBufferItem& Item);
+
+	CString GetMultiPasteSeparator(bool bConvertToLineFeeds = true);
+	void SetMultiPasteSeparator(CString csSep);
+
+	BOOL GetSetCurrentDirectory();
 
 	CString GetPasteString(CString csAppName);
 
@@ -380,127 +380,125 @@ public:
 	CString GetDefaultCutString();
 	void SetDefaultCutString(CString val);
 
-	BOOL	GetEditWordWrap();
-	void	SetEditWordWrap(BOOL bSet);
+	BOOL GetEditWordWrap();
+	void SetEditWordWrap(BOOL bSet);
 
 
-	bool		GetIsPortableDitto();
-	bool		GetIsWindowsApp();
-	bool		GetIsChocolateyApp();
+	bool GetIsPortableDitto();
+	bool GetIsWindowsApp();
+	bool GetIsChocolateyApp();
 
-	long		GetAutoMaxDelay();
-	void		SetAutoMaxDelay(long lDelay);
+	long GetAutoMaxDelay();
+	void SetAutoMaxDelay(long lDelay);
 
 	void SetTheme(CString csTheme);
 	CString GetTheme();
 
-	long		GetKeyStateWaitTimerCount();
-	long		GetKeyStatePasteDelay();
+	long GetKeyStateWaitTimerCount();
+	long GetKeyStatePasteDelay();
 
-	DWORD	GetDittoHotKey();
-	
-	DWORD	SendKeysDelay();
-	void		SetSendKeysDelay(DWORD val);
+	DWORD GetDittoHotKey();
 
-	DWORD	RealSendKeysDelay();
-	void		SetRealSendKeysDelay(DWORD val);
+	DWORD SendKeysDelay();
+	void SetSendKeysDelay(DWORD val);
 
-	DWORD	WaitForActiveWndTimeout();
-	DWORD	FocusChangedDelay();
-	DWORD	FocusWndTimerTimeout();
+	DWORD RealSendKeysDelay();
+	void SetRealSendKeysDelay(DWORD val);
 
-	BOOL		GetConnectedToClipboard();
-	void		SetConnectedToClipboard(BOOL val);
+	DWORD WaitForActiveWndTimeout();
+	DWORD FocusChangedDelay();
+	DWORD FocusWndTimerTimeout();
 
-	DWORD	GetTextOnlyRestoreDelay();
-	DWORD 	GetTextOnlyPasteDelay();
+	BOOL GetConnectedToClipboard();
+	void SetConnectedToClipboard(BOOL val);
 
-	BOOL		GetSetFocusToApp(CString csAppName);
+	DWORD GetTextOnlyRestoreDelay();
+	DWORD GetTextOnlyPasteDelay();
 
-	DWORD	SelectedIndex();
-	void		SetSelectedIndex(int val);
+	BOOL GetSetFocusToApp(CString csAppName);
 
-	void		SetCopyAppInclude(CString csAppName);
-	CString  GetCopyAppInclude();
+	DWORD SelectedIndex();
+	void SetSelectedIndex(int val);
 
-	void		SetCopyAppExclude(CString csAppName);
-	CString  GetCopyAppExclude();
+	void SetCopyAppInclude(CString csAppName);
+	CString GetCopyAppInclude();
 
-	CString  GetCopyAppSeparator();
+	void SetCopyAppExclude(CString csAppName);
+	CString GetCopyAppExclude();
 
-	DWORD	GetNoFormatsRetryDelay();
+	CString GetCopyAppSeparator();
 
-	DWORD	GetMainDeletesDeleteCount();
+	DWORD GetNoFormatsRetryDelay();
 
-	DWORD	GetIdleSecondsBeforeDelete();
+	DWORD GetMainDeletesDeleteCount();
 
-	DWORD	GetDbTimeout();
+	DWORD GetIdleSecondsBeforeDelete();
 
-	DWORD	GetFunnyTickCountAdjustment();
+	DWORD GetDbTimeout();
 
-	DWORD	GetMinIdleTimeBeforeTrackFocus();
+	DWORD GetFunnyTickCountAdjustment();
 
-	DWORD	GetTimeBeforeExpandWindow();
+	DWORD GetMinIdleTimeBeforeTrackFocus();
 
-	DWORD	GetUseGuiThreadInfoForFocus();
+	DWORD GetTimeBeforeExpandWindow();
 
-	void		SetSearchDescription(BOOL val);
-	BOOL		GetSearchDescription();
+	DWORD GetUseGuiThreadInfoForFocus();
 
-	void		SetSearchFullText(BOOL val);
-	BOOL		GetSearchFullText();
+	void SetSearchDescription(BOOL val);
+	BOOL GetSearchDescription();
 
-	void		SetSearchQuickPaste(BOOL val);
-	BOOL		GetSearchQuickPaste();
+	void SetSearchFullText(BOOL val);
+	BOOL GetSearchFullText();
 
-	void		SetSimpleTextSearch(BOOL val);
-	BOOL		GetSimpleTextSearch();
+	void SetSearchQuickPaste(BOOL val);
+	BOOL GetSearchQuickPaste();
 
-	void		SetMoveClipsOnGlobal10(BOOL val);
-	BOOL		GetMoveClipsOnGlobal10();
+	void SetSimpleTextSearch(BOOL val);
+	BOOL GetSimpleTextSearch();
 
-	void		SetShowScrollBar(BOOL val);
-	BOOL		GetShowScrollBar();
-	BOOL		m_showScrollBar{};
+	void SetMoveClipsOnGlobal10(BOOL val);
+	BOOL GetMoveClipsOnGlobal10();
 
-	void		SetUseModernScrollBar(BOOL val);
-	BOOL		GetUseModernScrollBar();
-	BOOL		m_useModernScrollBar{ TRUE };
+	void SetShowScrollBar(BOOL val);
+	BOOL GetShowScrollBar();
+	BOOL m_showScrollBar{};
 
-	void		SetPasteAsAdmin(BOOL val);
-	BOOL		GetPasteAsAdmin();
+	void SetUseModernScrollBar(BOOL val);
+	BOOL GetUseModernScrollBar();
+	BOOL m_useModernScrollBar{ TRUE };
 
-	void		SetRememberDescPos(BOOL val);
-	BOOL		GetRememberDescPos();
+	void SetPasteAsAdmin(BOOL val);
+	BOOL GetPasteAsAdmin();
 
-	void		SetSizeDescWindowToContent(BOOL val);
-	BOOL		GetSizeDescWindowToContent();
+	void SetRememberDescPos(BOOL val);
+	BOOL GetRememberDescPos();
 
-	void		SetScaleImagesToDescWindow(BOOL val);
-	BOOL		GetScaleImagesToDescWindow();
+	void SetSizeDescWindowToContent(BOOL val);
+	BOOL GetSizeDescWindowToContent();
 
-	void		SetDescWndPoint(CPoint point);
-	void		GetDescWndPoint(CPoint &point);
+	void SetScaleImagesToDescWindow(BOOL val);
+	BOOL GetScaleImagesToDescWindow();
 
-	void		SetDescWndSize(CSize size);
-	void		GetDescWndSize(CSize &size);
+	void SetDescWndPoint(CPoint point);
+	void GetDescWndPoint(CPoint& point);
 
-	void		SetShowInTaskBar(BOOL val);
-	BOOL		GetShowInTaskBar();
+	void SetDescWndSize(CSize size);
+	void GetDescWndSize(CSize& size);
 
-	void		SetHideTaskbarIconOnClose(BOOL val);
-	BOOL		GetHideTaskbarIconOnClose();
+	void SetShowInTaskBar(BOOL val);
+	BOOL GetShowInTaskBar();
 
-	void		SetDiffApp(CString val);
-	CString	GetDiffApp();
+	void SetHideTaskbarIconOnClose(BOOL val);
+	BOOL GetHideTaskbarIconOnClose();
 
-	void		SetQRCodeBorderPixels(int val);
-	int	GetQRCodeBorderPixels();
+	void SetDiffApp(CString val);
+	CString GetDiffApp();
+
+	void SetQRCodeBorderPixels(int val);
+	int GetQRCodeBorderPixels();
 
 	BOOL GetRegExTextSearch();
 	void SetRegExTextSearch(BOOL val);
-
-
 
 
 	int ReadRandomFileInterval();
@@ -530,10 +528,10 @@ public:
 	int GetActionShortCutB(DWORD action, int pos);
 	void SetActionShortCutB(int action, DWORD shortcut, int pos);
 
-	BOOL	m_bShowAlwaysOnTopWarning{ TRUE };
+	BOOL m_bShowAlwaysOnTopWarning{ TRUE };
 	BOOL GetShowAlwaysOnTopWarning();
 	void SetShowAlwaysOnTopWarning(BOOL show);
-	
+
 	BOOL GetUseIPFromAccept();
 	void SetUseIPFromAccept(BOOL useAccept);
 
@@ -571,8 +569,8 @@ public:
 	void SetErrorMsgPopupTimeout(int val);
 
 	CRegExFilterHelper m_regexHelper{};
-	void		SetRegexFilter(CString val, int pos);
-	CString	GetRegexFilter(int pos);
+	void SetRegexFilter(CString val, int pos);
+	CString GetRegexFilter(int pos);
 
 	void SetRegexFilterByProcessName(CString val, int pos);
 	CString GetRegexFilterByProcessName(int pos);
@@ -670,9 +668,9 @@ public:
 	BOOL GetRegexCaseInsensitive();
 	void SetRegexCaseInsensitive(BOOL val);
 
-	BOOL		m_bDrawCopiedColorCode{};
-	void		SetDrawCopiedColorCode(long bDraw);
-	BOOL		GetDrawCopiedColorCode();
+	BOOL m_bDrawCopiedColorCode{};
+	void SetDrawCopiedColorCode(long bDraw);
+	BOOL GetDrawCopiedColorCode();
 
 
 	BOOL m_centerWindowBelowCursorOrCaret{};
@@ -689,15 +687,14 @@ public:
 	CString GetRTFEditorPath();
 
 
-
 	void SetPreferUtf8ForCompare(BOOL val);
 	BOOL GetPreferUtf8ForCompare();
 
-	int	m_clipEditSaveDelayAfterLoadSeconds{ 3 };
+	int m_clipEditSaveDelayAfterLoadSeconds{ 3 };
 	void SetClipEditSaveDelayAfterLoadSeconds(int val);
 	BOOL GetClipEditSaveDelayAfterLoadSeconds();
 
-	int	m_clipEditSaveDelayAfterSaveSeconds{ 3 };
+	int m_clipEditSaveDelayAfterSaveSeconds{ 3 };
 	void SetClipEditSaveDelayAfterSaveSeconds(int val);
 	BOOL GetClipEditSaveDelayAfterSaveSeconds();
 
@@ -719,9 +716,9 @@ private:
 	/** @brief The folder a GetPath folder starts from. */
 	enum class PathRoot
 	{
-		ExeDir,                 ///< the exe's folder
-		AppDataUnlessPortable,  ///< the app data folder, the exe's folder for portable Ditto
-		TempUnlessPortable      ///< the temp folder, the exe's folder for portable Ditto
+		ExeDir,                ///< the exe's folder
+		AppDataUnlessPortable, ///< the app data folder, the exe's folder for portable Ditto
+		TempUnlessPortable     ///< the temp folder, the exe's folder for portable Ditto
 	};
 
 	/** @brief How GetPath builds the folder of one Path* id. */

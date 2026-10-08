@@ -28,8 +28,8 @@ public:
 	 */
 	void Parse(CString cs);
 
-	CString GetSQLString()				{ return _T("(") + m_csWhere + _T(")"); }
-	void	SetVariable(CString cs)		{ m_csVariable = cs;}
+	CString GetSQLString() { return _T("(") + m_csWhere + _T(")"); }
+	void SetVariable(CString cs) { m_csVariable = cs; }
 
 protected:
 	CString m_csWhere;

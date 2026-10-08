@@ -18,7 +18,7 @@ public:
 
 	bool Save(BOOL textOnly);
 	bool Restore();
-	void Clear()	{ m_Clipboard.RemoveAll(); }
+	void Clear() { m_Clipboard.RemoveAll(); }
 	bool RestoreTextOnly();
 
 	CClipFormats m_Clipboard;
@@ -47,7 +47,7 @@ private:
 	 * @param pCF the saved format, may be NULL.
 	 * @return true if pCF has a non-empty HGLOBAL.
 	 */
-	static bool HasValidData(const CClipFormat *pCF);
+	static bool HasValidData(const CClipFormat* pCF);
 	/**
 	 * @brief Tells whether a clipboard format is CF_TEXT or CF_UNICODETEXT.
 	 * @param cfType the clipboard format.

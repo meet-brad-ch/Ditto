@@ -9,14 +9,14 @@ public:
 	std::unique_ptr<Gdiplus::Bitmap> m_pBitmap{};
 
 public:
-	CGdiPlusBitmap()							{ }
-	virtual ~CGdiPlusBitmap()					{ Empty(); }
+	CGdiPlusBitmap() {}
+	virtual ~CGdiPlusBitmap() { Empty(); }
 
 	/** @brief Frees the loaded bitmap. */
-	void Empty()								{ m_pBitmap.reset(); }
+	void Empty() { m_pBitmap.reset(); }
 
 	/** @brief The loaded bitmap (non-owning), NULL when nothing is loaded. */
-	operator Gdiplus::Bitmap*() const			{ return m_pBitmap.get(); }
+	operator Gdiplus::Bitmap*() const { return m_pBitmap.get(); }
 };
 
 
@@ -36,28 +36,37 @@ protected:
 	static const void* LockResourceData(LPCTSTR pName, LPCTSTR pType, HMODULE hInst, DWORD& imageSize);
 
 public:
-	CGdiPlusBitmapResource()					{ m_hBuffer = NULL; }
+	CGdiPlusBitmapResource() { m_hBuffer = NULL; }
 	CGdiPlusBitmapResource(LPCTSTR pName, LPCTSTR pType = RT_RCDATA, HMODULE hInst = NULL)
-												{ m_hBuffer = NULL; Load(pName, pType, hInst); }
+	{
+		m_hBuffer = NULL;
+		Load(pName, pType, hInst);
+	}
 	CGdiPlusBitmapResource(UINT id, LPCTSTR pType = RT_RCDATA, HMODULE hInst = NULL)
-												{ m_hBuffer = NULL; Load(id, pType, hInst); }
+	{
+		m_hBuffer = NULL;
+		Load(id, pType, hInst);
+	}
 	CGdiPlusBitmapResource(UINT id, UINT type, HMODULE hInst = NULL)
-												{ m_hBuffer = NULL; Load(id, type, hInst); }
-	virtual ~CGdiPlusBitmapResource()			{ Empty(); }
+	{
+		m_hBuffer = NULL;
+		Load(id, type, hInst);
+	}
+	virtual ~CGdiPlusBitmapResource() { Empty(); }
 
 	void Empty();
 
 	bool Load(LPCTSTR pName, LPCTSTR pType = RT_RCDATA, HMODULE hInst = NULL);
 	bool Load(UINT id, LPCTSTR pType = RT_RCDATA, HMODULE hInst = NULL)
-												{ return Load(MAKEINTRESOURCE(id), pType, hInst); }
+	{ return Load(MAKEINTRESOURCE(id), pType, hInst); }
 	bool Load(UINT id, UINT type, HMODULE hInst = NULL)
-												{ return Load(MAKEINTRESOURCE(id), MAKEINTRESOURCE(type), hInst); }
+	{ return Load(MAKEINTRESOURCE(id), MAKEINTRESOURCE(type), hInst); }
 
-	bool LoadRaw(unsigned char* bitmapData, int imageSize) 
+	bool LoadRaw(unsigned char* bitmapData, int imageSize)
 	{
 		Empty();
 
-		m_hBuffer  = ::GlobalAlloc(GMEM_MOVEABLE, imageSize);
+		m_hBuffer = ::GlobalAlloc(GMEM_MOVEABLE, imageSize);
 		if (m_hBuffer)
 		{
 			void* pBuffer = ::GlobalLock(m_hBuffer);
@@ -68,7 +77,7 @@ public:
 				IStream* pStream = NULL;
 				if (::CreateStreamOnHGlobal(m_hBuffer, FALSE, &pStream) == S_OK)
 				{
-					m_pBitmap.reset(Gdiplus::Bitmap:: FromStream(pStream));
+					m_pBitmap.reset(Gdiplus::Bitmap::FromStream(pStream));
 					pStream->Release();
 					if (m_pBitmap)
 					{
@@ -87,8 +96,7 @@ public:
 	}
 };
 
-inline
-void CGdiPlusBitmapResource::Empty()
+inline void CGdiPlusBitmapResource::Empty()
 {
 	CGdiPlusBitmap::Empty();
 	if (m_hBuffer)
@@ -96,11 +104,10 @@ void CGdiPlusBitmapResource::Empty()
 		::GlobalUnlock(m_hBuffer);
 		::GlobalFree(m_hBuffer);
 		m_hBuffer = NULL;
-	} 
+	}
 }
 
-inline
-const void* CGdiPlusBitmapResource::LockResourceData(LPCTSTR pName, LPCTSTR pType, HMODULE hInst, DWORD& imageSize)
+inline const void* CGdiPlusBitmapResource::LockResourceData(LPCTSTR pName, LPCTSTR pType, HMODULE hInst, DWORD& imageSize)
 {
 	HRSRC hResource = ::FindResource(hInst, pName, pType);
 	if (!hResource)
@@ -117,8 +124,7 @@ const void* CGdiPlusBitmapResource::LockResourceData(LPCTSTR pName, LPCTSTR pTyp
 	return ::LockResource(hResourceData);
 }
 
-inline
-bool CGdiPlusBitmapResource::Load(LPCTSTR pName, LPCTSTR pType, HMODULE hInst)
+inline bool CGdiPlusBitmapResource::Load(LPCTSTR pName, LPCTSTR pType, HMODULE hInst)
 {
 	Empty();
 
@@ -127,7 +133,7 @@ bool CGdiPlusBitmapResource::Load(LPCTSTR pName, LPCTSTR pType, HMODULE hInst)
 	if (!pResourceData)
 		return false;
 
-	m_hBuffer  = ::GlobalAlloc(GMEM_MOVEABLE, imageSize);
+	m_hBuffer = ::GlobalAlloc(GMEM_MOVEABLE, imageSize);
 	if (m_hBuffer)
 	{
 		void* pBuffer = ::GlobalLock(m_hBuffer);
@@ -138,7 +144,7 @@ bool CGdiPlusBitmapResource::Load(LPCTSTR pName, LPCTSTR pType, HMODULE hInst)
 			IStream* pStream = NULL;
 			if (::CreateStreamOnHGlobal(m_hBuffer, FALSE, &pStream) == S_OK)
 			{
-				m_pBitmap.reset(Gdiplus::Bitmap:: FromStream(pStream));
+				m_pBitmap.reset(Gdiplus::Bitmap::FromStream(pStream));
 				pStream->Release();
 				if (m_pBitmap)
 				{
@@ -155,4 +161,3 @@ bool CGdiPlusBitmapResource::Load(LPCTSTR pName, LPCTSTR pType, HMODULE hInst)
 	}
 	return false;
 }
-

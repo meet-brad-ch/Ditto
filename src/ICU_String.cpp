@@ -35,8 +35,8 @@ bool CICU_String::Load()
 		u_isUUppercase = (bool(__cdecl*)(wchar_t c))GetProcAddress(m_dllHandle, "u_isUUppercase");
 		u_tolower = (wchar_t(__cdecl*)(wchar_t c))GetProcAddress(m_dllHandle, "u_tolower");
 		u_toupper = (wchar_t(__cdecl*)(wchar_t c))GetProcAddress(m_dllHandle, "u_toupper");
-		u_strToLower = (int(__cdecl*)(wchar_t* dest, int destCapacity, const wchar_t* src, int srcLength, const char* locale, int* pErrorCode))GetProcAddress(m_dllHandle, "u_strToLower");
-		u_strToUpper = (int(__cdecl*)(wchar_t* dest, int destCapacity, const wchar_t* src, int srcLength, const char* locale, int* pErrorCode))GetProcAddress(m_dllHandle, "u_strToUpper");
+		u_strToLower = (int(__cdecl*)(wchar_t * dest, int destCapacity, const wchar_t* src, int srcLength, const char* locale, int* pErrorCode)) GetProcAddress(m_dllHandle, "u_strToLower");
+		u_strToUpper = (int(__cdecl*)(wchar_t * dest, int destCapacity, const wchar_t* src, int srcLength, const char* locale, int* pErrorCode)) GetProcAddress(m_dllHandle, "u_strToUpper");
 
 		CLogger::Log(_T("Loaded icu.dll, this will be used for upper/lower case calls"));
 

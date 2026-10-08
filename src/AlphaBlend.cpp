@@ -55,7 +55,7 @@ CAlphaBlend::CAlphaBlend(HWND hWnd, int nOpactiy)
 	SetOpacity(nOpactiy);
 }
 
-CAlphaBlend::CAlphaBlend(CWnd *pWnd, int nOpacity)
+CAlphaBlend::CAlphaBlend(CWnd* pWnd, int nOpacity)
 {
 	m_hWnd = NULL;
 	m_nOpacity = 0;
@@ -73,11 +73,11 @@ BOOL CAlphaBlend::SetWindowHandle(HWND hWnd)
 	return true;
 }
 
-BOOL CAlphaBlend::SetWindowHandle(CWnd *pWnd)
+BOOL CAlphaBlend::SetWindowHandle(CWnd* pWnd)
 {
-	if (pWnd && ::IsWindow(pWnd->GetSafeHwnd())) 
+	if (pWnd && ::IsWindow(pWnd->GetSafeHwnd()))
 		m_hWnd = pWnd->GetSafeHwnd();
-	else 
+	else
 		return false;
 	return true;
 }
@@ -108,7 +108,7 @@ void CAlphaBlend::SetTransparent(BOOL bTransparent)
 
 		// make it transparent
 		long l = GetWindowLong(m_hWnd, GWL_EXSTYLE);
-		if(!(l & WS_EX_LAYERED))
+		if (!(l & WS_EX_LAYERED))
 		{
 			l |= WS_EX_LAYERED;
 			SetWindowLong(m_hWnd, GWL_EXSTYLE, l);
@@ -125,7 +125,7 @@ void CAlphaBlend::SetTransparent(BOOL bTransparent)
 	else
 	{
 		long l = GetWindowLong(m_hWnd, GWL_EXSTYLE);
-		if(l & WS_EX_LAYERED)
+		if (l & WS_EX_LAYERED)
 		{
 			l ^= WS_EX_LAYERED;
 			SetWindowLong(m_hWnd, GWL_EXSTYLE, l);
@@ -140,10 +140,10 @@ void CAlphaBlend::SetTransparent(BOOL bTransparent)
 BOOL CAlphaBlend::SetTransparent(HWND hWnd, int nOpacity, BOOL bTransparent)
 {
 	// set members
-	if (!SetWindowHandle(hWnd)) 
+	if (!SetWindowHandle(hWnd))
 		return false;
 
-	if (!SetOpacity(nOpacity)) 
+	if (!SetOpacity(nOpacity))
 		return false;
 
 	SetTransparent(bTransparent);

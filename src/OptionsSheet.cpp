@@ -15,14 +15,13 @@
 #include "QuickPasteKeyboard.h"
 
 
-
 /////////////////////////////////////////////////////////////////////////////
 // COptionsSheet
 
 IMPLEMENT_DYNAMIC(COptionsSheet, CPropertySheet)
 
-COptionsSheet::COptionsSheet(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectPage)
-	:CPropertySheet(pszCaption, pParentWnd, iSelectPage)
+COptionsSheet::COptionsSheet(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectPage) :
+	CPropertySheet(pszCaption, pParentWnd, iSelectPage)
 {
 	m_themeChanged = FALSE;
 	m_hWndParent = NULL;
@@ -47,8 +46,6 @@ COptionsSheet::COptionsSheet(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectP
 	AddPage(m_pQuickPasteShortCuts.get());
 	AddPage(m_pStats.get());
 	AddPage(m_pAbout.get());
-
-
 }
 
 COptionsSheet::~COptionsSheet()
@@ -57,7 +54,7 @@ COptionsSheet::~COptionsSheet()
 
 BEGIN_MESSAGE_MAP(COptionsSheet, CPropertySheet)
 	//{{AFX_MSG_MAP(COptionsSheet)
-		// NOTE - the ClassWizard will add and remove mapping macros here.
+	// NOTE - the ClassWizard will add and remove mapping macros here.
 	ON_WM_NCDESTROY()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
@@ -70,9 +67,9 @@ void COptionsSheet::SetNotifyWnd(HWND hWnd)
 	m_hWndParent = hWnd;
 }
 
-BOOL COptionsSheet::OnInitDialog() 
+BOOL COptionsSheet::OnInitDialog()
 {
-	m_bModeless = FALSE;   
+	m_bModeless = FALSE;
 	m_nFlags |= WF_CONTINUEMODAL;
 
 	HICON b = (HICON)LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME), IMAGE_ICON, 64, 64, LR_SHARED);

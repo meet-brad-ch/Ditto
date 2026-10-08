@@ -73,7 +73,8 @@ TEST(GzipStream, ReportsProgressUpToAllBytes)
 	std::ostringstream out;
 	std::vector<std::uint64_t> reported;
 
-	GzipStream::Compress(in, out, [&reported](std::uint64_t bytesDone) { reported.push_back(bytesDone); });
+	GzipStream::Compress(in, out, [&reported](std::uint64_t bytesDone)
+						 { reported.push_back(bytesDone); });
 
 	ASSERT_EQ(reported.size(), 4u);
 	EXPECT_EQ(reported.front(), 65536u);

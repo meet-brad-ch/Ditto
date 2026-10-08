@@ -10,8 +10,8 @@ CIdleTime::CIdleTime(CGetSetOptions& settings) :
 void CIdleTime::CheckTickCount(DWORD currentTick, DWORD lastInputTick)
 {
 	// only the first call decides; a later (or concurrent) call leaves the decision as it is
-	int expected{NotChecked};
-	const int decided{currentTick < lastInputTick ? AdjustAndLog : NoAdjustment};
+	int expected{ NotChecked };
+	const int decided{ currentTick < lastInputTick ? AdjustAndLog : NoAdjustment };
 	m_adjustment.compare_exchange_strong(expected, decided);
 }
 
@@ -26,18 +26,18 @@ double CIdleTime::IdleSeconds()
 	CheckTickCount(currentTick, info.dwTime);
 
 	// the call that moves AdjustAndLog to Adjust outputs the message (once)
-	int expected{AdjustAndLog};
-	if(m_adjustment.compare_exchange_strong(expected, Adjust))
+	int expected{ AdjustAndLog };
+	if (m_adjustment.compare_exchange_strong(expected, Adjust))
 	{
 		CLogger::Log(CStringUtil::Format(_T("Adjusting time of get tickcount by: %d, on startup we found GetTickCount to be less than last input"), m_settings.GetFunnyTickCountAdjustment()));
 		currentTick += m_settings.GetFunnyTickCountAdjustment();
 	}
-	else if(expected == Adjust)
+	else if (expected == Adjust)
 	{
 		currentTick += m_settings.GetFunnyTickCountAdjustment();
 	}
 
-	const double idleSeconds{ (currentTick - info.dwTime)/1000.0 };
+	const double idleSeconds{ (currentTick - info.dwTime) / 1000.0 };
 
 	return idleSeconds;
 }
@@ -54,7 +54,7 @@ int CMarkerInserter::Insert(CICU_String& icuString, CString& mainStr, CString& f
 
 		TrimLeadingLines(mainStr, inserted.firstFindPos, linesPerRow);
 
-		if(replaceCount > 0)
+		if (replaceCount > 0)
 		{
 			//use unprintable characters so it doesn't find copied html to convert
 			mainStr.Replace(_T("\r\n"), _T("\x01\x05\x02"));
@@ -84,7 +84,7 @@ CMarkerInserter::InsertResult CMarkerInserter::InsertMarkers(CICU_String& icuStr
 	int preLength = preInsert.GetLength();
 	int postLength = postInsert.GetLength();
 
-	while(TRUE)
+	while (TRUE)
 	{
 		foundPos = mainLow.Find(findLow, startFindPos);
 		if (foundPos < 0)
@@ -156,7 +156,7 @@ void CMarkerInserter::TrimLeadingLines(CString& mainStr, int firstFindPos, int l
 	}
 }
 
-void CMenuPopupUpdater::Update(CMenu *pPopupMenu, CWnd *pWnd)
+void CMenuPopupUpdater::Update(CMenu* pPopupMenu, CWnd* pWnd)
 {
 	ASSERT(pPopupMenu != NULL);
 	// Check the enabled state of various menu items.
@@ -170,20 +170,20 @@ void CMenuPopupUpdater::Update(CMenu *pPopupMenu, CWnd *pWnd)
 
 	state.m_nIndexMax = pPopupMenu->GetMenuItemCount();
 	for (state.m_nIndex = 0; state.m_nIndex < state.m_nIndexMax;
-		state.m_nIndex++)
+		 state.m_nIndex++)
 	{
 		UpdateItem(state, pPopupMenu, pWnd);
 	}
 }
 
-void CMenuPopupUpdater::FindParentMenu(CCmdUI& state, CMenu *pPopupMenu, CWnd *pWnd)
+void CMenuPopupUpdater::FindParentMenu(CCmdUI& state, CMenu* pPopupMenu, CWnd* pWnd)
 {
 	// Determine if menu is popup in top-level menu and set m_pOther to
 	// it if so (m_pParentMenu == NULL indicates that it is secondary popup).
 	HMENU hParentMenu{};
 	if (AfxGetThreadState()->m_hTrackingMenu == pPopupMenu->m_hMenu)
 	{
-		state.m_pParentMenu = pPopupMenu;    // Parent == child for tracking popup.
+		state.m_pParentMenu = pPopupMenu; // Parent == child for tracking popup.
 	}
 	else if ((hParentMenu = ::GetMenu(pWnd->m_hWnd)) != NULL)
 	{
@@ -206,7 +206,7 @@ void CMenuPopupUpdater::FindParentMenu(CCmdUI& state, CMenu *pPopupMenu, CWnd *p
 	}
 }
 
-void CMenuPopupUpdater::UpdateItem(CCmdUI& state, CMenu *pPopupMenu, CWnd *pWnd)
+void CMenuPopupUpdater::UpdateItem(CCmdUI& state, CMenu* pPopupMenu, CWnd* pWnd)
 {
 	state.m_nID = pPopupMenu->GetMenuItemID(state.m_nIndex);
 	if (state.m_nID == 0)
@@ -222,9 +222,9 @@ void CMenuPopupUpdater::UpdateItem(CCmdUI& state, CMenu *pPopupMenu, CWnd *pWnd)
 			(state.m_nID = state.m_pSubMenu->GetMenuItemID(0)) == 0 ||
 			state.m_nID == (UINT)-1)
 		{
-			return;       // First item of popup can't be routed to.
+			return; // First item of popup can't be routed to.
 		}
-		state.DoUpdate(pWnd, TRUE);   // Popups are never auto disabled.
+		state.DoUpdate(pWnd, TRUE); // Popups are never auto disabled.
 	}
 	else
 	{
@@ -238,7 +238,7 @@ void CMenuPopupUpdater::UpdateItem(CCmdUI& state, CMenu *pPopupMenu, CWnd *pWnd)
 	AdjustForMenuChanges(state, pPopupMenu);
 }
 
-void CMenuPopupUpdater::AdjustForMenuChanges(CCmdUI& state, CMenu *pPopupMenu)
+void CMenuPopupUpdater::AdjustForMenuChanges(CCmdUI& state, CMenu* pPopupMenu)
 {
 	// Adjust for menu deletions and additions.
 	UINT nCount = pPopupMenu->GetMenuItemCount();
@@ -246,7 +246,7 @@ void CMenuPopupUpdater::AdjustForMenuChanges(CCmdUI& state, CMenu *pPopupMenu)
 	{
 		state.m_nIndex -= (state.m_nIndexMax - nCount);
 		while (state.m_nIndex < nCount &&
-			pPopupMenu->GetMenuItemID(state.m_nIndex) == state.m_nID)
+			   pPopupMenu->GetMenuItemID(state.m_nIndex) == state.m_nID)
 		{
 			state.m_nIndex++;
 		}

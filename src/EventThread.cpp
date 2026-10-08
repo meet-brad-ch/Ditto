@@ -24,15 +24,15 @@ CEventThread::~CEventThread(void)
 {
 	Stop();
 
-	for(EventMapType::iterator it = m_eventMap.begin(); it != m_eventMap.end(); it++)
+	for (EventMapType::iterator it = m_eventMap.begin(); it != m_eventMap.end(); it++)
 	{
 		CloseHandle(it->first);
 	}
 }
 
-UINT CEventThread::EventThreadFnc(void* thisptr) 
+UINT CEventThread::EventThreadFnc(void* thisptr)
 {
-	CEventThread *threadClass = (CEventThread*)thisptr;
+	CEventThread* threadClass = (CEventThread*)thisptr;
 	threadClass->RunThread();
 	return 0;
 }
@@ -104,11 +104,11 @@ void CEventThread::AddEvent(int eventId, CString name)
 bool CEventThread::FireEvent(int eventId)
 {
 	HANDLE eventHandle = GetHandle(eventId);
-	if(eventHandle != nullptr)
+	if (eventHandle != nullptr)
 	{
 		SetEvent(eventHandle);
 		return true;
-	}	
+	}
 
 	return false;
 }
@@ -126,7 +126,7 @@ bool CEventThread::UndoFireEvent(int eventId)
 }
 
 HANDLE CEventThread::GetHandle(int eventId)
-{	
+{
 	ATL::CCritSecLock csLock(m_lock.m_sect);
 	for (auto it = m_eventMap.begin(); it != m_eventMap.end(); it++)
 	{
@@ -161,9 +161,9 @@ bool CEventThread::RemoveEvent(int eventId)
 	return false;
 }
 
-void CEventThread::Start(void *param) 
+void CEventThread::Start(void* param)
 {
-	if(m_threadRunning == false)
+	if (m_threadRunning == false)
 	{
 		ResetEvent(m_hEvt);
 		m_exitThread = false;
@@ -184,16 +184,16 @@ void CEventThread::WaitForThreadToExit(int waitTime)
 	WaitForSingleObject(m_hEvt, waitTime);
 }
 
-void CEventThread::Stop(int waitTime) 
+void CEventThread::Stop(int waitTime)
 {
 	CLogger::Log(CStringUtil::Format(_T("Start of CEventThread::Stop(int waitTime) %d - Name: %s"), waitTime, m_threadName.GetString()));
 
-	if(m_threadRunning)
+	if (m_threadRunning)
 	{
-		m_exitThread = true;	
+		m_exitThread = true;
 		FireEvent(ExitEvent);
 
-		if(waitTime > 0)
+		if (waitTime > 0)
 		{
 			// wait on the thread handle (signalled for good once the thread has ended) and log each
 			// period it is late. Upstream killed it with TerminateThread after waitTime, which can
@@ -209,7 +209,7 @@ void CEventThread::Stop(int waitTime)
 	CLogger::Log(CStringUtil::Format(_T("End of CEventThread::Stop(int waitTime) %d - Name: %s"), waitTime, m_threadName.GetString()));
 };
 
-void CEventThread::GetHandleVector(std::vector<HANDLE> &handles)
+void CEventThread::GetHandleVector(std::vector<HANDLE>& handles)
 {
 	ATL::CCritSecLock csLock(m_lock.m_sect);
 	handles.clear();
@@ -252,13 +252,13 @@ void CEventThread::RunThread()
 	SetEvent(m_hEvt);
 	ResetEvent(m_hEvt);
 
-	while(m_exitThread == false)
+	while (m_exitThread == false)
 	{
 		CheckForRebuildHandleVector(handles);
 
 		DWORD event = WaitForMultipleObjects((DWORD)handles.size(), handles.data(), FALSE, m_waitTimeout);
 
-		if(event == WAIT_FAILED)
+		if (event == WAIT_FAILED)
 		{
 			const DWORD errorMessageId = GetLastError();
 			LPSTR messageBuffer = nullptr;
@@ -272,7 +272,7 @@ void CEventThread::RunThread()
 
 			Sleep(1000);
 		}
-		else if(event == WAIT_TIMEOUT)
+		else if (event == WAIT_TIMEOUT)
 		{
 			OnTimeOut(m_param);
 		}
@@ -287,13 +287,13 @@ void CEventThread::RunThread()
 
 			HANDLE firedHandle = handles[handleIndex];
 			const int eventId = m_eventMap[firedHandle];
-			if(eventId == ExitEvent)
-			{				
+			if (eventId == ExitEvent)
+			{
 				break;
 			}
 			else if (eventId == RebuildEvents)
 			{
-				GetHandleVector(handles);				
+				GetHandleVector(handles);
 			}
 			else
 			{

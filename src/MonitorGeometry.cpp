@@ -10,28 +10,28 @@ int CMonitorGeometry::GetScreenWidth()
 {
 	const int width{ GetSystemMetrics(SM_CXSCREEN) };
 	const int height{ GetSystemMetrics(SM_CYSCREEN) };
-	switch(width)
+	switch (width)
 	{
 	default: // also 640, 800 and 1024
-		return(width);
+		return (width);
 	case 1280:
-		if(height == 480)
+		if (height == 480)
 		{
-			return(width / 2);
+			return (width / 2);
 		}
-		return(width);
+		return (width);
 	case 1600:
-		if(height == 600)
+		if (height == 600)
 		{
-			return(width / 2);
+			return (width / 2);
 		}
-		return(width);
+		return (width);
 	case 2048:
-		if(height == 768)
+		if (height == 768)
 		{
-			return(width / 2);
+			return (width / 2);
 		}
-		return(width);
+		return (width);
 	}
 }
 
@@ -39,28 +39,28 @@ int CMonitorGeometry::GetScreenHeight()
 {
 	const int width{ GetSystemMetrics(SM_CXSCREEN) };
 	const int height{ GetSystemMetrics(SM_CYSCREEN) };
-	switch(height)
+	switch (height)
 	{
 	default: // also 480, 600 and 768
-		return(height);
+		return (height);
 	case 960:
-		if(width == 640)
+		if (width == 640)
 		{
-			return(height / 2);
+			return (height / 2);
 		}
-		return(height);
+		return (height);
 	case 1200:
-		if(width == 800)
+		if (width == 800)
 		{
-			return(height / 2);
+			return (height / 2);
 		}
-		return(height);
+		return (height);
 	case 1536:
-		if(width == 1024)
+		if (width == 1024)
 		{
-			return(height / 2);
+			return (height / 2);
 		}
-		return(height);
+		return (height);
 	}
 }
 
@@ -149,7 +149,7 @@ CRect CMonitorGeometry::MonitorRectFromRect(CRect rect)
 	return crMonitor;
 }
 
-BOOL CMonitorGeometry::EnsureWindowVisible(CRect *pcrRect)
+BOOL CMonitorGeometry::EnsureWindowVisible(CRect* pcrRect)
 {
 	BOOL ret{ FALSE };
 

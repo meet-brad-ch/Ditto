@@ -55,39 +55,39 @@ CString CAccels::GetCmdKeyText(DWORD cmd)
 			}
 			break;
 		}
-	}	
+	}
 
 	return cmdShortcutText;
 }
 
-bool CAccels::OnMsg(MSG *pMsg, CAccel &a, int doubleKeyStrokeTimeout)
+bool CAccels::OnMsg(MSG* pMsg, CAccel& a, int doubleKeyStrokeTimeout)
 {
 	if (pMsg == NULL)
 	{
 		return false;
 	}
 
-	if((pMsg->message != WM_KEYDOWN && pMsg->message != WM_SYSKEYDOWN))
+	if ((pMsg->message != WM_KEYDOWN && pMsg->message != WM_SYSKEYDOWN))
 	{
 		return false;
 	}
 
 	// bit 30 (0x40000000) is 1 if this is NOT the first msg of the key
 	//  i.e. auto-repeat may cause multiple msgs of the same key
-	if((pMsg->lParam &0x40000000) && m_handleRepeatKeys == false)
+	if ((pMsg->lParam & 0x40000000) && m_handleRepeatKeys == false)
 	{
 		return false;
 	}
 
 	m_handleRepeatKeys = false;
 
-    const BYTE vkey = LOBYTE(pMsg->wParam);
+	const BYTE vkey = LOBYTE(pMsg->wParam);
 	BYTE mod = 0;
 	if (m_checkModifierKeys)
 	{
 		mod = GetKeyStateModifiers();
 	}
-    const DWORD key = MakeKey(vkey, mod);
+	const DWORD key = MakeKey(vkey, mod);
 
 	if (IsSecondKeyPending(doubleKeyStrokeTimeout))
 	{
@@ -100,10 +100,10 @@ bool CAccels::OnMsg(MSG *pMsg, CAccel &a, int doubleKeyStrokeTimeout)
 bool CAccels::IsSecondKeyPending(int doubleKeyStrokeTimeout) const
 {
 	return m_firstMapTick != 0 &&
-		(GetTickCount64() - m_firstMapTick) < doubleKeyStrokeTimeout;
+		   (GetTickCount64() - m_firstMapTick) < doubleKeyStrokeTimeout;
 }
 
-bool CAccels::MatchSecondKey(DWORD key, CAccel &a)
+bool CAccels::MatchSecondKey(DWORD key, CAccel& a)
 {
 	pair<multimap<DWORD, CAccel>::iterator, multimap<DWORD, CAccel>::iterator> ppp;
 	ppp = m_multiMap.equal_range(m_activeFirstKey);
@@ -122,7 +122,7 @@ bool CAccels::MatchSecondKey(DWORD key, CAccel &a)
 	return false;
 }
 
-bool CAccels::MatchFirstKey(DWORD key, CAccel &a)
+bool CAccels::MatchFirstKey(DWORD key, CAccel& a)
 {
 	m_firstMapTick = 0;
 	m_activeFirstKey = 0;
@@ -170,26 +170,26 @@ bool CAccels::ContainsKey(int vKey)
 
 BYTE CAccels::GetKeyStateModifiers()
 {
-    BYTE m = 0;
-    if(GetKeyState(VK_SHIFT) &0x8000)
-    {
-        m |= HOTKEYF_SHIFT;
-    }
-    if(GetKeyState(VK_CONTROL) &0x8000)
-    {
-        m |= HOTKEYF_CONTROL;
-    }
-    if(GetKeyState(VK_MENU) &0x8000)
-    {
-        m |= HOTKEYF_ALT;
-    }
-    if(GetKeyState(VK_LWIN) &0x8000)
-    {
-        m |= HOTKEYF_EXT;
-    }
-    if(GetKeyState(VK_RWIN) &0x8000)
-    {
-        m |= HOTKEYF_EXT;
-    }
-    return m;
+	BYTE m = 0;
+	if (GetKeyState(VK_SHIFT) & 0x8000)
+	{
+		m |= HOTKEYF_SHIFT;
+	}
+	if (GetKeyState(VK_CONTROL) & 0x8000)
+	{
+		m |= HOTKEYF_CONTROL;
+	}
+	if (GetKeyState(VK_MENU) & 0x8000)
+	{
+		m |= HOTKEYF_ALT;
+	}
+	if (GetKeyState(VK_LWIN) & 0x8000)
+	{
+		m |= HOTKEYF_EXT;
+	}
+	if (GetKeyState(VK_RWIN) & 0x8000)
+	{
+		m |= HOTKEYF_EXT;
+	}
+	return m;
 }
