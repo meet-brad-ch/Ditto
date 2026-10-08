@@ -1,4 +1,4 @@
-# Ditto, local-only fork
+# Ditto without network code
 
 A fork of the Ditto clipboard manager with all network code removed. It is built from source and
 publishes no releases or downloads.
