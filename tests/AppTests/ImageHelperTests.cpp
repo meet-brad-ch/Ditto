@@ -78,13 +78,17 @@ public:
 		EXPECT_TRUE(image.Create(2, 3, 24));
 
 		CComPtr<IStream> stream;
-		EXPECT_EQ(::CreateStreamOnHGlobal(NULL, TRUE, &stream), S_OK);
-		EXPECT_EQ(image.Save(stream, Gdiplus::ImageFormatPNG), S_OK);
-
 		STATSTG stat{};
-		EXPECT_EQ(stream->Stat(&stat, STATFLAG_NONAME), S_OK);
 		HGLOBAL hStream{};
-		EXPECT_EQ(::GetHGlobalFromStream(stream, &hStream), S_OK);
+		// each step needs the previous one: stop at the first failure
+		if (::CreateStreamOnHGlobal(NULL, TRUE, &stream) != S_OK || stream == nullptr ||
+			image.Save(stream, Gdiplus::ImageFormatPNG) != S_OK ||
+			stream->Stat(&stat, STATFLAG_NONAME) != S_OK ||
+			::GetHGlobalFromStream(stream, &hStream) != S_OK || hStream == nullptr)
+		{
+			ADD_FAILURE() << "the PNG stream could not be created, written or read";
+			return {};
+		}
 
 		const size_t size{ static_cast<size_t>(stat.cbSize.QuadPart) };
 		std::vector<BYTE> bytes(size);

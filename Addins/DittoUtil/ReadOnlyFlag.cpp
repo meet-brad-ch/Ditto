@@ -43,7 +43,7 @@ bool CReadOnlyFlag::ResetReadOnlyFlag(const CDittoInfo &DittoInfo, IClip *pClip,
 		{
 			CString file = SkipToFileStart(lines[i].TrimLeft(' ').TrimRight(' ').MakeLower());
 
-			const DWORD attributes{ resetFlag ? FILE_ATTRIBUTE_NORMAL : FILE_ATTRIBUTE_READONLY };
+			const DWORD attributes{ static_cast<DWORD>(resetFlag ? FILE_ATTRIBUTE_NORMAL : FILE_ATTRIBUTE_READONLY) };
 			if(::SetFileAttributes(file, attributes) == FALSE)
 			{
 				failedFiles.AppendFormat(_T("\n%s (error %u)"), file.GetString(), ::GetLastError());
