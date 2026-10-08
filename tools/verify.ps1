@@ -10,6 +10,7 @@
 #      macros): none in contract code; legacy code held by shrink-only baselines
 #      (tools\gates\allocation.ps1, globals.ps1; untouched third-party code: tools\thirdparty.txt)
 #      - complexity: every function of the own code below CC 10 (tools\gates\complexity.ps1)
+#      - formatting: every own C/C++ file matches .clang-format (tools\gates\format.ps1)
 #   7. runs every unit test on its own: DittoTests (AddressSanitizer build) and AppTests
 #      - coverage: line coverage of lib\DittoCore >= 90 % (Debug|x64 test build)
 #   8. checks with Doxygen that the contract code is fully documented
@@ -229,6 +230,18 @@ if ($gate.ExitCode -ne 0) { Fail 'a function is at or above complexity 10' 'Cycl
 $measured = ($gate.Lines | Where-Object { "$_" -match '(\d+) functions in (\d+) files; max CC (\d+)' } | Select-Object -First 1)
 $null = "$measured" -match '(\d+) functions in (\d+) files; max CC (\d+)'
 $report['Cyclomatic complexity'] = "PASS (all own code: $($Matches[1]) functions in $($Matches[2]) files, max CC $($Matches[3]) < 10)"
+
+# ---- 6c. formatting (clang-format) -------------------------------------------------------
+# Every own C/C++ file matches .clang-format (owner decision 2026-10-07; fix with
+# tools\gates\format.ps1 -Repo . -Fix).
+$gate = Invoke-Gate 'format.ps1' @{ Repo = $repo }
+if ($gate.ExitCode -ne 0) { Fail 'a file differs from .clang-format' 'Formatting' }
+$formatVersion = ($gate.Lines | Where-Object { "$_" -match 'format: (clang-format version [\d.]+)' } | Select-Object -First 1)
+$null = "$formatVersion" -match 'format: (clang-format version [\d.]+)'
+$formatTool = $Matches[1]
+$formatCount = ($gate.Lines | Where-Object { "$_" -match 'format: (\d+) files; 0 not formatted' } | Select-Object -First 1)
+$null = "$formatCount" -match 'format: (\d+) files'
+$report['Formatting'] = "PASS ($($Matches[1]) files match .clang-format, $formatTool)"
 
 # ---- 7. unit tests (each test on its own) ------------------------------------------------
 # DittoTests (lib\DittoCore) is an AddressSanitizer build; AppTests (the app layer against an

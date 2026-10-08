@@ -98,6 +98,11 @@ Branch coverage), on failure too. Run time: about 2 min, or about 3.5 min with `
    - **Complexity** (`tools\gates\complexity.ps1`, lizard): no function of Ditto's own code
      (`lib\`, `tests\` and the app alike) may reach CC 10. Untouched third-party files
      (`tools\thirdparty.txt`) are not measured.
+   - **Formatting** (`tools\gates\format.ps1`): every own C/C++ file matches `.clang-format`
+     (tabs, Allman braces, existing line breaks kept, includes never sorted), checked with the
+     clang-format that Visual Studio ships (22.1.3 here; another version may format differently).
+     Untouched third-party files and the resource editor's `resource.h` are not formatted. Fix
+     with `powershell -NoProfile -ExecutionPolicy Bypass -File tools\gates\format.ps1 -Repo . -Fix`.
 7. It runs every GoogleTest in `tests\` on its own (`--gtest_filter`), under AddressSanitizer. Each
    test writes its result to `build\test-results\<test>.xml`.
    - **Coverage:** Microsoft code coverage (it ships with Visual Studio) runs the Debug|x64 test

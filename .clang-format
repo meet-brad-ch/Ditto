@@ -1,0 +1,47 @@
+# Ditto's C/C++ formatting (owner decision 2026-10-07: clang-format on all own code).
+# Matches the existing style: tabs, Allman braces, indented namespaces, spaces inside brace
+# initialisers. ColumnLimit 0 keeps the existing line breaks (no rewrapping); includes are never
+# sorted (stdafx.h must stay first for the precompiled header). Checked by tools\gates\format.ps1.
+# Untouched third-party files (tools\thirdparty.txt) are never formatted.
+BasedOnStyle: Microsoft
+Language: Cpp
+Standard: c++20
+UseTab: ForContinuationAndIndentation
+IndentWidth: 4
+TabWidth: 4
+ContinuationIndentWidth: 4
+ColumnLimit: 0
+LineEnding: CRLF
+InsertNewlineAtEOF: true
+BreakBeforeBraces: Allman
+AccessModifierOffset: -4
+IndentCaseLabels: false
+NamespaceIndentation: All
+FixNamespaceComments: false
+Cpp11BracedListStyle: false
+PointerAlignment: Left
+DerivePointerAlignment: false
+ReferenceAlignment: Pointer
+SpaceBeforeParens: ControlStatements
+SortIncludes: Never
+IncludeBlocks: Preserve
+ReflowComments: false
+MaxEmptyLinesToKeep: 2
+KeepEmptyLines:
+  AtStartOfBlock: true
+AllowShortFunctionsOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortLoopsOnASingleLine: true
+AllowShortBlocksOnASingleLine: Always
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortLambdasOnASingleLine: All
+AllowShortEnumsOnASingleLine: true
+# constructor initializer lists: "Class() :" then one tab-indented member per line
+BreakConstructorInitializers: AfterColon
+PackConstructorInitializers: Never
+ConstructorInitializerIndentWidth: 4
+# MFC's DECLARE_/IMPLEMENT_ macros end without a semicolon: they are whole statements
+StatementMacros: [DECLARE_MESSAGE_MAP, DECLARE_DYNAMIC, DECLARE_DYNCREATE, DECLARE_SERIAL, DECLARE_WND_CLASS, DECLARE_INTERFACE_MAP, DECLARE_DISPATCH_MAP, DECLARE_EVENTSINK_MAP, DECLARE_OLECREATE, IMPLEMENT_DYNAMIC, IMPLEMENT_DYNCREATE, IMPLEMENT_SERIAL, IMPLEMENT_OLECREATE]
+# MFC/ATL maps are blocks: their entries stay indented
+MacroBlockBegin: "^(BEGIN_MESSAGE_MAP|BEGIN_EVENTSINK_MAP|BEGIN_DISPATCH_MAP|BEGIN_INTERFACE_MAP|BEGIN_COM_MAP|BEGIN_MSG_MAP|BEGIN_OBJECT_MAP|BEGIN_CONNECTION_POINT_MAP)$"
+MacroBlockEnd: "^(END_MESSAGE_MAP|END_EVENTSINK_MAP|END_DISPATCH_MAP|END_INTERFACE_MAP|END_COM_MAP|END_MSG_MAP|END_OBJECT_MAP|END_CONNECTION_POINT_MAP)$"
