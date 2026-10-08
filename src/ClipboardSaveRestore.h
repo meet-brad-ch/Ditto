@@ -2,10 +2,18 @@
 
 #include "Clip.h"
 
+class CAppWindows;
+class CRegisteredClipboardFormats;
+
 class CClipboardSaveRestore
 {
 public:
-	CClipboardSaveRestore(void);
+	/**
+	 * @brief Creates an empty saved clipboard.
+	 * @param windows The application's windows (the main window opens the clipboard); must outlive this object.
+	 * @param formats The registered clipboard formats (the ignore format a restore adds); must outlive this object.
+	 */
+	CClipboardSaveRestore(CAppWindows& windows, const CRegisteredClipboardFormats& formats);
 	~CClipboardSaveRestore(void);
 
 	bool Save(BOOL textOnly);
@@ -16,6 +24,11 @@ public:
 	CClipFormats m_Clipboard;
 
 private:
+	/** @brief The application's windows (not owned): the main window opens the clipboard. */
+	CAppWindows& m_windows;
+	/** @brief The registered clipboard formats (not owned). */
+	const CRegisteredClipboardFormats& m_formats;
+
 	/**
 	 * @brief Tells whether Save keeps a clipboard format.
 	 * @param textOnly TRUE to keep only CF_TEXT, CF_UNICODETEXT and CF_HDROP.

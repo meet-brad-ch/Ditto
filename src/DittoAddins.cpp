@@ -3,8 +3,10 @@
 #include "misc.h"
 #include "CP_Main.h"
 
-CDittoAddins::CDittoAddins(CGetSetOptions& settings) :
-	m_settings(settings)
+CDittoAddins::CDittoAddins(CGetSetOptions& settings, CMultiLanguage& language, CAppWindows& windows) :
+	m_settings(settings),
+	m_language(language),
+	m_windows(windows)
 {
 }
 
@@ -107,7 +109,7 @@ bool CDittoAddins::AddPrePasteAddinsToMenu(CMenu *pMenu)
 	if(bRet)
 	{
 		pMenu->InsertMenu(17, MF_BYPOSITION | MF_SEPARATOR);
-		pMenu->InsertMenu(18, MF_BYPOSITION|MF_ENABLED|MF_STRING|MF_POPUP, (UINT_PTR)AllAddinsMenu, theApp.m_Language.GetString("Add_Ins", "Add-Ins"));
+		pMenu->InsertMenu(18, MF_BYPOSITION|MF_ENABLED|MF_STRING|MF_POPUP, (UINT_PTR)AllAddinsMenu, m_language.GetString("Add_Ins", "Add-Ins"));
 	}
 
 	return bRet;
@@ -131,9 +133,9 @@ bool CDittoAddins::CallPrePasteFunction(int Id, IClip *pClip)
 void CDittoAddins::LoadDittoInfo(CDittoInfo &DittoInfo)
 {
 	DittoInfo.m_csDatabasePath = m_settings.GetDBPath();
-	DittoInfo.m_csLanguageCode = theApp.m_Language.GetLangCode();	
+	DittoInfo.m_csLanguageCode = m_language.GetLangCode();
 	DittoInfo.m_csSqliteVersion = sqlite3_libversion();
-	DittoInfo.m_hWndDitto = theApp.QPastehWnd();
+	DittoInfo.m_hWndDitto = m_windows.QPastehWnd();
 }
 
 void CDittoAddins::AboutScreenText(CStringArray &arr)

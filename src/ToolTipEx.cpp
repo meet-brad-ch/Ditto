@@ -118,7 +118,7 @@ BOOL CToolTipEx::Create(CWnd *pParentWnd)
 
 	m_optionsButton.Create(NULL, WS_CHILD | BS_OWNERDRAW | WS_TABSTOP, CRect(0, 0, 0, 0), this, 2);
 	m_optionsButton.LoadStdImageDPI(m_DittoWindow.m_dpi.GetDPI(), IDB_COG_16_16, IDB_COG_20_20, IDB_COG_24_24, cog_28, IDB_COG_32_32, _T("PNG"));
-	m_optionsButton.SetToolTipText(theApp.m_Language.GetString(_T("DescriptionOptionsTooltip"), _T("Description Options")));
+	m_optionsButton.SetToolTipText(theApp.Services().Language().GetString(_T("DescriptionOptionsTooltip"), _T("Description Options")));
 	m_optionsButton.ShowWindow(SW_SHOW);
 
 	m_clipDataStatic.Create(_T("some text"), WS_CHILD | WS_VISIBLE | SS_SIMPLE, CRect(0, 0, 0, 0), this, 3);
@@ -407,7 +407,7 @@ bool CToolTipEx::HandleCopyKey(MSG *pMsg)
 		if(GetKeyState(VK_CONTROL) &0x8000)
 		{
 			m_RichEdit.Copy();
-			theApp.SetCopyReason(CopyReasonEnum::COPY_FROM_TOOLTIP);
+			theApp.Services().State().SetCopyReason(CopyReasonEnum::COPY_FROM_TOOLTIP);
 			return true;
 		}
 		break;
@@ -457,7 +457,7 @@ void CToolTipEx::CheckToolTipActions(MSG *pMsg)
 					m_DittoWindow.m_bMinimized == false)
 				{
 					m_DittoWindow.MinMaxWindow(this, CDittoWindow::ForceMin);
-					theApp.m_activeWnd.ReleaseFocus();
+					theApp.Services().ActiveWindow().ReleaseFocus();
 
 					return TRUE;
 				}*/
@@ -1111,7 +1111,7 @@ void CToolTipEx::OnOptions()
 
 		GetCursorPos(&pp);
 
-		theApp.m_Language.UpdateRightClickMenu(cmSubMenu);
+		theApp.Services().Language().UpdateRightClickMenu(cmSubMenu);
 
 		CheckOptionMenuItems(cmSubMenu);
 

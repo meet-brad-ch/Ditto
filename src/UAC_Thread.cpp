@@ -6,7 +6,8 @@
 #include "QPasteWnd.h"
 #include "cp_main.h"
 
-CUAC_Thread::CUAC_Thread(int processId)
+CUAC_Thread::CUAC_Thread(int processId, ExternalWindowTracker& activeWindow) :
+	m_activeWindow(activeWindow)
 {
 	m_processId = processId;
 
@@ -66,13 +67,13 @@ void CUAC_Thread::OnEvent(int eventId, void * /*param*/)
 	switch((eUacThreadEvents)eventId)
 	{
 	case UAC_PASTE:
-		theApp.m_activeWnd.SendPaste(false);
-		break; 
+		m_activeWindow.SendPaste(false);
+		break;
 	case UAC_COPY:
-		theApp.m_activeWnd.SendCopy(CopyReasonEnum::COPY_TO_UNKOWN);
-		break; 
+		m_activeWindow.SendCopy(CopyReasonEnum::COPY_TO_UNKOWN);
+		break;
 	case UAC_CUT:
-		theApp.m_activeWnd.SendCut();
+		m_activeWindow.SendCut();
 		break; 
 	case UAC_EXIT:
 		this->CancelThread();

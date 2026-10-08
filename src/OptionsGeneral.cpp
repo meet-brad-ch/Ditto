@@ -20,7 +20,7 @@ IMPLEMENT_DYNCREATE(COptionsGeneral, CPropertyPage)
 
 COptionsGeneral::COptionsGeneral() : CPropertyPage(COptionsGeneral::IDD)
 {
-	m_csTitle = theApp.m_Language.GetString("GeneralTitle", "General");
+	m_csTitle = Services().Language().GetString("GeneralTitle", "General");
 	m_psp.pszTitle = m_csTitle;
 	m_psp.dwFlags |= PSP_USETITLE; 
 
@@ -34,9 +34,14 @@ COptionsGeneral::~COptionsGeneral()
 {
 }
 
+CAppServices& COptionsGeneral::Services() const
+{
+	return theApp.Services();
+}
+
 CGetSetOptions& COptionsGeneral::Settings() const
 {
-	return theApp.Services().Settings();
+	return Services().Settings();
 }
 
 void COptionsGeneral::DoDataExchange(CDataExchange* pDX)
@@ -138,13 +143,13 @@ BOOL COptionsGeneral::OnInitDialog()
 	FillThemes();
 	FillLanguages();
 
-	int caretPos = m_popupPositionCombo.AddString(theApp.m_Language.GetString("AtCaret", "At Caret"));
+	int caretPos = m_popupPositionCombo.AddString(Services().Language().GetString("AtCaret", "At Caret"));
 	m_popupPositionCombo.SetItemData(caretPos, CGetSetOptions::PosAtCaret);
 
-	int cursorPos = m_popupPositionCombo.AddString(theApp.m_Language.GetString("AtCursor", "At Cursor"));
+	int cursorPos = m_popupPositionCombo.AddString(Services().Language().GetString("AtCursor", "At Cursor"));
 	m_popupPositionCombo.SetItemData(cursorPos, CGetSetOptions::PosAtCursor);
 
-	int prevPos = m_popupPositionCombo.AddString(theApp.m_Language.GetString("AtPreviousPosition", "At Previous Position"));
+	int prevPos = m_popupPositionCombo.AddString(Services().Language().GetString("AtPreviousPosition", "At Previous Position"));
 	m_popupPositionCombo.SetItemData(prevPos, CGetSetOptions::PosAtPrevious);
 
 	switch (Settings().GetQuickPastePosition())
@@ -164,7 +169,7 @@ BOOL COptionsGeneral::OnInitDialog()
 
 	UpdateData(FALSE);
 
-	theApp.m_Language.UpdateOptionGeneral(this);
+	Services().Language().UpdateOptionGeneral(this);
 
 	//move after we translate so the en change gets called and we update with the correct translated value for environment variable
 	CString csPath = Settings().GetDBPath(false);
@@ -261,10 +266,11 @@ void COptionsGeneral::ApplyLanguage()
 
 	if(csLanguage.IsEmpty() == FALSE)
 	{
-		if(!theApp.m_Language.LoadLanguageFile(Settings().GetPath(CGetSetOptions::PathLanguage), csLanguage))
+		CMultiLanguage& language = Services().Language();
+		if(!language.LoadLanguageFile(Settings().GetPath(CGetSetOptions::PathLanguage), csLanguage))
 		{
 			CString cs;
-			cs.Format(_T("Error loading language file - %s - \n\n%s"), csLanguage.GetString(), theApp.m_Language.m_csLastError.GetString());
+			cs.Format(_T("Error loading language file - %s - \n\n%s"), csLanguage.GetString(), language.m_csLastError.GetString());
 
 			MessageBox(cs, _T("Ditto"), MB_OK);
 		}
@@ -338,7 +344,7 @@ bool COptionsGeneral::OpenNewDatabase(const CString& toSavePath, const CString& 
 {
 	Settings().SetDBPath(toSavePath);
 
-	if(CDatabaseManager::OpenDatabase(Settings(), resolvedPath) == FALSE)
+	if(CDatabaseManager::OpenDatabase(Settings(), theApp.Services().Database(), theApp.Services().State(), resolvedPath) == FALSE)
 	{
 		MessageBox(_T("Error Opening new database"), _T("Ditto"), MB_OK);
 		m_ePath.SetFocus();
@@ -346,7 +352,7 @@ bool COptionsGeneral::OpenNewDatabase(const CString& toSavePath, const CString& 
 	}
 	else
 	{
-		theApp.RefreshView();
+		Services().Windows().RefreshView();
 	}
 
 	return true;
@@ -509,7 +515,7 @@ void COptionsGeneral::FillThemes()
 	
 	m_cbTheme.Clear();
 
-	int windowsSettingIndex = m_cbTheme.AddString(theApp.m_Language.GetString("FollowWindowsTheme", "(Follow windows light/dark themes)"));
+	int windowsSettingIndex = m_cbTheme.AddString(Services().Language().GetString("FollowWindowsTheme", "(Follow windows light/dark themes)"));
 		
 		//_T("(Follow windows light/dark themes)"));
 	m_cbTheme.SetItemData(windowsSettingIndex, 0);
@@ -715,15 +721,16 @@ void COptionsGeneral::OnClickedExpireEntries()
 
 void COptionsGeneral::OnBnClickedButtonPreviewTheme()
 {
-	if (theApp.m_pMainFrame != NULL)
+	CMainFrame* pMainFrame = Services().Windows().MainFrame();
+	if (pMainFrame != NULL)
 	{
-		CQPasteWnd* pPasteWnd = theApp.m_pMainFrame->m_quickPaste.m_pwndPaste.get();
+		CQPasteWnd* pPasteWnd = pMainFrame->m_quickPaste.m_pwndPaste.get();
 
 		// If the window doesn't exist yet, create/show it first (will load persisted theme)
 		if (pPasteWnd == NULL || IsWindow(pPasteWnd->m_hWnd) == FALSE)
 		{
-			theApp.m_pMainFrame->m_quickPaste.ShowQPasteWnd(theApp.m_pMainFrame, true, false, TRUE);
-			pPasteWnd = theApp.m_pMainFrame->m_quickPaste.m_pwndPaste.get();
+			pMainFrame->m_quickPaste.ShowQPasteWnd(pMainFrame, true, false, TRUE);
+			pPasteWnd = pMainFrame->m_quickPaste.m_pwndPaste.get();
 		}
 
 		// Ensure it is visible before applying preview theme
@@ -741,14 +748,15 @@ void COptionsGeneral::OnBnClickedButtonPreviewTheme()
 void COptionsGeneral::OnCbnSelchangeComboTheme()
 {
 	// If the Ditto window is currently visible, update the theme live
-	if (theApp.m_pMainFrame != NULL && theApp.m_pMainFrame->m_quickPaste.IsWindowVisibleEx())
+	CMainFrame* pMainFrame = Services().Windows().MainFrame();
+	if (pMainFrame != NULL && pMainFrame->m_quickPaste.IsWindowVisibleEx())
 	{
 		ApplySelectedThemeToPreview();
-		
+
 		// Refresh the window to apply the new theme
-		if (theApp.m_pMainFrame->m_quickPaste.m_pwndPaste != NULL)
+		if (pMainFrame->m_quickPaste.m_pwndPaste != NULL)
 		{
-			theApp.m_pMainFrame->m_quickPaste.m_pwndPaste->RefreshThemeColors();
+			pMainFrame->m_quickPaste.m_pwndPaste->RefreshThemeColors();
 		}
 	}
 }

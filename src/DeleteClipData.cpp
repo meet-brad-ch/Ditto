@@ -24,6 +24,7 @@ IMPLEMENT_DYNAMIC(CDeleteClipData, CDialog)
 
 CDeleteClipData::CDeleteClipData(CWnd* pParent /*=NULL*/)
 	: CDialog(CDeleteClipData::IDD, pParent)
+	, m_showTaskbar(theApp.Services().Windows(), theApp.Services().State())
 	, m_pDescriptionWindow(nullptr)
 	, m_clipTitle(_T(""))
 	, m_filterByClipTitle(FALSE)
@@ -101,7 +102,7 @@ BOOL CDeleteClipData::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	theApp.m_Language.UpdateDeleteClipData(this);
+	theApp.Services().Language().UpdateDeleteClipData(this);
 
 	m_Resize.SetParent(m_hWnd);
 	m_Resize.AddControl(IDC_LIST2, CDialogResizer::SizeHeight | CDialogResizer::SizeWidth);
@@ -142,13 +143,13 @@ void CDeleteClipData::InitListCtrlCols()
 {
 	m_clipList.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 
-	m_clipList.InsertColumn(0, theApp.m_Language.GetDeleteClipDataString("ID", "ID"), LVCFMT_LEFT, 50);
-	m_clipList.InsertColumn(1, theApp.m_Language.GetDeleteClipDataString("Title", "Title"), LVCFMT_LEFT, 350);
-	m_clipList.InsertColumn(2, theApp.m_Language.GetDeleteClipDataString("QuickPasteText", "Quick Paste Text"), LVCFMT_LEFT, 200);
-	m_clipList.InsertColumn(3, theApp.m_Language.GetDeleteClipDataString("Created", "Created"), LVCFMT_LEFT, 150);
-	m_clipList.InsertColumn(4, theApp.m_Language.GetDeleteClipDataString("LastUsed", "Last Used"), LVCFMT_LEFT, 150);
-	m_clipList.InsertColumn(5, theApp.m_Language.GetDeleteClipDataString("Format", "Format"), LVCFMT_LEFT, 150);
-	m_clipList.InsertColumn(6, theApp.m_Language.GetDeleteClipDataString("DataSize", "Data Size"), LVCFMT_LEFT, 100);
+	m_clipList.InsertColumn(0, theApp.Services().Language().GetDeleteClipDataString("ID", "ID"), LVCFMT_LEFT, 50);
+	m_clipList.InsertColumn(1, theApp.Services().Language().GetDeleteClipDataString("Title", "Title"), LVCFMT_LEFT, 350);
+	m_clipList.InsertColumn(2, theApp.Services().Language().GetDeleteClipDataString("QuickPasteText", "Quick Paste Text"), LVCFMT_LEFT, 200);
+	m_clipList.InsertColumn(3, theApp.Services().Language().GetDeleteClipDataString("Created", "Created"), LVCFMT_LEFT, 150);
+	m_clipList.InsertColumn(4, theApp.Services().Language().GetDeleteClipDataString("LastUsed", "Last Used"), LVCFMT_LEFT, 150);
+	m_clipList.InsertColumn(5, theApp.Services().Language().GetDeleteClipDataString("Format", "Format"), LVCFMT_LEFT, 150);
+	m_clipList.InsertColumn(6, theApp.Services().Language().GetDeleteClipDataString("DataSize", "Data Size"), LVCFMT_LEFT, 100);
 }
 
 void CDeleteClipData::LoadItems()
@@ -159,7 +160,7 @@ void CDeleteClipData::LoadItems()
 
 	if (m_clipboardFomatCombo.GetCount() == 0)
 	{
-		CppSQLite3Query qFormats = theApp.m_db.execQueryEx(_T("select DISTINCT(strClipBoardFormat) from Data"));
+		CppSQLite3Query qFormats = theApp.Services().Database().execQueryEx(_T("select DISTINCT(strClipBoardFormat) from Data"));
 		while (qFormats.eof() == false)
 		{
 			CString format = qFormats.getStringField(_T("strClipBoardFormat"));
@@ -169,7 +170,7 @@ void CDeleteClipData::LoadItems()
 		}
 	}
 
-	CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT Main.lID, Main.mText, Main.lDate, Main.lastPasteDate, Main.QuickPasteText, Data.lID AS DataID, Data.strClipBoardFormat, length(Data.ooData) AS DataLength ")
+	CppSQLite3Query q = theApp.Services().Database().execQueryEx(_T("SELECT Main.lID, Main.mText, Main.lDate, Main.lastPasteDate, Main.QuickPasteText, Data.lID AS DataID, Data.strClipBoardFormat, length(Data.ooData) AS DataLength ")
 													_T("FROM Data ")
 													_T("INNER JOIN Main on Main.lID = Data.lParentID ")
 													_T("ORDER BY length(ooData) DESC"));
@@ -682,10 +683,10 @@ void CDeleteClipData::DeleteRows(const std::vector<int>& rowsToDelete, CProgress
 		try
 		{
 			//Sleep(100);
-			theApp.m_db.execDMLEx(_T("DELETE FROM Data where lID = %d"), data.m_DatalID);
+			theApp.Services().Database().execDMLEx(_T("DELETE FROM Data where lID = %d"), data.m_DatalID);
 
 			//If there are no more children for this clip then delete the parent
-			theApp.m_db.execDMLEx(_T("DELETE FROM Main where lID IN ")
+			theApp.Services().Database().execDMLEx(_T("DELETE FROM Main where lID IN ")
 				_T("(")
 				_T("SELECT Main.lID ")
 				_T("FROM Main ")
@@ -955,7 +956,7 @@ void CDeleteClipData::SetDescriptionWindowText(INT_PTR row)
 
 	m_pDescriptionWindow->SetToolTipText(m_data[row].m_Desc);
 
-	CClip selectedClip(theApp.Services().Settings());
+	CClip selectedClip(theApp.Services().ClipContext());
 	selectedClip.LoadMainTable(m_data[row].m_lID);
 	selectedClip.LoadFormats(m_data[row].m_lID, false, false, m_data[row].m_DatalID);
 
@@ -964,7 +965,7 @@ void CDeleteClipData::SetDescriptionWindowText(INT_PTR row)
 	int parentId = selectedClip.m_parentId;
 	if (parentId > 0)
 	{
-		CString folder = CClipDatabase::FolderPath(parentId);
+		CString folder = CClipDatabase::FolderPath(theApp.Services().Database(), parentId);
 
 		m_pDescriptionWindow->SetFolderPath(folder);
 	}
@@ -1008,7 +1009,7 @@ CString CDeleteClipData::DescribeClip(CClip& selectedClip)
 		}
 	}
 
-	if (theApp.m_GroupID > 0)
+	if (theApp.Services().State().m_GroupID > 0)
 	{
 		double sticky = selectedClip.m_stickyClipGroupOrder;
 		if (sticky != CClip::InvalidSticky)
@@ -1086,12 +1087,12 @@ void CDeleteClipData::SetDescriptionWindowImage(CClip& selectedClip)
 	try
 	{
 		// PNG is closer to the original, so it replaces the DIB when the clip has both
-		for (const CLIPFORMAT cfType : { (CLIPFORMAT)CF_DIB, (CLIPFORMAT)theApp.m_PNG_Format })
+		for (const CLIPFORMAT cfType : { (CLIPFORMAT)CF_DIB, theApp.Services().ClipboardFormats().Png() })
 		{
 			CClipFormat* format = selectedClip.m_Formats.FindFormat(cfType);
 			if (format != nullptr)
 			{
-				m_pDescriptionWindow->SetGdiplusBitmap(format->LoadGdiplusBitmap());
+				m_pDescriptionWindow->SetGdiplusBitmap(format->LoadGdiplusBitmap(theApp.Services().ClipboardFormats().Png()));
 			}
 		}
 	}
@@ -1178,7 +1179,7 @@ void CDeleteClipData::SaveClipDataItemToFile(CDeleteData item)
 
 	if (GetSaveFileName(&ofn))
 	{
-		CClip selectedClip(theApp.Services().Settings());
+		CClip selectedClip(theApp.Services().ClipContext());
 		selectedClip.LoadFormats(item.m_lID, false, false, item.m_DatalID);
 
 		WriteClipDataItem(selectedClip, item, ofn);
@@ -1231,7 +1232,7 @@ void CDeleteClipData::OnCancel()
 
 void CDeleteClipData::OnBnClickedBtCompactAndRepair()
 {
-	auto msg = theApp.m_Language.GetString("CompactRepairWarning", "Warning this can take quite a long time and require up to double the hard drive space as your current database size, Continue?");
+	auto msg = theApp.Services().Language().GetString("CompactRepairWarning", "Warning this can take quite a long time and require up to double the hard drive space as your current database size, Continue?");
 	int ret = MessageBox(msg, _T("Ditto"), MB_OKCANCEL);
 
 	if (ret == IDOK)
@@ -1244,11 +1245,11 @@ void CDeleteClipData::OnBnClickedBtCompactAndRepair()
 			{
 				for (int i = 0; i < 100; i++)
 				{
-					int toDeleteCount = theApp.m_db.execScalar(_T("SELECT COUNT(clipID) FROM MainDeletes"));
+					int toDeleteCount = theApp.Services().Database().execScalar(_T("SELECT COUNT(clipID) FROM MainDeletes"));
 					if (toDeleteCount <= 0)
 						break;
 
-					CClipRetentionPolicy::RemoveOldEntries(theApp.Services().Settings(), false);
+					CClipRetentionPolicy::RemoveOldEntries(theApp.Services().Settings(), theApp.Services().IdleTime(), theApp.Services().Windows(), false);
 				}
 			}
 			catch (CppSQLite3Exception& e)
@@ -1257,8 +1258,8 @@ void CDeleteClipData::OnBnClickedBtCompactAndRepair()
 				return;
 			}
 
-			theApp.m_db.execDML(_T("PRAGMA auto_vacuum = 1"));
-			theApp.m_db.execQuery(_T("VACUUM"));
+			theApp.Services().Database().execDML(_T("PRAGMA auto_vacuum = 1"));
+			theApp.Services().Database().execQuery(_T("VACUUM"));
 			SetDbSize();
 		}
 		catch (CppSQLite3Exception& e)

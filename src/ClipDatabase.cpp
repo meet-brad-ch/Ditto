@@ -2,8 +2,9 @@
 #include "CP_Main.h"
 #include "Misc.h"
 #include "ErrorReport.h"
+#include "ClipContext.h"
 
-long CClipDatabase::NewGroupID(int parentID, CString text)
+long CClipDatabase::NewGroupID(CDittoDb& db, int parentID, CString text)
 {
 	long lID{};
 	CTime time{};
@@ -15,14 +16,14 @@ long CClipDatabase::NewGroupID(int parentID, CString text)
 			text = time.Format("NewGroup %y/%m/%d %H:%M:%S");
 
 		// bound values: the name is stored as typed (no quote doubling) and the time keeps 64 bits
-		CppSQLite3Statement insert = theApp.m_db.compileStatement(
+		CppSQLite3Statement insert = db.compileStatement(
 			_T("insert into Main (lDate, mText, lDontAutoDelete, bIsGroup, lParentID, stickyClipOrder, stickyClipGroupOrder) values(?, ?, ?, 1, ?, -(2147483647), -(2147483647));"));
 		insert.bindInt64(1, time.GetTime());
 		insert.bind(2, text);
 		insert.bindInt64(3, time.GetTime());
 		insert.bind(4, parentID);
 
-		lID = (long)theApp.m_db.InsertReturningId(insert);
+		lID = (long)db.InsertReturningId(insert);
 	}
 	catch (CppSQLite3Exception& e)
 	{
@@ -33,12 +34,12 @@ long CClipDatabase::NewGroupID(int parentID, CString text)
 	return lID;
 }
 
-BOOL CClipDatabase::DeleteAllIDs()
+BOOL CClipDatabase::DeleteAllIDs(CDittoDb& db)
 {
 	try
 	{
-		theApp.m_db.execDML(_T("DELETE FROM Data;"));
-		theApp.m_db.execDML(_T("DELETE FROM Main;"));
+		db.execDML(_T("DELETE FROM Data;"));
+		db.execDML(_T("DELETE FROM Main;"));
 	}
 	catch (CppSQLite3Exception& e)
 	{
@@ -49,27 +50,28 @@ BOOL CClipDatabase::DeleteAllIDs()
 	return TRUE;
 }
 
-BOOL CClipDatabase::DeleteFormats(CGetSetOptions& settings, int parentID, ARRAY& formatIDs)
+BOOL CClipDatabase::DeleteFormats(CClipContext& context, int parentID, ARRAY& formatIDs)
 {
 	if(formatIDs.GetSize() <= 0)
 		return TRUE;
 
 	try
 	{
+		CDittoDb& db{ context.Database() };
 		//Delete the requested data formats
 		const INT_PTR count{ formatIDs.GetSize() };
 		for(int i{}; i < count; i++)
 		{
-			theApp.m_db.execDMLEx(_T("DELETE FROM Data WHERE lID = %d;"), formatIDs[i]);
+			db.execDMLEx(_T("DELETE FROM Data WHERE lID = %d;"), formatIDs[i]);
 		}
 
-		CClip clip(settings);
+		CClip clip(context);
 		if(clip.LoadFormats(parentID))
 		{
 			const DWORD CRC{ clip.GenerateCRC() };
 
 			//Update the main table with new size
-			theApp.m_db.execDMLEx(_T("UPDATE Main SET CRC = %d WHERE lID = %d"), CRC, parentID);
+			db.execDMLEx(_T("UPDATE Main SET CRC = %d WHERE lID = %d"), CRC, parentID);
 		}
 	}
 	catch (CppSQLite3Exception& e)
@@ -81,7 +83,7 @@ BOOL CClipDatabase::DeleteFormats(CGetSetOptions& settings, int parentID, ARRAY&
 	return TRUE;
 }
 
-CString CClipDatabase::FolderPath(int folderId)
+CString CClipDatabase::FolderPath(CDittoDb& db, int folderId)
 {
 	CString folder{ _T("") };
 	if (folderId > 0)
@@ -91,7 +93,7 @@ CString CClipDatabase::FolderPath(int folderId)
 			CStringArray arr;
 			for (int i{}; i < 100; i++)
 			{
-				CppSQLite3Query parent = theApp.m_db.execQueryEx(_T("SELECT lID, mText, lParentID FROM Main WHERE lID = %d"), folderId);
+				CppSQLite3Query parent = db.execQueryEx(_T("SELECT lID, mText, lParentID FROM Main WHERE lID = %d"), folderId);
 				if (parent.eof() == false)
 				{
 					arr.Add(parent.getStringField(_T("mText")));

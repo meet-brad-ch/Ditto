@@ -39,8 +39,8 @@
 // CQPasteWnd
 
 CQPasteWnd::CQPasteWnd() :
-	m_thread(theApp.Services().Settings()),
-	m_extraDataThread(theApp.Services().Settings())
+	m_thread(theApp.Services().Settings(), theApp.Services().Database(), theApp.Services().ClipboardFormats()),
+	m_extraDataThread(theApp.Services().Settings(), theApp.Services().Database(), theApp.Services().ClipboardFormats())
 {
 	m_Title = s_qpasteTitle;
 	m_bHideWnd = true;
@@ -65,6 +65,11 @@ CQPasteWnd::~CQPasteWnd()
 CGetSetOptions& CQPasteWnd::Settings() const
 {
 	return theApp.Services().Settings();
+}
+
+CAppServices& CQPasteWnd::Services()
+{
+	return theApp.Services();
 }
 
 BEGIN_MESSAGE_MAP(CQPasteWnd, CWndEx)
@@ -356,7 +361,7 @@ int CQPasteWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	m_search.Create(WS_TABSTOP | WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, CRect(0, 0, 0, 0), this, IdEditSearch);
 	m_search.SetDpiInfo(&m_DittoWindow.m_dpi);
-	m_search.SetPromptText(theApp.m_Language.GetString(_T("Search"), _T("Search")));
+	m_search.SetPromptText(Services().Language().GetString(_T("Search"), _T("Search")));
 	::SHAutoComplete(m_search.m_hWnd, SHACF_AUTOSUGGEST_FORCE_OFF);
 	SetSearchImages();
 	m_search.LoadPastSearches(Settings().GetPastSearchXml());
@@ -405,7 +410,7 @@ int CQPasteWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	//m_ShowGroupsFolderBottom.LoadBitmaps(IDB_CLOSED_FOLDER, IDB_CLOSED_FOLDER_PRESSED, IDB_CLOSED_FOLDER_FOCUSED);
 	m_ShowGroupsFolderBottom.LoadStdImageDPI(m_DittoWindow.m_dpi.GetDPI(), open_folder_24, open_folder_30, open_folder_36, open_folder_42, open_folder_48, _T("PNG"), open_folder_54, open_folder_60, open_folder_66, open_folder_72, open_folder_78, open_folder_84);
 	m_ShowGroupsFolderBottom.ShowWindow(SW_SHOW);
-	m_ShowGroupsFolderBottom.SetToolTipText(theApp.m_Language.GetString(_T("GroupsTooltip"), _T("Groups")));
+	m_ShowGroupsFolderBottom.SetToolTipText(Services().Language().GetString(_T("GroupsTooltip"), _T("Groups")));
 	m_ShowGroupsFolderBottom.ModifyStyle(WS_TABSTOP, 0);
 
 	m_BackButton.Create(NULL, WS_CHILD | BS_OWNERDRAW | WS_TABSTOP, CRect(0, 0, 0, 0), this, IdBackButton);
@@ -437,7 +442,7 @@ int CQPasteWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	m_Alpha.SetWindowHandle(m_hWnd);
 
-	CString onTopMsg = theApp.m_Language.GetString(_T("TurnOfAlwaysOntop"), _T("Always on Top Enabled"));
+	CString onTopMsg = Services().Language().GetString(_T("TurnOfAlwaysOntop"), _T("Always on Top Enabled"));
 	CString shortcutText = m_actions.GetCmdKeyText(ActionEnums::TOGGLESHOWPERSISTANT);
 	if (shortcutText != _T("") &&
 		shortcutText.Find("\t" + shortcutText) < 0)
@@ -686,7 +691,7 @@ int CQPasteWnd::MoveGroupHeader(int cx)
 {
 	int topOfListBox = 0;
 
-	if (theApp.m_GroupID > 0 && m_bShowStarredClips == false)
+	if (Services().State().m_GroupID > 0 && m_bShowStarredClips == false)
 	{
 		m_stGroup.ShowWindow(SW_SHOW);
 		m_BackButton.ShowWindow(SW_SHOW);
@@ -789,9 +794,9 @@ void CQPasteWnd::OnDeactivateWindow()
 	}
 
 	//re register the global hot keys for the last ten
-	if (theApp.m_bAppExiting == false)
+	if (Services().State().m_bAppExiting == false)
 	{
-		g_HotKeys.RegisterAll();
+		Services().HotKeys().RegisterAll();
 	}
 
 	m_lstHeader.HidePopup(true);
@@ -801,7 +806,7 @@ void CQPasteWnd::OnActivateWindow(BOOL bMinimized)
 {
 	if (bMinimized == FALSE)
 	{
-		if (theApp.m_bShowingQuickPaste == false)
+		if (Services().State().m_bShowingQuickPaste == false)
 		{
 			BOOL fillList = NeedsFillListOnActivate();
 
@@ -809,7 +814,7 @@ void CQPasteWnd::OnActivateWindow(BOOL bMinimized)
 		}
 
 		//Unregister the global hot keys for the last ten copies
-		g_HotKeys.UnregisterAll(false, true);
+		Services().HotKeys().UnregisterAll(false, true);
 	}
 }
 
@@ -820,7 +825,7 @@ BOOL CQPasteWnd::NeedsFillListOnActivate()
 	{
 		fillList = TRUE;
 	}
-	else if (theApp.m_databaseOnNetworkShare)
+	else if (Services().State().m_databaseOnNetworkShare)
 	{
 		__int64 lastWrite = CFileSystem::GetLastWriteTime(Settings().GetDBPath());
 		if (lastWrite > m_lastDbWrite)
@@ -843,7 +848,7 @@ BOOL CQPasteWnd::HideQPasteWindow(bool releaseFocus, BOOL clearSearchData)
 	CLogger::Log(_T("Start of HideQPasteWindow"));
 	ULONGLONG startTick = GetTickCount64();
 
-	if (!theApp.m_bShowingQuickPaste)
+	if (!Services().State().m_bShowingQuickPaste)
 	{
 		CLogger::Log(_T("End of HideQPasteWindow, !theApp.m_bShowingQuickPaste"));
 	}
@@ -854,13 +859,13 @@ BOOL CQPasteWnd::HideQPasteWindow(bool releaseFocus, BOOL clearSearchData)
 		m_bStopQuery = true;
 	}
 
-	theApp.m_bShowingQuickPaste = false;
+	Services().State().m_bShowingQuickPaste = false;
 
 	//needs to be before we hide our window - inorder to set focus to another window we need to be the foreground window
 	//http://msdn.microsoft.com/en-us/library/windows/desktop/ms632668%28v=vs.85%29.aspx
 	if (releaseFocus)
 	{
-		theApp.m_activeWnd.ReleaseFocus();
+		Services().ActiveWindow().ReleaseFocus();
 	}
 
 	KillTimer(TimerFillCache);
@@ -946,14 +951,14 @@ void CQPasteWnd::ClearSearchOnHide()
 
 void CQPasteWnd::RestoreGroupOnHide()
 {
-	if (theApp.m_GroupID > 0 &&
+	if (Services().State().m_GroupID > 0 &&
 		Settings().GetRevertToTopLevelGroup())
 	{
-		theApp.EnterGroupID(-1);
+		Services().Groups().EnterGroupID(-1);
 	}
 	else
 	{
-		theApp.TryEnterOldGroupState();
+		Services().Groups().TryEnterOldGroupState();
 	}
 }
 
@@ -971,14 +976,14 @@ void CQPasteWnd::SaveWindowSize()
 
 BOOL CQPasteWnd::ShowQPasteWindow(BOOL bFillList)
 {
-	theApp.m_bShowingQuickPaste = true;
+	Services().State().m_bShowingQuickPaste = true;
 
 	CLogger::Log(CStringUtil::Format(_T("Start - ShowQPasteWindow - Fill List: %d, array count: %d"), bFillList, m_listItems.size()));
 
 	//Ensure we have the latest theme file, this checks the last write time so it doesn't read the file each time
 	Settings().m_Theme.Load(Settings(), Settings().GetTheme(), false, true);
 
-	SetCaptionColorActive(Settings().m_bShowPersistent, theApp.GetConnectCV());
+	SetCaptionColorActive(Settings().m_bShowPersistent, Services().Clipboard().GetConnectCV());
 	SetCaptionOn(Settings().GetCaptionPos(), true, Settings().m_Theme.GetCaptionSize(), Settings().m_Theme.GetCaptionFontSize());
 
 	UpdateStatus();
@@ -1034,7 +1039,7 @@ BOOL CQPasteWnd::OpenID(int id, CSpecialPasteOptions pasteOptions)
 
 	if (pasteOptions.m_pPasteFormats == NULL)
 	{
-		if (theApp.EnterGroupID(id, FALSE, FALSE))
+		if (Services().Groups().EnterGroupID(id, FALSE, FALSE))
 		{
 			CLogger::Log(_T("Entered group"));
 			return TRUE;
@@ -1042,21 +1047,19 @@ BOOL CQPasteWnd::OpenID(int id, CSpecialPasteOptions pasteOptions)
 	}
 
 	// else, it is a clip, so paste it
-	CProcessPaste paste(Settings());
+	CProcessPaste paste(Services().ClipContext(), Services().ActiveWindow());
 
 	paste.m_bSendPaste = Settings().m_bSendPasteMessageAfterSelection == TRUE ? true : false;
 	paste.m_pasteOptions = pasteOptions;
-	paste.m_pastedFromGroup = (theApp.m_GroupID > 0);
+	paste.m_pastedFromGroup = (Services().State().m_GroupID > 0);
 
 	paste.GetClipIDs().Add(id);
 
 	if (paste.DoPaste())
 	{
-		theApp.OnPasteCompleted();
-
 		if (Settings().m_bSendPasteMessageAfterSelection == FALSE)
 		{
-			theApp.m_activeWnd.ActivateTarget();
+			Services().ActiveWindow().ActivateTarget();
 		}
 
 		if (Settings().m_bShowPersistent && Settings().GetAutoHide())
@@ -1095,21 +1098,19 @@ BOOL CQPasteWnd::OpenSelection(CSpecialPasteOptions pasteOptions)
 		return OpenID(IDs[0], pasteOptions);
 	}
 
-	CProcessPaste paste(Settings());
+	CProcessPaste paste(Services().ClipContext(), Services().ActiveWindow());
 
 	paste.m_bSendPaste = Settings().m_bSendPasteMessageAfterSelection == TRUE ? true : false;
 	paste.m_pasteOptions = pasteOptions;
-	paste.m_pastedFromGroup = (theApp.m_GroupID > 0);
+	paste.m_pastedFromGroup = (Services().State().m_GroupID > 0);
 
 
 	paste.GetClipIDs().Copy(IDs);
 	if (paste.DoPaste())
 	{
-		theApp.OnPasteCompleted();
-
 		if (Settings().m_bSendPasteMessageAfterSelection == FALSE)
 		{
-			theApp.m_activeWnd.ActivateTarget();
+			Services().ActiveWindow().ActivateTarget();
 		}
 
 		if (Settings().m_bShowPersistent && Settings().GetAutoHide())
@@ -1166,7 +1167,7 @@ BOOL CQPasteWnd::NewGroup(bool bGroupSelection, int parentId)
 		}
 	}
 
-	int id = CClipDatabase::NewGroupID(parentId, csName);
+	int id = CClipDatabase::NewGroupID(Services().Database(), parentId, csName);
 
 	if (id <= 0)
 	{
@@ -1175,15 +1176,15 @@ BOOL CQPasteWnd::NewGroup(bool bGroupSelection, int parentId)
 
 	if (!bGroupSelection)
 	{
-		theApp.m_FocusID = id; // focus on the new group
+		Services().State().m_FocusID = id; // focus on the new group
 		FillList();
 		return TRUE;
 	}
 
 	CClipIDs IDs;
 	m_lstHeader.GetSelectionItemData(IDs);
-	IDs.MoveTo(id);
-	theApp.EnterGroupID(id);
+	IDs.MoveTo(Services().ClipContext(), id);
+	Services().Groups().EnterGroupID(id);
 	return TRUE;
 }
 
@@ -1202,7 +1203,7 @@ LRESULT CQPasteWnd::OnListMoveSelectionToGroup(WPARAM wParam, LPARAM /*lParam*/)
 		CClipIDs IDs;
 		m_lstHeader.GetSelectionItemData(IDs);
 
-		IDs.MoveTo(groupId);
+		IDs.MoveTo(Services().ClipContext(), groupId);
 	}
 	return TRUE;
 }
@@ -1249,9 +1250,9 @@ LRESULT CQPasteWnd::OnReloadClipInUI(WPARAM wParam, LPARAM lParam)
 
 	ULONGLONG startTick = GetTickCount64();
 
-	theApp.m_FocusID = -1;
+	Services().State().m_FocusID = -1;
 
-	CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT clipOrder, clipGroupOrder, lastPasteDate, mText FROM Main WHERE lID = %d"), clipId);
+	CppSQLite3Query q = Services().Database().execQueryEx(_T("SELECT clipOrder, clipGroupOrder, lastPasteDate, mText FROM Main WHERE lID = %d"), clipId);
 	if (q.eof() == false)
 	{
 		ReloadedClip reloaded{};
@@ -1294,7 +1295,7 @@ BOOL CQPasteWnd::ApplyReloadedClip(CMainTable &item, const ReloadedClip &reloade
 			item.m_clipOrder = reloaded.order;
 			item.m_clipGroupOrder = reloaded.orderGroup;
 
-			if (theApp.m_GroupID > 0)
+			if (Services().State().m_GroupID > 0)
 			{
 				std::sort(m_listItems.begin(), m_listItems.end(), CMainTable::GroupSortDesc);
 			}
@@ -1331,7 +1332,7 @@ LRESULT CQPasteWnd::OnRefreshView(WPARAM wParam, LPARAM /*lParam*/)
 	// remove all additional refresh view messages from the queue
 	while (::PeekMessage(&msg, m_hWnd, CDittoMessage::RefreshView, CDittoMessage::RefreshView, PM_REMOVE)) {}
 
-	if (theApp.m_bShowingQuickPaste)
+	if (Services().State().m_bShowingQuickPaste)
 	{
 		CopyReasonEnum::CopyReason copyReason = (CopyReasonEnum::CopyReason)wParam;
 		if (copyReason == CopyReasonEnum::COPY_FROM_TOOLTIP)
@@ -1344,14 +1345,14 @@ LRESULT CQPasteWnd::OnRefreshView(WPARAM wParam, LPARAM /*lParam*/)
 	CLogger::Log(_T("OnRefreshView - Start"));
 	CString action;
 
-	theApp.m_FocusID = -1;
+	Services().State().m_FocusID = -1;
 
 	m_bHandleSearchTextChange = false;
 
 	m_search.SetWindowText(_T(""));
 	m_bHandleSearchTextChange = true;
 
-	if (theApp.m_bShowingQuickPaste)
+	if (Services().State().m_bShowingQuickPaste)
 	{
 		FillList(_T(""));
 		action = _T("Filled List");
@@ -1379,7 +1380,7 @@ LRESULT CQPasteWnd::OnRefreshView(WPARAM wParam, LPARAM /*lParam*/)
 
 void CQPasteWnd::RefreshNc()
 {
-	if (!theApp.m_bShowingQuickPaste)
+	if (!Services().State().m_bShowingQuickPaste)
 	{
 		return;
 	}
@@ -1393,29 +1394,29 @@ void CQPasteWnd::UpdateStatus(bool /*bRepaintImmediately*/)
 
 	if (Settings().m_bShowPersistent)
 	{
-		title = (CStringUtil::Format(_T("%s %s"), s_qpasteTitle, theApp.m_Language.GetString("top_window", "[Always on top]").GetString()));
+		title = (CStringUtil::Format(_T("%s %s"), s_qpasteTitle, Services().Language().GetString("top_window", "[Always on top]").GetString()));
 	}
 
-	if (theApp.IsClipboardViewerConnected() == FALSE)
+	if (Services().Clipboard().IsClipboardViewerConnected() == FALSE)
 	{
 		title += _T(" ");
-		title += theApp.m_Language.GetString("disconnected", "[Disconnected]");
+		title += Services().Language().GetString("disconnected", "[Disconnected]");
 	}
 
 	if (m_bShowStarredClips)
 	{
 		title += _T(" ");
-		title += theApp.m_Language.GetString("starred_clips", "[Starred clips]");
+		title += Services().Language().GetString("starred_clips", "[Starred clips]");
 	}
 
 	CString cs;
 	cs.Format(_T(" - %d/%d"), m_lstHeader.GetSelectedCount(), m_lstHeader.GetItemCount());
 	title += cs;
 
-	if (theApp.m_Status != "")
+	if (Services().State().m_Status != "")
 	{
 		title += " [ ";
-		title += theApp.m_Status;
+		title += Services().State().m_Status;
 		title += " ] - ";
 	}
 	else
@@ -1423,13 +1424,13 @@ void CQPasteWnd::UpdateStatus(bool /*bRepaintImmediately*/)
 		title += " - ";
 	}
 
-	if (::IsWindow(theApp.m_activeWnd.ActiveWnd()))
+	if (::IsWindow(Services().ActiveWindow().ActiveWnd()))
 	{
-		title += theApp.m_activeWnd.ActiveWndName();
+		title += Services().ActiveWindow().ActiveWndName();
 	}
 	else
 	{
-		title += theApp.m_Language.GetString("No_Target", "No target");
+		title += Services().Language().GetString("No_Target", "No target");
 	}
 
 	SetToolTipText(title);
@@ -1438,17 +1439,17 @@ void CQPasteWnd::UpdateStatus(bool /*bRepaintImmediately*/)
 
 	if (Settings().m_bShowPersistent)
 	{
-		windowTitle += CStringUtil::Format(_T(" %s"), theApp.m_Language.GetString("top_window", "[Always on top]").GetString());
+		windowTitle += CStringUtil::Format(_T(" %s"), Services().Language().GetString("top_window", "[Always on top]").GetString());
 	}
 
-	if (theApp.IsClipboardViewerConnected() == FALSE)
+	if (Services().Clipboard().IsClipboardViewerConnected() == FALSE)
 	{
-		windowTitle += CStringUtil::Format(_T(" %s"), theApp.m_Language.GetString("disconnected", "[Disconnected]").GetString());
+		windowTitle += CStringUtil::Format(_T(" %s"), Services().Language().GetString("disconnected", "[Disconnected]").GetString());
 	}
 
 	if (m_bShowStarredClips)
 	{
-		windowTitle += CStringUtil::Format(_T(" %s"), theApp.m_Language.GetString("starred_clips", "[Starred clips]").GetString());
+		windowTitle += CStringUtil::Format(_T(" %s"), Services().Language().GetString("starred_clips", "[Starred clips]").GetString());
 	}
 
 	SetCustomWindowTitle(windowTitle);
@@ -1541,7 +1542,7 @@ void CQPasteWnd::SetGroupFilter(FillListQuery &query, const CString &strStarredF
 
 		query.filter = strStarredFilter;
 	}
-	else if (theApp.m_GroupID < 0)
+	else if (Services().State().m_GroupID < 0)
 	{
 		//do not change this this directly relates to the views in the Main table
 		query.sort = "Main.stickyClipOrder DESC, "
@@ -1560,13 +1561,13 @@ void CQPasteWnd::SetGroupFilter(FillListQuery &query, const CString &strStarredF
 
 		//Main.stickyClipGroupOrder DESC, Main.clipGroupOrder DESC";//
 
-		if (theApp.m_GroupID >= 0)
+		if (Services().State().m_GroupID >= 0)
 		{
-			query.filter.Format(_T("Main.lParentID = %d"), theApp.m_GroupID);
+			query.filter.Format(_T("Main.lParentID = %d"), Services().State().m_GroupID);
 			query.parentFilter = query.filter;
 		}
 
-		m_stGroup.SetWindowText(theApp.m_GroupText);
+		m_stGroup.SetWindowText(Services().State().m_GroupText);
 	}
 }
 
@@ -1758,11 +1759,11 @@ void CQPasteWnd::ShowRightClickMenu()
 			pp.y = rc.bottom;
 		}
 
-		theApp.m_Addins.AddPrePasteAddinsToMenu(cmSubMenu);
+		Services().Addins().AddPrePasteAddinsToMenu(cmSubMenu);
 
 		AddShowStarredClipsMenuItem(cmSubMenu);
 
-		theApp.m_Language.UpdateRightClickMenu(cmSubMenu);
+		Services().Language().UpdateRightClickMenu(cmSubMenu);
 
 		if (m_bShowStarredClips)
 		{
@@ -1781,7 +1782,7 @@ void CQPasteWnd::AddShowStarredClipsMenuItem(CMenu* pMenu)
 		return;
 	}
 
-	CString csText = theApp.m_Language.GetString(_T("ShowStarredClips"), _T("Show Starred Clips"));
+	CString csText = Services().Language().GetString(_T("ShowStarredClips"), _T("Show Starred Clips"));
 	CString shortcutText = m_actions.GetCmdKeyText(ActionEnums::SHOW_STARRED_CLIPS);
 	if (shortcutText != _T("") &&
 		csText.Find(_T("\t")) < 0)
@@ -1866,7 +1867,7 @@ void CQPasteWnd::SetMenuChecks(CMenu* pMenu)
 	//Set the position check
 	CheckMenuItemForValue(pMenu, s_positionMenuChecks, Settings().GetQuickPastePosition());
 
-	theApp.UpdateMenuConnectCV(pMenu, ID_MENU_TOGGLECONNECTCV);
+	Services().Clipboard().UpdateMenuConnectCV(pMenu, ID_MENU_TOGGLECONNECTCV);
 
 	CheckMenuItemIf(pMenu, Settings().GetShowTextForFirstTenHotKeys(), ID_MENU_FIRSTTENHOTKEYS_SHOWHOTKEYTEXT);
 	CheckMenuItemIf(pMenu, Settings().GetUseCtrlNumForFirstTenHotKeys(), ID_MENU_FIRSTTENHOTKEYS_USECTRLNUM);
@@ -2029,12 +2030,12 @@ void CQPasteWnd::OnMenuPositioningAtpreviousposition()
 
 void CQPasteWnd::OnMenuOptions()
 {
-	theApp.m_pMainFrame->SendMessage(CDittoMessage::ShowOptions, 0, 0);
+	Services().Windows().MainFrame()->SendMessage(CDittoMessage::ShowOptions, 0, 0);
 }
 
 void CQPasteWnd::OnMenuExitprogram()
 {
-	::SendMessage(theApp.m_MainhWnd, WM_CLOSE, 0, 0);
+	::SendMessage(Services().Windows().MainHwnd(), WM_CLOSE, 0, 0);
 }
 
 void CQPasteWnd::OnMenuToggleConnectCV()
@@ -2195,7 +2196,7 @@ void CQPasteWnd::OnMenuQuickpropertiesSettoneverautodelete()
 	{
 		try
 		{
-			theApp.m_db.execDMLEx(_T("UPDATE Main SET lDontAutoDelete = %d where lID = %d;"), (int)CTime::GetCurrentTime().GetTime(), IDs[i]);
+			Services().Database().execDMLEx(_T("UPDATE Main SET lDontAutoDelete = %d where lID = %d;"), (int)CTime::GetCurrentTime().GetTime(), IDs[i]);
 		}
 		catch (CppSQLite3Exception& e)
 		{
@@ -2235,7 +2236,7 @@ void CQPasteWnd::OnMenuQuickpropertiesAutodelete()
 	{
 		try
 		{
-			theApp.m_db.execDMLEx(_T("UPDATE Main SET lDontAutoDelete = 0 where lID = %d;"), IDs[i]);
+			Services().Database().execDMLEx(_T("UPDATE Main SET lDontAutoDelete = 0 where lID = %d;"), IDs[i]);
 		}
 		catch (CppSQLite3Exception& e)
 		{
@@ -2274,10 +2275,10 @@ void CQPasteWnd::OnMenuQuickpropertiesRemovehotkey()
 	{
 		try
 		{
-			theApp.m_db.execDMLEx(_T("UPDATE Main SET lShortCut = 0, globalShortCut = 0 where lID = %d;"), IDs[i]);
-			g_HotKeys.Remove(IDs[i], CHotKey::PASTE_OPEN_CLIP);
-			theApp.m_db.execDMLEx(_T("UPDATE Main SET MoveToGroupShortCut = 0, GlobalMoveToGroupShortCut = 0 where lID = %d;"), IDs[i]);
-			g_HotKeys.Remove(IDs[i], CHotKey::MOVE_TO_GROUP);
+			Services().Database().execDMLEx(_T("UPDATE Main SET lShortCut = 0, globalShortCut = 0 where lID = %d;"), IDs[i]);
+			Services().HotKeys().Remove(IDs[i], CHotKey::PASTE_OPEN_CLIP);
+			Services().Database().execDMLEx(_T("UPDATE Main SET MoveToGroupShortCut = 0, GlobalMoveToGroupShortCut = 0 where lID = %d;"), IDs[i]);
+			Services().HotKeys().Remove(IDs[i], CHotKey::MOVE_TO_GROUP);
 		}
 		catch (CppSQLite3Exception& e)
 		{
@@ -2317,7 +2318,7 @@ void CQPasteWnd::OnQuickpropertiesRemovequickpaste()
 	{
 		try
 		{
-			theApp.m_db.execDMLEx(_T("UPDATE Main SET QuickPasteText = '' where lID = %d;"), IDs[i]);
+			Services().Database().execDMLEx(_T("UPDATE Main SET QuickPasteText = '' where lID = %d;"), IDs[i]);
 		}
 		catch (CppSQLite3Exception& e)
 		{
@@ -2458,7 +2459,7 @@ void CQPasteWnd::OnMenuExport()
 		Settings().SetLastExportDir(csPath);
 
 		CString csFile(CFileDialogPath::From(ofn));
-		IDs.Export(Settings(), csFile);
+		IDs.Export(Services().ClipContext(), csFile);
 	}
 
 	m_bHideWnd = true;
@@ -2467,7 +2468,7 @@ void CQPasteWnd::OnMenuExport()
 void CQPasteWnd::OnMenuImport()
 {
 	m_bHideWnd = false;
-	theApp.ImportClips(m_hWnd);
+	Services().ClipCommands().ImportClips(m_hWnd);
 	m_bHideWnd = true;
 }
 
@@ -2560,7 +2561,7 @@ void CQPasteWnd::DeleteSelectedRows()
 		bool bStartValue = m_bHideWnd;
 		m_bHideWnd = false;
 
-		int nRet = MessageBox(theApp.m_Language.GetString("Delete_Clip", "Delete Selected Clips?"), _T("Ditto"), MB_OKCANCEL | MB_TOPMOST);
+		int nRet = MessageBox(Services().Language().GetString("Delete_Clip", "Delete Selected Clips?"), _T("Ditto"), MB_OKCANCEL | MB_TOPMOST);
 
 		m_bHideWnd = bStartValue;
 
@@ -2590,7 +2591,7 @@ bool CQPasteWnd::DeleteClips(CClipIDs& IDs, ARRAY& Indexs)
 	POSITION pos = m_lstHeader.GetFirstSelectedItemPosition();
 	int nFirstSel = m_lstHeader.GetNextSelectedItem(pos);
 
-	IDs.DeleteIDs(true, theApp.m_db);
+	IDs.DeleteIDs(Services().Windows(), true, Services().Database());
 
 	Indexs.SortDescending();
 	INT_PTR count = Indexs.GetSize();
@@ -2605,7 +2606,7 @@ bool CQPasteWnd::DeleteClips(CClipIDs& IDs, ARRAY& Indexs)
 			if (Indexs[i] < (int)m_listItems.size())
 			{
 				RemoveFromImageRtfCache(Indexs[i]);
-				g_HotKeys.Remove(m_lstHeader.GetItemData(Indexs[i]), CHotKey::PASTE_OPEN_CLIP);
+				Services().HotKeys().Remove(m_lstHeader.GetItemData(Indexs[i]), CHotKey::PASTE_OPEN_CLIP);
 
 				m_listItems.erase(m_listItems.begin() + Indexs[i]);
 				erasedCount++;
@@ -2613,7 +2614,7 @@ bool CQPasteWnd::DeleteClips(CClipIDs& IDs, ARRAY& Indexs)
 		}
 	}
 
-	CClip::m_LastAddedCRC = 0;
+	Services().State().LastAddedClip().ClearCrc();
 
 	m_extraDataThread.FireLoadAccelerators();
 
@@ -2682,7 +2683,7 @@ CString CQPasteWnd::LoadDescription(int nItem)
 	{
 		int id = m_lstHeader.GetItemData(nItem);
 
-		CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT mText FROM Main WHERE lID = %d"), id);
+		CppSQLite3Query q = Services().Database().execQueryEx(_T("SELECT mText FROM Main WHERE lID = %d"), id);
 		if (q.eof() == false)
 		{
 			cs = q.getStringField(0);
@@ -2803,7 +2804,7 @@ void CQPasteWnd::TrackNonActiveMouseMove()
 			ULONGLONG tick = GetTickCount64();
 			if ((tick - m_lastNonActiveMouseMove) > 1000)
 			{
-				theApp.m_activeWnd.TrackActiveWnd(true);
+				Services().ActiveWindow().TrackActiveWnd(true);
 				m_lastNonActiveMouseMove = GetTickCount64();
 			}
 		}
@@ -3298,14 +3299,14 @@ bool CQPasteWnd::DoActionShowSystemMenu()
 
 bool CQPasteWnd::DoActionNewGroup()
 {
-	NewGroup(false, theApp.GetValidGroupID());
+	NewGroup(false, Services().State().GetValidGroupID());
 
 	return true;
 }
 
 bool CQPasteWnd::DoActionNewGroupSelection()
 {
-	NewGroup(true, theApp.GetValidGroupID());
+	NewGroup(true, Services().State().GetValidGroupID());
 
 	return true;
 }
@@ -3383,7 +3384,7 @@ bool CQPasteWnd::DoActionCloseWindow()
 			if (Settings().GetShowPersistent() && this->GetMinimized() == false)
 			{
 				MinMaxWindow(CDittoWindow::ForceMin);
-				theApp.m_activeWnd.ReleaseFocus();
+				Services().ActiveWindow().ReleaseFocus();
 
 				CLogger::Log(_T("close 4"));
 
@@ -3449,7 +3450,7 @@ bool CQPasteWnd::DoActionNewClip()
 {
 	CClipIDs IDs;
 	IDs.Add(-1);
-	theApp.EditItems(IDs, true, true);
+	Services().ClipCommands().EditItems(IDs, true, true);
 
 	return true;
 }
@@ -3470,7 +3471,7 @@ bool CQPasteWnd::DoActionEditClip()
 		textOnly = true;
 	}
 
-	theApp.EditItems(IDs, true, textOnly);
+	Services().ClipCommands().EditItems(IDs, true, textOnly);
 
 	return true;
 }
@@ -3559,7 +3560,7 @@ bool CQPasteWnd::DoActionHomeList()
 {
 	if (::GetFocus() == m_lstHeader.GetSafeHwnd())
 	{
-		theApp.EnterGroupID(-1); // History
+		Services().Groups().EnterGroupID(-1); // History
 		return true;
 	}
 
@@ -3570,7 +3571,7 @@ bool CQPasteWnd::DoActionBackGroup()
 {
 	if (::GetFocus() == m_lstHeader.GetSafeHwnd())
 	{
-		theApp.EnterGroupID(theApp.m_GroupParentID);
+		Services().Groups().EnterGroupID(Services().State().m_GroupParentID);
 		return true;
 	}
 
@@ -3585,7 +3586,7 @@ bool CQPasteWnd::DoActionToggleShowPersistant()
 	}
 	else
 	{
-		theApp.ShowPersistent(!Settings().m_bShowPersistent);
+		Services().Clipboard().ShowPersistent(!Settings().m_bShowPersistent);
 		if (Settings().m_bShowPersistent)
 		{
 			::SetWindowPos(m_hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW);
@@ -3681,7 +3682,7 @@ bool CQPasteWnd::ShowProperties(int id, int row)
 			if (row >= 0 &&
 				row < (int)m_listItems.size())
 			{
-				CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT * FROM Main WHERE lID = %d"), id);
+				CppSQLite3Query q = Services().Database().execQueryEx(_T("SELECT * FROM Main WHERE lID = %d"), id);
 				if (!q.eof())
 				{
 					FillMainTable(m_listItems[row], q);
@@ -3757,7 +3758,7 @@ bool CQPasteWnd::DoActionMoveClipToGroup()
 				CClipIDs IDs;
 				m_lstHeader.GetSelectionItemData(IDs);
 
-				IDs.MoveTo(nGroup);
+				IDs.MoveTo(Services().ClipContext(), nGroup);
 			}
 			FillList();
 		}
@@ -3780,7 +3781,7 @@ bool CQPasteWnd::DoShowInTaskBar()
 {
 	Settings().SetShowInTaskBar(!Settings().GetShowInTaskBar());
 
-	theApp.RefreshShowInTaskBar();
+	Services().Windows().RefreshShowInTaskBar();
 
 	return true;
 }
@@ -3801,7 +3802,7 @@ bool CQPasteWnd::DoClipCompare()
 			MinMaxWindow(CDittoWindow::ForceMin);
 		}
 
-		CClipCompare compare(Settings());
+		CClipCompare compare(Services().ClipContext());
 		compare.Compare(IDs[0], IDs[1]);
 
 		return true;
@@ -3853,7 +3854,7 @@ bool CQPasteWnd::DoSelectRightSideAndDoCompare()
 				MinMaxWindow(CDittoWindow::ForceMin);
 			}
 
-			CClipCompare compare(Settings());
+			CClipCompare compare(Services().ClipContext());
 			compare.Compare(m_leftSelectedCompareId, rightId);
 
 			return true;
@@ -3937,7 +3938,7 @@ bool CQPasteWnd::DoExportToTextFile()
 		{
 			int id = IDs[i];
 
-			CClip clip(Settings());
+			CClip clip(Services().ClipContext());
 			if (clip.LoadFormats(id, true))
 			{
 				CString savePath = NextExportFilePath(names, IDs.GetCount());
@@ -4031,7 +4032,7 @@ bool CQPasteWnd::DoExportToQRCode()
 	if (IDs.GetCount() > 0)
 	{
 		int id = IDs[0];
-		CClip clip(Settings());
+		CClip clip(Services().ClipContext());
 		if (clip.LoadMainTable(id))
 		{
 			if (clip.LoadFormats(id, true))
@@ -4074,7 +4075,7 @@ bool CQPasteWnd::DoPasteAsImage()
 
 bool CQPasteWnd::DoSaveCurrentClipboard()
 {
-	theApp.m_pMainFrame->PostMessage(CDittoMessage::SaveClipboard, 0, 0);
+	Services().Windows().MainFrame()->PostMessage(CDittoMessage::SaveClipboard, 0, 0);
 
 	return true;
 }
@@ -4092,10 +4093,10 @@ bool CQPasteWnd::DoMoveClipDown()
 		for (int i = ((int)IDs.GetCount()) - 1; i >= 0; i--)
 		{
 			int id = IDs[i];
-			CClip clip(Settings());
+			CClip clip(Services().ClipContext());
 			if (clip.LoadMainTable(id))
 			{
-				clip.MoveDown(theApp.m_GroupID);
+				clip.MoveDown(Services().State().m_GroupID);
 				clip.ModifyMainTable();
 
 				sort = SyncClipDataToArrayData(clip);
@@ -4104,7 +4105,7 @@ bool CQPasteWnd::DoMoveClipDown()
 
 		if (sort)
 		{
-			if (theApp.m_GroupID > 0)
+			if (Services().State().m_GroupID > 0)
 			{
 				std::sort(m_listItems.begin(), m_listItems.end(), CMainTable::GroupSortDesc);
 			}
@@ -4136,10 +4137,10 @@ bool CQPasteWnd::DoMoveClipUp()
 		for (int i = 0; i < IDs.GetCount(); i++)
 		{
 			int id = IDs[i];
-			CClip clip(Settings());
+			CClip clip(Services().ClipContext());
 			if (clip.LoadMainTable(id))
 			{
-				clip.MoveUp(theApp.m_GroupID);
+				clip.MoveUp(Services().State().m_GroupID);
 				clip.ModifyMainTable();
 
 				sort = SyncClipDataToArrayData(clip);
@@ -4148,7 +4149,7 @@ bool CQPasteWnd::DoMoveClipUp()
 
 		if (sort)
 		{
-			if (theApp.m_GroupID > 0)
+			if (Services().State().m_GroupID > 0)
 			{
 				std::sort(m_listItems.begin(), m_listItems.end(), CMainTable::GroupSortDesc);
 			}
@@ -4178,10 +4179,10 @@ bool CQPasteWnd::DoMoveClipLast()
 		for (int i = 0; i < IDs.GetCount(); i++)
 		{
 			int id = IDs[i];
-			CClip clip(Settings());
+			CClip clip(Services().ClipContext());
 			if (clip.LoadMainTable(id))
 			{
-				if (theApp.m_GroupID > 0)
+				if (Services().State().m_GroupID > 0)
 				{
 					clip.MakeLastGroupOrder();
 				}
@@ -4208,7 +4209,7 @@ bool CQPasteWnd::DoMoveClipLast()
 
 		if (sort)
 		{
-			if (theApp.m_GroupID > 0)
+			if (Services().State().m_GroupID > 0)
 			{
 				std::sort(m_listItems.begin(), m_listItems.end(), CMainTable::GroupSortDesc);
 			}
@@ -4252,10 +4253,10 @@ bool CQPasteWnd::DoMoveClipTOP()
 		for (int i = 0; i < IDs.GetCount(); i++)
 		{
 			int id = IDs[i];
-			CClip clip(Settings());
+			CClip clip(Services().ClipContext());
 			if (clip.LoadMainTable(id))
 			{
-				if (theApp.m_GroupID > 0)
+				if (Services().State().m_GroupID > 0)
 				{
 					clip.MakeLatestGroupOrder();
 				}
@@ -4271,7 +4272,7 @@ bool CQPasteWnd::DoMoveClipTOP()
 
 		if (sort)
 		{
-			if (theApp.m_GroupID > 0)
+			if (Services().State().m_GroupID > 0)
 			{
 				std::sort(m_listItems.begin(), m_listItems.end(), CMainTable::GroupSortDesc);
 			}
@@ -4526,9 +4527,9 @@ bool CQPasteWnd::OnShowClipWasPasted()
 bool CQPasteWnd::OnToggleLastGroupToggle()
 {
 	int newGroupId = -2;
-	if (theApp.m_GroupID > 0)
+	if (Services().State().m_GroupID > 0)
 	{
-		Settings().SetLastGroupToggle(theApp.m_GroupID);
+		Settings().SetLastGroupToggle(Services().State().m_GroupID);
 		newGroupId = -1;
 	}
 	else
@@ -4538,7 +4539,7 @@ bool CQPasteWnd::OnToggleLastGroupToggle()
 
 	if (newGroupId >= -1)
 	{
-		theApp.EnterGroupID(newGroupId);
+		Services().Groups().EnterGroupID(newGroupId);
 	}
 
 	return true;
@@ -4555,10 +4556,10 @@ bool CQPasteWnd::OnMakeTopSticky(bool forceSort)
 		for (int i = ((int)IDs.GetCount()) - 1; i >= 0; i--)
 		{
 			int id = IDs[i];
-			CClip clip(Settings());
+			CClip clip(Services().ClipContext());
 			if (clip.LoadMainTable(id))
 			{
-				clip.MakeStickyTop(theApp.m_GroupID);
+				clip.MakeStickyTop(Services().State().m_GroupID);
 				clip.ModifyMainTable();
 
 				sort = SyncClipDataToArrayData(clip);
@@ -4567,7 +4568,7 @@ bool CQPasteWnd::OnMakeTopSticky(bool forceSort)
 
 		if (sort)
 		{
-			if (theApp.m_GroupID > 0)
+			if (Services().State().m_GroupID > 0)
 			{
 				std::sort(m_listItems.begin(), m_listItems.end(), CMainTable::GroupSortDesc);
 			}
@@ -4597,10 +4598,10 @@ bool CQPasteWnd::OnMakeLastSticky()
 		for (int i = ((int)IDs.GetCount()) - 1; i >= 0; i--)
 		{
 			int id = IDs[i];
-			CClip clip(Settings());
+			CClip clip(Services().ClipContext());
 			if (clip.LoadMainTable(id))
 			{
-				clip.MakeStickyLast(theApp.m_GroupID);
+				clip.MakeStickyLast(Services().State().m_GroupID);
 				clip.ModifyMainTable();
 
 				sort = SyncClipDataToArrayData(clip);
@@ -4609,7 +4610,7 @@ bool CQPasteWnd::OnMakeLastSticky()
 
 		if (sort)
 		{
-			if (theApp.m_GroupID > 0)
+			if (Services().State().m_GroupID > 0)
 			{
 				std::sort(m_listItems.begin(), m_listItems.end(), CMainTable::GroupSortDesc);
 			}
@@ -4641,11 +4642,11 @@ bool CQPasteWnd::OnRemoveStickySetting()
 			RemoveStickyInternal(IDs[i], sort);
 		}
 
-		//theApp.m_FocusID = id;
+		//Services().State().m_FocusID = id;
 
 		if (sort)
 		{
-			if (theApp.m_GroupID > 0)
+			if (Services().State().m_GroupID > 0)
 			{
 				std::sort(m_listItems.begin(), m_listItems.end(), CMainTable::GroupSortDesc);
 			}
@@ -4666,10 +4667,10 @@ bool CQPasteWnd::OnRemoveStickySetting()
 
 void CQPasteWnd::RemoveStickyInternal(int id, bool& sort)
 {
-	CClip clip(Settings());
+	CClip clip(Services().ClipContext());
 	if (clip.LoadMainTable(id))
 	{
-		if (clip.RemoveStickySetting(theApp.m_GroupID))
+		if (clip.RemoveStickySetting(Services().State().m_GroupID))
 		{
 			clip.ModifyMainTable();
 
@@ -4678,7 +4679,7 @@ void CQPasteWnd::RemoveStickyInternal(int id, bool& sort)
 			{
 				if (iter->m_lID == id)
 				{
-					if (theApp.m_GroupID > 0)
+					if (Services().State().m_GroupID > 0)
 					{
 						iter->m_stickyClipGroupOrder = clip.m_stickyClipGroupOrder;
 					}
@@ -4775,7 +4776,7 @@ bool CQPasteWnd::DoActionSaveCF_HDROP_FileData()
 
 void CQPasteWnd::SaveClipFileData(int row, int id, CString &errorMessage)
 {
-	CClip clip(Settings());
+	CClip clip(Services().ClipContext());
 	if (clip.LoadMainTable(id))
 	{
 		if (clip.LoadFormats(id))
@@ -4786,7 +4787,7 @@ void CQPasteWnd::SaveClipFileData(int row, int id, CString &errorMessage)
 				if (row >= 0 &&
 					row < (int)m_listItems.size())
 				{
-					CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT * FROM Main WHERE lID = %d"), id);
+					CppSQLite3Query q = Services().Database().execQueryEx(_T("SELECT * FROM Main WHERE lID = %d"), id);
 					if (!q.eof())
 					{
 						FillMainTable(m_listItems[row], q);
@@ -4801,7 +4802,7 @@ void CQPasteWnd::SaveClipFileData(int row, int id, CString &errorMessage)
 
 bool CQPasteWnd::DoActionToggleClipboardConnection()
 {
-	theApp.ToggleConnectCV();
+	Services().Clipboard().ToggleConnectCV();
 	UpdateStatus();
 
 	return true;
@@ -4899,7 +4900,7 @@ bool CQPasteWnd::DoExportToBitMapFile()
 		{
 			int id = IDs[i];
 
-			CClip toSave(Settings());
+			CClip toSave(Services().ClipContext());
 			toSave.LoadFormats(id);
 
 			if (HasExportImage(toSave) == false)
@@ -4929,7 +4930,7 @@ bool CQPasteWnd::HasExportImage(CClip &toSave)
 	CClipFormat* bitmap = toSave.m_Formats.FindFormat(CF_DIB);
 	if (bitmap == NULL)
 	{
-		png = toSave.m_Formats.FindFormat(theApp.m_PNG_Format);
+		png = toSave.m_Formats.FindFormat(Services().ClipboardFormats().Png());
 	}
 
 	return !(bitmap == NULL && png == NULL);
@@ -4973,8 +4974,8 @@ void CQPasteWnd::OnClose()
 void CQPasteWnd::OnBegindrag(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	NM_LISTVIEW* pLV = (NM_LISTVIEW*)pNMHDR;
-	CProcessPaste paste(Settings());
-	paste.m_pastedFromGroup = (theApp.m_GroupID > 0);
+	CProcessPaste paste(Services().ClipContext(), Services().ActiveWindow());
+	paste.m_pastedFromGroup = (Services().State().m_GroupID > 0);
 
 	if (CKeyboard::IsControlPressed())
 	{
@@ -5070,7 +5071,7 @@ void CQPasteWnd::GetDispInfo(NMHDR* pNMHDR, LRESULT* /*pResult*/)
 
 	if (pItem->mask & CQListCtrl::s_lvifCfRichText && Settings().m_bDrawRTF)
 	{
-		GetDispInfoExtraFormat(pItem, theApp.m_RTFFormat, m_cf_NO_rtfCache, m_cf_rtfCache);
+		GetDispInfoExtraFormat(pItem, Services().ClipboardFormats().Rtf(), m_cf_NO_rtfCache, m_cf_rtfCache);
 	}
 }
 
@@ -5140,7 +5141,7 @@ CString CQPasteWnd::ListItemDisplayText(const CMainTable &item) const
 
 bool CQPasteWnd::IsListItemSticky(const CMainTable &item)
 {
-	if (theApp.m_GroupID > 0)
+	if (Services().State().m_GroupID > 0)
 	{
 		return item.m_stickyClipGroupOrder != CClip::InvalidSticky;
 	}
@@ -5291,7 +5292,7 @@ void CQPasteWnd::OnGetToolTipText(NMHDR* pNMHDR, LRESULT* /*pResult*/)
 		CString clipData = _T("");
 
 		int id = m_lstHeader.GetItemData(pInfo->lItem);
-		CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID, mText, lDate, lShortCut, clipOrder, clipGroupOrder, stickyClipOrder, stickyClipGroupOrder, lDontAutoDelete, QuickPasteText, lastPasteDate, globalShortCut, lParentID FROM Main WHERE lID = %d"), id);
+		CppSQLite3Query q = Services().Database().execQueryEx(_T("SELECT lID, mText, lDate, lShortCut, clipOrder, clipGroupOrder, stickyClipOrder, stickyClipGroupOrder, lDontAutoDelete, QuickPasteText, lastPasteDate, globalShortCut, lParentID FROM Main WHERE lID = %d"), id);
 		if (q.eof() == false)
 		{
 			CString clipText = q.getStringField(1);
@@ -5354,7 +5355,7 @@ void CQPasteWnd::AppendToolTipClipDetails(CppSQLite3Query &q, CString &clipData)
 	if (parentId > 0)
 	{
 		clipData += "\r\n";
-		clipData += CClipDatabase::FolderPath(parentId);
+		clipData += CClipDatabase::FolderPath(Services().Database(), parentId);
 	}
 }
 
@@ -5376,7 +5377,7 @@ void CQPasteWnd::AppendToolTipShortCut(CppSQLite3Query &q, CString &clipData)
 
 void CQPasteWnd::AppendToolTipSticky(CppSQLite3Query &q, CString &clipData)
 {
-	if (theApp.m_GroupID > 0)
+	if (Services().State().m_GroupID > 0)
 	{
 		int sticky = q.getIntField(_T("stickyClipGroupOrder"));
 		if (sticky != CClip::InvalidSticky)
@@ -5444,7 +5445,7 @@ void CQPasteWnd::OnNcLButtonDblClk(UINT nHitTest, CPoint point)
 		{
 		case CGetSetOptions::TogglesAlwaysOnTop:
 		{
-			theApp.ShowPersistent(!Settings().m_bShowPersistent);
+			Services().Clipboard().ShowPersistent(!Settings().m_bShowPersistent);
 			if (Settings().m_bShowPersistent)
 			{
 				::SetWindowPos(m_hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW);
@@ -5496,7 +5497,7 @@ void CQPasteWnd::OnShowGroupsBottom()
 	CMonitorGeometry::EnsureWindowVisible(&cr);
 
 	m_GroupTree.MoveWindow(cr);
-	m_GroupTree.m_selectedFolderID = theApp.m_GroupID;
+	m_GroupTree.m_selectedFolderID = Services().State().m_GroupID;
 	m_GroupTree.FillTree();
 	m_GroupTree.ShowWindow(SW_SHOW);
 
@@ -5521,20 +5522,20 @@ LRESULT CQPasteWnd::OnGroupTreeMessage(WPARAM wParam, LPARAM /*lParam*/)
 	if (id == -1)
 	{
 		//go back to the main list
-		theApp.EnterGroupID(-1);
+		Services().Groups().EnterGroupID(-1);
 	}
 	else if (id >= 0)
 	{
 		//Set the app flag so it does a send message to refresh the list
 		//We need to do this because we set the list pos to 0 and with Post
 		//the list is not filled up yet
-		bool bItWas = theApp.m_bAsynchronousRefreshView;
-		theApp.m_bAsynchronousRefreshView = false;
+		bool bItWas = Services().State().m_bAsynchronousRefreshView;
+		Services().State().m_bAsynchronousRefreshView = false;
 
 		CSpecialPasteOptions pasteOptions;
 		OpenID(id, pasteOptions);
 
-		theApp.m_bAsynchronousRefreshView = bItWas;
+		Services().State().m_bAsynchronousRefreshView = bItWas;
 
 		m_lstHeader.SetListPos(0);
 		m_lstHeader.SetFocus();
@@ -5553,7 +5554,7 @@ LRESULT CQPasteWnd::OnGroupTreeMessage(WPARAM wParam, LPARAM /*lParam*/)
 
 void CQPasteWnd::OnBackButton()
 {
-	theApp.EnterGroupID(theApp.m_GroupParentID);
+	Services().Groups().EnterGroupID(Services().State().m_GroupParentID);
 }
 
 void CQPasteWnd::OnMenuSearchDescription()
@@ -5782,12 +5783,12 @@ LRESULT CQPasteWnd::OnSetListCount(WPARAM wParam, LPARAM /*lParam*/)
 		m_noSearchResults = true;
 		if (m_bShowStarredClips && m_strSearch == _T(""))
 		{
-			CString text = theApp.m_Language.GetString("NoStarredClips", "There are no starred clips");
+			CString text = Services().Language().GetString("NoStarredClips", "There are no starred clips");
 			m_noSearchResultsStatic.SetWindowText(text);
 		}
 		else
 		{
-			CString text = theApp.m_Language.GetString("NoSearchResults", "There are no results for");
+			CString text = Services().Language().GetString("NoSearchResults", "There are no results for");
 			m_noSearchResultsStatic.SetWindowText(CStringUtil::Format(_T("%s \"%s\""), text.GetString(), m_strSearch.GetString()));
 		}
 	}
@@ -5840,7 +5841,7 @@ void CQPasteWnd::SelectFocusID()
 	std::vector<CMainTable>::iterator iter = m_listItems.begin();
 	while (iter != m_listItems.end())
 	{
-		if (iter->m_lID == theApp.m_FocusID)
+		if (iter->m_lID == Services().State().m_FocusID)
 		{
 			m_lstHeader.SetListPos(index);
 			selectedItem = true;
@@ -5930,7 +5931,7 @@ void CQPasteWnd::OnDoSearchTimer()
 	int nCaretPos = m_lstHeader.GetCaret();
 	if (nCaretPos >= 0)
 	{
-		theApp.m_FocusID = m_lstHeader.GetItemData(nCaretPos);
+		Services().State().m_FocusID = m_lstHeader.GetItemData(nCaretPos);
 	}
 
 	FillList(csText);
@@ -5977,12 +5978,12 @@ void CQPasteWnd::OnAddinSelect(UINT idIn)
 	if (IDs.GetCount() > 0)
 	{
 		int id = IDs[0];
-		CClip clip(Settings());
+		CClip clip(Services().ClipContext());
 		if (clip.LoadMainTable(id))
 		{
 			if (clip.LoadFormats(id, false))
 			{
-				bool bCont = theApp.m_Addins.CallPrePasteFunction(idIn, &clip);
+				bool bCont = Services().Addins().CallPrePasteFunction(idIn, &clip);
 				if (bCont)
 				{
 					CSpecialPasteOptions pasteOptions;
@@ -6193,7 +6194,7 @@ LRESULT CQPasteWnd::OnDeleteId(WPARAM wParam, LPARAM /*lParam*/)
 		bool bStartValue = m_bHideWnd;
 		m_bHideWnd = false;
 
-		int nRet = MessageBox(theApp.m_Language.GetString("Delete_Clip_Groups", "Delete Group?"), _T("Ditto"), MB_OKCANCEL | MB_TOPMOST);
+		int nRet = MessageBox(Services().Language().GetString("Delete_Clip_Groups", "Delete Group?"), _T("Ditto"), MB_OKCANCEL | MB_TOPMOST);
 
 		m_bHideWnd = bStartValue;
 
@@ -6421,11 +6422,11 @@ void CQPasteWnd::OnMenuGoToEntry()
 
 	int targetIndex = GoToEntryRank(filter, key);
 
-	theApp.m_FocusID = targetID;
+	Services().State().m_FocusID = targetID;
 
-	if (theApp.m_GroupID >= 0 && key.parent != theApp.m_GroupID)
+	if (Services().State().m_GroupID >= 0 && key.parent != Services().State().m_GroupID)
 	{
-		theApp.EnterGroupID(-1);
+		Services().Groups().EnterGroupID(-1);
 	}
 
 	m_bHandleSearchTextChange = false;
@@ -6460,7 +6461,7 @@ bool CQPasteWnd::LoadGoToEntryKey(long targetID, GoToEntryKey &key)
 	bool gotKey = false;
 	try
 	{
-		CppSQLite3Query q = theApp.m_db.execQueryEx(
+		CppSQLite3Query q = Services().Database().execQueryEx(
 			_T("SELECT stickyClipOrder, bIsGroup, clipOrder, lParentID FROM Main WHERE lID = %d"),
 			targetID);
 		if (!q.eof())
@@ -6495,7 +6496,7 @@ int CQPasteWnd::GoToEntryRank(const CString &filter, const GoToEntryKey &key)
 			key.sticky, key.isGroup,
 			key.sticky, key.isGroup, key.clipOrder);
 
-		targetIndex = theApp.m_db.execScalar(rankSql);
+		targetIndex = Services().Database().execScalar(rankSql);
 	}
 	catch (CppSQLite3Exception&)
 	{
@@ -6634,7 +6635,7 @@ void CQPasteWnd::OnSystemButton()
 
 		AddShowStarredClipsMenuItem(cmSubMenu);
 
-		theApp.m_Language.UpdateRightClickMenu(cmSubMenu);
+		Services().Language().UpdateRightClickMenu(cmSubMenu);
 
 		SetMenuChecks(cmSubMenu);
 
@@ -7244,7 +7245,7 @@ void CQPasteWnd::RefreshScrollBarColors()
 void CQPasteWnd::RefreshThemeColors()
 {
 	// Refresh caption bar colors
-	SetCaptionColorActive(Settings().m_bShowPersistent, theApp.GetConnectCV());
+	SetCaptionColorActive(Settings().m_bShowPersistent, Services().Clipboard().GetConnectCV());
 	SetCaptionOn(Settings().GetCaptionPos(), true, Settings().m_Theme.GetCaptionSize(), Settings().m_Theme.GetCaptionFontSize());
 	
 	// Refresh scrollbar colors
@@ -7270,7 +7271,7 @@ bool CQPasteWnd::DoActionSlugify()
 
 bool CQPasteWnd::DoRefreshList()
 {
-	theApp.m_FocusID = -1;
+	Services().State().m_FocusID = -1;
 
 	CString csText;
 	m_search.GetWindowText(csText);
@@ -7285,7 +7286,7 @@ bool CQPasteWnd::DoDeleteAllNonUsedClips()
 	bool bStartValue = m_bHideWnd;
 	m_bHideWnd = false;
 
-	int nRet = MessageBox(theApp.m_Language.GetString("Delete_All_Non_Used_Clips", "Delete all clips that are not groups, in groups, marked as never auto delete, has a shortcut key or marked as sticky.\r\n\r\nThis cannot be undone."), _T("Ditto"), MB_OKCANCEL | MB_TOPMOST);
+	int nRet = MessageBox(Services().Language().GetString("Delete_All_Non_Used_Clips", "Delete all clips that are not groups, in groups, marked as never auto delete, has a shortcut key or marked as sticky.\r\n\r\nThis cannot be undone."), _T("Ditto"), MB_OKCANCEL | MB_TOPMOST);
 
 	m_bHideWnd = bStartValue;
 	if (nRet != IDOK)
@@ -7295,7 +7296,7 @@ bool CQPasteWnd::DoDeleteAllNonUsedClips()
 
 	CWaitCursor wait;
 
-	CClipRetentionPolicy::DeleteNonUsedClips(true);
+	CClipRetentionPolicy::DeleteNonUsedClips(theApp.Services().Database(), theApp.Services().Windows(), true);
 	FillList();
 
 	m_cf_dibCache.clear();
@@ -7318,7 +7319,7 @@ bool CQPasteWnd::DoCopySelection()
 		return FALSE;
 	}
 
-	CProcessPaste paste(Settings());
+	CProcessPaste paste(Services().ClipContext(), Services().ActiveWindow());
 
 	//Don't send the paste just load it into memory
 	paste.m_bSendPaste = false;
@@ -7475,12 +7476,12 @@ void CQPasteWnd::OnFirstShowstartupmessage()
 
 void CQPasteWnd::OnFirstRestoreDb()
 {
-	theApp.m_pMainFrame->PostMessage(CDittoMessage::RestoreDb, 0, 0);
+	Services().Windows().MainFrame()->PostMessage(CDittoMessage::RestoreDb, 0, 0);
 }
 
 void CQPasteWnd::OnFirstBackupDb()
 {
-	theApp.m_pMainFrame->PostMessage(CDittoMessage::BackupDb, 0, 0);
+	Services().Windows().MainFrame()->PostMessage(CDittoMessage::BackupDb, 0, 0);
 }
 
 void CQPasteWnd::OnMenuDeleteallnonusedclips()

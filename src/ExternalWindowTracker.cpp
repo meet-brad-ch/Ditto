@@ -4,10 +4,16 @@
 #include "SendKeys.h"
 #include "Options.h"
 #include "CP_Main.h"
+#include "AppState.h"
+#include "AppWindows.h"
 #include "UAC_Helper.h"
+#include "UAC_Thread.h"
 
-ExternalWindowTracker::ExternalWindowTracker(CGetSetOptions& settings) :
-	m_settings(settings)
+ExternalWindowTracker::ExternalWindowTracker(CGetSetOptions& settings, CIdleTime& idleTime, CAppState& state, CAppWindows& windows) :
+	m_settings(settings),
+	m_idleTime(idleTime),
+	m_state(state),
+	m_windows(windows)
 {
 	m_activeWnd = NULL;
 	m_focusWnd = NULL;
@@ -32,12 +38,51 @@ ExternalWindowTracker::~ExternalWindowTracker(void)
 	}
 }
 
+void ExternalWindowTracker::RunUacHelper(int parentProcessId)
+{
+	m_pUacPasteThread = std::make_unique<CUAC_Thread>(parentProcessId, *this);
+	m_pUacPasteThread->Start();
+	m_pUacPasteThread->WaitForThreadToExit(INT_MAX);
+}
+
+void ExternalWindowTracker::StopUacThread()
+{
+	if(m_pUacPasteThread)
+	{
+		if(m_pUacPasteThread->ThreadWasStarted() == false)
+		{
+			m_pUacPasteThread->FireExit();
+		}
+		m_pUacPasteThread.reset();
+	}
+}
+
+CUAC_Thread& ExternalWindowTracker::UacThread()
+{
+	if(!m_pUacPasteThread)
+	{
+		m_pUacPasteThread = std::make_unique<CUAC_Thread>(GetCurrentProcessId(), *this);
+	}
+
+	return *m_pUacPasteThread;
+}
+
+bool ExternalWindowTracker::UACThreadRunning()
+{
+	if(m_pUacPasteThread)
+	{
+		return m_pUacPasteThread->IsRunning();
+	}
+
+	return false;
+}
+
 
 bool ExternalWindowTracker::TrackActiveWnd(bool force)
 {
-	if(force == false && CIdleTime::IdleSeconds(m_settings) < (m_settings.GetMinIdleTimeBeforeTrackFocus() / 1000.0))
+	if(force == false && m_idleTime.IdleSeconds() < (m_settings.GetMinIdleTimeBeforeTrackFocus() / 1000.0))
 	{
-		CLogger::Log(CStringUtil::Format(_T("Not Idle for long enough, IdleTime: %f, MinIdle %f"), CIdleTime::IdleSeconds(m_settings), (m_settings.GetMinIdleTimeBeforeTrackFocus() / 1000.0)));
+		CLogger::Log(CStringUtil::Format(_T("Not Idle for long enough, IdleTime: %f, MinIdle %f"), m_idleTime.IdleSeconds(), (m_settings.GetMinIdleTimeBeforeTrackFocus() / 1000.0)));
 		return false;
 	}
 
@@ -77,10 +122,10 @@ bool ExternalWindowTracker::TrackActiveWnd(bool force)
 	m_activeWnd = newActive;
 	m_dittoHasFocus = false;
 
-	if(theApp.QPasteWnd())
-		theApp.QPasteWnd()->UpdateStatus(true);
+	if(m_windows.QPasteWnd())
+		m_windows.QPasteWnd()->UpdateStatus(true);
 
-	CLogger::Log(CStringUtil::Format(_T("TargetActiveWindow Active: %s (%d), Focus: %s (%d), FromHook %d, IdleTime: %f"), WndName(m_activeWnd).GetString(), m_activeWnd, WndName(m_focusWnd).GetString(), m_focusWnd,fromHook, CIdleTime::IdleSeconds(m_settings)));
+	CLogger::Log(CStringUtil::Format(_T("TargetActiveWindow Active: %s (%d), Focus: %s (%d), FromHook %d, IdleTime: %f"), WndName(m_activeWnd).GetString(), m_activeWnd, WndName(m_focusWnd).GetString(), m_focusWnd,fromHook, m_idleTime.IdleSeconds()));
 
 	return true;
 }
@@ -327,7 +372,7 @@ void ExternalWindowTracker::ActivateTargetForPaste(HWND activeWnd)
 	ULONGLONG startTick = GetTickCount64();
 
 	ActivateTarget();
-	theApp.PumpMessageEx();
+	CAppWindows::PumpMessages();
 	WaitForActiveWnd(activeWnd, max(25, m_settings.WaitForActiveWndTimeout()));
 
 	ULONGLONG endTick = GetTickCount64();
@@ -340,10 +385,10 @@ bool ExternalWindowTracker::PassPasteToUacApp(bool pasteAsAdmin)
 	//can't run an elevated app when running windows app
 	if(m_settings.GetIsWindowsApp() == FALSE &&
 		pasteAsAdmin &&
-		theApp.UACThreadRunning() == false)
+		UACThreadRunning() == false)
 	{
 		CLogger::Log(CStringUtil::Format(_T("Passing paste off to uac aware app")));
-		if (theApp.UACPaste() == false)
+		if (UacThread().UACPaste() == false)
 		{
 			pasteAsAdmin = false;
 		}
@@ -366,7 +411,7 @@ void ExternalWindowTracker::SendCopy(CopyReasonEnum::CopyReason copyReason)
 
 	Sleep(delay);
 
-	theApp.PumpMessageEx();
+	CAppWindows::PumpMessages();
 
 	CLogger::Log(CStringUtil::Format(_T("Sending copy to app %s key stroke: %s, Delay: %d"), csToApp.GetString(), csString.GetString(), delay));
 
@@ -380,10 +425,10 @@ void ExternalWindowTracker::SendCopy(CopyReasonEnum::CopyReason copyReason)
 	//can't run an elevated app when running windows app
 	if(m_settings.GetIsWindowsApp() == FALSE &&
 		pasteAsAdmin &&
-		theApp.UACThreadRunning() == false)
+		UACThreadRunning() == false)
 	{
 		CLogger::Log(CStringUtil::Format(_T("Passing copy off to uac aware app")));
-		if (theApp.UACCopy() == false)
+		if (UacThread().UACCopy() == false)
 		{
 			pasteAsAdmin = false;
 		}
@@ -395,7 +440,7 @@ void ExternalWindowTracker::SendCopy(CopyReasonEnum::CopyReason copyReason)
 		Sleep(delay);
 		send.SetKeyDownDelay(SendKeysDelay);
 
-		theApp.SetCopyReason(copyReason);
+		m_state.SetCopyReason(copyReason);
 
 		send.SendKeys(csString, true);
 	}	
@@ -416,7 +461,7 @@ void ExternalWindowTracker::SendCut()
 
 	Sleep(delay);
 
-	theApp.PumpMessageEx();
+	CAppWindows::PumpMessages();
 	  
 	CLogger::Log(CStringUtil::Format(_T("Sending cut to app %s key stroke: %s, Delay: %d"), csToApp.GetString(), csString.GetString(), delay));
 
@@ -431,10 +476,10 @@ void ExternalWindowTracker::SendCut()
 	//can't run an elevated app when running windows app
 	if(m_settings.GetIsWindowsApp() == FALSE &&
 		pasteAsAdmin &&
-		theApp.UACThreadRunning() == false)
+		UACThreadRunning() == false)
 	{
 		CLogger::Log(CStringUtil::Format(_T("Passing copy off to uac aware app")));
-		if (theApp.UACCut() == false)
+		if (UacThread().UACCut() == false)
 		{
 			pasteAsAdmin = false;
 		}

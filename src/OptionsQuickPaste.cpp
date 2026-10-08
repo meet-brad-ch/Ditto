@@ -14,7 +14,7 @@ IMPLEMENT_DYNCREATE(COptionsQuickPaste, CPropertyPage)
 
 COptionsQuickPaste::COptionsQuickPaste() : CPropertyPage(COptionsQuickPaste::IDD)
 {
-	m_csTitle = theApp.m_Language.GetString("QuickPasteTitle", "Quick Paste");
+	m_csTitle = theApp.Services().Language().GetString("QuickPasteTitle", "Quick Paste");
 	m_psp.pszTitle = m_csTitle;
 	m_psp.dwFlags |= PSP_USETITLE; 
 
@@ -126,7 +126,7 @@ BOOL COptionsQuickPaste::OnInitDialog()
 
 	FillThemes();
 
-	theApp.m_Language.UpdateOptionQuickPaste(this);
+	theApp.Services().Language().UpdateOptionQuickPaste(this);
 		
 	return FALSE;
 }
@@ -154,7 +154,7 @@ BOOL COptionsQuickPaste::OnApply()
 	Settings().SetShowInTaskBar(m_showInTaskBar.GetCheck());
 	if(Settings().GetShowInTaskBar() != prevValue)
 	{
-		theApp.RefreshShowInTaskBar();
+		theApp.Services().Windows().RefreshShowInTaskBar();
 	}
 	
 	if(m_LogFont.lfWeight != 0)

@@ -17,7 +17,7 @@ IMPLEMENT_DYNCREATE(COptionsStats, CPropertyPage)
 COptionsStats::COptionsStats()
 	: CPropertyPage(COptionsStats::IDD)
 {
-	m_csTitle = theApp.m_Language.GetString("StatsTitle", "Stats");
+	m_csTitle = theApp.Services().Language().GetString("StatsTitle", "Stats");
 	m_psp.pszTitle = m_csTitle;
 	m_psp.dwFlags |= PSP_USETITLE; 
 
@@ -81,17 +81,19 @@ BOOL COptionsStats::OnInitDialog()
 	m_eTripCopies.Format(_T("%d"), settings.GetTripCopyCount());
 	m_eTripPastes.Format(_T("%d"), settings.GetTripPasteCount());
 
-	m_eLastStarted = theApp.m_oldtStartUp.Format();	
+	const COleDateTime& startUp = theApp.Services().State().m_oldtStartUp;
+	m_eLastStarted = startUp.Format();
 
-	COleDateTimeSpan span = COleDateTime::GetCurrentTime() - theApp.m_oldtStartUp;
+	COleDateTimeSpan span = COleDateTime::GetCurrentTime() - startUp;
 	CString csSpan;
 	csSpan.Format(_T("  -  %d.%d.%d (D.H.M)"), (long)span.GetTotalDays(), span.GetHours(), span.GetMinutes());
 	m_eLastStarted += csSpan;
 
 	try
 	{
-		m_eSavedCopies.Format(_T("%d"), theApp.m_db.execScalar(_T("SELECT COUNT(lID) FROM Main")));
-		m_eSavedCopyData.Format(_T("%d"), theApp.m_db.execScalar(_T("SELECT COUNT(lID) FROM Data")));
+		CDittoDb& database = theApp.Services().Database();
+		m_eSavedCopies.Format(_T("%d"), database.execScalar(_T("SELECT COUNT(lID) FROM Main")));
+		m_eSavedCopyData.Format(_T("%d"), database.execScalar(_T("SELECT COUNT(lID) FROM Data")));
 	}
 	catch (CppSQLite3Exception& e)
 	{
@@ -110,7 +112,7 @@ BOOL COptionsStats::OnInitDialog()
 
 	UpdateData(FALSE);
 
-	theApp.m_Language.UpdateOptionStats(this);
+	theApp.Services().Language().UpdateOptionStats(this);
 		
 	return TRUE;
 }
@@ -131,9 +133,9 @@ void COptionsStats::OnResetCounts()
 
 void COptionsStats::OnRemoveAll() 
 {
-	if(MessageBox(theApp.m_Language.GetString("Remove_All", "This will remove all Copy Entries!\n\nContinue?"), _T("Warning"), MB_OKCANCEL) == IDOK)
+	if(MessageBox(theApp.Services().Language().GetString("Remove_All", "This will remove all Copy Entries!\n\nContinue?"), _T("Warning"), MB_OKCANCEL) == IDOK)
 	{
-		if( CClipDatabase::DeleteAllIDs() )
+		if( CClipDatabase::DeleteAllIDs(theApp.Services().Database()) )
 		{
 			m_eSavedCopies.Empty();
 			m_eSavedCopyData.Empty();

@@ -55,7 +55,7 @@ int CEditFrameWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	ModifyStyle(WS_CAPTION|WS_BORDER|WS_OVERLAPPED|0x0000C000|WS_THICKFRAME|WS_DLGFRAME|WS_SYSMENU|WS_MINIMIZEBOX|WS_MAXIMIZEBOX, 0, SWP_DRAWFRAME); 
 	ModifyStyleEx(WS_EX_CLIENTEDGE, 0, 0);
 		
-	CString csTitle = theApp.m_Language.GetString("Ditto_Edit", "Ditto Edit");
+	CString csTitle = theApp.Services().Language().GetString("Ditto_Edit", "Ditto Edit");
 	m_EditWnd.Create(NULL, csTitle, WS_CHILD, CRect(0, 0, 0, 0), this, 100, NULL);
 	m_EditWnd.ShowWindow(SW_SHOW);
 

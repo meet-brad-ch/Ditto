@@ -221,7 +221,9 @@ protected:
   /** @brief Runs the default menu item (click or double click on the tray icon). */
   void         RunTrayDefaultMenuItem();
 
-  static CTrayWnd  m_wndInvisible;
+  /** @brief The hidden owner window MinimiseToTray parents the window to (no taskbar button);
+   *  one per tray icon, created on first use and destroyed with the tray icon. */
+  CTrayWnd             m_wndInvisible{};
 
 //Member variables
   /** @brief The Shell_NotifyIcon data of this tray icon (zero initialised; the constructor sets cbSize). */

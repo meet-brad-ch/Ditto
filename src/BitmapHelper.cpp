@@ -39,19 +39,19 @@ int CBitmapHelper::GetCBitmapHeight(const CBitmap& cbm)
 	return bm.bmHeight;
 }
 
-BOOL CBitmapHelper::GetCBitmap(CGetSetOptions& settings, void* pClip2, CDC* pDC, CBitmap* pBitMap, int nMaxHeight)
+BOOL CBitmapHelper::GetCBitmap(CGetSetOptions& settings, CLIPFORMAT pngFormat, void* pClip2, CDC* pDC, CBitmap* pBitMap, int nMaxHeight)
 {
 	CClipFormat* pClip = (CClipFormat*)pClip2;
 
 	if (pClip->m_cfType != CF_DIB &&
-		pClip->m_cfType != theApp.m_PNG_Format)
+		pClip->m_cfType != pngFormat)
 		return false;
 	if (!pBitMap)
 		return false;
 	if (nMaxHeight < 0)
 		return false;
 
-	const std::unique_ptr<Gdiplus::Bitmap> gdipBitmap{ pClip->CreateGdiplusBitmap() };
+	const std::unique_ptr<Gdiplus::Bitmap> gdipBitmap{ pClip->LoadGdiplusBitmap(pngFormat) };
 	if (gdipBitmap == nullptr)
 	{
 		return false;
@@ -95,14 +95,14 @@ BOOL CBitmapHelper::GetCBitmap(CGetSetOptions& settings, void* pClip2, CDC* pDC,
 	return true;
 }
 
-CSize CBitmapHelper::MeasureImages(CClipFormats& clips, BOOL horizontal)
+CSize CBitmapHelper::MeasureImages(CClipFormats& clips, CLIPFORMAT pngFormat, BOOL horizontal)
 {
 	CSize size{ 0, 0 };
 	const int count = (int)clips.GetCount();
 	for (int i = 0; i < count; i++)
 	{
 		// null for formats that are not images; GetCBitmap's drawing loop skips the same ones
-		const std::unique_ptr<Gdiplus::Bitmap> gdipBitmap(clips[i].CreateGdiplusBitmap());
+		const std::unique_ptr<Gdiplus::Bitmap> gdipBitmap(clips[i].LoadGdiplusBitmap(pngFormat));
 		if (!gdipBitmap)
 			continue;
 
@@ -114,14 +114,14 @@ CSize CBitmapHelper::MeasureImages(CClipFormats& clips, BOOL horizontal)
 	return size;
 }
 
-BOOL CBitmapHelper::GetCBitmap(CClipFormats& clips, CDC* pDC, CBitmap* pBitMap, BOOL horizontal)
+BOOL CBitmapHelper::GetCBitmap(CClipFormats& clips, CLIPFORMAT pngFormat, CDC* pDC, CBitmap* pBitMap, BOOL horizontal)
 {
 	BOOL bRet = FALSE;
 	if (!pBitMap)
 		return bRet;
 
 	int count = (int)clips.GetCount();
-	const CSize size = MeasureImages(clips, horizontal);
+	const CSize size = MeasureImages(clips, pngFormat, horizontal);
 
 	pBitMap->CreateCompatibleBitmap(pDC, size.cx, size.cy);
 	ASSERT(pBitMap->m_hObject != NULL);
@@ -145,10 +145,10 @@ BOOL CBitmapHelper::GetCBitmap(CClipFormats& clips, CDC* pDC, CBitmap* pBitMap, 
 		CClipFormat clip = clips[i];
 
 		if (clip.m_cfType != CF_DIB &&
-			clip.m_cfType != theApp.m_PNG_Format)
+			clip.m_cfType != pngFormat)
 			continue;
 
-		const std::unique_ptr<Gdiplus::Bitmap> gdipBitmap{ clip.CreateGdiplusBitmap() };
+		const std::unique_ptr<Gdiplus::Bitmap> gdipBitmap{ clip.LoadGdiplusBitmap(pngFormat) };
 		if (gdipBitmap == nullptr)
 			continue;
 

@@ -487,12 +487,13 @@ void CAdvGeneral::OnSize(UINT nType, int cx, int cy)
 
 void CAdvGeneral::OnBnClickedBtCompactAndRepair()
 {
-	auto msg = theApp.m_Language.GetString("CompactRepairWarning", "Warning this can take quite a long time and require up to double the hard drive space as your current database size, Continue?");
+	auto msg = theApp.Services().Language().GetString("CompactRepairWarning", "Warning this can take quite a long time and require up to double the hard drive space as your current database size, Continue?");
 	int ret = MessageBox(msg, _T("Ditto"), MB_OKCANCEL);
 
 	if (ret == IDOK)
 	{
 		CWaitCursor wait;
+		CDittoDb& database = theApp.Services().Database();
 
 		try
 		{
@@ -500,11 +501,11 @@ void CAdvGeneral::OnBnClickedBtCompactAndRepair()
 			{
 				for (int i = 0; i < 100; i++)
 				{
-					int toDeleteCount = theApp.m_db.execScalar(_T("SELECT COUNT(clipID) FROM MainDeletes"));
+					int toDeleteCount = database.execScalar(_T("SELECT COUNT(clipID) FROM MainDeletes"));
 					if (toDeleteCount <= 0)
 						break;
 
-					CClipRetentionPolicy::RemoveOldEntries(Settings(), false);
+					CClipRetentionPolicy::RemoveOldEntries(Settings(), theApp.Services().IdleTime(), theApp.Services().Windows(), false);
 				}
 			}
 			catch (CppSQLite3Exception& e)
@@ -513,8 +514,8 @@ void CAdvGeneral::OnBnClickedBtCompactAndRepair()
 				return;
 			}
 
-			theApp.m_db.execDML(_T("PRAGMA auto_vacuum = 1"));
-			theApp.m_db.execQuery(_T("VACUUM"));
+			database.execDML(_T("PRAGMA auto_vacuum = 1"));
+			database.execQuery(_T("VACUUM"));
 		}
 		catch (CppSQLite3Exception& e)
 		{
@@ -700,7 +701,7 @@ void CAdvGeneral::OnBnClickedButtonCopyScripts2()
 
 		try
 		{
-			theApp.m_db.execDML(reOrderSql);
+			theApp.Services().Database().execDML(reOrderSql);
 		}
 		catch (CppSQLite3Exception& e)
 		{

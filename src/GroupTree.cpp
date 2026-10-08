@@ -200,7 +200,7 @@ void CGroupTree::FillTree()
 
 void CGroupTree::FillTree(int parentID, HTREEITEM hParent)
 {
-	CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID, mText FROM Main WHERE bIsGroup = 1 AND lParentID = %d"), parentID);
+	CppSQLite3Query q = theApp.Services().Database().execQueryEx(_T("SELECT lID, mText FROM Main WHERE bIsGroup = 1 AND lParentID = %d"), parentID);
 
 	if(q.eof() == false)
 	{
@@ -368,7 +368,7 @@ void CGroupTree::OnRclickQuickPaste(NMHDR * /*pNMHDR*/, LRESULT *pResult)
 			return;
 		}
 
-		theApp.m_Language.UpdateGroupsRightClickMenu(cmSubMenu);
+		theApp.Services().Language().UpdateGroupsRightClickMenu(cmSubMenu);
 		
 		cmSubMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RIGHTBUTTON, pp.x, pp.y, this, NULL);
 	}

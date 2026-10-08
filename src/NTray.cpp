@@ -252,6 +252,10 @@ CTrayNotifyIcon::~CTrayNotifyIcon()
     DestroyIcon(m_hDynamicIcon);
     m_hDynamicIcon = NULL;
   }
+
+  //Destroy this tray icon's invisible window (its owner frame window is already destroyed)
+  if (::IsWindow(m_wndInvisible.m_hWnd))
+    m_wndInvisible.DestroyWindow();
 }
 
 BOOL CTrayNotifyIcon::Delete(_In_ BOOL bCloseHelperWindow)
@@ -1244,13 +1248,11 @@ BOOL CTrayNotifyIcon::CreateHelperWindow()
   return (CWindowImpl<CTrayNotifyIcon>::Create(NULL, CWindow::rcDefault, _T("CTrayNotifyIcon Helper Window"), WS_OVERLAPPEDWINDOW) != NULL);
 }
 
-CTrayWnd  CTrayNotifyIcon::m_wndInvisible;
-
 BOOL CTrayNotifyIcon::RemoveTaskbarIcon(CWnd* pWnd)
 {
 	LPCTSTR pstrOwnerClass = AfxRegisterWndClass(0);
 
-	// Create static invisible window
+	// Create this tray icon's invisible window
 	if (!::IsWindow(m_wndInvisible.m_hWnd))
 	{
 		if (!m_wndInvisible.CreateEx(0, pstrOwnerClass, _T(""), WS_POPUP,

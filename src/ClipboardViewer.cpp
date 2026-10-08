@@ -17,6 +17,11 @@ CGetSetOptions& CClipboardViewer::Settings() const
 	return theApp.Services().Settings();
 }
 
+const CRegisteredClipboardFormats& CClipboardViewer::Formats() const
+{
+	return theApp.Services().ClipboardFormats();
+}
+
 CClipboardViewer::CClipboardViewer(CCopyThread* pHandler) :
 	m_pHandler(pHandler),
 	m_bPinging(false),
@@ -104,8 +109,8 @@ void CClipboardViewer::SendPing()
 		if(OpenClipboard())
 		{
 			m_bPinging = true;
-			SetClipboardData(theApp.m_PingFormat, CGlobalMemory::NewGlobalP("Ditto Ping", sizeof("Ditto Ping")));
-			SetClipboardData(theApp.m_cfIgnoreClipboard , CGlobalMemory::NewGlobalP("Ignore", sizeof("Ignore")));
+			SetClipboardData(Formats().Ping(), CGlobalMemory::NewGlobalP("Ditto Ping", sizeof("Ditto Ping")));
+			SetClipboardData(Formats().IgnoreClipboard(), CGlobalMemory::NewGlobalP("Ignore", sizeof("Ignore")));
 
 			SetTimer(TimerPing, 2000, NULL);
 			CloseClipboard();
@@ -167,7 +172,7 @@ LRESULT CClipboardViewer::OnClipboardChange(WPARAM /*wParam*/, LPARAM /*lPara*/)
 
 bool CClipboardViewer::GetIgnoreClipboardChange()
 {
-	if(::IsClipboardFormatAvailable(theApp.m_cfIgnoreClipboard))
+	if(::IsClipboardFormatAvailable(Formats().IgnoreClipboard()))
 	{
 		CLogger::Log(_T("Clipboard Viewer Ignore clipboard format is on the clipboard, ignoring change"));
 		return true;
@@ -179,7 +184,7 @@ bool CClipboardViewer::GetIgnoreClipboardChange()
 	}
 
 	//https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats
-	if (::IsClipboardFormatAvailable(theApp.m_excludeClipboardContentFromMonitorProcessing))
+	if (::IsClipboardFormatAvailable(Formats().ExcludeClipboardContentFromMonitorProcessing()))
 	{
 		CLogger::Log(_T("ExcludeClipboardContentFromMonitorProcessing clipboard format is on the clipboard, ignoring change"));
 		return true;
@@ -191,7 +196,7 @@ bool CClipboardViewer::GetIgnoreClipboardChange()
 //The clipboard data has changed
 void CClipboardViewer::ProcessClipboardChange()
 {
-	if(::IsClipboardFormatAvailable(theApp.m_PingFormat))
+	if(::IsClipboardFormatAvailable(Formats().Ping()))
 	{
 		m_bPinging = false;
 		return;

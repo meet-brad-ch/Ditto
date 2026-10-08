@@ -14,6 +14,7 @@
 
 class CHotKey;
 class CGetSetOptions;
+class CAppServices;
 
 class CMainFrame: public CFrameWnd
 {
@@ -194,7 +195,7 @@ private:
 		void (CMainFrame::*handle)() = nullptr;
 	};
 
-	/** @brief The copy, paste and cut hot keys of one copy buffer (non-owning; g_HotKeys owns them). */
+	/** @brief The copy, paste and cut hot keys of one copy buffer (non-owning; the CHotKeys registry owns them). */
 	struct CopyBufferHotKeys
 	{
 		/** @brief The hot key that copies into the buffer, or nullptr. */
@@ -209,8 +210,15 @@ private:
 	static const std::array<TimerHandler, 11> s_timerHandlers;
 
 	/**
+	 * @brief The application's services (the frame is created by the application, not by an owner
+	 *        holding the services).
+	 * @return theApp.Services().
+	 */
+	CAppServices& Services() const;
+
+	/**
 	 * @brief The application's settings.
-	 * @return theApp.Services().Settings().
+	 * @return Services().Settings().
 	 */
 	CGetSetOptions& Settings() const;
 
@@ -227,7 +235,7 @@ private:
 	 * @param wParam The WM_HOTKEY id.
 	 * @return True for a show-Ditto hot key.
 	 */
-	static bool IsShowDittoHotKey(WPARAM wParam);
+	bool IsShowDittoHotKey(WPARAM wParam) const;
 
 	/** @brief Handles a show-Ditto hot key: moves the selection, hides or shows the window. */
 	void OnShowDittoHotKey();

@@ -49,7 +49,7 @@ int CEditWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	
 	//m_font.CreatePointFont(m_dpi.Scale(90), _T("Arial Unicode MS"), this->GetDC());
 	m_font.CreateFont(-m_dpi.Scale(13), 0, 0, 0, 400, 0, 0, 0, DEFAULT_CHARSET, 3, 2, 1, 34, _T("Segoe UI"));
-	m_updateDescriptionButton.Create(theApp.m_Language.GetString("Update_Desc", "Update clip description on save?"), WS_CHILD|WS_VISIBLE|BS_AUTOCHECKBOX, CRect(0,0,0,0), this, 101);
+	m_updateDescriptionButton.Create(theApp.Services().Language().GetString("Update_Desc", "Update clip description on save?"), WS_CHILD|WS_VISIBLE|BS_AUTOCHECKBOX, CRect(0,0,0,0), this, 101);
 	m_updateDescriptionButton.SetFont(&m_font);
 
 	if(theApp.Services().Settings().GetUpdateDescWhenSavingClip())
@@ -64,23 +64,23 @@ int CEditWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	CString csText;
 
 	m_toolBarControl.GetItemRect(m_toolBarControl.CommandToIndex(ID_BUTTON_NEW), cr);
-	csText.Format(_T("%s     Ctrl - N"), theApp.m_Language.GetString("New_Clip", "New Clip").GetString());
+	csText.Format(_T("%s     Ctrl - N"), theApp.Services().Language().GetString("New_Clip", "New Clip").GetString());
 	m_toolTipControl.AddTool(&m_toolBarControl, csText, cr, 1);
 
 	m_toolBarControl.GetItemRect(m_toolBarControl.CommandToIndex(ID_BUTTON_SAVE), cr);
-	csText.Format(_T("%s    Ctrl - S"), theApp.m_Language.GetString("Save", "Save").GetString());
+	csText.Format(_T("%s    Ctrl - S"), theApp.Services().Language().GetString("Save", "Save").GetString());
 	m_toolTipControl.AddTool(&m_toolBarControl, csText, cr, 2);
 
 	m_toolBarControl.GetItemRect(m_toolBarControl.CommandToIndex(ID_BUTTON_SAVE_ALL), cr);
-	csText.Format(_T("%s    Ctrl - Shift - S"), theApp.m_Language.GetString("Save_All", "Save All").GetString());
+	csText.Format(_T("%s    Ctrl - Shift - S"), theApp.Services().Language().GetString("Save_All", "Save All").GetString());
 	m_toolTipControl.AddTool(&m_toolBarControl, csText, cr, 3);
 
 	m_toolBarControl.GetItemRect(m_toolBarControl.CommandToIndex(ID_BUTTON_CLOSE), cr);
-	csText.Format(_T("%s    Escape"), theApp.m_Language.GetString("Close", "Close Current Tab").GetString());
+	csText.Format(_T("%s    Escape"), theApp.Services().Language().GetString("Close", "Close Current Tab").GetString());
 	m_toolTipControl.AddTool(&m_toolBarControl, csText, cr, 4);
 
 	m_toolBarControl.GetItemRect(m_toolBarControl.CommandToIndex(ID_BUTTON_SAVE_CLOSE_CLIPBOARD), cr);
-	csText.Format(_T("%s    Shift - Escape"), theApp.m_Language.GetString("Save_Close", "Save, Close and place on clipboard").GetString());
+	csText.Format(_T("%s    Shift - Escape"), theApp.Services().Language().GetString("Save_Close", "Save, Close and place on clipboard").GetString());
 	m_toolTipControl.AddTool(&m_toolBarControl, csText, cr, 4);
 
 	return 0;
@@ -224,7 +224,7 @@ bool CEditWnd::DoSaveItem(int index)
 		else
 		{
 			CString cs;
-			cs.Format(_T("%s '%s'"), theApp.m_Language.GetString("ErrorSaving", "Error saving clip").GetString(), m_tabControl.GetTabTitle(index).GetString());
+			cs.Format(_T("%s '%s'"), theApp.Services().Language().GetString("ErrorSaving", "Error saving clip").GetString(), m_tabControl.GetTabTitle(index).GetString());
 			MessageBox(cs, _T("Ditto"), MB_OK);
 		}
 	}
@@ -261,7 +261,7 @@ bool CEditWnd::AddItem(int id)
 		{
 			try
 			{
-				CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT mText FROM Main where lID = %d"), id);
+				CppSQLite3Query q = theApp.Services().Database().execQueryEx(_T("SELECT mText FROM Main where lID = %d"), id);
 				if(q.eof() == false)
 				{
 					csTitle = q.getStringField(_T("mText"));
@@ -276,7 +276,7 @@ bool CEditWnd::AddItem(int id)
 		}
 		else
 		{
-			csTitle = theApp.m_Language.GetString("New", "New");
+			csTitle = theApp.Services().Language().GetString("New", "New");
 		}
 
 		pEdit->Create(WS_TABSTOP|WS_CHILD|WS_VISIBLE, CRect(100, 100, 105, 105), this, 100, TRUE);
@@ -421,7 +421,7 @@ void CEditWnd::OnSaveCloseClipboard()
 	{
 		if(m_lastSaveID >= 0)
 		{
-			CProcessPaste Paste(theApp.Services().Settings());
+			CProcessPaste Paste(theApp.Services().ClipContext(), theApp.Services().ActiveWindow());
 			Paste.GetClipIDs().Add(m_lastSaveID);
 			Paste.m_bSendPaste = false;
 			Paste.DoPaste();

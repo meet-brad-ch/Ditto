@@ -5,6 +5,9 @@
 #include "stdafx.h"
 #include "CP_Main.h"
 #include "Clip.h"
+#include "AppState.h"
+#include "ClipContext.h"
+#include "RegisteredClipboardFormats.h"
 #include "DatabaseUtilities.h"
 #include "sqlite\CppSQLite3.h"
 #include "..\Shared\TextConvert.h"
@@ -115,13 +118,13 @@ HGLOBAL COleDataObjectEx::GetGlobalData(CLIPFORMAT cfFormat, LPFORMATETC lpForma
 	return hGlobal;
 }
 
-std::shared_ptr<CClipTypes> COleDataObjectEx::GetAvailableTypes()
+std::shared_ptr<CClipTypes> COleDataObjectEx::GetAvailableTypes(HWND clipboardOwner)
 {
 	std::shared_ptr<CClipTypes> types = std::make_shared<CClipTypes>();
 
 	// GetNextFormat API has a bug that cannot find avaliable formats correctly. (ex. CF_DIB)
 	// So, Use EnumClipboardFormats API.
-	if (!OpenClipboard(theApp.m_MainhWnd))
+	if (!OpenClipboard(clipboardOwner))
 		return types;
 
 	UINT format = 0;
@@ -210,15 +213,16 @@ CString CClipFormat::GetAsCString()
 
 Gdiplus::Bitmap *CClipFormat::CreateGdiplusBitmap()
 {
-	return LoadGdiplusBitmap().release(); // ownership: the add-in caller (IClipFormat's raw-pointer ABI)
+	// ownership: the add-in caller (IClipFormat's raw-pointer ABI)
+	return LoadGdiplusBitmap(CClipboardFormats::GetFormatID(_T("PNG"))).release();
 }
 
-std::unique_ptr<Gdiplus::Bitmap> CClipFormat::LoadGdiplusBitmap()
+std::unique_ptr<Gdiplus::Bitmap> CClipFormat::LoadGdiplusBitmap(CLIPFORMAT pngFormat)
 {
-	if (this->m_cfType != CF_DIB && this->m_cfType != theApp.m_PNG_Format)
+	if (this->m_cfType != CF_DIB && this->m_cfType != pngFormat)
 		return nullptr;
 
-	if (this->m_cfType == theApp.m_PNG_Format)
+	if (this->m_cfType == pngFormat)
 		return PNGImageHelper::GdipImageFromHGLOBAL(this->m_hgData);
 	return DIBImageHelper::GdipImageFromHGLOBAL(this->m_hgData);
 }
@@ -268,10 +272,7 @@ bool CClipFormats::RemoveFormat(CLIPFORMAT cfType)
 CClip - holds multiple CClipFormats and CopyClipboard() statistics
 \*----------------------------------------------------------------------------*/
 
-DWORD CClip::m_LastAddedCRC = 0;
-int CClip::m_lastAddedID = -1;
-
-CClip::CClip(CGetSetOptions& settings) :
+CClip::CClip(CClipContext& context) :
 	m_id(-1),
 	m_CRC(0),
 	m_parentId(-1),
@@ -286,14 +287,14 @@ CClip::CClip(CGetSetOptions& settings) :
 	m_globalShortCut(FALSE),
 	m_moveToGroupShortCut(0),
 	m_globalMoveToGroupShortCut(FALSE),
-	m_settings(settings)
+	m_context(context)
 {
 	m_copyReason = CopyReasonEnum::COPY_TO_UNKOWN;
 	m_addToDbStickyEnum = AddToDbStickyEnum::INVALID;
 }
 
-CClip::CClip(CGetSetOptions& settings, DittoCore::ClipSavePolicy savePolicy) :
-	CClip(settings)
+CClip::CClip(CClipContext& context, DittoCore::ClipSavePolicy savePolicy) :
+	CClip(context)
 {
 	m_savePolicy.emplace(std::move(savePolicy));
 }
@@ -302,7 +303,7 @@ const DittoCore::ClipSavePolicy& CClip::SavePolicy()
 {
 	if (!m_savePolicy.has_value())
 	{
-		m_savePolicy.emplace(m_settings.GetClipSaveSettings());
+		m_savePolicy.emplace(m_context.Settings().GetClipSaveSettings());
 	}
 	return *m_savePolicy;
 }
@@ -471,7 +472,8 @@ int CClip::LoadFromClipboard(CClipTypes* pClipTypes, CRegExFilterHelper& regexFi
 bool CClip::MayReadClipboard()
 {
 	// If the data is supposed to be private, then return
-	if (::IsClipboardFormatAvailable(theApp.m_cfIgnoreClipboard))
+	const CRegisteredClipboardFormats& formats{ m_context.Formats() };
+	if (::IsClipboardFormatAvailable(formats.IgnoreClipboard()))
 	{
 		CLogger::Log(_T("Clipboard ignore type is on the clipboard, skipping this clipboard change"));
 		return false;
@@ -480,7 +482,7 @@ bool CClip::MayReadClipboard()
 	if (SavePolicy().Settings().enforceIgnoreFormats)
 	{
 		//https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats
-		if (::IsClipboardFormatAvailable(theApp.m_excludeClipboardContentFromMonitorProcessing))
+		if (::IsClipboardFormatAvailable(formats.ExcludeClipboardContentFromMonitorProcessing()))
 		{
 			CLogger::Log(_T("ExcludeClipboardContentFromMonitorProcessing type is on the clipboard, skipping this clipboard change"));
 			return false;
@@ -489,7 +491,7 @@ bool CClip::MayReadClipboard()
 
 	//If we are saving a multi paste then delay us connecting to the clipboard
 	//to allow the ctrl-v to do a paste
-	if(::IsClipboardFormatAvailable(theApp.m_cfDelaySavingData))
+	if(::IsClipboardFormatAvailable(formats.DelaySavingData()))
 	{
 		CLogger::Log(_T("Delay clipboard type is on the clipboard, delaying 1500 ms to allow ctrl-v to work"));
 		Sleep(1500);
@@ -501,10 +503,11 @@ bool CClip::MayReadClipboard()
 bool CClip::IsExcludedFromHistory(COleDataObjectEx& oleData)
 {
 	//https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats
+	const CLIPFORMAT canInclude{ m_context.Formats().CanIncludeInClipboardHistory() };
 	if (SavePolicy().Settings().enforceIgnoreFormats &&
-		oleData.IsDataAvailable(theApp.m_canIncludeInClipboardHistory))
+		oleData.IsDataAvailable(canInclude))
 	{
-		HGLOBAL includeInHistory = oleData.GetGlobalData(theApp.m_canIncludeInClipboardHistory);
+		HGLOBAL includeInHistory = oleData.GetGlobalData(canInclude);
 		if (includeInHistory != nullptr && TakeDword(includeInHistory) == 0)
 		{
 			CLogger::Log(_T("CanIncludeInClipboardHistory is 0, skipping this clipboard change"));
@@ -783,7 +786,7 @@ bool CClip::AddToDB(bool bCheckForDuplicates)
 {
 	// one lock from reading the newest order to writing the clip, so a clip saved by another
 	// thread cannot get the same order in between
-	const std::unique_lock<std::recursive_mutex> lock = theApp.m_db.Lock();
+	const std::unique_lock<std::recursive_mutex> lock = m_context.Database().Lock();
 	bool bResult;
 	try
 	{
@@ -827,16 +830,16 @@ int CClip::ApplyAddToDbSticky()
 
 	if (m_addToDbStickyEnum == AddToDbStickyEnum::MAKE_TOP_STICKY)
 	{
-		m_stickyClipOrder = this->GetNewTopSticky(m_parentId, -1);
+		m_stickyClipOrder = GetNewTopSticky(m_context, m_parentId, -1);
 	}
 	else if (m_addToDbStickyEnum == AddToDbStickyEnum::MAKE_LAST_STICKY)
 	{
-		m_stickyClipOrder = this->GetNewLastSticky(m_parentId, -1);
+		m_stickyClipOrder = GetNewLastSticky(m_context, m_parentId, -1);
 	}
 	else if (m_addToDbStickyEnum == AddToDbStickyEnum::REPLACE_TOP_STICKY)
 	{
-		m_stickyClipOrder = this->GetNewTopSticky(m_parentId, -1);
-		removeStickySettingClipId = GetExistingTopStickyClipId(m_parentId);
+		m_stickyClipOrder = GetNewTopSticky(m_context, m_parentId, -1);
+		removeStickySettingClipId = GetExistingTopStickyClipId(m_context, m_parentId);
 	}
 
 	return removeStickySettingClipId;
@@ -854,7 +857,7 @@ bool CClip::MoveDuplicateToTop()
 	MakeLatestGroupOrder();
 
 	// the duplicate moves to the top instead of a second copy being saved
-	CClipRepository repository{Repository()};
+	CClipRepository repository{Repository(m_context)};
 	repository.SetOrder(nID, CClipRepository::OrderColumn::Clip, m_clipOrder);
 	if(m_parentId > -1)
 	{
@@ -874,12 +877,13 @@ bool CClip::MoveDuplicateToTop()
 // returning -1 here would have saved a second copy of the clip
 int CClip::FindDuplicate()
 {
-	switch (SavePolicy().DuplicateCheckFor(m_CRC, m_LastAddedCRC))
+	const CLastAddedClip& lastAdded{ m_context.LastAdded() };
+	switch (SavePolicy().DuplicateCheckFor(m_CRC, lastAdded.Crc()))
 	{
 	case DittoCore::DuplicateCheck::LastAdded:
-		return m_lastAddedID;
+		return lastAdded.Id();
 	case DittoCore::DuplicateCheck::AnyByCrc:
-		return Repository().FindByCrc(m_CRC).value_or(-1);
+		return Repository(m_context).FindByCrc(m_CRC).value_or(-1);
 	case DittoCore::DuplicateCheck::None:
 		return -1;
 	}
@@ -892,6 +896,7 @@ DWORD CClip::GenerateCRC()
 {
 	DittoCore::Crc32 crc;
 	const bool adjust = SavePolicy().Settings().adjustForCrc;
+	const CLIPFORMAT rtfFormat{ m_context.Formats().Rtf() };
 
 	const INT_PTR size = m_Formats.GetSize();
 	for (INT_PTR i = 0; i < size; i++)
@@ -899,17 +904,17 @@ DWORD CClip::GenerateCRC()
 		const CClipFormat& format = m_Formats.ElementAt(i);
 		if (format.m_hgData != NULL)
 		{
-			AddToCrc(crc, format, adjust);
+			AddToCrc(crc, format, adjust, rtfFormat);
 		}
 	}
 	return crc.Value();
 }
 
-void CClip::AddToCrc(DittoCore::Crc32& crc, const CClipFormat& format, bool adjust)
+void CClip::AddToCrc(DittoCore::Crc32& crc, const CClipFormat& format, bool adjust, CLIPFORMAT rtfFormat)
 {
 	const DittoCore::GlobalBytes block(format.m_hgData);
 	std::span<const std::byte> bytes = block.Bytes();
-	if (adjust && format.m_cfType == theApp.m_RTFFormat)
+	if (adjust && format.m_cfType == rtfFormat)
 	{
 		// In Word and Outlook the \datastore section and the rsid values change on every copy: leave them out
 		const std::string normalized = DittoCore::RtfNormalizer::Normalize(DittoCore::ClipText::ReadAnsiBounded(bytes));
@@ -944,14 +949,14 @@ bool CClip::AddRowsInTransaction(int removeStickySettingClipId)
 	try
 	{
 		// all or nothing: upstream left a Main row without data when the data insert failed
-		CDittoDbTransaction transaction(theApp.m_db);
+		CDittoDbTransaction transaction(m_context.Database());
 		if (AddToMainTable() == false || AddToDataTable() == false)
 		{
 			return false;   // the transaction rolls back
 		}
 		if (removeStickySettingClipId > 0)
 		{
-			RemoveStickySetting(removeStickySettingClipId, m_parentId);
+			RemoveStickySetting(m_context, removeStickySettingClipId, m_parentId);
 		}
 		transaction.Commit();
 		return true;
@@ -970,12 +975,11 @@ bool CClip::AddToMainTable()
 	{
 		ClipRecord record = ToRecord();
 		record.lastPasteDate = CTime::GetCurrentTime().GetTime();
-		m_id = Repository().InsertClip(record);
+		m_id = Repository(m_context).InsertClip(record);
 
 		CLogger::Log(CStringUtil::Format(_T("Added clip to main table, Id: %d, ParentId: %d Desc: %s, Order: %f, GroupOrder: %f"), m_id, m_parentId, m_Desc.GetString(), m_clipOrder, m_clipGroupOrder));
 
-		m_LastAddedCRC = m_CRC;
-		m_lastAddedID = m_id;
+		m_context.LastAdded().Record(m_CRC, m_id);
 	}
 	catch (CppSQLite3Exception& e)
 	{
@@ -991,7 +995,7 @@ bool CClip::ModifyMainTable()
 	bool bRet = false;
 	try
 	{
-		Repository().UpdateClip(ToRecord());
+		Repository(m_context).UpdateClip(ToRecord());
 		bRet = true;
 	}
 	catch (CppSQLite3Exception& e)
@@ -1008,7 +1012,7 @@ bool CClip::ModifyDescription()
 	bool bRet = false;
 	try
 	{
-		Repository().UpdateDescription(m_id, m_Desc);
+		Repository(m_context).UpdateDescription(m_id, m_Desc);
 		bRet = true;
 	}
 	catch (CppSQLite3Exception& e)
@@ -1037,7 +1041,7 @@ bool CClip::AddToDataTable()
 			records.push_back(std::move(record));
 		}
 
-		const std::vector<int> ids = Repository().InsertFormats(m_id, records);
+		const std::vector<int> ids = Repository(m_context).InsertFormats(m_id, records);
 		for(std::size_t r = 0; r < ids.size(); r++)
 		{
 			CClipFormat& format = m_Formats.ElementAt(m_Formats.GetSize() - 1 - static_cast<INT_PTR>(r));
@@ -1084,7 +1088,7 @@ void CClip::Move(int parentId, bool up)
 	const OrderSlot slot = SlotFor(parentId);
 	try
 	{
-		CClipRepository repository = Repository();
+		CClipRepository repository = Repository(m_context);
 		const std::optional<double> neighbour = repository.NearestOrder(slot.column, slot.sticky, slot.parentId, *slot.order, up);
 		if (neighbour)
 		{
@@ -1114,11 +1118,11 @@ void CClip::MakeStickyTop(int parentId)
 {
 	if (parentId < 0)
 	{
-		m_stickyClipOrder = GetNewTopSticky(parentId, m_id);
+		m_stickyClipOrder = GetNewTopSticky(m_context, parentId, m_id);
 	}
 	else
 	{
-		m_stickyClipGroupOrder = GetNewTopSticky(parentId, m_id);
+		m_stickyClipGroupOrder = GetNewTopSticky(m_context, parentId, m_id);
 	}
 }
 
@@ -1126,11 +1130,11 @@ void CClip::MakeStickyLast(int parentId)
 {
 	if (parentId < 0)
 	{
-		m_stickyClipOrder = GetNewLastSticky(parentId, m_id);
+		m_stickyClipOrder = GetNewLastSticky(m_context, parentId, m_id);
 	}
 	else
 	{
-		m_stickyClipGroupOrder = GetNewLastSticky(parentId, m_id);
+		m_stickyClipGroupOrder = GetNewLastSticky(m_context, parentId, m_id);
 	}
 }
 
@@ -1157,18 +1161,18 @@ bool CClip::RemoveStickySetting(int parentId)
 	return reset;
 }
 
-bool CClip::RemoveStickySetting(int clipId, int parentId)
+bool CClip::RemoveStickySetting(CClipContext& context, int clipId, int parentId)
 {
 	// returns whether the clip's row was changed; upstream always returned false
 	const CClipRepository::OrderColumn column = parentId < 0 ? CClipRepository::OrderColumn::StickyClip : CClipRepository::OrderColumn::StickyClipGroup;
-	return Repository().SetOrder(clipId, column, static_cast<double>(CClip::InvalidSticky));
+	return Repository(context).SetOrder(clipId, column, static_cast<double>(CClip::InvalidSticky));
 }
 
-int CClip::GetExistingTopStickyClipId(int parentId)
+int CClip::GetExistingTopStickyClipId(CClipContext& context, int parentId)
 {
 	try
 	{
-		return Repository().TopStickyClipId(ParentFilter(parentId)).value_or(-1);
+		return Repository(context).TopStickyClipId(ParentFilter(parentId)).value_or(-1);
 	}
 	catch (CppSQLite3Exception& e)
 	{
@@ -1178,11 +1182,11 @@ int CClip::GetExistingTopStickyClipId(int parentId)
 	}
 }
 
-std::optional<double> CClip::EdgeOrder(CClipRepository::OrderColumn column, bool sticky, int parentId, bool highest)
+std::optional<double> CClip::EdgeOrder(CClipContext& context, CClipRepository::OrderColumn column, bool sticky, int parentId, bool highest)
 {
 	try
 	{
-		return Repository().EdgeOrder(column, sticky, ParentFilter(parentId), highest);
+		return Repository(context).EdgeOrder(column, sticky, ParentFilter(parentId), highest);
 	}
 	catch (CppSQLite3Exception& e)
 	{
@@ -1198,9 +1202,9 @@ std::optional<int> CClip::ParentFilter(int parentId)
 	return parentId > -1 ? std::optional<int>(parentId) : std::nullopt;
 }
 
-CClipRepository CClip::Repository()
+CClipRepository CClip::Repository(CClipContext& context)
 {
-	return CClipRepository(theApp.m_db);
+	return CClipRepository(context.Database());
 }
 
 ClipRecord CClip::ToRecord() const
@@ -1247,17 +1251,17 @@ void CClip::FromRecord(const ClipRecord& record)
 	m_globalMoveToGroupShortCut = record.globalMoveToGroupShortCut;
 }
 
-double CClip::GetNewTopSticky(int parentId, int clipId)
+double CClip::GetNewTopSticky(CClipContext& context, int parentId, int clipId)
 {
-	const std::optional<double> highest = EdgeOrder(parentId < 0 ? CClipRepository::OrderColumn::StickyClip : CClipRepository::OrderColumn::StickyClipGroup, true, parentId, true);
+	const std::optional<double> highest = EdgeOrder(context, parentId < 0 ? CClipRepository::OrderColumn::StickyClip : CClipRepository::OrderColumn::StickyClipGroup, true, parentId, true);
 	const double newOrder = DittoCore::ClipOrder::TopSticky(highest);
 	CLogger::Log(CStringUtil::Format(_T("GetNewTopSticky, Id: %d, parentId: %d, NewMax: %f"), clipId, parentId, newOrder));
 	return newOrder;
 }
 
-double CClip::GetNewLastSticky(int parentId, int clipId)
+double CClip::GetNewLastSticky(CClipContext& context, int parentId, int clipId)
 {
-	const std::optional<double> lowest = EdgeOrder(parentId < 0 ? CClipRepository::OrderColumn::StickyClip : CClipRepository::OrderColumn::StickyClipGroup, true, parentId, false);
+	const std::optional<double> lowest = EdgeOrder(context, parentId < 0 ? CClipRepository::OrderColumn::StickyClip : CClipRepository::OrderColumn::StickyClipGroup, true, parentId, false);
 	const double newOrder = DittoCore::ClipOrder::LastSticky(lowest);
 	CLogger::Log(CStringUtil::Format(_T("GetNewLastSticky, Id: %d, parentId: %d, NewMin: %f"), clipId, parentId, newOrder));
 	return newOrder;
@@ -1265,14 +1269,14 @@ double CClip::GetNewLastSticky(int parentId, int clipId)
 
 void CClip::MakeLatestOrder()
 {
-	m_clipOrder = GetNewOrder(-1, m_id);
+	m_clipOrder = GetNewOrder(m_context, -1, m_id);
 }
 
 void CClip::MakeLatestGroupOrder()
 {
 	if(m_parentId > -1)
 	{
-		m_clipGroupOrder = GetNewOrder(m_parentId, m_id);
+		m_clipGroupOrder = GetNewOrder(m_context, m_parentId, m_id);
 	}
 }
 
@@ -1289,9 +1293,9 @@ void CClip::MakeLastGroupOrder()
 	}
 }
 
-double CClip::GetNewOrder(int parentId, int clipId)
+double CClip::GetNewOrder(CClipContext& context, int parentId, int clipId)
 {
-	const std::optional<double> highest = EdgeOrder(parentId < 0 ? CClipRepository::OrderColumn::Clip : CClipRepository::OrderColumn::ClipGroup, false, parentId, true);
+	const std::optional<double> highest = EdgeOrder(context, parentId < 0 ? CClipRepository::OrderColumn::Clip : CClipRepository::OrderColumn::ClipGroup, false, parentId, true);
 	const double newOrder = DittoCore::ClipOrder::Newest(highest);
 	CLogger::Log(CStringUtil::Format(_T("GetNewOrder, Id: %d, parentId: %d, NewMax: %f"), clipId, parentId, newOrder));
 	return newOrder;
@@ -1299,7 +1303,7 @@ double CClip::GetNewOrder(int parentId, int clipId)
 
 double CClip::GetNewLastOrder(int parentId, int clipId)
 {
-	const std::optional<double> lowest = EdgeOrder(parentId < 0 ? CClipRepository::OrderColumn::Clip : CClipRepository::OrderColumn::ClipGroup, false, parentId, false);
+	const std::optional<double> lowest = EdgeOrder(m_context, parentId < 0 ? CClipRepository::OrderColumn::Clip : CClipRepository::OrderColumn::ClipGroup, false, parentId, false);
 	const double newOrder = DittoCore::ClipOrder::Oldest(lowest);
 	CLogger::Log(CStringUtil::Format(_T("GetLastOrder, Id: %d, parentId: %d, NewMin: %f"), clipId, parentId, newOrder));
 	return newOrder;
@@ -1309,7 +1313,7 @@ BOOL CClip::LoadMainTable(int id)
 {
 	try
 	{
-		const std::optional<ClipRecord> record = Repository().LoadClip(id);
+		const std::optional<ClipRecord> record = Repository(m_context).LoadClip(id);
 		if (record)
 		{
 			FromRecord(*record);
@@ -1328,11 +1332,11 @@ BOOL CClip::LoadMainTable(int id)
 // STATICS
 
 // Allocates a Global containing the requested Clip Format Data
-HGLOBAL CClip::LoadFormat(int id, UINT cfType)
+HGLOBAL CClip::LoadFormat(CClipContext& context, int id, UINT cfType)
 {
 	try
 	{
-		const std::optional<std::vector<std::byte>> data = Repository().LoadFormat(id, CClipboardFormats::GetFormatName(static_cast<CLIPFORMAT>(cfType)));
+		const std::optional<std::vector<std::byte>> data = Repository(context).LoadFormat(id, CClipboardFormats::GetFormatName(static_cast<CLIPFORMAT>(cfType)));
 		if (data)
 		{
 			return CGlobalMemory::NewGlobalP(const_cast<std::byte*>(data->data()), data->size());
@@ -1371,7 +1375,7 @@ bool CClip::LoadFormats(int id, bool bOnlyLoad_CF_TEXT, bool includeRichTextForT
 
 		// a format saved without data is left out (and logged) by the repository; upstream added
 		// it with the previous format's handle, so two formats freed one block
-		for (const FormatRecord& record : Repository().LoadFormats(id, filter))
+		for (const FormatRecord& record : Repository(m_context).LoadFormats(id, filter))
 		{
 			CClipFormat cf;
 			cf.m_dataId = record.dataId;
@@ -1396,12 +1400,12 @@ bool CClip::LoadFormats(int id, bool bOnlyLoad_CF_TEXT, bool includeRichTextForT
 	return m_Formats.GetSize() > 0;
 }
 
-void CClip::LoadTypes(int id, CClipTypes& types)
+void CClip::LoadTypes(CClipContext& context, int id, CClipTypes& types)
 {
 	types.RemoveAll();
 	try
 	{
-		for (const CString& name : Repository().LoadFormatNames(id))
+		for (const CString& name : Repository(context).LoadFormatNames(id))
 		{
 			types.Add(CClipboardFormats::GetFormatID(name));
 		}
@@ -1438,7 +1442,7 @@ CStringA CClip::GetCFTextTextFormat()
 
 CStringA CClip::GetRTFTextFormat()
 {
-	IClipFormat* pFormat = this->Clips()->FindFormatEx(theApp.m_RTFFormat);
+	IClipFormat* pFormat = this->Clips()->FindFormatEx(m_context.Formats().Rtf());
 	if (pFormat != NULL)
 	{
 		return pFormat->GetAsCStringA();
@@ -1532,7 +1536,7 @@ BOOL CClip::SaveFormats(CString *unicode, CStringA *asci, CStringA *rtf, BOOL up
 	if (rtf != nullptr)
 	{
 		const int nLength = rtf->GetLength() + sizeof(char);
-		AddFormat(theApp.m_RTFFormat, rtf->GetBuffer(nLength), nLength, true);
+		AddFormat(m_context.Formats().Rtf(), rtf->GetBuffer(nLength), nLength, true);
 	}
 
 	if (asci != nullptr)
@@ -1559,7 +1563,7 @@ void CClip::AddImageFormats(std::vector<BYTE>* cf_dibBytes, std::vector<BYTE>* p
 
 	if (pngBytes != nullptr && pngBytes->size() > 0)
 	{
-		AddFormat(theApp.m_PNG_Format, pngBytes->data(), pngBytes->size(), false);
+		AddFormat(m_context.Formats().Png(), pngBytes->data(), pngBytes->size(), false);
 	}
 }
 
@@ -1571,9 +1575,9 @@ bool CClip::SaveFormatsInTransaction(const ARRAY& deletedData, BOOL updateDescri
 
 		// rolled back when a step fails; upstream's manual begin stayed open after an exception
 		// and ignored the steps' results, so a failed save was committed in part
-		CDittoDbTransaction transaction(theApp.m_db);
+		CDittoDbTransaction transaction(m_context.Database());
 
-		CClipRepository repository = Repository();
+		CClipRepository repository = Repository(m_context);
 		// CArrayEx indexes with int
 		const int count = static_cast<int>(deletedData.GetSize());
 		for (int i = 0; i < count; i++)
@@ -1611,7 +1615,7 @@ bool CClip::SaveMainRow(BOOL updateDescription)
 BOOL CClip::WriteImageToFile(CString path)
 {
 	CClipFormat *bitmap = this->m_Formats.FindFormat(CF_DIB);
-	CClipFormat *png = this->m_Formats.FindFormat(theApp.m_PNG_Format);
+	CClipFormat *png = this->m_Formats.FindFormat(m_context.Formats().Png());
 	if (!bitmap && !png) return false;
 	
 	std::shared_ptr<CImage> i;
@@ -1752,7 +1756,7 @@ CClip::FileDataIndexes CClip::FindFileDataIndexes(INT_PTR size)
 		{
 			indexes.hdrop = i;
 		}
-		else if(m_Formats[i].m_cfType == theApp.m_DittoFileData)
+		else if(m_Formats[i].m_cfType == m_context.Formats().DittoFileData())
 		{
 			indexes.dittoData = i;
 		}
@@ -1790,7 +1794,7 @@ bool CClip::AddFileDataRecord(const std::vector<CopiedFile>& copied, CString& er
 		errorMessage += _T("The files are too large to save together\r\n");
 		return false;
 	}
-	AddFormat(theApp.m_DittoFileData, const_cast<std::byte*>(record.data()), static_cast<UINT>(record.size()));
+	AddFormat(m_context.Formats().DittoFileData(), const_cast<std::byte*>(record.data()), static_cast<UINT>(record.size()));
 	return true;
 }
 
@@ -1811,13 +1815,14 @@ void CClip::SaveFileDataToDatabase(CString& errorMessage)
 
 std::unique_ptr<Gdiplus::Bitmap> CClip::CreateGdiplusBitmap()
 {
-	CClipFormat *png = this->m_Formats.FindFormat(CClipboardFormats::GetFormatID(_T("PNG")));
+	const CLIPFORMAT pngFormat{ m_context.Formats().Png() };
+	CClipFormat *png = this->m_Formats.FindFormat(pngFormat);
 	if (png != NULL)
-		return png->LoadGdiplusBitmap();
+		return png->LoadGdiplusBitmap(pngFormat);
 
 	CClipFormat *dib = this->m_Formats.FindFormat(CF_DIB);
 	if (dib != NULL)
-		return dib->LoadGdiplusBitmap();
+		return dib->LoadGdiplusBitmap(pngFormat);
 
 	return nullptr;
 }
@@ -1830,8 +1835,8 @@ bool CClip::SaveFromEditWnd(BOOL bUpdateDesc)
 	{
 		// one transaction: upstream deleted the old data first, so a failure while writing the
 		// new data lost the clip's contents
-		CDittoDbTransaction transaction(theApp.m_db);
-		CClipRepository repository = Repository();
+		CDittoDbTransaction transaction(m_context.Database());
+		CClipRepository repository = Repository(m_context);
 		repository.DeleteFormats(m_id);
 
 		DWORD CRC = GenerateCRC();

@@ -3,7 +3,9 @@
 #include "EventThread.h"
 #include "Path.h"
 
+class CAppWindows;
 class CClip;
+class CClipContext;
 class CGetSetOptions;
 namespace ATL { class CImage; }
 
@@ -13,9 +15,14 @@ public:
 	/**
 	 * @brief Creates the (not yet started) edit-file watcher.
 	 * @param settings The application's settings (edit folder, save delays); must outlive this object.
+	 * @param clipContext The services of the clips this thread saves; must outlive this object.
+	 * @param windows The application's windows (refresh of a saved clip); must outlive this object.
 	 */
-	explicit CClipEditThread(CGetSetOptions& settings);
+	CClipEditThread(CGetSetOptions& settings, CClipContext& clipContext, CAppWindows& windows);
 	virtual ~CClipEditThread();
+
+	CClipEditThread(const CClipEditThread&) = delete;
+	CClipEditThread& operator=(const CClipEditThread&) = delete;
 		
 	void Close();
 	void StartWatchingFolderForChanges();
@@ -117,6 +124,10 @@ private:
 
 	/// The application's settings (not owned).
 	CGetSetOptions& m_settings;
+	/// The services of the clips this thread saves (not owned).
+	CClipContext& m_clipContext;
+	/// The application's windows (not owned); a saved clip is refreshed in the quick paste window.
+	CAppWindows& m_windows;
 	HANDLE m_folderHandle;
 	FILE_NOTIFY_INFORMATION m_fileChangeBuffer[10000]{};
 	OVERLAPPED m_overlapped{};

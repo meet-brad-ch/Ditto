@@ -2,8 +2,12 @@
 #include "CP_Main.h"
 #include ".\clipboardsaverestore.h"
 #include "GlobalFileDrop.h"
+#include "AppWindows.h"
+#include "RegisteredClipboardFormats.h"
 
-CClipboardSaveRestore::CClipboardSaveRestore(void)
+CClipboardSaveRestore::CClipboardSaveRestore(CAppWindows& windows, const CRegisteredClipboardFormats& formats) :
+	m_windows(windows),
+	m_formats(formats)
 {
 }
 
@@ -19,7 +23,7 @@ bool CClipboardSaveRestore::Save(BOOL textOnly)
 	COleDataObjectEx oleData;
 	CClipFormat cf;
 
-	if(::OpenClipboard(theApp.m_MainhWnd))
+	if(::OpenClipboard(m_windows.MainHwnd()))
 	{
 		UINT nFormat = EnumClipboardFormats(0);
 		while(nFormat != 0)
@@ -74,11 +78,11 @@ bool CClipboardSaveRestore::Restore()
 {
 	bool bRet = false;
 
-	if(::OpenClipboard(theApp.m_MainhWnd))
+	if(::OpenClipboard(m_windows.MainHwnd()))
 	{
 		::EmptyClipboard();
 
-		SetClipboardData(theApp.m_cfIgnoreClipboard, CGlobalMemory::NewGlobalP("Ignore", sizeof("Ignore")));
+		SetClipboardData(m_formats.IgnoreClipboard(), CGlobalMemory::NewGlobalP("Ignore", sizeof("Ignore")));
 
 		INT_PTR size = m_Clipboard.GetSize();
 		for(int nPos = 0; nPos < size; nPos++)
@@ -122,11 +126,11 @@ bool CClipboardSaveRestore::RestoreTextOnly()
 		hDropString = GetHDropFilePaths(hDropIndex);
 	}
 
-	if(::OpenClipboard(theApp.m_MainhWnd))
+	if(::OpenClipboard(m_windows.MainHwnd()))
 	{
 		::EmptyClipboard();
 
-		SetClipboardData(theApp.m_cfIgnoreClipboard, CGlobalMemory::NewGlobalP("Ignore", sizeof("Ignore")));
+		SetClipboardData(m_formats.IgnoreClipboard(), CGlobalMemory::NewGlobalP("Ignore", sizeof("Ignore")));
 
 		SetTextFormatCopies();
 

@@ -99,6 +99,7 @@ typedef std::map < int, char > CF_NoDibTypeMap;
 // CQPasteWnd window
 
 class CGetSetOptions;
+class CAppServices;
 
 class CQPasteWnd: public CWndEx
 {
@@ -110,6 +111,10 @@ private:
 	/** @brief The application settings (theApp's services; this window is created by the framework).
 	@return the settings. */
 	CGetSetOptions& Settings() const;
+	/** @brief The application services (theApp's; this window is created by the framework). Static, so that
+	the static helpers of this class reach them too.
+	@return the services. */
+	static CAppServices& Services();
 
     // Attributes
 public:

@@ -5,7 +5,9 @@
 #include <vector>
 #include <afxtempl.h>
 
+class CAppWindows;
 class CGetSetOptions;
+class CMultiLanguage;
 
 class CDittoAddins
 {
@@ -13,9 +15,14 @@ public:
 	/**
 	 * @brief Creates the (empty) add-in list.
 	 * @param settings The application's settings (add-in folder, database path); must outlive this object.
+	 * @param language The UI texts (menu text, language code for the add-ins); must outlive this object.
+	 * @param windows The application's windows (the quick paste window for the add-ins); must outlive this object.
 	 */
-	explicit CDittoAddins(CGetSetOptions& settings);
+	CDittoAddins(CGetSetOptions& settings, CMultiLanguage& language, CAppWindows& windows);
 	~CDittoAddins(void);
+
+	CDittoAddins(const CDittoAddins&) = delete;
+	CDittoAddins& operator=(const CDittoAddins&) = delete;
 
 	bool LoadAll();
 	bool UnloadAll();
@@ -45,4 +52,8 @@ protected:
 
 	/// The application's settings (not owned).
 	CGetSetOptions& m_settings;
+	/// The UI texts (not owned).
+	CMultiLanguage& m_language;
+	/// The application's windows (not owned).
+	CAppWindows& m_windows;
 };

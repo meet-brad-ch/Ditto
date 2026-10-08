@@ -7,8 +7,13 @@
 #include <string>
 
 
-CDittoCopyBuffer::CDittoCopyBuffer(CGetSetOptions& settings) :
+CDittoCopyBuffer::CDittoCopyBuffer(CGetSetOptions& settings, CDittoDb& database, ExternalWindowTracker& activeWindow, CAppWindows& windows, const CRegisteredClipboardFormats& clipboardFormats) :
 	m_settings(settings),
+	m_database(database),
+	m_activeWindow(activeWindow),
+	m_windows(windows),
+	m_clipboardFormats(clipboardFormats),
+	m_SavedClipboard(windows, clipboardFormats),
 	m_ActiveTimer(TRUE, TRUE),
 	m_RestoreTimer(TRUE, TRUE),
 	m_Pasting(TRUE, TRUE)
@@ -35,11 +40,11 @@ bool CDittoCopyBuffer::StartCopy(long lCopyBuffer, bool bCut)
 	{
 		if(bCut)
 		{
-			theApp.m_activeWnd.SendCut();
+			m_activeWindow.SendCut();
 		}
 		else
 		{
-			theApp.m_activeWnd.SendCopy(CopyReasonEnum::COPY_TO_BUFFER);
+			m_activeWindow.SendCopy(CopyReasonEnum::COPY_TO_BUFFER);
 		}
 
 		//Create a thread to track if they have copied anything, if thread has exited before they have
@@ -99,7 +104,7 @@ bool CDittoCopyBuffer::EndCopy(long lID)
 	//put the data that we stored at the start of this action back on the standard clipboard
 	m_SavedClipboard.Restore();
 	
-	if(PutClipOnDittoCopyBuffer(m_settings, lID, m_lCurrentDittoBuffer))
+	if(PutClipOnDittoCopyBuffer(m_settings, m_database, lID, m_lCurrentDittoBuffer))
 	{
 		CLogger::Log(CStringUtil::Format(_T("Ditto end copy, saved clip successfully Clip ID = %d"), lID));	
 
@@ -113,20 +118,20 @@ bool CDittoCopyBuffer::EndCopy(long lID)
 	return bRet;
 }
 
-bool CDittoCopyBuffer::PutClipOnDittoCopyBuffer(CGetSetOptions& settings, long lClipId, long lBuffer)
+bool CDittoCopyBuffer::PutClipOnDittoCopyBuffer(CGetSetOptions& settings, CDittoDb& database, long lClipId, long lBuffer)
 {
 	try
 	{
 		//enclose in brackets so the query closes before we update below
 		{
-			CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID FROM CopyBuffers WHERE lCopyBuffer = %d"), lBuffer);
+			CppSQLite3Query q = database.execQueryEx(_T("SELECT lID FROM CopyBuffers WHERE lCopyBuffer = %d"), lBuffer);
 			if(q.eof())
 			{
-				theApp.m_db.execDMLEx(_T("INSERT INTO CopyBuffers VALUES(NULL, -1, %d);"), lBuffer);
+				database.execDMLEx(_T("INSERT INTO CopyBuffers VALUES(NULL, -1, %d);"), lBuffer);
 			}
 		}
 
-		theApp.m_db.execDMLEx(_T("UPDATE CopyBuffers SET lClipID = %d WHERE lCopyBuffer = %d"), lClipId, lBuffer);
+		database.execDMLEx(_T("UPDATE CopyBuffers SET lClipID = %d WHERE lCopyBuffer = %d"), lClipId, lBuffer);
 
 		CCopyBufferItem Item;
 		settings.GetCopyBufferItem(lBuffer, Item);
@@ -161,20 +166,20 @@ bool CDittoCopyBuffer::PastCopyBuffer(long lCopyBuffer)
 
 	try
 	{
-		CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT Main.lID FROM Main ")
+		CppSQLite3Query q = m_database.execQueryEx(_T("SELECT Main.lID FROM Main ")
 													_T("INNER JOIN CopyBuffers ON CopyBuffers.lClipID = Main.lID ")
 													_T("WHERE CopyBuffers.lCopyBuffer = %d"), lCopyBuffer);
 
 		if(q.eof() == false)
 		{
-			m_pClipboard = std::make_unique<CClipboardSaveRestoreCopyBuffer>();
+			m_pClipboard = std::make_unique<CClipboardSaveRestoreCopyBuffer>(m_windows, m_clipboardFormats);
 			//Save the clipboard,
 			//then put the new data on the clipboard
 			//then send a paste
 			//then wait a little and restore the original clipboard data
 			if(m_pClipboard->Save(false))
 			{
-				theApp.m_pMainFrame->PasteOrShowGroup(q.getIntField(_T("lID")), -1, FALSE, TRUE, false);
+				m_windows.MainFrame()->PasteOrShowGroup(q.getIntField(_T("lID")), -1, FALSE, TRUE, false);
 
 				m_pClipboard->m_lRestoreDelay = m_settings.GetDittoRestoreClipboardDelay();
 

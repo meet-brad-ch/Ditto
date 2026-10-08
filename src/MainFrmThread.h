@@ -5,6 +5,10 @@
 #include <memory>
 
 class CGetSetOptions;
+class CIdleTime;
+class CDittoDb;
+class CClipboardMonitor;
+class CAppWindows;
 
 class CMainFrmThread : public CEventThread
 {
@@ -13,8 +17,13 @@ public:
      * @brief Creates the (not yet started) background thread of the main frame.
      * @param settings The application's settings (retention, temp folders, database path);
      *        must outlive this object.
+     * @param idleTime The user's idle time (the retention and the database read); must outlive this object.
+     * @param database The clip database (the group name of a clip saved to a group); must outlive this object.
+     * @param clipboard The clipboard monitor (told about saved clips); must outlive this object.
+     * @param windows The application's windows (the main frame shows the saved-to-group message);
+     *        must outlive this object.
      */
-    explicit CMainFrmThread(CGetSetOptions& settings);
+    CMainFrmThread(CGetSetOptions& settings, CIdleTime& idleTime, CDittoDb& database, CClipboardMonitor& clipboard, CAppWindows& windows);
     ~CMainFrmThread(void);
 
     enum eCMainFrmThreadEvents
@@ -44,6 +53,14 @@ protected:
 
 	/// The application's settings (not owned).
 	CGetSetOptions& m_settings;
+	/// The user's idle time (not owned).
+	CIdleTime& m_idleTime;
+	/// The clip database (not owned).
+	CDittoDb& m_database;
+	/// The clipboard monitor (not owned).
+	CClipboardMonitor& m_clipboard;
+	/// The application's windows (not owned).
+	CAppWindows& m_windows;
 	CCriticalSection m_cs;
 	CClipList m_saveClips;
 };

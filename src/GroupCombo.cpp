@@ -59,7 +59,7 @@ void CGroupCombo::FillCombo(long lParentID, long lSpaces)
 
 	lSpaces++;
 
-	CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID, mText FROM Main WHERE bIsGroup = 1 AND lParentID = %d"), lParentID);
+	CppSQLite3Query q = theApp.Services().Database().execQueryEx(_T("SELECT lID, mText FROM Main WHERE bIsGroup = 1 AND lParentID = %d"), lParentID);
 
 	if(q.eof() == false)
 	{

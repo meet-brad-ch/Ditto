@@ -13,6 +13,11 @@
 #include "sqlite/CppSQLite3.h"
 
 class CGetSetOptions;
+class CDittoDb;
+class CAppState;
+class CAppWindows;
+class CIdleTime;
+class CMultiLanguage;
 
 /**
  * @brief Names, creates, opens and maintains the clip database file.
@@ -34,18 +39,21 @@ public:
 	 */
 	static CString GetDefaultDBName(CGetSetOptions& settings);
 	/**
-	 * @brief Opens a database as the application's database (theApp.m_db), with the ICU extension
-	 * and the configured busy timeout; also sets theApp.m_databaseOnNetworkShare.
+	 * @brief Opens a database as the application's database (closing the one open before), with the
+	 * ICU extension and the configured busy timeout; also sets CAppState::m_databaseOnNetworkShare.
 	 * @param settings the application's settings (the busy timeout).
+	 * @param database the application's database connection.
+	 * @param state the application state (whether the database lies on a network share).
 	 * @param dbPath the database path.
 	 * @return TRUE if it is open; FALSE (after showing the error) if opening failed.
 	 */
-	static BOOL OpenDatabase(CGetSetOptions& settings, CString dbPath);
+	static BOOL OpenDatabase(CGetSetOptions& settings, CDittoDb& database, CAppState& state, CString dbPath);
 	/**
 	 * @brief Tells whether the application's database is open.
-	 * @return theApp.m_db.IsDatabaseOpen().
+	 * @param database the application's database connection.
+	 * @return database.IsDatabaseOpen().
 	 */
-	static BOOL IsDatabaseOpen();
+	static BOOL IsDatabaseOpen(CDittoDb& database);
 	/**
 	 * @brief Creates a new, empty database with Ditto's current schema.
 	 * @param csFile the path of the new database file.
@@ -86,32 +94,38 @@ public:
 	 * @brief Deletes the clips over the max entries and the expired clips (as configured), then
 	 * empties the MainDeletes table in steps.
 	 * @param settings the application's settings (database path and retention options).
+	 * @param idleTime the user's idle time (checked before each MainDeletes row).
+	 * @param windows the application's windows (told of each deleted clip, CClipIDs::DeleteIDs).
 	 * @param checkIdleTime true to delete MainDeletes rows only while the computer is idle long enough.
 	 * @return TRUE on success; FALSE (after showing the error) if a statement failed.
 	 */
-	static BOOL RemoveOldEntries(CGetSetOptions& settings, bool checkIdleTime);
+	static BOOL RemoveOldEntries(CGetSetOptions& settings, CIdleTime& idleTime, CAppWindows& windows, bool checkIdleTime);
 	/**
 	 * @brief Deletes every plain clip (no shortcut, not kept, not in a group, not sticky) and empties MainDeletes.
+	 * @param database the application's database connection.
+	 * @param windows the application's windows (passed on to CClipIDs::DeleteIDs).
 	 * @param fromAppWindow passed on to CClipIDs::DeleteIDs.
 	 * @return TRUE.
 	 */
-	static BOOL DeleteNonUsedClips(bool fromAppWindow);
+	static BOOL DeleteNonUsedClips(CDittoDb& database, CAppWindows& windows, bool fromAppWindow);
 
 private:
 	/**
 	 * @brief RemoveOldEntries' max-entries step: deletes the plain clips (no shortcut, not kept, not in
 	 * a group, not sticky) beyond the newest GetMaxEntries clips.
 	 * @param settings the application's settings (GetMaxEntries).
+	 * @param windows the application's windows (told of each deleted clip).
 	 * @param db the open database.
 	 */
-	static void RemoveClipsOverMaxEntries(CGetSetOptions& settings, CppSQLite3DB& db);
+	static void RemoveClipsOverMaxEntries(CGetSetOptions& settings, CAppWindows& windows, CppSQLite3DB& db);
 	/**
 	 * @brief RemoveOldEntries' expiry step: deletes the plain clips (no shortcut, not kept, not in a
 	 * group, not sticky) last pasted more than GetExpiredEntries days ago.
 	 * @param settings the application's settings (GetExpiredEntries).
+	 * @param windows the application's windows (told of each deleted clip).
 	 * @param db the open database.
 	 */
-	static void RemoveExpiredClips(CGetSetOptions& settings, CppSQLite3DB& db);
+	static void RemoveExpiredClips(CGetSetOptions& settings, CAppWindows& windows, CppSQLite3DB& db);
 };
 
 /**
@@ -128,19 +142,24 @@ public:
 	static BOOL CreateBackup(CString csPath);
 	/**
 	 * @brief Writes a gzip-compressed copy of the database, showing the progress in a popup.
+	 * @param language the UI texts (the progress text).
 	 * @param dbPath the database path.
 	 * @param backupPath the backup file path.
 	 * @return TRUE on success; FALSE (after showing the error) on failure.
 	 */
-	static BOOL BackupDB(CString dbPath, CString backupPath);
+	static BOOL BackupDB(CMultiLanguage& language, CString dbPath, CString backupPath);
 	/**
 	 * @brief Unpacks a backup next to the current database, checks it, makes it the configured
 	 * database, opens it and refreshes the view.
 	 * @param settings the application's settings (temp folder, default directory, database path).
+	 * @param language the UI texts (the progress text).
+	 * @param database the application's database connection (opened on the restored file).
+	 * @param state the application state (passed on to CDatabaseManager::OpenDatabase).
+	 * @param windows the application's windows (the view refreshed after the restore).
 	 * @param backupPath the backup file path.
 	 * @return TRUE on success; FALSE (after showing the error) on failure.
 	 */
-	static BOOL RestoreDB(CGetSetOptions& settings, CString backupPath);
+	static BOOL RestoreDB(CGetSetOptions& settings, CMultiLanguage& language, CDittoDb& database, CAppState& state, CAppWindows& windows, CString backupPath);
 };
 
 namespace nsPath { class CPath; }
@@ -154,11 +173,14 @@ public:
 	/**
 	 * @brief Makes sure a usable database exists and opens it.
 	 * @param settings the application's settings (the database path is stored there when it changes).
+	 * @param language the UI texts (the message about a bad database file).
+	 * @param database the application's database connection (opened on the database found).
+	 * @param state the application state (passed on to CDatabaseManager::OpenDatabase).
 	 * @param csDBPath the configured database path; empty for the default location.
 	 * @return TRUE if a database was found or created and opened; FALSE if it is on a network
 	 * share or another drive than C: and missing, or could not be created or opened.
 	 */
-	static BOOL CheckDBExists(CGetSetOptions& settings, CString csDBPath);
+	static BOOL CheckDBExists(CGetSetOptions& settings, CMultiLanguage& language, CDittoDb& database, CAppState& state, CString csDBPath);
 	/**
 	 * @brief Tells whether a database path is on a network share or on a drive other than C:.
 	 * @param path the database path.
@@ -178,10 +200,11 @@ private:
 	 * @brief CheckDBExists' step for an existing file: checks and upgrades it; a bad file is renamed
 	 * to *_BAD.* (after telling the user) and a new database is created at a new default path.
 	 * @param settings the application's settings (default directory; the new path is stored there).
+	 * @param language the UI texts (the message about the bad file).
 	 * @param csDBPath in: the existing database path; out: the path of the database to open.
 	 * @return TRUE for a valid database, else the result of CreateDB.
 	 */
-	static BOOL CheckExistingDB(CGetSetOptions& settings, CString& csDBPath);
+	static BOOL CheckExistingDB(CGetSetOptions& settings, CMultiLanguage& language, CString& csDBPath);
 };
 
 /**

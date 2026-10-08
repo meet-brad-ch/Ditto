@@ -103,6 +103,6 @@ void CSelectDB::OnUseDefault()
 	if(DatabaseSchemaUpgrader::ValidDB(csPath) == FALSE)
 		DeleteFile(csPath);
 
-	if(DatabaseLocator::CheckDBExists(settings, settings.GetDBPath()))
+	if(DatabaseLocator::CheckDBExists(settings, theApp.Services().Language(), theApp.Services().Database(), theApp.Services().State(), settings.GetDBPath()))
 		EndDialog(IDOK);
 }

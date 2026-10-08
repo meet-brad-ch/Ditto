@@ -24,6 +24,7 @@
 #include "Misc.h"
 
 class CClip;
+class CClipContext;
 class CCopyThread;
 class CGetSetOptions;
 
@@ -37,7 +38,12 @@ class COleDataObjectEx : public COleDataObject
 public:
 	// creates global from IStream if necessary
 	HGLOBAL GetGlobalData(CLIPFORMAT cfFormat, LPFORMATETC lpFormatEtc = NULL);
-	std::shared_ptr<CClipTypes> GetAvailableTypes();
+	/**
+	 * @brief The formats on the clipboard (EnumClipboardFormats, without CF_MAX).
+	 * @param clipboardOwner The window that opens the clipboard (the main window).
+	 * @return The formats; empty when the clipboard cannot be opened.
+	 */
+	std::shared_ptr<CClipTypes> GetAvailableTypes(HWND clipboardOwner);
 
 private:
 	// Copies a whole stream into a new global block; null when the stream is empty, over 4 GB, or
@@ -78,12 +84,17 @@ public:
 
 	/**
 	 * @brief Decodes a PNG or DIB format into a GDI+ bitmap.
+	 * @param pngFormat The registered "PNG" format (CRegisteredClipboardFormats::Png()).
 	 * @return The bitmap, owned by the caller; null for other formats or unreadable data.
 	 */
-	std::unique_ptr<Gdiplus::Bitmap> LoadGdiplusBitmap();
+	std::unique_ptr<Gdiplus::Bitmap> LoadGdiplusBitmap(CLIPFORMAT pngFormat);
 
 	/**
 	 * @brief IClipFormat (the add-in interface): LoadGdiplusBitmap for an add-in.
+	 *
+	 * The interface has no parameter for the services, so the "PNG" id is looked up by name
+	 * (CClipboardFormats::GetFormatID: RegisterClipboardFormat returns the id that is already
+	 * registered for the name, the one CRegisteredClipboardFormats::Png() holds).
 	 * @return The bitmap, owned by the add-in caller (the interface's raw-pointer ABI); null as for LoadGdiplusBitmap.
 	 */
 	virtual Gdiplus::Bitmap* CreateGdiplusBitmap() override;
@@ -119,24 +130,23 @@ public:
 	/**
 	 * @brief Creates an empty clip that takes its save settings from the settings when they are
 	 *        first needed.
-	 * @param settings The application's settings; must outlive this clip.
+	 * @param context The services the clip works with (CAppServices::ClipContext()): the settings,
+	 *        the clip saved last (the duplicate check reads it, a save records this clip there), the
+	 *        database, the registered formats and the main window; must outlive this clip.
 	 */
-	explicit CClip(CGetSetOptions& settings);
+	explicit CClip(CClipContext& context);
 	/**
 	 * @brief Creates an empty clip that saves with the given save settings.
-	 * @param settings The application's settings; must outlive this clip.
+	 * @param context The services the clip works with; must outlive this clip.
 	 * @param savePolicy The save settings used instead of the settings' GetClipSaveSettings().
 	 */
-	CClip(CGetSetOptions& settings, DittoCore::ClipSavePolicy savePolicy);
+	CClip(CClipContext& context, DittoCore::ClipSavePolicy savePolicy);
 	~CClip();
-	// Copies the clip's data; the save settings stay this clip's own
+	// Copies the clip's data; the save settings and the last-added record stay this clip's own
 	const CClip& operator=(const CClip &clip);
 
 	/** @brief The sticky order of a clip that is not sticky (stored in the database's sticky columns). */
 	static constexpr int InvalidSticky = -(2147483647);
-
-	static DWORD m_LastAddedCRC;
-	static int m_lastAddedID;
 
 	int m_id;
 	CClipFormats m_Formats;
@@ -212,19 +222,24 @@ public:
 
 	BOOL SaveFormats(CString* unicode, CStringA* asci, CStringA* rtf, BOOL updateDescription, std::vector<BYTE>* cf_dibBytes = nullptr, std::vector<BYTE>* pngBytes = nullptr);
 
-	// Allocates a Global containing the requested Clip's Format Data
-	static HGLOBAL LoadFormat(int id, UINT cfType);
+	// Allocates a Global containing the requested Clip's Format Data (context: the database)
+	static HGLOBAL LoadFormat(CClipContext& context, int id, UINT cfType);
 	// Fills "formats" with the Data of all Formats in the db for the given Clip ID
 	bool LoadFormats(int id, bool bOnlyLoad_CF_TEXT = false, bool includeRichTextForTextOnly = false, int dataId = -1);
-	// Fills "types" with all Types in the db for the given Clip ID
-	static void LoadTypes(int id, CClipTypes& types);
+	// Fills "types" with all Types in the db for the given Clip ID (context: the database)
+	static void LoadTypes(CClipContext& context, int id, CClipTypes& types);
 
-	static double GetNewOrder(int parentId, int clipId);
+	// The order above the newest clip of the main list or a group (context: the database)
+	static double GetNewOrder(CClipContext& context, int parentId, int clipId);
 	double GetNewLastOrder(int parentId, int clipId);
-	static double GetNewTopSticky(int parentId, int clipId);
-	static double GetNewLastSticky(int parentId, int clipId);
-	static int GetExistingTopStickyClipId(int parentId);
-	static bool RemoveStickySetting(int clipId, int parentId);
+	// The sticky order above the top sticky clip (context: the database)
+	static double GetNewTopSticky(CClipContext& context, int parentId, int clipId);
+	// The sticky order below the last sticky clip (context: the database)
+	static double GetNewLastSticky(CClipContext& context, int parentId, int clipId);
+	// The id of the top sticky clip; -1 for none (context: the database)
+	static int GetExistingTopStickyClipId(CClipContext& context, int parentId);
+	// Clears a saved clip's sticky setting in the database (context: the database)
+	static bool RemoveStickySetting(CClipContext& context, int clipId, int parentId);
 
 	bool AddFileDataToData(CString &errorMessage);
 
@@ -244,6 +259,12 @@ protected:
 	int FindDuplicate();
 
 	AddToDbStickyEnum::AddToDbSticky m_addToDbStickyEnum;
+
+	/**
+	 * @brief The services this clip works with (for the derived clips).
+	 * @return The context given to the constructor (not owned).
+	 */
+	CClipContext& Context() const { return m_context; }
 
 private:
 	// AddToDB's duplicate step: when a saved clip has this clip's CRC, moves it to the top of its
@@ -265,16 +286,17 @@ private:
 	// Moves the clip one place up or down in its list (midpoint of the two neighbours)
 	void Move(int parentId, bool up);
 	// The highest or lowest order of a column in the main list or a group; nullopt when empty
-	static std::optional<double> EdgeOrder(CClipRepository::OrderColumn column, bool sticky, int parentId, bool highest);
+	static std::optional<double> EdgeOrder(CClipContext& context, CClipRepository::OrderColumn column, bool sticky, int parentId, bool highest);
 	// The repository's parent filter: the group for parentId > -1, all clips otherwise
 	static std::optional<int> ParentFilter(int parentId);
-	// The repository over theApp's database
-	static CClipRepository Repository();
+	// The repository over the context's database
+	static CClipRepository Repository(CClipContext& context);
 	// The save settings: the injected ones, or the options' (read once, when first needed)
 	const DittoCore::ClipSavePolicy& SavePolicy();
 	std::optional<DittoCore::ClipSavePolicy> m_savePolicy{};
-	/// The application's settings (not owned); SavePolicy reads the save settings from them.
-	CGetSetOptions& m_settings;
+	/// The services this clip works with (not owned): SavePolicy reads the save settings,
+	/// FindDuplicate reads the clip saved last and AddToMainTable records this clip there.
+	CClipContext& m_context;
 	// This clip's Main row, and back
 	ClipRecord ToRecord() const;
 	void FromRecord(const ClipRecord& record);
@@ -296,8 +318,8 @@ private:
 	static DWORD TakeDword(HGLOBAL block);
 
 	// Adds one format's data to the clip's CRC; with adjust, ignores the parts that change on every
-	// copy (RTF datastore and rsid values, text block slack)
-	static void AddToCrc(DittoCore::Crc32& crc, const CClipFormat& format, bool adjust);
+	// copy (RTF datastore and rsid values, text block slack); rtfFormat: the registered "Rich Text Format"
+	static void AddToCrc(DittoCore::Crc32& crc, const CClipFormat& format, bool adjust, CLIPFORMAT rtfFormat);
 
 	// CF_TEXT and CF_UNICODETEXT bytes up to and including the terminator, within the block;
 	// other formats unchanged

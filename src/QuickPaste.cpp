@@ -10,8 +10,11 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-CQuickPaste::CQuickPaste(CGetSetOptions &settings)
-	: m_settings(settings)
+CQuickPaste::CQuickPaste(CGetSetOptions &settings, CAppState &state, CDittoDb &database, ExternalWindowTracker &activeWindow)
+	: m_settings(settings),
+	m_state(state),
+	m_database(database),
+	m_activeWindow(activeWindow)
 {
 	m_forceResizeOnNextShow = false;
 }
@@ -35,7 +38,7 @@ BOOL CQuickPaste::CloseQPasteWnd()
 
 		m_pwndPaste.reset();
 
-		theApp.m_bShowingQuickPaste = false;
+		m_state.m_bShowingQuickPaste = false;
 	}
 	
 	return TRUE;
@@ -137,8 +140,8 @@ void CQuickPaste::CloseWndAndReopenDatabase()
 
 	m_pwndPaste.reset();
 
-	theApp.m_db.close();
-	CDatabaseManager::OpenDatabase(m_settings, m_settings.GetDBPath());
+	m_database.close();
+	CDatabaseManager::OpenDatabase(m_settings, m_database, m_state, m_settings.GetDBPath());
 }
 
 bool CQuickPaste::ShowPersistentWnd()
@@ -181,13 +184,13 @@ void CQuickPaste::GetInitialPointAndSize(CPoint &point, CSize &csSize)
 
 CPoint CQuickPaste::CaretOrCenterPoint(const CSize &csSize, CPoint &point)
 {
-	CPoint ptCaret = theApp.m_activeWnd.FocusCaret();
+	CPoint ptCaret = m_activeWindow.FocusCaret();
 	if(ptCaret.x == -1 || ptCaret.y == -1)
 	{
 		CRect cr;
-		::GetWindowRect(theApp.m_activeWnd.ActiveWnd(), cr);
+		::GetWindowRect(m_activeWindow.ActiveWnd(), cr);
 
-		if(theApp.m_activeWnd.DesktopHasFocus() == false &&
+		if(m_activeWindow.DesktopHasFocus() == false &&
 			cr.Width() > 0 &&
 			cr.Height() > 0)
 		{

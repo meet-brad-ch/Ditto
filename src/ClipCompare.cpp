@@ -2,9 +2,11 @@
 #include "ClipCompare.h"
 #include "Misc.h"
 #include "Options.h"
+#include "ClipContext.h"
 
-CClipCompare::CClipCompare(CGetSetOptions& settings) :
-	m_settings(settings)
+CClipCompare::CClipCompare(CClipContext& context) :
+	m_context(context),
+	m_settings(context.Settings())
 {
 }
 
@@ -16,10 +18,10 @@ CClipCompare::~CClipCompare(void)
 
 void CClipCompare::Compare(int leftId, int rightId)
 {
-	CClip leftClip(m_settings);
+	CClip leftClip(m_context);
 	if(leftClip.LoadFormats(leftId, true))
 	{
-		CClip rightClip(m_settings);
+		CClip rightClip(m_context);
 		if(rightClip.LoadFormats(rightId, true))
 		{
 			CompareClips(leftId, leftClip, rightId, rightClip);

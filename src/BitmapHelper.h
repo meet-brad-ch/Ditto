@@ -34,22 +34,32 @@ public:
 	 * @brief Draws a clip format's image (CF_DIB or PNG) into a new bitmap, scaled down to a
 	 *        maximum height.
 	 * @param settings The application's settings (the fast thumbnail mode).
+	 * @param pngFormat The registered "PNG" format (CRegisteredClipboardFormats::Png()).
 	 * @param pClip2 The CClipFormat that holds the image.
 	 * @param pDC The device context the bitmap is made compatible with.
 	 * @param pBitMap Receives the bitmap.
 	 * @param nMaxHeight The maximum height.
 	 * @return TRUE when the bitmap was made.
 	 */
-	static BOOL		GetCBitmap(CGetSetOptions& settings, void* pClip2, CDC* pDC, CBitmap* pBitMap, int nMaxHeight);
-	static BOOL		GetCBitmap(CClipFormats& clips, CDC* pDC, CBitmap* pBitMap, BOOL horizontal);
+	static BOOL		GetCBitmap(CGetSetOptions& settings, CLIPFORMAT pngFormat, void* pClip2, CDC* pDC, CBitmap* pBitMap, int nMaxHeight);
+	/**
+	 * @brief Draws the images (CF_DIB or PNG) of clip formats side by side or stacked into a new bitmap.
+	 * @param clips The formats; the ones that are not images are skipped.
+	 * @param pngFormat The registered "PNG" format (CRegisteredClipboardFormats::Png()).
+	 * @param pDC The device context the bitmap is made compatible with.
+	 * @param pBitMap Receives the bitmap.
+	 * @param horizontal TRUE: side by side; FALSE: stacked.
+	 * @return TRUE when an image was drawn.
+	 */
+	static BOOL		GetCBitmap(CClipFormats& clips, CLIPFORMAT pngFormat, CDC* pDC, CBitmap* pBitMap, BOOL horizontal);
 	static HANDLE	hBitmapToDIB(HBITMAP hBitmap, DWORD dwCompression, HPALETTE hPal);
 	static WORD		PaletteSize(LPSTR lpDIB);
 	static WORD		DIBNumColors(LPSTR lpDIB);
 	static bool		DrawDIB(CDC* pDC, HANDLE hData, int nLeft, int nRight, int& nWidth);
 
 private:
-	// The size of the images of clips placed side by side (horizontal) or stacked.
-	static CSize	MeasureImages(CClipFormats& clips, BOOL horizontal);
+	// The size of the images of clips placed side by side (horizontal) or stacked; pngFormat: the registered "PNG" format.
+	static CSize	MeasureImages(CClipFormats& clips, CLIPFORMAT pngFormat, BOOL horizontal);
 
 };
 

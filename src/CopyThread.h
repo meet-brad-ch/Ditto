@@ -4,6 +4,7 @@
 #include <afxmt.h>
 #include <memory>
 
+class CAppServices;
 class CGetSetOptions;
 
 struct CCopyConfig
@@ -113,4 +114,10 @@ private:
 	 * @return theApp.Services().Settings().
 	 */
 	CGetSetOptions& Settings() const;
+
+	/**
+	 * @brief The application's services.
+	 * @return theApp.Services().
+	 */
+	CAppServices& Services() const;
 };

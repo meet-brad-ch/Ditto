@@ -46,6 +46,12 @@
     <ClCompile Include="src\AppServices.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\AppState.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AppWindows.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="src\BitmapHelper.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -64,13 +70,22 @@
     <ClCompile Include="src\Clip_ImportExport.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\ClipboardMonitor.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="src\ClipboardSaveRestore.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\ClipboardViewer.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\ClipCommands.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="src\ClipCompare.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ClipDataReader.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\ClipEditThread.cpp">
@@ -155,6 +170,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\GroupName.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GroupNavigator.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\GroupStatic.cpp">
@@ -325,6 +343,9 @@
     <ClCompile Include="src\RegExFilterHelper.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\RegisteredClipboardFormats.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="src\RichEditCtrlEx.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -481,6 +502,12 @@
     <ClInclude Include="src\AppServices.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\AppState.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AppWindows.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="src\BitmapHelper.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -502,13 +529,25 @@
     <ClInclude Include="src\Clip_ImportExport.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\ClipboardMonitor.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="src\ClipboardSaveRestore.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\ClipboardViewer.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\ClipCommands.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ClipContext.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="src\ClipCompare.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ClipDataReader.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\ClipEditThread.h">
@@ -599,6 +638,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\GroupName.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GroupNavigator.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\GroupStatic.h">
@@ -773,6 +815,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\RegExFilterHelper.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\RegisteredClipboardFormats.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\RichEditCtrlEx.h">

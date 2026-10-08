@@ -16,7 +16,7 @@ IMPLEMENT_DYNCREATE(COptionsTypes, CPropertyPage)
 
 COptionsTypes::COptionsTypes() : CPropertyPage(COptionsTypes::IDD)
 {
-	m_csTitle = theApp.m_Language.GetString("SupportedTypesTitle", "Supported Types");
+	m_csTitle = theApp.Services().Language().GetString("SupportedTypesTitle", "Supported Types");
 	m_psp.pszTitle = m_csTitle;
 	m_psp.dwFlags |= PSP_USETITLE; 
 
@@ -55,7 +55,8 @@ BOOL COptionsTypes::OnApply()
 	{
 		try
 		{
-			theApp.m_db.execDML(_T("DELETE FROM Types;"));
+			CDittoDb& database = theApp.Services().Database();
+			database.execDML(_T("DELETE FROM Types;"));
 
 			CString csText;
 			int nCount = m_List.GetCount();
@@ -63,7 +64,7 @@ BOOL COptionsTypes::OnApply()
 			{
 				m_List.GetText(i, csText);
 
-				theApp.m_db.execDMLEx(_T("INSERT INTO Types VALUES(NULL, '%s');"), csText.GetString());
+				database.execDMLEx(_T("INSERT INTO Types VALUES(NULL, '%s');"), csText.GetString());
 			}
 		}
 		catch (CppSQLite3Exception& e)
@@ -73,7 +74,7 @@ BOOL COptionsTypes::OnApply()
 		}
 
 		// refresh our local cache
-		theApp.ReloadTypes();
+		theApp.Services().Clipboard().ReloadTypes();
 	}
 	
 	return CPropertyPage::OnApply();
@@ -85,7 +86,7 @@ BOOL COptionsTypes::OnInitDialog()
 
 	try
 	{
-		CppSQLite3Query q = theApp.m_db.execQuery(_T("SELECT TypeText FROM Types"));
+		CppSQLite3Query q = theApp.Services().Database().execQuery(_T("SELECT TypeText FROM Types"));
 		if(q.eof())
 		{
 			m_List.AddString(_T("CF_TEXT"));
@@ -113,7 +114,7 @@ BOOL COptionsTypes::OnInitDialog()
 
 	m_List.SetFocus();
 
-	theApp.m_Language.UpdateOptionSupportedTypes(this);
+	theApp.Services().Language().UpdateOptionSupportedTypes(this);
 	
 	return FALSE;
 }

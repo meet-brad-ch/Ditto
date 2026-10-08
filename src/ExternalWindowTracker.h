@@ -2,7 +2,13 @@
 
 #include "Misc.h"
 
+#include <memory>
+
+class CAppState;
+class CAppWindows;
 class CGetSetOptions;
+class CIdleTime;
+class CUAC_Thread;
 
 class ExternalWindowTracker
 {
@@ -11,9 +17,25 @@ public:
 	 * @brief Creates the tracker and loads oleacc.dll for the caret lookup.
 	 * @param settings The application's settings (focus tracking and send-keys options); must
 	 *        outlive this object.
+	 * @param idleTime The user's idle time (focus tracking waits for it); must outlive this object.
+	 * @param state The application state (the copy reason of a sent copy); must outlive this object.
+	 * @param windows The application's windows (the quick paste window's status); must outlive this object.
 	 */
-	explicit ExternalWindowTracker(CGetSetOptions& settings);
+	ExternalWindowTracker(CGetSetOptions& settings, CIdleTime& idleTime, CAppState& state, CAppWindows& windows);
 	~ExternalWindowTracker(void);
+
+	ExternalWindowTracker(const ExternalWindowTracker&) = delete;
+	ExternalWindowTracker& operator=(const ExternalWindowTracker&) = delete;
+
+	/**
+	 * @brief Runs this process as the elevated helper of another Ditto: pastes, copies and cuts when
+	 *        that Ditto asks, until it ends or asks this helper to exit (blocks until then).
+	 * @param parentProcessId The process id of the Ditto that started this helper.
+	 */
+	void RunUacHelper(int parentProcessId);
+
+	/** @brief Ends the elevated helper thread (asks it to exit when it never started) and frees it. */
+	void StopUacThread();
 
 	HWND ActiveWnd() const { return m_activeWnd; }
 	HWND FocusWnd() const { return m_focusWnd; }
@@ -36,6 +58,14 @@ public:
 protected:
 	/// The application's settings (not owned).
 	CGetSetOptions& m_settings;
+	/// The user's idle time (not owned).
+	CIdleTime& m_idleTime;
+	/// The application state (not owned).
+	CAppState& m_state;
+	/// The application's windows (not owned).
+	CAppWindows& m_windows;
+	/// The elevated helper thread; created on the first paste, copy or cut as administrator (or by RunUacHelper).
+	std::unique_ptr<CUAC_Thread> m_pUacPasteThread{};
 
 	typedef HRESULT(__stdcall *AccessibleObjectFromWindow)(_In_ HWND hwnd, _In_ DWORD dwId, _In_ REFIID riid, _Outptr_ void** ppvObject);
 
@@ -91,6 +121,18 @@ private:
 	/** @brief Activates the target window for a paste and waits until it is in the foreground.
 	 *  @param activeWnd The target window. */
 	void ActivateTargetForPaste(HWND activeWnd);
+
+	/**
+	 * @brief The elevated helper thread for this process; created on first use.
+	 * @return The thread, owned by this tracker.
+	 */
+	CUAC_Thread& UacThread();
+
+	/**
+	 * @brief Whether the elevated helper thread runs.
+	 * @return False when it was never created or does not run.
+	 */
+	bool UACThreadRunning();
 
 	/** @brief Passes an elevated paste to the UAC aware helper app, when that is possible.
 	 *  @param pasteAsAdmin true if the paste must be done as administrator.

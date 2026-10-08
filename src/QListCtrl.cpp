@@ -10,6 +10,7 @@
 #include "ErrorReport.h"
 #include "MainTableFunctions.h"
 #include "DittoCopyBuffer.h"
+#include "ClipDataReader.h"
 #include <atlbase.h>
 #include "..\Shared\TextConvert.h"
 #include <cmath>
@@ -329,7 +330,7 @@ bool CQListCtrl::PutSelectedItemOnDittoCopyBuffer(long lBuffer)
 	INT_PTR nCount = arr.GetSize();
 	if (nCount > 0 && arr[0])
 	{
-		CDittoCopyBuffer::PutClipOnDittoCopyBuffer(Settings(), arr[0], lBuffer);
+		CDittoCopyBuffer::PutClipOnDittoCopyBuffer(Settings(), theApp.Services().Database(), arr[0], lBuffer);
 		bRet = true;
 	}
 
@@ -613,7 +614,7 @@ bool CQListCtrl::ShowsFirstTenHotKey(int firstTenNum) const
 
 bool CQListCtrl::ShouldDrawInGroupIcon(const CString& strSymbols)
 {
-	return (theApp.m_GroupID > 0 && strSymbols.Find(_T("<ingroup>")) >= 0) == false;
+	return (theApp.Services().State().m_GroupID > 0 &&strSymbols.Find(_T("<ingroup>")) >= 0) == false;
 }
 
 void CQListCtrl::DrawSymbolIcons(CDC* pDC, CRect& rcText, const CString& strSymbols, bool drawInGroupIcon)
@@ -661,7 +662,7 @@ bool CQListCtrl::HighlightSearchMatches(CString& csText)
 	auto highlightColor = Settings().m_Theme.SearchTextHighlight();
 	//use unprintable characters so it doesn't find copied html to convert
 	return m_searchText.GetLength() > 0 &&
-		CMarkerInserter::Insert(csText, m_searchText, CStringUtil::Format(_T("\x01\x04 color='#%02x%02x%02x'\x02"), GetRValue(highlightColor), GetGValue(highlightColor), GetBValue(highlightColor)), _T("\x01\x03\x04\x02"), m_linesPerRow) > 0;
+		CMarkerInserter::Insert(theApp.Services().IcuString(), csText, m_searchText,CStringUtil::Format(_T("\x01\x04 color='#%02x%02x%02x'\x02"), GetRValue(highlightColor), GetGValue(highlightColor), GetBValue(highlightColor)), _T("\x01\x03\x04\x02"), m_linesPerRow) > 0;
 }
 
 void CQListCtrl::DrawFirstTenHotKey(CDC* pDC, const CRect& rcItem, int firstTenNum)
@@ -1278,7 +1279,7 @@ BOOL CQListCtrl::DrawBitMap(int nItem, CRect& crRect, CDC* pDC, const CString& c
 	{
 		try
 		{
-			HGLOBAL smallImage = format->GetDibFittingToHeight(Settings(), pDC, crRect.Height());
+			HGLOBAL smallImage = format->GetDibFittingToHeight(Settings(), theApp.Services().ClipboardFormats().Png(), pDC, crRect.Height());
 			if (smallImage != NULL)
 			{
 				//Will return the width of the bitmap in nWidth
@@ -1625,7 +1626,7 @@ void CQListCtrl::SetToolTipImage(int nItem, CClipFormat& Clip)
 	try
 	{
 		// the DIB if the clip has one, else the PNG
-		for (const CLIPFORMAT cfType : { (CLIPFORMAT)CF_DIB, (CLIPFORMAT)theApp.m_PNG_Format })
+		for (const CLIPFORMAT cfType : { (CLIPFORMAT)CF_DIB, theApp.Services().ClipboardFormats().Png() })
 		{
 			Clip.m_cfType = cfType;
 			if (GetClipData(nItem, Clip) && Clip.m_hgData)
@@ -1777,7 +1778,7 @@ bool CQListCtrl::LoadToolTipClipData(int clipId)
 {
 	try
 	{
-		CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID, lDate, lastPasteDate, lDontAutoDelete, QuickPasteText, lShortCut, globalShortCut, stickyClipOrder, stickyClipGroupOrder, lParentID FROM Main WHERE lID = %d"), clipId);
+		CppSQLite3Query q = theApp.Services().Database().execQueryEx(_T("SELECT lID, lDate, lastPasteDate, lDontAutoDelete, QuickPasteText, lShortCut, globalShortCut, stickyClipOrder, stickyClipGroupOrder, lParentID FROM Main WHERE lID = %d"), clipId);
 		if (q.eof() == false)
 		{
 			CString clipData{ClipDataText(q)};
@@ -1785,7 +1786,7 @@ bool CQListCtrl::LoadToolTipClipData(int clipId)
 			int parentId = q.getIntField(_T("lParentID"));
 			if (parentId > 0)
 			{
-				CString folder = CClipDatabase::FolderPath(parentId);
+				CString folder = CClipDatabase::FolderPath(theApp.Services().Database(), parentId);
 
 				m_pToolTip->SetFolderPath(folder);
 			}
@@ -1885,7 +1886,7 @@ CString CQListCtrl::ClipDataText(CppSQLite3Query& q)
 		}
 	}
 
-	if (theApp.m_GroupID > 0)
+	if (theApp.Services().State().m_GroupID > 0)
 	{
 		int sticky{q.getIntField(_T("stickyClipGroupOrder"))};
 		if (sticky != CClip::InvalidSticky)
@@ -1931,7 +1932,7 @@ void CQListCtrl::GetToolTipText(int nItem, CString& csText)
 
 BOOL CQListCtrl::GetClipData(int nItem, CClipFormat& Clip)
 {
-	return theApp.GetClipData(GetItemData(nItem), Clip);
+	return CClipDataReader(theApp.Services().Database()).GetClipData(static_cast<long>(GetItemData(nItem)), Clip);
 }
 
 DWORD CQListCtrl::GetItemData(int nItem)
@@ -2118,7 +2119,7 @@ void CQListCtrl::NotifySelectionChanged()
 		SetTimer(TimerShowProperties, 300, NULL);
 	}
 	if (GetSelectedCount() > 0)
-		theApp.SetStatus(NULL, FALSE);
+		theApp.Services().Windows().SetStatus(NULL, FALSE);
 }
 
 void CQListCtrl::UpdateAllSelectedState()
@@ -2150,7 +2151,7 @@ void CQListCtrl::OnTimer(UINT_PTR nIDEvent)
 	{
 	case TimerShowProperties:
 	{
-		if (theApp.m_bShowingQuickPaste)
+		if (theApp.Services().State().m_bShowingQuickPaste)
 			ShowFullDescription(true);
 		KillTimer(TimerShowProperties);
 

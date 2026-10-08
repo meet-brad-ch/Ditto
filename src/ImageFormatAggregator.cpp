@@ -6,7 +6,8 @@
 #include <memory>
 #include <type_traits>
 
-CImageFormatAggregator::CImageFormatAggregator(BOOL horizontally)
+CImageFormatAggregator::CImageFormatAggregator(BOOL horizontally, CLIPFORMAT pngFormat) :
+	m_pngFormat(pngFormat)
 {
 	m_horizontally = horizontally;
 }
@@ -46,7 +47,7 @@ HGLOBAL CImageFormatAggregator::GetHGlobal()
 	const std::unique_ptr<std::remove_pointer_t<HDC>, decltype(releaseDc)> dc(::GetDC(window), releaseDc);
 
 	CBitmap bitmap;
-	if (CBitmapHelper::GetCBitmap(m_images, CDC::FromHandle(dc.get()), &bitmap, m_horizontally) == FALSE)
+	if (CBitmapHelper::GetCBitmap(m_images, m_pngFormat, CDC::FromHandle(dc.get()), &bitmap, m_horizontally) == FALSE)
 	{
 		bitmap.DeleteObject();
 		return NULL;

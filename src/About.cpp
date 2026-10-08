@@ -15,7 +15,7 @@ IMPLEMENT_DYNCREATE(CAbout, CPropertyPage)
 
 CAbout::CAbout() : CPropertyPage(CAbout::IDD)
 {
-	m_csTitle = theApp.m_Language.GetString("AboutTitle", "About");
+	m_csTitle = theApp.Services().Language().GetString("AboutTitle", "About");
 	m_psp.pszTitle = m_csTitle;
 	m_psp.dwFlags |= PSP_USETITLE;
 
@@ -93,7 +93,7 @@ BOOL CAbout::OnInitDialog()
 
 	//Show what addins are loaded
 	CStringArray arr;
-	theApp.m_Addins.AboutScreenText(arr);
+	theApp.Services().Addins().AboutScreenText(arr);
 	INT_PTR count = arr.GetCount();
 	for(int i = 0; i < count; i++)
 	{

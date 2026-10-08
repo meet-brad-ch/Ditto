@@ -89,7 +89,7 @@ BOOL COptionsSheet::OnInitDialog()
 
 	SetWindowText(_T("Options"));
 
-	theApp.m_Language.UpdateOptionsSheet(this);
+	theApp.Services().Language().UpdateOptionsSheet(this);
 
 	::ShowWindow(::GetDlgItem(m_hWnd, ID_APPLY_NOW), SW_HIDE);
 

@@ -55,7 +55,7 @@ BOOL CMoveToGroupDlg::OnInitDialog()
 	m_Tree.SetNotificationWndEx(m_hWnd);
 	m_Tree.FillTree();
 
-	theApp.m_Language.UpdateMoveToGroups(this);
+	theApp.Services().Language().UpdateMoveToGroups(this);
 	
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
@@ -100,7 +100,7 @@ void CMoveToGroupDlg::OnButtonNewGroup()
 		
 	CString csName = Name.m_csName;
 	
-	long lID = CClipDatabase::NewGroupID(m_Tree.GetSelectedTree(), csName);
+	long lID = CClipDatabase::NewGroupID(theApp.Services().Database(), m_Tree.GetSelectedTree(), csName);
 	if(lID >= 0)
 	{
 		m_Tree.AddNode(csName, lID);

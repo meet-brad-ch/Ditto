@@ -2,10 +2,18 @@
 
 #include "EventThread.h"
 
+class ExternalWindowTracker;
+
 class CUAC_Thread : public CEventThread
 {
 public:
-	CUAC_Thread(int processId);
+	/**
+	 * @brief Creates the thread object for the events of a Ditto process.
+	 * @param processId The Ditto process the events belong to.
+	 * @param activeWindow The tracker that sends the paste, copy or cut in this process; must
+	 *        outlive this object.
+	 */
+	CUAC_Thread(int processId, ExternalWindowTracker& activeWindow);
 	~CUAC_Thread(void);
 
 	enum eUacThreadEvents
@@ -45,6 +53,9 @@ public:
 	bool UACCut();
 
 private:
+	/** @brief The tracker that sends the paste, copy or cut (not owned). */
+	ExternalWindowTracker& m_activeWindow;
+
 	virtual void OnEvent(int eventId, void *param);
 	virtual void OnTimeOut(void *param);
 	CString EnumName(eUacThreadEvents e);

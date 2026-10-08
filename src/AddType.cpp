@@ -51,7 +51,7 @@ BOOL CAddType::OnInitDialog()
 	
 	m_lbCandidateTypes.SetFocus();
 
-	theApp.m_Language.UpdateOptionSupportedTypesAdd(this);
+	theApp.Services().Language().UpdateOptionSupportedTypesAdd(this);
 	return FALSE;
 }
 

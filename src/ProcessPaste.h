@@ -17,6 +17,10 @@
 
 #include <functional>
 
+class CClipContext;
+class CDittoDb;
+class ExternalWindowTracker;
+
 /*------------------------------------------------------------------*\
 	CProcessPaste
 \*------------------------------------------------------------------*/
@@ -35,12 +39,13 @@ public:
 	{
 		/**
 		 * @brief Creates the data for MarkAsPastedThread.
-		 * @param appSettings The application's settings, read by the thread; must outlive the thread.
+		 * @param clipContext The clip services (the settings, the database, the windows), used by
+		 *        the thread; must outlive the thread.
 		 */
-		explicit MarkAsPastedData(CGetSetOptions& appSettings) : settings(appSettings) {}
+		explicit MarkAsPastedData(CClipContext& clipContext) : context(clipContext) {}
 
-		/** @brief The application's settings (not owned). */
-		CGetSetOptions& settings;
+		/** @brief The clip services (not owned). */
+		CClipContext& context;
 		CClipIDs ids;
 		bool pastedFromGroup{};
 		bool updateClipOrder{};
@@ -48,9 +53,11 @@ public:
 
 	/**
 	 * @brief Creates a paste with a new, empty data source.
-	 * @param settings The application's settings; must outlive this object.
+	 * @param context The clip services (the settings, the registered formats, the database, the
+	 *        windows); must outlive this object and the paste's MarkAsPastedThread.
+	 * @param activeWindow The tracker of the window the paste goes to; must outlive this object.
 	 */
-	explicit CProcessPaste(CGetSetOptions& settings);
+	CProcessPaste(CClipContext& context, ExternalWindowTracker& activeWindow);
 	~CProcessPaste();
 
 	CClipIDs& GetClipIDs() { return m_pOle->m_ClipIDs; }
@@ -62,13 +69,17 @@ public:
 	static UINT MarkAsPastedThread(LPVOID pParam);
 
 private:
-	/// The application's settings (not owned).
+	/// The clip services (not owned).
+	CClipContext& m_context;
+	/// The application's settings (not owned; m_context.Settings()).
 	CGetSetOptions& m_settings;
+	/// The tracker of the window the paste goes to (not owned).
+	ExternalWindowTracker& m_activeWindow;
 
 	BOOL RunAtBoundary(LPCTSTR operation, const std::function<BOOL()>& body);
-	// MarkAsPastedThread's order step for one clip: gives it the newest group order (pastedFromGroup)
-	// or the newest main order, so it moves to the top of its list
-	static void MoveToTopOrder(int id, bool pastedFromGroup);
+	// MarkAsPastedThread's order step for one clip in db: gives it the newest group order
+	// (pastedFromGroup) or the newest main order, so it moves to the top of its list
+	static void MoveToTopOrder(CDittoDb& db, int id, bool pastedFromGroup);
 
 	/**
 	 * @brief MarkAsPastedThread's database step: moves the clips to the top (when the options ask),

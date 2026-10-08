@@ -16,8 +16,10 @@ void CErrorReport::Show(const CString& text)
 	// Only a running main window shows a posted error. During start-up (a failed start destroys
 	// the window before it reads its messages), without a database, or while closing, a message
 	// box shows it instead
-	const HWND mainWindow = theApp.m_MainhWnd;
-	if (mainWindow != NULL && theApp.m_bAppRunning)
+	// the documented exception to the access rule: CErrorReport is called from every class and thread
+	CAppServices& services{theApp.Services()};
+	const HWND mainWindow = services.Windows().MainHwnd();
+	if (mainWindow != NULL && services.State().m_bAppRunning)
 	{
 		auto message = std::make_unique<CString>(text);
 		if (::PostMessage(mainWindow, CDittoMessage::ShowOwnedErrorMsg, reinterpret_cast<WPARAM>(message.get()), 0))

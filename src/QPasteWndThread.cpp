@@ -5,13 +5,16 @@
 #include "QPasteWnd.h"
 #include "cp_main.h"
 #include "ErrorReport.h"
+#include "ClipDataReader.h"
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
 #include <string>
 
-CQPasteWndThread::CQPasteWndThread(CGetSetOptions& settings) :
-	m_settings(settings)
+CQPasteWndThread::CQPasteWndThread(CGetSetOptions& settings, CDittoDb& database, const CRegisteredClipboardFormats& clipboardFormats) :
+	m_settings(settings),
+	m_database(database),
+	m_clipboardFormats(clipboardFormats)
 {
 	m_rowHeight = 0;
 	m_threadName = "CQPasteWndThread";
@@ -82,7 +85,7 @@ void CQPasteWndThread::OnSetListCount(void *param)
 
     try
     {
-        lRecordCount = theApp.m_db.execScalar(countSQL);
+        lRecordCount = m_database.execScalar(countSQL);
         ::PostMessage(pasteWnd->m_hWnd, CQListCtrl::NmSetListCount, lRecordCount, 0);
     }
 	catch (CppSQLite3Exception& e)
@@ -196,7 +199,7 @@ int CQPasteWndThread::LoadItemRows(CQPasteWnd *pasteWnd, const CString &localSql
 
 	CMainTable table;
 
-	CppSQLite3Query q = theApp.m_db.execQuery(localSql);
+	CppSQLite3Query q = m_database.execQuery(localSql);
 	while(!q.eof())
 	{
 		CQPasteWnd::FillMainTable(table, q);
@@ -341,7 +344,7 @@ void CQPasteWndThread::OnLoadExtraData(void *param)
 		{
 			ReduceMapItems(pasteWnd->m_cf_dibCache, pasteWnd->m_CritSection, _T("image"));
 		}
-		else if (it->m_cfType == theApp.m_RTFFormat)
+		else if (it->m_cfType == m_clipboardFormats.Rtf())
 		{
 			ReduceMapItems(pasteWnd->m_cf_rtfCache, pasteWnd->m_CritSection, _T("rtf"));
 		}
@@ -373,7 +376,7 @@ bool CQPasteWndThread::NeedsExtraDataLoad(CQPasteWnd *pasteWnd, const CClipForma
 			}
 		}
 	}
-	else if (format.m_cfType == theApp.m_RTFFormat)
+	else if (format.m_cfType == m_clipboardFormats.Rtf())
 	{
 		ATL::CCritSecLock csLock(pasteWnd->m_CritSection.m_sect);
 
@@ -421,14 +424,15 @@ void CQPasteWndThread::LoadExtraDataFormat(CQPasteWnd *pasteWnd, CClipFormatQLis
 
 BOOL CQPasteWndThread::GetExtraClipData(CClipFormatQListCtrl &format)
 {
-	BOOL foundClipData = theApp.GetClipData(format.m_parentId, format);
+	CClipDataReader reader{m_database};
+	BOOL foundClipData = reader.GetClipData(format.m_parentId, format);
 	if (foundClipData == false &&
 		format.m_cfType == CF_DIB)
 	{
 		format.Free();
-		format.m_cfType = theApp.m_PNG_Format;
+		format.m_cfType = m_clipboardFormats.Png();
 
-		foundClipData = theApp.GetClipData(format.m_parentId, format);
+		foundClipData = reader.GetClipData(format.m_parentId, format);
 	}
 
 	return foundClipData;
@@ -437,13 +441,13 @@ BOOL CQPasteWndThread::GetExtraClipData(CClipFormatQListCtrl &format)
 void CQPasteWndThread::CacheExtraData(CQPasteWnd *pasteWnd, CClipFormatQListCtrl &format)
 {
 	if (format.m_cfType == CF_DIB ||
-		format.m_cfType == theApp.m_PNG_Format)
+		format.m_cfType == m_clipboardFormats.Png())
 	{
 		ULONGLONG startConvertImage = GetTickCount64();
 
 		HDC dc = GetDC(NULL);
 
-		format.GetDibFittingToHeight(m_settings, CDC::FromHandle(dc), m_rowHeight);
+		format.GetDibFittingToHeight(m_settings, m_clipboardFormats.Png(), CDC::FromHandle(dc), m_rowHeight);
 
 		ReleaseDC(NULL, dc);
 
@@ -463,7 +467,7 @@ void CQPasteWndThread::CacheExtraData(CQPasteWnd *pasteWnd, CClipFormatQListCtrl
 			CLogger::Log(CStringUtil::Format(_T("Loaded, extra data for clipId: %d, Row: %d image cache count: %d"), format.m_parentId, format.m_clipRow, pasteWnd->m_cf_dibCache.size()));
 		}
 	}
-	else if (format.m_cfType == theApp.m_RTFFormat)
+	else if (format.m_cfType == m_clipboardFormats.Rtf())
 	{
 		ATL::CCritSecLock csLock(pasteWnd->m_CritSection.m_sect);
 
@@ -481,11 +485,11 @@ void CQPasteWndThread::MarkNoExtraData(CQPasteWnd *pasteWnd, const CClipFormatQL
 	ATL::CCritSecLock csLock(pasteWnd->m_CritSection.m_sect);
 
 	if (format.m_cfType == CF_DIB ||
-		format.m_cfType == theApp.m_PNG_Format)
+		format.m_cfType == m_clipboardFormats.Png())
 	{
 		pasteWnd->m_cf_NO_dibCache[format.m_parentId] = true;
 	}
-	else if (format.m_cfType == theApp.m_RTFFormat)
+	else if (format.m_cfType == m_clipboardFormats.Rtf())
 	{
 		pasteWnd->m_cf_NO_rtfCache[format.m_parentId] = true;
 	}
@@ -494,13 +498,13 @@ void CQPasteWndThread::MarkNoExtraData(CQPasteWnd *pasteWnd, const CClipFormatQL
 void CQPasteWndThread::OnLoadAccelerators(void *param)
 {
     CQPasteWnd *pasteWnd = (CQPasteWnd*)param;
-    pasteWnd->m_lstHeader.DestroyAndCreateAccelerator(TRUE, theApp.m_db);
+    pasteWnd->m_lstHeader.DestroyAndCreateAccelerator(TRUE, m_database);
 }
 
 void CQPasteWndThread::OnUnloadAccelerators(void *param)
 {
     CQPasteWnd *pasteWnd = (CQPasteWnd*)param;
-    pasteWnd->m_lstHeader.DestroyAndCreateAccelerator(FALSE, theApp.m_db);
+    pasteWnd->m_lstHeader.DestroyAndCreateAccelerator(FALSE, m_database);
 }
 
 CString CQPasteWndThread::EnumName(eCQPasteWndThreadEvents e)

@@ -184,7 +184,7 @@ const std::array<ActionEnums::DefaultShortcut, 11> ActionEnums::s_defaultShortcu
 	{ PASTE_POSITION_10, CAccels::MakeKey(VK_NUMPAD0, HOTKEYF_CONTROL) },
 } };
 
-CString ActionEnums::EnumDescription(ActionEnumValues value)
+CString ActionEnums::EnumDescription(ActionEnumValues value, CMultiLanguage& language)
 {
 	CString val = _T("");
 
@@ -197,7 +197,7 @@ CString ActionEnums::EnumDescription(ActionEnumValues value)
 		}
 	}
 
-	CString translatedValue = theApp.m_Language.GetQuickPasteKeyboardString(value, val);
+	CString translatedValue = language.GetQuickPasteKeyboardString(value, val);
 
 	if (translatedValue != _T(""))
 	{

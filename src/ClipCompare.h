@@ -2,6 +2,7 @@
 #include "Clip.h"
 #include <array>
 
+class CClipContext;
 class CGetSetOptions;
 
 class CClipCompare
@@ -9,10 +10,10 @@ class CClipCompare
 public:
 	/**
 	 * @brief Creates a clip comparer.
-	 * @param settings The application's settings (diff application, UTF-8 preference, compare
-	 *        folder); must outlive this object.
+	 * @param context The clip services (the clips to compare; its settings give the diff
+	 *        application, the UTF-8 preference and the compare folder); must outlive this object.
 	 */
-	explicit CClipCompare(CGetSetOptions& settings);
+	explicit CClipCompare(CClipContext& context);
 	~CClipCompare(void);
 
 	void Compare(int leftId, int rightId);
@@ -98,7 +99,9 @@ private:
 	 */
 	static void SetConfiguredAppParams(const CString& path, CString& params);
 
-	/// The application's settings (not owned).
+	/// The clip services (not owned).
+	CClipContext& m_context;
+	/// The application's settings (not owned; m_context.Settings()).
 	CGetSetOptions& m_settings;
 };
 

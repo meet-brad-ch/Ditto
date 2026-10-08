@@ -12,9 +12,12 @@
 #include "ClipboardFormatError.h"
 #include "ErrorReport.h"
 #include "DittoDbTransaction.h"
+#include "ClipContext.h"
+#include "AppWindows.h"
+#include "RegisteredClipboardFormats.h"
 
 // allocate an HGLOBAL of the given Format Type representing these Clip IDs.
-HGLOBAL CClipIDs::Render(CGetSetOptions& settings, UINT cfType)
+HGLOBAL CClipIDs::Render(CClipContext& context, UINT cfType)
 {
 	INT_PTR count = GetSize();
 	if(count <= 0)
@@ -24,67 +27,69 @@ HGLOBAL CClipIDs::Render(CGetSetOptions& settings, UINT cfType)
 
 	if(count == 1)
 	{
-		return CClip::LoadFormat(ElementAt(0), cfType);
+		return CClip::LoadFormat(context, ElementAt(0), cfType);
 	}
 
+	CGetSetOptions& settings{ context.Settings() };
 	CStringA SepA = CTextConvert::UnicodeToAnsi(settings.GetMultiPasteSeparator());
 	CStringW SepW = settings.GetMultiPasteSeparator();
 	const BOOL bReverse{ settings.m_bMultiPasteReverse };
+	const CRegisteredClipboardFormats& formats{ context.Formats() };
 
 	if(cfType == CF_TEXT)
 	{
 		CCF_TextAggregator CFText(SepA);
-		return RenderAggregated(CFText, CF_TEXT, bReverse);
+		return RenderAggregated(context, CFText, CF_TEXT, bReverse);
 	}
 	else if(cfType == CF_UNICODETEXT)
 	{
 		CCF_UnicodeTextAggregator CFUnicodeText(SepW);
-		return RenderAggregated(CFUnicodeText, CF_UNICODETEXT, bReverse);
+		return RenderAggregated(context, CFUnicodeText, CF_UNICODETEXT, bReverse);
 	}
 	else if(cfType == CF_HDROP)
 	{
 		CCF_HDropAggregator HDrop;
-		return RenderAggregated(HDrop, CF_HDROP, bReverse);
+		return RenderAggregated(context, HDrop, CF_HDROP, bReverse);
 	}
-	else if(cfType == theApp.m_HTML_Format)
+	else if(cfType == formats.Html())
 	{
 		CHTMLFormatAggregator Html(SepW);
-		return RenderAggregated(Html, theApp.m_HTML_Format, bReverse);
+		return RenderAggregated(context, Html, formats.Html(), bReverse);
 	}
-	else if(cfType == theApp.m_RTFFormat)
+	else if(cfType == formats.Rtf())
 	{
 		CRichTextAggregator RichText(SepW);
-		return RenderAggregated(RichText, theApp.m_RTFFormat, bReverse);
+		return RenderAggregated(context, RichText, formats.Rtf(), bReverse);
 	}
 
 	return NULL;
 }
 
-HGLOBAL CClipIDs::RenderAggregated(IClipAggregator& Aggregator, UINT cfType, BOOL bReverse)
+HGLOBAL CClipIDs::RenderAggregated(CClipContext& context, IClipAggregator& Aggregator, UINT cfType, BOOL bReverse)
 {
-	if(AggregateData(Aggregator, cfType, bReverse, false))
+	if(AggregateData(context, Aggregator, cfType, bReverse, false))
 	{
 		return Aggregator.GetHGlobal();
 	}
 	return NULL;
 }
 
-void CClipIDs::GetTypes(CClipTypes& types)
+void CClipIDs::GetTypes(CClipContext& context, CClipTypes& types)
 {
 	INT_PTR count = GetSize();
 	types.RemoveAll();
 
 	if(count == 1)
 	{
-		CClip::LoadTypes(ElementAt(0), types);
+		CClip::LoadTypes(context, ElementAt(0), types);
 	}
 	else if(count > 1)
 	{
-		GetCommonTypes(types, count);
+		GetCommonTypes(context, types, count);
 	}
 }
 
-void CClipIDs::GetCommonTypes(CClipTypes& types, INT_PTR count)
+void CClipIDs::GetCommonTypes(CClipContext& context, CClipTypes& types, INT_PTR count)
 {
 	//Add the types that are common across all paste ids
 	long lCount{};
@@ -93,7 +98,7 @@ void CClipIDs::GetCommonTypes(CClipTypes& types, INT_PTR count)
 	for(int nIDPos = 0; nIDPos < count; nIDPos++)
 	{
 		CClipTypes CurrTypes;
-		CClip::LoadTypes(ElementAt(nIDPos), CurrTypes);
+		CClip::LoadTypes(context, ElementAt(nIDPos), CurrTypes);
 
 		INT_PTR typeCount = CurrTypes.GetSize();
 
@@ -122,14 +127,14 @@ void CClipIDs::GetCommonTypes(CClipTypes& types, INT_PTR count)
 	//If there were no common types add the first clip
 	if(types.GetSize() <= 0)
 	{
-		CClip::LoadTypes(ElementAt(0), types);
+		CClip::LoadTypes(context, ElementAt(0), types);
 	}
 }
 
 // Adds the cfType data of every clip to Aggregator. Errors are not handled here: a malformed clip
 // (DittoCore::ClipboardFormatError) or a database error (CppSQLite3Exception) stops the paste at its
 // boundary (COleClipSource::OnRenderGlobalData, CProcessPaste::DoPaste/DoDrag), which reports it.
-bool CClipIDs::AggregateData(IClipAggregator &Aggregator, UINT cfType, BOOL bReverse, bool textOnly)
+bool CClipIDs::AggregateData(CClipContext& context, IClipAggregator &Aggregator, UINT cfType, BOOL bReverse, bool textOnly)
 {
 	CString csSQL;
 	INT_PTR numIDs = GetSize();
@@ -162,7 +167,7 @@ bool CClipIDs::AggregateData(IClipAggregator &Aggregator, UINT cfType, BOOL bRev
 			sqlCF_HDROP.GetString(),
 			ElementAt(nIndex));
 
-		CppSQLite3Query q = theApp.m_db.execQuery(csSQL);
+		CppSQLite3Query q = context.Database().execQuery(csSQL);
 
 		if(q.eof() == false)
 		{
@@ -184,7 +189,7 @@ bool CClipIDs::AggregateData(IClipAggregator &Aggregator, UINT cfType, BOOL bRev
 }
 
 // Blindly Moves IDs into the lParentID Group sequentially with the given order
-BOOL CClipIDs::MoveTo(long lParentID, double /*dFirst*/, double /*dIncrement*/)
+BOOL CClipIDs::MoveTo(CClipContext& context, long lParentID, double /*dFirst*/, double /*dIncrement*/)
 {
 	try
 	{
@@ -200,7 +205,7 @@ BOOL CClipIDs::MoveTo(long lParentID, double /*dFirst*/, double /*dIncrement*/)
 			{
 				sql = CStringUtil::Format(_T("UPDATE Main SET lParentID = %d, clipGroupOrder = %f WHERE lID = %d AND lID <> %d;"), 
 							lParentID,
-							CClip::GetNewOrder(lParentID, ElementAt(i)),
+							CClip::GetNewOrder(context, lParentID, ElementAt(i)),
 							ElementAt(i),
 							lParentID);
 			}
@@ -212,7 +217,7 @@ BOOL CClipIDs::MoveTo(long lParentID, double /*dFirst*/, double /*dIncrement*/)
 							lParentID);
 			}
 
-			int ret = theApp.m_db.execDMLEx(sql);
+			int ret = context.Database().execDMLEx(sql);
 
 			CLogger::Log(CStringUtil::Format(_T("MoveTo, Sql Ret: %d, SQL: %s"), ret, sql.GetString()));
 		}
@@ -227,13 +232,13 @@ BOOL CClipIDs::MoveTo(long lParentID, double /*dFirst*/, double /*dIncrement*/)
 }
 
 // Empties this array and fills it with the elements of the given group ID
-BOOL CClipIDs::LoadElementsOf(int groupId)
+BOOL CClipIDs::LoadElementsOf(CClipContext& context, int groupId)
 {
 	SetSize(0);
-	
+
 	try
 	{
-		CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID FROM Main WHERE lParentID = %d"), groupId);
+		CppSQLite3Query q = context.Database().execQueryEx(_T("SELECT lID FROM Main WHERE lParentID = %d"), groupId);
 		while(q.eof() == false)
 		{
 			Add(q.getIntField(_T("lID")));
@@ -260,22 +265,22 @@ BOOL CClipIDs::LoadElementsOf(int groupId)
 //   an alternative design would be to have one CMainTable per level deep,
 //   but I thought that might be too costly, so I implemented it this way.
 
-BOOL CClipIDs::CopyTo(CGetSetOptions& settings, int parentId)
+BOOL CClipIDs::CopyTo(CClipContext& context, int parentId)
 {
 	INT_PTR count = GetSize();
 	if(count == 0)
 		return TRUE;
-		
+
 	try
 	{
 		// rolled back if a statement throws; upstream's manual begin was left open then
-		CDittoDbTransaction transaction(theApp.m_db);
+		CDittoDbTransaction transaction(context.Database());
 
 		for(int i = 0; i < count; i++)
 		{
 			int nID = ElementAt(i);
 
-			CClip clip(settings);
+			CClip clip(context);
 
 			if(clip.LoadMainTable(nID))
 			{
@@ -306,7 +311,7 @@ BOOL CClipIDs::CopyTo(CGetSetOptions& settings, int parentId)
 	return TRUE;
 }
 
-BOOL CClipIDs::DeleteIDs(bool fromClipWindow, CppSQLite3DB& db)
+BOOL CClipIDs::DeleteIDs(CAppWindows& windows, bool fromClipWindow, CppSQLite3DB& db)
 {
 	CPopup status(0, 0, ::GetForegroundWindow());
 	bool bAllowShow;
@@ -356,7 +361,7 @@ BOOL CClipIDs::DeleteIDs(bool fromClipWindow, CppSQLite3DB& db)
 
 			if(fromClipWindow == false)
 			{
-				theApp.OnDeleteID(clipId);
+				windows.OnDeleteID(clipId);
 			}
 		}
 
@@ -457,7 +462,7 @@ BOOL CClipIDs::CreateExportSqliteDB(CppSQLite3DB &db)
 	return bRet;
 }
 
-BOOL CClipIDs::Export(CGetSetOptions& settings, CString csFilePath)
+BOOL CClipIDs::Export(CClipContext& context, CString csFilePath)
 {    
 	INT_PTR count = GetSize();
 	if(count == 0)
@@ -479,7 +484,7 @@ BOOL CClipIDs::Export(CGetSetOptions& settings, CString csFilePath)
 		if(CreateExportSqliteDB(db) == FALSE)
 			return FALSE;
 
-		bRet = ExportClips(settings, db);
+		bRet = ExportClips(context, db);
 
 		db.close();
 	}
@@ -497,7 +502,7 @@ BOOL CClipIDs::Export(CGetSetOptions& settings, CString csFilePath)
 	return bRet;
 }
 
-BOOL CClipIDs::ExportClips(CGetSetOptions& settings, CppSQLite3DB& db)
+BOOL CClipIDs::ExportClips(CClipContext& context, CppSQLite3DB& db)
 {
 	BOOL bRet{FALSE};
 	INT_PTR count{GetSize()};
@@ -505,7 +510,7 @@ BOOL CClipIDs::ExportClips(CGetSetOptions& settings, CppSQLite3DB& db)
 	{
 		int nID{ElementAt(i)};
 
-		CClip_ImportExport clip{settings};
+		CClip_ImportExport clip{context};
 
 		if(clip.LoadMainTable(nID))
 		{

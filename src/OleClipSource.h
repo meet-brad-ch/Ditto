@@ -13,6 +13,8 @@
 #include <string_view>
 #include <vector>
 
+class CAppServices;
+
 /*------------------------------------------------------------------*\
 	COleClipSource
 \*------------------------------------------------------------------*/
@@ -49,6 +51,12 @@ protected:
 	 * @return theApp.Services().Settings().
 	 */
 	CGetSetOptions& Settings() const;
+
+	/**
+	 * @brief The application's services (also for the static members).
+	 * @return theApp.Services().
+	 */
+	static CAppServices& Services();
 
 	// Case mapping for the special-paste transforms (ICU)
 	CIcuCaseMapper m_caseMapper;

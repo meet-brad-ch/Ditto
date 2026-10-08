@@ -12,7 +12,7 @@ IMPLEMENT_DYNCREATE(COptionsKeyBoard, CPropertyPage)
 
 COptionsKeyBoard::COptionsKeyBoard() : CPropertyPage(COptionsKeyBoard::IDD)
 {
-	m_csTitle = theApp.m_Language.GetString("KeyboardShortcutsTitle", "Keyboard Shortcuts");
+	m_csTitle = theApp.Services().Language().GetString("KeyboardShortcutsTitle", "Keyboard Shortcuts");
 	m_psp.pszTitle = m_csTitle;
 	m_psp.dwFlags |= PSP_USETITLE;
 	
@@ -64,27 +64,30 @@ BOOL COptionsKeyBoard::OnInitDialog()
 
 	m_pParent = (COptionsSheet *)GetParent();
 
-	theApp.m_pDittoHotKey->CopyToCtrl(m_HotKey, m_hWnd, IDC_CHECK_WIN_DITTO);
-	theApp.m_pDittoHotKey2->CopyToCtrl(m_HotKey2, m_hWnd, IDC_CHECK_WIN_DITTO2);
-	theApp.m_pDittoHotKey3->CopyToCtrl(m_HotKey3, m_hWnd, IDC_CHECK_WIN_DITTO3);
+	CHotKeys& hotKeys = theApp.Services().HotKeys();
+	using Id = CHotKeys::Id;
 
-	theApp.m_pPosOne->CopyToCtrl(m_One, m_hWnd, IDC_CHECK_WIN1);
-	theApp.m_pPosTwo->CopyToCtrl(m_Two, m_hWnd, IDC_CHECK_WIN2);
-	theApp.m_pPosThree->CopyToCtrl(m_Three, m_hWnd, IDC_CHECK_WIN3);
-	theApp.m_pPosFour->CopyToCtrl(m_Four, m_hWnd, IDC_CHECK_WIN4);
-	theApp.m_pPosFive->CopyToCtrl(m_Five, m_hWnd, IDC_CHECK_WIN5);
-	theApp.m_pPosSix->CopyToCtrl(m_Six, m_hWnd, IDC_CHECK_WIN6);
-	theApp.m_pPosSeven->CopyToCtrl(m_Seven, m_hWnd, IDC_CHECK_WIN7);
-	theApp.m_pPosEight->CopyToCtrl(m_Eight, m_hWnd, IDC_CHECK_WIN8);
-	theApp.m_pPosNine->CopyToCtrl(m_Nine, m_hWnd, IDC_CHECK_WIN9);
-	theApp.m_pPosTen->CopyToCtrl(m_Ten, m_hWnd, IDC_CHECK_WIN10);
-	theApp.m_pTextOnlyPaste->CopyToCtrl(m_TextOnlyKey, m_hWnd, IDC_CHECK_WIN_TEXT_ONLY);
-	theApp.m_pSaveClipboard->CopyToCtrl(m_saveClipboardHotKey, m_hWnd, IDC_CHECK_WIN_SAVE_CLIPBOARD);
-	theApp.m_pCopyAndSaveClipboard->CopyToCtrl(m_copyAndSaveClipboardCtrl, m_hWnd, IDC_CHECK_WIN_COPY_SAVE_CLIPBOARD);
+	hotKeys.Named(Id::DittoHotKey)->CopyToCtrl(m_HotKey, m_hWnd, IDC_CHECK_WIN_DITTO);
+	hotKeys.Named(Id::DittoHotKey2)->CopyToCtrl(m_HotKey2, m_hWnd, IDC_CHECK_WIN_DITTO2);
+	hotKeys.Named(Id::DittoHotKey3)->CopyToCtrl(m_HotKey3, m_hWnd, IDC_CHECK_WIN_DITTO3);
+
+	hotKeys.Named(Id::PosOne)->CopyToCtrl(m_One, m_hWnd, IDC_CHECK_WIN1);
+	hotKeys.Named(Id::PosTwo)->CopyToCtrl(m_Two, m_hWnd, IDC_CHECK_WIN2);
+	hotKeys.Named(Id::PosThree)->CopyToCtrl(m_Three, m_hWnd, IDC_CHECK_WIN3);
+	hotKeys.Named(Id::PosFour)->CopyToCtrl(m_Four, m_hWnd, IDC_CHECK_WIN4);
+	hotKeys.Named(Id::PosFive)->CopyToCtrl(m_Five, m_hWnd, IDC_CHECK_WIN5);
+	hotKeys.Named(Id::PosSix)->CopyToCtrl(m_Six, m_hWnd, IDC_CHECK_WIN6);
+	hotKeys.Named(Id::PosSeven)->CopyToCtrl(m_Seven, m_hWnd, IDC_CHECK_WIN7);
+	hotKeys.Named(Id::PosEight)->CopyToCtrl(m_Eight, m_hWnd, IDC_CHECK_WIN8);
+	hotKeys.Named(Id::PosNine)->CopyToCtrl(m_Nine, m_hWnd, IDC_CHECK_WIN9);
+	hotKeys.Named(Id::PosTen)->CopyToCtrl(m_Ten, m_hWnd, IDC_CHECK_WIN10);
+	hotKeys.Named(Id::TextOnlyPaste)->CopyToCtrl(m_TextOnlyKey, m_hWnd, IDC_CHECK_WIN_TEXT_ONLY);
+	hotKeys.Named(Id::SaveClipboard)->CopyToCtrl(m_saveClipboardHotKey, m_hWnd, IDC_CHECK_WIN_SAVE_CLIPBOARD);
+	hotKeys.Named(Id::CopyAndSaveClipboard)->CopyToCtrl(m_copyAndSaveClipboardCtrl, m_hWnd, IDC_CHECK_WIN_COPY_SAVE_CLIPBOARD);
 
 
 	//Unregister hotkeys and Reregister them on cancel or ok
-	g_HotKeys.UnregisterAll();
+	hotKeys.UnregisterAll();
 
 	CGetSetOptions& settings = theApp.Services().Settings();
 	m_btSendPaste.SetCheck(settings.m_bSendPasteOnFirstTenHotKeys);
@@ -94,7 +97,7 @@ BOOL COptionsKeyBoard::OnInitDialog()
 
 	m_HotKey.SetFocus();
 
-	theApp.m_Language.UpdateOptionShortcuts(this);	
+	theApp.Services().Language().UpdateOptionShortcuts(this);
 		
 	return FALSE;
 }
@@ -120,48 +123,51 @@ BOOL COptionsKeyBoard::OnApply()
 	CString str;
 	ARRAY keys;
 	
-	g_HotKeys.GetKeys( keys ); // save old keys just in case new ones are invalid
-	
-	theApp.m_pDittoHotKey->CopyFromCtrl(m_HotKey, m_hWnd, IDC_CHECK_WIN_DITTO);
-	theApp.m_pDittoHotKey2->CopyFromCtrl(m_HotKey2, m_hWnd, IDC_CHECK_WIN_DITTO2);
-	theApp.m_pDittoHotKey3->CopyFromCtrl(m_HotKey3, m_hWnd, IDC_CHECK_WIN_DITTO3);
-	
-	theApp.m_pPosOne->CopyFromCtrl(m_One, m_hWnd, IDC_CHECK_WIN1);
-	theApp.m_pPosTwo->CopyFromCtrl(m_Two, m_hWnd, IDC_CHECK_WIN2);
-	theApp.m_pPosThree->CopyFromCtrl(m_Three, m_hWnd, IDC_CHECK_WIN3);
-	theApp.m_pPosFour->CopyFromCtrl(m_Four, m_hWnd, IDC_CHECK_WIN4);
-	theApp.m_pPosFive->CopyFromCtrl(m_Five, m_hWnd, IDC_CHECK_WIN5);
-	theApp.m_pPosSix->CopyFromCtrl(m_Six, m_hWnd, IDC_CHECK_WIN6);
-	theApp.m_pPosSeven->CopyFromCtrl(m_Seven, m_hWnd, IDC_CHECK_WIN7);
-	theApp.m_pPosEight->CopyFromCtrl(m_Eight, m_hWnd, IDC_CHECK_WIN8);
-	theApp.m_pPosNine->CopyFromCtrl(m_Nine, m_hWnd, IDC_CHECK_WIN9);
-	theApp.m_pPosTen->CopyFromCtrl(m_Ten, m_hWnd, IDC_CHECK_WIN10);
-	theApp.m_pTextOnlyPaste->CopyFromCtrl(m_TextOnlyKey, m_hWnd, IDC_CHECK_WIN_TEXT_ONLY);
-	theApp.m_pSaveClipboard->CopyFromCtrl(m_saveClipboardHotKey, m_hWnd, IDC_CHECK_WIN_SAVE_CLIPBOARD);
-	theApp.m_pCopyAndSaveClipboard->CopyFromCtrl(m_copyAndSaveClipboardCtrl, m_hWnd, IDC_CHECK_WIN_COPY_SAVE_CLIPBOARD);
+	CHotKeys& hotKeys = theApp.Services().HotKeys();
+	using Id = CHotKeys::Id;
+
+	hotKeys.GetKeys( keys ); // save old keys just in case new ones are invalid
+
+	hotKeys.Named(Id::DittoHotKey)->CopyFromCtrl(m_HotKey, m_hWnd, IDC_CHECK_WIN_DITTO);
+	hotKeys.Named(Id::DittoHotKey2)->CopyFromCtrl(m_HotKey2, m_hWnd, IDC_CHECK_WIN_DITTO2);
+	hotKeys.Named(Id::DittoHotKey3)->CopyFromCtrl(m_HotKey3, m_hWnd, IDC_CHECK_WIN_DITTO3);
+
+	hotKeys.Named(Id::PosOne)->CopyFromCtrl(m_One, m_hWnd, IDC_CHECK_WIN1);
+	hotKeys.Named(Id::PosTwo)->CopyFromCtrl(m_Two, m_hWnd, IDC_CHECK_WIN2);
+	hotKeys.Named(Id::PosThree)->CopyFromCtrl(m_Three, m_hWnd, IDC_CHECK_WIN3);
+	hotKeys.Named(Id::PosFour)->CopyFromCtrl(m_Four, m_hWnd, IDC_CHECK_WIN4);
+	hotKeys.Named(Id::PosFive)->CopyFromCtrl(m_Five, m_hWnd, IDC_CHECK_WIN5);
+	hotKeys.Named(Id::PosSix)->CopyFromCtrl(m_Six, m_hWnd, IDC_CHECK_WIN6);
+	hotKeys.Named(Id::PosSeven)->CopyFromCtrl(m_Seven, m_hWnd, IDC_CHECK_WIN7);
+	hotKeys.Named(Id::PosEight)->CopyFromCtrl(m_Eight, m_hWnd, IDC_CHECK_WIN8);
+	hotKeys.Named(Id::PosNine)->CopyFromCtrl(m_Nine, m_hWnd, IDC_CHECK_WIN9);
+	hotKeys.Named(Id::PosTen)->CopyFromCtrl(m_Ten, m_hWnd, IDC_CHECK_WIN10);
+	hotKeys.Named(Id::TextOnlyPaste)->CopyFromCtrl(m_TextOnlyKey, m_hWnd, IDC_CHECK_WIN_TEXT_ONLY);
+	hotKeys.Named(Id::SaveClipboard)->CopyFromCtrl(m_saveClipboardHotKey, m_hWnd, IDC_CHECK_WIN_SAVE_CLIPBOARD);
+	hotKeys.Named(Id::CopyAndSaveClipboard)->CopyFromCtrl(m_copyAndSaveClipboardCtrl, m_hWnd, IDC_CHECK_WIN_COPY_SAVE_CLIPBOARD);
 
 	ARRAY NewKeys;
-	g_HotKeys.GetKeys(NewKeys);
-	
-	if(g_HotKeys.FindFirstConflict(NewKeys, &x, &y))
+	hotKeys.GetKeys(NewKeys);
+
+	if(hotKeys.FindFirstConflict(NewKeys, &x, &y))
 	{
-		str =  g_HotKeys.ElementAt(x)->GetName();
+		str =  hotKeys.ElementAt(x)->GetName();
 		str += " and ";
-		str += g_HotKeys.ElementAt(y)->GetName();
+		str += hotKeys.ElementAt(y)->GetName();
 		str += " cannot be the same.";
 		MessageBox(str);
-		g_HotKeys.SetKeys(keys); // restore the original values
+		hotKeys.SetKeys(keys); // restore the original values
 		return FALSE;
 	}
-	
-	g_HotKeys.SaveAllKeys();
-	g_HotKeys.RegisterAll(true);
-	
+
+	hotKeys.SaveAllKeys();
+	hotKeys.RegisterAll(true);
+
 	return CPropertyPage::OnApply();
 }
 
-void COptionsKeyBoard::OnCancel() 
+void COptionsKeyBoard::OnCancel()
 {
-	g_HotKeys.RegisterAll( true );
+	theApp.Services().HotKeys().RegisterAll( true );
 	CPropertyPage::OnCancel();
 }

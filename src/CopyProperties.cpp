@@ -19,7 +19,7 @@
 
 CCopyProperties::CCopyProperties(long lCopyID, CWnd* pParent, CClip *pMemoryClip)
 	: CDialog(CCopyProperties::IDD, pParent),
-	m_clip(theApp.Services().Settings())
+	m_clip(theApp.Services().ClipContext())
 {
 	m_lCopyID = lCopyID;
 	m_bDeletedData = false;
@@ -131,7 +131,7 @@ BOOL CCopyProperties::OnInitDialog()
 	m_Resize.AddControl(IDC_STATIC_MD5, CDialogResizer::MoveTop | CDialogResizer::MoveLeft);
 	m_Resize.AddControl(IDC_EDIT_MD5, CDialogResizer::MoveTop | CDialogResizer::MoveLeft);
 	
-	theApp.m_Language.UpdateClipProperties(this);
+	theApp.Services().Language().UpdateClipProperties(this);
 
 	if (m_clip.ID() > 0)
 	{
@@ -357,7 +357,7 @@ void CCopyProperties::SaveToMemoryClip()
 
 bool CCopyProperties::SaveToStoredClip()
 {
-	CClip clip{ theApp.Services().Settings() };
+	CClip clip{ theApp.Services().ClipContext() };
 	if(clip.LoadMainTable(m_lCopyID))
 	{
 		LoadDataIntoCClip(clip);
@@ -382,7 +382,7 @@ bool CCopyProperties::SaveToStoredClip()
 		{
 			if(m_bDeletedData)
 			{
-				CClipDatabase::DeleteFormats(theApp.Services().Settings(), m_lCopyID, m_DeletedData);
+				CClipDatabase::DeleteFormats(theApp.Services().ClipContext(), m_lCopyID, m_DeletedData);
 			}
 		}
 	}
@@ -396,11 +396,11 @@ BOOL CCopyProperties::CheckGlobalHotKey(CClip &clip)
 
 	if(clip.m_globalShortCut)
 	{
-		ret = g_HotKeys.ValidateClip(theApp.Services().Settings(), clip.m_id, clip.m_shortCut, clip.m_Desc, CHotKey::PASTE_OPEN_CLIP);
+		ret = theApp.Services().HotKeys().ValidateClip(clip.m_id, clip.m_shortCut, clip.m_Desc, CHotKey::PASTE_OPEN_CLIP);
 	}
 	else
 	{
-		g_HotKeys.Remove(clip.m_id, CHotKey::PASTE_OPEN_CLIP);
+		theApp.Services().HotKeys().Remove(clip.m_id, CHotKey::PASTE_OPEN_CLIP);
 		ret = TRUE;
 	}
 
@@ -413,11 +413,11 @@ BOOL CCopyProperties::CheckMoveToGroupGlobalHotKey(CClip &clip)
 
 	if(clip.m_globalMoveToGroupShortCut)
 	{
-		ret = g_HotKeys.ValidateClip(theApp.Services().Settings(), clip.m_id, clip.m_moveToGroupShortCut, clip.m_Desc, CHotKey::MOVE_TO_GROUP);
+		ret = theApp.Services().HotKeys().ValidateClip(clip.m_id, clip.m_moveToGroupShortCut, clip.m_Desc, CHotKey::MOVE_TO_GROUP);
 	}
 	else
 	{
-		g_HotKeys.Remove(clip.m_id, CHotKey::MOVE_TO_GROUP);
+		theApp.Services().HotKeys().Remove(clip.m_id, CHotKey::MOVE_TO_GROUP);
 		ret = TRUE;
 	}
 
@@ -451,7 +451,7 @@ void CCopyProperties::LoadDataIntoCClip(CClip &Clip)
 	Clip.m_moveToGroupShortCut = MAKEWORD(moveToGroupKeyKode, moveToGroupModifers); 
 
 	//remove any others that have the same hot key
-	CClipRepository repository(theApp.m_db);
+	CClipRepository repository(theApp.Services().Database());
 	repository.ReleaseShortCuts(m_lCopyID, { .paste = Clip.m_shortCut, .moveToGroup = Clip.m_moveToGroupShortCut });
 
 	m_description.GetWindowText(Clip.m_Desc);

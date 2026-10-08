@@ -15,7 +15,7 @@ IMPLEMENT_DYNAMIC(CQuickPasteKeyboard, CPropertyPage)
 CQuickPasteKeyboard::CQuickPasteKeyboard()
 	: CPropertyPage(CQuickPasteKeyboard::IDD)
 {
-	m_csTitle = theApp.m_Language.GetString("QuickPasteKeyboardTitle", "Quick Paste Keyboard");
+	m_csTitle = theApp.Services().Language().GetString("QuickPasteKeyboardTitle", "Quick Paste Keyboard");
 	m_psp.pszTitle = m_csTitle;
 	m_psp.dwFlags |= PSP_USETITLE;
 }
@@ -97,7 +97,7 @@ BOOL CQuickPasteKeyboard::OnInitDialog()
 
 	//SetWindowText(_T("Quick Paste Shortcuts"));
 
-	theApp.m_Language.UpdateOptionQuickPasteKeyboard(this);
+	theApp.Services().Language().UpdateOptionQuickPasteKeyboard(this);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
@@ -107,8 +107,8 @@ void CQuickPasteKeyboard::InitListCtrlCols()
 {
 	m_list.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 
-	m_list.InsertColumn(0, theApp.m_Language.GetString("QPHotKey", "Hot Key"), LVCFMT_LEFT, 150);
-	m_list.InsertColumn(1, theApp.m_Language.GetString("QPCommand", "Command"), LVCFMT_LEFT, 350);
+	m_list.InsertColumn(0, theApp.Services().Language().GetString("QPHotKey", "Hot Key"), LVCFMT_LEFT, 150);
+	m_list.InsertColumn(1, theApp.Services().Language().GetString("QPCommand", "Command"), LVCFMT_LEFT, 350);
 }
 
 int CALLBACK CQuickPasteKeyboard::MyCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
@@ -160,7 +160,7 @@ void CQuickPasteKeyboard::LoadItems()
 			lvi.pszText = (LPTSTR) (LPCTSTR) (shortCutText);
 			m_list.InsertItem(&lvi);
 
-			CString col2 = ActionEnums::EnumDescription(action);
+			CString col2 = ActionEnums::EnumDescription(action, theApp.Services().Language());
 			m_list.SetItemText(row, 1, col2);
 
 			m_list.SetItemData(row, i);

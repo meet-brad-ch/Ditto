@@ -76,7 +76,7 @@ bool CDittoRulerRichEditCtrl::LoadItem(long lID, CString csDesc)
 
 bool CDittoRulerRichEditCtrl::HasClipData(long lID, CClipFormat& Clip)
 {
-	return theApp.GetClipData(lID, Clip) && Clip.m_hgData;
+	return CClipDataReader(theApp.Services().Database()).GetClipData(lID, Clip) && Clip.m_hgData;
 }
 
 long CDittoRulerRichEditCtrl::GetTypeFlags(long lID)
@@ -86,14 +86,14 @@ long CDittoRulerRichEditCtrl::GetTypeFlags(long lID)
 	try
 	{
 		CLIPFORMAT cfType = CF_TEXT;
-		CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT lID FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), lID, CClipboardFormats::GetFormatName(cfType).GetString());
+		CppSQLite3Query q = theApp.Services().Database().execQueryEx(_T("SELECT lID FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), lID, CClipboardFormats::GetFormatName(cfType).GetString());
 		if(q.eof() == false)
 		{
 			lRet |= stCF_TEXT;
 		}
 
 		cfType = CF_UNICODETEXT;
-		q = theApp.m_db.execQueryEx(_T("SELECT lID FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), lID, CClipboardFormats::GetFormatName(cfType).GetString());
+		q = theApp.Services().Database().execQueryEx(_T("SELECT lID FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), lID, CClipboardFormats::GetFormatName(cfType).GetString());
 		if(q.eof() == false)
 		{
 			lRet |= stCF_UNICODETEXT;
@@ -101,7 +101,7 @@ long CDittoRulerRichEditCtrl::GetTypeFlags(long lID)
 
 		// Registered formats are in 0xC000-0xFFFF, so they fit a CLIPFORMAT
 		cfType = static_cast<CLIPFORMAT>(RegisterClipboardFormat(_T("Rich Text Format")));
-		q = theApp.m_db.execQueryEx(_T("SELECT lID FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), lID, CClipboardFormats::GetFormatName(cfType).GetString());
+		q = theApp.Services().Database().execQueryEx(_T("SELECT lID FROM Data WHERE lParentID = %d AND strClipboardFormat = '%s'"), lID, CClipboardFormats::GetFormatName(cfType).GetString());
 		if(q.eof() == false)
 		{
 			lRet |= stRTF;
@@ -138,7 +138,7 @@ int CDittoRulerRichEditCtrl::SaveToDB(BOOL bUpdateDesc)
 	try
 	{
 		//only save the types if they have them set as save types, mainly rtf type
-		const std::unique_ptr<CClipTypes> pTypes{theApp.LoadTypesFromDB()};
+		const std::unique_ptr<CClipTypes> pTypes{CClipDataReader(theApp.Services().Database()).LoadTypesFromDB()};
 		if (!pTypes)
 		{
 			return FALSE; // LoadTypesFromDB reported the failure
@@ -146,7 +146,7 @@ int CDittoRulerRichEditCtrl::SaveToDB(BOOL bUpdateDesc)
 
 		int saveTypes{SaveTypesOf(*pTypes)};
 
-		CClip Clip(theApp.Services().Settings());
+		CClip Clip(theApp.Services().ClipContext());
 		Clip.m_id = m_lID;
 		LoadFormatsToSave(Clip, saveTypes);
 
@@ -169,7 +169,7 @@ int CDittoRulerRichEditCtrl::SaveToDB(BOOL bUpdateDesc)
 		nRet = SavedClipToDb;
 
 		if(bUpdateDesc)
-			theApp.RefreshView();
+			theApp.Services().Windows().RefreshView();
 	}
 	catch (CppSQLite3Exception& e)
 	{
@@ -222,7 +222,7 @@ int CDittoRulerRichEditCtrl::SaveTypesOf(CClipTypes& types)
 	INT_PTR numTypes{types.GetSize()};
 	for (int i = 0; i < numTypes; i++)
 	{
-		if (types.ElementAt(i) == theApp.m_RTFFormat)
+		if (types.ElementAt(i) == theApp.Services().ClipboardFormats().Rtf())
 		{
 			saveTypes |= stRTF;
 		}
@@ -318,7 +318,7 @@ bool CDittoRulerRichEditCtrl::CloseEdit(bool bPrompt, BOOL bUpdateDesc)
 		if(bPrompt)
 		{
 			CString cs;
-			cs.Format(_T("%s '%s'"), theApp.m_Language.GetString("SaveChanges", "Do you want to save changes to").GetString(), m_csDescription.GetString());
+			cs.Format(_T("%s '%s'"), theApp.Services().Language().GetString("SaveChanges", "Do you want to save changes to").GetString(), m_csDescription.GetString());
 
 			::SetForegroundWindow(m_hWnd);
 			nRet = MessageBox(cs, _T("Ditto"), MB_YESNOCANCEL);
@@ -329,7 +329,7 @@ bool CDittoRulerRichEditCtrl::CloseEdit(bool bPrompt, BOOL bUpdateDesc)
 			if(SaveToDB(bUpdateDesc) == false)
 			{
 				CString cs;
-				cs.Format(_T("%s '%s'"), theApp.m_Language.GetString("ErrorSaving", "Error saving clip").GetString(), m_csDescription.GetString());
+				cs.Format(_T("%s '%s'"), theApp.Services().Language().GetString("ErrorSaving", "Error saving clip").GetString(), m_csDescription.GetString());
 				MessageBox(cs, _T("Ditto"), MB_OK);
 			}
 		}

@@ -45,13 +45,14 @@ int CNoDbFrameWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	SetTimer(TimerOpenDb, 15000, NULL);
 	SetTimer(TimerErrorMsg, 180000, NULL);
 
-	g_HotKeys.Init(m_hWnd);
+	CHotKeys& hotKeys{Services().HotKeys()};
+	hotKeys.Init(m_hWnd);
 
-	m_pDittoHotKey = &g_HotKeys.Create(Settings(), CString("DittoHotKey"), 704); //704 is ctrl-tilda
-	m_pDittoHotKey2 = &g_HotKeys.Create(Settings(), CString("DittoHotKey2"));
-	m_pDittoHotKey3 = &g_HotKeys.Create(Settings(), CString("DittoHotKey3"));
+	m_pDittoHotKey = &hotKeys.Create(CString("DittoHotKey"), 704); //704 is ctrl-tilda
+	m_pDittoHotKey2 = &hotKeys.Create(CString("DittoHotKey2"));
+	m_pDittoHotKey3 = &hotKeys.Create(CString("DittoHotKey3"));
 
-	g_HotKeys.RegisterAll();
+	hotKeys.RegisterAll();
 
 	return 0;
 }
@@ -100,29 +101,35 @@ void CNoDbFrameWnd::OnTimer(UINT_PTR nIDEvent)
 
 void CNoDbFrameWnd::ShowNoDbMessage()
 {
-	CString msg = theApp.m_Language.GetString(_T("StartupNoDbMsg"), _T("Ditto was unable to open its database, waiting until it can be opened. Update the path in Options if needed. Path: "));
+	CString msg = Services().Language().GetString(_T("StartupNoDbMsg"), _T("Ditto was unable to open its database, waiting until it can be opened. Update the path in Options if needed. Path: "));
 	msg += CStringUtil::Format(_T(" %s"), Settings().GetDBPath().GetString());
 	m_trayIcon.SetBalloonDetails(msg, _T("Ditto"), CTrayNotifyIcon::BalloonStyle::Info, Settings().GetBalloonTimeout());
 }
 
+CAppServices& CNoDbFrameWnd::Services() const
+{
+	return theApp.Services();
+}
+
 CGetSetOptions& CNoDbFrameWnd::Settings() const
 {
-	return theApp.Services().Settings();
+	return Services().Settings();
 }
 
 void CNoDbFrameWnd::TryOpenDatabase()
 {
-	if (CDatabaseManager::IsDatabaseOpen() ||
-		DatabaseLocator::CheckDBExists(Settings(), Settings().GetDBPath()))
+	if (CDatabaseManager::IsDatabaseOpen(Services().Database()) ||
+		DatabaseLocator::CheckDBExists(Settings(), Services().Language(), Services().Database(), Services().State(), Settings().GetDBPath()))
 	{
 		// the registry owns the keys: Remove destroys them
-		g_HotKeys.Remove(m_pDittoHotKey);
+		CHotKeys& hotKeys{Services().HotKeys()};
+		hotKeys.Remove(m_pDittoHotKey);
 		m_pDittoHotKey = NULL;
 
-		g_HotKeys.Remove(m_pDittoHotKey2);
+		hotKeys.Remove(m_pDittoHotKey2);
 		m_pDittoHotKey2 = NULL;
 
-		g_HotKeys.Remove(m_pDittoHotKey3);
+		hotKeys.Remove(m_pDittoHotKey3);
 		m_pDittoHotKey3 = NULL;
 
 		KillTimer(TimerOpenDb);

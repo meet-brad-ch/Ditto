@@ -6,6 +6,8 @@ class CQPasteWnd;
 class CMainTable;
 class CClipFormatQListCtrl;
 class CGetSetOptions;
+class CDittoDb;
+class CRegisteredClipboardFormats;
 
 class CQPasteWndThread: public CEventThread
 {
@@ -13,8 +15,10 @@ public:
     /**
      * @brief Creates the quick paste window's loader thread (not started yet).
      * @param settings The application settings (owned by the composition root; outlives the thread).
+     * @param database The clip database the rows and formats are read from (owned by the composition root; outlives the thread).
+     * @param clipboardFormats The registered clipboard formats (RTF, PNG) (owned by the composition root; outlives the thread).
      */
-    explicit CQPasteWndThread(CGetSetOptions& settings);
+    CQPasteWndThread(CGetSetOptions& settings, CDittoDb& database, const CRegisteredClipboardFormats& clipboardFormats);
     ~CQPasteWndThread(void);
 
     enum eCQPasteWndThreadEvents
@@ -131,6 +135,10 @@ protected:
 	int m_rowHeight;
 	/** @brief The application settings (the image cache reads the thumbnail mode). */
 	CGetSetOptions& m_settings;
+	/** @brief The clip database (not owned). */
+	CDittoDb& m_database;
+	/** @brief The registered clipboard formats (not owned). */
+	const CRegisteredClipboardFormats& m_clipboardFormats;
 
     CString m_sql;
     CString m_countSql;

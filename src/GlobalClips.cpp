@@ -14,6 +14,7 @@ IMPLEMENT_DYNAMIC(GlobalClips, CDialogEx)
 
 GlobalClips::GlobalClips(CWnd* pParent /*=NULL*/)
 	: CDialogEx(GlobalClips::IDD, pParent)
+	, m_showTaskbar(theApp.Services().Windows(), theApp.Services().State())
 {
 
 }
@@ -39,7 +40,7 @@ BOOL GlobalClips::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
-	theApp.m_Language.UpdateGlobalHotKeys(this);
+	theApp.Services().Language().UpdateGlobalHotKeys(this);
 
 	m_Resize.SetParent(m_hWnd);
 	m_Resize.AddControl(IDC_LIST2, CDialogResizer::SizeHeight | CDialogResizer::SizeWidth);
@@ -59,12 +60,13 @@ void GlobalClips::LoadItems()
 	// Use the LV_ITEM structure to insert the items
 	LVITEM lvi;
 	CString strItem;
-	int count = (int)g_HotKeys.GetCount();
+	const CHotKeys& hotKeys = theApp.Services().HotKeys();
+	int count = (int)hotKeys.GetCount();
 
 	int row = 0;
 	for (int i = 0; i < count; i++)
 	{
-		CHotKey *pHotKey = g_HotKeys[i];
+		CHotKey *pHotKey = hotKeys[i];
 
 		if(pHotKey->m_Key <= 0)
 		{
@@ -83,7 +85,7 @@ void GlobalClips::LoadItems()
 
 			if(pHotKey->m_hkType == CHotKey::PASTE_OPEN_CLIP)
 			{
-				strItem.Insert(0, theApp.m_Language.GetGlobalHotKeyString("(Clip)", "(Clip) "));
+				strItem.Insert(0, theApp.Services().Language().GetGlobalHotKeyString("(Clip)", "(Clip) "));
 			}
 			else if(pHotKey->m_hkType == CHotKey::MOVE_TO_GROUP)
 			{
@@ -98,10 +100,10 @@ void GlobalClips::LoadItems()
 		strItem = pHotKey->GetHotKeyDisplay();
 		m_List.SetItemText(row, 1, strItem);
 
-		strItem = theApp.m_Language.GetGlobalHotKeyString("Error", "Error");
+		strItem = theApp.Services().Language().GetGlobalHotKeyString("Error", "Error");
 		if(pHotKey->IsRegistered())
 		{
-			strItem = theApp.m_Language.GetGlobalHotKeyString("Yes", "Yes");
+			strItem = theApp.Services().Language().GetGlobalHotKeyString("Yes", "Yes");
 		}
 
 		m_List.SetItemText(row, 2, strItem);
@@ -116,9 +118,9 @@ void GlobalClips::InitListCtrlCols()
 {
 	m_List.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 	
-	m_List.InsertColumn(0, theApp.m_Language.GetGlobalHotKeyString("Description", "Description"), LVCFMT_LEFT, 200);
-	m_List.InsertColumn(1, theApp.m_Language.GetGlobalHotKeyString("HotKey", "Hot Key"), LVCFMT_LEFT, 100);
-	m_List.InsertColumn(2, theApp.m_Language.GetGlobalHotKeyString("Registered", "Registered"), LVCFMT_LEFT, 100);
+	m_List.InsertColumn(0, theApp.Services().Language().GetGlobalHotKeyString("Description", "Description"), LVCFMT_LEFT, 200);
+	m_List.InsertColumn(1, theApp.Services().Language().GetGlobalHotKeyString("HotKey", "Hot Key"), LVCFMT_LEFT, 100);
+	m_List.InsertColumn(2, theApp.Services().Language().GetGlobalHotKeyString("Registered", "Registered"), LVCFMT_LEFT, 100);
 }
 
 void GlobalClips::SetNotifyWnd(HWND hWnd)
@@ -155,12 +157,12 @@ void GlobalClips::OnSize(UINT nType, int cx, int cy)
 //
 //	int id = (int)m_List.GetItemData(pNMItemActivate->iItem);
 //
-//	int count = (int)g_HotKeys.GetCount();
+//	int count = (int)theApp.Services().HotKeys().GetCount();
 //
 //	int row = 0;
 //	for (int i = 0; i < count; i++)
 //	{
-//		CHotKey *pHotKey = g_HotKeys[i];
+//		CHotKey *pHotKey = theApp.Services().HotKeys()[i];
 //
 //		if(pHotKey->m_globalId == id)
 //		{

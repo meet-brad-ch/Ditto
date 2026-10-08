@@ -7,6 +7,7 @@
 #endif // _MSC_VER > 1000
 
 #include "..\Shared/ArrayEx.h"
+#include <atomic>
 #include <source_location>
 #include <vector>
 
@@ -27,7 +28,7 @@ public:
 	};
 };
 
-/** @brief The flags of CCP_MainApp::RefreshClipInUI: what to do after a clip was reloaded. */
+/** @brief The flags of CAppWindows::RefreshClipInUI: what to do after a clip was reloaded. */
 class CClipRefreshFlags
 {
 public:
@@ -110,18 +111,51 @@ public:
 
 class CGetSetOptions;
 
-/** @brief How long the user has been idle (no keyboard or mouse input). */
+/**
+ * @brief How long the user has been idle (no keyboard or mouse input). Owned by CAppServices
+ * (IdleTime()); called from several threads.
+ */
 class CIdleTime
 {
 public:
 	/**
+	 * @brief Creates the idle-time reader; the tick-count check runs on the first IdleSeconds call.
+	 * @param settings The application's settings (the tick-count adjustment); must outlive this object.
+	 */
+	explicit CIdleTime(CGetSetOptions& settings);
+
+	CIdleTime(const CIdleTime&) = delete;
+	CIdleTime& operator=(const CIdleTime&) = delete;
+
+	/**
 	 * @brief The time since the last input (GetLastInputInfo). When the tick count was found below
-	 * the last input time on the first call, settings.GetFunnyTickCountAdjustment() is added
+	 * the last input time on the first call, the settings' GetFunnyTickCountAdjustment() is added
 	 * to the tick count (logged once).
-	 * @param settings The application's settings (read only when the adjustment applies).
 	 * @return The idle time in seconds.
 	 */
-	static double IdleSeconds(CGetSetOptions& settings);
+	double IdleSeconds();
+
+private:
+	/** @brief The states of the tick-count check (m_adjustment). */
+	enum AdjustmentState : int
+	{
+		NotChecked = -1,      ///< no IdleSeconds call yet
+		NoAdjustment = 0,     ///< the tick count was not below the last input time
+		AdjustAndLog = 1,     ///< adjust; the first adjusting call logs it
+		Adjust = 2            ///< adjust (already logged)
+	};
+
+	/**
+	 * @brief Decides on the first call whether the tick count needs the adjustment.
+	 * @param currentTick The tick count (32-bit, as LASTINPUTINFO::dwTime).
+	 * @param lastInputTick LASTINPUTINFO::dwTime.
+	 */
+	void CheckTickCount(DWORD currentTick, DWORD lastInputTick);
+
+	/** @brief The application's settings (not owned). */
+	CGetSetOptions& m_settings;
+	/** @brief The AdjustmentState of the tick-count check; atomic: IdleSeconds runs on several threads. */
+	std::atomic<int> m_adjustment{NotChecked};
 };
 
 
@@ -169,6 +203,8 @@ public:
 #	include <bitset>
 #endif // !defined(_BITSET_)
 
+class CICU_String;
+
 /**
  * @brief Marks the case-insensitive matches of a search text in a list row's text (search highlighting).
  */
@@ -178,6 +214,7 @@ public:
 	/**
 	 * @brief Puts markers around each match (at most 101), drops the leading lines before the
 	 * first match when it is past the row's lines, and turns the line breaks into unprintable markers.
+	 * @param icuString The ICU case mapping (the case-insensitive comparison).
 	 * @param mainStr The text; changed in place.
 	 * @param findStr The search text; nothing is done when it is empty.
 	 * @param preInsert The marker inserted before each match.
@@ -185,7 +222,7 @@ public:
 	 * @param linesPerRow The number of lines a list row shows.
 	 * @return The number of matches marked.
 	 */
-	static int Insert(CString& mainStr, CString& findStr, CString preInsert, CString postInsert, int linesPerRow);
+	static int Insert(CICU_String& icuString, CString& mainStr, CString& findStr, CString preInsert, CString postInsert, int linesPerRow);
 
 private:
 	/** @brief What the insert step did. */
@@ -199,13 +236,14 @@ private:
 
 	/**
 	 * @brief Insert's first step: inserts the markers around each match (at most 101).
+	 * @param icuString The ICU case mapping (the case-insensitive comparison).
 	 * @param mainStr The text; changed in place.
 	 * @param findStr The search text, not empty.
 	 * @param preInsert The marker inserted before each match.
 	 * @param postInsert The marker inserted after each match.
 	 * @return The number of matches and where the first one now is.
 	 */
-	static InsertResult InsertMarkers(CString& mainStr, CString& findStr, const CString& preInsert, const CString& postInsert);
+	static InsertResult InsertMarkers(CICU_String& icuString, CString& mainStr,CString& findStr, const CString& preInsert, const CString& postInsert);
 
 	/**
 	 * @brief Insert's second step: when the first match is past the row's lines, drops the lines

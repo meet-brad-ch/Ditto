@@ -15,10 +15,11 @@ public:
 	/**
 	 * @brief Replaces the image data (CF_DIB or PNG) once with a DIB scaled down to a height.
 	 * @param settings The application's settings (the fast thumbnail mode).
+	 * @param pngFormat The registered "PNG" format (CRegisteredClipboardFormats::Png()).
 	 * @param pDc The device context used for the scaling.
 	 * @param height The maximum height.
 	 * @return The (scaled) DIB data; NULL for another format or when scaling failed.
 	 */
-	HGLOBAL GetDibFittingToHeight(CGetSetOptions& settings, CDC *pDc, int height);
+	HGLOBAL GetDibFittingToHeight(CGetSetOptions& settings, CLIPFORMAT pngFormat, CDC *pDc, int height);
 };
 

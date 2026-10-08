@@ -3,7 +3,7 @@
 #include "Misc.h"
 #include "FileDialogPath.h"
 
-BOOL CDatabaseBackupPrompt::RestoreDbPrompt(CGetSetOptions& settings, HWND hwnd)
+BOOL CDatabaseBackupPrompt::RestoreDbPrompt(CGetSetOptions& settings, CMultiLanguage& language, CDittoDb& database, CAppState& state, CAppWindows& windows, HWND hwnd)
 {
 	BOOL ret{ false };
 
@@ -33,13 +33,13 @@ BOOL CDatabaseBackupPrompt::RestoreDbPrompt(CGetSetOptions& settings, HWND hwnd)
 
 		CString dbPath{ settings.GetDBPath() };
 		CString backupPath(CFileDialogPath::From(ofn));
-		ret = CDatabaseBackupService::RestoreDB(settings, backupPath);
+		ret = CDatabaseBackupService::RestoreDB(settings, language, database, state, windows, backupPath);
 	}
 
 	return ret;
 }
 
-BOOL CDatabaseBackupPrompt::BackupDbPrompt(CGetSetOptions& settings, HWND hwnd)
+BOOL CDatabaseBackupPrompt::BackupDbPrompt(CGetSetOptions& settings, CMultiLanguage& language, HWND hwnd)
 {
 	BOOL ret{ FALSE };
 
@@ -69,7 +69,7 @@ BOOL CDatabaseBackupPrompt::BackupDbPrompt(CGetSetOptions& settings, HWND hwnd)
 
 		CString dbPath{ settings.GetDBPath() };
 		CString backupPath(CFileDialogPath::From(ofn));
-		ret = CDatabaseBackupService::BackupDB(dbPath, backupPath);
+		ret = CDatabaseBackupService::BackupDB(language, dbPath, backupPath);
 	}
 
 	return ret;

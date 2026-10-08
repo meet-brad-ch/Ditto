@@ -12,14 +12,20 @@
 #include "QPasteWnd.h"
 #include <memory>
 
+class CAppState;
+class CDittoDb;
 class CGetSetOptions;
+class ExternalWindowTracker;
 
 class CQuickPaste
 {
 public:
 	/** @brief Creates the quick paste controller.
-	@param settings the application settings; must outlive this object. */
-	explicit CQuickPaste(CGetSetOptions &settings);
+	@param settings the application settings; must outlive this object.
+	@param state the application state (whether the quick paste window shows); must outlive this object.
+	@param database the clip database (closed and reopened on request); must outlive this object.
+	@param activeWindow the tracker of the target window (the caret the window opens at); must outlive this object. */
+	CQuickPaste(CGetSetOptions &settings, CAppState &state, CDittoDb &database, ExternalWindowTracker &activeWindow);
 	virtual ~CQuickPaste();
 
 	void ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboard, BOOL bReFillList);
@@ -44,6 +50,12 @@ protected:
 private:
 	/** @brief The application settings (owned by the application services). */
 	CGetSetOptions &m_settings;
+	/** @brief The application state (owned by the application services). */
+	CAppState &m_state;
+	/** @brief The clip database (owned by the application services). */
+	CDittoDb &m_database;
+	/** @brief The tracker of the target window (owned by the application services). */
+	ExternalWindowTracker &m_activeWindow;
 
 	/** @brief Is the "close the window and reopen the database" key combination (shift + control, not from the keyboard hot key) down?
 	@param bFromKeyboard the window is shown from the keyboard hot key.
@@ -62,7 +74,7 @@ private:
 	@param csSize the window size.
 	@param point set to the cursor position when the monitor center is used.
 	@return the point. */
-	static CPoint CaretOrCenterPoint(const CSize &csSize, CPoint &point);
+	CPoint CaretOrCenterPoint(const CSize &csSize, CPoint &point);
 	/** @brief Sets the window point (and for the previous position the size) by the position option.
 	@param nPosition the POS_* option.
 	@param bAtPrevPos show at the previous position.

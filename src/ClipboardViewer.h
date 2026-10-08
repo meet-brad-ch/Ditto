@@ -6,6 +6,7 @@
 #endif // _MSC_VER > 1000
 
 class CGetSetOptions;
+class CRegisteredClipboardFormats;
 
 class CClipboardViewer : public CWnd
 {
@@ -74,6 +75,12 @@ private:
 	 * @return theApp.Services().Settings().
 	 */
 	CGetSetOptions& Settings() const;
+
+	/**
+	 * @brief The clipboard formats Ditto registers by name.
+	 * @return theApp.Services().ClipboardFormats().
+	 */
+	const CRegisteredClipboardFormats& Formats() const;
 
 	void ProcessClipboardChange();
 	/**

@@ -148,8 +148,14 @@ private:
 	void SelectFollowWindowsTheme();
 
 	/**
+	 * @brief The application's services.
+	 * @return theApp.Services().
+	 */
+	CAppServices& Services() const;
+
+	/**
 	 * @brief The application's settings.
-	 * @return theApp.Services().Settings().
+	 * @return Services().Settings().
 	 */
 	CGetSetOptions& Settings() const;
 };

@@ -5,23 +5,19 @@
 #include "SendKeys.h"
 #include "Accels.h"
 
-CHotKeys g_HotKeys;
-
-int CHotKey::m_nextId = 0;
-
-CHotKey::CHotKey(CGetSetOptions& settings, CString name, DWORD defKey, bool bUnregOnShowDitto, HotKeyType hkType, CString description)
+CHotKey::CHotKey(const CHotKeys& registry, CGetSetOptions& settings, int globalId, CString name, DWORD defKey, bool bUnregOnShowDitto, HotKeyType hkType, CString description)
 	: m_Name(name),
 	m_description(description),
-	m_bIsRegistered(false), 
+	m_bIsRegistered(false),
 	m_bUnRegisterOnShowDitto(bUnregOnShowDitto),
 	m_clipId(0),
+	m_registry(registry),
 	m_settings(settings)
 {
 	m_Atom = ::GlobalAddAtom(CStringUtil::Format(_T("%s_%d"), m_Name.GetString(), hkType));
 	ASSERT(m_Atom);
 	m_Key = (DWORD)m_settings.GetProfileLong(m_Name, (long) defKey);
-	m_globalId = m_nextId;
-	m_nextId++;
+	m_globalId = globalId;
 	m_hkType = hkType;
 }
 
@@ -183,16 +179,16 @@ bool CHotKey::SaveKey()
 	return false;
 }
 
-BOOL CHotKey::ValidateHotKey(DWORD dwHotKey)
+BOOL CHotKeys::ValidateHotKey(DWORD dwHotKey) const
 {
 	ATOM id = ::GlobalAddAtom(_T("HK_VALIDATE"));
-	BOOL bResult = ::RegisterHotKey( g_HotKeys.m_hWnd,
+	BOOL bResult = ::RegisterHotKey( m_hWnd,
 		id,
-		GetModifier(HIBYTE(dwHotKey)),
+		CHotKey::GetModifier(HIBYTE(dwHotKey)),
 		LOBYTE(dwHotKey) );
 
 	if(bResult)
-		::UnregisterHotKey(g_HotKeys.m_hWnd, id);
+		::UnregisterHotKey(m_hWnd, id);
 
 	::GlobalDeleteAtom(id);
 
@@ -241,8 +237,8 @@ bool CHotKey::Register()
 	{
 		if(m_bIsRegistered == false)
 		{
-			ASSERT(g_HotKeys.m_hWnd);
-			m_bIsRegistered = ::RegisterHotKey(g_HotKeys.m_hWnd,
+			ASSERT(m_registry.Window());
+			m_bIsRegistered = ::RegisterHotKey(m_registry.Window(),
 				m_Atom,
 				GetModifier(),
 				LOBYTE(m_Key) ) == TRUE;
@@ -268,8 +264,8 @@ bool CHotKey::Unregister(bool bOnShowingDitto)
 
 	if(m_Key)
 	{
-		ASSERT(g_HotKeys.m_hWnd);
-		if(::UnregisterHotKey( g_HotKeys.m_hWnd, m_Atom))
+		ASSERT(m_registry.Window());
+		if(::UnregisterHotKey( m_registry.Window(), m_Atom))
 		{
 			m_bIsRegistered = false;
 			return true;
@@ -289,9 +285,9 @@ bool CHotKey::Unregister(bool bOnShowingDitto)
 	return false;
 }
 
-CHotKeys::CHotKeys() : m_hWnd(NULL) 
+CHotKeys::CHotKeys(CGetSetOptions& settings) :
+	m_settings(settings)
 {
-
 }
 
 CHotKeys::~CHotKeys()
@@ -303,10 +299,25 @@ CHotKeys::~CHotKeys()
 	}
 }
 
-CHotKey& CHotKeys::Create(CGetSetOptions& settings, CString name, DWORD defKey, bool bUnregOnShowDitto, CHotKey::HotKeyType hkType, CString description)
+CHotKey& CHotKeys::Create(CString name, DWORD defKey, bool bUnregOnShowDitto, CHotKey::HotKeyType hkType, CString description)
 {
-	m_keys.push_back(std::make_unique<CHotKey>(settings, name, defKey, bUnregOnShowDitto, hkType, description));
+	const int globalId{m_nextId};
+	m_nextId++;
+	m_keys.push_back(std::make_unique<CHotKey>(*this, m_settings, globalId, name, defKey, bUnregOnShowDitto, hkType, description));
 	return *m_keys.back();
+}
+
+void CHotKeys::CreateNamed()
+{
+	for (const NamedHotKeySpec& spec : s_namedHotKeys)
+	{
+		m_named.at(static_cast<size_t>(spec.id)) = &Create(spec.name, spec.defaultKey, spec.unregisterOnShowDitto);
+	}
+}
+
+CHotKey* CHotKeys::Named(Id id) const
+{
+	return m_named.at(static_cast<size_t>(id));
 }
 
 INT_PTR CHotKeys::Find(CHotKey* pHotKey)
@@ -350,7 +361,7 @@ bool CHotKeys::Remove(int clipId, CHotKey::HotKeyType hkType)
 	return false;
 }
 
-BOOL CHotKeys::ValidateClip(CGetSetOptions& settings, int clipId, DWORD key, CString desc, CHotKey::HotKeyType hkType)
+BOOL CHotKeys::ValidateClip(int clipId, DWORD key, CString desc, CHotKey::HotKeyType hkType)
 {
 	CHotKey *pKey = NULL;
 	INT_PTR count = GetSize();
@@ -367,14 +378,14 @@ BOOL CHotKeys::ValidateClip(CGetSetOptions& settings, int clipId, DWORD key, CSt
 
 	if(pKey == NULL)
 	{
-		pKey = &Create(settings, desc, key, true, hkType);
+		pKey = &Create(desc, key, true, hkType);
 	}
 
 	pKey->m_Key = key;
 	pKey->m_Name = desc;
 	pKey->m_clipId = clipId;
 
-	return CHotKey::ValidateHotKey(key);
+	return ValidateHotKey(key);
 }
 
 void CHotKeys::LoadAllKeys()

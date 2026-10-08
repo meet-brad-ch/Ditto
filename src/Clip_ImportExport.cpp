@@ -14,13 +14,15 @@
 #include <afx.h>
 #include <afxstr.h>
 #include "Clip.h"
+#include "ClipContext.h"
+#include "AppWindows.h"
 
 #include <span>
 #include <string>
 #include <vector>
 
-CClip_ImportExport::CClip_ImportExport(CGetSetOptions& settings) :
-	CClip(settings),
+CClip_ImportExport::CClip_ImportExport(CClipContext& context) :
+	CClip(context),
 	m_importCount(0)
 {
 
@@ -63,7 +65,7 @@ bool CClip_ImportExport::ExportToSqliteDB(CppSQLite3DB& db)
 	return true;
 }
 
-// A CppSQLite3Exception propagates: the callers (CCP_MainApp::ImportClips and ImportFileFromCommandLine)
+// A CppSQLite3Exception propagates: the callers (CClipCommands::ImportClips and CCP_MainApp::ImportFileFromCommandLine)
 // are the operation boundaries and show it.
 bool CClip_ImportExport::ImportFromSqliteDB(CppSQLite3DB& db, bool bAddToDB, bool bPutOnClipboard)
 {
@@ -123,7 +125,7 @@ void CClip_ImportExport::FinishImport(bool bAddToDB, bool bPutOnClipboard, CStri
 {
 	if (bAddToDB)
 	{
-		theApp.RefreshView();
+		Context().Windows().RefreshView();
 	}
 	else if (m_importCount == 1 && bPutOnClipboard)
 	{
@@ -139,7 +141,7 @@ bool CClip_ImportExport::PlaceCF_TEXT_AND_CF_UNICODETEXT_OnClipboard(CStringA& c
 {
 	bool bRet = false;
 
-	if (OpenClipboard(theApp.m_MainhWnd))
+	if (OpenClipboard(Context().Windows().MainHwnd()))
 	{
 		EmptyClipboard();
 
@@ -177,7 +179,7 @@ bool CClip_ImportExport::PlaceFormatsOnclipboard()
 {
 	bool bRet = false;
 
-	if (OpenClipboard(theApp.m_MainhWnd))
+	if (OpenClipboard(Context().Windows().MainHwnd()))
 	{
 		EmptyClipboard();
 

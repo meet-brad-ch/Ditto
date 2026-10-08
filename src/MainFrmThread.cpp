@@ -5,8 +5,12 @@
 #include "Misc.h"
 #include "cp_main.h"
 
-CMainFrmThread::CMainFrmThread(CGetSetOptions& settings) :
-	m_settings(settings)
+CMainFrmThread::CMainFrmThread(CGetSetOptions& settings, CIdleTime& idleTime, CDittoDb& database, CClipboardMonitor& clipboard, CAppWindows& windows) :
+	m_settings(settings),
+	m_idleTime(idleTime),
+	m_database(database),
+	m_clipboard(clipboard),
+	m_windows(windows)
 {
 	m_threadName = "CMainFrmThread";
     for(int eventEnum = 0; eventEnum < ECMAINFRMTHREADEVENTS_COUNT; eventEnum++)
@@ -52,7 +56,7 @@ void CMainFrmThread::OnEvent(int eventId, void * /*param*/)
 //not sure if this does what i think it does but looking into issues with slow access on large dbs
 void CMainFrmThread::OnReadDbFile()
 {
-	double idle = CIdleTime::IdleSeconds(m_settings);
+	double idle = m_idleTime.IdleSeconds();
 
 	if (idle < m_settings.ReadRandomFileIdleMin())
 	{
@@ -77,7 +81,7 @@ void CMainFrmThread::OnReadDbFile()
 
 void CMainFrmThread::OnDeleteEntries()
 {
-    CClipRetentionPolicy::RemoveOldEntries(m_settings, true);
+    CClipRetentionPolicy::RemoveOldEntries(m_settings, m_idleTime, m_windows, true);
 }
 
 void CMainFrmThread::OnRemoveTempFiles()
@@ -116,7 +120,7 @@ void CMainFrmThread::OnSaveClips()
 
 		CLogger::Log(CStringUtil::Format(_T("SaveCopyclips After AddToDb, Id: %d Before OnCopyCopyCompleted"), Id));
 
-		theApp.OnCopyCompleted(Id, count, copyReason);
+		m_clipboard.OnCopyCompleted(Id, count, copyReason);
 
 		CLogger::Log(CStringUtil::Format(_T("SaveCopyclips After AddToDb, Id: %d After OnCopyCopyCompleted"), Id));
 
@@ -125,7 +129,7 @@ void CMainFrmThread::OnSaveClips()
 			m_settings.GetShowMsgWndOnCopyToGroup())
 		{
 			CString groupName;
-			CppSQLite3Query q = theApp.m_db.execQueryEx(_T("SELECT mText FROM Main WHERE lID = %d"), lastClip.m_parentId);
+			CppSQLite3Query q = m_database.execQueryEx(_T("SELECT mText FROM Main WHERE lID = %d"), lastClip.m_parentId);
 			if (q.eof() == false)
 			{
 				groupName = q.getStringField(0);
@@ -134,7 +138,7 @@ void CMainFrmThread::OnSaveClips()
 			auto message{std::make_unique<CString>()};
 			message->Format(_T("Saved new clip \"%s\"\r\ndirectly to the group \"%s\""), lastClip.m_Desc.Left(35).GetString(), groupName.GetString());
 
-			if (theApp.m_pMainFrame->PostMessageW(CDittoMessage::ShowMsgWindow, reinterpret_cast<WPARAM>(message.get()), lastClip.m_parentId))
+			if (m_windows.MainFrame()->PostMessageW(CDittoMessage::ShowMsgWindow, reinterpret_cast<WPARAM>(message.get()), lastClip.m_parentId))
 			{
 				message.release(); // ownership: CMainFrame::OnShowMsgWindow retakes it in a std::unique_ptr
 			}

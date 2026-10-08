@@ -2,10 +2,20 @@
 #include "CP_Main.h"
 #include "Misc.h"
 
-// app-wide state, read and set by CIdleTime::IdleSeconds only; left for the composition root (Phase L3d)
-int g_funnyGetTickCountAdjustment = -1;
+CIdleTime::CIdleTime(CGetSetOptions& settings) :
+	m_settings(settings)
+{
+}
 
-double CIdleTime::IdleSeconds(CGetSetOptions& settings)
+void CIdleTime::CheckTickCount(DWORD currentTick, DWORD lastInputTick)
+{
+	// only the first call decides; a later (or concurrent) call leaves the decision as it is
+	int expected{NotChecked};
+	const int decided{currentTick < lastInputTick ? AdjustAndLog : NoAdjustment};
+	m_adjustment.compare_exchange_strong(expected, decided);
+}
+
+double CIdleTime::IdleSeconds()
 {
 	LASTINPUTINFO info{};
 	info.cbSize = sizeof(info);
@@ -13,27 +23,18 @@ double CIdleTime::IdleSeconds(CGetSetOptions& settings)
 	// Compared with LASTINPUTINFO::dwTime, a 32-bit tick value, so keep 32-bit wrap-around arithmetic.
 	DWORD currentTick{ static_cast<DWORD>(GetTickCount64()) };
 
-	if(g_funnyGetTickCountAdjustment == -1)
+	CheckTickCount(currentTick, info.dwTime);
+
+	// the call that moves AdjustAndLog to Adjust outputs the message (once)
+	int expected{AdjustAndLog};
+	if(m_adjustment.compare_exchange_strong(expected, Adjust))
 	{
-		if(currentTick < info.dwTime)
-		{
-			g_funnyGetTickCountAdjustment = 1;
-		}
-		else
-		{
-			g_funnyGetTickCountAdjustment = 0; 
-		}		
+		CLogger::Log(CStringUtil::Format(_T("Adjusting time of get tickcount by: %d, on startup we found GetTickCount to be less than last input"), m_settings.GetFunnyTickCountAdjustment()));
+		currentTick += m_settings.GetFunnyTickCountAdjustment();
 	}
-	
-	if(g_funnyGetTickCountAdjustment == 1 || g_funnyGetTickCountAdjustment == 2)
+	else if(expected == Adjust)
 	{
-		//Output message the first time
-		if(g_funnyGetTickCountAdjustment == 1)
-		{
-			CLogger::Log(CStringUtil::Format(_T("Adjusting time of get tickcount by: %d, on startup we found GetTickCount to be less than last input"), settings.GetFunnyTickCountAdjustment()));
-			g_funnyGetTickCountAdjustment = 2;
-		}
-		currentTick += settings.GetFunnyTickCountAdjustment();
+		currentTick += m_settings.GetFunnyTickCountAdjustment();
 	}
 
 	const double idleSeconds{ (currentTick - info.dwTime)/1000.0 };
@@ -41,14 +42,14 @@ double CIdleTime::IdleSeconds(CGetSetOptions& settings)
 	return idleSeconds;
 }
 
-int CMarkerInserter::Insert(CString& mainStr, CString& findStr, CString preInsert, CString postInsert, int linesPerRow)
+int CMarkerInserter::Insert(CICU_String& icuString, CString& mainStr, CString& findStr, CString preInsert, CString postInsert, int linesPerRow)
 {
 	int replaceCount = 0;
 
 	//Prevent infinite loop when user tries to replace nothing.
 	if (findStr != "")
 	{
-		const InsertResult inserted{ InsertMarkers(mainStr, findStr, preInsert, postInsert) };
+		const InsertResult inserted{ InsertMarkers(icuString, mainStr, findStr, preInsert, postInsert) };
 		replaceCount = inserted.replaceCount;
 
 		TrimLeadingLines(mainStr, inserted.firstFindPos, linesPerRow);
@@ -65,7 +66,7 @@ int CMarkerInserter::Insert(CString& mainStr, CString& findStr, CString preInser
 	return replaceCount;
 }
 
-CMarkerInserter::InsertResult CMarkerInserter::InsertMarkers(CString& mainStr, CString& findStr, const CString& preInsert, const CString& postInsert)
+CMarkerInserter::InsertResult CMarkerInserter::InsertMarkers(CICU_String& icuString, CString& mainStr, CString& findStr, const CString& preInsert, const CString& postInsert)
 {
 	InsertResult result{};
 
@@ -76,8 +77,8 @@ CMarkerInserter::InsertResult CMarkerInserter::InsertMarkers(CString& mainStr, C
 	int newPos = 0;
 	int insertedLength = 0;
 
-	CString mainLow(theApp.m_icuString.ToLowerStringEx(mainStr));
-	CString findLow(theApp.m_icuString.ToLowerStringEx(findStr));
+	CString mainLow(icuString.ToLowerStringEx(mainStr));
+	CString findLow(icuString.ToLowerStringEx(findStr));
 	findLow.MakeLower();
 
 	int preLength = preInsert.GetLength();

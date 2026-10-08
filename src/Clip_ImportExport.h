@@ -6,9 +6,10 @@ class CClip_ImportExport :	public CClip
 public:
 	/**
 	 * @brief Creates an empty clip for importing or exporting.
-	 * @param settings The application's settings; must outlive this clip.
+	 * @param context The services the clip works with (also the main window that opens the
+	 *        clipboard and the list refresh after an import); must outlive this clip.
 	 */
-	explicit CClip_ImportExport(CGetSetOptions& settings);
+	explicit CClip_ImportExport(CClipContext& context);
 	~CClip_ImportExport(void);
 
 	bool ExportToSqliteDB(CppSQLite3DB &m_db);

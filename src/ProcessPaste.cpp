@@ -4,10 +4,13 @@
 #include "ClipIds.h"
 #include "ClipboardFormatError.h"
 #include "ErrorReport.h"
+#include "ClipContext.h"
 #include <memory>
 
-CProcessPaste::CProcessPaste(CGetSetOptions& settings) :
-	m_settings(settings)
+CProcessPaste::CProcessPaste(CClipContext& context, ExternalWindowTracker& activeWindow) :
+	m_context(context),
+	m_settings(context.Settings()),
+	m_activeWindow(activeWindow)
 {
 	m_pOle = std::make_unique<COleClipSource>().release(); // ownership: COM reference count (one reference, held by this object until SetClipboard or InternalRelease)
 	m_bSendPaste = true;
@@ -80,11 +83,11 @@ BOOL CProcessPaste::DoPaste()
 		// 2) we are pasting multiple, but the settings' m_bSaveMultiPaste is false
 		if (GetClipIDs().GetSize() == 1 || !m_settings.m_bSaveMultiPaste)
 		{
-			m_pOle->CacheGlobalData(theApp.m_cfIgnoreClipboard, CGlobalMemory::NewGlobalP("Ignore", sizeof("Ignore")));
+			m_pOle->CacheGlobalData(m_context.Formats().IgnoreClipboard(), CGlobalMemory::NewGlobalP("Ignore", sizeof("Ignore")));
 		}
 		else
 		{
-			m_pOle->CacheGlobalData(theApp.m_cfDelaySavingData, CGlobalMemory::NewGlobalP("Delay", sizeof("Delay")));
+			m_pOle->CacheGlobalData(m_context.Formats().DelaySavingData(), CGlobalMemory::NewGlobalP("Delay", sizeof("Delay")));
 		}
 
 		m_pOle->SetClipboard(); // m_pOle is now managed by the OLE clipboard
@@ -93,12 +96,12 @@ BOOL CProcessPaste::DoPaste()
 		if (m_bSendPaste)
 		{
 			CLogger::Log(_T("Sending Paste to active window"));
-			theApp.m_activeWnd.SendPaste(m_bActivateTarget);
+			m_activeWindow.SendPaste(m_bActivateTarget);
 		}
 		else if (m_bActivateTarget)
 		{
 			CLogger::Log(_T("Activating active window"));
-			theApp.m_activeWnd.ActivateTarget();
+			m_activeWindow.ActivateTarget();
 		}
 		return TRUE;
 	});
@@ -150,7 +153,7 @@ void CProcessPaste::MarkAsPasted(bool updateClipOrder)
 	m_settings.SetTripPasteCount(-1);
 	m_settings.SetTotalPasteCount(-1);
 
-	auto pData{std::make_unique<MarkAsPastedData>(m_settings)};
+	auto pData{std::make_unique<MarkAsPastedData>(m_context)};
 	for (int i = 0; i < clips.GetCount(); i++)
 	{
 		pData->ids.Add(clips.ElementAt(i));
@@ -211,11 +214,13 @@ void CProcessPaste::UpdatePastedClips(MarkAsPastedData& data, int& clipId)
 	int refreshFlags = 0;
 
 	int clipCount = (int)data.ids.GetCount();
+	const CGetSetOptions& settings{ data.context.Settings() };
+	CDittoDb& db{ data.context.Database() };
 
-	if(data.settings.m_bUpdateTimeOnPaste &&
+	if(settings.m_bUpdateTimeOnPaste &&
 		data.updateClipOrder)
 	{
-		if (data.settings.m_refreshViewAfterPasting)
+		if (settings.m_refreshViewAfterPasting)
 		{
 			refreshFlags |= CClipRefreshFlags::AfterPasteSelectClip;
 		}
@@ -224,7 +229,7 @@ void CProcessPaste::UpdatePastedClips(MarkAsPastedData& data, int& clipId)
 		{
 			int id = data.ids.ElementAt(i);
 			clipId = id;
-			MoveToTopOrder(id, data.pastedFromGroup);
+			MoveToTopOrder(db, id, data.pastedFromGroup);
 		}
 	}
 
@@ -232,21 +237,21 @@ void CProcessPaste::UpdatePastedClips(MarkAsPastedData& data, int& clipId)
 	{
 		int id = data.ids.ElementAt(i);
 		clipId = id;
-		theApp.m_db.execDMLEx(_T("UPDATE Main SET lastPasteDate = %d where lID = %d;"), (int)CTime::GetCurrentTime().GetTime(), id);
+		db.execDMLEx(_T("UPDATE Main SET lastPasteDate = %d where lID = %d;"), (int)CTime::GetCurrentTime().GetTime(), id);
 	}
 
 	for (int i = 0; i < clipCount; i++)
 	{
 		int id = data.ids.ElementAt(i);
-		theApp.RefreshClipInUI(id, refreshFlags);
+		data.context.Windows().RefreshClipInUI(id, refreshFlags);
 	}
 }
 
-void CProcessPaste::MoveToTopOrder(int id, bool pastedFromGroup)
+void CProcessPaste::MoveToTopOrder(CDittoDb& db, int id, bool pastedFromGroup)
 {
 	if (pastedFromGroup)
 	{
-		CppSQLite3Query q{theApp.m_db.execQuery(_T("SELECT clipGroupOrder FROM Main ORDER BY clipGroupOrder DESC LIMIT 1"))};
+		CppSQLite3Query q{db.execQuery(_T("SELECT clipGroupOrder FROM Main ORDER BY clipGroupOrder DESC LIMIT 1"))};
 
 		if (q.eof() == false)
 		{
@@ -255,12 +260,12 @@ void CProcessPaste::MoveToTopOrder(int id, bool pastedFromGroup)
 
 			CLogger::Log(CStringUtil::Format(_T("Setting clipId: %d, GroupOrder: %f"), id, latestDate));
 
-			theApp.m_db.execDMLEx(_T("UPDATE Main SET clipGroupOrder = %f where lID = %d;"), latestDate, id);
+			db.execDMLEx(_T("UPDATE Main SET clipGroupOrder = %f where lID = %d;"), latestDate, id);
 		}
 	}
 	else
 	{
-		CppSQLite3Query q{theApp.m_db.execQuery(_T("SELECT clipOrder FROM Main ORDER BY clipOrder DESC LIMIT 1"))};
+		CppSQLite3Query q{db.execQuery(_T("SELECT clipOrder FROM Main ORDER BY clipOrder DESC LIMIT 1"))};
 
 		if (q.eof() == false)
 		{
@@ -269,7 +274,7 @@ void CProcessPaste::MoveToTopOrder(int id, bool pastedFromGroup)
 
 			CLogger::Log(CStringUtil::Format(_T("Setting clipId: %d, order: %f"), id, latestDate));
 
-			theApp.m_db.execDMLEx(_T("UPDATE Main SET clipOrder = %f where lID = %d;"), latestDate, id);
+			db.execDMLEx(_T("UPDATE Main SET clipOrder = %f where lID = %d;"), latestDate, id);
 		}
 	}
 }

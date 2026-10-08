@@ -3,6 +3,8 @@
 #include <array>
 #include <span>
 
+class CMultiLanguage;
+
 class ActionEnums
 {
 public:
@@ -158,7 +160,13 @@ public:
 		LAST_ACTION
 	};
 
-	static CString EnumDescription(ActionEnumValues value);
+	/**
+	 * @brief The description of an action, translated when the language file has a text for it.
+	 * @param value The action.
+	 * @param language The UI texts of the chosen language.
+	 * @return The translated description, or the English one when the language has none.
+	 */
+	static CString EnumDescription(ActionEnumValues value, CMultiLanguage& language);
 
 	static int GetDefaultShortCutKeyA(ActionEnumValues value, int pos);
 	static int GetDefaultShortCutKeyB(ActionEnumValues value, int pos);

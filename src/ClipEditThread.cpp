@@ -7,8 +7,10 @@
 #include "ConvertRTFToText.h"
 #include "..\Shared\TextConvert.h"
 
-CClipEditThread::CClipEditThread(CGetSetOptions& settings) :
-	m_settings(settings)
+CClipEditThread::CClipEditThread(CGetSetOptions& settings, CClipContext& clipContext, CAppWindows& windows) :
+	m_settings(settings),
+	m_clipContext(clipContext),
+	m_windows(windows)
 {
 	m_folderHandle = INVALID_HANDLE_VALUE;
 	m_threadName = _T("ClipEditTrackingThread");
@@ -231,7 +233,7 @@ bool CClipEditThread::SaveToClip(CString filePath, int id)
 
 	id = ResolveNewClipId(filePath, id);
 
-	CClip clip(m_settings);
+	CClip clip(m_clipContext);
 	if (id >= 0)
 	{
 		if (clip.LoadMainTable(id) == FALSE)
@@ -350,11 +352,11 @@ void CClipEditThread::RefreshEditedClip(const CString& filePath, int id, const C
 	if (id == -1)
 	{
 		m_newClipIds[filePath] = clip.m_id;
-		theApp.RefreshView(CopyReasonEnum::COPY_TO_UNKOWN);
+		m_windows.RefreshView(CopyReasonEnum::COPY_TO_UNKOWN);
 	}
 	else if (id > 0)
 	{
-		theApp.RefreshClipInUI(id, CClipRefreshFlags::ClipDescription);
+		m_windows.RefreshClipInUI(id, CClipRefreshFlags::ClipDescription);
 	}
 }
 

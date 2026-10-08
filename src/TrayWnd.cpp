@@ -31,9 +31,10 @@ END_MESSAGE_MAP()
 
 LRESULT CTrayWnd::OnTaskBarCreated(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
-	if(theApp.m_pMainFrame != NULL)
+	CMainFrame* const mainFrame{theApp.Services().Windows().MainFrame()};
+	if(mainFrame != NULL)
 	{
-		theApp.m_pMainFrame->PostMessage(CDittoMessage::ReaddTaskbarIcon, 0, 0);
+		mainFrame->PostMessage(CDittoMessage::ReaddTaskbarIcon, 0, 0);
 	}
 	
 	return TRUE;

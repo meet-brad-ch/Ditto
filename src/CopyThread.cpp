@@ -55,14 +55,14 @@ void CCopyThread::OnClipboardChange(CString activeWindow)
 	if(!m_LocalConfig.m_bCopyOnChange)
 		return;
 	
-	int groupId = theApp.GetActiveGroupId();
+	int groupId = Services().State().GetActiveGroupId();
 	if(groupId > -1)
 	{
 		CLogger::Log(CStringUtil::Format(_T("LoadFromClipboard - loading clips into groupId: %d"), groupId));
 	}
-	
-	auto pClip = std::make_unique<CClip>(Settings());
-	pClip->m_copyReason = theApp.GetCopyReason();
+
+	auto pClip = std::make_unique<CClip>(Services().ClipContext());
+	pClip->m_copyReason = Services().State().GetCopyReason();
 
 	COleDataObjectEx oleData;
 	CClipTypes* pSupportedTypes = m_LocalConfig.m_pSupportedTypes.get();
@@ -71,9 +71,9 @@ void CCopyThread::OnClipboardChange(CString activeWindow)
 	// then save all to the database, so when we paste this it will paste 
 	// just like you were using Ctrl-V
 	std::shared_ptr<CClipTypes> availableTypes;
-	if (theApp.m_CopyBuffer.Active() || Settings().GetSupportAllTypes())
+	if (Services().CopyBuffer().Active() || Settings().GetSupportAllTypes())
 	{
-		availableTypes = oleData.GetAvailableTypes();
+		availableTypes = oleData.GetAvailableTypes(Services().Windows().MainHwnd());
 		pSupportedTypes = availableTypes.get();
 	}
 
@@ -137,6 +137,11 @@ int CCopyThread::LoadClipWithRetry(CClip& clip, CClipTypes* pSupportedTypes, con
 CGetSetOptions& CCopyThread::Settings() const
 {
 	return theApp.Services().Settings();
+}
+
+CAppServices& CCopyThread::Services() const
+{
+	return theApp.Services();
 }
 
 void CCopyThread::HandOverClip(std::unique_ptr<CClip>& pClip)
