@@ -154,6 +154,8 @@ protected:
 	CArray <CTab, CTab&> m_Tabs;
 	int m_nActiveTab;
 	int m_nTabHeight;
+	/** @brief Fills the tab bar and the spinner background (the non-selected tab colour). */
+	CBrush m_brNonSelectedTab;
 	CPen m_penGray;
 	CPen m_penBlack;
 	/** @brief The font of the inactive tabs; empty until SetTabHeight. */

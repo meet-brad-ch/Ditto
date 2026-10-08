@@ -104,7 +104,8 @@ int CTabCtrlEx::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 	
-	// Create the pens
+	// Create the brush and the pens
+	m_brNonSelectedTab.CreateSolidBrush(m_NonSelectedColor);
 	m_penGray.CreatePen(PS_SOLID, 1, RGB(172, 168, 153));
 	m_penBlack.CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
 
