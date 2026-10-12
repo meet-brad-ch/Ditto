@@ -105,7 +105,10 @@ jobs:
             if (-not (Test-Path (Join-Path $inno 'ISCC.exe'))) { throw "ISCC.exe not found in $inno" }
           }
           "INNO_DIR=$inno" >> $env:GITHUB_ENV
-          "Inno Setup $((Get-Item (Join-Path $inno 'ISCC.exe')).VersionInfo.ProductVersion)"
+          # ISCC.exe has no version resource; Inno Setup's uninstall entry names the version
+          $uninstall = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*', 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*', 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*'
+          $entry = Get-ItemProperty $uninstall -ErrorAction SilentlyContinue | Where-Object { $_.InstallLocation -and $_.InstallLocation.TrimEnd('\') -eq $inno.TrimEnd('\') } | Select-Object -First 1
+          "Inno Setup $(if ($entry) { $entry.DisplayVersion } else { '(version not recorded)' }) in $inno"
 
       # Release|x64 rebuild with /analyze and /WX, imports, hardening, sources, the code gates,
       # every unit test on its own (DittoTests under ASan), coverage, Doxygen.
