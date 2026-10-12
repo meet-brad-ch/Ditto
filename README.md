@@ -1,7 +1,8 @@
 # Ditto without network code
 
-A fork of the Ditto clipboard manager with all network code removed. It is built from source and
-publishes no releases or downloads.
+A fork of the Ditto clipboard manager with all network code removed. GitHub Actions builds every
+commit and publishes each tagged version as a GitHub release, with the installer as its only
+asset (see Releases). There are no other downloads.
 
 For what Ditto is, its features and how to use it, see the main project:
 **https://github.com/sabrogden/Ditto**. This README covers only what this fork changes and how to
@@ -111,7 +112,8 @@ The build writes `Release64\Ditto.exe`, `Release64\Addins\DittoUtil.dll`, `ICU_L
 - vcpkg at `C:\vcpkg` (or set `VCPKG_ROOT`), with the baseline commit from `vcpkg.json`.
 - Doxygen 1.15.0 on `PATH` (or in `C:\Program Files\doxygen\bin`).
 - Python with `pip install lizard==1.17.31`.
-- Inno Setup 7.0.2, for the installer.
+- Inno Setup 6.7 or 7.0, for the installer. CI uses 6.7 from the runner image; `tools\ci.ps1`
+  looks for Inno Setup 7 unless `INNO_DIR` names another folder.
 - clang-format and Microsoft code coverage ship with Visual Studio.
 
 ## Verify
@@ -152,12 +154,21 @@ failure. It takes about 2 minutes, or about 4.5 minutes with `-Analyze`.
 
 ### CI
 
-`powershell -NoProfile -ExecutionPolicy Bypass -File tools\ci.ps1 [-Ref <commit>]` is the
-project's CI. Run it before every push.
+`.github\workflows\build.yml` runs on every push to `master`, every pull request and on demand
+(`gh workflow run build`), on GitHub's `windows-2025-vs2026` image.
 
-- It clones the commit into `build\ci\<commit>\work`, so only committed files take part.
 - Steps: `verify.ps1 -Analyze`, `fuzz.ps1`, the Debug|x64, Debug|Win32 and Release|Win32 builds,
   then the installer (any Inno Setup warning fails).
+- The run summary holds the unit-test table and the installer's SHA256.
+- Artifacts: the installer (`DittoSetup-ci-<run>`, or `DittoSetup-<version>` on a tag) and
+  `reports-<run>` (binaries, test results, coverage, logs).
+- Tools come from the image, Chocolatey (Doxygen) and pip (lizard); vcpkg is cloned at the
+  `vcpkg.json` baseline. Nothing is downloaded from a URL in the workflow.
+
+`powershell -NoProfile -ExecutionPolicy Bypass -File tools\ci.ps1 [-Ref <commit>]` runs the same
+steps on this machine. Run it before every push.
+
+- It clones the commit into `build\ci\<commit>\work`, so only committed files take part.
 - Output: `build\ci\<commit>\summary.md` (each step, the verification block, the installer's
   SHA256, the per-test table) and `build\ci\<commit>\artifacts\` (installer, binaries, test
   results, coverage, logs). The clone is deleted afterwards. The exit code is 0 only when every
@@ -189,8 +200,9 @@ clipboard, so a running Ditto also records the four test clips.
   `lib\Contract.props`.
 - `tests\`: DittoTests (GoogleTest for DittoCore), `tests\AppTests\` (the app layer against an
   in-memory SQLite database) and `tests\fuzz\`.
-- `tools\`: `verify.ps1`, `ci.ps1`, `fuzz.ps1`, `runtime-netcheck.ps1`, and the gates in
-  `tools\gates\`.
+- `tools\`: `verify.ps1`, `ci.ps1`, `fuzz.ps1`, `runtime-netcheck.ps1`, `set-version.ps1`, and
+  the gates in `tools\gates\`.
+- `.github\workflows\build.yml`: the GitHub Actions workflow (see CI).
 - `DittoSetup\`: the Inno Setup installer script.
 - `Debug\Language\`, `Debug\Themes\`: the language and theme files the installer packages.
 
@@ -218,6 +230,31 @@ Build Release|x64 first, then run:
 - **Crash dumps:** Windows writes its default dumps to `%LOCALAPPDATA%\CrashDumps`. Full dumps
   need the key `HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\Ditto.exe`,
   which needs administrator rights.
+
+### Releases
+
+The tag sets the version. To release 3.25.0:
+
+```
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\set-version.ps1 -Version 3.25.0
+git commit -am "Version 3.25.0"
+git push origin master
+git tag v3.25.0
+git push origin v3.25.0
+```
+
+- **Push the one tag by name.** `git push --tags` would also push the upstream tags that a clone
+  carries.
+- **Tag forms:** `v<major>.<minor>.<patch>` (build 0) or `v<major>.<minor>.<patch>.<build>`. Any
+  other tag fails before the build and releases nothing.
+- **On the tag**, CI runs `tools\set-version.ps1` before building, so `Ditto.exe`, its About box,
+  the installer's name (`DittoSetup_3_25_0_0.exe`) and the release carry the tag's version.
+  Committing the stamp first (as above) keeps the tagged source equal to the release.
+- **The release** `v3.25.0` ("Ditto 3.25.0.0") appears on the repository's Releases page after
+  every gate passed, with the installer as its only asset and its SHA256 in the notes. The same
+  hash is in the run summary.
+- **To take a release back:** `gh release delete v3.25.0 --yes`, then
+  `git push --delete origin v3.25.0`.
 
 ## Upstream
 

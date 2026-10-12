@@ -1,0 +1,210 @@
+# CI for Ditto without network code. Every push to master, pull request and manual run builds the
+# whole package and runs every gate, the same steps as tools\ci.ps1 locally:
+#   tools\verify.ps1 -Analyze; tools\fuzz.ps1 -Seconds 60; the Debug|x64, Debug|Win32 and
+#   Release|Win32 builds; the Inno Setup installer (an Inno Setup warning fails it).
+# The installer is an artifact of every run. A tag v<major>.<minor>.<patch>[.<build>] sets the
+# version: tools\set-version.ps1 stamps it into CP_Main.rc before the build, so Ditto.exe, the
+# installer's file name (DittoSetup_a_b_c_d.exe, taken from Ditto.exe by the .iss) and the
+# release carry it; the release job then publishes the installer and its SHA256 as a GitHub
+# release. No tool is downloaded from a URL here: the runner image has Visual Studio 2026, vcpkg,
+# Inno Setup 6 and Python; Doxygen comes from Chocolatey, lizard from pip, vcpkg's port tree from
+# a git clone at the vcpkg.json baseline.
+name: build
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# one run per ref: a newer push cancels the older run of the same branch (never a tag's run)
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+
+env:
+  DOXYGEN_VERSION: '1.15.0'
+  LIZARD_VERSION: '1.17.31'
+
+jobs:
+  build:
+    runs-on: windows-2025-vs2026   # Visual Studio 2026 (toolset v145) with ATL/MFC and ASan, vcpkg, Inno Setup 6
+    timeout-minutes: 90
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      artifact: ${{ steps.version.outputs.artifact }}
+      installer: ${{ steps.version.outputs.installer }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The tag is the version: v3.25.0 -> 3.25.0.0, v3.25.0.1 -> 3.25.0.1. Any other tag fails
+      # here, before anything is built, so a wrong tag never releases. Without a tag the version
+      # stays what CP_Main.rc says and the artifact is named after the run.
+      - name: Version
+        id: version
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF_TYPE -eq 'tag') {
+            if ($env:GITHUB_REF_NAME -notmatch '^v(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?$') {
+              throw "tag '$env:GITHUB_REF_NAME' is not v<major>.<minor>.<patch>[.<build>]: nothing is built or released"
+            }
+            $version = "$($Matches[1]).$($Matches[2]).$($Matches[3]).$(if ($Matches[4]) { $Matches[4] } else { '0' })"
+            powershell -NoProfile -ExecutionPolicy Bypass -File tools\set-version.ps1 -Version $version
+            if ($LASTEXITCODE -ne 0) { throw 'set-version.ps1 failed' }
+            git diff --stat -- CP_Main.rc
+            $artifact = "DittoSetup-$version"
+          }
+          else {
+            $m = [regex]::Match((Get-Content CP_Main.rc -Raw), '(?m)^\s*FILEVERSION\s+(\d+),(\d+),(\d+),(\d+)')
+            if (-not $m.Success) { throw 'CP_Main.rc has no FILEVERSION line' }
+            $version = @(1..4 | ForEach-Object { $m.Groups[$_].Value }) -join '.'
+            $artifact = "DittoSetup-ci-$env:GITHUB_RUN_NUMBER"
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "artifact=$artifact" >> $env:GITHUB_OUTPUT
+          "installer=DittoSetup_$($version -replace '\.', '_').exe" >> $env:GITHUB_OUTPUT
+          "version $version; artifact $artifact"
+
+      # A fresh clone at the manifest's builtin-baseline: the image's C:\vcpkg is at another
+      # commit (and may be a shallow clone, which vcpkg's baseline lookup rejects).
+      - name: vcpkg at the vcpkg.json baseline
+        shell: pwsh
+        run: |
+          $baseline = (Get-Content vcpkg.json -Raw | ConvertFrom-Json).'builtin-baseline'
+          $root = Join-Path $env:RUNNER_TEMP 'vcpkg'
+          git clone --quiet https://github.com/microsoft/vcpkg $root
+          git -C $root checkout --quiet $baseline
+          if ($LASTEXITCODE -ne 0) { throw "vcpkg baseline $baseline not found" }
+          & (Join-Path $root 'bootstrap-vcpkg.bat') -disableMetrics
+          if ($LASTEXITCODE -ne 0) { throw 'vcpkg bootstrap failed' }
+          "VCPKG_ROOT=$root" >> $env:GITHUB_ENV
+
+      # Doxygen (verify.ps1 stage 8) from Chocolatey, lizard (complexity gate) from pip, Inno
+      # Setup from the image (ci.ps1 and the Installer step read INNO_DIR).
+      - name: Tools (Doxygen, lizard, Inno Setup)
+        shell: pwsh
+        run: |
+          choco install doxygen.install --version $env:DOXYGEN_VERSION -y --no-progress | Out-Host
+          if ($LASTEXITCODE -notin 0, 3010) { throw "choco install doxygen.install failed ($LASTEXITCODE)" }
+          $doxygen = 'C:\Program Files\doxygen\bin'
+          if (-not (Test-Path (Join-Path $doxygen 'doxygen.exe'))) { throw "doxygen.exe not found in $doxygen" }
+          $doxygen >> $env:GITHUB_PATH
+
+          python -m pip install --disable-pip-version-check "lizard==$env:LIZARD_VERSION"
+          if ($LASTEXITCODE -ne 0) { throw 'pip install lizard failed' }
+          python -c "import sysconfig; print(sysconfig.get_path('scripts'))" >> $env:GITHUB_PATH
+
+          $inno = "${env:ProgramFiles(x86)}\Inno Setup 6"
+          if (-not (Test-Path (Join-Path $inno 'ISCC.exe'))) {
+            choco install innosetup -y --no-progress | Out-Host
+            if (-not (Test-Path (Join-Path $inno 'ISCC.exe'))) { throw "ISCC.exe not found in $inno" }
+          }
+          "INNO_DIR=$inno" >> $env:GITHUB_ENV
+          "Inno Setup $((Get-Item (Join-Path $inno 'ISCC.exe')).VersionInfo.ProductVersion)"
+
+      # Release|x64 rebuild with /analyze and /WX, imports, hardening, sources, the code gates,
+      # every unit test on its own (DittoTests under ASan), coverage, Doxygen.
+      - name: Verify (all gates, /analyze)
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File tools\verify.ps1 -Analyze
+
+      - name: Fuzz (libFuzzer, 60 s per target)
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File tools\fuzz.ps1 -Seconds 60
+
+      - name: Unit test summary
+        if: always()
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File tools\test-summary.ps1 -Results build\test-results -Output $env:GITHUB_STEP_SUMMARY
+
+      # The other configurations (/W4 /WX like Release|x64): configuration-only breakage.
+      - name: Debug|x64, Debug|Win32 and Release|Win32 builds
+        shell: pwsh
+        run: |
+          $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.ATLMFC -property installationPath
+          if (-not $vs) { throw 'no Visual Studio with the MFC component' }
+          # one install up front: under /m every project would otherwise start its own vcpkg install
+          & (Join-Path $env:VCPKG_ROOT 'vcpkg.exe') install --triplet x86-windows-static-md "--x-install-root=vcpkg_installed\x86-windows-static-md" --no-print-usage
+          if ($LASTEXITCODE -ne 0) { throw "vcpkg install x86-windows-static-md failed ($LASTEXITCODE)" }
+          foreach ($config in @(@('Debug', 'x64'), @('Debug', 'Win32'), @('Release', 'Win32'))) {
+            & (Join-Path $vs 'MSBuild\Current\Bin\amd64\MSBuild.exe') CP_Main_10.sln "/p:Configuration=$($config[0])" "/p:Platform=$($config[1])" "/p:VcpkgRoot=$env:VCPKG_ROOT" /m /nologo /v:m
+            if ($LASTEXITCODE -ne 0) { throw "$($config[0])|$($config[1]) build failed ($LASTEXITCODE)" }
+          }
+
+      # Not /Q: that hides the compiler's warnings, and a warning fails the step like a C++ one.
+      # The file name must be the one the version step predicted: that proves the exe carries
+      # the tag's version. The SHA256 goes to the run summary.
+      - name: Installer (Inno Setup)
+        shell: pwsh
+        env:
+          INSTALLER: ${{ steps.version.outputs.installer }}
+        run: |
+          $out = @(& (Join-Path $env:INNO_DIR 'ISCC.exe') DittoSetup\DittoSetup_10.iss 2>&1 | ForEach-Object { "$_" })
+          if ($LASTEXITCODE -ne 0) { $out; throw "ISCC failed ($LASTEXITCODE)" }
+          $warnings = @($out | Where-Object { $_ -match '^Warning:' })
+          if ($warnings.Count -gt 0) { $warnings; throw "$($warnings.Count) Inno Setup warnings" }
+          $expected = Join-Path 'DittoSetup\Output' $env:INSTALLER
+          if (-not (Test-Path $expected)) { Get-ChildItem DittoSetup\Output; throw "the installer is not $expected (Ditto.exe's version differs from the tag?)" }
+          $hash = (Get-FileHash $expected -Algorithm SHA256).Hash
+          "Installer ``$env:INSTALLER`` SHA256 ``$hash``" >> $env:GITHUB_STEP_SUMMARY
+          "$env:INSTALLER  $hash"
+
+      - name: Upload the installer
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ steps.version.outputs.artifact }}
+          path: DittoSetup/Output/${{ steps.version.outputs.installer }}
+          if-no-files-found: error
+
+      - name: Upload binaries, test results, coverage and logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: reports-${{ github.run_number }}
+          path: |
+            Release64/**/*.exe
+            Release64/**/*.dll
+            build/test-results/
+            build/coverage/
+            build/logs/
+            build/fuzz/
+          if-no-files-found: warn
+
+  # Only a tag reaches here. The installer is the one the build job uploaded; its SHA256 is
+  # computed again here and written into the notes (the Installer step printed the same hash).
+  release:
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write   # create the release and attach the installer
+      actions: read     # download this run's artifact
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      VERSION: ${{ needs.build.outputs.version }}
+      ARTIFACT: ${{ needs.build.outputs.artifact }}
+      INSTALLER: ${{ needs.build.outputs.installer }}
+    steps:
+      - name: Download the installer built above
+        run: gh run download "$GITHUB_RUN_ID" --name "$ARTIFACT" --dir dist
+
+      - name: Release notes (generated; the SHA256 of the asset)
+        run: |
+          test -f "dist/$INSTALLER"
+          sha=$(sha256sum "dist/$INSTALLER" | cut -d' ' -f1)
+          {
+            echo "Ditto without network code (fork of sabrogden/Ditto): per-user installer, no admin rights."
+            echo
+            echo "- Installer: \`$INSTALLER\`"
+            echo "- Version: $VERSION"
+            echo "- SHA256: \`$sha\`"
+            echo "- Built by GitHub Actions run $GITHUB_RUN_NUMBER from commit $GITHUB_SHA."
+          } > notes.md
+          cat notes.md
+
+      - name: Create the GitHub release
+        run: gh release create "$GITHUB_REF_NAME" "dist/$INSTALLER" --verify-tag --title "Ditto $VERSION" --notes-file notes.md

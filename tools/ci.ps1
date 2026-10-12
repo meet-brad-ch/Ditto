@@ -1,4 +1,4 @@
-# CI (the project's only CI; there is no GitHub workflow): run on this machine against a clean clone
+# Local mirror of .github\workflows\build.yml (the same steps): run on this machine against a clean clone
 # of one commit, so only committed files take part (no untracked or ignored leftovers).
 #   1. clone the commit into build\ci\<commit>\work
 #   2. tools\verify.ps1 -Analyze (rebuild with /analyze, all gates, every test alone under ASan)
