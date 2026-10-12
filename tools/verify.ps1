@@ -295,8 +295,12 @@ if (-not $doxygen -and (Test-Path 'C:\Program Files\doxygen\bin\doxygen.exe')) {
 if (-not $doxygen) { Fail 'docs: doxygen not found (install Doxygen or put it on PATH)' }
 Push-Location $repo
 try {
-    $docOut = & $doxygen (Join-Path $repo 'tools\Doxyfile.contract') 2>&1
+    # Doxygen writes its warnings to stderr, which 'Stop' would turn into a crash of this script
+    # (Windows PowerShell 5.1); read them as text and let the exit code decide
+    $ErrorActionPreference = 'Continue'
+    $docOut = @(& $doxygen (Join-Path $repo 'tools\Doxyfile.contract') 2>&1 | ForEach-Object { "$_" })
     $docCode = $LASTEXITCODE
+    $ErrorActionPreference = 'Stop'
 }
 finally { Pop-Location }
 $docOut | Where-Object { "$_".Trim() } | Select-Object -First 20 | ForEach-Object { Say "  docs: $_" }

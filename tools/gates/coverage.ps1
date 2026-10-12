@@ -11,12 +11,19 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 function Say([string] $m) { Write-Output "$(Get-Date -Format 'HH:mm:ss') $m" }
+# Runs a native program and returns its output as text. Windows PowerShell 5.1 turns a native
+# program's stderr line into an error record, which 'Stop' would throw on (the coverage console
+# prints a first-run "Telemetry" notice there); the exit code decides instead.
+function Invoke-Native([scriptblock] $command) {
+    $ErrorActionPreference = 'Continue'
+    @(& $command 2>&1 | ForEach-Object { "$_" })
+}
 
 $console = Join-Path $VsPath 'Common7\IDE\Extensions\Microsoft\CodeCoverage.Console\Microsoft.CodeCoverage.Console.exe'
 if (-not (Test-Path $console)) { Say "coverage: FAILED Microsoft.CodeCoverage.Console.exe not found under $VsPath"; exit 1 }
 
 $msbuild = Join-Path $VsPath 'MSBuild\Current\Bin\amd64\MSBuild.exe'
-$out = & $msbuild (Join-Path $Repo 'tests\DittoTests.vcxproj') /p:Configuration=Debug /p:Platform=x64 "/p:SolutionDir=$Repo\" /m /nologo /v:m 2>&1
+$out = Invoke-Native { & $msbuild (Join-Path $Repo 'tests\DittoTests.vcxproj') /p:Configuration=Debug /p:Platform=x64 "/p:SolutionDir=$Repo\" /m /nologo /v:m }
 if ($LASTEXITCODE -ne 0) {
     $out | Where-Object { "$_" -match 'error' } | Select-Object -First 20 | ForEach-Object { Say "  $_" }
     Say "coverage: FAILED Debug|x64 test build exit $LASTEXITCODE"; exit 1
@@ -27,7 +34,7 @@ $outDir = Join-Path $Repo 'build\coverage'
 New-Item -ItemType Directory $outDir -Force | Out-Null
 $report = Join-Path $outDir 'DittoCore.cobertura.xml'
 $settings = Join-Path $PSScriptRoot 'coverage.config.xml'
-$run = & $console collect $testExe --gtest_brief=1 --settings $settings --output $report --output-format cobertura --nologo 2>&1
+$run = Invoke-Native { & $console collect $testExe --gtest_brief=1 --settings $settings --output $report --output-format cobertura --nologo }
 if ($LASTEXITCODE -ne 0) {
     $run | Select-Object -Last 20 | ForEach-Object { Say "  $_" }
     Say "coverage: FAILED the instrumented test run exited $LASTEXITCODE"; exit 1
@@ -55,7 +62,7 @@ Write-Output ("COVERAGE_LINE={0:P1}" -f $rate)
 
 # The app layer: line coverage of the src\ files that AppTests compiles (Debug|x64 build). It is
 # reported, not gated: the owner set no minimum for the legacy app (only lib\DittoCore has 90 %).
-$out = & $msbuild (Join-Path $Repo 'tests\AppTests\AppTests.vcxproj') /p:Configuration=Debug /p:Platform=x64 "/p:SolutionDir=$Repo\" /m /nologo /v:m 2>&1
+$out = Invoke-Native { & $msbuild (Join-Path $Repo 'tests\AppTests\AppTests.vcxproj') /p:Configuration=Debug /p:Platform=x64 "/p:SolutionDir=$Repo\" /m /nologo /v:m }
 if ($LASTEXITCODE -ne 0) {
     $out | Where-Object { "$_" -match 'error' } | Select-Object -First 20 | ForEach-Object { Say "  $_" }
     Say "coverage: FAILED AppTests Debug|x64 build exit $LASTEXITCODE"; exit 1
@@ -63,7 +70,7 @@ if ($LASTEXITCODE -ne 0) {
 $appReport = Join-Path $outDir 'AppTests.cobertura.xml'
 $appExe = Join-Path $Repo 'build\AppTests\x64\Debug\AppTests.exe'
 $appSettings = Join-Path $PSScriptRoot 'coverage.app.config.xml'
-$run = & $console collect $appExe --gtest_brief=1 --settings $appSettings --output $appReport --output-format cobertura --nologo 2>&1
+$run = Invoke-Native { & $console collect $appExe --gtest_brief=1 --settings $appSettings --output $appReport --output-format cobertura --nologo }
 if ($LASTEXITCODE -ne 0) {
     $run | Select-Object -Last 20 | ForEach-Object { Say "  $_" }
     Say "coverage: FAILED the instrumented AppTests run exited $LASTEXITCODE"; exit 1
